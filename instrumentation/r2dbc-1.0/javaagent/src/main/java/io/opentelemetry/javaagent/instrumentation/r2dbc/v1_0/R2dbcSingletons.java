@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetr
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcSqlAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 
 public final class R2dbcSingletons {
@@ -24,28 +23,43 @@ public final class R2dbcSingletons {
     R2dbcTelemetryBuilder builder =
         R2dbcTelemetry.builder(GlobalOpenTelemetry.get())
             .setStatementSanitizationEnabled(
-                AgentInstrumentationConfig.get()
-                    .getBoolean(
-                        "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
-                        DeclarativeConfigUtil.getBoolean(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "r2dbc",
+                        "statement_sanitizer",
+                        "enabled")
+                    .or(
+                        () ->
+                            DeclarativeConfigUtil.getBoolean(
                                 GlobalOpenTelemetry.get(),
-                                "general",
+                                "java",
                                 "db",
                                 "statement_sanitizer",
-                                "enabled")
-                            .orElse(true)))
+                                "enabled"))
+                    .orElse(true))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     R2dbcSqlAttributesGetter.INSTANCE,
                     PeerServiceResolver.create(GlobalOpenTelemetry.get())));
     Experimental.setEnableSqlCommenter(
         builder,
-        AgentInstrumentationConfig.get()
-            .getBoolean(
-                "otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled",
-                DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "common", "db", "sqlcommenter/development")
-                    .orElse(false)));
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "r2dbc",
+                "experimental",
+                "sqlcommenter",
+                "enabled")
+            .or(
+                () ->
+                    DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "db",
+                        "sqlcommenter/development"))
+            .orElse(false));
     Experimental.customizeSqlCommenter(
         builder,
         sqlCommenterBuilder ->

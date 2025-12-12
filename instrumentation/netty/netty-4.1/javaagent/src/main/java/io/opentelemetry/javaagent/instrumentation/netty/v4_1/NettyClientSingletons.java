@@ -19,16 +19,17 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyC
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class NettyClientSingletons {
 
   private static final boolean connectionTelemetryEnabled =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.netty.connection-telemetry.enabled", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "netty", "connection_telemetry", "enabled")
+          .orElse(false);
   private static final boolean sslTelemetryEnabled =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "netty", "ssl_telemetry", "enabled")
+          .orElse(false);
 
   private static final Instrumenter<NettyRequest, HttpResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
@@ -54,7 +55,7 @@ public final class NettyClientSingletons {
             INSTRUMENTER,
             DeclarativeConfigUtil.getBoolean(
                     GlobalOpenTelemetry.get(),
-                    "general",
+                    "java",
                     "http",
                     "client",
                     "emit_telemetry/development")

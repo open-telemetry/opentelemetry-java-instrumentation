@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletHttpAttributesGe
 import io.opentelemetry.instrumentation.servlet.internal.ServletInstrumenterBuilder;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,12 +29,17 @@ import java.util.Set;
 public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      AgentInstrumentationConfig.get()
-          .getList(
-              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
+      DeclarativeConfigUtil.getList(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "servlet",
+              "experimental",
+              "capture_request_parameters")
+          .orElse(emptyList());
   private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "servlet", "experimental_span_attributes")
+          .orElse(false);
 
   private AgentServletInstrumenterBuilder() {}
 

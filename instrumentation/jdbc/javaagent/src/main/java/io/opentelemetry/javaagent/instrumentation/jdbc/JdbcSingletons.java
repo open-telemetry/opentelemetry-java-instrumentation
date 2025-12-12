@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.sql.Connection;
@@ -43,32 +42,44 @@ public final class JdbcSingletons {
             JdbcAttributesGetter.INSTANCE, PeerServiceResolver.create(GlobalOpenTelemetry.get()));
 
     CAPTURE_QUERY_PARAMETERS =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "jdbc",
+                "experimental",
+                "capture_query_parameters")
+            .orElse(false);
 
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
             Collections.singletonList(peerServiceExtractor),
             true,
-            AgentInstrumentationConfig.get()
-                .getBoolean(
-                    "otel.instrumentation.jdbc.statement-sanitizer.enabled",
-                    DeclarativeConfigUtil.getBoolean(
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(), "java", "jdbc", "statement_sanitizer", "enabled")
+                .or(
+                    () ->
+                        DeclarativeConfigUtil.getBoolean(
                             GlobalOpenTelemetry.get(),
-                            "general",
+                            "java",
                             "db",
                             "statement_sanitizer",
-                            "enabled")
-                        .orElse(true)),
+                            "enabled"))
+                .orElse(true),
             CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
             Collections.singletonList(peerServiceExtractor),
-            AgentInstrumentationConfig.get()
-                .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(),
+                    "java",
+                    "jdbc",
+                    "experimental",
+                    "transaction",
+                    "enabled")
+                .orElse(false));
   }
 
   public static Instrumenter<DbRequest, Void> transactionInstrumenter() {
@@ -112,12 +123,22 @@ public final class JdbcSingletons {
   private static SqlCommenter configureSqlCommenter() {
     SqlCommenterBuilder builder = SqlCommenter.builder();
     builder.setEnabled(
-        AgentInstrumentationConfig.get()
-            .getBoolean(
-                "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
-                DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "common", "db", "sqlcommenter/development")
-                    .orElse(false)));
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "jdbc",
+                "experimental",
+                "sqlcommenter",
+                "enabled")
+            .or(
+                () ->
+                    DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "db",
+                        "sqlcommenter/development"))
+            .orElse(false));
     SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
     return builder.build();
   }

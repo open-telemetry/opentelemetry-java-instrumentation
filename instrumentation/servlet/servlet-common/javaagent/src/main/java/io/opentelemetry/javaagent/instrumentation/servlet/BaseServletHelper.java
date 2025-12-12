@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletAdditionalAttrib
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -34,13 +33,21 @@ import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      AgentInstrumentationConfig.get()
-          .getList(
-              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
+      DeclarativeConfigUtil.getList(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "servlet",
+              "experimental",
+              "capture_request_parameters")
+          .orElse(emptyList());
   private static final boolean ADD_TRACE_ID_REQUEST_ATTRIBUTE =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.servlet.experimental.add-trace-id-request-attribute", true);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "servlet",
+              "experimental",
+              "add_trace_id_request_attribute")
+          .orElse(true);
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
