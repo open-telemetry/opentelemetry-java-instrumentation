@@ -11,9 +11,9 @@ import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientUrlTemplate;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.HttpAttributes;
 import java.net.HttpURLConnection;
 import java.util.Set;
@@ -29,7 +29,13 @@ public class HttpMethodAttributeExtractor<
   private HttpMethodAttributeExtractor(Set<String> knownMethods) {
     this.knownMethods = knownMethods;
     emitExperimentalHttpClientTelemetry =
-        AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry();
+        DeclarativeConfigUtil.getBoolean(
+                io.opentelemetry.api.GlobalOpenTelemetry.get(),
+                "general",
+                "http",
+                "client",
+                "emit_telemetry/development")
+            .orElse(false);
   }
 
   public static AttributesExtractor<? super HttpURLConnection, ? super Integer> create(

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.netty.common.v4_0.internal.client
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
@@ -50,7 +51,14 @@ public final class NettyClientSingletons {
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
     CLIENT_HANDLER_FACTORY =
         new NettyClientHandlerFactory(
-            INSTRUMENTER, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
+            INSTRUMENTER,
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(),
+                    "general",
+                    "http",
+                    "client",
+                    "emit_telemetry/development")
+                .orElse(false));
   }
 
   public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {

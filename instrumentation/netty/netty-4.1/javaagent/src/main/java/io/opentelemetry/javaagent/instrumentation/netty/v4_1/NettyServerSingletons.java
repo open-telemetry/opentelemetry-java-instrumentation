@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetry;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.NettyServerInstrumenterBuilderUtil;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public final class NettyServerSingletons {
 
@@ -18,7 +18,9 @@ public final class NettyServerSingletons {
     NettyServerInstrumenterBuilderUtil.getBuilderExtractor()
         .apply(builder)
         .configure(AgentCommonConfig.get());
-    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
+    if (DeclarativeConfigUtil.getBoolean(
+            GlobalOpenTelemetry.get(), "general", "http", "server", "emit_telemetry/development")
+        .orElse(false)) {
       // this logic is only used in agent
       builder.setEmitExperimentalHttpServerEvents(true);
     }
