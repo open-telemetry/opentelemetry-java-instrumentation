@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import io.opentelemetry.api.OpenTelemetry;
 import java.util.Objects;
 
 /**
@@ -39,8 +40,8 @@ public class EnduserConfig {
   private final boolean roleEnabled;
   private final boolean scopeEnabled;
 
-  EnduserConfig(InstrumentationConfig instrumentationConfig) {
-    Objects.requireNonNull(instrumentationConfig, "instrumentationConfig must not be null");
+  EnduserConfig(OpenTelemetry openTelemetry) {
+    Objects.requireNonNull(openTelemetry, "openTelemetry must not be null");
 
     /*
      * Capturing enduser.* attributes is disabled by default, because of this requirement in the specification:
@@ -50,12 +51,14 @@ public class EnduserConfig {
      * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
      */
     this.idEnabled =
-        instrumentationConfig.getBoolean("otel.instrumentation.common.enduser.id.enabled", false);
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "common", "enduser", "id_enabled")
+            .orElse(false);
     this.roleEnabled =
-        instrumentationConfig.getBoolean("otel.instrumentation.common.enduser.role.enabled", false);
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "common", "enduser", "role_enabled")
+            .orElse(false);
     this.scopeEnabled =
-        instrumentationConfig.getBoolean(
-            "otel.instrumentation.common.enduser.scope.enabled", false);
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "common", "enduser", "scope_enabled")
+            .orElse(false);
   }
 
   /**
