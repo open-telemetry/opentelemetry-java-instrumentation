@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.w
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -36,7 +37,17 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
          * If any functionality not related to enduser attributes is added to this module,
          * then this check will need to move elsewhere to only guard the enduser attributes logic.
          */
-        && AgentCommonConfig.get().getEnduserConfig().isAnyEnabled();
+        && isAnyEnduserAttributeEnabled();
+  }
+
+  private static boolean isAnyEnduserAttributeEnabled() {
+    var otel = GlobalOpenTelemetry.get();
+    return DeclarativeConfigUtil.getBoolean(otel, "general", "enduser", "id", "enabled")
+            .orElse(false)
+        || DeclarativeConfigUtil.getBoolean(otel, "general", "enduser", "role", "enabled")
+            .orElse(false)
+        || DeclarativeConfigUtil.getBoolean(otel, "general", "enduser", "scope", "enabled")
+            .orElse(false);
   }
 
   @Override

@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public class EnduserAttributesCapturerSingletons {
@@ -22,9 +23,18 @@ public class EnduserAttributesCapturerSingletons {
 
   private static EnduserAttributesCapturer createEndUserAttributesCapturerFromConfig() {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
-    capturer.setEnduserIdEnabled(AgentCommonConfig.get().getEnduserConfig().isIdEnabled());
-    capturer.setEnduserRoleEnabled(AgentCommonConfig.get().getEnduserConfig().isRoleEnabled());
-    capturer.setEnduserScopeEnabled(AgentCommonConfig.get().getEnduserConfig().isScopeEnabled());
+    capturer.setEnduserIdEnabled(
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "general", "enduser", "id", "enabled")
+            .orElse(false));
+    capturer.setEnduserRoleEnabled(
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "general", "enduser", "role", "enabled")
+            .orElse(false));
+    capturer.setEnduserScopeEnabled(
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "general", "enduser", "scope", "enabled")
+            .orElse(false));
 
     String rolePrefix =
         AgentInstrumentationConfig.get()
