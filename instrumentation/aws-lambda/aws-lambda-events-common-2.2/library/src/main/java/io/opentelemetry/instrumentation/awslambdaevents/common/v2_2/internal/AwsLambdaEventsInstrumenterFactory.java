@@ -38,7 +38,7 @@ public final class AwsLambdaEventsInstrumenterFactory {
   private static Set<String> getKnownHttpMethods(OpenTelemetry openTelemetry) {
     return DeclarativeConfigUtil.getList(openTelemetry, "general", "http", "known_methods")
         .map(HashSet::new)
-        .orElse(HttpConstants.KNOWN_METHODS);
+        .orElse(new HashSet<>(HttpConstants.KNOWN_METHODS));
   }
 
   private static String spanName(AwsLambdaRequest input) {

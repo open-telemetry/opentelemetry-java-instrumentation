@@ -28,7 +28,7 @@ public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>
     return DeclarativeConfigUtil.getList(
             GlobalOpenTelemetry.get(), "general", "http", "known_methods")
         .map(HashSet::new)
-        .orElse(HttpConstants.KNOWN_METHODS);
+        .orElse(new HashSet<>(HttpConstants.KNOWN_METHODS));
   }
 
   @Override
