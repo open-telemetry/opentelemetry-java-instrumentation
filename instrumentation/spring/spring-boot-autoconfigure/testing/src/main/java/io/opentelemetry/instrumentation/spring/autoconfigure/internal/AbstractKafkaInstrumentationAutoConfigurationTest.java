@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -13,6 +12,7 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
@@ -20,17 +20,19 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
 
+  public static final ConfigPropertiesBridge EMPTY_INSTRUMENTATION_CONFIG =
+      new ConfigPropertiesBridge(
+          DefaultConfigProperties.createFromMap(Collections.emptyMap()),
+          ConfigProvider.noop(),
+          false);
+
   protected abstract AutoConfigurations autoConfigurations();
 
   protected abstract void factoryTestAssertion(AssertableApplicationContext context);
 
   protected final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withBean(
-              InstrumentationConfig.class,
-              () ->
-                  new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(emptyMap()), ConfigProvider.noop()))
+          .withBean(InstrumentationConfig.class, () -> EMPTY_INSTRUMENTATION_CONFIG)
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);
 

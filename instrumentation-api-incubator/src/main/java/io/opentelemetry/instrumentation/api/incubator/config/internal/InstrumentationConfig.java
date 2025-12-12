@@ -119,7 +119,6 @@ public interface InstrumentationConfig {
    * Returns a {@link DeclarativeConfigProperties} for the given node name, which is usually an
    * instrumentation name. If declarative configuration is not used, a bridge to ConfigProperties is
    *
-   *
    * <p>Declarative configuration is used to configure instrumentation properties in a declarative
    * way, such as through YAML or JSON files.
    *
