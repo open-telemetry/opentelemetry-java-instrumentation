@@ -9,9 +9,11 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.internal.BulkGetFuture;
 
 public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<?>>
@@ -24,11 +26,27 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
   @Nullable
   public static BulkGetCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+    MemcachedNode handlingNode = getNodeFromConnection(connection);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, handlingNode);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
     return new BulkGetCompletionListener(parentContext, request);
+  }
+
+  @Nullable
+  private static MemcachedNode getNodeFromConnection(MemcachedConnection connection) {
+    try {
+      Collection<MemcachedNode> allNodes = connection.getLocator().getAll();
+      if (allNodes.size() == 1) {
+        return allNodes.iterator().next();
+      }
+      // For multiple nodes, return null - bulk operations span multiple servers
+      // and we cannot accurately attribute to a single server
+      return null;
+    } catch (RuntimeException e) {
+      return null;
+    }
   }
 
   @Override
