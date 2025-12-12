@@ -132,6 +132,11 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       return "otel." + translatedPath;
     }
 
+    // Handle jmx prefix specially: otel.jmx.* instead of otel.instrumentation.jmx.*
+    if (translatedPath.startsWith("jmx.")) {
+      return "otel." + translatedPath;
+    }
+
     // Standard conversion: otel.instrumentation. + kebab-case path
     return "otel.instrumentation." + translatedPath;
   }

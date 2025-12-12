@@ -165,6 +165,7 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    // TODO remove this method when library instrumentation reads it from declarative configuration
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);

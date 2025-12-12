@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 
 /** Installs the {@link JarAnalyzer}. */
@@ -19,10 +18,14 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
-
     boolean enabled =
-        config.getBoolean("otel.instrumentation.runtime-telemetry.package-emitter.enabled", false);
+        DeclarativeConfigUtil.getBoolean(
+                autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(),
+                "java",
+                "runtime_telemetry",
+                "package_emitter",
+                "enabled")
+            .orElse(false);
     if (!enabled) {
       return;
     }
@@ -31,7 +34,13 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
       return;
     }
     int jarsPerSecond =
-        config.getInt("otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second", 10);
+        DeclarativeConfigUtil.getInt(
+                autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(),
+                "java",
+                "runtime_telemetry",
+                "package_emitter",
+                "jars_per_second")
+            .orElse(10);
     JarAnalyzer jarAnalyzer =
         JarAnalyzer.create(autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(), jarsPerSecond);
     inst.addTransformer(jarAnalyzer);

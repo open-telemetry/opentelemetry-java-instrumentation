@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -34,6 +35,32 @@ public final class DeclarativeConfigUtil {
   public static Optional<Integer> getInt(OpenTelemetry openTelemetry, String... propertyPath) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
     return Optional.ofNullable(node != null ? node.getInt(leaf(propertyPath)) : null);
+  }
+
+  public static Optional<Long> getLong(OpenTelemetry openTelemetry, String... propertyPath) {
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
+    return Optional.ofNullable(node != null ? node.getLong(leaf(propertyPath)) : null);
+  }
+
+  public static Optional<Duration> getDuration(OpenTelemetry openTelemetry, String... propertyPath) {
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
+    if (node == null) {
+      return Optional.empty();
+    }
+    String leaf = leaf(propertyPath);
+
+    // First try as Long (milliseconds) - typical for YAML config
+    Long millis = node.getLong(leaf);
+    if (millis != null) {
+      return Optional.of(Duration.ofMillis(millis));
+    }
+
+    // Fall back to String parsing - typical for system properties like "1m", "10s"
+    String value = node.getString(leaf);
+    if (value == null || value.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(DurationParser.parseDuration(value));
   }
 
   public static Optional<List<String>> getList(

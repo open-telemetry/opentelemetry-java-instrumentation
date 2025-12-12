@@ -81,6 +81,7 @@ public final class OpenTelemetryInstaller {
       EarlyInitAgentConfig earlyConfig, ConfigProvider configProvider) {
     return new DeclarativeConfigPropertiesBridgeBuilder()
         .addMapping("otel.javaagent", "agent")
+        .addMapping("otel.jmx", "otel.instrumentation.jmx")
         .addOverride("otel.instrumentation.common.default-enabled", defaultEnabled(configProvider))
         // these properties are used to initialize the SDK before the configuration file
         // is loaded for consistency, we pass them to the bridge, so that they can be read

@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
@@ -17,6 +19,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,17 +31,28 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+    OpenTelemetry openTelemetry = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
-    if (config.getBoolean("otel.jmx.enabled", true)) {
+    boolean defaultEnabled =
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "common", "default_enabled")
+            .orElse(true);
+    boolean enabled =
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "jmx", "enabled")
+            .orElse(defaultEnabled);
+    if (enabled) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(config));
+              .beanDiscoveryDelay(beanDiscoveryDelay(openTelemetry, config));
 
-      config.getList("otel.jmx.config").stream()
+      DeclarativeConfigUtil.getList(openTelemetry, "java", "jmx", "config")
+          .orElse(Collections.emptyList())
+          .stream()
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
-      config.getList("otel.jmx.target.system").forEach(target -> addClasspathRules(target, jmx));
+      DeclarativeConfigUtil.getList(openTelemetry, "java", "jmx", "target_system")
+          .orElse(Collections.emptyList())
+          .forEach(target -> addClasspathRules(target, jmx));
 
       jmx.build().start();
     }
@@ -66,8 +80,11 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static Duration beanDiscoveryDelay(ConfigProperties configProperties) {
-    Duration discoveryDelay = configProperties.getDuration("otel.jmx.discovery.delay");
+  private static Duration beanDiscoveryDelay(
+      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
+    Duration discoveryDelay =
+        DeclarativeConfigUtil.getDuration(openTelemetry, "java", "jmx", "discovery_delay")
+            .orElse(null);
     if (discoveryDelay != null) {
       return discoveryDelay;
     }
