@@ -5,14 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webflux;
 
+import static io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractKafkaInstrumentationAutoConfigurationTest.EMPTY_INSTRUMENTATION_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -25,10 +22,7 @@ class WebClientBeanPostProcessorTest {
 
   static {
     beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
-    beanFactory.registerSingleton(
-        "configProperties",
-        new ConfigPropertiesBridge(
-            DefaultConfigProperties.createFromMap(Collections.emptyMap()), ConfigProvider.noop()));
+    beanFactory.registerSingleton("instrumentationConfig", EMPTY_INSTRUMENTATION_CONFIG);
   }
 
   @Test
