@@ -88,9 +88,15 @@ develocity {
 }
 
 buildCache {
-  remote(HttpBuildCache::class) {
+  remote<HttpBuildCache> {
     url = uri("$develocityServer/cache/")
     isPush = isCI && develocityAccessKey.isNotEmpty()
+    if (develocityAccessKey.isNotEmpty()) {
+      credentials {
+        username = ""
+        password = develocityAccessKey
+      }
+    }
   }
 }
 
