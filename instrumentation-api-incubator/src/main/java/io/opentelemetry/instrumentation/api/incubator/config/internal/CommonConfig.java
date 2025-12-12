@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -175,9 +176,8 @@ public final class CommonConfig {
       ValueProvider<T> getFromConfigProvider,
       T defaultValue,
       Supplier<T> fallback) {
-    ConfigProvider configProvider = config.getConfigProvider();
-    if (config.isDeclarative() && configProvider != null) {
-      T value = getFromConfigProvider.get(configProvider);
+    if (config.isDeclarative()) {
+      T value = getFromConfigProvider.get(config.getConfigProvider());
       return value != null ? value : defaultValue;
     }
     // fallback doesn't return null, so we can safely call it

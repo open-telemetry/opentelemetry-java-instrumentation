@@ -19,6 +19,7 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
@@ -78,7 +79,6 @@ import net.bytebuddy.dynamic.VisibilityBridgeStrategy;
 import net.bytebuddy.dynamic.scaffold.InstrumentedType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
-import org.jetbrains.annotations.NotNull;
 
 public class AgentInstaller {
 
@@ -171,7 +171,7 @@ public class AgentInstaller {
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
-        getConfigPropertiesBridge(autoConfiguredSdk, sdkConfig));
+        getInstrumentationConfig(autoConfiguredSdk, sdkConfig));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
@@ -230,18 +230,18 @@ public class AgentInstaller {
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
   }
 
-  @NotNull
-  private static ConfigPropertiesBridge getConfigPropertiesBridge(
+  private static InstrumentationConfig getInstrumentationConfig(
       AutoConfiguredOpenTelemetrySdk autoConfiguredSdk, ConfigProperties sdkConfig) {
-    ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
+    ConfigProvider originalProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
 
-    return new ConfigPropertiesBridge(
-        sdkConfig,
-        configProvider != null
-            ? configProvider
+    boolean isDeclarativeConfig = originalProvider != null;
+    // use the bridge only if the configuration is not already declarative
+    ConfigProvider provider =
+        isDeclarativeConfig
+            ? originalProvider
             : ConfigPropertiesDeclarativeConfigProperties.create(
-                AutoConfigureUtil.getConfig(autoConfiguredSdk)),
-        configProvider != null);
+                AutoConfigureUtil.getConfig(autoConfiguredSdk));
+    return new ConfigPropertiesBridge(sdkConfig, provider, isDeclarativeConfig);
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
