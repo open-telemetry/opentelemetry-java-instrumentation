@@ -11,6 +11,7 @@ import static java.util.logging.Level.WARNING;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
@@ -374,7 +375,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
     // for instrumentations, so we need to handle both declarative and non-declarative configs here
     String value =
-        ConfigProviderUtil.isDeclarativeConfig(openTelemetry)
+        openTelemetry instanceof ExtendedOpenTelemetry
             ? InstrumentationConfigUtil.getOrNull(
                 ConfigProviderUtil.getConfigProvider(GlobalOpenTelemetry.get()),
                 config -> config.getString("span_suppression_strategy/development"),

@@ -23,13 +23,8 @@ public class ConfigProviderUtil {
         }
       };
 
-  /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
-  public static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
-    return openTelemetry instanceof ExtendedOpenTelemetry;
-  }
-
   public static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
-    if (isDeclarativeConfig(openTelemetry)) {
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
       return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
     }
     return BRIDGED_CONFIG_PROVIDER;
