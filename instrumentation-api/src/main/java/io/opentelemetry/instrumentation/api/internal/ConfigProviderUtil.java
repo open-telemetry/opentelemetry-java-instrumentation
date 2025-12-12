@@ -43,6 +43,10 @@ public class ConfigProviderUtil {
     return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
+  /**
+   * Returns the ConfigProvider from declarative config if supported, otherwise returns a bridged
+   * ConfigProvider that reads from system properties or environment variables.
+   */
   public static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
     if (isDeclarativeConfig(openTelemetry)) {
       return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
