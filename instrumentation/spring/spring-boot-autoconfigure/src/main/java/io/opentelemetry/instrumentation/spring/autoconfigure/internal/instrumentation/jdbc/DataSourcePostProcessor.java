@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -61,7 +60,13 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
       JdbcTelemetryBuilder builder =
           JdbcTelemetry.builder(openTelemetry)
               .setStatementSanitizationEnabled(
-                  InstrumentationConfigUtil.isStatementSanitizationEnabled(openTelemetry, "jdbc"))
+                  DeclarativeConfigUtil.getBoolean(
+                          openTelemetry, "jdbc", "statement_sanitizer", "enabled")
+                      .orElseGet(
+                          () ->
+                              DeclarativeConfigUtil.getBoolean(
+                                      openTelemetry, "common", "db_statement_sanitizer", "enabled")
+                                  .orElse(true)))
               .setCaptureQueryParameters(
                   DeclarativeConfigUtil.getBoolean(
                           openTelemetry, "jdbc", "capture_query_parameters")

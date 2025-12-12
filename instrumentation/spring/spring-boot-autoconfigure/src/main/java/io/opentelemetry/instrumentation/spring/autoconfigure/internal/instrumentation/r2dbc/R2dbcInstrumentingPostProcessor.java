@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.r2dbc;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.springframework.aop.scope.ScopedProxyUtils;
@@ -30,7 +30,13 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
       OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
       return R2dbcTelemetry.builder(openTelemetry)
           .setStatementSanitizationEnabled(
-              InstrumentationConfigUtil.isStatementSanitizationEnabled(openTelemetry, "r2dbc"))
+              DeclarativeConfigUtil.getBoolean(
+                      openTelemetry, "r2dbc", "statement_sanitizer", "enabled")
+                  .orElseGet(
+                      () ->
+                          DeclarativeConfigUtil.getBoolean(
+                                  openTelemetry, "common", "db_statement_sanitizer", "enabled")
+                              .orElse(true)))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }

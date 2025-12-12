@@ -6,9 +6,10 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webflux;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -28,19 +29,17 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
   }
 
   static SpringWebfluxClientTelemetry getWebfluxClientTelemetry(OpenTelemetry openTelemetry) {
-    return InstrumentationConfigUtil.configureClientBuilder(
-            openTelemetry,
-            SpringWebfluxClientTelemetry.builder(openTelemetry),
-            SpringWebfluxBuilderUtil.getClientBuilderExtractor())
-        .build();
+    SpringWebfluxClientTelemetryBuilder builder =
+        SpringWebfluxClientTelemetry.builder(openTelemetry);
+    SpringWebfluxBuilderUtil.getClientBuilderExtractor().apply(builder).configure(openTelemetry);
+    return builder.build();
   }
 
   static SpringWebfluxServerTelemetry getWebfluxServerTelemetry(OpenTelemetry openTelemetry) {
-    return InstrumentationConfigUtil.configureServerBuilder(
-            openTelemetry,
-            SpringWebfluxServerTelemetry.builder(openTelemetry),
-            SpringWebfluxBuilderUtil.getServerBuilderExtractor())
-        .build();
+    SpringWebfluxServerTelemetryBuilder builder =
+        SpringWebfluxServerTelemetry.builder(openTelemetry);
+    SpringWebfluxBuilderUtil.getServerBuilderExtractor().apply(builder).configure(openTelemetry);
+    return builder.build();
   }
 
   @Override
