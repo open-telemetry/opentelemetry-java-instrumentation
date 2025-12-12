@@ -26,7 +26,8 @@ class RestClientInstrumentationAutoConfigurationTest {
               InstrumentationConfig.class,
               () ->
                   new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap()),
+                      OpenTelemetry.noop()))
           .withBean(RestClient.class, RestClient::create)
           .withConfiguration(
               AutoConfigurations.of(RestClientInstrumentationAutoConfiguration.class));

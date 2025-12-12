@@ -12,10 +12,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 /**
@@ -57,12 +58,8 @@ public final class ConfigPropertiesUtil {
    * otherwise falls back to system properties and environment variables.
    */
   public static Optional<Boolean> getBoolean(OpenTelemetry openTelemetry, String... propertyName) {
-    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
-    if (node != null) {
-      return Optional.ofNullable(node.getBoolean(leaf(propertyName)));
-    }
-    String strValue = getString(toSystemProperty(propertyName));
-    return strValue == null ? Optional.empty() : Optional.of(Boolean.parseBoolean(strValue));
+    return Optional.ofNullable(
+        getValue(openTelemetry, propertyName, DeclarativeConfigProperties::getBoolean));
   }
 
   /**
@@ -98,11 +95,25 @@ public final class ConfigPropertiesUtil {
    * otherwise falls back to system properties and environment variables.
    */
   public static Optional<String> getString(OpenTelemetry openTelemetry, String... propertyName) {
-    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
-    if (node != null) {
-      return Optional.ofNullable(node.getString(leaf(propertyName)));
+    return Optional.ofNullable(
+        getValue(openTelemetry, propertyName, DeclarativeConfigProperties::getString));
+  }
+
+  private static <T> T getValue(
+      OpenTelemetry openTelemetry,
+      String[] propertyName,
+      BiFunction<DeclarativeConfigProperties, String, T> getter) {
+    DeclarativeConfigProperties instrumentationConfig =
+        getConfigProvider(openTelemetry).getInstrumentationConfig();
+    DeclarativeConfigProperties node =
+        instrumentationConfig == null
+            ? empty()
+            : instrumentationConfig.getStructured("java", empty());
+    // last part is the leaf property
+    for (int i = 0; i < propertyName.length - 1; i++) {
+      node = node.getStructured(propertyName[i], empty());
     }
-    return Optional.ofNullable(getString(toSystemProperty(propertyName)));
+    return getter.apply(node, propertyName[propertyName.length - 1]);
   }
 
   /**
@@ -110,13 +121,11 @@ public final class ConfigPropertiesUtil {
    * available, otherwise falls back to system properties and environment variables.
    */
   public static List<String> getList(OpenTelemetry openTelemetry, String... propertyName) {
-    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
-    if (node != null) {
-      return node.getScalarList(leaf(propertyName), String.class, emptyList());
-    }
-    return Optional.ofNullable(getString(toSystemProperty(propertyName)))
-        .map(value -> filterBlanksAndNulls(value.split(",")))
-        .orElse(emptyList());
+    return getValue(
+        openTelemetry,
+        propertyName,
+        (declarativeConfigProperties, name) ->
+            declarativeConfigProperties.getScalarList(name, String.class, emptyList()));
   }
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
@@ -124,52 +133,27 @@ public final class ConfigPropertiesUtil {
     return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
-  private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
-  }
-
-  private static String leaf(String[] propertyName) {
-    return propertyName[propertyName.length - 1];
-  }
-
-  @Nullable
-  private static DeclarativeConfigProperties getDeclarativeConfigNode(
-      OpenTelemetry openTelemetry, String... propertyName) {
+  private static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
     if (isDeclarativeConfig(openTelemetry)) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
-      ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();
-      return getConfigProperties(configProvider, propertyName);
+      return extendedOpenTelemetry.getConfigProvider();
     }
-    return null;
+    return new SystemPropertiesConfigProvider();
   }
 
-  /** Returns the DeclarativeConfigProperties node for the given property name parts. */
-  public static DeclarativeConfigProperties getConfigProperties(
-      ConfigProvider configProvider, String[] propertyName) {
-    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
-    if (instrumentationConfig == null) {
-      return empty();
-    }
-    DeclarativeConfigProperties node = instrumentationConfig.getStructured("java", empty());
-    // last part is the leaf property
-    for (int i = 0; i < propertyName.length - 1; i++) {
-      node = node.getStructured(propertyName[i], empty());
-    }
-    return node;
+  public static String toSystemProperty(String[] nodes) {
+    return toSystemProperty(new ArrayList<>(Arrays.asList(nodes)));
   }
 
-  public static String toSystemProperty(String[] propertyName) {
-    for (int i = 0; i < propertyName.length; i++) {
-      String node = propertyName[i];
+  public static String toSystemProperty(List<String> nodes) {
+    for (int i = 0; i < nodes.size(); i++) {
+      String node = nodes.get(i);
       if (node.endsWith("/development")) {
         String prefix = node.contains("experimental") ? "" : "experimental.";
-        propertyName[i] = prefix + node.substring(0, node.length() - 12);
+        nodes.set(i, prefix + node.substring(0, node.length() - 12));
       }
     }
-    return "otel.instrumentation." + String.join(".", propertyName).replace('_', '-');
+    return "otel.instrumentation." + String.join(".", nodes).replace('_', '-');
   }
 
   private ConfigPropertiesUtil() {}

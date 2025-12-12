@@ -26,7 +26,8 @@ class WebClientBeanPostProcessorTest {
     beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
     beanFactory.registerSingleton(
         "configProperties",
-        new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(Collections.emptyMap())));
+        new ConfigPropertiesBridge(
+            DefaultConfigProperties.createFromMap(Collections.emptyMap()), OpenTelemetry.noop()));
   }
 
   @Test

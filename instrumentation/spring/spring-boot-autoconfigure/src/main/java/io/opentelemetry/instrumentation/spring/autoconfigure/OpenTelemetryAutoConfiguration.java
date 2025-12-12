@@ -131,8 +131,9 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
-        return new ConfigPropertiesBridge(properties);
+      public InstrumentationConfig instrumentationConfig(
+          ConfigProperties properties, OpenTelemetry openTelemetry) {
+        return new ConfigPropertiesBridge(properties, openTelemetry);
       }
 
       /**
@@ -190,8 +191,8 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       public InstrumentationConfig instrumentationConfig(
-          ConfigProperties properties, ConfigProvider configProvider) {
-        return new ConfigPropertiesBridge(properties, configProvider);
+          ConfigProperties properties, OpenTelemetry openTelemetry, ConfigProvider configProvider) {
+        return new ConfigPropertiesBridge(properties, openTelemetry, configProvider);
       }
 
       @Bean
@@ -231,8 +232,9 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
-      return new ConfigPropertiesBridge(properties, null);
+    public InstrumentationConfig instrumentationConfig(
+        ConfigProperties properties, OpenTelemetry openTelemetry) {
+      return new ConfigPropertiesBridge(properties, openTelemetry);
     }
 
     @Configuration
@@ -267,8 +269,9 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean({InstrumentationConfig.class})
   static class FallbackInstrumentationConfig {
     @Bean
-    public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
-      return new ConfigPropertiesBridge(properties, null);
+    public InstrumentationConfig instrumentationConfig(
+        ConfigProperties properties, OpenTelemetry openTelemetry) {
+      return new ConfigPropertiesBridge(properties, openTelemetry);
     }
   }
 

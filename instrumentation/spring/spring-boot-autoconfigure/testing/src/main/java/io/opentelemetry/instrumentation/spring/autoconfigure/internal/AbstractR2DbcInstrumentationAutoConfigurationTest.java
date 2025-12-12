@@ -31,7 +31,8 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
               InstrumentationConfig.class,
               () ->
                   new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap()),
+                      OpenTelemetry.noop()))
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, testing()::getOpenTelemetry);
 

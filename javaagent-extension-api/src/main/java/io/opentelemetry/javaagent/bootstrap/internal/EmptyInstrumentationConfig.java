@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
@@ -76,5 +77,10 @@ final class EmptyInstrumentationConfig implements InstrumentationConfig {
   @Override
   public ConfigProvider getConfigProvider() {
     return null;
+  }
+
+  @Override
+  public OpenTelemetry getOpenTelemetry() {
+    return OpenTelemetry.noop();
   }
 }

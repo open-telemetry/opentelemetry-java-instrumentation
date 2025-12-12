@@ -28,7 +28,8 @@ class SpringWebMvcInstrumentation6AutoConfigurationTest {
               InstrumentationConfig.class,
               () ->
                   new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap()),
+                      OpenTelemetry.noop()))
           .withConfiguration(
               AutoConfigurations.of(SpringWebMvc6InstrumentationAutoConfiguration.class));
 

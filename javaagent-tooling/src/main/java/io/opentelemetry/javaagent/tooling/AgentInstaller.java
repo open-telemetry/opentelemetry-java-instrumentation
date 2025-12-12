@@ -169,7 +169,9 @@ public class AgentInstaller {
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
         new ConfigPropertiesBridge(
-            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
+            sdkConfig,
+            AutoConfigureUtil.getConfigProvider(autoConfiguredSdk),
+            autoConfiguredSdk.getOpenTelemetrySdk()));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);

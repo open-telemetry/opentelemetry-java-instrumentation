@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -45,10 +46,16 @@ class ConfigPropertiesBridgeTest {
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(emptyMap());
 
     return Stream.of(
-        Arguments.of("config properties", new ConfigPropertiesBridge(configProperties, null)),
+        Arguments.of(
+            "config properties",
+            new ConfigPropertiesBridge(
+                configProperties, null, OpenTelemetry.noop())),
         Arguments.of(
             "declarative config",
-            new ConfigPropertiesBridge(configProperties, SdkConfigProvider.create(emptyModel))));
+            new ConfigPropertiesBridge(
+                configProperties,
+                SdkConfigProvider.create(emptyModel),
+                OpenTelemetry.noop())));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -95,10 +102,16 @@ class ConfigPropertiesBridgeTest {
         DefaultConfigProperties.createFromMap(getProperties());
 
     return Stream.of(
-        Arguments.of("config properties", new ConfigPropertiesBridge(configProperties, null)),
+        Arguments.of(
+            "config properties",
+            new ConfigPropertiesBridge(
+                configProperties, null, OpenTelemetry.noop())),
         Arguments.of(
             "declarative config",
-            new ConfigPropertiesBridge(configProperties, SdkConfigProvider.create(emptyModel))));
+            new ConfigPropertiesBridge(
+                configProperties,
+                SdkConfigProvider.create(emptyModel),
+                OpenTelemetry.noop())));
   }
 
   private static Map<String, String> getProperties() {

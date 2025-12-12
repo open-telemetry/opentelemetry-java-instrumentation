@@ -58,7 +58,8 @@ class SchedulingInstrumentationAspectTest {
         newAspect(
             testing.getOpenTelemetry(),
             new ConfigPropertiesBridge(
-                DefaultConfigProperties.createFromMap(Collections.emptyMap())));
+                DefaultConfigProperties.createFromMap(Collections.emptyMap()),
+                OpenTelemetry.noop()));
     factory.addAspect(aspect);
 
     schedulingTester = factory.getProxy();

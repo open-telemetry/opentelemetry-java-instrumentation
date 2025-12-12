@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
@@ -28,15 +29,19 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
+  private final OpenTelemetry openTelemetry;
   @Nullable private final ConfigProvider configProvider;
 
-  public ConfigPropertiesBridge(ConfigProperties configProperties) {
-    this(configProperties, null);
+  public ConfigPropertiesBridge(ConfigProperties configProperties, OpenTelemetry openTelemetry) {
+    this(configProperties, openTelemetry, null);
   }
 
   public ConfigPropertiesBridge(
-      ConfigProperties configProperties, @Nullable ConfigProvider configProvider) {
+      ConfigProperties configProperties,
+      OpenTelemetry openTelemetry,
+      @Nullable ConfigProvider configProvider) {
     this.configProperties = configProperties;
+    this.openTelemetry = openTelemetry;
     this.configProvider = configProvider;
   }
 
@@ -142,5 +147,10 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Override
   public ConfigProvider getConfigProvider() {
     return configProvider;
+  }
+
+  @Override
+  public OpenTelemetry getOpenTelemetry() {
+    return openTelemetry;
   }
 }

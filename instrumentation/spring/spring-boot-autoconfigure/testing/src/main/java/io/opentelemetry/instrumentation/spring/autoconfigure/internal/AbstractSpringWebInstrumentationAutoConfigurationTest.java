@@ -29,7 +29,8 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
               InstrumentationConfig.class,
               () ->
                   new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap()),
+                      OpenTelemetry.noop()))
           .withBean(RestTemplate.class, RestTemplate::new)
           .withConfiguration(autoConfigurations());
 

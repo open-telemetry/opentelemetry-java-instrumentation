@@ -34,7 +34,9 @@ public abstract class AbstractJdbcInstrumentationAutoConfigurationTest {
       new ApplicationContextRunner()
           .withBean(
               InstrumentationConfig.class,
-              () -> new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(emptyMap())))
+              () ->
+                  new ConfigPropertiesBridge(
+                      DefaultConfigProperties.createFromMap(emptyMap()), OpenTelemetry.noop()))
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, testing()::getOpenTelemetry);
 

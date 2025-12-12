@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.time.Duration;
@@ -136,4 +137,6 @@ public interface InstrumentationConfig {
    */
   @Nullable
   ConfigProvider getConfigProvider();
+
+  OpenTelemetry getOpenTelemetry();
 }

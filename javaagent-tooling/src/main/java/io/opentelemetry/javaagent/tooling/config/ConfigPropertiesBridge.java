@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
@@ -23,11 +24,15 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
   @Nullable private final ConfigProvider configProvider;
+  private final OpenTelemetry openTelemetry;
 
   public ConfigPropertiesBridge(
-      ConfigProperties configProperties, @Nullable ConfigProvider configProvider) {
+      ConfigProperties configProperties,
+      @Nullable ConfigProvider configProvider,
+      OpenTelemetry openTelemetry) {
     this.configProperties = configProperties;
     this.configProvider = configProvider;
+    this.openTelemetry = openTelemetry;
   }
 
   @Nullable
@@ -132,5 +137,10 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Override
   public ConfigProvider getConfigProvider() {
     return configProvider;
+  }
+
+  @Override
+  public OpenTelemetry getOpenTelemetry() {
+    return openTelemetry;
   }
 }
