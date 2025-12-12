@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
@@ -24,6 +25,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringOpenTelemetrySdk;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroComponentProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroVersionResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.ResourceCustomizerProvider;
@@ -124,15 +126,25 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public OpenTelemetry openTelemetry(
-          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+      public OpenTelemetrySdk openTelemetry(
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
+          ConfigProvider configProvider) {
         logStart();
-        return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+        OpenTelemetrySdk sdk = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+        // Wrap the SDK to provide ConfigProvider for DeclarativeConfigUtil
+        // SpringOpenTelemetrySdk extends OpenTelemetrySdk and implements ExtendedOpenTelemetry
+        return SpringOpenTelemetrySdk.create(sdk, configProvider);
       }
 
       @Bean
-      public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
-        return new ConfigPropertiesBridge(properties);
+      public ConfigProvider configProvider(ConfigProperties properties) {
+        return ConfigPropertiesBackedConfigProvider.create(properties);
+      }
+
+      @Bean
+      public InstrumentationConfig instrumentationConfig(
+          ConfigProperties properties, ConfigProvider configProvider) {
+        return new ConfigPropertiesBridge(properties, configProvider);
       }
 
       /**

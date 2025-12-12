@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.instrumentation.config.bridge;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -13,9 +13,8 @@ import javax.annotation.Nullable;
 /**
  * A {@link ConfigProvider} implementation backed by {@link ConfigProperties}.
  *
- * <p>This is used when the user configured the agent with system properties (not YAML), so we
- * create a ConfigProvider that provides access to the configuration through the declarative config
- * API.
+ * <p>This is used when the user configured with system properties (not YAML), so we create a
+ * ConfigProvider that provides access to the configuration through the declarative config API.
  *
  * <p>This allows instrumentations to always use {@code ExtendedOpenTelemetry.getConfigProvider()}
  * regardless of whether the user started with system properties or YAML.

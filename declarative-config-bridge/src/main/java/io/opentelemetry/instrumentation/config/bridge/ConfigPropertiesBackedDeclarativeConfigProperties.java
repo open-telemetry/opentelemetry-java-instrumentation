@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.instrumentation.config.bridge;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
@@ -20,11 +20,10 @@ import javax.annotation.Nullable;
  * Implementation of {@link DeclarativeConfigProperties} backed by {@link ConfigProperties}.
  *
  * <p>This allows instrumentations to use the declarative config API even when the user configured
- * the agent with system properties (not YAML). It uses a dynamic bridge approach that tracks the
- * navigation path and only resolves to system properties at the leaf node when a value is actually
- * requested.
+ * with system properties (not YAML). It uses a dynamic bridge approach that tracks the navigation
+ * path and only resolves to system properties at the leaf node when a value is actually requested.
  */
-final class ConfigPropertiesBackedDeclarativeConfigProperties
+public final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
   private final ConfigProperties configProperties;
@@ -84,7 +83,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
    * @param configProperties the ConfigProperties to read from
    * @return a new DeclarativeConfigProperties instance
    */
-  static DeclarativeConfigProperties createInstrumentationConfig(
+  public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
         configProperties, Collections.emptyList());
