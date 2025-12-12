@@ -10,6 +10,7 @@ import static java.util.Collections.emptyIterator;
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
@@ -17,7 +18,11 @@ enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
 
   @Override
   public Iterable<String> keys(GrpcRequest request) {
-    return request.getMetadata().keys();
+    // Filter out HTTP/2 pseudo-headers (starting with ':') as they cannot be
+    // accessed via Metadata.Key.of() and would cause IllegalArgumentException
+    return request.getMetadata().keys().stream()
+        .filter(key -> !key.startsWith(":"))
+        .collect(Collectors.toList());
   }
 
   @Override
