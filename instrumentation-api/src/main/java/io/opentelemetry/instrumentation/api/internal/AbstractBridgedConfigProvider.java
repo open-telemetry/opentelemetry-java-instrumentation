@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public abstract class AbstractSystemPropertiesConfigProvider implements ConfigProvider {
+public abstract class AbstractBridgedConfigProvider implements ConfigProvider {
   @Nullable
   @Override
   public DeclarativeConfigProperties getInstrumentationConfig() {

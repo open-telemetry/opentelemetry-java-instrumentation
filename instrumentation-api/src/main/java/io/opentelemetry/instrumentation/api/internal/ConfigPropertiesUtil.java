@@ -138,7 +138,7 @@ public final class ConfigPropertiesUtil {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       return extendedOpenTelemetry.getConfigProvider();
     }
-    return new AbstractSystemPropertiesConfigProvider() {
+    return new AbstractBridgedConfigProvider() {
       @Override
       protected AbstractSystemPropertiesDeclarativeConfigProperties getProperties(String name) {
         return new SystemPropertiesDeclarativeConfigProperties(name, null);

@@ -130,8 +130,8 @@ public interface InstrumentationConfig {
   DeclarativeConfigProperties getDeclarativeConfig(String node);
 
   /**
-   * @return the {@link ConfigProvider}, which is a bridge to ConfigProperties if declarative
-   *     configuration is not used
+   * Returns the {@link ConfigProvider}, which is a bridge to ConfigProperties if declarative
+   * configuration is not used
    */
   ConfigProvider getConfigProvider();
 }

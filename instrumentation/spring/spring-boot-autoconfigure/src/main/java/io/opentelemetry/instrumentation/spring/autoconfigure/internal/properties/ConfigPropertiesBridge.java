@@ -125,7 +125,7 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
     DeclarativeConfigProperties config =
-        InstrumentationConfigUtil.javaInstrumentationConfig(requireNonNull(configProvider), node);
+        InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
     if (config == null) {
       // there is no declarative config for this node
       return empty();
@@ -133,7 +133,6 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
     return config;
   }
 
-  @Nullable
   @Override
   public ConfigProvider getConfigProvider() {
     return configProvider;
