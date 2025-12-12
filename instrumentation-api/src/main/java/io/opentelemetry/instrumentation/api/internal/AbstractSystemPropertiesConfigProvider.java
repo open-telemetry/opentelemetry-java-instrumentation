@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-// todo also an implementation of ConfigProvider that reads from ConfigProperties
 public abstract class AbstractSystemPropertiesConfigProvider implements ConfigProvider {
   @Nullable
   @Override
