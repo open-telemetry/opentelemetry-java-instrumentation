@@ -55,6 +55,13 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    // SOFA RPC's tracer module uses Disruptor which requires sun.misc.Unsafe.
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 configurations.named("testSofaRpcRuntimeClasspath") {
