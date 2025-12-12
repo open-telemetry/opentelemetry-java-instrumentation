@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("deprecation") // foo
 public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecordBuilder150
     implements ExtendedLogRecordBuilder {
   private static final Logger logger =
