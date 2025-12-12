@@ -12071,6 +12071,10 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
   scope:
     name: io.opentelemetry.opentelemetry-api-1.56
+- name: opentelemetry-api-1.57
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.57
 - name: opentelemetry-instrumentation-api
   source_path: instrumentation/opentelemetry-instrumentation-api
   scope:
