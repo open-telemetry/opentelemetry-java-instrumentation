@@ -117,9 +117,8 @@ public interface InstrumentationConfig {
 
   /**
    * Returns a {@link DeclarativeConfigProperties} for the given node name, which is usually an
-   * instrumentation name
+   * instrumentation name. If declarative configuration is not used, a bridge to ConfigProperties is
    *
-   * <p>Call {@link #isDeclarative()} first to check if declarative configuration is used.
    *
    * <p>Declarative configuration is used to configure instrumentation properties in a declarative
    * way, such as through YAML or JSON files.
@@ -127,7 +126,6 @@ public interface InstrumentationConfig {
    * @param node the name of the instrumentation (e.g. "log4j"), the vendor name (e.g. "google"), or
    *     "common" for common Java settings that don't apply to other languages.
    * @return the declarative configuration properties for the given node name
-   * @throws IllegalStateException if {@link #isDeclarative()} returns {@code false}
    */
   default DeclarativeConfigProperties getDeclarativeConfig(String node) {
     DeclarativeConfigProperties config =
