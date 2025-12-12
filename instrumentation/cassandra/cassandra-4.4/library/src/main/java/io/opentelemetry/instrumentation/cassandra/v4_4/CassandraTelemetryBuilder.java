@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
@@ -56,7 +57,9 @@ public class CassandraTelemetryBuilder {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
     return Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            DbClientSpanNameExtractor.create(attributesGetter, SqlDialect.CASSANDRA))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
                 .setTableAttribute(DB_CASSANDRA_TABLE)

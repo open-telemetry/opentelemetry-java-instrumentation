@@ -24,12 +24,13 @@ class MultiQuery {
   }
 
   static MultiQuery analyze(
-      Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
+      Collection<String> rawQueryTexts, SqlDialect dialect, boolean statementSanitizationEnabled) {
     UniqueValue uniqueMainIdentifier = new UniqueValue();
     UniqueValue uniqueOperation = new UniqueValue();
     Set<String> uniqueStatements = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
-      SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
+      SqlStatementInfo sanitizedStatement =
+          SqlStatementSanitizerUtil.sanitize(rawQueryText, dialect);
       String mainIdentifier = sanitizedStatement.getMainIdentifier();
       uniqueMainIdentifier.set(mainIdentifier);
       String operation = sanitizedStatement.getOperation();

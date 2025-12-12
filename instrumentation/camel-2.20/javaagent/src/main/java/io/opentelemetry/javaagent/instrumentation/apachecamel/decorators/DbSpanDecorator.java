@@ -23,6 +23,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.CASSANDRA;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -72,7 +74,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
         if (cqlObj != null) {
-          return sanitizer.sanitize(cqlObj.toString()).getFullStatement();
+          return sanitizer.sanitize(cqlObj.toString(), CASSANDRA).getFullStatement();
         }
         return null;
       case "jdbc":
