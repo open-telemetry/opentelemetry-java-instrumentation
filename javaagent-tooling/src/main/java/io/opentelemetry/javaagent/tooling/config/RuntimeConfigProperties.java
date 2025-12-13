@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.annotation.Nullable;
 
 public final class RuntimeConfigProperties {
 
-  @Nullable private static volatile ConfigProperties instance = new EmptyConfigProperties();
+  @Nullable private static volatile ConfigProperties instance = EmptyConfigProperties.INSTANCE;
 
   public static void set(ConfigProperties configProperties) {
     instance = configProperties;

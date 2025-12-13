@@ -165,8 +165,7 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       public OpenTelemetry openTelemetry(
-          OpenTelemetryConfigurationModel model,
-          ApplicationContext applicationContext) {
+          OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
         ExtendedOpenTelemetrySdk sdk =
             DeclarativeConfiguration.create(
                 model, new OpenTelemetrySdkComponentLoader(applicationContext));

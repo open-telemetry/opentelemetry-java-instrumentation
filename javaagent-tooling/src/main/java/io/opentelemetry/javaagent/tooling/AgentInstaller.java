@@ -185,7 +185,9 @@ public class AgentInstaller {
           agentBuilder = agentExtension.extend(agentBuilder);
         } catch (UnsupportedOperationException e) {
           // fall back to the deprecated method
-          agentBuilder = agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
+          @SuppressWarnings("deprecation")
+          AgentBuilder extended = agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
+          agentBuilder = extended;
         }
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
@@ -289,6 +291,8 @@ public class AgentInstaller {
                     "otel.instrumentation.experimental.span-suppression-strategy", value));
   }
 
+  // Need to call deprecated API for backward compatibility with extensions that haven't migrated
+  @SuppressWarnings("deprecation")
   private static void setBootstrapPackages(ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer :
@@ -307,6 +311,8 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
+  // Need to call deprecated API for backward compatibility with extensions that haven't migrated
+  @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
       ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
