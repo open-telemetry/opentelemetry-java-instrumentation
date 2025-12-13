@@ -15,13 +15,8 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
  */
 public class ConfigProviderUtil {
 
-  static final AbstractBridgedConfigProvider BRIDGED_CONFIG_PROVIDER =
-      new AbstractBridgedConfigProvider() {
-        @Override
-        protected BridgedDeclarativeConfigProperties getProperties(String name) {
-          return new BridgedDeclarativeConfigProperties(name, null, ConfigPropertiesUtil::getString);
-        }
-      };
+  static final BridgedConfigProvider BRIDGED_CONFIG_PROVIDER =
+      new BridgedConfigProvider(ConfigPropertiesUtil::getString);
 
   /**
    * Returns the ConfigProvider from declarative config if supported, otherwise returns a bridged

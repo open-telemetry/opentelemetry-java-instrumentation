@@ -13,9 +13,7 @@ import org.junit.jupiter.api.Test;
 class BridgedDeclarativeConfigPropertiesTest {
   @Test
   void toSystemProperty() {
-    assertThat(
-            BridgedDeclarativeConfigProperties.toSystemProperty(
-                Arrays.asList("a_b", "c", "d")))
+    assertThat(BridgedDeclarativeConfigProperties.toSystemProperty(Arrays.asList("a_b", "c", "d")))
         .isEqualTo("otel.instrumentation.a-b.c.d");
     assertThat(
             BridgedDeclarativeConfigProperties.toSystemProperty(
@@ -27,4 +25,3 @@ class BridgedDeclarativeConfigPropertiesTest {
         .isEqualTo("otel.instrumentation.a-experimental-b.c.d");
   }
 }
-

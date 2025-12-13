@@ -22,11 +22,13 @@ class ConfigPropertiesDeclarativeConfigPropertiesTest {
     when(configProperties.getString("otel.instrumentation.foo.bar")).thenReturn("baz");
     when(configProperties.getString("otel.instrumentation.experimental.foo.bar")).thenReturn("qux");
 
-    ConfigProvider configProvider = ConfigPropertiesDeclarativeConfigProperties.create(configProperties);
+    ConfigProvider configProvider =
+        ConfigPropertiesDeclarativeConfigProperties.create(configProperties);
     DeclarativeConfigProperties properties = configProvider.getInstrumentationConfig();
 
-    assertThat(properties.getStructured("java").getStructured("foo").getString("bar")).isEqualTo("baz");
-    assertThat(properties.getStructured("java").getStructured("foo/development").getString("bar")).isEqualTo("qux");
+    assertThat(properties.getStructured("java").getStructured("foo").getString("bar"))
+        .isEqualTo("baz");
+    assertThat(properties.getStructured("java").getStructured("foo/development").getString("bar"))
+        .isEqualTo("qux");
   }
 }
-

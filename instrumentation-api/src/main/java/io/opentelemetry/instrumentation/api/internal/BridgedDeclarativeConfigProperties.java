@@ -106,8 +106,7 @@ public final class BridgedDeclarativeConfigProperties implements DeclarativeConf
     String value = getString(name);
     return value == null
         ? null
-        : (List<T>)
-            BridgedDeclarativeConfigProperties.filterBlanksAndNulls(value.split(","));
+        : (List<T>) BridgedDeclarativeConfigProperties.filterBlanksAndNulls(value.split(","));
   }
 
   @Nullable
@@ -157,4 +156,3 @@ public final class BridgedDeclarativeConfigProperties implements DeclarativeConf
     return "otel.instrumentation." + String.join(".", nodes).replace('_', '-');
   }
 }
-
