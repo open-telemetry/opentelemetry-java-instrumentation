@@ -28,11 +28,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
     // url template is emitted only when http client experimental telemetry is enabled
     boolean urlTemplateEnabled =
         DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(),
-                "java",
-                "http",
-                "client",
-                "emit_experimental_telemetry")
+                GlobalOpenTelemetry.get(), "java", "http", "client", "emit_experimental_telemetry")
             .orElse(false);
     if (!urlTemplateEnabled) {
       return;
