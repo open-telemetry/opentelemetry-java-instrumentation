@@ -44,7 +44,7 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
     // This instrumentation produces controller telemetry and sets http route. Http route is set by
     // this instrumentation only when it was not already set by a jax-rs framework instrumentation.
     // This instrumentation uses complex type matcher, disabling it can improve startup performance.
-    return super.defaultEnabled()
+    return superDefaultEnabled()
         && DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
@@ -52,6 +52,15 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
                 "controller_telemetry/development",
                 "enabled")
             .orElse(false);
+  }
+
+  // This method can be removed and super.defaultEnabled() can be used instead once the deprecated
+  // InstrumentationModule.defaultEnabled(ConfigProperties) is removed, at which point
+  // InstrumentationModule.defaultEnabled() will no longer need to throw an exception.
+  private static boolean superDefaultEnabled() {
+    return DeclarativeConfigUtil.getBoolean(
+            GlobalOpenTelemetry.get(), "java", "common", "default_enabled")
+        .orElse(true);
   }
 
   @Override

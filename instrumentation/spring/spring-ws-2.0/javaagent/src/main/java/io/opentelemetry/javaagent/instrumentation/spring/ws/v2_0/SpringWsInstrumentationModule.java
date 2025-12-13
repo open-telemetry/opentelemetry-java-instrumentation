@@ -29,7 +29,7 @@ public class SpringWsInstrumentationModule extends InstrumentationModule
   @Override
   public boolean defaultEnabled() {
     // this instrumentation only produces controller telemetry
-    return super.defaultEnabled()
+    return superDefaultEnabled()
         && DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
@@ -37,6 +37,15 @@ public class SpringWsInstrumentationModule extends InstrumentationModule
                 "controller_telemetry/development",
                 "enabled")
             .orElse(false);
+  }
+
+  // This method can be removed and super.defaultEnabled() can be used instead once the deprecated
+  // InstrumentationModule.defaultEnabled(ConfigProperties) is removed, at which point
+  // InstrumentationModule.defaultEnabled() will no longer need to throw an exception.
+  private static boolean superDefaultEnabled() {
+    return DeclarativeConfigUtil.getBoolean(
+            GlobalOpenTelemetry.get(), "java", "common", "default_enabled")
+        .orElse(true);
   }
 
   @Override
