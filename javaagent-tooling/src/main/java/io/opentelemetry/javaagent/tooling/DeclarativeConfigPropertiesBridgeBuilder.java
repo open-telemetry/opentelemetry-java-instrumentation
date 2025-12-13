@@ -8,10 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -61,34 +58,6 @@ class DeclarativeConfigPropertiesBridgeBuilder {
     return this;
   }
 
-  /** Build {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
-  ConfigProperties build(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    ConfigProperties sdkConfigProperties =
-        AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
-    if (sdkConfigProperties != null) {
-      return sdkConfigProperties;
-    }
-    ConfigProvider configProvider =
-        AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
-    if (configProvider != null) {
-      return buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
-    }
-    // Should never happen
-    throw new IllegalStateException(
-        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or DeclarativeConfigProperties. This is likely a programming error in opentelemetry-java");
-  }
-
-  /**
-   * Build {@link ConfigProperties} from the provided {@link DeclarativeConfigProperties} node.
-   *
-   * @param node the declarative config properties to build from
-   * @return a new instance of {@link ConfigProperties}
-   */
-  ConfigProperties build(@Nullable DeclarativeConfigProperties node) {
-    return new DeclarativeConfigPropertiesBridge(
-        node == null ? empty() : node, mappings, overrideValues);
-  }
-
   /**
    * Build {@link ConfigProperties} from the {@link DeclarativeConfigProperties} provided by the
    * instrumentation configuration.
@@ -101,7 +70,9 @@ class DeclarativeConfigPropertiesBridgeBuilder {
    */
   ConfigProperties buildFromInstrumentationConfig(
       @Nullable DeclarativeConfigProperties instrumentationConfig) {
-    return build(
-        instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
+    DeclarativeConfigProperties javaConfig =
+        instrumentationConfig == null ? null : instrumentationConfig.getStructured("java");
+    return new DeclarativeConfigPropertiesBridge(
+        javaConfig == null ? empty() : javaConfig, mappings, overrideValues);
   }
 }

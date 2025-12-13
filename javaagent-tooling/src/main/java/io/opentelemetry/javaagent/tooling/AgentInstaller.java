@@ -15,9 +15,11 @@ import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
@@ -38,6 +40,7 @@ import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOpe
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+import io.opentelemetry.javaagent.tooling.config.RuntimeConfigProperties;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
@@ -164,11 +167,10 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     // TODO remove this method when library instrumentation reads it from declarative configuration
-    copyNecessaryConfigToSystemProperties(sdkConfig);
+    copyNecessaryConfigToSystemProperties();
 
-    setBootstrapPackages(sdkConfig, extensionClassLoader);
+    setBootstrapPackages(extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
         SdkAutoconfigureAccess.getResource(autoConfiguredSdk).getAttributes());
 
@@ -178,7 +180,7 @@ public class AgentInstaller {
     }
 
     agentBuilder = agentBuilder.with(new ClassLoadListener());
-    agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
+    agentBuilder = configureIgnoredTypes(extensionClassLoader, agentBuilder);
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class, extensionClassLoader)) {
@@ -189,7 +191,7 @@ public class AgentInstaller {
             new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
       }
       try {
-        agentBuilder = agentExtension.extend(agentBuilder, sdkConfig);
+        agentBuilder = agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
         logger.log(
@@ -221,7 +223,7 @@ public class AgentInstaller {
     addHttpServerResponseCustomizers(extensionClassLoader);
     addSqlCommenterCustomizers(extensionClassLoader);
 
-    runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
+    runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
@@ -279,21 +281,24 @@ public class AgentInstaller {
     agentBuilder.installOn(instrumentation);
   }
 
-  private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
-    for (String property : asList("otel.instrumentation.experimental.span-suppression-strategy")) {
-      String value = config.getString(property);
-      if (value != null) {
-        System.setProperty(property, value);
-      }
-    }
+  // TODO remove this method when library instrumentation reads it from declarative configuration
+  private static void copyNecessaryConfigToSystemProperties() {
+    DeclarativeConfigUtil.getString(
+            GlobalOpenTelemetry.get(),
+            "java",
+            // TODO add "common" here
+            "span_suppression_strategy/experimental")
+        .ifPresent(
+            value ->
+                System.setProperty(
+                    "otel.instrumentation.experimental.span-suppression-strategy", value));
   }
 
-  private static void setBootstrapPackages(
-      ConfigProperties config, ClassLoader extensionClassLoader) {
+  private static void setBootstrapPackages(ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer :
         load(BootstrapPackagesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config);
+      configurer.configure(builder, RuntimeConfigProperties.get());
     }
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
   }
@@ -303,11 +308,11 @@ public class AgentInstaller {
   }
 
   private static AgentBuilder configureIgnoredTypes(
-      ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
+      ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config);
+      configurer.configure(builder, RuntimeConfigProperties.get());
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
@@ -353,8 +358,7 @@ public class AgentInstaller {
 
   private static void runAfterAgentListeners(
       Iterable<AgentListener> agentListeners,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk,
-      ConfigProperties sdkConfigProperties) {
+      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -372,7 +376,12 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        sdkConfigProperties.getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        DeclarativeConfigUtil.getBoolean(
+                autoConfiguredSdk.getOpenTelemetrySdk(),
+                "java",
+                "agent",
+                "force_synchronous_agent_listeners/experimental")
+            .orElse(false);
     boolean javaBefore9 = isJavaBefore9();
     if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");

@@ -137,20 +137,6 @@ public class OpenTelemetryAutoConfiguration {
       public ConfigProvider configProvider(ConfigProperties properties) {
         return ConfigPropertiesBackedConfigProvider.create(properties);
       }
-
-      /**
-       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-       *
-       * <p>Not using spring boot properties directly in order to support {@link
-       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
-       * and {@link
-       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
-       */
-      @Bean
-      public ConfigProperties otelProperties(
-          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-        return requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
-      }
     }
 
     @Configuration
