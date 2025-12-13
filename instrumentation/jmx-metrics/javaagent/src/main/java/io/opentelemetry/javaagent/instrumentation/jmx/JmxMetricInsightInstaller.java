@@ -77,9 +77,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static Duration beanDiscoveryDelay(
-      OpenTelemetry openTelemetry) {
+  private static Duration beanDiscoveryDelay(OpenTelemetry openTelemetry) {
     return DeclarativeConfigUtil.getDuration(openTelemetry, "java", "jmx", "discovery_delay")
-            .orElse(Duration.ofMinutes(1));
+        .orElse(Duration.ofMinutes(1));
   }
 }

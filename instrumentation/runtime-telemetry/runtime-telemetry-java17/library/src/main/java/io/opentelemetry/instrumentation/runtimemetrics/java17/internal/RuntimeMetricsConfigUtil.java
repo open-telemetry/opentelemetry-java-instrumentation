@@ -26,7 +26,8 @@ public final class RuntimeMetricsConfigUtil {
     If enabled, default to only the metrics not already covered by runtime-telemetry-java8
     */
     boolean defaultEnabled =
-        DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "common", "default_enabled").orElse(true);
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "common", "default_enabled")
+            .orElse(true);
     if (DeclarativeConfigUtil.getBoolean(
             openTelemetry, "java", "runtime_telemetry_java17", "enable_all")
         .orElse(false)) {

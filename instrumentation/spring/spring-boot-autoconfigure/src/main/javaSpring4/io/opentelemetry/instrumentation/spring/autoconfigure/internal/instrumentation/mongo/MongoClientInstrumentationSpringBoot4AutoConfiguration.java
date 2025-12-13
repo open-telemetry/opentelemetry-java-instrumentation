@@ -35,7 +35,10 @@ public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
                         .orElseGet(
                             () ->
                                 DeclarativeConfigUtil.getBoolean(
-                                        openTelemetry, "common", "db_statement_sanitizer", "enabled")
+                                        openTelemetry,
+                                        "common",
+                                        "db_statement_sanitizer",
+                                        "enabled")
                                     .orElse(true)))
                 .build()
                 .newCommandListener());

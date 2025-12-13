@@ -121,10 +121,7 @@ public final class RabbitSingletons {
     return MessagingAttributesExtractor.builder(getter, operation)
         .setCapturedHeaders(
             DeclarativeConfigUtil.getList(
-                    GlobalOpenTelemetry.get(),
-                    "java",
-                    "messaging",
-                    "capture_headers/development")
+                    GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
                 .orElse(Collections.emptyList()))
         .build();
   }

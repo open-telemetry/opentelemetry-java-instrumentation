@@ -20,7 +20,11 @@ public class Axis2Singletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, Axis2Request::spanName)
             .setEnabled(
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "common", "controller_telemetry/development", "enabled")
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
                     .orElse(false))
             .buildInstrumenter();
   }

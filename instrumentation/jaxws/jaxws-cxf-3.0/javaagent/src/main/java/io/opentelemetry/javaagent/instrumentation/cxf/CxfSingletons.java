@@ -20,7 +20,11 @@ public class CxfSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
             .setEnabled(
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "common", "controller_telemetry/development", "enabled")
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
                     .orElse(false))
             .buildInstrumenter();
   }

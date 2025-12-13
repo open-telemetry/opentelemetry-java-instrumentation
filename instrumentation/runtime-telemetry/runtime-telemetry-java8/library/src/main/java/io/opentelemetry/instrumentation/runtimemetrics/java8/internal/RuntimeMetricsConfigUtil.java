@@ -22,9 +22,9 @@ public final class RuntimeMetricsConfigUtil {
   public static RuntimeMetrics configure(
       RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry) {
     boolean defaultEnabled =
-        DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "common", "default_enabled").orElse(true);
-    if (!DeclarativeConfigUtil.getBoolean(
-            openTelemetry, "java", "runtime_telemetry", "enabled")
+        DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "common", "default_enabled")
+            .orElse(true);
+    if (!DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "runtime_telemetry", "enabled")
         .orElse(defaultEnabled)) {
       // nothing is enabled
       return null;

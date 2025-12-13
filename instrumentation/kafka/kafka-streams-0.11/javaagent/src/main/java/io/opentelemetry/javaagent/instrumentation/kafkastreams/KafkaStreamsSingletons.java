@@ -20,10 +20,7 @@ public final class KafkaStreamsSingletons {
       new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
           .setCapturedHeaders(
               DeclarativeConfigUtil.getList(
-                      GlobalOpenTelemetry.get(),
-                      "java",
-                      "messaging",
-                      "capture_headers/development")
+                      GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
                   .orElse(Collections.emptyList()))
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(

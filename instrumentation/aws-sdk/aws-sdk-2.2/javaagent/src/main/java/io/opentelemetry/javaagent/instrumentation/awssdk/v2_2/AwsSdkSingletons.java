@@ -43,8 +43,10 @@ public final class AwsSdkSingletons {
     @Override
     protected boolean getBoolean(String name, boolean defaultValue) {
       // Convert otel.instrumentation.xxx.yyy to java/xxx/yyy format
-      // e.g. otel.instrumentation.aws-sdk.experimental-span-attributes -> java/aws_sdk/experimental_span_attributes
-      String[] parts = name.replace("otel.instrumentation.", "java.").replace("-", "_").split("\\.");
+      // e.g. otel.instrumentation.aws-sdk.experimental-span-attributes ->
+      // java/aws_sdk/experimental_span_attributes
+      String[] parts =
+          name.replace("otel.instrumentation.", "java.").replace("-", "_").split("\\.");
       return DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), parts)
           .orElse(defaultValue);
     }

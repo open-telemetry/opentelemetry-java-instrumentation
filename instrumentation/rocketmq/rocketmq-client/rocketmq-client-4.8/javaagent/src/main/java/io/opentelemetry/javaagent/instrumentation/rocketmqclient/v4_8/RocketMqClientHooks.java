@@ -19,10 +19,7 @@ public final class RocketMqClientHooks {
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(
               DeclarativeConfigUtil.getList(
-                      GlobalOpenTelemetry.get(),
-                      "java",
-                      "messaging",
-                      "capture_headers/development")
+                      GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
                   .orElse(Collections.emptyList()))
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(

@@ -7,21 +7,18 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.logs.LoggerProvider;
-import io.opentelemetry.api.metrics.MeterProvider;
-import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 
 /**
- * Wrapper around {@link OpenTelemetrySdk} that implements {@link ExtendedOpenTelemetry} and provides a
- * {@link ConfigProvider} even when the underlying SDK doesn't have one.
+ * Wrapper around {@link OpenTelemetrySdk} that implements {@link ExtendedOpenTelemetry} and
+ * provides a {@link ConfigProvider} even when the underlying SDK doesn't have one.
  *
  * <p>This is used when the user configured with system properties (not YAML), so we create a
  * ConfigProvider backed by the final ConfigProperties. This allows instrumentations to always use
  * {@code ExtendedOpenTelemetry.getConfigProvider()} regardless of how the SDK was configured.
  */
-public final class ExtendedOpenTelemetrySdkWrapper extends OpenTelemetrySdk implements ExtendedOpenTelemetry {
+public final class ExtendedOpenTelemetrySdkWrapper extends OpenTelemetrySdk
+    implements ExtendedOpenTelemetry {
 
   private final ConfigProvider configProvider;
 

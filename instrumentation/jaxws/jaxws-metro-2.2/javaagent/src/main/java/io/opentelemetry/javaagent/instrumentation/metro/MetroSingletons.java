@@ -20,7 +20,11 @@ public class MetroSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, MetroRequest::spanName)
             .setEnabled(
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "common", "controller_telemetry/development", "enabled")
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
                     .orElse(false))
             .buildInstrumenter();
   }

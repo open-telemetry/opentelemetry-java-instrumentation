@@ -28,10 +28,7 @@ public final class SpringIntegrationSingletons {
       SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(
               DeclarativeConfigUtil.getList(
-                      GlobalOpenTelemetry.get(),
-                      "java",
-                      "messaging",
-                      "capture_headers/development")
+                      GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
                   .orElse(Collections.emptyList()))
           .setProducerSpanEnabled(
               DeclarativeConfigUtil.getBoolean(

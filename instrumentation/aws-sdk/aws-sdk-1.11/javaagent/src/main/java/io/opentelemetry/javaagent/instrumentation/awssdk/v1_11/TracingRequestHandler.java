@@ -49,10 +49,7 @@ public class TracingRequestHandler extends RequestHandler2 {
                   .orElse(false))
           .setCapturedHeaders(
               DeclarativeConfigUtil.getList(
-                      GlobalOpenTelemetry.get(),
-                      "java",
-                      "messaging",
-                      "capture_headers/development")
+                      GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
                   .orElse(Collections.emptyList()))
           .build()
           .newRequestHandler();

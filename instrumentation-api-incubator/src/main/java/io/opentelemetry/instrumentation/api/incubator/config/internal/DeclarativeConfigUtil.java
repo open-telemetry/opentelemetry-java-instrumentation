@@ -42,7 +42,8 @@ public final class DeclarativeConfigUtil {
     return Optional.ofNullable(node != null ? node.getLong(leaf(propertyPath)) : null);
   }
 
-  public static Optional<Duration> getDuration(OpenTelemetry openTelemetry, String... propertyPath) {
+  public static Optional<Duration> getDuration(
+      OpenTelemetry openTelemetry, String... propertyPath) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
     if (node == null) {
       return Optional.empty();

@@ -52,7 +52,8 @@ public final class OpenTelemetryInstaller {
       // instance for some existing java agent extension APIs
       configProperties = getDeclarativeConfigBridgedProperties(earlyConfig, configProvider);
     } else {
-      throw new IllegalStateException("Exactly one of configProvider or configProperties must be non-null");
+      throw new IllegalStateException(
+          "Exactly one of configProvider or configProperties must be non-null");
     }
 
     setForceFlush(sdk);
