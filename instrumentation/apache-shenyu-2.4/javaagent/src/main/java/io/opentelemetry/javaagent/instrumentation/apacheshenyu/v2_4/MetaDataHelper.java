@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import org.apache.shenyu.common.dto.MetaData;
 
 public final class MetaDataHelper {
@@ -58,8 +59,9 @@ public final class MetaDataHelper {
 
   static {
     CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.apache-shenyu.experimental-span-attributes", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "java", "apache_shenyu", "experimental_span_attributes")
+            .orElse(false);
   }
 
   private MetaDataHelper() {}

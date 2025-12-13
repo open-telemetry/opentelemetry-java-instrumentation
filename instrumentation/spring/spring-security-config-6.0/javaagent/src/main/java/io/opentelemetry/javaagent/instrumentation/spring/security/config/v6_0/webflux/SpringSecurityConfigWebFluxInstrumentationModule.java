@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.w
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 /** Instrumentation module for webflux-based applications that use spring-security-config. */
@@ -27,8 +27,8 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
-    return super.defaultEnabled(config)
+  public boolean defaultEnabled() {
+    return superDefaultEnabled()
         /*
          * Since the only thing this module currently does is capture enduser attributes,
          * the module can be completely disabled if enduser attributes are disabled.
@@ -36,7 +36,26 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
          * If any functionality not related to enduser attributes is added to this module,
          * then this check will need to move elsewhere to only guard the enduser attributes logic.
          */
-        && AgentCommonConfig.get().getEnduserConfig().isAnyEnabled();
+        && isAnyEnduserAttributeEnabled();
+  }
+
+  // This method can be removed and super.defaultEnabled() can be used instead once the deprecated
+  // InstrumentationModule.defaultEnabled(ConfigProperties) is removed, at which point
+  // InstrumentationModule.defaultEnabled() will no longer need to throw an exception.
+  private static boolean superDefaultEnabled() {
+    return DeclarativeConfigUtil.getBoolean(
+            GlobalOpenTelemetry.get(), "java", "common", "default_enabled")
+        .orElse(true);
+  }
+
+  private static boolean isAnyEnduserAttributeEnabled() {
+    var otel = GlobalOpenTelemetry.get();
+    return DeclarativeConfigUtil.getBoolean(otel, "java", "common", "enduser", "id", "enabled")
+            .orElse(false)
+        || DeclarativeConfigUtil.getBoolean(otel, "java", "common", "enduser", "role", "enabled")
+            .orElse(false)
+        || DeclarativeConfigUtil.getBoolean(otel, "java", "common", "enduser", "scope", "enabled")
+            .orElse(false);
   }
 
   @Override

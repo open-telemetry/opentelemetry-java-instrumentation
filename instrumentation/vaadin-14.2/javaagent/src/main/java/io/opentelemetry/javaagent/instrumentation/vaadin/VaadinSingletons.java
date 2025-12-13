@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.vaadin;
 import com.vaadin.flow.server.communication.rpc.RpcInvocationHandler;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class VaadinSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vaadin-14.2";
@@ -29,6 +29,15 @@ public class VaadinSingletons {
   private static final VaadinHelper HELPER;
 
   static {
+    boolean controllerTelemetryEnabled =
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "common",
+                "controller_telemetry/development",
+                "enabled")
+            .orElse(false);
+
     ClientCallableCodeAttributesGetter clientCallableAttributesGetter =
         new ClientCallableCodeAttributesGetter();
     CLIENT_CALLABLE_INSTRUMENTER =
@@ -36,14 +45,14 @@ public class VaadinSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(clientCallableAttributesGetter))
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(controllerTelemetryEnabled)
             .addAttributesExtractor(CodeAttributesExtractor.create(clientCallableAttributesGetter))
             .buildInstrumenter();
 
     REQUEST_HANDLER_INSTRUMENTER =
         Instrumenter.<VaadinHandlerRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinHandlerRequest::getSpanName)
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(controllerTelemetryEnabled)
             // add context for tracking nested request handler calls
             .addContextCustomizer(
                 (context, vaadinHandlerRequest, startAttributes) ->
@@ -54,14 +63,14 @@ public class VaadinSingletons {
     RPC_INSTRUMENTER =
         Instrumenter.<VaadinRpcRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinSingletons::rpcSpanName)
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(controllerTelemetryEnabled)
             .addAttributesExtractor(CodeAttributesExtractor.create(rpcCodeAttributesGetter))
             .buildInstrumenter();
 
     SERVICE_INSTRUMENTER =
         Instrumenter.<VaadinServiceRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinServiceRequest::getSpanName)
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(controllerTelemetryEnabled)
             // add context for tracking whether any request handler handled the request
             .addContextCustomizer(
                 (context, vaadinServiceRequest, startAttributes) ->

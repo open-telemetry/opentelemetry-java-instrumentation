@@ -3,15 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.config.bridge;
+package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -22,7 +19,7 @@ import javax.annotation.Nullable;
  * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
  * values for properties.
  */
-public class DeclarativeConfigPropertiesBridgeBuilder {
+class DeclarativeConfigPropertiesBridgeBuilder {
   /**
    * order is important here, so we use LinkedHashMap - see {@link #addMapping(String, String)} for
    * more details
@@ -31,7 +28,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
 
   private final Map<String, Object> overrideValues = new HashMap<>();
 
-  public DeclarativeConfigPropertiesBridgeBuilder() {}
+  DeclarativeConfigPropertiesBridgeBuilder() {}
 
   /**
    * Adds a mapping from a property prefix to a YAML path.
@@ -44,8 +41,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
    * @param yamlPath the YAML path to resolve the property against
    */
   @CanIgnoreReturnValue
-  public DeclarativeConfigPropertiesBridgeBuilder addMapping(
-      String propertyPrefix, String yamlPath) {
+  DeclarativeConfigPropertiesBridgeBuilder addMapping(String propertyPrefix, String yamlPath) {
     mappings.put(propertyPrefix, yamlPath);
     return this;
   }
@@ -57,37 +53,9 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
    * @param value the value to return when the property is requested
    */
   @CanIgnoreReturnValue
-  public DeclarativeConfigPropertiesBridgeBuilder addOverride(String propertyName, Object value) {
+  DeclarativeConfigPropertiesBridgeBuilder addOverride(String propertyName, Object value) {
     overrideValues.put(propertyName, value);
     return this;
-  }
-
-  /** Build {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
-  public ConfigProperties build(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    ConfigProperties sdkConfigProperties =
-        AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
-    if (sdkConfigProperties != null) {
-      return sdkConfigProperties;
-    }
-    ConfigProvider configProvider =
-        AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
-    if (configProvider != null) {
-      return buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
-    }
-    // Should never happen
-    throw new IllegalStateException(
-        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or DeclarativeConfigProperties. This is likely a programming error in opentelemetry-java");
-  }
-
-  /**
-   * Build {@link ConfigProperties} from the provided {@link DeclarativeConfigProperties} node.
-   *
-   * @param node the declarative config properties to build from
-   * @return a new instance of {@link ConfigProperties}
-   */
-  public ConfigProperties build(@Nullable DeclarativeConfigProperties node) {
-    return new DeclarativeConfigPropertiesBridge(
-        node == null ? empty() : node, mappings, overrideValues);
   }
 
   /**
@@ -100,9 +68,11 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
    * @param instrumentationConfig the instrumentation configuration to build from
    * @return a new instance of {@link ConfigProperties}
    */
-  public ConfigProperties buildFromInstrumentationConfig(
+  ConfigProperties buildFromInstrumentationConfig(
       @Nullable DeclarativeConfigProperties instrumentationConfig) {
-    return build(
-        instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
+    DeclarativeConfigProperties javaConfig =
+        instrumentationConfig == null ? null : instrumentationConfig.getStructured("java");
+    return new DeclarativeConfigPropertiesBridge(
+        javaConfig == null ? empty() : javaConfig, mappings, overrideValues);
   }
 }

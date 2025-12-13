@@ -7,32 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationInstrumentation.DEFAULT_ANNOTATIONS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 class IncludeTest {
-
-  @Mock InstrumentationConfig config;
 
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testConfiguration(String value, List<String> expected) {
-    when(config.getString("otel.instrumentation.external-annotations.include")).thenReturn(value);
-
-    assertThat(ExternalAnnotationInstrumentation.configureAdditionalTraceAnnotations(config))
+    assertThat(ExternalAnnotationInstrumentation.configureAdditionalTraceAnnotations(value))
         .isEqualTo(new HashSet<>(expected));
   }
 

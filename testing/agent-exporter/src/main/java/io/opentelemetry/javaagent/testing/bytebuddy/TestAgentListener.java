@@ -59,7 +59,15 @@ public class TestAgentListener implements AgentBuilder.Listener {
           || configurer instanceof GlobalIgnoredTypesConfigurer) {
         continue;
       }
-      configurer.configure(builder, EmptyConfigProperties.INSTANCE);
+      try {
+        configurer.configure(builder);
+      } catch (UnsupportedOperationException e) {
+        // fall back to the deprecated method for backwards compatibility with old extensions
+        @SuppressWarnings("deprecation")
+        Runnable callDeprecated =
+            () -> configurer.configure(builder, EmptyConfigProperties.INSTANCE);
+        callDeprecated.run();
+      }
     }
     return builder.buildIgnoredTypesTrie();
   }

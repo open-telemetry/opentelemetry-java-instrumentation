@@ -8,17 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.sql.Connection;
@@ -39,29 +39,47 @@ public final class JdbcSingletons {
   static {
     AttributesExtractor<DbRequest, Void> peerServiceExtractor =
         PeerServiceAttributesExtractor.create(
-            JdbcAttributesGetter.INSTANCE, AgentCommonConfig.get().getPeerServiceResolver());
+            JdbcAttributesGetter.INSTANCE, PeerServiceResolver.create(GlobalOpenTelemetry.get()));
 
     CAPTURE_QUERY_PARAMETERS =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "jdbc",
+                "experimental",
+                "capture_query_parameters")
+            .orElse(false);
 
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
             Collections.singletonList(peerServiceExtractor),
             true,
-            AgentInstrumentationConfig.get()
-                .getBoolean(
-                    "otel.instrumentation.jdbc.statement-sanitizer.enabled",
-                    AgentCommonConfig.get().isStatementSanitizationEnabled()),
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(), "java", "jdbc", "statement_sanitizer", "enabled")
+                .orElseGet(
+                    () ->
+                        DeclarativeConfigUtil.getBoolean(
+                                GlobalOpenTelemetry.get(),
+                                "java",
+                                "db",
+                                "statement_sanitizer",
+                                "enabled")
+                            .orElse(true)),
             CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
             Collections.singletonList(peerServiceExtractor),
-            AgentInstrumentationConfig.get()
-                .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(),
+                    "java",
+                    "jdbc",
+                    "experimental",
+                    "transaction",
+                    "enabled")
+                .orElse(false));
   }
 
   public static Instrumenter<DbRequest, Void> transactionInstrumenter() {
@@ -105,10 +123,22 @@ public final class JdbcSingletons {
   private static SqlCommenter configureSqlCommenter() {
     SqlCommenterBuilder builder = SqlCommenter.builder();
     builder.setEnabled(
-        AgentInstrumentationConfig.get()
-            .getBoolean(
-                "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
-                AgentCommonConfig.get().isSqlCommenterEnabled()));
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "jdbc",
+                "experimental",
+                "sqlcommenter",
+                "enabled")
+            .orElseGet(
+                () ->
+                    DeclarativeConfigUtil.getBoolean(
+                            GlobalOpenTelemetry.get(),
+                            "java",
+                            "common",
+                            "db",
+                            "sqlcommenter/development")
+                        .orElse(false)));
     SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
     return builder.build();
   }

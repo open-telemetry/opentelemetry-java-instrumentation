@@ -8,11 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class MongoInstrumentationSingletons {
 
@@ -20,10 +19,17 @@ public final class MongoInstrumentationSingletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-async-3.3",
-          AgentInstrumentationConfig.get()
-              .getBoolean(
-                  "otel.instrumentation.mongo.statement-sanitizer.enabled",
-                  AgentCommonConfig.get().isStatementSanitizationEnabled()));
+          DeclarativeConfigUtil.getBoolean(
+                  GlobalOpenTelemetry.get(), "java", "mongo", "statement_sanitizer", "enabled")
+              .orElseGet(
+                  () ->
+                      DeclarativeConfigUtil.getBoolean(
+                              GlobalOpenTelemetry.get(),
+                              "java",
+                              "db",
+                              "statement_sanitizer",
+                              "enabled")
+                          .orElse(true)));
 
   public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
 

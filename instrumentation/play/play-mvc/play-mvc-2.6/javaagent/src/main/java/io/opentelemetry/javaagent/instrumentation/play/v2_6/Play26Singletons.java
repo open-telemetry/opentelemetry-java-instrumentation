@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_6;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
@@ -27,7 +27,14 @@ public final class Play26Singletons {
   private static final Instrumenter<Void, Void> INSTRUMENTER =
       Instrumenter.<Void, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.6", s -> SPAN_NAME)
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+          .setEnabled(
+              DeclarativeConfigUtil.getBoolean(
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "common",
+                      "controller_telemetry/development",
+                      "enabled")
+                  .orElse(false))
           .buildInstrumenter();
 
   @Nullable private static final Method typedKeyGetUnderlying;

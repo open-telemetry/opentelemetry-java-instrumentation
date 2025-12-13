@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,9 +34,9 @@ class OtlpProtocolPropertiesSupplierTest {
             this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
 
     // then
-    assertThat(
-            AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("otel.exporter.otlp.protocol"))
-        .isEqualTo("grpc");
+    assertThat(autoConfiguredSdk.getOpenTelemetrySdk().toString())
+        .contains("OtlpGrpc")
+        .doesNotContain("OtlpHttp");
   }
 
   @Test
@@ -48,8 +47,8 @@ class OtlpProtocolPropertiesSupplierTest {
             this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
 
     // then
-    assertThat(
-            AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("otel.exporter.otlp.protocol"))
-        .isEqualTo("http/protobuf");
+    assertThat(autoConfiguredSdk.getOpenTelemetrySdk().toString())
+        .contains("OtlpHttp")
+        .doesNotContain("OtlpGrpc");
   }
 }

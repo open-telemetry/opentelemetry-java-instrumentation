@@ -24,5 +24,19 @@ public interface BootstrapPackagesConfigurer {
    * Configure the passed {@code builder} and define which classes should always be loaded by the
    * bootstrap class loader.
    */
-  void configure(BootstrapPackagesBuilder builder, ConfigProperties config);
+  default void configure(BootstrapPackagesBuilder builder) {
+    throw new UnsupportedOperationException(
+        "This method is not implemented. Please override this method.");
+  }
+
+  /**
+   * Configure the passed {@code builder} and define which classes should always be loaded by the
+   * bootstrap class loader.
+   *
+   * @deprecated Use {@link #configure(BootstrapPackagesBuilder)} instead.
+   */
+  @Deprecated
+  default void configure(BootstrapPackagesBuilder builder, ConfigProperties config) {
+    configure(builder);
+  }
 }
