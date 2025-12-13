@@ -225,7 +225,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(
       OpenTelemetry openTelemetry) {
-    DeclarativeConfigUtil.getList(openTelemetry, "general", "http", "known_methods")
+    DeclarativeConfigUtil.getList(openTelemetry, "java", "http", "known_methods")
         .ifPresent(this::setKnownMethods);
     DeclarativeConfigUtil.getList(
             openTelemetry, "general", "http", "server", "request_captured_headers")
@@ -235,7 +235,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
         .ifPresent(this::setCapturedResponseHeaders);
     setEmitExperimentalHttpServerTelemetry(
         DeclarativeConfigUtil.getBoolean(
-                openTelemetry, "general", "http", "server", "emit_experimental_telemetry")
+                openTelemetry, "java", "http", "server", "emit_experimental_telemetry")
             .orElse(false));
     return this;
   }

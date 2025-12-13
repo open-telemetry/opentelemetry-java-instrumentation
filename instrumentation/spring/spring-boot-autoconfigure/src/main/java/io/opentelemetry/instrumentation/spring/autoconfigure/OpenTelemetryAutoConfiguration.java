@@ -33,6 +33,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import io.opentelemetry.sdk.extension.incubator.ExtendedOpenTelemetrySdk;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
@@ -164,18 +165,14 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       public OpenTelemetry openTelemetry(
-          OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
-        OpenTelemetrySdk sdk =
+          OpenTelemetryConfigurationModel model,
+          ApplicationContext applicationContext) {
+        ExtendedOpenTelemetrySdk sdk =
             DeclarativeConfiguration.create(
                 model, new OpenTelemetrySdkComponentLoader(applicationContext));
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         return sdk;
-      }
-
-      @Bean
-      public ConfigProvider configProvider(OpenTelemetryConfigurationModel model) {
-        return SpringConfigProvider.create(model);
       }
 
       @Bean

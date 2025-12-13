@@ -36,7 +36,7 @@ public final class AwsLambdaEventsInstrumenterFactory {
   }
 
   private static Set<String> getKnownHttpMethods(OpenTelemetry openTelemetry) {
-    return DeclarativeConfigUtil.getList(openTelemetry, "general", "http", "known_methods")
+    return DeclarativeConfigUtil.getList(openTelemetry, "java", "http", "known_methods")
         .map(HashSet::new)
         .orElse(new HashSet<>(HttpConstants.KNOWN_METHODS));
   }

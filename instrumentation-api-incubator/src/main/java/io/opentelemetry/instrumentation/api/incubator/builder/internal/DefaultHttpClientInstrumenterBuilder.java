@@ -266,7 +266,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(
       OpenTelemetry openTelemetry) {
-    DeclarativeConfigUtil.getList(openTelemetry, "general", "http", "known_methods")
+    DeclarativeConfigUtil.getList(openTelemetry, "java", "http", "known_methods")
         .ifPresent(this::setKnownMethods);
     DeclarativeConfigUtil.getList(
             openTelemetry, "general", "http", "client", "request_captured_headers")
@@ -277,11 +277,11 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     setPeerServiceResolver(PeerServiceResolver.create(openTelemetry));
     setEmitExperimentalHttpClientTelemetry(
         DeclarativeConfigUtil.getBoolean(
-                openTelemetry, "general", "http", "client", "emit_experimental_telemetry")
+                openTelemetry, "java", "http", "client", "emit_experimental_telemetry")
             .orElse(false));
     setRedactQueryParameters(
         DeclarativeConfigUtil.getBoolean(
-                openTelemetry, "general", "http", "client", "redact_query_parameters/development")
+                openTelemetry, "java", "http", "client", "redact_query_parameters/development")
             .orElse(true));
     return this;
   }
