@@ -3,7 +3,7 @@
 This table documents the conversion from system properties (upstream/main) to declarative config paths (HEAD).
 
 | Declarative Config Path (HEAD) | System Property (upstream/main) |
-|-------------------------------|--------------------------------|
+| ------------------------------- | -------------------------------- |
 | `general`, `db`, `statement_sanitizer`, `enabled` | `otel.instrumentation.common.db-statement-sanitizer.enabled` |
 | `general`, `http`, `client`, `emit_experimental_telemetry` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
 | `general`, `http`, `client`, `redact_query_parameters/development` | `otel.instrumentation.http.client.experimental.redact-query-parameters` |
