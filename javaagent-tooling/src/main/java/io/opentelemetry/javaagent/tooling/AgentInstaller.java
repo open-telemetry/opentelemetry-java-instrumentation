@@ -288,7 +288,12 @@ public class AgentInstaller {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer :
         load(BootstrapPackagesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, RuntimeConfigProperties.get());
+      try {
+        configurer.configure(builder);
+      } catch (UnsupportedOperationException e) {
+        // fall back to the deprecated method
+        configurer.configure(builder, RuntimeConfigProperties.get());
+      }
     }
     BootstrapPackagePrefixesHolder.setBoostrapPackagePrefixes(builder.build());
   }
