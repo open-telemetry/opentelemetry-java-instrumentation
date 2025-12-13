@@ -22,7 +22,7 @@ public final class HystrixSingletons {
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HystrixRequest::spanName);
 
     if (DeclarativeConfigUtil.getBoolean(
-            GlobalOpenTelemetry.get(), "hystrix", "span_attributes/development")
+            GlobalOpenTelemetry.get(), "java", "hystrix", "span_attributes/development")
         .orElse(false)) {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }

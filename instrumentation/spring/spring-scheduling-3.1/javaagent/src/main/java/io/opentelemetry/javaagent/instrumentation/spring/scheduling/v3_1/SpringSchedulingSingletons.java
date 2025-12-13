@@ -18,7 +18,7 @@ public final class SpringSchedulingSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "spring_scheduling", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "java", "spring_scheduling", "span_attributes/development")
           .orElse(false);
 
   private static final Instrumenter<Runnable, Void> INSTRUMENTER;

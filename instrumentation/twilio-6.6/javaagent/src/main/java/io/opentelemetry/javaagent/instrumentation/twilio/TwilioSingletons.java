@@ -17,7 +17,7 @@ public final class TwilioSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "twilio", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "java", "twilio", "span_attributes/development")
           .orElse(false);
 
   private static final Instrumenter<String, Object> INSTRUMENTER;

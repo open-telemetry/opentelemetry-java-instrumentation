@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 public final class HibernateInstrumenterFactory {
   static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "hibernate", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "java", "hibernate", "span_attributes/development")
           .orElse(false);
 
   public static Instrumenter<HibernateOperation, Void> createInstrumenter(

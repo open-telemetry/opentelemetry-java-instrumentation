@@ -16,7 +16,7 @@ public final class InstrumentationHelper {
         GuavaAsyncOperationEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "guava", "span_attributes/development")
+                        GlobalOpenTelemetry.get(), "java", "guava", "span_attributes/development")
                     .orElse(false))
             .build();
 

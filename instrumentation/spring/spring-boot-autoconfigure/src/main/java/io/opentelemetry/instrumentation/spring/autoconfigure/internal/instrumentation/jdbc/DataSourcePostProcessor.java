@@ -72,17 +72,17 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
                         .orElse(true)))
               .setCaptureQueryParameters(
                   DeclarativeConfigUtil.getBoolean(
-                          openTelemetry, "jdbc", "capture_query_parameters")
+                          openTelemetry, "java", "jdbc", "capture_query_parameters")
                       .orElse(false))
               .setTransactionInstrumenterEnabled(
-                  DeclarativeConfigUtil.getBoolean(openTelemetry, "jdbc", "transaction", "enabled")
+                  DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "jdbc", "transaction", "enabled")
                       .orElse(false))
               .setDataSourceInstrumenterEnabled(
-                  DeclarativeConfigUtil.getBoolean(openTelemetry, "jdbc", "datasource", "enabled")
+                  DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "jdbc", "datasource", "enabled")
                       .orElse(false));
       Experimental.setEnableSqlCommenter(
           builder,
-          DeclarativeConfigUtil.getBoolean(openTelemetry, "jdbc", "sqlcommenter", "enabled")
+          DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "jdbc", "sqlcommenter", "enabled")
               .orElse(false));
       DataSource otelDataSource = builder.build().wrap(dataSource);
 

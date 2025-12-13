@@ -23,7 +23,7 @@ public final class PowerJobSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "powerjob", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "java", "powerjob", "span_attributes/development")
           .orElse(false);
   private static final Instrumenter<PowerJobProcessRequest, ProcessResult> INSTRUMENTER = create();
 
