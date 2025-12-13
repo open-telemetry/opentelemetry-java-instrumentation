@@ -19,7 +19,7 @@ public final class NettyServerSingletons {
         .apply(builder)
         .configure(GlobalOpenTelemetry.get());
     if (DeclarativeConfigUtil.getBoolean(
-            GlobalOpenTelemetry.get(), "general", "http", "server", "emit_experimental_telemetry")
+            GlobalOpenTelemetry.get(), "java", "http", "server", "emit_experimental_telemetry")
         .orElse(false)) {
       // this logic is only used in agent
       builder.setEmitExperimentalHttpServerEvents(true);
