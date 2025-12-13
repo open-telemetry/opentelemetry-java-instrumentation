@@ -64,7 +64,8 @@ public class TestAgentListener implements AgentBuilder.Listener {
       } catch (UnsupportedOperationException e) {
         // fall back to the deprecated method for backwards compatibility with old extensions
         @SuppressWarnings("deprecation")
-        Runnable callDeprecated = () -> configurer.configure(builder, EmptyConfigProperties.INSTANCE);
+        Runnable callDeprecated =
+            () -> configurer.configure(builder, EmptyConfigProperties.INSTANCE);
         callDeprecated.run();
       }
     }
