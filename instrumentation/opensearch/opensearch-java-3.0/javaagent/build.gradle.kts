@@ -24,14 +24,15 @@ dependencies {
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
-  // For testing AwsSdk2Transport
+  // AwsSdk2Transport supports awssdk version 2.26.0
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testImplementation("software.amazon.awssdk:auth:2.22.0")
-  testImplementation("software.amazon.awssdk:identity-spi:2.22.0")
-  testImplementation("software.amazon.awssdk:apache-client:2.22.0")
-  testImplementation("software.amazon.awssdk:netty-nio-client:2.22.0")
-  testImplementation("software.amazon.awssdk:regions:2.22.0")
+  testImplementation("software.amazon.awssdk:auth:2.26.0")
+  testImplementation("software.amazon.awssdk:identity-spi:2.26.0")
+  testImplementation("software.amazon.awssdk:apache-client:2.26.0")
+  testImplementation("software.amazon.awssdk:netty-nio-client:2.26.0")
+  testImplementation("software.amazon.awssdk:netty-nio-client:2.26.0")
+  testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
 tasks {
@@ -40,14 +41,47 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
+  test {
+    filter {
+      excludeTestsMatching("OpenSearchCaptureSearchQueryTest")
+    }
+  }
+
+  val testCaptureSearchQuery by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("OpenSearchCaptureSearchQueryTest")
+    }
+    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=true")
+  }
+
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("OpenSearchCaptureSearchQueryTest")
+    }
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testCaptureSearchQueryStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("OpenSearchCaptureSearchQueryTest")
+    }
+    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
+    dependsOn(testCaptureSearchQuery)
     dependsOn(testStableSemconv)
+    dependsOn(testCaptureSearchQueryStableSemconv)
   }
 }

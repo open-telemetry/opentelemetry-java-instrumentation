@@ -41,8 +41,6 @@ import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.cluster.HealthResponse;
 import org.opensearch.client.opensearch.core.IndexRequest;
-import org.opensearch.client.opensearch.core.MsearchRequest;
-import org.opensearch.client.opensearch.core.MsearchResponse;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
@@ -209,7 +207,7 @@ abstract class AbstractOpenSearchTest {
   }
 
   @Test
-  void shouldCaptureSearchQueryBody() throws IOException {
+  void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {
     // Execute search query with body
     SearchRequest searchRequest =
         SearchRequest.of(
@@ -225,7 +223,7 @@ abstract class AbstractOpenSearchTest {
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
-    // Verify trace includes query body in DB_STATEMENT with exact match
+    // Verify trace does NOT include query body, only method + operation
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -236,10 +234,13 @@ abstract class AbstractOpenSearchTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                // DB_STATEMENT should exactly match the extracted JSON query body
-                                equalTo(
+                                // DB_STATEMENT should be method + operation, not JSON body
+                                satisfies(
                                     maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                    statement ->
+                                        statement
+                                            .asString()
+                                            .startsWith("POST /" + INDEX_NAME + "/_search"))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -254,85 +255,6 @@ abstract class AbstractOpenSearchTest {
                                     url ->
                                         url.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(PEER_SERVICE, "test-peer-service"))));
-  }
-
-  @Test
-  void shouldCaptureMsearchQueryBody() throws IOException {
-    // Execute search query with body
-
-    MsearchRequest msearchRequest =
-        new MsearchRequest.Builder()
-            .searches(
-                s ->
-                    s.header(h -> h.index(INDEX_NAME))
-                        .body(
-                            b ->
-                                b.query(
-                                    q ->
-                                        q.term(
-                                            t ->
-                                                t.field("message")
-                                                    .value(v -> v.stringValue("message"))))))
-            .searches(
-                s ->
-                    s.header(h -> h.index(INDEX_NAME))
-                        .body(
-                            b ->
-                                b.query(
-                                    q ->
-                                        q.term(
-                                            t ->
-                                                t.field("message2")
-                                                    .value(v -> v.longValue(100L))))))
-            .searches(
-                s ->
-                    s.header(h -> h.index(INDEX_NAME))
-                        .body(
-                            b ->
-                                b.query(
-                                    q ->
-                                        q.term(
-                                            t ->
-                                                t.field("message3")
-                                                    .value(v -> v.booleanValue(true))))))
-            .build();
-
-    MsearchResponse<TestDocument> msearchResponse =
-        openSearchClient.msearch(msearchRequest, TestDocument.class);
-    assertThat(msearchResponse.responses().size()).isGreaterThan(0);
-
-    // Verify trace includes query body in DB_STATEMENT with exact match
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("POST")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                // DB_STATEMENT should exactly match the extracted JSON query body
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}")),
-                    span ->
-                        span.hasName("POST")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                satisfies(
-                                    URL_FULL,
-                                    url ->
-                                        url.asString()
-                                            .startsWith(
-                                                httpHost + "/" + "_msearch?typed_keys=true")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                                 equalTo(PEER_SERVICE, "test-peer-service"))));
   }

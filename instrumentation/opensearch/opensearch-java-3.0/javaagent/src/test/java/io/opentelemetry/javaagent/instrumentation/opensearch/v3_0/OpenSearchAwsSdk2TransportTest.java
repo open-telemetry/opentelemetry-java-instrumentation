@@ -339,17 +339,8 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
 
   @Test
   @Override
-  void shouldCaptureSearchQueryBody() throws IOException {
-    // Execute search query with body
+  void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {
     setupForSearchResponse();
-    super.shouldCaptureSearchQueryBody();
-  }
-
-  @Test
-  @Override
-  void shouldCaptureMsearchQueryBody() throws IOException {
-    // Execute search query with body
-    setupForMsearchResponse();
-    super.shouldCaptureMsearchQueryBody();
+    super.shouldNotCaptureSearchQueryBodyWhenDisabled();
   }
 }

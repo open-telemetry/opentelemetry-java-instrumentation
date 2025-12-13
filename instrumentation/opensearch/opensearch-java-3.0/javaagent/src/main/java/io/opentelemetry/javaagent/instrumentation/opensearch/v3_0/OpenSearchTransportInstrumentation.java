@@ -22,6 +22,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.opensearch.client.json.JsonpMapper;
+import org.opensearch.client.opensearch.core.MsearchRequest;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.transport.Endpoint;
 import org.opensearch.client.transport.OpenSearchTransport;
 
@@ -68,9 +70,10 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
       String queryBody = null;
 
-      if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY) {
+      if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY
+          && (request instanceof SearchRequest || request instanceof MsearchRequest)) {
         String rawBody = OpenSearchBodyExtractor.extract(jsonpMapper, request);
-        queryBody = OpenSearchBodyExtractor.extract(jsonpMapper, rawBody);
+        queryBody = OpenSearchBodySanitizer.sanitize(rawBody);
       }
 
       OpenSearchRequest otelRequest =
