@@ -38,15 +38,20 @@ public class KafkaInstrumentationAutoConfiguration {
     OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
     return SpringKafkaTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            DeclarativeConfigUtil.getBoolean(openTelemetry, "kafka", "experimental_span_attributes")
+            DeclarativeConfigUtil.getBoolean(
+                    openTelemetry, "java", "kafka", "experimental_span_attributes")
                 .orElse(false))
         .setMessagingReceiveInstrumentationEnabled(
             DeclarativeConfigUtil.getBoolean(
-                    openTelemetry, "messaging", "experimental", "receive_telemetry", "enabled")
+                    openTelemetry,
+                    "java",
+                    "messaging",
+                    "receive_telemetry/development",
+                    "enabled")
                 .orElse(false))
         .setCapturedHeaders(
             DeclarativeConfigUtil.getList(
-                    openTelemetry, "messaging", "experimental", "capture_headers")
+                    openTelemetry, "java", "messaging", "capture_headers/development")
                 .orElse(emptyList()))
         .build();
   }

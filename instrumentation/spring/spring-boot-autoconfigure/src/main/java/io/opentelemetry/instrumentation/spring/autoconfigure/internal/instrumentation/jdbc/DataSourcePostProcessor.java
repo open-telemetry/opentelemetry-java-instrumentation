@@ -60,13 +60,16 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
       JdbcTelemetryBuilder builder =
           JdbcTelemetry.builder(openTelemetry)
               .setStatementSanitizationEnabled(
-                  DeclarativeConfigUtil.getBoolean(
-                          openTelemetry, "jdbc", "statement_sanitizer", "enabled")
-                      .orElseGet(
-                          () ->
-                              DeclarativeConfigUtil.getBoolean(
-                                      openTelemetry, "common", "db_statement_sanitizer", "enabled")
-                                  .orElse(true)))
+                DeclarativeConfigUtil.getBoolean(
+                    openTelemetry, "java", "jdbc", "statement_sanitizer", "enabled")
+                  .orElseGet(
+                    () ->
+                      DeclarativeConfigUtil.getBoolean(
+                          openTelemetry,
+                          "common",
+                          "db_statement_sanitizer",
+                          "enabled")
+                        .orElse(true)))
               .setCaptureQueryParameters(
                   DeclarativeConfigUtil.getBoolean(
                           openTelemetry, "jdbc", "capture_query_parameters")

@@ -33,16 +33,16 @@ public class MongoClientInstrumentationAutoConfiguration {
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
                 .setStatementSanitizationEnabled(
-                    DeclarativeConfigUtil.getBoolean(
-                            openTelemetry, "mongo", "statement_sanitizer", "enabled")
-                        .orElseGet(
-                            () ->
-                                DeclarativeConfigUtil.getBoolean(
-                                        openTelemetry,
-                                        "common",
-                                        "db_statement_sanitizer",
-                                        "enabled")
-                                    .orElse(true)))
+                DeclarativeConfigUtil.getBoolean(
+                    openTelemetry, "java", "mongo", "statement_sanitizer", "enabled")
+                  .orElseGet(
+                    () ->
+                      DeclarativeConfigUtil.getBoolean(
+                          openTelemetry,
+                          "common",
+                          "db_statement_sanitizer",
+                          "enabled")
+                        .orElse(true)))
                 .build()
                 .newCommandListener());
   }

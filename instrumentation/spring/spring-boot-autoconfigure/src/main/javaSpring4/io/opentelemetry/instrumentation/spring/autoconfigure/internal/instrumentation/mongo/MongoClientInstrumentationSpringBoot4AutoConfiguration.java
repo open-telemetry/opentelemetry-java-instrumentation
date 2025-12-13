@@ -31,11 +31,12 @@ public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
             MongoTelemetry.builder(openTelemetry)
                 .setStatementSanitizationEnabled(
                     DeclarativeConfigUtil.getBoolean(
-                            openTelemetry, "mongo", "statement_sanitizer", "enabled")
+                            openTelemetry, "java", "mongo", "statement_sanitizer", "enabled")
                         .orElseGet(
                             () ->
                                 DeclarativeConfigUtil.getBoolean(
                                         openTelemetry,
+                                        "java",
                                         "common",
                                         "db_statement_sanitizer",
                                         "enabled")
