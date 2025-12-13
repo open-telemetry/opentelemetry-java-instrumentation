@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.javaagent.tooling.config.RuntimeConfigProperties;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
@@ -32,7 +33,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,34 +64,30 @@ public final class InstrumentationModuleInstaller {
   }
 
   AgentBuilder install(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     boolean defaultEnabled;
     try {
       defaultEnabled = instrumentationModule.defaultEnabled();
     } catch (UnsupportedOperationException e) {
       // fall back to the deprecated method
-      defaultEnabled = instrumentationModule.defaultEnabled(config);
+      defaultEnabled = instrumentationModule.defaultEnabled(RuntimeConfigProperties.get());
     }
     if (!AgentConfig.isInstrumentationEnabled(
-        config, instrumentationModule.instrumentationNames(), defaultEnabled)) {
+        instrumentationModule.instrumentationNames(), defaultEnabled)) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
     }
 
     if (instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
+      return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
+      return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
   private AgentBuilder installIndyModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -123,7 +119,7 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
@@ -175,9 +171,7 @@ public final class InstrumentationModuleInstaller {
   }
 
   private AgentBuilder installInjectingModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -194,7 +188,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),

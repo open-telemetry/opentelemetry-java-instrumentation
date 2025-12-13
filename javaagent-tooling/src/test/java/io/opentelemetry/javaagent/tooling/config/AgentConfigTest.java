@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,14 +30,32 @@ class AgentConfigTest {
       boolean defaultEnabled,
       boolean expected) {
 
-    ConfigProperties config = mock(ConfigProperties.class);
-    when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
-    when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
+    Map<String, String> config = new HashMap<>();
+    if (firstEnabled != null) {
+      config.put("otel.instrumentation.first.enabled", firstEnabled.toString());
+    }
+    if (secondEnabled != null) {
+      config.put("otel.instrumentation.second.enabled", secondEnabled.toString());
+    }
 
-    assertEquals(
-        expected,
-        AgentConfig.isInstrumentationEnabled(
-            config, new TreeSet<>(asList("first", "second")), defaultEnabled));
+    // Reset GlobalOpenTelemetry and configure with test properties
+    GlobalOpenTelemetry.resetForTest();
+    OpenTelemetrySdk sdk =
+        AutoConfiguredOpenTelemetrySdk.builder()
+            .addPropertiesSupplier(() -> config)
+            .setResultAsGlobal()
+            .build()
+            .getOpenTelemetrySdk();
+
+    try {
+      assertEquals(
+          expected,
+          AgentConfig.isInstrumentationEnabled(
+              new TreeSet<>(asList("first", "second")), defaultEnabled));
+    } finally {
+      sdk.close();
+      GlobalOpenTelemetry.resetForTest();
+    }
   }
 
   private static Stream<Arguments> instrumentationEnabledParams() {

@@ -48,7 +48,7 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
 
   private static void maybeEnableLoggingExporter(
       SdkTracerProviderBuilder builder, ConfigProperties config) {
-    if (AgentConfig.isDebugModeEnabled(config)) {
+    if (AgentConfig.isDebugModeEnabled()) {
       // don't install another instance if the user has already explicitly requested it.
       if (loggingExporterIsNotAlreadyConfigured(config)) {
         builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));

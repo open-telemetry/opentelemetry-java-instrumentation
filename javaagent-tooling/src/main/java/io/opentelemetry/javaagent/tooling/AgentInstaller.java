@@ -181,7 +181,12 @@ public class AgentInstaller {
             new Object[] {agentExtension.extensionName(), agentExtension.getClass().getName()});
       }
       try {
-        agentBuilder = agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
+        try {
+          agentBuilder = agentExtension.extend(agentBuilder);
+        } catch (UnsupportedOperationException e) {
+          // fall back to the deprecated method
+          agentBuilder = agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
+        }
         numberOfLoadedExtensions++;
       } catch (Exception | LinkageError e) {
         logger.log(
