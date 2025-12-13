@@ -21,7 +21,6 @@ import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.config.RuntimeConfigProperties;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
@@ -33,10 +32,13 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -72,7 +74,7 @@ public final class InstrumentationModuleInstaller {
       // fall back to the deprecated method
       defaultEnabled = instrumentationModule.defaultEnabled(RuntimeConfigProperties.get());
     }
-    if (!AgentConfig.isInstrumentationEnabled(
+    if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(), defaultEnabled)) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
@@ -270,5 +272,18 @@ public final class InstrumentationModuleInstaller {
         .and(
             (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
                 classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription));
+  }
+
+  private static boolean isInstrumentationEnabled(
+      Iterable<String> instrumentationNames, boolean defaultEnabled) {
+    for (String name : instrumentationNames) {
+      Optional<Boolean> enabled =
+          DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "instrumentation", name, "enabled");
+      if (enabled.isPresent()) {
+        return enabled.get();
+      }
+    }
+    return defaultEnabled;
   }
 }
