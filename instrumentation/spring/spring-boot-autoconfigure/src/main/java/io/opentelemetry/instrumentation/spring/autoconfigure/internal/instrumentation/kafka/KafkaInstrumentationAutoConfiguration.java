@@ -43,11 +43,7 @@ public class KafkaInstrumentationAutoConfiguration {
                 .orElse(false))
         .setMessagingReceiveInstrumentationEnabled(
             DeclarativeConfigUtil.getBoolean(
-                    openTelemetry,
-                    "java",
-                    "messaging",
-                    "receive_telemetry/development",
-                    "enabled")
+                    openTelemetry, "java", "messaging", "receive_telemetry/development", "enabled")
                 .orElse(false))
         .setCapturedHeaders(
             DeclarativeConfigUtil.getList(

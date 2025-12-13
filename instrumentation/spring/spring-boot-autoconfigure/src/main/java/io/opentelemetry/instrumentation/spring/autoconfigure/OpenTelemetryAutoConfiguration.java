@@ -122,7 +122,8 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public ConfigProperties otelProperties(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-        ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+        ConfigProperties configProperties =
+            AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
         if (configProperties == null) {
           throw new IllegalStateException(
               "Expected configProperties to be non-null for properties-based configuration");
@@ -137,13 +138,14 @@ public class OpenTelemetryAutoConfiguration {
         logStart();
         OpenTelemetrySdk sdk = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
         // Extract ConfigProvider from the AutoConfiguredOpenTelemetrySdk
-        ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
-        
+        ConfigProvider configProvider =
+            AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
+
         if (configProvider == null) {
           // Create ConfigProvider from ConfigProperties if not already present
           configProvider = ConfigPropertiesBackedConfigProvider.create(otelProperties);
         }
-        
+
         // Wrap the SDK to provide ConfigProvider for DeclarativeConfigUtil
         // SpringOpenTelemetrySdk extends OpenTelemetrySdk and implements ExtendedOpenTelemetry
         return SpringOpenTelemetrySdk.create(sdk, configProvider);

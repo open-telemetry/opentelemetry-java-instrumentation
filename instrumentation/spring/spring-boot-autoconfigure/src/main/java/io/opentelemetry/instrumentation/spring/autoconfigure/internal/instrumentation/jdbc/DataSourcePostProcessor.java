@@ -60,25 +60,24 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
       JdbcTelemetryBuilder builder =
           JdbcTelemetry.builder(openTelemetry)
               .setStatementSanitizationEnabled(
-                DeclarativeConfigUtil.getBoolean(
-                    openTelemetry, "java", "jdbc", "statement_sanitizer", "enabled")
-                  .orElseGet(
-                    () ->
-                      DeclarativeConfigUtil.getBoolean(
-                          openTelemetry,
-                          "common",
-                          "db_statement_sanitizer",
-                          "enabled")
-                        .orElse(true)))
+                  DeclarativeConfigUtil.getBoolean(
+                          openTelemetry, "java", "jdbc", "statement_sanitizer", "enabled")
+                      .orElseGet(
+                          () ->
+                              DeclarativeConfigUtil.getBoolean(
+                                      openTelemetry, "common", "db_statement_sanitizer", "enabled")
+                                  .orElse(true)))
               .setCaptureQueryParameters(
                   DeclarativeConfigUtil.getBoolean(
                           openTelemetry, "java", "jdbc", "capture_query_parameters")
                       .orElse(false))
               .setTransactionInstrumenterEnabled(
-                  DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "jdbc", "transaction", "enabled")
+                  DeclarativeConfigUtil.getBoolean(
+                          openTelemetry, "java", "jdbc", "transaction", "enabled")
                       .orElse(false))
               .setDataSourceInstrumenterEnabled(
-                  DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "jdbc", "datasource", "enabled")
+                  DeclarativeConfigUtil.getBoolean(
+                          openTelemetry, "java", "jdbc", "datasource", "enabled")
                       .orElse(false));
       Experimental.setEnableSqlCommenter(
           builder,
