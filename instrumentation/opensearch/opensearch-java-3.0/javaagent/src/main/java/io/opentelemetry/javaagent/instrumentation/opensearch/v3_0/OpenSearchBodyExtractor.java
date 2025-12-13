@@ -5,10 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static java.util.logging.Level.FINE;
+
 import jakarta.json.stream.JsonGenerator;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.ContentType;
 import org.opensearch.client.json.JsonpMapper;
@@ -16,6 +19,8 @@ import org.opensearch.client.json.NdJsonpSerializable;
 import org.opensearch.client.transport.GenericSerializable;
 
 public class OpenSearchBodyExtractor {
+
+  private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
 
   @Nullable
   public static String extract(JsonpMapper mapper, Object request) {
@@ -35,6 +40,7 @@ public class OpenSearchBodyExtractor {
       String body = baos.toString(StandardCharsets.UTF_8);
       return body.isEmpty() ? null : body;
     } catch (RuntimeException e) {
+      logger.log(FINE, "Failure extracting body", e);
       return null;
     }
   }
@@ -56,7 +62,7 @@ public class OpenSearchBodyExtractor {
         }
       }
     } catch (RuntimeException e) {
-      // Ignore
+      logger.log(FINE, "Failure serializing NdJson", e);
     }
   }
 

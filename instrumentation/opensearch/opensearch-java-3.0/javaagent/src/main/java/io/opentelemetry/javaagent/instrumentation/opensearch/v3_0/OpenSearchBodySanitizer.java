@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static java.util.logging.Level.FINE;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -13,8 +15,11 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class OpenSearchBodySanitizer {
+
+  private static final Logger logger = Logger.getLogger(OpenSearchBodySanitizer.class.getName());
 
   private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper();
   private static final String MASKED_VALUE = "?";
@@ -68,6 +73,7 @@ public class OpenSearchBodySanitizer {
       JsonNode sanitizedNode = sanitizeNode(rootNode);
       return objectMapper.writeValueAsString(sanitizedNode);
     } catch (Exception e) {
+      logger.log(FINE, "Failure sanitizing single query", e);
       return query;
     }
   }
