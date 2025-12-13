@@ -48,15 +48,15 @@ public final class BridgedConfigProvider implements ConfigProvider {
 
     static DeclarativeConfigProperties create(
         Function<String, DeclarativeConfigProperties> getStructuredFunc) {
-      return new DeclarativeConfigPropertiesImpl(getStructuredFunc);
+      return new InnerDeclarativeConfigProperties(getStructuredFunc);
     }
   }
 
-  private static final class DeclarativeConfigPropertiesImpl
+  private static final class InnerDeclarativeConfigProperties
       implements DeclarativeConfigProperties {
     private final Function<String, DeclarativeConfigProperties> getStructuredFunc;
 
-    DeclarativeConfigPropertiesImpl(
+    InnerDeclarativeConfigProperties(
         Function<String, DeclarativeConfigProperties> getStructuredFunc) {
       this.getStructuredFunc = getStructuredFunc;
     }
