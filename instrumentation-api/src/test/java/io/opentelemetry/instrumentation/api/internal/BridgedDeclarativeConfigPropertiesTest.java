@@ -10,20 +10,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
-class AbstractBridgedDeclarativeConfigPropertiesTest {
+class BridgedDeclarativeConfigPropertiesTest {
   @Test
   void toSystemProperty() {
     assertThat(
-            AbstractBridgedDeclarativeConfigProperties.toSystemProperty(
+            BridgedDeclarativeConfigProperties.toSystemProperty(
                 Arrays.asList("a_b", "c", "d")))
         .isEqualTo("otel.instrumentation.a-b.c.d");
     assertThat(
-            AbstractBridgedDeclarativeConfigProperties.toSystemProperty(
+            BridgedDeclarativeConfigProperties.toSystemProperty(
                 Arrays.asList("a_b/development", "c", "d")))
         .isEqualTo("otel.instrumentation.experimental.a-b.c.d");
     assertThat(
-            AbstractBridgedDeclarativeConfigProperties.toSystemProperty(
+            BridgedDeclarativeConfigProperties.toSystemProperty(
                 Arrays.asList("a_experimental_b/development", "c", "d")))
         .isEqualTo("otel.instrumentation.a-experimental-b.c.d");
   }
 }
+

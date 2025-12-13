@@ -37,7 +37,7 @@ public abstract class AbstractBridgedConfigProvider implements ConfigProvider {
     };
   }
 
-  protected abstract AbstractBridgedDeclarativeConfigProperties getProperties(String name);
+  protected abstract BridgedDeclarativeConfigProperties getProperties(String name);
 
   private abstract static class EmptyDeclarativeConfigProperties
       implements DeclarativeConfigProperties {

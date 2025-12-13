@@ -18,8 +18,8 @@ public class ConfigProviderUtil {
   static final AbstractBridgedConfigProvider BRIDGED_CONFIG_PROVIDER =
       new AbstractBridgedConfigProvider() {
         @Override
-        protected AbstractBridgedDeclarativeConfigProperties getProperties(String name) {
-          return new SystemPropertiesDeclarativeConfigProperties(name, null);
+        protected BridgedDeclarativeConfigProperties getProperties(String name) {
+          return new BridgedDeclarativeConfigProperties(name, null, ConfigPropertiesUtil::getString);
         }
       };
 

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -18,15 +19,18 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public abstract class AbstractBridgedDeclarativeConfigProperties
-    implements DeclarativeConfigProperties {
-  protected final String node;
-  @Nullable protected final AbstractBridgedDeclarativeConfigProperties parent;
+public final class BridgedDeclarativeConfigProperties implements DeclarativeConfigProperties {
+  private final String node;
+  @Nullable private final BridgedDeclarativeConfigProperties parent;
+  private final Function<String, String> propertySource;
 
-  public AbstractBridgedDeclarativeConfigProperties(
-      String node, @Nullable AbstractBridgedDeclarativeConfigProperties parent) {
+  public BridgedDeclarativeConfigProperties(
+      String node,
+      @Nullable BridgedDeclarativeConfigProperties parent,
+      Function<String, String> propertySource) {
     this.node = node;
     this.parent = parent;
+    this.propertySource = propertySource;
   }
 
   private static List<String> filterBlanksAndNulls(String[] values) {
@@ -39,7 +43,7 @@ public abstract class AbstractBridgedDeclarativeConfigProperties
   @Nullable
   @Override
   public String getString(String name) {
-    return getStringValue(getSystemProperty(name));
+    return propertySource.apply(getSystemProperty(name));
   }
 
   @Nullable
@@ -103,13 +107,13 @@ public abstract class AbstractBridgedDeclarativeConfigProperties
     return value == null
         ? null
         : (List<T>)
-            AbstractBridgedDeclarativeConfigProperties.filterBlanksAndNulls(value.split(","));
+            BridgedDeclarativeConfigProperties.filterBlanksAndNulls(value.split(","));
   }
 
   @Nullable
   @Override
   public DeclarativeConfigProperties getStructured(String name) {
-    return newChild(name);
+    return new BridgedDeclarativeConfigProperties(name, this, propertySource);
   }
 
   @Nullable
@@ -127,11 +131,6 @@ public abstract class AbstractBridgedDeclarativeConfigProperties
   public ComponentLoader getComponentLoader() {
     throw new UnsupportedOperationException();
   }
-
-  protected abstract AbstractBridgedDeclarativeConfigProperties newChild(String node);
-
-  @Nullable
-  protected abstract String getStringValue(String systemPropertyKey);
 
   private String getSystemProperty(String name) {
     List<String> nodes = new ArrayList<>();
@@ -158,3 +157,4 @@ public abstract class AbstractBridgedDeclarativeConfigProperties
     return "otel.instrumentation." + String.join(".", nodes).replace('_', '-');
   }
 }
+
