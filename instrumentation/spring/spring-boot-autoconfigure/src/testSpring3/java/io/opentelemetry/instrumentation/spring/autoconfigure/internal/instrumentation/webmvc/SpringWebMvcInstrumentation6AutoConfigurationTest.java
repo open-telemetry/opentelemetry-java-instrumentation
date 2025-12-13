@@ -30,8 +30,7 @@ class SpringWebMvcInstrumentation6AutoConfigurationTest {
               () ->
                   new ConfigPropertiesBridge(
                       DefaultConfigProperties.createFromMap(Collections.emptyMap()),
-                      ConfigProvider.noop(),
-                      false))
+                      ConfigProvider.noop()))
           .withConfiguration(
               AutoConfigurations.of(SpringWebMvc6InstrumentationAutoConfiguration.class));
 

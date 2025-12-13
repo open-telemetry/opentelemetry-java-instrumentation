@@ -28,8 +28,7 @@ class RestClientInstrumentationAutoConfigurationTest {
               () ->
                   new ConfigPropertiesBridge(
                       DefaultConfigProperties.createFromMap(Collections.emptyMap()),
-                      ConfigProvider.noop(),
-                      false))
+                      ConfigProvider.noop()))
           .withBean(RestClient.class, RestClient::create)
           .withConfiguration(
               AutoConfigurations.of(RestClientInstrumentationAutoConfiguration.class));

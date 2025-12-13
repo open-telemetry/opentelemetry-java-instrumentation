@@ -22,9 +22,7 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
 
   public static final ConfigPropertiesBridge EMPTY_INSTRUMENTATION_CONFIG =
       new ConfigPropertiesBridge(
-          DefaultConfigProperties.createFromMap(Collections.emptyMap()),
-          ConfigProvider.noop(),
-          false);
+          DefaultConfigProperties.createFromMap(Collections.emptyMap()), ConfigProvider.noop());
 
   protected abstract AutoConfigurations autoConfigurations();
 

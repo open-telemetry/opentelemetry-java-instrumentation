@@ -45,12 +45,10 @@ class ConfigPropertiesBridgeTest {
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(emptyMap());
 
     return Stream.of(
-        Arguments.of(
-            "config properties", new ConfigPropertiesBridge(configProperties, null, false)),
+        Arguments.of("config properties", new ConfigPropertiesBridge(configProperties, null)),
         Arguments.of(
             "declarative config",
-            new ConfigPropertiesBridge(
-                configProperties, SdkConfigProvider.create(emptyModel), false)));
+            new ConfigPropertiesBridge(configProperties, SdkConfigProvider.create(emptyModel))));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -97,12 +95,10 @@ class ConfigPropertiesBridgeTest {
         DefaultConfigProperties.createFromMap(getProperties());
 
     return Stream.of(
-        Arguments.of(
-            "config properties", new ConfigPropertiesBridge(configProperties, null, false)),
+        Arguments.of("config properties", new ConfigPropertiesBridge(configProperties, null)),
         Arguments.of(
             "declarative config",
-            new ConfigPropertiesBridge(
-                configProperties, SdkConfigProvider.create(emptyModel), false)));
+            new ConfigPropertiesBridge(configProperties, SdkConfigProvider.create(emptyModel))));
   }
 
   private static Map<String, String> getProperties() {

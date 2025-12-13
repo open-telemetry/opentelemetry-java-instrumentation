@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -240,8 +241,8 @@ public class AgentInstaller {
         isDeclarativeConfig
             ? originalProvider
             : ConfigPropertiesDeclarativeConfigProperties.create(
-                AutoConfigureUtil.getConfig(autoConfiguredSdk));
-    return new ConfigPropertiesBridge(sdkConfig, provider, isDeclarativeConfig);
+                requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredSdk)));
+    return new ConfigPropertiesBridge(sdkConfig, provider);
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {

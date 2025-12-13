@@ -18,15 +18,10 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
   private final ConfigProvider configProvider;
-  private final boolean isDeclarativeConfig;
 
-  public ConfigPropertiesBridge(
-      ConfigProperties configProperties,
-      ConfigProvider configProvider,
-      boolean isDeclarativeConfig) {
+  public ConfigPropertiesBridge(ConfigProperties configProperties, ConfigProvider configProvider) {
     this.configProperties = configProperties;
     this.configProvider = configProvider;
-    this.isDeclarativeConfig = isDeclarativeConfig;
   }
 
   @Nullable
@@ -109,11 +104,6 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
     } catch (ConfigurationException ignored) {
       return defaultValue;
     }
-  }
-
-  @Override
-  public boolean isDeclarative() {
-    return isDeclarativeConfig;
   }
 
   @Nullable

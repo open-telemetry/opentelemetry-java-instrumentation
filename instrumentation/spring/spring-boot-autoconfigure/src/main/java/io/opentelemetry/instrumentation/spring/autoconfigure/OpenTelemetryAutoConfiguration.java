@@ -153,7 +153,7 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public InstrumentationConfig instrumentationConfig(
           ConfigProperties properties, ConfigProvider configProvider) {
-        return new ConfigPropertiesBridge(properties, configProvider, false);
+        return new ConfigPropertiesBridge(properties, configProvider);
       }
     }
 
@@ -198,7 +198,7 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public InstrumentationConfig instrumentationConfig(
           ConfigProperties properties, ConfigProvider configProvider) {
-        return new ConfigPropertiesBridge(properties, configProvider, true);
+        return new ConfigPropertiesBridge(properties, configProvider);
       }
 
       @Bean
@@ -245,7 +245,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public InstrumentationConfig instrumentationConfig(
         ConfigProperties properties, ConfigProvider configProvider) {
-      return new ConfigPropertiesBridge(properties, configProvider, false);
+      return new ConfigPropertiesBridge(properties, configProvider);
     }
 
     @Configuration
@@ -292,7 +292,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public InstrumentationConfig instrumentationConfig(
         ConfigProperties properties, ConfigProvider configProvider) {
-      return new ConfigPropertiesBridge(properties, configProvider, false);
+      return new ConfigPropertiesBridge(properties, configProvider);
     }
   }
 

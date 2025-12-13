@@ -11,6 +11,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.BridgedConfigProvider;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +114,9 @@ public interface InstrumentationConfig {
   Map<String, String> getMap(String name, Map<String, String> defaultValue);
 
   /** Returns {@code true} if declarative configuration is used in this configuration. */
-  boolean isDeclarative();
+  default boolean isDeclarative() {
+    return !(getConfigProvider() instanceof BridgedConfigProvider);
+  }
 
   /**
    * Returns a {@link DeclarativeConfigProperties} for the given node name, which is usually an

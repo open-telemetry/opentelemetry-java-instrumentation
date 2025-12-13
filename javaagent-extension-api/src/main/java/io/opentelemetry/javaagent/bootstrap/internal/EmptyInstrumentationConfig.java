@@ -61,11 +61,6 @@ final class EmptyInstrumentationConfig implements InstrumentationConfig {
   }
 
   @Override
-  public boolean isDeclarative() {
-    return false;
-  }
-
-  @Override
   public ConfigProvider getConfigProvider() {
     return ConfigProvider.noop();
   }
