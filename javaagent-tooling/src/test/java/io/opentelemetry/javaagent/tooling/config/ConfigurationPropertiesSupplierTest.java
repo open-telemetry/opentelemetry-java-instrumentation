@@ -77,7 +77,7 @@ class ConfigurationPropertiesSupplierTest {
                 .getInstrumentationConfig()
                 .getStructured("custom", DeclarativeConfigProperties.empty())
                 .getString("key"))
-        .isEqualTo("42");
+        .isEqualTo("123");
   }
 
   // SPI used in test
