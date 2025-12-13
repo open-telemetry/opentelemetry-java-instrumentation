@@ -18,7 +18,7 @@ public final class XxlJobInstrumenterFactory {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "xxl_job", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "java", "xxl_job", "experimental_span_attributes")
           .orElse(false);
 
   public static Instrumenter<XxlJobProcessRequest, Void> create(String instrumentationName) {

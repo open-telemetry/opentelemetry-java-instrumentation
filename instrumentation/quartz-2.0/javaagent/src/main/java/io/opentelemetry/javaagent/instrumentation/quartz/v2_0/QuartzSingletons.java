@@ -15,7 +15,7 @@ public final class QuartzSingletons {
       QuartzTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(), "java", "quartz", "span_attributes/development")
+                      GlobalOpenTelemetry.get(), "java", "quartz", "experimental_span_attributes")
                   .orElse(false))
           .build();
 

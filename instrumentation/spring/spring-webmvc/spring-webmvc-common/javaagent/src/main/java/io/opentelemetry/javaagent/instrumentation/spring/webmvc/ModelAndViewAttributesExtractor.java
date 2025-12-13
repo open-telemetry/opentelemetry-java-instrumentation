@@ -18,7 +18,7 @@ public class ModelAndViewAttributesExtractor implements AttributesExtractor<Mode
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "spring_webmvc", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "spring_webmvc", "experimental_span_attributes")
           .orElse(false);
 
   @Override

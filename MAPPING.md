@@ -41,12 +41,12 @@ This table documents the conversion from system properties (upstream/main) to de
 | `java`, `grpc`, `capture_metadata`, `server`, `request` | `otel.instrumentation.grpc.capture-metadata.server.request` |
 | `java`, `grpc`, `emit_message_events` | `otel.instrumentation.grpc.emit-message-events` |
 | `java`, `grpc`, `experimental_span_attributes` | `otel.instrumentation.grpc.experimental-span-attributes` |
-| `java`, `guava`, `span_attributes/development` | `otel.instrumentation.guava.experimental-span-attributes` |
-| `java`, `hibernate`, `span_attributes/development` | `otel.instrumentation.hibernate.experimental-span-attributes` |
+| `java`, `guava`, `experimental_span_attributes` | `otel.instrumentation.guava.experimental-span-attributes` |
+| `java`, `hibernate`, `experimental_span_attributes` | `otel.instrumentation.hibernate.experimental-span-attributes` |
 | `java`, `http`, `client`, `emit_experimental_telemetry/development` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
 | `java`, `http`, `client`, `emit_telemetry/development` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
 | `java`, `http`, `known_methods` | `otel.instrumentation.http.known-methods` |
-| `java`, `hystrix`, `span_attributes/development` | `otel.instrumentation.hystrix.experimental-span-attributes` |
+| `java`, `hystrix`, `experimental_span_attributes` | `otel.instrumentation.hystrix.experimental-span-attributes` |
 | `java`, `jaxrs`, `experimental_span_attributes` | `otel.instrumentation.jaxrs.experimental-span-attributes` |
 | `java`, `jdbc`, `datasource`, `enabled` | `otel.instrumentation.jdbc.datasource.enabled` |
 | `java`, `jdbc`, `experimental`, `capture_query_parameters` | `otel.instrumentation.jdbc.experimental.capture-query-parameters` |
@@ -90,9 +90,9 @@ This table documents the conversion from system properties (upstream/main) to de
 | `java`, `netty`, `ssl_telemetry`, `enabled` | `otel.instrumentation.netty.ssl-telemetry.enabled` |
 | `java`, `opentelemetry-instrumentation-annotations`, `exclude_methods` | `otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods` |
 | `java`, `oshi`, `enabled` | `otel.instrumentation.oshi.enabled` |
-| `java`, `powerjob`, `span_attributes/development` | `otel.instrumentation.powerjob.experimental-span-attributes` |
+| `java`, `powerjob`, `experimental_span_attributes` | `otel.instrumentation.powerjob.experimental-span-attributes` |
 | `java`, `pulsar`, `experimental_span_attributes` | `otel.instrumentation.pulsar.experimental-span-attributes` |
-| `java`, `quartz`, `span_attributes/development` | `otel.instrumentation.quartz.experimental-span-attributes` |
+| `java`, `quartz`, `experimental_span_attributes` | `otel.instrumentation.quartz.experimental-span-attributes` |
 | `java`, `r2dbc`, `experimental`, `sqlcommenter`, `enabled` | `otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled` |
 | `java`, `r2dbc`, `statement_sanitizer`, `enabled` | `otel.instrumentation.r2dbc.statement-sanitizer.enabled` |
 | `java`, `rabbitmq`, `experimental_span_attributes` | `otel.instrumentation.rabbitmq.experimental-span-attributes` |
@@ -100,14 +100,14 @@ This table documents the conversion from system properties (upstream/main) to de
 | `java`, `runtime_telemetry`, `capture_gc_cause` | `otel.instrumentation.runtime-telemetry.capture-gc-cause` |
 | `java`, `runtime_telemetry`, `emit_experimental_telemetry` | `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` |
 | `java`, `runtime_telemetry`, `enabled` | `otel.instrumentation.runtime-telemetry.enabled` |
-| `java`, `rxjava`, `span_attributes/development` | `otel.instrumentation.rxjava.experimental-span-attributes` |
+| `java`, `rxjava`, `experimental_span_attributes` | `otel.instrumentation.rxjava.experimental-span-attributes` |
 | `java`, `servlet`, `experimental`, `add_trace_id_request_attribute` | `otel.instrumentation.servlet.experimental.add-trace-id-request-attribute` |
 | `java`, `servlet`, `experimental`, `capture_request_parameters` | `otel.instrumentation.servlet.experimental.capture-request-parameters` |
 | `java`, `spring_batch`, `chunk/development`, `new_trace` | `otel.instrumentation.spring-batch.experimental.chunk.new-trace` |
 | `java`, `spring_batch`, `item`, `enabled` | `otel.instrumentation.spring-batch.item.enabled` |
-| `java`, `spring_scheduling`, `span_attributes/development` | `otel.instrumentation.spring-scheduling.experimental-span-attributes` |
+| `java`, `spring_scheduling`, `experimental_span_attributes` | `otel.instrumentation.spring-scheduling.experimental-span-attributes` |
 | `java`, `spring_security`, `enduser`, `role`, `granted_authority_prefix` | `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` |
 | `java`, `spring_security`, `enduser`, `scope`, `granted_authority_prefix` | `otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix` |
-| `java`, `spymemcached`, `span_attributes/development` | `otel.instrumentation.spymemcached.experimental-span-attributes` |
-| `java`, `twilio`, `span_attributes/development` | `otel.instrumentation.twilio.experimental-span-attributes` |
-| `java`, `xxl_job`, `span_attributes/development` | `otel.instrumentation.xxl-job.experimental-span-attributes` |
+| `java`, `spymemcached`, `experimental_span_attributes` | `otel.instrumentation.spymemcached.experimental-span-attributes` |
+| `java`, `twilio`, `experimental_span_attributes` | `otel.instrumentation.twilio.experimental-span-attributes` |
+| `java`, `xxl_job`, `experimental_span_attributes` | `otel.instrumentation.xxl-job.experimental-span-attributes` |

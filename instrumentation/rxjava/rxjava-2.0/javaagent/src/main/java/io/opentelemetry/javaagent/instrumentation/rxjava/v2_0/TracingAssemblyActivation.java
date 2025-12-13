@@ -25,7 +25,7 @@ public final class TracingAssemblyActivation {
       TracingAssembly.builder()
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(), "java", "rxjava", "span_attributes/development")
+                      GlobalOpenTelemetry.get(), "java", "rxjava", "experimental_span_attributes")
                   .orElse(false))
           .build()
           .enable();

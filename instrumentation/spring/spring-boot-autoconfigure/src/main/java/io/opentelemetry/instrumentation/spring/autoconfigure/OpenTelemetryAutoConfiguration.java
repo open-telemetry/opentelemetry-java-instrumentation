@@ -118,20 +118,35 @@ public class OpenTelemetryAutoConfiguration {
             .build();
       }
 
+      // TODO why is exposing this needed?
       @Bean
-      public OpenTelemetrySdk openTelemetry(
-          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
-          ConfigProvider configProvider) {
-        logStart();
-        OpenTelemetrySdk sdk = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
-        // Wrap the SDK to provide ConfigProvider for DeclarativeConfigUtil
-        // SpringOpenTelemetrySdk extends OpenTelemetrySdk and implements ExtendedOpenTelemetry
-        return SpringOpenTelemetrySdk.create(sdk, configProvider);
+      public ConfigProperties otelProperties(
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+        ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+        if (configProperties == null) {
+          throw new IllegalStateException(
+              "Expected configProperties to be non-null for properties-based configuration");
+        }
+        return configProperties;
       }
 
       @Bean
-      public ConfigProvider configProvider(ConfigProperties properties) {
-        return ConfigPropertiesBackedConfigProvider.create(properties);
+      public OpenTelemetrySdk openTelemetry(
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
+          ConfigProperties otelProperties) {
+        logStart();
+        OpenTelemetrySdk sdk = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+        // Extract ConfigProvider from the AutoConfiguredOpenTelemetrySdk
+        ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
+        
+        if (configProvider == null) {
+          // Create ConfigProvider from ConfigProperties if not already present
+          configProvider = ConfigPropertiesBackedConfigProvider.create(otelProperties);
+        }
+        
+        // Wrap the SDK to provide ConfigProvider for DeclarativeConfigUtil
+        // SpringOpenTelemetrySdk extends OpenTelemetrySdk and implements ExtendedOpenTelemetry
+        return SpringOpenTelemetrySdk.create(sdk, configProvider);
       }
     }
 

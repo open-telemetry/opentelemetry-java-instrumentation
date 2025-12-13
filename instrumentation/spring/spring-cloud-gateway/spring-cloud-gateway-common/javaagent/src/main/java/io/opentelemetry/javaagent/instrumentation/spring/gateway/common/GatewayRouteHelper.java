@@ -38,7 +38,7 @@ public final class GatewayRouteHelper {
   static {
     CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
         DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(), "spring_cloud_gateway", "span_attributes/development")
+                GlobalOpenTelemetry.get(), "spring_cloud_gateway", "experimental_span_attributes")
             .orElse(false);
   }
 

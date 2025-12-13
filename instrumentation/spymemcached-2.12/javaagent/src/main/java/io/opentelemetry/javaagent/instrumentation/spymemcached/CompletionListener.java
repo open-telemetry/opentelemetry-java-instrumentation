@@ -18,7 +18,7 @@ public abstract class CompletionListener<T> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "spymemcached", "span_attributes/development")
+              GlobalOpenTelemetry.get(), "java", "spymemcached", "experimental_span_attributes")
           .orElse(false);
 
   private static final String DB_COMMAND_CANCELLED = "spymemcached.command.cancelled";
