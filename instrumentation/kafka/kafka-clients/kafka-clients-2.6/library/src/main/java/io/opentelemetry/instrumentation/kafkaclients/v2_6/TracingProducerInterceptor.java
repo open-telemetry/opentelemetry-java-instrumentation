@@ -9,9 +9,12 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
@@ -28,12 +31,24 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 @Deprecated
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
+  private static final KafkaTelemetry telemetry;
+
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    telemetry =
+        KafkaTelemetry.builder(openTelemetry)
+            .setCapturedHeaders(
+                Optional.ofNullable(
+                        InstrumentationConfigUtil.getOrNull(
+                            ConfigProviderUtil.getConfigProvider(openTelemetry),
+                            config ->
+                                config.getScalarList("capture_headers/development", String.class),
+                            "java",
+                            "messaging"))
+                    .orElse(emptyList()))
+            .build();
+    ;
+  }
 
   @Nullable private String clientId;
 

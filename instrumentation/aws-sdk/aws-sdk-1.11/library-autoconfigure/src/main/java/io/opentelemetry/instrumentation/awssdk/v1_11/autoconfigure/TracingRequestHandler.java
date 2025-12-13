@@ -12,27 +12,50 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import java.util.Optional;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
  */
 public class TracingRequestHandler extends RequestHandler2 {
 
-  private static final RequestHandler2 DELEGATE =
-      AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCaptureExperimentalSpanAttributes(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.aws-sdk.experimental-span-attributes", false))
-          .setMessagingReceiveInstrumentationEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build()
-          .newRequestHandler();
+  private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
+
+  private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
+    ConfigProvider configProvider = ConfigProviderUtil.getConfigProvider(openTelemetry);
+    return AwsSdkTelemetry.builder(openTelemetry)
+        .setCaptureExperimentalSpanAttributes(
+            Optional.ofNullable(
+                    InstrumentationConfigUtil.getOrNull(
+                        configProvider,
+                        config -> config.getBoolean("span_attributes/development"),
+                        "java",
+                        "aws_sdk"))
+                .orElse(false))
+        .setMessagingReceiveInstrumentationEnabled(
+            Optional.ofNullable(
+                    InstrumentationConfigUtil.getOrNull(
+                        configProvider,
+                        config -> config.getBoolean("messaging.receive_telemetry/development"),
+                        "java",
+                        "aws_sdk"))
+                .orElse(false))
+        .setCapturedHeaders(
+            Optional.ofNullable(
+                    InstrumentationConfigUtil.getOrNull(
+                        configProvider,
+                        config -> config.getScalarList("capture_headers/development", String.class),
+                        "java",
+                        "messaging"))
+                .orElse(emptyList()))
+        .build()
+        .newRequestHandler();
+  }
 
   @Override
   public void beforeRequest(Request<?> request) {

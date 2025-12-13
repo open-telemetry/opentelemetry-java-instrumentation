@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,26 +20,48 @@ public abstract class AbstractAwsSdkTelemetryFactory {
   protected abstract List<String> getCapturedHeaders();
 
   private boolean captureExperimentalSpanAttributes() {
-    return getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
+    return Optional.ofNullable(
+            InstrumentationConfigUtil.getOrNull(
+                getConfigProvider(),
+                config -> config.getBoolean("span_attributes/development"),
+                "java",
+                "aws_sdk"))
+        .orElse(false);
   }
 
   protected abstract boolean messagingReceiveInstrumentationEnabled();
 
   private boolean useMessagingPropagator() {
-    return getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+    return Optional.ofNullable(
+            InstrumentationConfigUtil.getOrNull(
+                getConfigProvider(),
+                config -> config.getBoolean("use_propagator_for_messaging/development"),
+                "java",
+                "aws_sdk"))
+        .orElse(false);
   }
 
   private boolean recordIndividualHttpError() {
-    return getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
+    return Optional.ofNullable(
+            InstrumentationConfigUtil.getOrNull(
+                getConfigProvider(),
+                config -> config.getBoolean("record_individual_http_error/development"),
+                "java",
+                "aws_sdk"))
+        .orElse(false);
   }
 
   private boolean genaiCaptureMessageContent() {
-    return getBoolean("otel.instrumentation.genai.capture-message-content", false);
+    return Optional.ofNullable(
+            InstrumentationConfigUtil.getOrNull(
+                getConfigProvider(),
+                config -> config.getBoolean("capture_message_content"),
+                "java",
+                "genai"))
+        .orElse(false);
   }
 
-  protected abstract boolean getBoolean(String name, boolean defaultValue);
+  protected abstract ConfigProvider getConfigProvider();
 
   public AwsSdkTelemetry telemetry() {
     return AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())

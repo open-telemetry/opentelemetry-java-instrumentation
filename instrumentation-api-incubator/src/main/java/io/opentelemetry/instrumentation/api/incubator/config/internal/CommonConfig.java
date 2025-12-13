@@ -175,9 +175,8 @@ public final class CommonConfig {
       ValueProvider<T> getFromConfigProvider,
       T defaultValue,
       Supplier<T> fallback) {
-    ConfigProvider configProvider = config.getConfigProvider();
-    if (configProvider != null) {
-      T value = getFromConfigProvider.get(configProvider);
+    if (config.isDeclarative()) {
+      T value = getFromConfigProvider.get(config.getConfigProvider());
       return value != null ? value : defaultValue;
     }
     // fallback doesn't return null, so we can safely call it

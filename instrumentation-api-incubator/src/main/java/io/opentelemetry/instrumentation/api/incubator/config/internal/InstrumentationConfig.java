@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.BridgedConfigProvider;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -111,13 +114,13 @@ public interface InstrumentationConfig {
   Map<String, String> getMap(String name, Map<String, String> defaultValue);
 
   /** Returns {@code true} if declarative configuration is used in this configuration. */
-  boolean isDeclarative();
+  default boolean isDeclarative() {
+    return !(getConfigProvider() instanceof BridgedConfigProvider);
+  }
 
   /**
    * Returns a {@link DeclarativeConfigProperties} for the given node name, which is usually an
-   * instrumentation name
-   *
-   * <p>Call {@link #isDeclarative()} first to check if declarative configuration is used.
+   * instrumentation name. If declarative configuration is not used, a bridge to ConfigProperties is
    *
    * <p>Declarative configuration is used to configure instrumentation properties in a declarative
    * way, such as through YAML or JSON files.
@@ -125,15 +128,20 @@ public interface InstrumentationConfig {
    * @param node the name of the instrumentation (e.g. "log4j"), the vendor name (e.g. "google"), or
    *     "common" for common Java settings that don't apply to other languages.
    * @return the declarative configuration properties for the given node name
-   * @throws IllegalStateException if {@link #isDeclarative()} returns {@code false}
    */
-  DeclarativeConfigProperties getDeclarativeConfig(String node);
+  default DeclarativeConfigProperties getDeclarativeConfig(String node) {
+    DeclarativeConfigProperties config =
+        InstrumentationConfigUtil.javaInstrumentationConfig(getConfigProvider(), node);
+    if (config == null) {
+      // there is no declarative config for this node
+      return empty();
+    }
+    return config;
+  }
 
   /**
-   * Returns the {@link ConfigProvider} if declarative configuration is used.
-   *
-   * @return the {@link ConfigProvider} or {@code null} if no provider is available
+   * Returns the {@link ConfigProvider}, which is a bridge to ConfigProperties if declarative
+   * configuration is not used
    */
-  @Nullable
   ConfigProvider getConfigProvider();
 }

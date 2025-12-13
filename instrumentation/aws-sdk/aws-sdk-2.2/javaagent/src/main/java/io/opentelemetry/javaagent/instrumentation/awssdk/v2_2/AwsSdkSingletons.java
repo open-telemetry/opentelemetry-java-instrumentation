@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
@@ -20,7 +21,6 @@ public final class AwsSdkSingletons {
   }
 
   private static class AwsSdkTelemetryFactory extends AbstractAwsSdkTelemetryFactory {
-
     @Override
     protected List<String> getCapturedHeaders() {
       return ExperimentalConfig.get().getMessagingHeaders();
@@ -32,8 +32,8 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean getBoolean(String name, boolean defaultValue) {
-      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
+    protected ConfigProvider getConfigProvider() {
+      return AgentInstrumentationConfig.get().getConfigProvider();
     }
   }
 

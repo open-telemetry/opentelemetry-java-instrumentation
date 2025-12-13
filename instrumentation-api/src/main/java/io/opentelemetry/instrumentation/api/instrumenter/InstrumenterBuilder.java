@@ -9,7 +9,10 @@ import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -20,6 +23,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
@@ -48,11 +52,7 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
-
-  private static final SpanSuppressionStrategy spanSuppressionStrategy =
-      SpanSuppressionStrategy.fromConfig(
-          ConfigPropertiesUtil.getString(
-              "otel.instrumentation.experimental.span-suppression-strategy"));
+  private static final boolean supportsDeclarativeConfig = supportsDeclarativeConfig();
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -75,6 +75,20 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
+
+  private static boolean supportsDeclarativeConfig() {
+    try {
+      Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
+      return true;
+    } catch (ClassNotFoundException e) {
+      // The incubator module is not available.
+      // This only happens in OpenTelemetry API instrumentation tests, where an older version of
+      // OpenTelemetry API is used that does not have ExtendedOpenTelemetry.
+      // Having the incubator module without ExtendedOpenTelemetry class should still return false
+      // for those tests to avoid a ClassNotFoundException.
+      return false;
+    }
+  }
 
   static {
     Experimental.internalAddOperationListenerAttributesExtractor(
@@ -373,8 +387,19 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressor buildSpanSuppressor() {
+    // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
+    // for instrumentations, so we need to handle both declarative and non-declarative configs here
+    String value =
+        isDeclarativeConfig(openTelemetry)
+            ? InstrumentationConfigUtil.getOrNull(
+                ConfigProviderUtil.getConfigProvider(GlobalOpenTelemetry.get()),
+                config -> config.getString("span_suppression_strategy/development"),
+                "java",
+                "common")
+            : ConfigPropertiesUtil.getString(
+                "otel.instrumentation.experimental.span-suppression-strategy");
     return new SpanSuppressors.ByContextKey(
-        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+        SpanSuppressionStrategy.fromConfig(value).create(getSpanKeysFromAttributesExtractors()));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
@@ -452,6 +477,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
           });
     }
+  }
+
+  /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
+  public static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
+    return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

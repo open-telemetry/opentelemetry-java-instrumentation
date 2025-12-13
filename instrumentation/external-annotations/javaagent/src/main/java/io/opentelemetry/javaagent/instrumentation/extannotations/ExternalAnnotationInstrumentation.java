@@ -67,11 +67,6 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           "kamon.annotation.api.Trace",
           "org.springframework.cloud.sleuth.annotation.NewSpan");
 
-  private static final String TRACE_ANNOTATIONS_CONFIG =
-      "otel.instrumentation.external-annotations.include";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.external-annotations.exclude-methods";
-
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
 
@@ -116,7 +111,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   // visible for testing
   static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
-    String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
+    String configString = config.getDeclarativeConfig("external-annotations").getString("include");
     if (configString == null) {
       return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
     } else if (configString.isEmpty()) {
@@ -148,7 +143,9 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            AgentInstrumentationConfig.get()
+                .getDeclarativeConfig("external-annotations")
+                .getString("exclude-methods"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =

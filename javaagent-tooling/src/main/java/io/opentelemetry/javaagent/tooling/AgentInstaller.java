@@ -10,15 +10,19 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
@@ -168,8 +172,7 @@ public class AgentInstaller {
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
-        new ConfigPropertiesBridge(
-            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
+        getInstrumentationConfig(autoConfiguredSdk, sdkConfig));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
@@ -226,6 +229,20 @@ public class AgentInstaller {
     addSqlCommenterCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
+  }
+
+  private static InstrumentationConfig getInstrumentationConfig(
+      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk, ConfigProperties sdkConfig) {
+    ConfigProvider originalProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
+
+    boolean isDeclarativeConfig = originalProvider != null;
+    // use the bridge only if the configuration is not already declarative
+    ConfigProvider provider =
+        isDeclarativeConfig
+            ? originalProvider
+            : ConfigPropertiesDeclarativeConfigProperties.create(
+                requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredSdk)));
+    return new ConfigPropertiesBridge(sdkConfig, provider);
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {

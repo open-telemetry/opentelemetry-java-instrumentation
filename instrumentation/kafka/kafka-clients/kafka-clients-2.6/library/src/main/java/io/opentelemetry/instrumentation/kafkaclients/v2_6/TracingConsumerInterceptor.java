@@ -9,13 +9,17 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -32,15 +36,33 @@ import org.apache.kafka.common.TopicPartition;
 @Deprecated
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setMessagingReceiveInstrumentationEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
+  private static final KafkaTelemetry telemetry;
+
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    ConfigProvider configProvider = ConfigProviderUtil.getConfigProvider(openTelemetry);
+    telemetry =
+        KafkaTelemetry.builder(openTelemetry)
+            .setMessagingReceiveInstrumentationEnabled(
+                Optional.ofNullable(
+                        InstrumentationConfigUtil.getOrNull(
+                            configProvider,
+                            config -> config.getBoolean("enabled"),
+                            "java",
+                            "messaging",
+                            "receive_telemetry/development"))
+                    .orElse(false))
+            .setCapturedHeaders(
+                Optional.ofNullable(
+                        InstrumentationConfigUtil.getOrNull(
+                            configProvider,
+                            config ->
+                                config.getScalarList("capture_headers/development", String.class),
+                            "java",
+                            "messaging"))
+                    .orElse(emptyList()))
+            .build();
+  }
 
   private String consumerGroup;
   private String clientId;
