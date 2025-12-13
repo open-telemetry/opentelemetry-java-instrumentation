@@ -10263,12 +10263,46 @@ libraries:
           type: STRING
   powerjob:
   - name: powerjob-4.0
+    display_name: PowerJob
+    description: This instrumentation enables spans for PowerJob job processor executions.
+    library_link: https://github.com/PowerJob/PowerJob
     source_path: instrumentation/powerjob-4.0
     scope:
       name: io.opentelemetry.powerjob-4.0
     target_versions:
       javaagent:
       - tech.powerjob:powerjob-worker:[4.0.0,)
+    configurations:
+    - name: otel.instrumentation.powerjob.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`, `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and `scheduling.powerjob.job.type`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.powerjob.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.powerjob.job.id
+          type: LONG
+        - name: scheduling.powerjob.job.param
+          type: STRING
+        - name: scheduling.powerjob.job.type
+          type: STRING
   pulsar:
   - name: pulsar-2.8
     source_path: instrumentation/pulsar/pulsar-2.8
