@@ -174,6 +174,8 @@ tasks {
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
+    // slf4j-api-2.0.17.jar!META-INF/LICENSE.txt
+    exclude("META-INF/LICENSE.txt")
 
     archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
   }
@@ -206,6 +208,8 @@ tasks {
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
+    // slf4j-api-2.0.17.jar!META-INF/LICENSE.txt
+    exclude("META-INF/LICENSE.txt")
 
     archiveFileName.set("javaagentLibs-relocated-tmp.jar")
   }
