@@ -33,6 +33,5 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * @deprecated Use {@link #configure(IgnoredTypesBuilder)} instead.
    */
   @Deprecated
-  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
-  }
+  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {}
 }

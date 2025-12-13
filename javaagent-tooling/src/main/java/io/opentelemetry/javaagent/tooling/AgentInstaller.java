@@ -186,7 +186,8 @@ public class AgentInstaller {
         } catch (UnsupportedOperationException e) {
           // fall back to the deprecated method
           @SuppressWarnings("deprecation")
-          AgentBuilder extended = agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
+          AgentBuilder extended =
+              agentExtension.extend(agentBuilder, RuntimeConfigProperties.get());
           agentBuilder = extended;
         }
         numberOfLoadedExtensions++;
