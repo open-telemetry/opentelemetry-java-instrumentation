@@ -11,9 +11,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class OpenSearchSingletons {
   private static final Instrumenter<OpenSearchRequest, Void> INSTRUMENTER = createInstrumenter();
+
+  public static final boolean CAPTURE_SEARCH_QUERY =
+      AgentInstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.opensearch.capture-search-query", false);
 
   public static Instrumenter<OpenSearchRequest, Void> instrumenter() {
     return INSTRUMENTER;
