@@ -67,10 +67,15 @@ public final class InstrumentationModuleInstaller {
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
       ConfigProperties config) {
+    boolean defaultEnabled;
+    try {
+      defaultEnabled = instrumentationModule.defaultEnabled();
+    } catch (UnsupportedOperationException e) {
+      // fall back to the deprecated method
+      defaultEnabled = instrumentationModule.defaultEnabled(config);
+    }
     if (!AgentConfig.isInstrumentationEnabled(
-        config,
-        instrumentationModule.instrumentationNames(),
-        instrumentationModule.defaultEnabled(config))) {
+        config, instrumentationModule.instrumentationNames(), defaultEnabled)) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;

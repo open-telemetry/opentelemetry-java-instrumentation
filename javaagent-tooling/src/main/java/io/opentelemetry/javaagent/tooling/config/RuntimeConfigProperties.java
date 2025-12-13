@@ -10,8 +10,7 @@ import javax.annotation.Nullable;
 
 public final class RuntimeConfigProperties {
 
-  // TODO populate with empty config for safety?
-  @Nullable private static volatile ConfigProperties instance;
+  @Nullable private static volatile ConfigProperties instance = new EmptyConfigProperties();
 
   public static void set(ConfigProperties configProperties) {
     instance = configProperties;
