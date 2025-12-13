@@ -32,7 +32,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
                 "java",
                 "http",
                 "client",
-                "emit_experimental_telemetry/development")
+                "emit_experimental_telemetry")
             .orElse(false);
     if (!urlTemplateEnabled) {
       return;

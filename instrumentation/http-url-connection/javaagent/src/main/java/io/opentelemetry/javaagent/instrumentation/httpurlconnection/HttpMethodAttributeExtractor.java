@@ -34,7 +34,7 @@ public class HttpMethodAttributeExtractor<
                 "general",
                 "http",
                 "client",
-                "emit_telemetry/development")
+                "emit_experimental_telemetry")
             .orElse(false);
   }
 

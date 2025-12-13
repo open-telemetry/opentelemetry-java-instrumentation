@@ -58,7 +58,7 @@ public final class NettyClientSingletons {
                     "java",
                     "http",
                     "client",
-                    "emit_telemetry/development")
+                    "emit_experimental_telemetry")
                 .orElse(false));
   }
 

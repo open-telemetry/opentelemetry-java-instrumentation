@@ -277,7 +277,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     setPeerServiceResolver(PeerServiceResolver.create(openTelemetry));
     setEmitExperimentalHttpClientTelemetry(
         DeclarativeConfigUtil.getBoolean(
-                openTelemetry, "general", "http", "client", "emit_telemetry/development")
+                openTelemetry, "general", "http", "client", "emit_experimental_telemetry")
             .orElse(false));
     setRedactQueryParameters(
         DeclarativeConfigUtil.getBoolean(

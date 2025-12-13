@@ -5,12 +5,12 @@ This table documents the conversion from system properties (upstream/main) to de
 | Declarative Config Path (HEAD) | System Property (upstream/main) |
 |-------------------------------|--------------------------------|
 | `general`, `db`, `statement_sanitizer`, `enabled` | `otel.instrumentation.common.db-statement-sanitizer.enabled` |
-| `general`, `http`, `client`, `emit_telemetry/development` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
+| `general`, `http`, `client`, `emit_experimental_telemetry` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
 | `general`, `http`, `client`, `redact_query_parameters/development` | `otel.instrumentation.http.client.experimental.redact-query-parameters` |
 | `general`, `http`, `client`, `request_captured_headers` | `otel.instrumentation.http.client.capture-request-headers` |
 | `general`, `http`, `client`, `response_captured_headers` | `otel.instrumentation.http.client.capture-response-headers` |
 | `general`, `http`, `known_methods` | `otel.instrumentation.http.known-methods` |
-| `general`, `http`, `server`, `emit_telemetry/development` | `otel.instrumentation.http.server.emit-experimental-telemetry` |
+| `general`, `http`, `server`, `emit_experimental_telemetry` | `otel.instrumentation.http.server.emit-experimental-telemetry` |
 | `general`, `http`, `server`, `request_captured_headers` | `otel.instrumentation.http.server.capture-request-headers` |
 | `general`, `http`, `server`, `response_captured_headers` | `otel.instrumentation.http.server.capture-response-headers` |
 | `general`, `peer`, `service_mapping` | `otel.instrumentation.common.peer-service-mapping` |
@@ -43,8 +43,8 @@ This table documents the conversion from system properties (upstream/main) to de
 | `java`, `grpc`, `experimental_span_attributes` | `otel.instrumentation.grpc.experimental-span-attributes` |
 | `java`, `guava`, `experimental_span_attributes` | `otel.instrumentation.guava.experimental-span-attributes` |
 | `java`, `hibernate`, `experimental_span_attributes` | `otel.instrumentation.hibernate.experimental-span-attributes` |
-| `java`, `http`, `client`, `emit_experimental_telemetry/development` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
-| `java`, `http`, `client`, `emit_telemetry/development` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
+| `java`, `http`, `client`, `emit_experimental_telemetry` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
+| `java`, `http`, `client`, `emit_experimental_telemetry` | `otel.instrumentation.http.client.emit-experimental-telemetry` |
 | `java`, `http`, `known_methods` | `otel.instrumentation.http.known-methods` |
 | `java`, `hystrix`, `experimental_span_attributes` | `otel.instrumentation.hystrix.experimental-span-attributes` |
 | `java`, `jaxrs`, `experimental_span_attributes` | `otel.instrumentation.jaxrs.experimental-span-attributes` |

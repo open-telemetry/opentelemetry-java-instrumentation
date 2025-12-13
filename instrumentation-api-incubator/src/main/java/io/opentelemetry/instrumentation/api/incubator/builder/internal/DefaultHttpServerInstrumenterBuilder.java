@@ -235,7 +235,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
         .ifPresent(this::setCapturedResponseHeaders);
     setEmitExperimentalHttpServerTelemetry(
         DeclarativeConfigUtil.getBoolean(
-                openTelemetry, "general", "http", "server", "emit_telemetry/development")
+                openTelemetry, "general", "http", "server", "emit_experimental_telemetry")
             .orElse(false));
     return this;
   }
