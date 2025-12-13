@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
-import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
@@ -178,18 +177,6 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public ConfigProvider configProvider(OpenTelemetryConfigurationModel model) {
         return SpringConfigProvider.create(model);
-      }
-
-      /**
-       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-       *
-       * <p>Not using spring boot properties directly, because declarative configuration does not
-       * integrate with spring boot properties.
-       */
-      @Bean
-      public ConfigProperties otelProperties(ConfigProvider configProvider) {
-        return new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
       }
 
       @Bean
