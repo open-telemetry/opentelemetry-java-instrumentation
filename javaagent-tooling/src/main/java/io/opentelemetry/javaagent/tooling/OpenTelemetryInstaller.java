@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
@@ -15,7 +16,6 @@ import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -37,12 +37,12 @@ public final class OpenTelemetryInstaller {
             .setResultAsGlobal()
             .setServiceClassLoader(extensionClassLoader)
             .build();
-    ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
 
     setForceFlush(sdk);
 
-    if (configProvider != null) {
+    if (sdk instanceof ExtendedOpenTelemetry) {
+      ConfigProvider configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
       // We create a new instance of AutoConfiguredOpenTelemetrySdk, which has a ConfigProperties
       // instance that can be used to read properties from the configuration file.
       // This allows most instrumentations to be unaware of which configuration style is used.
