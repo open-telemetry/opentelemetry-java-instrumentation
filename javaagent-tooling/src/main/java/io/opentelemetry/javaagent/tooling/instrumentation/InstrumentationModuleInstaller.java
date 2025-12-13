@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -32,8 +34,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,8 +74,7 @@ public final class InstrumentationModuleInstaller {
       // fall back to the deprecated method
       defaultEnabled = instrumentationModule.defaultEnabled(RuntimeConfigProperties.get());
     }
-    if (!isInstrumentationEnabled(
-        instrumentationModule.instrumentationNames(), defaultEnabled)) {
+    if (!isInstrumentationEnabled(instrumentationModule.instrumentationNames(), defaultEnabled)) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;

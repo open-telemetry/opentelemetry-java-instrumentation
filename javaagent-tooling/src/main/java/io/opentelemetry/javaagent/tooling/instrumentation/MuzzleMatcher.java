@@ -49,8 +49,7 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
     this.instrumentationLogger = instrumentationLogger;
     this.instrumentationModule = instrumentationModule;
     boolean debugMode =
-        DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(), "java", "agent", "debug")
+        DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "java", "agent", "debug")
             .orElse(false);
     this.muzzleLogLevel = debugMode ? WARNING : FINE;
   }

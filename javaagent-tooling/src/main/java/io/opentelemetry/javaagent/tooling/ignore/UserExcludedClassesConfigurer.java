@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.tooling.ignore;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;

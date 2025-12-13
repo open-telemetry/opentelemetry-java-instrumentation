@@ -14,7 +14,6 @@ import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.AgentExtension;
 import io.opentelemetry.javaagent.tooling.Utils;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -40,8 +39,7 @@ public class InstrumentationLoader implements AgentExtension {
             });
       }
       try {
-        agentBuilder =
-            instrumentationModuleInstaller.install(instrumentationModule, agentBuilder);
+        agentBuilder = instrumentationModuleInstaller.install(instrumentationModule, agentBuilder);
         numberOfLoadedModules++;
       } catch (Exception | LinkageError e) {
         logger.log(

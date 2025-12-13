@@ -36,8 +36,7 @@ class UserExcludedClassLoadersConfigurerTest {
   void shouldIgnoreClassesAndPackages() {
     // when
     underTest.configureInternal(
-        builder,
-        asList("com.example.IgnoredClass", "com.example.ignored.*", "com.another_ignore"));
+        builder, asList("com.example.IgnoredClass", "com.example.ignored.*", "com.another_ignore"));
 
     // then
     verify(builder).ignoreClassLoader("com.example.IgnoredClass");
