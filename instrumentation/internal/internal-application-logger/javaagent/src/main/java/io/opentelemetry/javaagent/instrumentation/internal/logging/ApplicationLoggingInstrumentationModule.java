@@ -25,8 +25,7 @@ public class ApplicationLoggingInstrumentationModule extends InstrumentationModu
   public boolean defaultEnabled() {
     // only enable this instrumentation if the application logger is enabled
     return super.defaultEnabled()
-        && DeclarativeConfigUtil.getString(
-                GlobalOpenTelemetry.get(), "java", "agent", "logging")
+        && DeclarativeConfigUtil.getString(GlobalOpenTelemetry.get(), "java", "agent", "logging")
             .map(value -> "application".equals(value))
             .orElse(false);
   }

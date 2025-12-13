@@ -30,12 +30,12 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
   public boolean defaultEnabled() {
     return super.defaultEnabled()
         /*
-          * Since the only thing this module currently does is capture enduser attributes,
-          * the module can be completely disabled if enduser attributes are disabled.
-          *
-          * If any functionality not related to enduser attributes is added to this module,
-          * then this check will need to move elsewhere to only guard the enduser attributes logic.
-          */
+         * Since the only thing this module currently does is capture enduser attributes,
+         * the module can be completely disabled if enduser attributes are disabled.
+         *
+         * If any functionality not related to enduser attributes is added to this module,
+         * then this check will need to move elsewhere to only guard the enduser attributes logic.
+         */
         && isAnyEnduserAttributeEnabled();
   }
 
