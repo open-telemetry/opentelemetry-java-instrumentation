@@ -21,22 +21,6 @@ import org.mockito.Mockito;
 
 @SuppressWarnings("DoNotMockAutoValue")
 class DeclarativeConfigPropertiesBridgeBuilderTest {
-  @Test
-  void shouldUseConfigPropertiesForAutoConfiguration() {
-    ConfigProperties configPropertiesMock = mock(ConfigProperties.class);
-    AutoConfiguredOpenTelemetrySdk sdkMock = mock(AutoConfiguredOpenTelemetrySdk.class);
-    try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
-      autoConfigureUtilMock
-          .when(() -> AutoConfigureUtil.getConfig(sdkMock))
-          .thenReturn(configPropertiesMock);
-
-      ConfigProperties configProperties =
-          new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
-
-      assertThat(configProperties).isSameAs(configPropertiesMock);
-    }
-  }
 
   @Test
   void shouldUseConfigProviderForDeclarativeConfiguration() {
@@ -61,7 +45,8 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
           .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
-          new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
+          new DeclarativeConfigPropertiesBridgeBuilder()
+              .buildFromInstrumentationConfig(instrumentationConfigMock);
 
       assertThat(configProperties.getString(propertyName)).isEqualTo(expectedValue);
     }
@@ -81,7 +66,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
           .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
-          new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
+          new DeclarativeConfigPropertiesBridgeBuilder().buildFromInstrumentationConfig(null);
 
       assertThat(configProperties.getString("testProperty")).isNull();
     }

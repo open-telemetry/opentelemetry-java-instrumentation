@@ -42,33 +42,29 @@ public final class OpenTelemetryInstaller {
     ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    if (configProperties == null) {
+    if (configProvider == null && configProperties != null) {
+      // Provide a fake declarative configuration based on config properties
+      // so that declarative configuration APIs can be used everywhere
+      configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
+      sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
+    } else if (configProperties == null && configProvider != null) {
+      // Declarative configuration was used, but we still need a ConfigProperties
+      // instance for some existing java agent extension APIs
       configProperties = getDeclarativeConfigBridgedProperties(earlyConfig, configProvider);
+    } else {
+      throw new IllegalStateException("Exactly one of configProvider or configProperties must be non-null");
     }
-    RuntimeConfigProperties.set(configProperties);
 
     setForceFlush(sdk);
-
-    if (configProvider != null) {
-      // Declarative configuration was used
-      GlobalOpenTelemetry.set(sdk);
-      return autoConfiguredSdk;
-    }
-
-    // Declarative configuration was not used, so we provide fake declarative configuration
-    // based on config properties
-    ConfigProvider generatedConfigProvider =
-        ConfigPropertiesBackedConfigProvider.create(configProperties);
-
-    ExtendedOpenTelemetrySdkWrapper wrappedSdk =
-        new ExtendedOpenTelemetrySdkWrapper(sdk, generatedConfigProvider);
-    GlobalOpenTelemetry.set(wrappedSdk);
+    GlobalOpenTelemetry.set(sdk);
+    // we still need a ConfigProperties instance for some existing agent extension APIs
+    RuntimeConfigProperties.set(configProperties);
 
     return SdkAutoconfigureAccess.create(
         sdk,
         SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
         configProperties,
-        generatedConfigProvider);
+        configProvider);
   }
 
   // Visible for testing
