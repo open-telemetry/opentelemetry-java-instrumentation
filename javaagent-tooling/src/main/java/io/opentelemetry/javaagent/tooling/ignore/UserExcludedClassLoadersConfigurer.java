@@ -23,6 +23,11 @@ public class UserExcludedClassLoadersConfigurer implements IgnoredTypesConfigure
         DeclarativeConfigUtil.getList(
                 GlobalOpenTelemetry.get(), "java", "agent", "exclude_class_loaders")
             .orElse(emptyList());
+    configureInternal(builder, excludedClassLoaders);
+  }
+
+  // Visible for testing
+  void configureInternal(IgnoredTypesBuilder builder, List<String> excludedClassLoaders) {
     for (String excludedClassLoader : excludedClassLoaders) {
       excludedClassLoader = excludedClassLoader.trim();
       // remove the trailing *

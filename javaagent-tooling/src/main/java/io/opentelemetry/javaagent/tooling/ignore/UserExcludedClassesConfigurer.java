@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
@@ -20,8 +21,13 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
   @Override
   public void configure(IgnoredTypesBuilder builder) {
     List<String> excludedClasses =
-        DeclarativeConfigUtil.getList(GlobalOpenTelemetry.get(), "java", "agent", "exclude_classes")
+        DeclarativeConfigUtil.getList(openTelemetry, "java", "agent", "exclude_classes")
             .orElse(emptyList());
+    configureInternal(builder, excludedClasses);
+  }
+
+  // Visible for testing
+  void configureInternal(IgnoredTypesBuilder builder, List<String> excludedClasses) {
     for (String excludedClass : excludedClasses) {
       excludedClass = excludedClass.trim();
       // remove the trailing *
