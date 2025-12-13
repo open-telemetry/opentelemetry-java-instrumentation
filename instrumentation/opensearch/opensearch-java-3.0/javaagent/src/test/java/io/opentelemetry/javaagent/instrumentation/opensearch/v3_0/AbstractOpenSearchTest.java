@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -36,7 +37,15 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.cluster.HealthResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.MsearchRequest;
+import org.opensearch.client.opensearch.core.MsearchResponse;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.testcontainers.OpensearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -44,6 +53,7 @@ import org.testcontainers.utility.DockerImageName;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractOpenSearchTest {
 
+  protected static final String INDEX_NAME = "test-search-index";
   protected OpenSearchClient openSearchClient;
   protected OpenSearchAsyncClient openSearchAsyncClient;
   protected OpensearchContainer opensearch;
@@ -73,6 +83,32 @@ abstract class AbstractOpenSearchTest {
     httpHost = URI.create(opensearch.getHttpHostAddress());
     openSearchClient = buildOpenSearchClient();
     openSearchAsyncClient = buildOpenSearchAsyncClient();
+
+    String documentId = "test-doc-1";
+
+    // Create index
+    CreateIndexRequest createIndexRequest =
+        CreateIndexRequest.of(
+            c ->
+                c.index(INDEX_NAME)
+                    .mappings(
+                        TypeMapping.of(
+                            t ->
+                                t.properties(
+                                    "message",
+                                    p ->
+                                        p.text(txt -> txt.fielddata(true).analyzer("standard"))))));
+
+    openSearchClient.indices().create(createIndexRequest);
+
+    TestDocument testDocument = TestDocument.create(documentId, "test message for search");
+    IndexRequest<TestDocument> indexRequest =
+        new IndexRequest.Builder<TestDocument>().index(INDEX_NAME).document(testDocument).build();
+
+    openSearchClient.index(indexRequest);
+
+    // Wait for indexing to complete
+    openSearchClient.indices().refresh(r -> r.index(INDEX_NAME));
   }
 
   @AfterAll
@@ -170,5 +206,134 @@ abstract class AbstractOpenSearchTest {
 
     assertDurationMetric(
         getTesting(), "io.opentelemetry.opensearch-java-3.0", DB_OPERATION_NAME, DB_SYSTEM_NAME);
+  }
+
+  @Test
+  void shouldCaptureSearchQueryBody() throws IOException {
+    // Execute search query with body
+    SearchRequest searchRequest =
+        SearchRequest.of(
+            s ->
+                s.index(INDEX_NAME)
+                    .query(
+                        Query.of(
+                            q ->
+                                q.match(
+                                    m -> m.field("message").query(v -> v.stringValue("test"))))));
+
+    SearchResponse<TestDocument> searchResponse =
+        openSearchClient.search(searchRequest, TestDocument.class);
+    assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
+
+    // Verify trace includes query body in DB_STATEMENT with exact match
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                equalTo(maybeStable(DB_OPERATION), "POST"),
+                                // DB_STATEMENT should exactly match the extracted JSON query body
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                    span ->
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                satisfies(
+                                    URL_FULL,
+                                    url ->
+                                        url.asString()
+                                            .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                equalTo(PEER_SERVICE, "test-peer-service"))));
+  }
+
+  @Test
+  void shouldCaptureMsearchQueryBody() throws IOException {
+    // Execute search query with body
+
+    MsearchRequest msearchRequest =
+        new MsearchRequest.Builder()
+            .searches(
+                s ->
+                    s.header(h -> h.index(INDEX_NAME))
+                        .body(
+                            b ->
+                                b.query(
+                                    q ->
+                                        q.term(
+                                            t ->
+                                                t.field("message")
+                                                    .value(v -> v.stringValue("message"))))))
+            .searches(
+                s ->
+                    s.header(h -> h.index(INDEX_NAME))
+                        .body(
+                            b ->
+                                b.query(
+                                    q ->
+                                        q.term(
+                                            t ->
+                                                t.field("message2")
+                                                    .value(v -> v.longValue(100L))))))
+            .searches(
+                s ->
+                    s.header(h -> h.index(INDEX_NAME))
+                        .body(
+                            b ->
+                                b.query(
+                                    q ->
+                                        q.term(
+                                            t ->
+                                                t.field("message3")
+                                                    .value(v -> v.booleanValue(true))))))
+            .build();
+
+    MsearchResponse<TestDocument> msearchResponse =
+        openSearchClient.msearch(msearchRequest, TestDocument.class);
+    assertThat(msearchResponse.responses().size()).isGreaterThan(0);
+
+    // Verify trace includes query body in DB_STATEMENT with exact match
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                equalTo(maybeStable(DB_OPERATION), "POST"),
+                                // DB_STATEMENT should exactly match the extracted JSON query body
+                                equalTo(
+                                    maybeStable(DB_STATEMENT),
+                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}")),
+                    span ->
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                satisfies(
+                                    URL_FULL,
+                                    url ->
+                                        url.asString()
+                                            .startsWith(
+                                                httpHost + "/" + "_msearch?typed_keys=true")),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 }

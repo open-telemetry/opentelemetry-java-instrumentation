@@ -21,7 +21,9 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.transport.Endpoint;
+import org.opensearch.client.transport.OpenSearchTransport;
 
 public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
   @Override
@@ -60,10 +62,21 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceScope start(Object request, Endpoint<Object, Object, Object> endpoint) {
+    public static AdviceScope start(
+        Object request, Endpoint<Object, Object, Object> endpoint, JsonpMapper jsonpMapper) {
       Context parentContext = Context.current();
+
+      String queryBody = null;
+
+      if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY) {
+        String rawBody = OpenSearchBodyExtractor.extract(jsonpMapper, request);
+        queryBody = OpenSearchBodyExtractor.extract(jsonpMapper, rawBody);
+      }
+
       OpenSearchRequest otelRequest =
-          OpenSearchRequest.create(endpoint.method(request), endpoint.requestUrl(request));
+          OpenSearchRequest.create(
+              endpoint.method(request), endpoint.requestUrl(request), queryBody);
+
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
       }
@@ -94,9 +107,10 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
+        @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      return AdviceScope.start(request, endpoint);
+      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -114,9 +128,11 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] onEnter(
+        @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      AdviceScope adviceScope = AdviceScope.start(request, endpoint);
+      AdviceScope adviceScope =
+          AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
       return new Object[] {adviceScope};
     }
 

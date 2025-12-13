@@ -18,6 +18,7 @@ dependencies {
   library("org.opensearch.client:opensearch-java:3.0.0")
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
 
   testImplementation("org.opensearch.client:opensearch-rest-client:3.0.0")
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
