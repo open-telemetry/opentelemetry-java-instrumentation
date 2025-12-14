@@ -41,7 +41,6 @@ public class SetOperationInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This Object future, @Advice.Argument(0) Operation operation) {
-
       if (future instanceof OperationFuture || future instanceof GetFuture) {
         FUTURE_OPERATION.set((Future<?>) future, operation);
       }
