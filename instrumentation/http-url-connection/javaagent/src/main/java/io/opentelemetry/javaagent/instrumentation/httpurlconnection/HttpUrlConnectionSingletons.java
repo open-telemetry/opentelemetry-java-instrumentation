@@ -43,7 +43,7 @@ public final class HttpUrlConnectionSingletons {
 
   private static Set<String> getKnownHttpMethods() {
     return DeclarativeConfigUtil.getList(
-            GlobalOpenTelemetry.get(), "general", "http", "known_methods")
+            GlobalOpenTelemetry.get(), "java", "http", "known_methods")
         .map(HashSet::new)
         .orElse(new HashSet<>(HttpConstants.KNOWN_METHODS));
   }

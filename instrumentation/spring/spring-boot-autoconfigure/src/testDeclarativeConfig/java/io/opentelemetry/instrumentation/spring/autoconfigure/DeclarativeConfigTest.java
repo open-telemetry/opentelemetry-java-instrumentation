@@ -57,7 +57,8 @@ class DeclarativeConfigTest {
         context -> {
           assertThat(context).hasBean("openTelemetry");
           OpenTelemetry openTelemetry = context.getBean(OpenTelemetry.class);
-          assertThat(DeclarativeConfigUtil.getString(openTelemetry, "java", "foo", "bar")).hasValue("baz");
+          assertThat(DeclarativeConfigUtil.getString(openTelemetry, "java", "foo", "bar"))
+              .hasValue("baz");
         });
   }
 

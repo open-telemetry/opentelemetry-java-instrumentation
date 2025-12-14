@@ -31,7 +31,7 @@ public class HttpMethodAttributeExtractor<
     emitExperimentalHttpClientTelemetry =
         DeclarativeConfigUtil.getBoolean(
                 io.opentelemetry.api.GlobalOpenTelemetry.get(),
-                "general",
+                "java",
                 "http",
                 "client",
                 "emit_experimental_telemetry")
