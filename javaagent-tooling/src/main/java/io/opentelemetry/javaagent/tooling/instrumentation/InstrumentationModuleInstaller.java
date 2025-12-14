@@ -279,8 +279,7 @@ public final class InstrumentationModuleInstaller {
       Iterable<String> instrumentationNames, boolean defaultEnabled) {
     for (String name : instrumentationNames) {
       Optional<Boolean> enabled =
-          DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", name, "enabled");
+          DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "java", name, "enabled");
       if (enabled.isPresent()) {
         return enabled.get();
       }

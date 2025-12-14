@@ -60,6 +60,10 @@ class EmbeddedConfigFile {
             ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
           if (propertyName.startsWith("otel.")) {
             Object property = propertySource.getProperty(propertyName);
+            // Resolve ${} placeholders in String values while preserving types for others
+            if (property instanceof String) {
+              property = environment.resolvePlaceholders((String) property);
+            }
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
@@ -76,6 +80,9 @@ class EmbeddedConfigFile {
                       .replace(".", "_")
                       .toUpperCase(Locale.ROOT);
               Object envVarValue = propertySource.getProperty(envVarName);
+              if (envVarValue instanceof String) {
+                envVarValue = environment.resolvePlaceholders((String) envVarValue);
+              }
               if (envVarValue != null) {
                 property = envVarValue;
               }

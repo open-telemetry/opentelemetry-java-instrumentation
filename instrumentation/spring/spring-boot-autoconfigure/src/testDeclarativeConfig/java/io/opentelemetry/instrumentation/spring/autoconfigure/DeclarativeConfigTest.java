@@ -46,8 +46,7 @@ class DeclarativeConfigTest {
             context ->
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
-                    .doesNotHaveBean("openTelemetry")
-                    .hasBean("otelProperties"));
+                    .doesNotHaveBean("openTelemetry"));
   }
 
   @Test
@@ -56,9 +55,9 @@ class DeclarativeConfigTest {
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
         context -> {
-          assertThat(context).hasBean("openTelemetry").hasBean("otelProperties");
+          assertThat(context).hasBean("openTelemetry");
           OpenTelemetry openTelemetry = context.getBean(OpenTelemetry.class);
-          assertThat(DeclarativeConfigUtil.getString(openTelemetry, "foo", "bar")).hasValue("baz");
+          assertThat(DeclarativeConfigUtil.getString(openTelemetry, "java", "foo", "bar")).hasValue("baz");
         });
   }
 
