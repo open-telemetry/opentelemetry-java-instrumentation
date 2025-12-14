@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +32,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     OpenTelemetry openTelemetry = autoConfiguredSdk.getOpenTelemetrySdk();
+    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
     boolean defaultEnabled =
         DeclarativeConfigUtil.getBoolean(openTelemetry, "java", "common", "default_enabled")
@@ -40,7 +43,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (enabled) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(openTelemetry));
+              .beanDiscoveryDelay(beanDiscoveryDelay(openTelemetry, config));
 
       DeclarativeConfigUtil.getList(openTelemetry, "java", "jmx", "config")
           .orElse(Collections.emptyList())
@@ -77,8 +80,16 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static Duration beanDiscoveryDelay(OpenTelemetry openTelemetry) {
-    return DeclarativeConfigUtil.getDuration(openTelemetry, "java", "jmx", "discovery_delay")
-        .orElse(Duration.ofMinutes(1));
+  private static Duration beanDiscoveryDelay(
+      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
+    Duration discoveryDelay =
+        DeclarativeConfigUtil.getDuration(openTelemetry, "java", "jmx", "discovery_delay")
+            .orElse(null);
+    if (discoveryDelay != null) {
+      return discoveryDelay;
+    }
+
+    // TODO remove this fallback because it's not available via declarative configuration API
+    return configProperties.getDuration("otel.metric.export.interval", Duration.ofMinutes(1));
   }
 }
