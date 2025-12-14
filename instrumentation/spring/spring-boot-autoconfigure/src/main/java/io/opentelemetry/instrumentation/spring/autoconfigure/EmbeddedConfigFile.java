@@ -79,10 +79,8 @@ class EmbeddedConfigFile {
                       .replace("]", "")
                       .replace(".", "_")
                       .toUpperCase(Locale.ROOT);
-              Object envVarValue = propertySource.getProperty(envVarName);
-              if (envVarValue instanceof String) {
-                envVarValue = environment.resolvePlaceholders((String) envVarValue);
-              }
+              // Use environment.getProperty() to search all property sources for the env var
+              String envVarValue = environment.getProperty(envVarName);
               if (envVarValue != null) {
                 property = envVarValue;
               }
