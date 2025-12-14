@@ -49,7 +49,7 @@ public final class OpenTelemetryInstaller {
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
     } else if (configProperties == null && configProvider != null) {
       // Declarative configuration was used, but we still need a ConfigProperties
-      // instance for some existing java agent extension APIs
+      // instance for some deprecated agent extension APIs
       configProperties = getDeclarativeConfigBridgedProperties(earlyConfig, configProvider);
     } else {
       throw new IllegalStateException(
@@ -58,7 +58,7 @@ public final class OpenTelemetryInstaller {
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
-    // we still need a ConfigProperties instance for some existing agent extension APIs
+    // we still need a ConfigProperties instance for some deprecated agent extension APIs
     RuntimeConfigProperties.set(configProperties);
 
     return SdkAutoconfigureAccess.create(
