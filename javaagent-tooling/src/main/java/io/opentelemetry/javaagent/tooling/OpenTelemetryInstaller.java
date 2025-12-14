@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
@@ -34,26 +36,34 @@ public final class OpenTelemetryInstaller {
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
-            .setResultAsGlobal()
+            // Don't use setResultAsGlobal() - we need to wrap the SDK before setting as global
             .setServiceClassLoader(extensionClassLoader)
             .build();
     ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
-
-    setForceFlush(sdk);
-
-    if (configProvider != null) {
-      // We create a new instance of AutoConfiguredOpenTelemetrySdk, which has a ConfigProperties
-      // instance that can be used to read properties from the configuration file.
-      // This allows most instrumentations to be unaware of which configuration style is used.
-      return SdkAutoconfigureAccess.create(
-          sdk,
-          SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
-          getDeclarativeConfigBridgedProperties(earlyConfig, configProvider),
-          configProvider);
+    ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    if (configProvider == null && configProperties != null) {
+      // Provide a fake declarative configuration based on config properties
+      // so that declarative configuration API can be used everywhere
+      configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
+      sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
+    } else if (configProperties == null && configProvider != null) {
+      // Provide a fake ConfigProperties until we have migrated all runtime configuration
+      // access to use declarative configuration API
+      configProperties = getDeclarativeConfigBridgedProperties(earlyConfig, configProvider);
+    } else {
+      throw new IllegalStateException(
+          "Exactly one of configProvider or configProperties must be non-null");
     }
 
-    return autoConfiguredSdk;
+    setForceFlush(sdk);
+    GlobalOpenTelemetry.set(sdk);
+
+    return SdkAutoconfigureAccess.create(
+        sdk,
+        SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
+        configProperties,
+        configProvider);
   }
 
   // Visible for testing
