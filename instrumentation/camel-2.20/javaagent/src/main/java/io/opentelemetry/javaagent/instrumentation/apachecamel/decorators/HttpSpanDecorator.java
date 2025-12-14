@@ -55,8 +55,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   }
 
   private static Set<String> getKnownHttpMethods() {
-    return DeclarativeConfigUtil.getList(
-            GlobalOpenTelemetry.get(), "java", "http", "known_methods")
+    return DeclarativeConfigUtil.getList(GlobalOpenTelemetry.get(), "java", "http", "known_methods")
         .map(HashSet::new)
         .orElse(new HashSet<>(HttpConstants.KNOWN_METHODS));
   }
