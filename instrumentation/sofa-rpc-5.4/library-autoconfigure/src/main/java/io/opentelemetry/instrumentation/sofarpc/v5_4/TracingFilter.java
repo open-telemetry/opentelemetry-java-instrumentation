@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import static com.alipay.sofa.rpc.common.RpcConstants.HIDE_KEY_PREFIX;
-
 import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.config.AbstractInterfaceConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
-import com.alipay.sofa.rpc.context.RpcInternalContext;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
@@ -19,14 +16,15 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 final class TracingFilter extends Filter {
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
 
-  /** Hidden key: .otel.async.context otel Asynchronous call context */
-  private static final String HIDDEN_KEY_ASYNC_CONTEXT = HIDE_KEY_PREFIX + "otel_async_context";
+  private static final VirtualField<SofaRequest, Context> ASYNC_CONTEXT =
+      VirtualField.find(SofaRequest.class, Context.class);
 
   TracingFilter(Instrumenter<SofaRpcRequest, SofaResponse> instrumenter, boolean isClientSide) {
     this.instrumenter = instrumenter;
@@ -54,8 +52,7 @@ final class TracingFilter extends Filter {
       response = invoker.invoke(request);
       if (isClientSide && request.isAsync()) {
         isSynchronous = false;
-        RpcInternalContext internalCtx = RpcInternalContext.getContext();
-        internalCtx.setAttachment(HIDDEN_KEY_ASYNC_CONTEXT, context);
+        ASYNC_CONTEXT.set(request, context);
       }
     } catch (Throwable e) {
       instrumenter.end(context, sofaRpcRequest, null, e);
@@ -120,12 +117,11 @@ final class TracingFilter extends Filter {
     if (!isClientSide) {
       return;
     }
-    RpcInternalContext internalCtx = RpcInternalContext.getContext();
-    Context otelContext = (Context) internalCtx.getAttachment(HIDDEN_KEY_ASYNC_CONTEXT);
-    if (otelContext == null) {
+    Context context = ASYNC_CONTEXT.get(request);
+    if (context == null) {
       return;
     }
     Throwable error = exception != null ? exception : extractException(response);
-    instrumenter.end(otelContext, SofaRpcRequest.create(request), response, error);
+    instrumenter.end(context, SofaRpcRequest.create(request), response, error);
   }
 }
