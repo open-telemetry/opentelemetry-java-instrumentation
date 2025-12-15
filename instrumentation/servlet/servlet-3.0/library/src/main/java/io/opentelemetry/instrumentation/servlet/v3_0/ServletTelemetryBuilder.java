@@ -57,13 +57,29 @@ public final class ServletTelemetryBuilder {
     builder = servletBuilder.getBuilder();
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractor) {
-    builder.setStatusExtractor(
+    return setSpanStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public ServletTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(
         convertSpanStatusExtractor(
-            statusExtractor,
+            spanStatusExtractorCustomizer,
             ServletRequestContext::new,
             ServletResponseContext::new,
             ServletRequestContext::request,
@@ -137,13 +153,30 @@ public final class ServletTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<HttpServletRequest>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(
+    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
+  @CanIgnoreReturnValue
+  public ServletTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(
         convertSpanNameExtractor(
-            serverSpanNameExtractor, ServletRequestContext::new, ServletRequestContext::request));
+            spanNameExtractorCustomizer,
+            ServletRequestContext::new,
+            ServletRequestContext::request));
     return this;
   }
 

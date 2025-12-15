@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,22 +26,31 @@ public class JmxTelemetryTest {
   }
 
   @Test
-  void missingClasspathTarget() {
+  void throwsExceptionOnNullInput() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addClassPathRules("should-not-exist"))
+    assertThatThrownBy(() -> builder.addRules((InputStream) null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> builder.addRules((Path) null))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void invalidClasspathTarget() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addClassPathRules("invalid"))
+    assertThatThrownBy(() -> addClasspathRules(builder, "jmx/rules/invalid.yaml"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  void knownClassPathTarget() {
-    JmxTelemetry.builder(OpenTelemetry.noop()).addClassPathRules("jvm").build();
+  void knownValidYaml() {
+    JmxTelemetryBuilder jmxtelemetry = JmxTelemetry.builder(OpenTelemetry.noop());
+    addClasspathRules(jmxtelemetry, "jmx/rules/jvm.yaml");
+    assertThat(jmxtelemetry.build()).isNotNull();
+  }
+
+  private static void addClasspathRules(JmxTelemetryBuilder builder, String path) {
+    InputStream input = JmxTelemetryTest.class.getClassLoader().getResourceAsStream(path);
+    builder.addRules(input);
   }
 
   @Test
@@ -48,7 +58,7 @@ public class JmxTelemetryTest {
     Path invalid = Files.createTempFile(dir, "invalid", ".yaml");
     Files.write(invalid, ":this !is /not YAML".getBytes(StandardCharsets.UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addCustomRules(invalid))
+    assertThatThrownBy(() -> builder.addRules(invalid))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

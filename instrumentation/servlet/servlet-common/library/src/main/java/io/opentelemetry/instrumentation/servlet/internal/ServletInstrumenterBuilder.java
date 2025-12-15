@@ -104,7 +104,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
       SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor) {
 
-    builder.setSpanNameExtractor(e -> spanNameExtractor);
+    builder.setSpanNameExtractorCustomizer(e -> spanNameExtractor);
 
     builder.setBuilderCustomizer(
         builder -> {

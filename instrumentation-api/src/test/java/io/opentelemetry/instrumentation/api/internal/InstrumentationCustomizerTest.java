@@ -327,7 +327,7 @@ class InstrumentationCustomizerTest {
     setCustomizer(
         customizer -> {
           customizerCalled.set(true);
-          customizer.setSpanNameExtractor(
+          customizer.setSpanNameExtractorCustomizer(
               unused -> (SpanNameExtractor<Object>) object -> "new name");
         });
 
@@ -366,7 +366,7 @@ class InstrumentationCustomizerTest {
     setCustomizer(
         customizer -> {
           customizerCalled.set(true);
-          customizer.setSpanStatusExtractor(
+          customizer.setSpanStatusExtractorCustomizer(
               unused ->
                   (spanStatusBuilder, request, response, error) ->
                       spanStatusBuilder.setStatus(StatusCode.OK));
