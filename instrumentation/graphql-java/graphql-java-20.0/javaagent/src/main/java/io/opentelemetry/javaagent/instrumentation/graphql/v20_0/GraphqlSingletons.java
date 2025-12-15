@@ -32,8 +32,6 @@ public final class GraphqlSingletons {
             .build();
   }
 
-  private GraphqlSingletons() {}
-
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
     Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
@@ -84,4 +82,6 @@ public final class GraphqlSingletons {
               .getBoolean("enabled", false);
     }
   }
+
+  private GraphqlSingletons() {}
 }
