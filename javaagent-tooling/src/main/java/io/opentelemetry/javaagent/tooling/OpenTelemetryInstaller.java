@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
@@ -39,21 +40,19 @@ public final class OpenTelemetryInstaller {
             // Don't use setResultAsGlobal() - we need to wrap the SDK before setting as global
             .setServiceClassLoader(extensionClassLoader)
             .build();
-    ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    if (configProvider == null && configProperties != null) {
+    ConfigProvider configProvider;
+    if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
-    } else if (configProperties == null && configProvider != null) {
+    } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
+      configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
       configProperties = getDeclarativeConfigBridgedProperties(earlyConfig, configProvider);
-    } else {
-      throw new IllegalStateException(
-          "Exactly one of configProvider or configProperties must be non-null");
     }
 
     setForceFlush(sdk);
