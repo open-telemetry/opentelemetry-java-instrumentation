@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -13,7 +12,6 @@ import static java.util.Collections.singletonMap;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -31,10 +29,8 @@ public class MethodInstrumentationModule extends InstrumentationModule
   }
 
   private static List<TypeInstrumentation> createInstrumentations() {
-    List<TypeInstrumentation> list =
-        MethodsConfig.parse(
-            DeclarativeConfigUtil.getStructured(GlobalOpenTelemetry.get(), "java", empty())
-                .getStructured("methods", empty()));
+    MethodConfiguration config = new MethodConfiguration(GlobalOpenTelemetry.get());
+    List<TypeInstrumentation> list = config.typeInstrumentations();
     // ensure that there is at least one instrumentation so that muzzle reference collection could
     // work
     if (list.isEmpty()) {

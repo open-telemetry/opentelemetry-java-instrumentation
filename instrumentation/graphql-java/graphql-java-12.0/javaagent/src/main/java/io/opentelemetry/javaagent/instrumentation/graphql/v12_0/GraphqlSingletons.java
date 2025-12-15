@@ -10,11 +10,10 @@ import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
-import javax.annotation.Nullable;
 
 public final class GraphqlSingletons {
 
@@ -26,9 +25,9 @@ public final class GraphqlSingletons {
 
     TELEMETRY =
         GraphQLTelemetry.builder(openTelemetry)
-            .setCaptureQuery(config.captureQuery(true))
-            .setSanitizeQuery(config.querySanitizerEnabled(true))
-            .setAddOperationNameToSpanName(config.addOperationNameToSpanName(false))
+            .setCaptureQuery(config.captureQuery)
+            .setSanitizeQuery(config.querySanitizerEnabled)
+            .setAddOperationNameToSpanName(config.addOperationNameToSpanName)
             .build();
   }
 
@@ -42,41 +41,36 @@ public final class GraphqlSingletons {
   // instrumentation/development:
   //   java:
   //     graphql:
-  //       capture_query: [boolean]
+  //       capture_query: true
   //       query_sanitizer:
-  //         enabled: [boolean]
+  //         enabled: true
   //       add_operation_name_to_span_name:
-  //         enabled: [boolean]
+  //         enabled: false
   private static final class Configuration {
 
-    @Nullable private final Boolean captureQuery;
-    @Nullable private final Boolean querySanitizerEnabled;
-    @Nullable private final Boolean addOperationNameToSpanName;
+    private final boolean captureQuery;
+    private final boolean querySanitizerEnabled;
+    private final boolean addOperationNameToSpanName;
 
     Configuration(OpenTelemetry openTelemetry) {
-      DeclarativeConfigProperties graphqlConfig =
-          DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty())
-              .getStructured("graphql", empty());
+      DeclarativeConfigProperties javaConfig = empty();
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+        DeclarativeConfigProperties instrumentationConfig =
+            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+        if (instrumentationConfig != null) {
+          javaConfig = instrumentationConfig.getStructured("java", empty());
+        }
+      }
+      DeclarativeConfigProperties graphqlConfig = javaConfig.getStructured("graphql", empty());
 
-      this.captureQuery = graphqlConfig.getBoolean("capture_query");
+      this.captureQuery = graphqlConfig.getBoolean("capture_query", true);
       this.querySanitizerEnabled =
-          graphqlConfig.getStructured("query_sanitizer", empty()).getBoolean("enabled");
+          graphqlConfig.getStructured("query_sanitizer", empty()).getBoolean("enabled", true);
       this.addOperationNameToSpanName =
           graphqlConfig
               .getStructured("add_operation_name_to_span_name", empty())
-              .getBoolean("enabled");
-    }
-
-    boolean captureQuery(boolean defaultValue) {
-      return captureQuery != null ? captureQuery : defaultValue;
-    }
-
-    boolean querySanitizerEnabled(boolean defaultValue) {
-      return querySanitizerEnabled != null ? querySanitizerEnabled : defaultValue;
-    }
-
-    boolean addOperationNameToSpanName(boolean defaultValue) {
-      return addOperationNameToSpanName != null ? addOperationNameToSpanName : defaultValue;
+              .getBoolean("enabled", false);
     }
   }
 }

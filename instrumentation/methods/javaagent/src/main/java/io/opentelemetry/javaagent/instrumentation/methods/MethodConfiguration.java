@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -24,18 +27,37 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MethodsConfig {
+public class MethodConfiguration {
 
-  private static final Logger logger = Logger.getLogger(MethodsConfig.class.getName());
+  private static final Logger logger = Logger.getLogger(MethodConfiguration.class.getName());
 
-  private MethodsConfig() {}
+  private final List<TypeInstrumentation> typeInstrumentations;
 
-  static List<TypeInstrumentation> parse(DeclarativeConfigProperties methods) {
+  MethodConfiguration(OpenTelemetry openTelemetry) {
+    DeclarativeConfigProperties javaConfig = empty();
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+      DeclarativeConfigProperties instrumentationConfig =
+          extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+      if (instrumentationConfig != null) {
+        javaConfig = instrumentationConfig.getStructured("java", empty());
+      }
+    }
+    DeclarativeConfigProperties methodsConfig = javaConfig.getStructured("methods", empty());
+
+    this.typeInstrumentations = parse(methodsConfig);
+  }
+
+  List<TypeInstrumentation> typeInstrumentations() {
+    return typeInstrumentations;
+  }
+
+  private static List<TypeInstrumentation> parse(DeclarativeConfigProperties methods) {
     // First try structured declarative config (YAML format)
     List<DeclarativeConfigProperties> includeList = methods.getStructuredList("include");
     if (includeList != null) {
       return includeList.stream()
-          .flatMap(MethodsConfig::parseMethodInstrumentation)
+          .flatMap(MethodConfiguration::parseMethodInstrumentation)
           .collect(Collectors.toList());
     }
 
