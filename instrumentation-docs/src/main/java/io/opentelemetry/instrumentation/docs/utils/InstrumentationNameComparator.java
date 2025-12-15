@@ -67,36 +67,36 @@ final class InstrumentationNameComparator {
       static final KeyComparator INSTANCE = new KeyComparator();
 
       @Override
-      public int compare(Key a, Key b) {
-        int compare = a.baseLower.compareTo(b.baseLower);
+      public int compare(Key k1, Key k2) {
+        int compare = k1.baseLower.compareTo(k2.baseLower);
         if (compare != 0) {
           return compare;
         }
 
-        if (a.hasVersion != b.hasVersion) {
-          return a.hasVersion ? 1 : -1;
+        if (k1.hasVersion != k2.hasVersion) {
+          return k1.hasVersion ? 1 : -1;
         }
-        if (!a.hasVersion) {
+        if (!k1.hasVersion) {
           return 0;
         }
 
-        compare = Integer.compare(a.major, b.major);
+        compare = Integer.compare(k1.major, k2.major);
         if (compare != 0) {
           return compare;
         }
 
         // Treat "1" as "1.0" if compared to "1.0"
-        int aMinor = a.hasMinor ? a.minor : 0;
-        int bMinor = b.hasMinor ? b.minor : 0;
-        compare = Integer.compare(aMinor, bMinor);
+        int k1Minor = k1.hasMinor ? k1.minor : 0;
+        int k2Minor = k2.hasMinor ? k2.minor : 0;
+        compare = Integer.compare(k1Minor, k2Minor);
         if (compare != 0) {
           return compare;
         }
 
         // Treat "1.0" as "1.0.0" if compared to "1.0.0"
-        int aPatch = a.hasPatch ? a.patch : 0;
-        int bPatch = b.hasPatch ? b.patch : 0;
-        return Integer.compare(aPatch, bPatch);
+        int k1Patch = k1.hasPatch ? k1.patch : 0;
+        int k2Patch = k2.hasPatch ? k2.patch : 0;
+        return Integer.compare(k1Patch, k2Patch);
       }
     }
   }
