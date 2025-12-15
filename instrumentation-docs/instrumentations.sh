@@ -198,6 +198,8 @@ readonly INSTRUMENTATIONS=(
   "play:play-ws:play-ws-1.0:javaagent:test"
   "play:play-ws:play-ws-2.0:javaagent:test"
   "play:play-ws:play-ws-2.1:javaagent:test"
+  "powerjob-4.0:javaagent:test"
+  "powerjob-4.0:javaagent:testExperimental"
   "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
   "spring:spring-batch-3.0:javaagent:test"
