@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 import java.util.List;
 
 public final class AwsSdkSingletons {
@@ -23,17 +24,31 @@ public final class AwsSdkSingletons {
 
     @Override
     protected List<String> getCapturedHeaders() {
-      return ExperimentalConfig.get().getMessagingHeaders();
+      return DeclarativeConfigUtil.getList(
+              GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
+          .orElse(Collections.emptyList());
     }
 
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
-      return ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+      return DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "messaging",
+              "receive_telemetry/development",
+              "enabled")
+          .orElse(false);
     }
 
     @Override
     protected boolean getBoolean(String name, boolean defaultValue) {
-      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
+      // Convert otel.instrumentation.xxx.yyy to java/xxx/yyy format
+      // e.g. otel.instrumentation.aws-sdk.experimental-span-attributes ->
+      // java/aws_sdk/experimental_span_attributes
+      String[] parts =
+          name.replace("otel.instrumentation.", "java.").replace("-", "_").split("\\.");
+      return DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), parts)
+          .orElse(defaultValue);
     }
   }
 

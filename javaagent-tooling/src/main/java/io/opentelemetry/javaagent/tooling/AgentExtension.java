@@ -26,7 +26,22 @@ public interface AgentExtension extends Ordered {
    * @return The customized agent. Note that this method MUST return a non-null {@link AgentBuilder}
    *     instance that contains all customizations defined in this extension.
    */
-  AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config);
+  default AgentBuilder extend(AgentBuilder agentBuilder) {
+    throw new UnsupportedOperationException(
+        "This method is not implemented. Please override this method.");
+  }
+
+  /**
+   * Extend the passed {@code agentBuilder} with custom logic (e.g. instrumentation).
+   *
+   * @return The customized agent. Note that this method MUST return a non-null {@link AgentBuilder}
+   *     instance that contains all customizations defined in this extension.
+   * @deprecated Use {@link #extend(AgentBuilder)} instead.
+   */
+  @Deprecated
+  default AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
+    return extend(agentBuilder);
+  }
 
   /**
    * Returns the name of the extension. It does not have to be unique, but it should be

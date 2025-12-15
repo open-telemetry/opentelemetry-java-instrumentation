@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.common;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class JaxWsInstrumenterFactory {
 
@@ -21,7 +21,14 @@ public final class JaxWsInstrumenterFactory {
             instrumentationName,
             CodeSpanNameExtractor.create(codeAttributesGetter))
         .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-        .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+        .setEnabled(
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(),
+                    "java",
+                    "common",
+                    "controller_telemetry/development",
+                    "enabled")
+                .orElse(false))
         .buildInstrumenter();
   }
 

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
@@ -14,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 import org.apache.pulsar.client.api.Message;
 
 public final class SpringPulsarSingletons {
@@ -26,7 +27,13 @@ public final class SpringPulsarSingletons {
     SpringPulsarMessageAttributesGetter getter = SpringPulsarMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
     boolean messagingReceiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "messaging",
+                "receive_telemetry/development",
+                "enabled")
+            .orElse(false);
 
     InstrumenterBuilder<Message<?>, Void> builder =
         Instrumenter.<Message<?>, Void>builder(
@@ -35,7 +42,13 @@ public final class SpringPulsarSingletons {
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operation)
-                    .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                    .setCapturedHeaders(
+                        DeclarativeConfigUtil.getList(
+                                GlobalOpenTelemetry.get(),
+                                "java",
+                                "messaging",
+                                "capture_headers/development")
+                            .orElse(Collections.emptyList()))
                     .build());
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(

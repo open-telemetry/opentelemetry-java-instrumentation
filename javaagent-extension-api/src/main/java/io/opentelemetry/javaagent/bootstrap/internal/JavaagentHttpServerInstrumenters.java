@@ -48,7 +48,7 @@ public final class JavaagentHttpServerInstrumenters {
       DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> builder,
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
     return builder
-        .configure(AgentCommonConfig.get())
+        .configure(GlobalOpenTelemetry.get())
         .setBuilderCustomizer(builderCustomizer)
         .build();
   }

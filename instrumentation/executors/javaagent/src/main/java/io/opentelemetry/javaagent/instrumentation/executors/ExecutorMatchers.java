@@ -12,7 +12,8 @@ import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -98,16 +99,17 @@ final class ExecutorMatchers {
                 "scala.concurrent.Future$InternalCallbackExecutor$",
                 "scala.concurrent.impl.ExecutionContextImpl"));
     combined.addAll(
-        AgentInstrumentationConfig.get()
-            .getList("otel.instrumentation.executors.include", emptyList()));
+        DeclarativeConfigUtil.getList(GlobalOpenTelemetry.get(), "java", "executors", "include")
+            .orElse(emptyList()));
     INSTRUMENTED_EXECUTOR_NAMES = Collections.unmodifiableSet(combined);
 
     INSTRUMENTED_EXECUTOR_PREFIXES = Collections.singletonList("slick.util.AsyncExecutor$");
   }
 
   static ElementMatcher.Junction<TypeDescription> executorNameMatcher() {
-    if (AgentInstrumentationConfig.get()
-        .getBoolean("otel.instrumentation.executors.include-all", false)) {
+    if (DeclarativeConfigUtil.getBoolean(
+            GlobalOpenTelemetry.get(), "java", "executors", "include_all")
+        .orElse(false)) {
       return any();
     }
 

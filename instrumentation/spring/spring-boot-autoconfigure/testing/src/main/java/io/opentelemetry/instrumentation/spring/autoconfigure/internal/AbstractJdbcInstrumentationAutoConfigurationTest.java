@@ -7,14 +7,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.sql.Connection;
 import java.sql.Statement;
 import javax.sql.DataSource;
@@ -32,9 +28,6 @@ public abstract class AbstractJdbcInstrumentationAutoConfigurationTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
-          .withBean(
-              InstrumentationConfig.class,
-              () -> new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(emptyMap())))
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, testing()::getOpenTelemetry);
 

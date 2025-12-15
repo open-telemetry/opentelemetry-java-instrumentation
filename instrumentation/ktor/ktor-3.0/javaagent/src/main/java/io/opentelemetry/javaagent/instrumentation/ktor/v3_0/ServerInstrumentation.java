@@ -15,7 +15,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil;
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetryBuilderKt;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.invoke.MethodHandle;
@@ -64,7 +63,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
     @Override
     public Unit invoke(AbstractKtorServerTelemetryBuilder builder) {
       builder.setOpenTelemetry(GlobalOpenTelemetry.get());
-      KtorBuilderUtil.serverBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
+      KtorBuilderUtil.serverBuilderExtractor.invoke(builder).configure(GlobalOpenTelemetry.get());
       return Unit.INSTANCE;
     }
   }

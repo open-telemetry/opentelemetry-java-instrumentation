@@ -46,20 +46,24 @@ class EmbeddedConfigFile {
   private EmbeddedConfigFile() {}
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
-    Map<String, String> props = extractSpringProperties(environment);
+    Map<String, Object> props = extractSpringProperties(environment);
     return convertToOpenTelemetryConfigurationModel(props);
   }
 
-  private static Map<String, String> extractSpringProperties(ConfigurableEnvironment environment) {
+  private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
-    Map<String, String> props = new HashMap<>();
+    Map<String, Object> props = new HashMap<>();
     for (PropertySource<?> propertySource : propertySources) {
       if (propertySource instanceof EnumerablePropertySource<?>) {
         for (String propertyName :
             ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
           if (propertyName.startsWith("otel.")) {
-            String property = environment.getProperty(propertyName);
+            Object property = propertySource.getProperty(propertyName);
+            // Resolve ${} placeholders in String values while preserving types for others
+            if (property instanceof String) {
+              property = environment.resolvePlaceholders((String) property);
+            }
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
@@ -75,6 +79,7 @@ class EmbeddedConfigFile {
                       .replace("]", "")
                       .replace(".", "_")
                       .toUpperCase(Locale.ROOT);
+              // Use environment.getProperty() to search all property sources for the env var
               String envVarValue = environment.getProperty(envVarName);
               if (envVarValue != null) {
                 property = envVarValue;
@@ -96,7 +101,7 @@ class EmbeddedConfigFile {
   }
 
   static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(
-      Map<String, String> flatProps) {
+      Map<String, Object> flatProps) {
     Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
     return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
@@ -112,12 +117,12 @@ class EmbeddedConfigFile {
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  static Map<String, Object> convertFlatPropsToNested(Map<String, String> flatProps) {
+  static Map<String, Object> convertFlatPropsToNested(Map<String, Object> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
-    for (Map.Entry<String, String> entry : flatProps.entrySet()) {
+    for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
       String key = entry.getKey();
-      String value = entry.getValue();
+      Object value = entry.getValue();
 
       // Split the key by dots
       String[] parts = key.split("\\.");

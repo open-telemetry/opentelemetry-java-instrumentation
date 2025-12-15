@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
@@ -34,19 +34,21 @@ public class KafkaInstrumentationAutoConfiguration {
   public KafkaInstrumentationAutoConfiguration() {}
 
   @Bean
-  static SpringKafkaTelemetry getTelemetry(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<InstrumentationConfig> configProvider) {
-    InstrumentationConfig config = configProvider.getObject();
-    return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
+  static SpringKafkaTelemetry getTelemetry(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
+    return SpringKafkaTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            config.getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+            DeclarativeConfigUtil.getBoolean(
+                    openTelemetry, "java", "kafka", "experimental_span_attributes")
+                .orElse(false))
         .setMessagingReceiveInstrumentationEnabled(
-            config.getBoolean(
-                "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
+            DeclarativeConfigUtil.getBoolean(
+                    openTelemetry, "java", "messaging", "receive_telemetry/development", "enabled")
+                .orElse(false))
         .setCapturedHeaders(
-            config.getList(
-                "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+            DeclarativeConfigUtil.getList(
+                    openTelemetry, "java", "messaging", "capture_headers/development")
+                .orElse(emptyList()))
         .build();
   }
 
@@ -58,9 +60,8 @@ public class KafkaInstrumentationAutoConfiguration {
       matchIfMissing = true)
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
-          ObjectProvider<OpenTelemetry> openTelemetryProvider,
-          ObjectProvider<InstrumentationConfig> configProvider) {
+          ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
-        () -> getTelemetry(openTelemetryProvider, configProvider));
+        () -> getTelemetry(openTelemetryProvider));
   }
 }

@@ -11,16 +11,16 @@ import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -57,11 +57,16 @@ public final class LettuceSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     connectNetworkAttributesGetter,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                    PeerServiceResolver.create(GlobalOpenTelemetry.get())))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setEnabled(
-                AgentInstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled", false))
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "lettuce",
+                        "connection_telemetry",
+                        "enabled")
+                    .orElse(false))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

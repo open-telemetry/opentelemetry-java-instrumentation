@@ -16,11 +16,11 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
@@ -67,11 +67,6 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           "kamon.annotation.api.Trace",
           "org.springframework.cloud.sleuth.annotation.NewSpan");
 
-  private static final String TRACE_ANNOTATIONS_CONFIG =
-      "otel.instrumentation.external-annotations.include";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.external-annotations.exclude-methods";
-
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
 
@@ -79,8 +74,11 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   public ExternalAnnotationInstrumentation() {
-    Set<String> additionalTraceAnnotations =
-        configureAdditionalTraceAnnotations(AgentInstrumentationConfig.get());
+    String configString =
+        DeclarativeConfigUtil.getString(
+                GlobalOpenTelemetry.get(), "java", "external_annotations", "include")
+            .orElse(null);
+    Set<String> additionalTraceAnnotations = configureAdditionalTraceAnnotations(configString);
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
@@ -115,8 +113,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   }
 
   // visible for testing
-  static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
-    String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
+  static Set<String> configureAdditionalTraceAnnotations(String configString) {
     if (configString == null) {
       return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
     } else if (configString.isEmpty()) {
@@ -148,7 +145,9 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            DeclarativeConfigUtil.getString(
+                    GlobalOpenTelemetry.get(), "java", "external_annotations", "exclude_methods")
+                .orElse(null));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> classMather =

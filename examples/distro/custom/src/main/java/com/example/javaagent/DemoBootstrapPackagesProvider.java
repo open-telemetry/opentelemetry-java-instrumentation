@@ -8,7 +8,6 @@ package com.example.javaagent;
 import com.example.javaagent.bootstrap.AgentApi;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilder;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**
  * To ensure that the classes we add to bootstrap class loader are available in class loaders that
@@ -20,7 +19,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class DemoBootstrapPackagesProvider implements BootstrapPackagesConfigurer {
 
   @Override
-  public void configure(BootstrapPackagesBuilder builder, ConfigProperties config) {
+  public void configure(BootstrapPackagesBuilder builder) {
     builder.add(AgentApi.class.getPackage().getName());
   }
 }

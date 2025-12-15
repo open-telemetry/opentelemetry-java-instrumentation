@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -32,7 +32,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
@@ -224,20 +223,20 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
-    set(config::getKnownHttpRequestMethods, this::setKnownMethods);
-    set(config::getServerRequestHeaders, this::setCapturedRequestHeaders);
-    set(config::getServerResponseHeaders, this::setCapturedResponseHeaders);
-    set(
-        config::shouldEmitExperimentalHttpServerTelemetry,
-        this::setEmitExperimentalHttpServerTelemetry);
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(
+      OpenTelemetry openTelemetry) {
+    DeclarativeConfigUtil.getList(openTelemetry, "java", "http", "known_methods")
+        .ifPresent(this::setKnownMethods);
+    DeclarativeConfigUtil.getList(
+            openTelemetry, "general", "http", "server", "request_captured_headers")
+        .ifPresent(this::setCapturedRequestHeaders);
+    DeclarativeConfigUtil.getList(
+            openTelemetry, "general", "http", "server", "response_captured_headers")
+        .ifPresent(this::setCapturedResponseHeaders);
+    setEmitExperimentalHttpServerTelemetry(
+        DeclarativeConfigUtil.getBoolean(
+                openTelemetry, "java", "http", "server", "emit_experimental_telemetry")
+            .orElse(false));
     return this;
-  }
-
-  private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
-    T t = supplier.get();
-    if (t != null) {
-      consumer.accept(t);
-    }
   }
 }

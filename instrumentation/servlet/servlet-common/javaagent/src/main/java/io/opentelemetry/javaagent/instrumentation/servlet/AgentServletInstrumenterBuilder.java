@@ -9,9 +9,11 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
@@ -19,20 +21,25 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletHttpAttributesGe
 import io.opentelemetry.instrumentation.servlet.internal.ServletInstrumenterBuilder;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      AgentInstrumentationConfig.get()
-          .getList(
-              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
+      DeclarativeConfigUtil.getList(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "servlet",
+              "experimental",
+              "capture_request_parameters")
+          .orElse(emptyList());
   private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "servlet", "experimental_span_attributes")
+          .orElse(false);
 
   private AgentServletInstrumenterBuilder() {}
 
@@ -69,7 +76,10 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
                 instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, accessor)
             .captureRequestParameters(CAPTURE_REQUEST_PARAMETERS)
             .setCaptureExperimentalAttributes(CAPTURE_EXPERIMENTAL_ATTRIBUTES)
-            .setCaptureEnduserId(AgentCommonConfig.get().getEnduserConfig().isIdEnabled());
+            .setCaptureEnduserId(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(), "java", "common", "enduser", "id", "enabled")
+                    .orElse(false));
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);
@@ -77,7 +87,7 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
     if (propagateOperationListenersToOnEnd) {
       builder.propagateOperationListenersToOnEnd();
     }
-    builder.getBuilder().configure(AgentCommonConfig.get());
+    builder.getBuilder().configure(GlobalOpenTelemetry.get());
 
     return builder.build(spanNameExtractor);
   }
@@ -88,9 +98,15 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
         httpAttributesGetter = new ServletHttpAttributesGetter<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
         HttpSpanNameExtractor.builder(httpAttributesGetter)
-            .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
+            .setKnownMethods(getKnownHttpMethods())
             .build();
 
     return build(instrumentationName, accessor, spanNameExtractor, httpAttributesGetter);
+  }
+
+  private static Set<String> getKnownHttpMethods() {
+    return DeclarativeConfigUtil.getList(GlobalOpenTelemetry.get(), "java", "http", "known_methods")
+        .map(HashSet::new)
+        .orElse(new HashSet<>(HttpConstants.KNOWN_METHODS));
   }
 }
