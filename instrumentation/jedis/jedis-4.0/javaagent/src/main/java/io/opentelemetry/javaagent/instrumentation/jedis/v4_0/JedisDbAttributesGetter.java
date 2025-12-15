@@ -6,12 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+
+  private final RedisCommandSanitizer sanitizer;
+
+  JedisDbAttributesGetter(boolean statementSanitizerEnabled) {
+    this.sanitizer = RedisCommandSanitizer.create(statementSanitizerEnabled);
+  }
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
@@ -26,7 +33,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbQueryText(JedisRequest request) {
-    return request.getStatement();
+    return sanitizer.sanitize(request.getOperation(), request.getArgs());
   }
 
   @Override

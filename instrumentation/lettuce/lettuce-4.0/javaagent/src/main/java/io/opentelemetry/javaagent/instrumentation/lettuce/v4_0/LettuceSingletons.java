@@ -5,28 +5,33 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-4.0";
 
   private static final Instrumenter<RedisCommand<?, ?, ?>, Void> INSTRUMENTER;
   private static final Instrumenter<RedisURI, Void> CONNECT_INSTRUMENTER;
+  private static final Configuration CONFIG;
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v4_0-context-key");
@@ -35,6 +40,8 @@ public final class LettuceSingletons {
       VirtualField.find(AsyncCommand.class, Context.class);
 
   static {
+    CONFIG = new Configuration(GlobalOpenTelemetry.get());
+
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
     INSTRUMENTER =
@@ -55,12 +62,14 @@ public final class LettuceSingletons {
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
+                    netAttributesGetter, PeerServiceResolver.create(GlobalOpenTelemetry.get())))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
-            .setEnabled(
-                AgentInstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled", false))
+            .setEnabled(CONFIG.connectionTelemetryEnabled)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
+  }
+
+  public static boolean experimentalSpanAttributes() {
+    return CONFIG.experimentalSpanAttributes;
   }
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {
@@ -69,6 +78,36 @@ public final class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return CONNECT_INSTRUMENTER;
+  }
+
+  // instrumentation/development:
+  //   java:
+  //     lettuce:
+  //       connection_telemetry:
+  //         enabled: false
+  //       experimental_span_attributes: false
+  private static final class Configuration {
+
+    private final boolean connectionTelemetryEnabled;
+    private final boolean experimentalSpanAttributes;
+
+    Configuration(OpenTelemetry openTelemetry) {
+      DeclarativeConfigProperties javaConfig = empty();
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+        DeclarativeConfigProperties instrumentationConfig =
+            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+        if (instrumentationConfig != null) {
+          javaConfig = instrumentationConfig.getStructured("java", empty());
+        }
+      }
+      DeclarativeConfigProperties lettuceConfig = javaConfig.getStructured("lettuce", empty());
+
+      this.connectionTelemetryEnabled =
+          lettuceConfig.getStructured("connection_telemetry", empty()).getBoolean("enabled", false);
+      this.experimentalSpanAttributes =
+          lettuceConfig.getBoolean("experimental_span_attributes", false);
+    }
   }
 
   private LettuceSingletons() {}

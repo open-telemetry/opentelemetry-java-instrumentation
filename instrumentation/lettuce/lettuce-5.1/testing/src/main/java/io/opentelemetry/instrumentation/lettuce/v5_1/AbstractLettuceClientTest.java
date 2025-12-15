@@ -27,10 +27,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
-  private static final boolean COMMAND_ENCODING_EVENTS_ENABLED =
-      Boolean.getBoolean(
-          "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled");
-
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final int DB_INDEX = 0;
@@ -88,16 +84,9 @@ public abstract class AbstractLettuceClientTest {
   }
 
   protected static void assertCommandEncodeEvents(SpanData span) {
-    if (COMMAND_ENCODING_EVENTS_ENABLED) {
-      assertThat(span)
-          .hasEventsSatisfyingExactly(
-              event -> event.hasName("redis.encode.start"),
-              event -> event.hasName("redis.encode.end"));
-    } else {
-      assertThat(span.getEvents())
-          .noneSatisfy(event -> assertThat(event).hasName("redis.encode.start"));
-      assertThat(span.getEvents())
-          .noneSatisfy(event -> assertThat(event).hasName("redis.encode.end"));
-    }
+    assertThat(span)
+        .hasEventsSatisfyingExactly(
+            event -> event.hasName("redis.encode.start"),
+            event -> event.hasName("redis.encode.end"));
   }
 }

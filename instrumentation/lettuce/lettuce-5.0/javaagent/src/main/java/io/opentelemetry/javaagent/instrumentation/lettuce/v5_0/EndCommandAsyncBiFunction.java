@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.experimentalSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
@@ -25,10 +25,6 @@ import java.util.function.BiFunction;
  */
 public class EndCommandAsyncBiFunction<T, U extends Throwable, R>
     implements BiFunction<T, Throwable, R> {
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private final Context context;
   private final RedisCommand<?, ?, ?> command;
@@ -46,7 +42,7 @@ public class EndCommandAsyncBiFunction<T, U extends Throwable, R>
 
   public static void end(Context context, RedisCommand<?, ?, ?> command, Throwable throwable) {
     if (throwable instanceof CancellationException) {
-      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      if (experimentalSpanAttributes()) {
         Span.fromContext(context).setAttribute("lettuce.command.cancelled", true);
       }
       // and don't report this as an error

@@ -5,13 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -28,8 +32,12 @@ import org.redisson.client.protocol.CommandsData;
 @AutoValue
 public abstract class RedissonRequest {
 
-  private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final RedisCommandSanitizer sanitizer;
+
+  static {
+    Configuration config = new Configuration(GlobalOpenTelemetry.get());
+    sanitizer = RedisCommandSanitizer.create(config.statementSanitizerEnabled);
+  }
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
@@ -158,6 +166,36 @@ public abstract class RedissonRequest {
       }
     } catch (IllegalAccessException ignored) {
       return null;
+    }
+  }
+
+  // instrumentation/development:
+  //   java:
+  //     common:
+  //       db:
+  //         statement_sanitizer:
+  //           enabled: true
+  private static final class Configuration {
+
+    private final boolean statementSanitizerEnabled;
+
+    Configuration(OpenTelemetry openTelemetry) {
+      DeclarativeConfigProperties javaConfig = empty();
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+        DeclarativeConfigProperties instrumentationConfig =
+            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+        if (instrumentationConfig != null) {
+          javaConfig = instrumentationConfig.getStructured("java", empty());
+        }
+      }
+
+      this.statementSanitizerEnabled =
+          javaConfig
+              .getStructured("common", empty())
+              .getStructured("db", empty())
+              .getStructured("statement_sanitizer", empty())
+              .getBoolean("enabled", true);
     }
   }
 }

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.experimentalSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import org.reactivestreams.Subscription;
@@ -19,10 +19,6 @@ import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 
 public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runnable {
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private Context context;
   private int numResults;
@@ -38,7 +34,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal<?>>, Runn
 
   private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
     if (context != null) {
-      if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      if (experimentalSpanAttributes()) {
         Span span = Span.fromContext(context);
         span.setAttribute("lettuce.command.results.count", numResults);
         if (isCommandCancelled) {

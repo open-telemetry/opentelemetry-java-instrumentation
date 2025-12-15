@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static com.lambdaworks.redis.protocol.CommandKeyword.SEGFAULT;
 import static com.lambdaworks.redis.protocol.CommandType.DEBUG;
 import static com.lambdaworks.redis.protocol.CommandType.SHUTDOWN;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.experimentalSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 
 import com.lambdaworks.redis.protocol.AsyncCommand;
@@ -16,16 +17,11 @@ import com.lambdaworks.redis.protocol.ProtocolKeyword;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
 public final class InstrumentationPoints {
-
-  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
 
   private static final Set<CommandType> NON_INSTRUMENTING_COMMANDS = EnumSet.of(SHUTDOWN, DEBUG);
 
@@ -40,7 +36,7 @@ public final class InstrumentationPoints {
       asyncCommand.handleAsync(
           (value, ex) -> {
             if (ex instanceof CancellationException) {
-              if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+              if (experimentalSpanAttributes()) {
                 Span span = Span.fromContext(context);
                 span.setAttribute("lettuce.command.cancelled", true);
               }

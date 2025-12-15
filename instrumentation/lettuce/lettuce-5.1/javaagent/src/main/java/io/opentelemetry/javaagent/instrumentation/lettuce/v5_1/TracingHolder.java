@@ -5,25 +5,67 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class TracingHolder {
 
-  private static final boolean CAPTURE_COMMAND_ENCODING_EVENTS =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled", false);
+  public static final Tracing TRACING;
 
-  public static final Tracing TRACING =
-      LettuceTelemetry.builder(GlobalOpenTelemetry.get())
-          .setStatementSanitizationEnabled(AgentCommonConfig.get().isStatementSanitizationEnabled())
-          .setEncodingSpanEventsEnabled(CAPTURE_COMMAND_ENCODING_EVENTS)
-          .build()
-          .newTracing();
+  static {
+    Configuration config = new Configuration(GlobalOpenTelemetry.get());
+    TRACING =
+        LettuceTelemetry.builder(GlobalOpenTelemetry.get())
+            .setStatementSanitizationEnabled(config.statementSanitizerEnabled)
+            .setEncodingSpanEventsEnabled(config.commandEncodingEventsEnabled)
+            .build()
+            .newTracing();
+  }
+
+  // instrumentation/development:
+  //   java:
+  //     common:
+  //       db:
+  //         statement_sanitizer:
+  //           enabled: true
+  //     lettuce:
+  //       command_encoding_events/development:
+  //         enabled: false
+  private static final class Configuration {
+
+    private final boolean statementSanitizerEnabled;
+    private final boolean commandEncodingEventsEnabled;
+
+    Configuration(OpenTelemetry openTelemetry) {
+      DeclarativeConfigProperties javaConfig = empty();
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+        DeclarativeConfigProperties instrumentationConfig =
+            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+        if (instrumentationConfig != null) {
+          javaConfig = instrumentationConfig.getStructured("java", empty());
+        }
+      }
+
+      this.statementSanitizerEnabled =
+          javaConfig
+              .getStructured("common", empty())
+              .getStructured("db", empty())
+              .getStructured("statement_sanitizer", empty())
+              .getBoolean("enabled", true);
+      this.commandEncodingEventsEnabled =
+          javaConfig
+              .getStructured("lettuce", empty())
+              .getStructured("command_encoding_events/development", empty())
+              .getBoolean("enabled", false);
+    }
+  }
 
   private TracingHolder() {}
 }

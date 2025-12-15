@@ -5,12 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -18,7 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
@@ -36,16 +41,20 @@ public final class VertxRedisClientSingletons {
       VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   static {
+    Configuration config = new Configuration(GlobalOpenTelemetry.get());
+
     // Redis semantic conventions don't follow the regular pattern of adding the db.namespace to
     // the span name
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
         VertxRedisClientRequest::getCommand;
 
+    VertxRedisClientAttributesGetter attributesGetter =
+        new VertxRedisClientAttributesGetter(config.statementSanitizerEnabled);
+
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractor(
-                DbClientAttributesExtractor.create(VertxRedisClientAttributesGetter.INSTANCE))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(attributesGetter))
             .addAttributesExtractor(VertxRedisClientAttributesExtractor.INSTANCE)
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
@@ -54,7 +63,7 @@ public final class VertxRedisClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxRedisClientNetAttributesGetter.INSTANCE,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                    PeerServiceResolver.create(GlobalOpenTelemetry.get())))
             .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -106,6 +115,36 @@ public final class VertxRedisClientSingletons {
 
   public static RedisURI getRedisUri(RedisStandaloneConnection connection) {
     return redisUriField.get(connection);
+  }
+
+  // instrumentation/development:
+  //   java:
+  //     common:
+  //       db:
+  //         statement_sanitizer:
+  //           enabled: true
+  private static final class Configuration {
+
+    private final boolean statementSanitizerEnabled;
+
+    Configuration(OpenTelemetry openTelemetry) {
+      DeclarativeConfigProperties javaConfig = empty();
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+        DeclarativeConfigProperties instrumentationConfig =
+            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+        if (instrumentationConfig != null) {
+          javaConfig = instrumentationConfig.getStructured("java", empty());
+        }
+      }
+
+      this.statementSanitizerEnabled =
+          javaConfig
+              .getStructured("common", empty())
+              .getStructured("db", empty())
+              .getStructured("statement_sanitizer", empty())
+              .getBoolean("enabled", true);
+    }
   }
 
   private VertxRedisClientSingletons() {}
