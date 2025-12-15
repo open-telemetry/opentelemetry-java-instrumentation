@@ -29,14 +29,33 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean messagingReceiveInstrumentationEnabled() {
+    protected boolean messagingReceiveTelemetryEnabled() {
       return ConfigPropertiesUtil.getBoolean(
           "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
     }
 
     @Override
-    protected boolean getBoolean(String name, boolean defaultValue) {
-      return ConfigPropertiesUtil.getBoolean(name, defaultValue);
+    protected boolean captureExperimentalSpanAttributes() {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.aws-sdk.experimental-span-attributes", false);
+    }
+
+    @Override
+    protected boolean useMessagingPropagator() {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+    }
+
+    @Override
+    protected boolean recordIndividualHttpError() {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
+    }
+
+    @Override
+    protected boolean genaiCaptureMessageContent() {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.genai.capture-message-content", false);
     }
   }
 

@@ -16,33 +16,21 @@ import java.util.List;
 public abstract class AbstractAwsSdkTelemetryFactory {
   protected abstract List<String> getCapturedHeaders();
 
-  private boolean captureExperimentalSpanAttributes() {
-    return getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
-  }
+  protected abstract boolean captureExperimentalSpanAttributes();
 
-  protected abstract boolean messagingReceiveInstrumentationEnabled();
+  protected abstract boolean messagingReceiveTelemetryEnabled();
 
-  private boolean useMessagingPropagator() {
-    return getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
-  }
+  protected abstract boolean useMessagingPropagator();
 
-  private boolean recordIndividualHttpError() {
-    return getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
-  }
+  protected abstract boolean recordIndividualHttpError();
 
-  private boolean genaiCaptureMessageContent() {
-    return getBoolean("otel.instrumentation.genai.capture-message-content", false);
-  }
-
-  protected abstract boolean getBoolean(String name, boolean defaultValue);
+  protected abstract boolean genaiCaptureMessageContent();
 
   public AwsSdkTelemetry telemetry() {
     return AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
         .setCapturedHeaders(getCapturedHeaders())
         .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
-        .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled())
+        .setMessagingReceiveTelemetryEnabled(messagingReceiveTelemetryEnabled())
         .setUseConfiguredPropagatorForMessaging(useMessagingPropagator())
         .setRecordIndividualHttpError(recordIndividualHttpError())
         .setGenaiCaptureMessageContent(genaiCaptureMessageContent())
