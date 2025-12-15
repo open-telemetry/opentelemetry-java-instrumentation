@@ -13,16 +13,15 @@ import io.opentelemetry.javaagent.testing.util.KeysVerifyingPropagator;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
 
-/** Provides a propagator that wraps the default W3C propagators with additional verification. */
+/** Provides a composite propagator that includes the default W3C propagators plus verification. */
 @AutoService(ConfigurablePropagatorProvider.class)
 public final class KeysVerifyingPropagatorProvider implements ConfigurablePropagatorProvider {
   @Override
   public TextMapPropagator getPropagator(ConfigProperties configProperties) {
-    TextMapPropagator composite =
-        TextMapPropagator.composite(
-            W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance());
-
-    return new KeysVerifyingPropagator(composite);
+    return TextMapPropagator.composite(
+        KeysVerifyingPropagator.getInstance(),
+        W3CTraceContextPropagator.getInstance(),
+        W3CBaggagePropagator.getInstance());
   }
 
   @Override

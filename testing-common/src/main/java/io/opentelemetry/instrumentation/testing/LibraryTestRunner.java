@@ -103,10 +103,10 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
                     .build())
             .setPropagators(
                 ContextPropagators.create(
-                    new KeysVerifyingPropagator(
-                        TextMapPropagator.composite(
-                            W3CTraceContextPropagator.getInstance(),
-                            W3CBaggagePropagator.getInstance()))))
+                    TextMapPropagator.composite(
+                        KeysVerifyingPropagator.getInstance(),
+                        W3CTraceContextPropagator.getInstance(),
+                        W3CBaggagePropagator.getInstance())))
             .buildAndRegisterGlobal();
     openTelemetry = wrap(openTelemetrySdk);
   }
