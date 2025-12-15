@@ -55,21 +55,26 @@ class ConfigPropertiesUtilTest {
     assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(-1);
   }
 
-  @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "false")
-  @SetSystemProperty(key = "test.property.boolean", value = "true")
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_BOOLEAN", value = "false")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.boolean", value = "true")
   @Test
   void getBoolean_systemProperty() {
-    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isTrue();
+    assertBoolean(true);
   }
 
-  @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "true")
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_BOOLEAN", value = "true")
   @Test
   void getBoolean_environmentVariable() {
-    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isTrue();
+    assertBoolean(true);
   }
 
   @Test
   void getBoolean_none() {
-    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isFalse();
+    assertBoolean(false);
+  }
+
+  private static void assertBoolean(boolean expected) {
+    assertThat(ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean", false))
+        .isEqualTo(expected);
   }
 }

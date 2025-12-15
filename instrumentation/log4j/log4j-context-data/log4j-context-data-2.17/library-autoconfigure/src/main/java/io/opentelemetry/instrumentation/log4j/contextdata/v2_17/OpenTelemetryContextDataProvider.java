@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.Collections;
@@ -25,7 +28,10 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   private static final boolean BAGGAGE_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+      DeclarativeConfigUtil.getStructured(GlobalOpenTelemetry.get(), "java", empty())
+          .getStructured("log4j_context_data", empty())
+          .getBoolean("add_baggage", false);
+
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
   private static final Map<String, String> staticContextData = getStaticContextData();
