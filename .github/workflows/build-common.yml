@@ -219,7 +219,7 @@ jobs:
           fi
 
       - name: Upload agent jar
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: opentelemetry-javaagent.jar
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
@@ -230,7 +230,7 @@ jobs:
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM.zip
@@ -292,7 +292,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-cache-pnpm-modules
@@ -385,7 +385,7 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}-indy-${{ matrix.test-indy }}
           path: /tmp/deadlock-detector-*
@@ -393,7 +393,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
@@ -465,7 +465,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           # we expect crash dumps either in root director or in smoke-tests
