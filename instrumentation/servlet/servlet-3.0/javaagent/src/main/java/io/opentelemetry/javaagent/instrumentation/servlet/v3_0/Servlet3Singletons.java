@@ -8,12 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.v3_0.internal.Servlet3Accessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
 import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
 import javax.servlet.Filter;
@@ -27,7 +28,7 @@ public final class Servlet3Singletons {
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =
-          ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+          AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =

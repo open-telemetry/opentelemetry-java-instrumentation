@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.client.AkkaHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -56,7 +55,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       }
 
       public static AdviceScope start(HttpRequest request) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
@@ -83,7 +82,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
           if (throwable == null) {
             responseFuture.onComplete(
                 new OnCompleteHandler(context, request), actorSystem.dispatcher());
-            return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
+            return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), Context.current());
           } else {
             instrumenter().end(context, request, null, throwable);
           }

@@ -47,7 +47,7 @@ class KtorServerTelemetry private constructor(
     fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
     ) {
-      builder.setStatusExtractor { prevExtractor ->
+      builder.setSpanStatusExtractorCustomizer { prevExtractor ->
         SpanStatusExtractor {
             spanStatusBuilder: SpanStatusBuilder,
             request: ApplicationRequest,

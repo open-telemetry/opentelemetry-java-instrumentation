@@ -91,6 +91,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
@@ -303,6 +304,22 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
+  val trimLicenseTrailingWhitespace by registering {
+    val licenseFile = rootDir.toPath().resolve("licenses/licenses.md")
+    val newline = System.lineSeparator()
+    doLast {
+      if (Files.exists(licenseFile)) {
+        val content = String(Files.readAllBytes(licenseFile), Charsets.UTF_8)
+        val normalized = content.lineSequence()
+          .map { it.trimEnd() }
+          .toList()
+          .dropLastWhile { it.isEmpty() }
+          .joinToString(newline) + newline
+        Files.write(licenseFile, normalized.toByteArray(Charsets.UTF_8))
+      }
+    }
+  }
+
   val removeLicenseDate by registering {
     // removing the license report date makes it idempotent
     val rootDirPath = rootDir.toPath()
@@ -328,7 +345,7 @@ tasks {
   val generateLicenseReportTask = named("generateLicenseReport")
   generateLicenseReportTask.configure {
     dependsOn(cleanLicenses)
-    finalizedBy(":spotlessApply")
+    finalizedBy(trimLicenseTrailingWhitespace)
     finalizedBy(removeLicenseDate)
     // disable licence report generation unless this task is explicitly run
     // the files produced by this task are used by other tasks without declaring them as dependency

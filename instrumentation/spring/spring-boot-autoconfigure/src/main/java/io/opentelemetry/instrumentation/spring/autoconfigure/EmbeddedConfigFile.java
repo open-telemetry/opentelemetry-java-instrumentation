@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -62,6 +63,24 @@ class EmbeddedConfigFile {
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
+            if (propertyName.contains("[")) {
+              // fix override via env var or system property
+              // see
+              // https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding
+              // For example, the configuration property my.service[0].other would use an
+              // environment variable named MY_SERVICE_0_OTHER.
+              String envVarName =
+                  propertyName
+                      .replace("[", "_")
+                      .replace("]", "")
+                      .replace(".", "_")
+                      .toUpperCase(Locale.ROOT);
+              String envVarValue = environment.getProperty(envVarName);
+              if (envVarValue != null) {
+                property = envVarValue;
+              }
+            }
+
             props.put(propertyName.substring("otel.".length()), property);
           }
         }
