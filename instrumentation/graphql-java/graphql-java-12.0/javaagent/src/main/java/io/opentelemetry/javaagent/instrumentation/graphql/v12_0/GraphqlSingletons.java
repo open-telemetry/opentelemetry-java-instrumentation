@@ -5,36 +5,72 @@
 
 package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class GraphqlSingletons {
 
-  private static final boolean CAPTURE_QUERY =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.capture-query", true);
-  private static final boolean QUERY_SANITIZATION_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
-  private static final boolean ADD_OPERATION_NAME_TO_SPAN_NAME =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.graphql.add-operation-name-to-span-name.enabled", false);
+  private static final GraphQLTelemetry TELEMETRY;
 
-  private static final GraphQLTelemetry TELEMETRY =
-      GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCaptureQuery(CAPTURE_QUERY)
-          .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
-          .setAddOperationNameToSpanName(ADD_OPERATION_NAME_TO_SPAN_NAME)
-          .build();
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    Configuration config = new Configuration(openTelemetry);
 
-  private GraphqlSingletons() {}
+    TELEMETRY =
+        GraphQLTelemetry.builder(openTelemetry)
+            .setCaptureQuery(config.captureQuery)
+            .setSanitizeQuery(config.querySanitizerEnabled)
+            .setAddOperationNameToSpanName(config.addOperationNameToSpanName)
+            .build();
+  }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
     Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
   }
+
+  // instrumentation/development:
+  //   java:
+  //     graphql:
+  //       capture_query: true
+  //       query_sanitizer:
+  //         enabled: true
+  //       add_operation_name_to_span_name:
+  //         enabled: false
+  private static final class Configuration {
+
+    private final boolean captureQuery;
+    private final boolean querySanitizerEnabled;
+    private final boolean addOperationNameToSpanName;
+
+    Configuration(OpenTelemetry openTelemetry) {
+      DeclarativeConfigProperties javaConfig = empty();
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+        DeclarativeConfigProperties instrumentationConfig =
+            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+        if (instrumentationConfig != null) {
+          javaConfig = instrumentationConfig.getStructured("java", empty());
+        }
+      }
+      DeclarativeConfigProperties graphqlConfig = javaConfig.getStructured("graphql", empty());
+
+      this.captureQuery = graphqlConfig.getBoolean("capture_query", true);
+      this.querySanitizerEnabled =
+          graphqlConfig.getStructured("query_sanitizer", empty()).getBoolean("enabled", true);
+      this.addOperationNameToSpanName =
+          graphqlConfig
+              .getStructured("add_operation_name_to_span_name", empty())
+              .getBoolean("enabled", false);
+    }
+  }
+
+  private GraphqlSingletons() {}
 }
