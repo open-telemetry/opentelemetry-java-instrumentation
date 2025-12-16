@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
 
@@ -51,24 +49,13 @@ public final class GraphqlSingletons {
     private final boolean addOperationNameToSpanName;
 
     Configuration(OpenTelemetry openTelemetry) {
-      DeclarativeConfigProperties javaConfig = empty();
-      if (openTelemetry instanceof ExtendedOpenTelemetry) {
-        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
-        DeclarativeConfigProperties instrumentationConfig =
-            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
-        if (instrumentationConfig != null) {
-          javaConfig = instrumentationConfig.getStructured("java", empty());
-        }
-      }
-      DeclarativeConfigProperties graphqlConfig = javaConfig.getStructured("graphql", empty());
+      ExtendedDeclarativeConfigProperties config = DeclarativeConfigUtil.get(openTelemetry);
 
-      this.captureQuery = graphqlConfig.getBoolean("capture_query", true);
+      this.captureQuery = config.get("graphql").getBoolean("capture_query", true);
       this.querySanitizerEnabled =
-          graphqlConfig.getStructured("query_sanitizer", empty()).getBoolean("enabled", true);
+          config.get("graphql").get("query_sanitizer").getBoolean("enabled", true);
       this.addOperationNameToSpanName =
-          graphqlConfig
-              .getStructured("add_operation_name_to_span_name", empty())
-              .getBoolean("enabled", false);
+          config.get("graphql").get("add_operation_name_to_span_name").getBoolean("enabled", false);
     }
   }
 
