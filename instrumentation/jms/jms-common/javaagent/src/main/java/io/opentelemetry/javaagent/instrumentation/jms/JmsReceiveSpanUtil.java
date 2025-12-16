@@ -8,16 +8,19 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 
 public final class JmsReceiveSpanUtil {
   private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
   private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("messaging")
+          .get("receive_telemetry/development")
+          .getBoolean("enabled", false);
 
   public static void createReceiveSpan(
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,

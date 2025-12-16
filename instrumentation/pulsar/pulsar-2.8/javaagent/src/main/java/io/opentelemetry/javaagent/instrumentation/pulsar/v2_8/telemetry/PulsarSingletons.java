@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -25,8 +28,6 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -41,9 +42,18 @@ public final class PulsarSingletons {
   private static final TextMapPropagator PROPAGATOR =
       TELEMETRY.getPropagators().getTextMapPropagator();
   private static final List<String> capturedHeaders =
-      ExperimentalConfig.get().getMessagingHeaders();
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("messaging")
+          .getScalarList("capture_headers/development", String.class, emptyList());
   private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("messaging")
+          .get("receive_telemetry/development")
+          .getBoolean("enabled", false);
+  private static final boolean experimentalSpanAttributesEnabled =
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("pulsar")
+          .getBoolean("experimental_span_attributes", false);
 
   private static final Instrumenter<PulsarRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
       createConsumerProcessInstrumenter();
@@ -143,8 +153,7 @@ public final class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addOperationMetrics(MessagingProducerMetrics.get());
 
-    if (AgentInstrumentationConfig.get()
-        .getBoolean("otel.instrumentation.pulsar.experimental-span-attributes", false)) {
+    if (experimentalSpanAttributesEnabled) {
       builder.addAttributesExtractor(ExperimentalProducerAttributesExtractor.INSTANCE);
     }
 

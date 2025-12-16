@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class VertxKafkaSingletons {
 
@@ -21,14 +23,23 @@ public final class VertxKafkaSingletons {
   private static final Instrumenter<KafkaProcessRequest, Void> PROCESS_INSTRUMENTER;
 
   static {
+    ExtendedDeclarativeConfigProperties instrumentationConfig =
+        DeclarativeConfigUtil.get(GlobalOpenTelemetry.get());
     KafkaInstrumenterFactory factory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+            .setCapturedHeaders(
+                instrumentationConfig
+                    .get("messaging")
+                    .getScalarList("capture_headers/development", String.class, emptyList()))
             .setCaptureExperimentalSpanAttributes(
-                AgentInstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+                instrumentationConfig
+                    .get("kafka")
+                    .getBoolean("experimental_span_attributes", false))
             .setMessagingReceiveInstrumentationEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+                instrumentationConfig
+                    .get("messaging")
+                    .get("receive_telemetry/development")
+                    .getBoolean("enabled", false));
     BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();
     PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
   }
