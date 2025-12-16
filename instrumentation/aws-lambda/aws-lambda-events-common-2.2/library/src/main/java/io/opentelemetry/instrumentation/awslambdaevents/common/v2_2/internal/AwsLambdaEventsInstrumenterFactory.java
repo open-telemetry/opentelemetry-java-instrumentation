@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionAttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -81,7 +82,8 @@ public final class AwsLambdaEventsInstrumenterFactory {
 
       this.knownHttpMethods =
           new HashSet<>(
-              httpConfig.getScalarList("known_methods", String.class, HttpConstants.KNOWN_METHODS));
+              httpConfig.getScalarList(
+                  "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     }
   }
 
