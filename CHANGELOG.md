@@ -2,13 +2,13 @@
 
 ## Unreleased
 
-## Version 2.23.0 (2025-12-13)
-
 ### ⚠️ Breaking Changes
 
 - Rename `otel.experimental.javascript-snippet` to
   `otel.instrumentation.servlet.experimental.javascript-snippet` to follow naming conventions
   ([#15339](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15339))
+
+## Version 2.23.0 (2025-12-13)
 
 ### ⚠️ Breaking Changes
 

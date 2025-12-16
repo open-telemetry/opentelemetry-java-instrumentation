@@ -30,16 +30,17 @@ public class TracingRequestHandler extends RequestHandler2 {
     DeclarativeConfigProperties java =
         DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty());
     DeclarativeConfigProperties awsSdk = java.getStructured("aws_sdk", empty());
-
+    DeclarativeConfigProperties messaging = java.getStructured("messaging", empty());
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
             awsSdk.getBoolean("span_attributes/development", false))
         .setMessagingReceiveTelemetryEnabled(
-            awsSdk.getBoolean("messaging.receive_telemetry/development", false))
+            messaging
+                .getStructured("receive_telemetry/development", empty())
+                .getBoolean("enabled", false))
         .setCapturedHeaders(
             Optional.ofNullable(
-                    java.getStructured("messaging", empty())
-                        .getScalarList("capture_headers/development", String.class))
+                    messaging.getScalarList("capture_headers/development", String.class))
                 .orElse(emptyList()))
         .build()
         .newRequestHandler();
