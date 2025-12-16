@@ -16,27 +16,9 @@ class InstrumentationNameComparatorTest {
 
   @Test
   void testComparesLibrariesDifferentName() {
-    InstrumentationModule moduleB =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/b-module")
-            .instrumentationName("b-module")
-            .namespace("b-module")
-            .group("b-module")
-            .build();
-    InstrumentationModule moduleC =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/c-module")
-            .instrumentationName("c-module")
-            .namespace("c-module")
-            .group("c-module")
-            .build();
-    InstrumentationModule moduleA =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/a-module")
-            .instrumentationName("a-module")
-            .namespace("a-module")
-            .group("a-module")
-            .build();
+    InstrumentationModule moduleB = new InstrumentationModule.Builder("b-module").build();
+    InstrumentationModule moduleC = new InstrumentationModule.Builder("c-module").build();
+    InstrumentationModule moduleA = new InstrumentationModule.Builder("a-module").build();
 
     List<String> modules =
         Stream.of(moduleB, moduleC, moduleA)
@@ -48,35 +30,11 @@ class InstrumentationNameComparatorTest {
 
   @Test
   void testComparesLibrariesDifferentVersions() {
-    InstrumentationModule moduleB =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/b-module")
-            .instrumentationName("b-module")
-            .namespace("b-module")
-            .group("b-module")
-            .build();
-    InstrumentationModule moduleB2 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/b-module-2.0")
-            .instrumentationName("b-module-2.0")
-            .namespace("b-module")
-            .group("b-module")
-            .build();
-    InstrumentationModule moduleB4 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/b-module-4.2")
-            .instrumentationName("b-module-4.2")
-            .namespace("b-module")
-            .group("b-module")
-            .build();
+    InstrumentationModule moduleB = new InstrumentationModule.Builder("b-module").build();
+    InstrumentationModule moduleB2 = new InstrumentationModule.Builder("b-module-2.0").build();
+    InstrumentationModule moduleB4 = new InstrumentationModule.Builder("b-module-4.2").build();
 
-    InstrumentationModule moduleB25 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/b-module-2.5")
-            .instrumentationName("b-module-2.5")
-            .namespace("b-module")
-            .group("b-module")
-            .build();
+    InstrumentationModule moduleB25 = new InstrumentationModule.Builder("b-module-2.5").build();
 
     List<String> modules =
         Stream.of(moduleB4, moduleB25, moduleB, moduleB2)
@@ -89,41 +47,11 @@ class InstrumentationNameComparatorTest {
 
   @Test
   void testComparesMultiDigitMinorVersions() {
-    InstrumentationModule module19 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-1.9")
-            .instrumentationName("lib-1.9")
-            .namespace("lib")
-            .group("lib")
-            .build();
-    InstrumentationModule module110 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-1.10")
-            .instrumentationName("lib-1.10")
-            .namespace("lib")
-            .group("lib")
-            .build();
-    InstrumentationModule module156 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-1.56")
-            .instrumentationName("lib-1.56")
-            .namespace("lib")
-            .group("lib")
-            .build();
-    InstrumentationModule module157 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-1.57")
-            .instrumentationName("lib-1.57")
-            .namespace("lib")
-            .group("lib")
-            .build();
-    InstrumentationModule module20 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-2.0")
-            .instrumentationName("lib-2.0")
-            .namespace("lib")
-            .group("lib")
-            .build();
+    InstrumentationModule module19 = new InstrumentationModule.Builder("lib-1.9").build();
+    InstrumentationModule module110 = new InstrumentationModule.Builder("lib-1.10").build();
+    InstrumentationModule module156 = new InstrumentationModule.Builder("lib-1.56").build();
+    InstrumentationModule module157 = new InstrumentationModule.Builder("lib-1.57").build();
+    InstrumentationModule module20 = new InstrumentationModule.Builder("lib-2.0").build();
 
     List<String> modules =
         Stream.of(module157, module110, module156, module19, module20)
@@ -137,34 +65,10 @@ class InstrumentationNameComparatorTest {
   @Test
   void testComparesPatchVersions() {
     // Test that 3.1 comes before 3.1.6, which comes before 3.2
-    InstrumentationModule module31 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/couchbase/couchbase-3.1")
-            .instrumentationName("couchbase-3.1")
-            .namespace("couchbase")
-            .group("couchbase")
-            .build();
-    InstrumentationModule module316 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/couchbase/couchbase-3.1.6")
-            .instrumentationName("couchbase-3.1.6")
-            .namespace("couchbase")
-            .group("couchbase")
-            .build();
-    InstrumentationModule module32 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/couchbase/couchbase-3.2")
-            .instrumentationName("couchbase-3.2")
-            .namespace("couchbase")
-            .group("couchbase")
-            .build();
-    InstrumentationModule module34 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/couchbase/couchbase-3.4")
-            .instrumentationName("couchbase-3.4")
-            .namespace("couchbase")
-            .group("couchbase")
-            .build();
+    InstrumentationModule module31 = new InstrumentationModule.Builder("couchbase-3.1").build();
+    InstrumentationModule module316 = new InstrumentationModule.Builder("couchbase-3.1.6").build();
+    InstrumentationModule module32 = new InstrumentationModule.Builder("couchbase-3.2").build();
+    InstrumentationModule module34 = new InstrumentationModule.Builder("couchbase-3.4").build();
 
     List<String> modules =
         Stream.of(module34, module316, module32, module31)
@@ -178,27 +82,9 @@ class InstrumentationNameComparatorTest {
 
   @Test
   void testComparesVersionedAndUnversioned() {
-    InstrumentationModule moduleUnversioned =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib")
-            .instrumentationName("lib")
-            .namespace("lib")
-            .group("lib")
-            .build();
-    InstrumentationModule module10 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-1.0")
-            .instrumentationName("lib-1.0")
-            .namespace("lib")
-            .group("lib")
-            .build();
-    InstrumentationModule module20 =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/lib/lib-2.0")
-            .instrumentationName("lib-2.0")
-            .namespace("lib")
-            .group("lib")
-            .build();
+    InstrumentationModule moduleUnversioned = new InstrumentationModule.Builder("lib").build();
+    InstrumentationModule module10 = new InstrumentationModule.Builder("lib-1.0").build();
+    InstrumentationModule module20 = new InstrumentationModule.Builder("lib-2.0").build();
 
     List<String> modules =
         Stream.of(module20, module10, moduleUnversioned)
