@@ -444,11 +444,7 @@ class SystemPropertiesBackedDeclarativeConfigPropertiesTest {
   void getStructured_underscoreToDash() {
     DeclarativeConfigProperties config =
         SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("test_feature")
-                .getString("property"))
+    assertThat(config.getStructured("java").getStructured("test_feature").getString("property"))
         .isEqualTo("dash_value");
   }
 
