@@ -10,9 +10,9 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.logging.Logger;
@@ -26,15 +26,19 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
+    DeclarativeConfigProperties instrumentationConfig =
+        ((ExtendedOpenTelemetry) GlobalOpenTelemetry.get())
+            .getConfigProvider()
+            .getInstrumentationConfig();
+    DeclarativeConfigProperties configuration =
+        instrumentationConfig != null
+            ? instrumentationConfig.getStructured("http", empty()).getStructured("client", empty())
+            : null;
     // url template is emitted only when http client experimental telemetry is enabled
-    boolean urlTemplateEnabled =
-        config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
-    if (!urlTemplateEnabled || !config.isDeclarative()) {
+    if (configuration == null
+        || !configuration.getBoolean("emit-experimental-telemetry/development", false)) {
       return;
     }
-    DeclarativeConfigProperties configuration =
-        config.getDeclarativeConfig("http").getStructured("client", empty());
     configuration
         .getStructuredList("url_template_rules", emptyList())
         .forEach(
