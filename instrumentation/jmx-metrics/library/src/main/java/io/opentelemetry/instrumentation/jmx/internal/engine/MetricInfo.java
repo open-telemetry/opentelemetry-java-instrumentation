@@ -18,7 +18,12 @@ import javax.annotation.Nullable;
  */
 public class MetricInfo {
 
-  // OpenTelemetry asynchronous instrument types that can be used
+  /**
+   * OpenTelemetry asynchronous instrument types that can be used
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
   public enum Type {
     COUNTER,
     UPDOWNCOUNTER,
