@@ -189,11 +189,8 @@ class YamlHelperTest {
             Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"));
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-external-annotations")
             .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
-            .instrumentationName("opentelemetry-external-annotations")
-            .namespace("opentelemetry-external-annotations")
-            .group("opentelemetry-external-annotations")
             .metadata(customMetadata)
             .targetVersions(externalAnnotationsVersions)
             .build());
@@ -645,46 +642,36 @@ class YamlHelperTest {
             .build();
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-api-1.57")
             .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.57")
-            .instrumentationName("opentelemetry-api-1.57")
-            .namespace("opentelemetry-api")
             .group("opentelemetry-api")
             .metadata(metadata)
             .build());
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-api-1.10")
             .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.10")
-            .instrumentationName("opentelemetry-api-1.10")
-            .namespace("opentelemetry-api")
             .group("opentelemetry-api")
             .metadata(metadata)
             .build());
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-api-1.56")
             .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.56")
-            .instrumentationName("opentelemetry-api-1.56")
-            .namespace("opentelemetry-api")
             .group("opentelemetry-api")
             .metadata(metadata)
             .build());
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-api-1.9")
             .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.9")
-            .instrumentationName("opentelemetry-api-1.9")
-            .namespace("opentelemetry-api")
             .group("opentelemetry-api")
             .metadata(metadata)
             .build());
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-api-2.0")
             .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-2.0")
-            .instrumentationName("opentelemetry-api-2.0")
-            .namespace("opentelemetry-api")
             .group("opentelemetry-api")
             .metadata(metadata)
             .build());

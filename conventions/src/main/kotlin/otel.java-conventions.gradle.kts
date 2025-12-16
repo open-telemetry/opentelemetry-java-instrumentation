@@ -71,7 +71,9 @@ tasks.withType<JavaCompile>().configureEach {
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
           // jdk21 generates more serial warnings than previous versions
-          "-Xlint:-serial"
+          "-Xlint:-serial",
+          // suppress warning: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
+          "-Xlint:-classfile"
         )
       )
       if (System.getProperty("dev") != "true") {
