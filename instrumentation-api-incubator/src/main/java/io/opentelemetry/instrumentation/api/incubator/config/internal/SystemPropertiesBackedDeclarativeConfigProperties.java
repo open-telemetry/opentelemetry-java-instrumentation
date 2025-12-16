@@ -74,7 +74,7 @@ final class SystemPropertiesBackedDeclarativeConfigProperties
       return null;
     }
     try {
-      return Long.getLong(strValue);
+      return Long.parseLong(strValue);
     } catch (NumberFormatException ignored) {
       return null;
     }

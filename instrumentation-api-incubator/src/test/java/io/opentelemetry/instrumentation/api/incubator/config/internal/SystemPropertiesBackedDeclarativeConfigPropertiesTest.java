@@ -161,4 +161,354 @@ class SystemPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getScalarList("list", Integer.class))
         .isNull();
   }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.list", value = ",,a,,b,,")
+  @Test
+  void getList_multipleCommas() {
+    assertList(asList("a", "b"));
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.list", value = "   ")
+  @Test
+  void getList_onlyWhitespace() {
+    assertList(emptyList());
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_INT", value = "100")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "200")
+  @Test
+  void getInt_systemProperty() {
+    assertInt(200);
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_INT", value = "100")
+  @Test
+  void getInt_environmentVariable() {
+    assertInt(100);
+  }
+
+  @Test
+  void getInt_none() {
+    assertInt(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "0")
+  @Test
+  void getInt_zero() {
+    assertInt(0);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "-42")
+  @Test
+  void getInt_negative() {
+    assertInt(-42);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "2147483647")
+  @Test
+  void getInt_maxValue() {
+    assertInt(Integer.MAX_VALUE);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "-2147483648")
+  @Test
+  void getInt_minValue() {
+    assertInt(Integer.MIN_VALUE);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "invalid")
+  @Test
+  void getInt_invalidValue() {
+    assertInt(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "12.34")
+  @Test
+  void getInt_decimalValue() {
+    assertInt(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.int", value = "")
+  @Test
+  void getInt_emptyString() {
+    assertInt(null);
+  }
+
+  private static void assertInt(@Nullable Integer expected) {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getInt("int"))
+        .isEqualTo(expected);
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_LONG", value = "100")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.long", value = "200")
+  @Test
+  void getLong_systemProperty() {
+    assertLong(200L);
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_LONG", value = "100")
+  @Test
+  void getLong_environmentVariable() {
+    assertLong(100L);
+  }
+
+  @Test
+  void getLong_none() {
+    assertLong(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.long", value = "0")
+  @Test
+  void getLong_zero() {
+    assertLong(0L);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.long", value = "-42")
+  @Test
+  void getLong_negative() {
+    assertLong(-42L);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.long", value = "9223372036854775807")
+  @Test
+  void getLong_maxValue() {
+    assertLong(Long.MAX_VALUE);
+  }
+
+  @SetSystemProperty(
+      key = "otel.instrumentation.test.property.long",
+      value = "-9223372036854775808")
+  @Test
+  void getLong_minValue() {
+    assertLong(Long.MIN_VALUE);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.long", value = "invalid")
+  @Test
+  void getLong_invalidValue() {
+    assertLong(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.long", value = "")
+  @Test
+  void getLong_emptyString() {
+    assertLong(null);
+  }
+
+  private static void assertLong(@Nullable Long expected) {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getLong("long"))
+        .isEqualTo(expected);
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_DOUBLE", value = "1.5")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "2.5")
+  @Test
+  void getDouble_systemProperty() {
+    assertDouble(2.5);
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_DOUBLE", value = "1.5")
+  @Test
+  void getDouble_environmentVariable() {
+    assertDouble(1.5);
+  }
+
+  @Test
+  void getDouble_none() {
+    assertDouble(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "0.0")
+  @Test
+  void getDouble_zero() {
+    assertDouble(0.0);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "-42.5")
+  @Test
+  void getDouble_negative() {
+    assertDouble(-42.5);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "42")
+  @Test
+  void getDouble_integerValue() {
+    assertDouble(42.0);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "1.23e10")
+  @Test
+  void getDouble_scientificNotation() {
+    assertDouble(1.23e10);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "Infinity")
+  @Test
+  void getDouble_infinity() {
+    assertDouble(Double.POSITIVE_INFINITY);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "-Infinity")
+  @Test
+  void getDouble_negativeInfinity() {
+    assertDouble(Double.NEGATIVE_INFINITY);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "NaN")
+  @Test
+  void getDouble_nan() {
+    assertThat(
+            SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig()
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getDouble("double"))
+        .isNaN();
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "invalid")
+  @Test
+  void getDouble_invalidValue() {
+    assertDouble(null);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.double", value = "")
+  @Test
+  void getDouble_emptyString() {
+    assertDouble(null);
+  }
+
+  private static void assertDouble(@Nullable Double expected) {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getDouble("double"))
+        .isEqualTo(expected);
+  }
+
+  @Test
+  void getStructuredList_returnsNull() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getStructuredList("list"))
+        .isNull();
+  }
+
+  @Test
+  void getPropertyKeys_returnsEmptySet() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(config.getPropertyKeys()).isEmpty();
+  }
+
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.test-feature.property",
+      value = "experimental_value")
+  @Test
+  void getStructured_developmentSuffix() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test_feature/development")
+                .getString("property"))
+        .isEqualTo("experimental_value");
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test-feature.property", value = "dash_value")
+  @Test
+  void getStructured_underscoreToDash() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test_feature")
+                .getString("property"))
+        .isEqualTo("dash_value");
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.nested.path.property", value = "nested_value")
+  @Test
+  void getStructured_nestedPath() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("nested")
+                .getStructured("path")
+                .getString("property"))
+        .isEqualTo("nested_value");
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.string", value = "")
+  @Test
+  void getString_emptyString() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getString("string"))
+        .isEmpty();
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.string", value = "  whitespace  ")
+  @Test
+  void getString_withWhitespace() {
+    DeclarativeConfigProperties config =
+        SystemPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getStructured("property")
+                .getString("string"))
+        .isEqualTo("  whitespace  ");
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.boolean", value = "false")
+  @Test
+  void getBoolean_false() {
+    assertBoolean(false);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.boolean", value = "TRUE")
+  @Test
+  void getBoolean_uppercase() {
+    assertBoolean(true);
+  }
+
+  @SetSystemProperty(key = "otel.instrumentation.test.property.boolean", value = "False")
+  @Test
+  void getBoolean_mixedCase() {
+    assertBoolean(false);
+  }
 }
