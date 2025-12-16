@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static io.opentelemetry.instrumentation.api.instrumenter.DeprecatedConfigProperties.warnIfUsed;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
@@ -396,8 +395,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private String getSpanSuppressionStrategy() {
     String key = "otel.instrumentation.common.experimental.span-suppression-strategy";
     String deprecatedKey = "otel.instrumentation.experimental.span-suppression-strategy";
-    // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
-    // for instrumentations, so we need to handle both declarative and non-declarative configs here
+    // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
     if (maybeDeclarativeConfig(openTelemetry)) {
       DeclarativeConfigProperties instrumentationConfig =
           ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
@@ -405,7 +403,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         return null;
       }
 
-      return warnIfUsed(
+      return DeprecatedConfigProperties.warnIfUsed(
           deprecatedKey,
           instrumentationConfig
               .getStructured("java", empty())
@@ -416,7 +414,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getStructured("common", empty())
               .getString("span_suppression_strategy/development"));
     } else {
-      return warnIfUsed(
+      return DeprecatedConfigProperties.warnIfUsed(
           deprecatedKey,
           ConfigPropertiesUtil.getString(deprecatedKey),
           key,

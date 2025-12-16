@@ -19,6 +19,7 @@ final class DeprecatedConfigProperties {
 
   private static final Logger logger = Logger.getLogger(DeprecatedConfigProperties.class.getName());
 
+  @Nullable
   static String warnIfUsed(
       String deprecatedPropertyName,
       @Nullable String deprecatedPropertyValue,
