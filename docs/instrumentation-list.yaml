@@ -11156,6 +11156,7 @@ libraries:
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
     scope:
       name: io.opentelemetry.spring-webflux-5.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     target_versions:
       javaagent:
       - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
