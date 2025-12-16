@@ -29,7 +29,7 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean messagingReceiveInstrumentationEnabled() {
+    protected boolean messagingReceiveTelemetryEnabled() {
       return ConfigPropertiesUtil.getBoolean(
           "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
     }

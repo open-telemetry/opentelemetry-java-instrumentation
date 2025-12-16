@@ -23,7 +23,7 @@ public final class SpringKafkaSingletons {
           .setCaptureExperimentalSpanAttributes(
               AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-          .setMessagingReceiveInstrumentationEnabled(
+          .setMessagingReceiveTelemetryEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .build();
   private static final Instrumenter<KafkaReceiveRequest, Void> BATCH_PROCESS_INSTRUMENTER;
@@ -35,7 +35,7 @@ public final class SpringKafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 AgentInstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-            .setMessagingReceiveInstrumentationEnabled(
+            .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
             .setErrorCauseExtractor(SpringKafkaErrorCauseExtractor.INSTANCE);
     BATCH_PROCESS_INSTRUMENTER = factory.createBatchProcessInstrumenter();
