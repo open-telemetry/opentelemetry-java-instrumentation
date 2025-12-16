@@ -42,6 +42,28 @@ class SqlStatementSanitizerTest {
     assertThat(result.getMainIdentifier()).isEqualToIgnoringCase(expected.getMainIdentifier());
   }
 
+  @ParameterizedTest
+  @MethodSource("sensitiveArgs")
+  void sanitizeSensitive(String original, String expected) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
+    assertThat(result.getFullStatement()).isEqualTo(expected);
+  }
+
+  private static Stream<Arguments> sensitiveArgs() {
+    return Stream.of(
+        // SAP HANA CONNECT and CREATE USER statements can contain unquoted password
+        // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+        Arguments.of("CONNECT user PASSWORD Password1", "CONNECT ?"),
+        Arguments.of("CREATE USER new_user PASSWORD Password1", "CREATE USER ?"),
+        Arguments.of("ALTER USER user PASSWORD Password1", "ALTER USER ?"),
+        // Oracle CREATE USER statement can contain unquoted password
+        // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
+        Arguments.of("CREATE USER new_user IDENTIFIED BY Password1", "CREATE USER ?"),
+        Arguments.of("ALTER USER user IDENTIFIED BY Password1 REPLACE Password2", "ALTER USER ?"),
+        // field named "connect" does not trigger sanitization
+        Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE"));
+  }
+
   @Test
   void veryLongSelectStatementsAreOk() {
     StringBuilder sb = new StringBuilder("SELECT * FROM table WHERE");
