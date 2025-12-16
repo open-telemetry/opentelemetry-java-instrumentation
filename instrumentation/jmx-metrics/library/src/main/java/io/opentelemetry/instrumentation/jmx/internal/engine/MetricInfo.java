@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import javax.annotation.Nullable;
 
@@ -12,6 +12,9 @@ import javax.annotation.Nullable;
  * metric to be reported with OpenTelemetry.
  *
  * <p>Objects of this class are immutable.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class MetricInfo {
 

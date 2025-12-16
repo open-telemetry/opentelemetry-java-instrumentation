@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static java.util.logging.Level.INFO;
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +15,9 @@ import javax.management.QueryExp;
 /**
  * A class describing a set of MBeans which can be used to collect values for a metric. Objects of
  * this class are immutable.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class BeanGroup {
   // How to specify the MBean(s)

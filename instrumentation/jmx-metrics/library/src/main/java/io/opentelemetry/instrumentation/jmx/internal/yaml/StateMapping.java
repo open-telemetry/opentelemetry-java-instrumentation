@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.yaml;
+package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Collections;
@@ -13,7 +13,12 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-/** State mapping for "state metrics", contains: */
+/**
+ * State mapping for "state metrics"
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public class StateMapping {
 
   private static final StateMapping EMPTY =

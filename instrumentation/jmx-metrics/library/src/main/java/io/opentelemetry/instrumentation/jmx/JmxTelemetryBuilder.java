@@ -9,8 +9,8 @@ import static java.util.logging.Level.FINE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
-import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;

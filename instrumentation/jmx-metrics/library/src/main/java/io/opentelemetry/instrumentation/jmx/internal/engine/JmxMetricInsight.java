@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static java.util.logging.Level.FINE;
 
@@ -14,7 +14,12 @@ import java.util.logging.Logger;
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerFactory;
 
-/** Collecting and exporting JMX metrics. */
+/**
+ * Collecting and exporting JMX metrics.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public class JmxMetricInsight {
 
   private static final Logger logger = Logger.getLogger(JmxMetricInsight.class.getName());
