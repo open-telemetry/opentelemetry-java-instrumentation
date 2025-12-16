@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static io.opentelemetry.instrumentation.api.instrumenter.DeprecatedConfigProperties.warnDeprecatedKeyUsed;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
@@ -393,21 +394,37 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   @Nullable
   private String getSpanSuppressionStrategy() {
+    String key = "otel.instrumentation.common.experimental.span-suppression-strategy";
+    String deprecatedKey = "otel.instrumentation.experimental.span-suppression-strategy";
     // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
     // for instrumentations, so we need to handle both declarative and non-declarative configs here
-    if (isDeclarativeConfig(openTelemetry)) {
+    if (maybeDeclarativeConfig(openTelemetry)) {
       DeclarativeConfigProperties instrumentationConfig =
           ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
       if (instrumentationConfig == null) {
         return null;
       }
+      String value =
+          instrumentationConfig
+              .getStructured("java", empty())
+              .getStructured("common", empty())
+              .getString("span_suppression_strategy/development");
+      if (value != null) {
+        return value;
+      }
+      warnDeprecatedKeyUsed(deprecatedKey, key);
+
       return instrumentationConfig
           .getStructured("java", empty())
-          .getStructured("common", empty())
           .getString("span_suppression_strategy/development");
     } else {
-      return ConfigPropertiesUtil.getString(
-          "otel.instrumentation.experimental.span-suppression-strategy");
+      String value = ConfigPropertiesUtil.getString(key);
+      if (value != null) {
+        return value;
+      }
+      warnDeprecatedKeyUsed(deprecatedKey, key);
+
+      return ConfigPropertiesUtil.getString(deprecatedKey);
     }
   }
 
@@ -488,8 +505,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
   }
 
-  /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
-  private static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
+  /**
+   * Returns true if the current classpath supports declarative config and the instance may support
+   * declarative config (the agent implements ExtendedOpenTelemetry even when declarative config
+   * isn't used).
+   */
+  private static boolean maybeDeclarativeConfig(OpenTelemetry openTelemetry) {
     return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
