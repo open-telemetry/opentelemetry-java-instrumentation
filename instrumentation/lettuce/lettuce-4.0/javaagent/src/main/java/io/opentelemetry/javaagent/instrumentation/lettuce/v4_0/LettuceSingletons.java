@@ -71,5 +71,10 @@ public final class LettuceSingletons {
     return CONNECT_INSTRUMENTER;
   }
 
+  public static boolean experimentalSpanAttributes() {
+    return AgentInstrumentationConfig.get()
+        .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
+  }
+
   private LettuceSingletons() {}
 }

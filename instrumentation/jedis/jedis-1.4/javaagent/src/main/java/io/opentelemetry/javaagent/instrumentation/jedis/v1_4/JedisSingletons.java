@@ -21,7 +21,8 @@ public final class JedisSingletons {
   private static final Instrumenter<JedisRequest, Void> INSTRUMENTER;
 
   static {
-    JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
+    JedisDbAttributesGetter dbAttributesGetter =
+        new JedisDbAttributesGetter(AgentCommonConfig.get().isStatementSanitizationEnabled());
     JedisNetworkAttributesGetter netAttributesGetter = new JedisNetworkAttributesGetter();
 
     INSTRUMENTER =

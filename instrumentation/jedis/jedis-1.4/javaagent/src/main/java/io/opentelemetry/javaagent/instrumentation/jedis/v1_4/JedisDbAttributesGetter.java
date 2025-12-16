@@ -7,13 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
-  private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private final RedisCommandSanitizer sanitizer;
+
+  JedisDbAttributesGetter(boolean statementSanitizerEnabled) {
+    this.sanitizer = RedisCommandSanitizer.create(statementSanitizerEnabled);
+  }
 
   @Override
   public String getDbSystem(JedisRequest request) {

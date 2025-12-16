@@ -35,7 +35,8 @@ public final class LettuceSingletons {
       VirtualField.find(AsyncCommand.class, Context.class);
 
   static {
-    LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    LettuceDbAttributesGetter dbAttributesGetter =
+        new LettuceDbAttributesGetter(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
     INSTRUMENTER =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
@@ -71,6 +72,11 @@ public final class LettuceSingletons {
 
   public static Instrumenter<RedisURI, Void> connectInstrumenter() {
     return CONNECT_INSTRUMENTER;
+  }
+
+  public static boolean experimentalSpanAttributes() {
+    return AgentInstrumentationConfig.get()
+        .getBoolean("otel.instrumentation.lettuce.experimental-span-attributes", false);
   }
 
   private LettuceSingletons() {}
