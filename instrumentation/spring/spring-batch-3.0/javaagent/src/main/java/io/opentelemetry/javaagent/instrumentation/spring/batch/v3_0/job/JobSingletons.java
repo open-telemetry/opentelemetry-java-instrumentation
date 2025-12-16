@@ -5,28 +5,27 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.instrumentationName;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import org.springframework.batch.core.JobExecution;
 
 public class JobSingletons {
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-batch-3.0";
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes", false);
-
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("spring_batch")
+          .getBoolean("experimental_span_attributes", false);
   private static final Instrumenter<JobExecution, Void> INSTRUMENTER;
 
   static {
     InstrumenterBuilder<JobExecution, Void> instrumenter =
         Instrumenter.builder(
-            GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName);
+            GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, JobSingletons::extractSpanName);
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenter.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_batch"));
@@ -40,6 +39,10 @@ public class JobSingletons {
 
   public static Instrumenter<JobExecution, Void> jobInstrumenter() {
     return INSTRUMENTER;
+  }
+
+  public static String instrumentationName() {
+    return INSTRUMENTATION_NAME;
   }
 
   private JobSingletons() {}

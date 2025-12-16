@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.instrumentationName;
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobSingletons.instrumentationName;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
@@ -21,6 +21,11 @@ import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
 public class ChunkSingletons {
 
+  private static final boolean CREATE_ROOT_SPAN_FOR_CHUNK =
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("spring_batch")
+          .get("chunk/development")
+          .getBoolean("new_trace", false);
   private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER;
 
   static {
@@ -28,7 +33,7 @@ public class ChunkSingletons {
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), instrumentationName(), ChunkSingletons::spanName);
 
-    if (shouldCreateRootSpanForChunk()) {
+    if (CREATE_ROOT_SPAN_FOR_CHUNK) {
       instrumenterBuilder.addSpanLinksExtractor(ChunkSingletons::extractSpanLinks);
     }
 
@@ -43,7 +48,7 @@ public class ChunkSingletons {
       SpanLinksBuilder spanLinks, Context unused, ChunkContextAndBuilder request) {
     // The context passed will be Context.root() if shouldCreateRootSpanForChunk()
     Context parentContext = currentContext();
-    if (shouldCreateRootSpanForChunk()) {
+    if (CREATE_ROOT_SPAN_FOR_CHUNK) {
       SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
       if (parentSpanContext.isValid()) {
         spanLinks.addLink(parentSpanContext);
@@ -60,6 +65,10 @@ public class ChunkSingletons {
     // only use "Chunk" for item processing steps, steps that use custom Tasklets will get "Tasklet"
     String type = SimpleStepBuilder.class.isAssignableFrom(builderClass) ? "Chunk" : "Tasklet";
     return "BatchJob " + jobName + "." + stepName + "." + type;
+  }
+
+  public static boolean shouldCreateRootSpanForChunk() {
+    return CREATE_ROOT_SPAN_FOR_CHUNK;
   }
 
   private ChunkSingletons() {}

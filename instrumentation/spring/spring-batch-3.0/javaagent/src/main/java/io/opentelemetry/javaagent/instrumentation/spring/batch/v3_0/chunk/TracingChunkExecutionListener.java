@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.ChunkSingletons.chunkInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.ChunkSingletons.shouldCreateRootSpanForChunk;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.context.Context;

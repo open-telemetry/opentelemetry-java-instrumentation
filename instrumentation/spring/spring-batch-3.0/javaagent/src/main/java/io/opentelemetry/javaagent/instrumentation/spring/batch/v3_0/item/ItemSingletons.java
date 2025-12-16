@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.instrumentationName;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobSingletons.instrumentationName;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -20,6 +21,11 @@ public class ItemSingletons {
   static final String ITEM_OPERATION_WRITE = "ItemWrite";
   static final String ITEM_OPERATION_PROCESS = "ItemProcess";
 
+  private static final boolean ITEM_ENABLED =
+      DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+          .get("spring_batch")
+          .get("item")
+          .getBoolean("enabled", false);
   private static final Instrumenter<String, Void> INSTRUMENTER =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), str -> str)
@@ -51,6 +57,10 @@ public class ItemSingletons {
   @Nullable
   public static ChunkContext getChunkContext(Context currentContext) {
     return currentContext.get(CHUNK_CONTEXT_KEY);
+  }
+
+  public static boolean shouldTraceItems() {
+    return ITEM_ENABLED;
   }
 
   private ItemSingletons() {}

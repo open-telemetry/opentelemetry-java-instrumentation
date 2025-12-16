@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.shouldTraceItems;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSingletons.getChunkContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSingletons.itemInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSingletons.shouldTraceItems;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
