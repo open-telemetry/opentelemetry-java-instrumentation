@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static io.opentelemetry.instrumentation.api.instrumenter.DeprecatedConfigProperties.warnDeprecatedKeyUsed;
+import static io.opentelemetry.instrumentation.api.instrumenter.DeprecatedConfigProperties.warnIfUsed;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
@@ -404,27 +404,23 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       if (instrumentationConfig == null) {
         return null;
       }
-      String value =
+
+      return warnIfUsed(
+          deprecatedKey,
+          instrumentationConfig
+              .getStructured("java", empty())
+              .getString("span_suppression_strategy/development"),
+          key,
           instrumentationConfig
               .getStructured("java", empty())
               .getStructured("common", empty())
-              .getString("span_suppression_strategy/development");
-      if (value != null) {
-        return value;
-      }
-      warnDeprecatedKeyUsed(deprecatedKey, key);
-
-      return instrumentationConfig
-          .getStructured("java", empty())
-          .getString("span_suppression_strategy/development");
+              .getString("span_suppression_strategy/development"));
     } else {
-      String value = ConfigPropertiesUtil.getString(key);
-      if (value != null) {
-        return value;
-      }
-      warnDeprecatedKeyUsed(deprecatedKey, key);
-
-      return ConfigPropertiesUtil.getString(deprecatedKey);
+      return warnIfUsed(
+          deprecatedKey,
+          ConfigPropertiesUtil.getString(deprecatedKey),
+          key,
+          ConfigPropertiesUtil.getString(key));
     }
   }
 
