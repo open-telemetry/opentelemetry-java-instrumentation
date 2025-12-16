@@ -166,10 +166,9 @@ public abstract class AbstractSpringBootBasedTest
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      assertServerSpan(span, "GET", DEFERRED_RESULT, DEFERRED_RESULT.getStatus());
-                      span.hasNoParent();
-                    },
+                    span ->
+                        assertServerSpan(span, "GET", DEFERRED_RESULT, DEFERRED_RESULT.getStatus())
+                            .hasNoParent(),
                     span ->
                         assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(0)),
                     span ->
