@@ -32,11 +32,14 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
             .getInstrumentationConfig();
     DeclarativeConfigProperties configuration =
         instrumentationConfig != null
-            ? instrumentationConfig.getStructured("http", empty()).getStructured("client", empty())
+            ? instrumentationConfig
+                .getStructured("java", empty())
+                .getStructured("http", empty())
+                .getStructured("client", empty())
             : null;
     // url template is emitted only when http client experimental telemetry is enabled
     if (configuration == null
-        || !configuration.getBoolean("emit-experimental-telemetry/development", false)) {
+        || !configuration.getBoolean("emit_experimental_telemetry/development", false)) {
       return;
     }
     configuration
