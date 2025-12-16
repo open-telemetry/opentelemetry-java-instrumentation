@@ -489,7 +489,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
-  public static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
+  private static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
     return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
