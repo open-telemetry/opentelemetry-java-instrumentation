@@ -62,12 +62,13 @@ public enum OkHttpAttributesGetter
         return "http";
       case SPDY_3:
         return "spdy";
+      default:
+        // added in 3.11.0
+        if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
+          return "http";
+        }
+        return null;
     }
-    // added in 3.11.0
-    if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
-      return "http";
-    }
-    return null;
   }
 
   @Nullable
@@ -85,12 +86,13 @@ public enum OkHttpAttributesGetter
         return "2";
       case SPDY_3:
         return "3.1";
+      default:
+        // added in 3.11.0
+        if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
+          return "2";
+        }
+        return null;
     }
-    // added in 3.11.0
-    if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
-      return "2";
-    }
-    return null;
   }
 
   @Override
