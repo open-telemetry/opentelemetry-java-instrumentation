@@ -29,9 +29,8 @@ final class OpenSearchAttributesGetter
     // keep the previous logic in case of failure to extract the query body
     if (request.getBody() == null) {
       return request.getMethod() + " " + request.getOperation();
-    } else {
-      return request.getBody();
     }
+    return request.getBody();
   }
 
   @Override

@@ -10,8 +10,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Splits multiple queries separated by semicolons. Single Responsibility: Only responsible for
- * query separation logic.
+ * Splits and joins queries for newline-delimited JSON (nd-json) format. Splits input by newlines
+ * and joins output with semicolons for display.
  */
 class QuerySplitter {
 
@@ -21,7 +21,7 @@ class QuerySplitter {
   private QuerySplitter() {}
 
   /**
-   * Splits a string containing multiple queries separated by semicolons.
+   * Splits a string containing multiple queries separated by newlines.
    *
    * @param queriesString input string containing queries
    * @return list of individual query strings, empty if input is null or empty

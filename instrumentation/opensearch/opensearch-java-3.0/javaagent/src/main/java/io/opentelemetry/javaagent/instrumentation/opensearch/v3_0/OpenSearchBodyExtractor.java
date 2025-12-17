@@ -13,12 +13,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.apache.hc.core5.http.ContentType;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.NdJsonpSerializable;
 import org.opensearch.client.transport.GenericSerializable;
 
-public class OpenSearchBodyExtractor {
+public final class OpenSearchBodyExtractor {
 
   private static final Logger logger = Logger.getLogger(OpenSearchBodyExtractor.class.getName());
 
@@ -30,7 +29,7 @@ public class OpenSearchBodyExtractor {
       if (request instanceof NdJsonpSerializable) {
         writeNdJson(mapper, (NdJsonpSerializable) request, baos);
       } else if (request instanceof GenericSerializable) {
-        ContentType.parse(((GenericSerializable) request).serialize(baos));
+        ((GenericSerializable) request).serialize(baos);
       } else {
         JsonGenerator generator = mapper.jsonProvider().createGenerator(baos);
         mapper.serialize(request, generator);

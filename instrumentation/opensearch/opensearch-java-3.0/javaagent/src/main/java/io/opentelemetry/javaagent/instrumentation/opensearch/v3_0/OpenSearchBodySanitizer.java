@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class OpenSearchBodySanitizer {
+public final class OpenSearchBodySanitizer {
 
   private static final Logger logger = Logger.getLogger(OpenSearchBodySanitizer.class.getName());
 
@@ -30,18 +30,6 @@ public class OpenSearchBodySanitizer {
 
   private OpenSearchBodySanitizer(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
-  }
-
-  public static OpenSearchBodySanitizer create() {
-    return new OpenSearchBodySanitizer(DEFAULT_OBJECT_MAPPER);
-  }
-
-  public static OpenSearchBodySanitizer create(ObjectMapper objectMapper) {
-    return new OpenSearchBodySanitizer(objectMapper);
-  }
-
-  public static OpenSearchBodySanitizer getDefault() {
-    return DEFAULT_INSTANCE;
   }
 
   public static String sanitize(String jsonString) {

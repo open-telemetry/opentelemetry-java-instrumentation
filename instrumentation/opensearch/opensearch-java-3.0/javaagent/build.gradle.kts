@@ -31,7 +31,6 @@ dependencies {
   testImplementation("software.amazon.awssdk:identity-spi:2.26.0")
   testImplementation("software.amazon.awssdk:apache-client:2.26.0")
   testImplementation("software.amazon.awssdk:netty-nio-client:2.26.0")
-  testImplementation("software.amazon.awssdk:netty-nio-client:2.26.0")
   testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
