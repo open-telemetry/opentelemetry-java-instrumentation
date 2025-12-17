@@ -11605,7 +11605,7 @@ libraries:
     target_versions:
       javaagent:
       - com.vaadin:flow-server:[2.2.0,3)
-      - com.vaadin:flow-server:[3.1.0,)
+      - com.vaadin:flow-server:[3.1.0,25.0.0)
   vertx:
   - name: vertx-http-client-3.0
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0
