@@ -48,8 +48,7 @@ class RestClientInstrumentationAutoConfigurationTest {
             context -> {
               assertThat(
                       context.getBean(
-                          "otelRestClientBeanPostProcessor",
-                          RestClientBeanPostProcessorSpring3.class))
+                          "otelRestClientBeanPostProcessor", RestClientBeanPostProcessor.class))
                   .isNotNull();
 
               context
@@ -85,8 +84,7 @@ class RestClientInstrumentationAutoConfigurationTest {
         context ->
             assertThat(
                     context.getBean(
-                        "otelRestClientBeanPostProcessor",
-                        RestClientBeanPostProcessorSpring3.class))
+                        "otelRestClientBeanPostProcessor", RestClientBeanPostProcessor.class))
                 .isNotNull());
   }
 }

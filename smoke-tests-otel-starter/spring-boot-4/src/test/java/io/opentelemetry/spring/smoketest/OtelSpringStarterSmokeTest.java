@@ -60,7 +60,7 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
   }
 
   @Test
-  void restClient() {
+  void restClientBuilder() {
     testing.clearAllExportedData();
 
     RestClient restClient = restClientBuilder.baseUrl("http://localhost:" + port).build();

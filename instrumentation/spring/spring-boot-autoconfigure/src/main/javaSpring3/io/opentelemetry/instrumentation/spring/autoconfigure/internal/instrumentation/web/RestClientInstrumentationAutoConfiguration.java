@@ -32,10 +32,10 @@ import org.springframework.web.client.RestClient;
 public class RestClientInstrumentationAutoConfiguration {
 
   @Bean
-  static RestClientBeanPostProcessorSpring3 otelRestClientBeanPostProcessor(
+  static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       ObjectProvider<InstrumentationConfig> configProvider) {
-    return new RestClientBeanPostProcessorSpring3(openTelemetryProvider, configProvider);
+    return new RestClientBeanPostProcessor(openTelemetryProvider, configProvider);
   }
 
   @Bean
@@ -44,7 +44,7 @@ public class RestClientInstrumentationAutoConfiguration {
       ObjectProvider<InstrumentationConfig> configProvider) {
     return builder ->
         builder.requestInterceptor(
-            RestClientBeanPostProcessorSpring3.getInterceptor(
+            RestClientBeanPostProcessor.getInterceptor(
                 openTelemetryProvider.getObject(), configProvider.getObject()));
   }
 }
