@@ -44,10 +44,7 @@ public final class KeysVerifyingPropagator implements TextMapPropagator {
   @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
   public <C> Context extract(Context context, @Nullable C carrier, TextMapGetter<C> getter) {
     // Exercise methods to verify no errors
-    Iterable<String> keys = getter.keys(carrier);
-    if (keys != null) {
-      keys.iterator().forEachRemaining(key -> getter.get(carrier, key));
-    }
+    getter.keys(carrier).forEach(key -> getter.get(carrier, key));
 
     return context;
   }
