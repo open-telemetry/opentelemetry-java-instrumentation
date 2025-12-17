@@ -71,7 +71,9 @@ tasks.withType<JavaCompile>().configureEach {
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
           // jdk21 generates more serial warnings than previous versions
-          "-Xlint:-serial"
+          "-Xlint:-serial",
+          // suppress warning: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
+          "-Xlint:-classfile"
         )
       )
       if (System.getProperty("dev") != "true") {
@@ -141,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.129.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.130.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }

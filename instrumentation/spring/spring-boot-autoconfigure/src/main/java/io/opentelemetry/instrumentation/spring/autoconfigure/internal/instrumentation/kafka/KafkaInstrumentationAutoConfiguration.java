@@ -41,7 +41,7 @@ public class KafkaInstrumentationAutoConfiguration {
     return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
         .setCaptureExperimentalSpanAttributes(
             config.getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-        .setMessagingReceiveInstrumentationEnabled(
+        .setMessagingReceiveTelemetryEnabled(
             config.getBoolean(
                 "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
         .setCapturedHeaders(

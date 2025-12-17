@@ -200,6 +200,8 @@ readonly INSTRUMENTATIONS=(
   "play:play-ws:play-ws-2.1:javaagent:test"
   "powerjob-4.0:javaagent:test"
   "powerjob-4.0:javaagent:testExperimental"
+  "pulsar:pulsar-2.8:javaagent:test"
+  "pulsar:pulsar-2.8:javaagent:testExperimental"
   "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
   "sofa-rpc-5.4:javaagent:testSofaRpc"
