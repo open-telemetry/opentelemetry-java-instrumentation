@@ -18,3 +18,13 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk-testing")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
 }
+
+tasks {
+  compileJava {
+    // RestClient from spring-boot-restclient:4.0.0 uses Spring Framework 7.0.1
+    // which has @Deprecated annotations with Java 9+ attributes (since, forRemoval)
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+}

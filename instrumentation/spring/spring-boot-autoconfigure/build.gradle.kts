@@ -222,6 +222,7 @@ testing {
         implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
         implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
         implementation("org.springframework.boot:spring-boot-starter-test:$version")
+        implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
       }
     }
 

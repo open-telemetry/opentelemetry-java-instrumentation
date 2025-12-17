@@ -8,16 +8,16 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractRestClientInstrumentationAutoConfigurationTest;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 
-class RestClientInstrumentationAutoConfigurationTest
+class RestClientInstrumentationSpringBoot4AutoConfigurationTest
     extends AbstractRestClientInstrumentationAutoConfigurationTest {
 
   @Override
   protected AutoConfigurations autoConfigurations() {
-    return AutoConfigurations.of(RestClientInstrumentationAutoConfiguration.class);
+    return AutoConfigurations.of(RestClientInstrumentationSpringBoot4AutoConfiguration.class);
   }
 
   @Override
   protected Class<?> postProcessorClass() {
-    return RestClientBeanPostProcessor.class;
+    return RestClientBeanPostProcessorSpring4.class;
   }
 }
