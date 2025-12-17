@@ -157,7 +157,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         this.listener = listener;
       }
 
-      public static AdviceScope start(MemcachedClient client, String methodName, String key) {
+      public static AdviceScope start(MemcachedClient client, String methodName) {
         CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
         if (callDepth.getAndIncrement() > 0) {
           return new AdviceScope(callDepth, null);
@@ -165,8 +165,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
         return new AdviceScope(
             callDepth,
-            SyncCompletionListener.create(
-                Context.current(), client.getConnection(), methodName, key));
+            SyncCompletionListener.create(Context.current(), client.getConnection(), methodName));
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -180,10 +179,8 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope methodEnter(
-        @Advice.This MemcachedClient client,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Argument(0) String key) {
-      return AdviceScope.start(client, methodName, key);
+        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(client, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

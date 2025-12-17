@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
+import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.handlingNodeThreadLocal;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
@@ -24,24 +25,13 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   @Nullable
   public static SyncCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName, String key) {
-    // For sync operations, determine the handling node based on the key
-    MemcachedNode handlingNode = getHandlingNodeForKey(connection, key);
+      Context parentContext, MemcachedConnection connection, String methodName) {
+    MemcachedNode handlingNode = handlingNodeThreadLocal.get();
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, handlingNode);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
     return new SyncCompletionListener(parentContext, request);
-  }
-
-  @Nullable
-  private static MemcachedNode getHandlingNodeForKey(MemcachedConnection connection, String key) {
-    try {
-      // Use the connection's locator to find the primary node for this key
-      return connection.getLocator().getPrimary(key);
-    } catch (RuntimeException e) {
-      return null;
-    }
   }
 
   @Override
