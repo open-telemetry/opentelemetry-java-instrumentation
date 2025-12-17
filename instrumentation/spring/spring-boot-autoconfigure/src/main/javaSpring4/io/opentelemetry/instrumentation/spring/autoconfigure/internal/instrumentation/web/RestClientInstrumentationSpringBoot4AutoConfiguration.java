@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Conditiona
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.web.client.RestClientAutoConfiguration;
-import org.springframework.boot.web.client.RestClientCustomizer;
+import org.springframework.boot.restclient.RestClientCustomizer;
+import org.springframework.boot.restclient.autoconfigure.RestClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
@@ -29,13 +29,13 @@ import org.springframework.web.client.RestClient;
 @ConditionalOnClass({RestClient.class, RestClientCustomizer.class})
 @AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration
-public class RestClientInstrumentationAutoConfiguration {
+public class RestClientInstrumentationSpringBoot4AutoConfiguration {
 
   @Bean
-  static RestClientBeanPostProcessorSpring3 otelRestClientBeanPostProcessor(
+  static RestClientBeanPostProcessorSpring4 otelRestClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       ObjectProvider<InstrumentationConfig> configProvider) {
-    return new RestClientBeanPostProcessorSpring3(openTelemetryProvider, configProvider);
+    return new RestClientBeanPostProcessorSpring4(openTelemetryProvider, configProvider);
   }
 
   @Bean
@@ -44,7 +44,7 @@ public class RestClientInstrumentationAutoConfiguration {
       ObjectProvider<InstrumentationConfig> configProvider) {
     return builder ->
         builder.requestInterceptor(
-            RestClientBeanPostProcessorSpring3.getInterceptor(
+            RestClientBeanPostProcessorSpring4.getInterceptor(
                 openTelemetryProvider.getObject(), configProvider.getObject()));
   }
 }

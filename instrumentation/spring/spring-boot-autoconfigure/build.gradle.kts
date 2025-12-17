@@ -134,6 +134,7 @@ dependencies {
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

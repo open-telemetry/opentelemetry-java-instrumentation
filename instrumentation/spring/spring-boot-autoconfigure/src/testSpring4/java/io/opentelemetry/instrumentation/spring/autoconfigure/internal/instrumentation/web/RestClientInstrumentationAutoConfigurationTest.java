@@ -29,14 +29,14 @@ class RestClientInstrumentationAutoConfigurationTest {
                       DefaultConfigProperties.createFromMap(Collections.emptyMap())))
           .withBean(RestClient.class, RestClient::create)
           .withConfiguration(
-              AutoConfigurations.of(RestClientInstrumentationAutoConfiguration.class));
+              AutoConfigurations.of(RestClientInstrumentationSpringBoot4AutoConfiguration.class));
 
   /**
    * Tests the case that users create a {@link RestClient} bean themselves.
    *
    * <pre>{@code
    * @Bean public RestClient restClient() {
-   *     return new RestClient();
+   *     return RestClient.create();
    * }
    * }</pre>
    */
@@ -49,7 +49,7 @@ class RestClientInstrumentationAutoConfigurationTest {
               assertThat(
                       context.getBean(
                           "otelRestClientBeanPostProcessor",
-                          RestClientBeanPostProcessorSpring3.class))
+                          RestClientBeanPostProcessorSpring4.class))
                   .isNotNull();
 
               context
@@ -86,7 +86,59 @@ class RestClientInstrumentationAutoConfigurationTest {
             assertThat(
                     context.getBean(
                         "otelRestClientBeanPostProcessor",
-                        RestClientBeanPostProcessorSpring3.class))
+                        RestClientBeanPostProcessorSpring4.class))
                 .isNotNull());
+  }
+
+  /**
+   * Tests the case where users inject RestClient.Builder from Spring Boot autoconfiguration.
+   *
+   * <pre>{@code
+   * @Autowired private RestClient.Builder restClientBuilder;
+   *
+   * public void makeRequest() {
+   *     RestClient client = restClientBuilder.build();
+   *     client.get().uri("http://example.com").retrieve().body(String.class);
+   * }
+   * }</pre>
+   *
+   * <p>This tests the Spring Boot 4 RestClientAutoConfiguration integration to ensure the
+   * RestClientCustomizer is properly applied to injected builders.
+   */
+  @Test
+  void restClientBuilderInjection() {
+    new ApplicationContextRunner()
+        .withBean(OpenTelemetry.class, OpenTelemetry::noop)
+        .withBean(
+            InstrumentationConfig.class,
+            () ->
+                new ConfigPropertiesBridge(
+                    DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+        .withConfiguration(
+            AutoConfigurations.of(
+                org.springframework.boot.restclient.autoconfigure.RestClientAutoConfiguration.class,
+                RestClientInstrumentationSpringBoot4AutoConfiguration.class))
+        .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
+        .run(
+            context -> {
+              RestClient.Builder builder = context.getBean(RestClient.Builder.class);
+              RestClient client = builder.build();
+
+              // Verify that the built RestClient has instrumentation
+              client
+                  .mutate()
+                  .requestInterceptors(
+                      interceptors -> {
+                        long count =
+                            interceptors.stream()
+                                .filter(
+                                    rti ->
+                                        rti.getClass()
+                                            .getName()
+                                            .startsWith("io.opentelemetry.instrumentation"))
+                                .count();
+                        assertThat(count).isEqualTo(1);
+                      });
+            });
   }
 }
