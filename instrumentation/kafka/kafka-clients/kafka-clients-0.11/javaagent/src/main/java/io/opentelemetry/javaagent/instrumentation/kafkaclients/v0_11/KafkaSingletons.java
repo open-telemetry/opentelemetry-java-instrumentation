@@ -33,7 +33,7 @@ public final class KafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 AgentInstrumentationConfig.get()
                     .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-            .setMessagingReceiveInstrumentationEnabled(
+            .setMessagingReceiveTelemetryEnabled(
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     PRODUCER_INSTRUMENTER = instrumenterFactory.createProducerInstrumenter();
     CONSUMER_RECEIVE_INSTRUMENTER = instrumenterFactory.createConsumerReceiveInstrumenter();
