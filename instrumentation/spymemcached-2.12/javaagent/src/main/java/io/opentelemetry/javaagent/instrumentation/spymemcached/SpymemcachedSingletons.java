@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.concurrent.Future;
+import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.Operation;
 
 public final class SpymemcachedSingletons {
@@ -22,6 +23,8 @@ public final class SpymemcachedSingletons {
   private static final Instrumenter<SpymemcachedRequest, Object> INSTRUMENTER;
 
   public static final VirtualField<Future<?>, Operation> FUTURE_OPERATION;
+
+  public static final ThreadLocal<MemcachedNode> handlingNodeThreadLocal = new ThreadLocal<>();
 
   static {
     SpymemcachedAttributesGetter dbAttributesGetter = new SpymemcachedAttributesGetter();
