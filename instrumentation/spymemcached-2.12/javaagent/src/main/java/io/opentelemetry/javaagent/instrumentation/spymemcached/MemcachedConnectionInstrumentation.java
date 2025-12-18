@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.handlingNodeThreadLocal;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -16,7 +17,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.MemcachedNode;
-import net.spy.memcached.ops.Operation;
 
 public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
 
@@ -31,7 +31,8 @@ public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("addOperation"))
             .and(takesArguments(2))
-            .and(takesArguments(MemcachedNode.class, Operation.class)),
+            .and(takesArgument(0, named("net.spy.memcached.MemcachedNode")))
+            .and(takesArgument(1, named("net.spy.memcached.ops.Operation"))),
         this.getClass().getName() + "$AddOperationAdvice");
   }
 
