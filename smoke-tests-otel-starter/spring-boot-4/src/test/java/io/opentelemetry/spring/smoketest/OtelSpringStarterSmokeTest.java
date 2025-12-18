@@ -61,8 +61,6 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Test
   void restClientBuilder() {
-    testing.clearAllExportedData();
-
     RestClient restClient = restClientBuilder.baseUrl("http://localhost:" + port).build();
     restClient.get().uri(OtelSpringStarterSmokeTestController.PING).retrieve().body(String.class);
 

@@ -294,8 +294,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void databaseQuery() {
-    testing.clearAllExportedData();
-
     testing.runWithSpan(
         "server",
         () -> {
@@ -317,8 +315,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void restTemplate() {
-    testing.clearAllExportedData();
-
     restTemplateCall(OtelSpringStarterSmokeTestController.PING);
 
     testing.waitAndAssertTraces(
@@ -332,8 +328,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void shouldRedactSomeUrlParameters() {
-    testing.clearAllExportedData();
-
     restTemplateCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
 
     testing.waitAndAssertTraces(
