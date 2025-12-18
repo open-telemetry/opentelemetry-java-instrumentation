@@ -20,12 +20,10 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -66,18 +64,15 @@ public final class OpenTelemetryDriver implements Driver {
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties java =
-        DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty());
-
     boolean defaultValue =
-        java.getStructured("common", empty())
-            .getStructured("db_sqlcommenter/development", empty())
+        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
+            .get("db_sqlcommenter/development")
             .getBoolean("enabled", false);
 
     return SqlCommenter.builder()
         .setEnabled(
-            java.getStructured("jdbc", empty())
-                .getStructured("sqlcommenter/development", empty())
+            LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
+                .get("sqlcommenter/development")
                 .getBoolean("enabled", defaultValue))
         .build();
   }

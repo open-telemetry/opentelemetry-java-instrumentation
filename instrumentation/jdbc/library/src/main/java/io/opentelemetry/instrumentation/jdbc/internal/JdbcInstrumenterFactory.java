@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -30,8 +29,7 @@ public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
-    return DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty())
-        .getStructured("jdbc", empty())
+    return LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
         .getBoolean("capture_query_parameters/development", false);
   }
 
@@ -43,9 +41,8 @@ public final class JdbcInstrumenterFactory {
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
     boolean statementSanitizationEnabled =
-        DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty())
-            .getStructured("common", empty())
-            .getStructured("db_statement_sanitizer", empty())
+        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
+            .get("db_statement_sanitizer")
             .getBoolean("enabled", true);
     return createStatementInstrumenter(
         openTelemetry, emptyList(), true, statementSanitizationEnabled, captureQueryParameters);
@@ -95,8 +92,7 @@ public final class JdbcInstrumenterFactory {
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
     boolean enabled =
-        DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty())
-            .getStructured("jdbc", empty())
+        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
             .getBoolean("transaction/development", false);
     return createTransactionInstrumenter(openTelemetry, enabled);
   }

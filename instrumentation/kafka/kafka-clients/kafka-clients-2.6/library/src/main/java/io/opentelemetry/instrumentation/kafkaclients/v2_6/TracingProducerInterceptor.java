@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
@@ -39,11 +37,8 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
     telemetry =
         KafkaTelemetry.builder(openTelemetry)
             .setCapturedHeaders(
-                Optional.ofNullable(
-                        DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty())
-                            .getStructured("messaging", empty())
-                            .getScalarList("capture_headers/development", String.class))
-                    .orElse(emptyList()))
+                LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging")
+                    .getScalarList("capture_headers/development", String.class, emptyList()))
             .build();
   }
 

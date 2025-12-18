@@ -5,15 +5,14 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -40,16 +39,13 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    DeclarativeConfigProperties messaging =
-        DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty())
-            .getStructured("messaging", empty());
+    ExtendedDeclarativeConfigProperties messaging =
+        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
 
     telemetry =
         KafkaTelemetry.builder(openTelemetry)
             .setMessagingReceiveInstrumentationEnabled(
-                messaging
-                    .getStructured("receive_telemetry/development", empty())
-                    .getBoolean("enabled", false))
+                messaging.get("receive_telemetry/development").getBoolean("enabled", false))
             .setCapturedHeaders(
                 Optional.ofNullable(
                         messaging.getScalarList("capture_headers/development", String.class))

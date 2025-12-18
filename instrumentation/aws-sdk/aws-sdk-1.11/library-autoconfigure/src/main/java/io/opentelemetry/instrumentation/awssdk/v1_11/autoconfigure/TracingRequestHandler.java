@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.autoconfigure;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -14,8 +13,8 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import java.util.Optional;
 
@@ -27,17 +26,14 @@ public class TracingRequestHandler extends RequestHandler2 {
   private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
 
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties java =
-        DeclarativeConfigUtil.getStructured(openTelemetry, "java", empty());
-    DeclarativeConfigProperties awsSdk = java.getStructured("aws_sdk", empty());
-    DeclarativeConfigProperties messaging = java.getStructured("messaging", empty());
+    ExtendedDeclarativeConfigProperties messaging =
+        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            awsSdk.getBoolean("span_attributes/development", false))
+            LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "aws_sdk")
+                .getBoolean("span_attributes/development", false))
         .setMessagingReceiveTelemetryEnabled(
-            messaging
-                .getStructured("receive_telemetry/development", empty())
-                .getBoolean("enabled", false))
+            messaging.get("receive_telemetry/development").getBoolean("enabled", false))
         .setCapturedHeaders(
             Optional.ofNullable(
                     messaging.getScalarList("capture_headers/development", String.class))

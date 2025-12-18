@@ -30,7 +30,7 @@ final class SystemPropertiesBackedDeclarativeConfigProperties
 
   private final List<String> path;
 
-  public static DeclarativeConfigProperties createInstrumentationConfig() {
+  static DeclarativeConfigProperties createInstrumentationConfig() {
     return new SystemPropertiesBackedDeclarativeConfigProperties(Collections.emptyList());
   }
 

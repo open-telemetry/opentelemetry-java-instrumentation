@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -25,8 +24,9 @@ public class ExperimentalSnippetHolder {
 
   private static String getSnippetSetting() {
     String snippet =
-        DeclarativeConfigUtil.getStructured(GlobalOpenTelemetry.get(), "java", empty())
-            .getStructured("servlet", empty())
+        DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+            .get("java")
+            .get("servlet")
             .getString("javascript-snippet/development", null);
     // Can remove deprecated fallback in 2.24.0
     if (snippet != null) {
