@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.testing.propagator;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.testing.util.KeysVerifyingPropagator;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -18,10 +16,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
 public final class KeysVerifyingPropagatorProvider implements ConfigurablePropagatorProvider {
   @Override
   public TextMapPropagator getPropagator(ConfigProperties configProperties) {
-    return TextMapPropagator.composite(
-        KeysVerifyingPropagator.getInstance(),
-        W3CTraceContextPropagator.getInstance(),
-        W3CBaggagePropagator.getInstance());
+    return KeysVerifyingPropagator.getInstance();
   }
 
   @Override

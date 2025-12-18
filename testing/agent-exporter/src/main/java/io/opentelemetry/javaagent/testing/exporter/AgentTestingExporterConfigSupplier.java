@@ -24,7 +24,7 @@ public class AgentTestingExporterConfigSupplier implements AutoConfigurationCust
     properties.put("otel.logs.exporter", "none");
     properties.put("otel.metrics.exporter", "none");
     properties.put("otel.traces.exporter", "none");
-    properties.put("otel.propagators", "testing-verifying-propagator");
+    properties.put("otel.propagators", "testing-verifying-propagator,tracecontext,baggage");
     return properties;
   }
 }
