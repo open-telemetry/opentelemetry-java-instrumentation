@@ -10305,12 +10305,209 @@ libraries:
           type: STRING
   pulsar:
   - name: pulsar-2.8
+    display_name: Apache Pulsar Client
+    description: |
+      This instrumentation enables messaging spans for Apache Pulsar message producers and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://pulsar.apache.org/
     source_path: instrumentation/pulsar/pulsar-2.8
     scope:
       name: io.opentelemetry.pulsar-2.8
     target_versions:
       javaagent:
       - org.apache.pulsar:pulsar-client:[2.8.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    - name: otel.instrumentation.pulsar.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `messaging.pulsar.message.type` for producer spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: messaging.publish.duration
+        description: Measures the duration of publish operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: messaging.receive.duration
+        description: Measures the duration of receive operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: messaging.receive.messages
+        description: Measures the number of received messages.
+        type: LONG_SUM
+        unit: message
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.pulsar.experimental-span-attributes=true
+      metrics:
+      - name: messaging.publish.duration
+        description: Measures the duration of publish operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: messaging.receive.duration
+        description: Measures the duration of receive operation.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: messaging.receive.messages
+        description: Measures the number of received messages.
+        type: LONG_SUM
+        unit: message
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.pulsar.message.type
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   quarkus:
   - name: quarkus-resteasy-reactive
     source_path: instrumentation/quarkus-resteasy-reactive
@@ -11156,6 +11353,7 @@ libraries:
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
     scope:
       name: io.opentelemetry.spring-webflux-5.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     target_versions:
       javaagent:
       - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
@@ -11604,7 +11802,7 @@ libraries:
     target_versions:
       javaagent:
       - com.vaadin:flow-server:[2.2.0,3)
-      - com.vaadin:flow-server:[3.1.0,)
+      - com.vaadin:flow-server:[3.1.0,25.0.0)
   vertx:
   - name: vertx-http-client-3.0
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0

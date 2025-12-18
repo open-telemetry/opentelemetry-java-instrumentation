@@ -20,7 +20,7 @@ public class AwsSdkTelemetryBuilder {
 
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
-  private boolean messagingReceiveInstrumentationEnabled;
+  private boolean messagingReceiveTelemetryEnabled;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -54,11 +54,26 @@ public class AwsSdkTelemetryBuilder {
    *
    * <p>Note that this will cause the consumer side to start a new trace, with only a span link
    * connecting it to the producer trace.
+   *
+   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
+  }
+
+  /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * <p>Note that this will cause the consumer side to start a new trace, with only a span link
+   * connecting it to the producer trace.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setMessagingReceiveTelemetryEnabled(
+      boolean messagingReceiveTelemetryEnabled) {
+    this.messagingReceiveTelemetryEnabled = messagingReceiveTelemetryEnabled;
     return this;
   }
 
@@ -70,6 +85,6 @@ public class AwsSdkTelemetryBuilder {
         openTelemetry,
         capturedHeaders,
         captureExperimentalSpanAttributes,
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveTelemetryEnabled);
   }
 }

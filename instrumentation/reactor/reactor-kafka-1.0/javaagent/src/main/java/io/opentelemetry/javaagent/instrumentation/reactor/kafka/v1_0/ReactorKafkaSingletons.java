@@ -22,7 +22,7 @@ final class ReactorKafkaSingletons {
           .setCaptureExperimentalSpanAttributes(
               AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-          .setMessagingReceiveInstrumentationEnabled(
+          .setMessagingReceiveTelemetryEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .createConsumerProcessInstrumenter();
 

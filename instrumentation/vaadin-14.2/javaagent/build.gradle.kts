@@ -21,7 +21,13 @@ muzzle {
   pass {
     group.set("com.vaadin")
     module.set("flow-server")
-    versions.set("[3.1.0,)")
+    versions.set("[3.1.0,25.0.0)")
+  }
+  // not supported yet
+  fail {
+    group.set("com.vaadin")
+    module.set("flow-server")
+    versions.set("[25.0.0,)")
   }
 }
 
