@@ -144,7 +144,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   }
 
   @Test
-  @org.junit.jupiter.api.Order(1)
+  @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
     makeClientCall();
