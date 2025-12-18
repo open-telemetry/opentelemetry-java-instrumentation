@@ -37,7 +37,7 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
   @Nullable
   private static MemcachedNode getNodeFromConnection(MemcachedConnection connection) {
     Collection<MemcachedNode> allNodes = connection.getLocator().getAll();
-    if (allNodes.size() == 1) {
+    if (allNodes != null && allNodes.size() == 1) {
       return allNodes.iterator().next();
     }
     // For multiple nodes, return null - bulk operations span multiple servers
