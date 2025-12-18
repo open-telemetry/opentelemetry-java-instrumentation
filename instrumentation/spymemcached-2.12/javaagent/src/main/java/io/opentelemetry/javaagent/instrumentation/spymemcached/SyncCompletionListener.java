@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.handlingNodeThreadLocal;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
@@ -13,7 +12,6 @@ import io.opentelemetry.context.Context;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
-import net.spy.memcached.MemcachedNode;
 
 public class SyncCompletionListener extends CompletionListener<Void> {
 
@@ -26,8 +24,7 @@ public class SyncCompletionListener extends CompletionListener<Void> {
   @Nullable
   public static SyncCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
-    MemcachedNode handlingNode = handlingNodeThreadLocal.get();
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, handlingNode);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, null);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }

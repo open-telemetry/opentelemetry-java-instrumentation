@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
+import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.handlingNodeThreadLocal;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.semconv.ServerAttributes;
+import java.net.InetSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import net.spy.memcached.MemcachedNode;
 
 public abstract class CompletionListener<T> {
 
@@ -64,7 +68,18 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(Throwable thrown) {
+    setServerAttributes(Span.fromContext(context));
     instrumenter().end(context, request, null, thrown);
+  }
+
+  private static void setServerAttributes(Span span) {
+    MemcachedNode handlingNode = handlingNodeThreadLocal.get();
+    handlingNodeThreadLocal.remove();
+    if (handlingNode != null && handlingNode.getSocketAddress() instanceof InetSocketAddress) {
+      InetSocketAddress host = (InetSocketAddress) handlingNode.getSocketAddress();
+      span.setAttribute(ServerAttributes.SERVER_ADDRESS, host.getHostString());
+      span.setAttribute(ServerAttributes.SERVER_PORT, host.getPort());
+    }
   }
 
   protected abstract void processResult(Span span, T future)
