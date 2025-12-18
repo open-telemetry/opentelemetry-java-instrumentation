@@ -45,10 +45,5 @@ public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
         handlingNodeThreadLocal.set(node);
       }
     }
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit() {
-      handlingNodeThreadLocal.remove();
-    }
   }
 }
