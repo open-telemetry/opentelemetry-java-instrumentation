@@ -103,7 +103,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       String dbSystem = getter.getDbSystem(request);
       if (dbSystem == null) {
         throw new UnsupportedOperationException(
-            "Must override getDbSystemName() or getDbSystem() (deprecated)");
+            "Must override getDbSystemName() or getDbSystem() (deprecated)", e);
       }
       return dbSystem;
     }
