@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
-import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;

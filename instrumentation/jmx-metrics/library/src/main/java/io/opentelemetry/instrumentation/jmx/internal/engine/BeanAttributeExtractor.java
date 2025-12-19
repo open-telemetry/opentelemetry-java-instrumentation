@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 
-import io.opentelemetry.instrumentation.jmx.yaml.StateMapping;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -25,6 +25,9 @@ import javax.management.openmbean.TabularData;
 /**
  * A class responsible for extracting attribute values from MBeans. Objects of this class are
  * immutable.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class BeanAttributeExtractor implements MetricAttributeExtractor {
 

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.yaml;
+package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
-import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttribute;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttributeExtractor;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +23,9 @@ import javax.annotation.Nullable;
  * <li>the sourceUnit
  *
  *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
+ *
+ *     <p>This class is internal and is hence not for public use. Its APIs are unstable and can
+ *     change at any time.
  */
 public abstract class MetricStructure {
 

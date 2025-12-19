@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.yaml;
+package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.BeanGroup;
-import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
-import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
-import io.opentelemetry.instrumentation.jmx.engine.MetricExtractor;
-import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
+import io.opentelemetry.instrumentation.jmx.internal.engine.BeanAttributeExtractor;
+import io.opentelemetry.instrumentation.jmx.internal.engine.BeanGroup;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttribute;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttributeExtractor;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricExtractor;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +25,9 @@ import javax.management.ObjectName;
 /**
  * This class represents a complete JMX metrics rule as defined by a YAML file. Objects of this
  * class are created and populated by the YAML parser.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class JmxRule extends MetricStructure {
 
