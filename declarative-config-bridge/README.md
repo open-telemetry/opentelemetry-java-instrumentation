@@ -60,7 +60,7 @@ And now the component provider that uses the Declarative Config Bridge:
 ```java
 
 @AutoService(ComponentProvider.class)
-public class InferredSpansComponentProvider implements ComponentProvider<SpanProcessor> {
+public class InferredSpansComponentProvider implements ComponentProvider {
 
   @Override
   public String getName() {

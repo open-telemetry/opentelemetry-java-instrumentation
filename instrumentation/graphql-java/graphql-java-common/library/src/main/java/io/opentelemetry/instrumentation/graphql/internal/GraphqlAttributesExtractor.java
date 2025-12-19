@@ -45,6 +45,8 @@ final class GraphqlAttributesExtractor
       attributes.put(
           GRAPHQL_OPERATION_TYPE, request.getOperation().name().toLowerCase(Locale.ROOT));
     }
-    attributes.put(GRAPHQL_DOCUMENT, request.getQuery());
+    if (request.getQuery() != null) {
+      attributes.put(GRAPHQL_DOCUMENT, request.getQuery());
+    }
   }
 }

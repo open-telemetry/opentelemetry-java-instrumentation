@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public class ResourceCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
 
-  // opentelemetry-javaagent-distribution: adds "distro.name" and "distro.version" attributes
+  // opentelemetry_javaagent_distribution: adds "distro.name" and "distro.version" attributes
   // (DistroComponentProvider in this package)
   private static final List<String> REQUIRED_DETECTORS =
-      Collections.singletonList("opentelemetry-javaagent-distribution");
+      Collections.singletonList("opentelemetry_javaagent_distribution");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {

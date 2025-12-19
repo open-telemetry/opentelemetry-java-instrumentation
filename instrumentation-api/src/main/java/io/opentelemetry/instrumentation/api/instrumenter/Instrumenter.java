@@ -85,6 +85,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
+  // to allow converting generic lists to arrays with toArray
   @SuppressWarnings({"rawtypes", "unchecked"})
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
@@ -326,8 +327,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
               Instrumenter<REQUEST, RESPONSE> instrumenter,
               Context parentContext,
               REQUEST request) {
-            SpanKind spanKind = instrumenter.spanKindExtractor.extract(request);
+            return suppressSpan(
+                instrumenter, parentContext, instrumenter.spanKindExtractor.extract(request));
+          }
 
+          @Override
+          public <REQUEST, RESPONSE> Context suppressSpan(
+              Instrumenter<REQUEST, RESPONSE> instrumenter,
+              Context parentContext,
+              SpanKind spanKind) {
             return instrumenter.spanSuppressor.storeInContext(
                 parentContext, spanKind, Span.getInvalid());
           }

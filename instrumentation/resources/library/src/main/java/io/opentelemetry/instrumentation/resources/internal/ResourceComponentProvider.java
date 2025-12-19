@@ -11,7 +11,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.util.function.Function;
 
 /** Abstract class to simply {@link Resource} {@link ComponentProvider} implementations. */
-abstract class ResourceComponentProvider implements ComponentProvider<Resource> {
+abstract class ResourceComponentProvider implements ComponentProvider {
 
   private final String name;
   private final Function<DeclarativeConfigProperties, Resource> supplier;

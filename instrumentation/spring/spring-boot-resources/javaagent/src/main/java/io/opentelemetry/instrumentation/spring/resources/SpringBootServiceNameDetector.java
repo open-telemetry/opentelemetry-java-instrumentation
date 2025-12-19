@@ -185,6 +185,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     return findByClasspathYamlFile("bootstrap.yaml");
   }
 
+  @Nullable
   private String findByClasspathYamlFile(String fileName) {
     String result = loadFromClasspath(fileName, SpringBootServiceNameDetector::parseNameFromYaml);
     if (logger.isLoggable(FINER)) {
@@ -218,7 +219,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static String parseNameFromYaml(InputStream in) {
     try {
       LoadSettings settings = LoadSettings.builder().build();

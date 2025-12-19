@@ -76,7 +76,7 @@ class FieldMapping {
     return attributeKey.getType();
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we expect the caller to check the attribute type
   <T> AttributeKey<T> getAttributeKey() {
     return (AttributeKey<T>) attributeKey;
   }

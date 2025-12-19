@@ -11,6 +11,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,6 +33,7 @@ public class AcknowledgementExecutionContextInstrumentation implements TypeInstr
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
       return SpringAwsUtil.handleBatch(messages);
     }

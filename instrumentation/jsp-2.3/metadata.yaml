@@ -1,0 +1,18 @@
+display_name: JSP (JavaServer Pages)
+description: >
+  This instrumentation enables view spans for JSP page rendering and compilation (view spans are
+  disabled by default).
+features:
+  - VIEW_SPANS
+library_link: https://jakarta.ee/specifications/pages/
+configurations:
+  - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+    description: Enables the creation of experimental view spans.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jsp.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
+      and `jsp.classFQCN`.
+    type: boolean
+    default: false

@@ -23,10 +23,7 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
   @Override
   public Iterable<String> keys(MessageWithChannel carrier) {
     MessageHeaders headers = carrier.getMessage().getHeaders();
-    @SuppressWarnings("unchecked")
-    Map<String, List<String>> nativeHeaders =
-        (Map<String, List<String>>)
-            headers.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+    Map<String, List<String>> nativeHeaders = getNativeHeaders(headers);
     if (nativeHeaders != null) {
       return nativeHeaders.keySet();
     }
@@ -34,7 +31,11 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
   }
 
   @Override
-  public String get(MessageWithChannel carrier, String key) {
+  @Nullable
+  public String get(@Nullable MessageWithChannel carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     MessageHeaders headers = carrier.getMessage().getHeaders();
     String nativeHeaderValue = getNativeHeader(headers, key);
     if (nativeHeaderValue != null) {
@@ -52,10 +53,7 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
 
   @Nullable
   private static String getNativeHeader(MessageHeaders carrier, String key) {
-    @SuppressWarnings("unchecked")
-    Map<String, List<String>> nativeMap =
-        (Map<String, List<String>>)
-            carrier.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
+    Map<String, List<String>> nativeMap = getNativeHeaders(carrier);
     if (nativeMap == null) {
       return null;
     }
@@ -64,5 +62,11 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
       return null;
     }
     return values.get(0);
+  }
+
+  @SuppressWarnings("unchecked") // casting headers map
+  private static Map<String, List<String>> getNativeHeaders(MessageHeaders carrier) {
+    return (Map<String, List<String>>)
+        carrier.get(NativeMessageHeaderAccessor.NATIVE_HEADERS, Map.class);
   }
 }

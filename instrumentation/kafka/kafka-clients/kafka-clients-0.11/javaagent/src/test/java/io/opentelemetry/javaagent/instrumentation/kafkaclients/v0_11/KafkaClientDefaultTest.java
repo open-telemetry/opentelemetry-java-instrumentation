@@ -155,6 +155,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             processAttributes(null, null, false, false))));
   }
 
+  @ParameterizedTest
   @DisplayName("test records(TopicPartition) kafka consume")
   @ValueSource(booleans = {true, false})
   void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)

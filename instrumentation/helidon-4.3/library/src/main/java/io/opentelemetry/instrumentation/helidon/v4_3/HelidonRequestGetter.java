@@ -13,6 +13,7 @@ import io.helidon.http.HeaderNames;
 import io.helidon.webserver.http.ServerRequest;
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 enum HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
@@ -23,7 +24,9 @@ enum HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
     if (req == null) {
       return emptyList();
     }
-    return () -> req.headers().stream().map(Header::name).iterator();
+    // Materialize the stream to avoid Helidon's HeaderIterator bug where customHeadersIterator
+    // can be null when iterating through the lazy iterator
+    return req.headers().stream().map(Header::name).collect(Collectors.toList());
   }
 
   @Override

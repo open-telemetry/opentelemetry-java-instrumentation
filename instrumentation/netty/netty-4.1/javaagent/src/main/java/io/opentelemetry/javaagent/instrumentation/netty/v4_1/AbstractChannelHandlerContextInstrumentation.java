@@ -15,7 +15,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.Attribute;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
@@ -57,7 +57,7 @@ public class AbstractChannelHandlerContextInstrumentation implements TypeInstrum
       if (clientContext != null) {
         ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).remove();
         contextAttr.remove();
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndRemove();
+        NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndRemove();
         instrumenter().end(clientContext, request, null, throwable);
         return;
       }

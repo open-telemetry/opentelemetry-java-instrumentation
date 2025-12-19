@@ -14,7 +14,7 @@ import oracle.ucp.jdbc.PoolDataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class OracleUcpInstrumentationTest extends AbstractOracleUcpInstrumentationTest {
+class OracleUcpInstrumentationTest extends AbstractOracleUcpInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

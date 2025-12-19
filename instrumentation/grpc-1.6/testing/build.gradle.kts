@@ -8,7 +8,7 @@ plugins {
 val grpcVersion = "1.6.0"
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("io.grpc:grpc-core:$grpcVersion")
   api("io.grpc:grpc-protobuf:$grpcVersion")

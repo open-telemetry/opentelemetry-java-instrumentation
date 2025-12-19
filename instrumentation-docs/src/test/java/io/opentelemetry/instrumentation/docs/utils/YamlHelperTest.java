@@ -189,11 +189,8 @@ class YamlHelperTest {
             Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"));
 
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-external-annotations")
             .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
-            .instrumentationName("opentelemetry-external-annotations")
-            .namespace("opentelemetry-external-annotations")
-            .group("opentelemetry-external-annotations")
             .metadata(customMetadata)
             .targetVersions(externalAnnotationsVersions)
             .build());
@@ -631,6 +628,84 @@ class YamlHelperTest {
                 target_versions:
                   javaagent:
                   - com.example:test-library:[1.0.0,)
+            """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testInstrumentationsSortedBySemanticVersion() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    InstrumentationMetadata metadata =
+        new InstrumentationMetadata.Builder()
+            .classification(InstrumentationClassification.LIBRARY.name())
+            .build();
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.57")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.57")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.10")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.10")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.56")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.56")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.9")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.9")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-2.0")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-2.0")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+            libraries:
+              opentelemetry-api:
+              - name: opentelemetry-api-1.9
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.9
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.9
+              - name: opentelemetry-api-1.10
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.10
+              - name: opentelemetry-api-1.56
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.56
+              - name: opentelemetry-api-1.57
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.57
+              - name: opentelemetry-api-2.0
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-2.0
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-2.0
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());

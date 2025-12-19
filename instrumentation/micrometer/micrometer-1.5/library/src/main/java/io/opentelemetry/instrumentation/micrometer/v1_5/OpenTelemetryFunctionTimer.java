@@ -14,13 +14,14 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import io.opentelemetry.api.metrics.ObservableLongCounter;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 
 final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
-    implements FunctionTimer, RemovableMeter {
+    implements FunctionTimer, RemovableMeter, OpenTelemetryInstrument {
   private final TimeUnit baseTimeUnit;
   private final ObservableLongCounter observableCount;
   private final ObservableDoubleCounter observableTotalTime;

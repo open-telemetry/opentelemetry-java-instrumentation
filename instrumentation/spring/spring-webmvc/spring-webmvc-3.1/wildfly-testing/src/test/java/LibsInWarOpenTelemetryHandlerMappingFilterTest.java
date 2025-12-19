@@ -13,7 +13,7 @@ import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 // spring is inside war/WEB-INF/lib
-public class LibsInWarOpenTelemetryHandlerMappingFilterTest
+class LibsInWarOpenTelemetryHandlerMappingFilterTest
     extends AbstractOpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {

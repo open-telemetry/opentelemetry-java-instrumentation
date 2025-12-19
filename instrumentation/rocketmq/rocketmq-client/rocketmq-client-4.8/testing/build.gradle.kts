@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("org.apache.rocketmq:rocketmq-test:4.8.0")
 
   implementation("io.opentelemetry:opentelemetry-api")

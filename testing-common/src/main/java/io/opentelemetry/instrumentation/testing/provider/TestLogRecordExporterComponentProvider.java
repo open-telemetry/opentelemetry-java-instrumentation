@@ -10,8 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import java.util.Objects;
 
-public class TestLogRecordExporterComponentProvider
-    implements ComponentProvider<LogRecordExporter> {
+public class TestLogRecordExporterComponentProvider implements ComponentProvider {
 
   private static LogRecordExporter logRecordExporter;
 

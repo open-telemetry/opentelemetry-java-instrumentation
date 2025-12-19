@@ -246,7 +246,7 @@ public final class ContextPropagationOperator {
     }
   }
 
-  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"})
+  @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"}) // fine
   private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
     throw (T) t;
   }

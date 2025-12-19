@@ -19,23 +19,9 @@ final class ElasticsearchTransportAttributesGetter
     return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(ElasticTransportRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(ElasticTransportRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(ElasticTransportRequest request) {
     return null;
   }
 

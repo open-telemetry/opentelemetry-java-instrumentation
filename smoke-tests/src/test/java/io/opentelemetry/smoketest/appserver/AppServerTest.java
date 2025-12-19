@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.smoketest.AbstractSmokeTest;
 import io.opentelemetry.smoketest.TestContainerManager;
+import io.opentelemetry.smoketest.TestImageVersions;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
@@ -64,7 +65,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
   static Function<AppServerImage, String> appServerImage(String targetImagePrefix) {
     return a -> {
       String platformSuffix = a.isWindows() ? "-windows" : "";
-      String extraTag = "-20251014.18508284308";
+      String extraTag = "-" + TestImageVersions.SERVLET_VERSION;
       String fullSuffix = a.getServerVersion() + "-jdk" + a.getJdk() + platformSuffix + extraTag;
       return targetImagePrefix + ":" + fullSuffix;
     };

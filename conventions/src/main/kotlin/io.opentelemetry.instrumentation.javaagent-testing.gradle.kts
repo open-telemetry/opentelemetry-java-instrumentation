@@ -6,6 +6,14 @@ plugins {
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
+val failOnContextLeakProperty = providers.gradleProperty("failOnContextLeak")
+  .map { it != "false" }
+  .orElse(true)
+
+val testIndyProperty = providers.gradleProperty("testIndy")
+  .map { it == "true" }
+  .orElse(false)
+
 val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
 extra["denyUnsafe"] = denyUnsafe
 
@@ -74,6 +82,15 @@ class JavaagentTestArgumentsProvider(
   @InputFile
   @PathSensitive(PathSensitivity.RELATIVE)
   val shadowJar: File,
+
+  @get:Input
+  val failOnContextLeak: Boolean,
+
+  @get:Input
+  val testIndy: Boolean,
+
+  @get:Input
+  val denyUnsafe: Boolean,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> {
     val list = mutableListOf(
@@ -83,13 +100,13 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
       "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
       "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
-      "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
+      "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
       // prevent sporadic gradle deadlocks, see SafeLogger for more details
       "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
       // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
       // in smoke tests instead.
       "-Dotel.javaagent.add-thread-details=false",
-      "-Dotel.javaagent.experimental.indy=${findProperty("testIndy") == "true"}",
+      "-Dotel.javaagent.experimental.indy=$testIndy",
       // suppress repeated logging of "No metric data to export - skipping export."
       // since PeriodicMetricReader is configured with a short interval
       "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
@@ -123,22 +140,26 @@ afterEvaluate {
     // this dependency.
     dependsOn(agentForTesting.buildDependencies)
 
+    val failOnContextLeakOverride = failOnContextLeakProperty.get()
+    val testIndyEnabled = testIndyProperty.get()
+
     jvmArgumentProviders.add(
       JavaagentTestArgumentsProvider(
         agentShadowJar,
-        shadowJar.archiveFile.get().asFile
+        shadowJar.archiveFile.get().asFile,
+        failOnContextLeakOverride,
+        testIndyEnabled,
+        denyUnsafe
       )
     )
 
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
+    val mainResourcesDir = project.layout.buildDirectory.dir("resources/main").get().asFile.absoluteFile
+    val mainClassesDir = project.layout.buildDirectory.dir("classes/java/main").get().asFile.absoluteFile
+
     classpath = classpath.filter {
-      if (file(layout.buildDirectory.dir("resources/main")).equals(it) || file(
-          layout.buildDirectory.dir(
-            "classes/java/main"
-          )
-        ).equals(it)
-      ) {
+      if (it.absoluteFile == mainResourcesDir || it.absoluteFile == mainClassesDir) {
         // The sources are packaged into the testing jar, so we need to exclude them from the test
         // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false

@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.EXPERIMENTAL_ATTRIBUTES_ENABLED;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -17,7 +21,6 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import java.net.InetAddress;
@@ -27,7 +30,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import org.assertj.core.api.AbstractBooleanAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -215,8 +217,12 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             satisfies(
-                                AttributeKey.longKey("lettuce.command.results.count"),
-                                val -> val.isGreaterThan(100)))));
+                                longKey("lettuce.command.results.count"),
+                                val -> {
+                                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                    val.isGreaterThan(100);
+                                  }
+                                }))));
   }
 
   @Test
@@ -233,12 +239,14 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                            equalTo(booleanKey("lettuce.command.cancelled"), experimental(true)),
                             satisfies(
-                                AttributeKey.booleanKey("lettuce.command.cancelled"),
-                                AbstractBooleanAssert::isTrue),
-                            satisfies(
-                                AttributeKey.longKey("lettuce.command.results.count"),
-                                val -> val.isEqualTo(2)))));
+                                longKey("lettuce.command.results.count"),
+                                val -> {
+                                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                    val.isEqualTo(2);
+                                  }
+                                }))));
   }
 
   @Test

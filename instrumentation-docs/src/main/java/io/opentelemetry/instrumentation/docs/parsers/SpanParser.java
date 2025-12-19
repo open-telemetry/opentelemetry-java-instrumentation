@@ -26,6 +26,7 @@ public class SpanParser {
   // We want to ignore test related attributes
   private static final List<String> EXCLUDED_ATTRIBUTES =
       List.of(
+          "asdf",
           "x-test-",
           "test-baggage-",
           "test_message",

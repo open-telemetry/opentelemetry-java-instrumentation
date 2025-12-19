@@ -40,10 +40,20 @@ public final class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
+  public JmsInstrumenterFactory setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
+   */
+  @CanIgnoreReturnValue
+  @Deprecated
+  public JmsInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
+      boolean messagingReceiveInstrumentationEnabled) {
+    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
   }
 
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {

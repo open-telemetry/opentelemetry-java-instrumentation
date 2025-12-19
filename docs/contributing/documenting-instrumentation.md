@@ -69,10 +69,8 @@ Every javaagent instrumentation module should have a README.md file in the javaa
 | `property.name` | Type | Default | Description |
 ```
 
-
 **Note:** At some point we will likely automate the generation of this javaagent README.md file
 using the metadata.yaml file described below.
-
 
 ## Metadata.yaml Files
 
@@ -168,7 +166,6 @@ Some notes when writing descriptions:
   * Example: "This instrumentation enriches HTTP server spans with route information, and enables
     controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default)."
 
-
 ### Semantic Conventions
 
 If the instrumentation adheres to one or more specific semantic conventions, include a
@@ -185,9 +182,9 @@ List of possible options:
 * [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-server-span)
 * [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
 * [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
-* [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
-* [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
-* [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md)
+* [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-metrics.md)
+* [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-metrics.md)
 * [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
 * [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
 * [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
@@ -228,11 +225,9 @@ Each configuration should include:
 * `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`, and `map`.
 * `default`: The default value for the configuration.
 
-
 If a configuration enables experimental attributes, list them, for example:
 
 > Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-
 
 ### Classification (optional)
 
@@ -250,7 +245,6 @@ There are currently three supported classifications:
 The primary way this `classification` is used is to group and filter instrumentations by their
 utility in tooling and documentation. If you are unsure which classification to use, you can omit
 this field, and it will default to `library`.
-
 
 ### Disabled by Default (optional)
 

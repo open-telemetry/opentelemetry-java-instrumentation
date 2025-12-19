@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 
-public class ReflectionTest {
+class ReflectionTest {
 
   @Test
   void testOurFieldsAndMethodsAreNotVisibleWithReflection() {

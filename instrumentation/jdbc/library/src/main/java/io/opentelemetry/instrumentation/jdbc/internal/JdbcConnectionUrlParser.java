@@ -1151,7 +1151,7 @@ public enum JdbcConnectionUrlParser {
   }
 
   // see
-  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md
   private static String toDbSystem(String type) {
     switch (type) {
       case "as400": // IBM AS400 Database

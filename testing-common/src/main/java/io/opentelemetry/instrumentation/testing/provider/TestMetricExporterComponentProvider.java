@@ -10,7 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Objects;
 
-public class TestMetricExporterComponentProvider implements ComponentProvider<MetricExporter> {
+public class TestMetricExporterComponentProvider implements ComponentProvider {
 
   private static MetricExporter metricExporter;
 

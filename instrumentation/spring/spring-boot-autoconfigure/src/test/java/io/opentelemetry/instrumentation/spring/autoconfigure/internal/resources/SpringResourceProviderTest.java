@@ -27,7 +27,7 @@ import org.springframework.boot.test.context.assertj.AssertableApplicationContex
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.core.env.Environment;
 
-public class SpringResourceProviderTest {
+class SpringResourceProviderTest {
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()

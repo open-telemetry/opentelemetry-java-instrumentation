@@ -21,7 +21,7 @@ class SpringBootWithSamplingSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20251017.18602659902")
+        .springBoot()
         .env("OTEL_TRACES_SAMPLER", "parentbased_traceidratio")
         .env("OTEL_TRACES_SAMPLER_ARG", String.valueOf(SAMPLER_PROBABILITY));
   }

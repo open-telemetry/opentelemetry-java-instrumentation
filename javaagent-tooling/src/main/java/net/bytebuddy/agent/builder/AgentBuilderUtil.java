@@ -272,13 +272,13 @@ public class AgentBuilderUtil {
     return (ElementMatcher<?>) erasureMatcherField.get(matcher);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static List<AgentBuilder.RawMatcher> getDelegateMatchers(AgentBuilder.RawMatcher matcher)
       throws Exception {
     return (List<AgentBuilder.RawMatcher>) rawConjunctionMatchersField.get(matcher);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static List<ElementMatcher<?>> getDelegateMatchers(
       ElementMatcher.Junction.Conjunction<?> matcher) throws Exception {
     return (List<ElementMatcher<?>>) conjunctionMatchersField.get(matcher);
@@ -295,7 +295,7 @@ public class AgentBuilderUtil {
     return mode == StringMatcher.Mode.EQUALS_FULLY ? value : null;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static Set<String> getStringSetMatcherValue(StringSetMatcher matcher) throws Exception {
     return (Set<String>) stringSetMatcherValuesField.get(matcher);
   }

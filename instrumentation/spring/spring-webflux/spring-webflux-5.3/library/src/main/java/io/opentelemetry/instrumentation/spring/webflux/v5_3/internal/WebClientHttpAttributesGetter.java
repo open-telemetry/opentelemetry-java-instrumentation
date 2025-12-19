@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -33,7 +31,7 @@ public enum WebClientHttpAttributesGetter
 
   @Override
   public List<String> getHttpRequestHeader(ClientRequest request, String name) {
-    return request.headers().getOrDefault(name, emptyList());
+    return HeaderUtil.getHeader(request.headers(), name);
   }
 
   @Override

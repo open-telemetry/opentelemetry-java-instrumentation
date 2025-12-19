@@ -73,5 +73,25 @@ class TelemetryParser {
         || scopeAllowList.getOrDefault(moduleScope, emptySet()).contains(telemetryScope);
   }
 
+  /**
+   * Normalizes the 'when' condition from the given content by stripping quotes and whitespace.
+   *
+   * @param content the content containing the 'when' condition
+   * @return normalized when condition
+   */
+  static String normalizeWhenCondition(String content) {
+    if (content == null) {
+      return "";
+    }
+
+    String when = content.substring(0, content.indexOf('\n'));
+    String whenCondition = when.replace("when: ", "").strip();
+    // Remove surrounding quotes if present (to avoid double-quoting in output)
+    if (whenCondition.startsWith("\"") && whenCondition.endsWith("\"")) {
+      whenCondition = whenCondition.substring(1, whenCondition.length() - 1);
+    }
+    return whenCondition;
+  }
+
   private TelemetryParser() {}
 }

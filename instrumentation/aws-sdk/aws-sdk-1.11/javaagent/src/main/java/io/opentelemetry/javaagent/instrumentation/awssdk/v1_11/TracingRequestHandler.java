@@ -38,7 +38,7 @@ public class TracingRequestHandler extends RequestHandler2 {
           .setCaptureExperimentalSpanAttributes(
               AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false))
-          .setMessagingReceiveInstrumentationEnabled(
+          .setMessagingReceiveTelemetryEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .build()

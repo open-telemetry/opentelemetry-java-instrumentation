@@ -20,7 +20,7 @@ import java.util.Map;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 
-public class SerializationUtilTest {
+class SerializationUtilTest {
 
   private static final Map<Class<?>, String> events = buildEventExamples();
 

@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   // 6.0+ added protocolVersion access which allows forcing RESP2 for consistency in tests
   compileOnly("io.lettuce:lettuce-core:6.0.0.RELEASE")

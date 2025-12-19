@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.server.HttpRequestHeadersGetter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.server.NettyHttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
@@ -21,7 +21,7 @@ import java.util.Collection;
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
 
-  private final DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
+  private final DefaultHttpServerInstrumenterBuilder<NettyRequest, HttpResponse> builder;
 
   private boolean emitExperimentalHttpServerEvents = false;
 

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -106,18 +107,17 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return Duration.ofMillis(millis);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we expect to have only lists of strings in override values
   @Override
   public List<String> getList(String propertyName) {
     List<String> propertyValue =
         getPropertyValue(
             propertyName,
-            List.class,
+            o -> (List<String>) o,
             (properties, lastPart) -> properties.getScalarList(lastPart, String.class));
     return propertyValue == null ? Collections.emptyList() : propertyValue;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String propertyName) {
     DeclarativeConfigProperties propertyValue =
@@ -147,7 +147,15 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       String property,
       Class<T> clazz,
       BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    T override = clazz.cast(overrideValues.get(property));
+    return getPropertyValue(property, clazz::cast, extractor);
+  }
+
+  @Nullable
+  private <T> T getPropertyValue(
+      String property,
+      Function<Object, T> converter,
+      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
+    T override = converter.apply(overrideValues.get(property));
     if (override != null) {
       return override;
     }

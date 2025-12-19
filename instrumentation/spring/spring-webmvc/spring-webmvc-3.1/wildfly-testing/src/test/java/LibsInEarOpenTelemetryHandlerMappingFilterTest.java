@@ -13,7 +13,7 @@ import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 // spring is inside ear/lib
-public class LibsInEarOpenTelemetryHandlerMappingFilterTest
+class LibsInEarOpenTelemetryHandlerMappingFilterTest
     extends AbstractOpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {

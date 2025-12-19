@@ -6,22 +6,26 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 
 import com.mongodb.event.CommandListener;
+import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class MongoInstrumentationSingletons {
 
-  public static final CommandListener LISTENER =
-      MongoTelemetry.builder(GlobalOpenTelemetry.get())
-          .setStatementSanitizationEnabled(
-              AgentInstrumentationConfig.get()
-                  .getBoolean(
-                      "otel.instrumentation.mongo.statement-sanitizer.enabled",
-                      AgentCommonConfig.get().isStatementSanitizationEnabled()))
-          .build()
-          .newCommandListener();
+  private static final Instrumenter<CommandStartedEvent, Void> INSTRUMENTER =
+      MongoInstrumenterFactory.createInstrumenter(
+          GlobalOpenTelemetry.get(),
+          "io.opentelemetry.mongo-3.7",
+          AgentInstrumentationConfig.get()
+              .getBoolean(
+                  "otel.instrumentation.mongo.statement-sanitizer.enabled",
+                  AgentCommonConfig.get().isStatementSanitizationEnabled()));
+
+  public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
 
   public static boolean isTracingListener(CommandListener listener) {
     return listener.getClass().getName().equals(LISTENER.getClass().getName());

@@ -27,18 +27,19 @@ public final class GraphQLTelemetry {
   }
 
   private final OpenTelemetryInstrumentationHelper helper;
-  private final Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter;
+  private final Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter;
   private final boolean createSpansForTrivialDataFetcher;
 
   GraphQLTelemetry(
       OpenTelemetry openTelemetry,
+      boolean captureQuery,
       boolean sanitizeQuery,
-      Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter,
+      Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter,
       boolean createSpansForTrivialDataFetcher,
       boolean addOperationNameToSpanName) {
     helper =
         GraphqlInstrumenterFactory.createInstrumentationHelper(
-            openTelemetry, sanitizeQuery, addOperationNameToSpanName);
+            openTelemetry, captureQuery, sanitizeQuery, addOperationNameToSpanName);
     this.dataFetcherInstrumenter = dataFetcherInstrumenter;
     this.createSpansForTrivialDataFetcher = createSpansForTrivialDataFetcher;
   }

@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.javahttpserver.internal.Experimental;
 import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class JavaHttpServerTelemetryBuilder {
@@ -43,24 +42,24 @@ public final class JavaHttpServerTelemetryBuilder {
   /**
    * Sets the status extractor for server spans.
    *
-   * @deprecated Use {@link #setStatusExtractor(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractor(
-      Function<
-              SpanStatusExtractor<HttpExchange, HttpExchange>,
-              SpanStatusExtractor<HttpExchange, HttpExchange>>
-          statusExtractor) {
-    return setStatusExtractor(
-        (UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>>) statusExtractor::apply);
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
+   * customized one.
+   */
   @CanIgnoreReturnValue
-  public JavaHttpServerTelemetryBuilder setStatusExtractor(
-      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+  public JavaHttpServerTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 
@@ -121,22 +120,23 @@ public final class JavaHttpServerTelemetryBuilder {
   /**
    * Sets custom {@link SpanNameExtractor} via transform function.
    *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpExchange>, SpanNameExtractor<HttpExchange>>
-          spanNameExtractorTransformer) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<HttpExchange>>) spanNameExtractorTransformer::apply);
+      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
+    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+  public JavaHttpServerTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

@@ -15,6 +15,8 @@ import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
@@ -30,6 +32,8 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHol
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizer;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
@@ -46,6 +50,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
@@ -165,9 +170,14 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    OpenTelemetrySdk openTelemetry = autoConfiguredSdk.getOpenTelemetrySdk();
+    ConfigProvider configProvider =
+        openTelemetry instanceof ExtendedOpenTelemetry
+            ? ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider()
+            : null;
+
     AgentInstrumentationConfig.internalInitializeConfig(
-        new ConfigPropertiesBridge(
-            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
+        new ConfigPropertiesBridge(sdkConfig, configProvider));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
@@ -221,6 +231,7 @@ public class AgentInstaller {
     instrumentationInstalled = true;
 
     addHttpServerResponseCustomizers(extensionClassLoader);
+    addSqlCommenterCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
   }
@@ -336,6 +347,18 @@ public class AgentInstaller {
             for (HttpServerResponseCustomizer modifier : customizers) {
               modifier.customize(serverContext, response, responseMutator);
             }
+          }
+        });
+  }
+
+  private static void addSqlCommenterCustomizers(ClassLoader extensionClassLoader) {
+    List<SqlCommenterCustomizer> customizers =
+        load(SqlCommenterCustomizer.class, extensionClassLoader);
+
+    SqlCommenterCustomizerHolder.setCustomizer(
+        builder -> {
+          for (SqlCommenterCustomizer modifier : customizers) {
+            modifier.customize(builder);
           }
         });
   }

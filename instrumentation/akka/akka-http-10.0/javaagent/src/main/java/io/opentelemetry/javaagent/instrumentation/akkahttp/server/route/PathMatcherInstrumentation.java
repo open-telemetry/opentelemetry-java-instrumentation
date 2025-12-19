@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -40,7 +41,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used
       // for constructing the route
-      PathMatcherUtil.setMatched(result, prefix.toString());
+      PREFIX.set(result, prefix.toString());
     }
   }
 }

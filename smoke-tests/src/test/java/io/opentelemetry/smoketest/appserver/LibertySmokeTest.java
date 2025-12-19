@@ -103,9 +103,9 @@ abstract class LibertySmokeTest extends AppServerTest {
   @AppServer(version = "23.0.0.12", jdk = "17-openj9")
   static class Liberty23Jdk17Openj9 extends LibertySmokeTest {}
 
-  @AppServer(version = "23.0.0.12", jdk = "20")
-  static class Liberty23Jdk20 extends LibertySmokeTest {}
+  @AppServer(version = "23.0.0.12", jdk = "21")
+  static class Liberty23Jdk21 extends LibertySmokeTest {}
 
-  @AppServer(version = "23.0.0.12", jdk = "20-openj9")
-  static class Liberty23Jdk20Openj9 extends LibertySmokeTest {}
+  @AppServer(version = "23.0.0.12", jdk = "21-openj9")
+  static class Liberty23Jdk21Openj9 extends LibertySmokeTest {}
 }

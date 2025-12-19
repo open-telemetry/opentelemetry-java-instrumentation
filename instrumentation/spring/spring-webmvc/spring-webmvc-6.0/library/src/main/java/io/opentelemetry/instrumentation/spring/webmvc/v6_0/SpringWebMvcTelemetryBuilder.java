@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBui
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
@@ -78,22 +77,23 @@ public final class SpringWebMvcTelemetryBuilder {
   /**
    * Sets custom {@link SpanNameExtractor} via transform function.
    *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpServletRequest>, SpanNameExtractor<HttpServletRequest>>
-          spanNameExtractor) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<HttpServletRequest>>) spanNameExtractor::apply);
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractor) {
+    return setSpanNameExtractorCustomizer(spanNameExtractor);
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractor) {
-    builder.setSpanNameExtractor(spanNameExtractor);
+  public SpringWebMvcTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

@@ -13,7 +13,7 @@ tasks {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("org.apache.httpcomponents:httpclient:4.3")
 

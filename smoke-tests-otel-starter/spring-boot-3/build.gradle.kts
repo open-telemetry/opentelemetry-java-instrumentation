@@ -25,6 +25,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
 
   val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
   if (testLatestDeps) {
@@ -76,8 +77,8 @@ graalvmNative {
   }
 }
 
-// Disable collectReachabilityMetadata task to avoid configuration isolation issues
-// See https://github.com/gradle/gradle/issues/17559
 tasks.named("collectReachabilityMetadata").configure {
-  enabled = false
+  // See https://github.com/gradle/gradle/issues/17559
+  // See https://github.com/graalvm/native-build-tools/issues/760
+  notCompatibleWithConfigurationCache("GraalVM native-build-tools plugin is incompatible with configuration cache")
 }

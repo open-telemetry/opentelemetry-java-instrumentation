@@ -7,12 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBiGetter;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import javax.annotation.Nullable;
 
 /** Helper class for constructing span name for given servlet/filter mapping and request. */
-public class ServletSpanNameProvider<REQUEST>
+class ServletSpanNameProvider<REQUEST>
     implements HttpServerRouteBiGetter<MappingResolver, REQUEST> {
   private final ServletAccessor<REQUEST, ?> servletAccessor;
 

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 import org.apache.jasper.JspCompilationContext;
 import org.apache.jasper.compiler.Compiler;
@@ -30,6 +31,7 @@ public class JspCompilationContextInstrumentationSingletons {
                 "io.opentelemetry.jsp-2.3",
                 JspCompilationContextInstrumentationSingletons::spanNameOnCompile)
             .addAttributesExtractor(new CompilationAttributesExtractor())
+            .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
             .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 

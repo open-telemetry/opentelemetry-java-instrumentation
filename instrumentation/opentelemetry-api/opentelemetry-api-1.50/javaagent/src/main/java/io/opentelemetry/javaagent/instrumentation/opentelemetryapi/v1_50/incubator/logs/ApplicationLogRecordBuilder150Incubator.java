@@ -117,12 +117,13 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // converting ExtendedAttributeKey loses generic type
   public <T> ExtendedLogRecordBuilder setAttribute(ExtendedAttributeKey<T> key, T value) {
     io.opentelemetry.api.incubator.common.ExtendedAttributeKey<T> agentKey =
         convertExtendedAttributeKey(key);
     if (agentKey != null) {
       if (key.getType() == EXTENDED_ATTRIBUTES) {
+        // this cast is safe because T is ExtendedAttributes in this case
         value = (T) convertExtendedAttributes((ExtendedAttributes) value);
       }
       agentLogRecordBuilder.setAttribute(agentKey, value);
@@ -136,7 +137,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
     return this;
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({"unchecked", "rawtypes"}) // converting ExtendedAttributeKey loses generic type
   private static io.opentelemetry.api.incubator.common.ExtendedAttributes convertExtendedAttributes(
       ExtendedAttributes applicationAttributes) {
     io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder agentAttributes =
@@ -155,7 +156,10 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
     return agentAttributes.build();
   }
 
-  @SuppressWarnings({"rawtypes"})
+  @SuppressWarnings({
+    "rawtypes", // converting ExtendedAttributeKey loses generic type
+    "deprecation" // need to support applications still using EXTENDED_ATTRIBUTES
+  })
   private static io.opentelemetry.api.incubator.common.ExtendedAttributeKey
       convertExtendedAttributeKey(ExtendedAttributeKey applicationKey) {
     switch (applicationKey.getType()) {

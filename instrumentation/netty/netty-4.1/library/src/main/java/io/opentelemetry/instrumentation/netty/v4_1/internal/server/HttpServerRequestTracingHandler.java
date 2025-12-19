@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 
@@ -23,10 +23,9 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
  */
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Instrumenter<NettyRequest, HttpResponse> instrumenter;
 
-  public HttpServerRequestTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+  public HttpServerRequestTracingHandler(Instrumenter<NettyRequest, HttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
@@ -48,7 +47,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     }
 
     Context parentContext = Context.current();
-    HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
+    NettyRequest request = NettyRequest.create((HttpRequest) msg, channel);
     if (!instrumenter.shouldStart(parentContext, request)) {
       super.channelRead(ctx, msg);
       return;

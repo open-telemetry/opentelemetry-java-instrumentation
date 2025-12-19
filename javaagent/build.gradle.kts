@@ -90,6 +90,8 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
@@ -108,7 +110,7 @@ dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
   testCompileOnly(project(":javaagent-extension-api"))
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
 }
 
@@ -291,7 +293,7 @@ tasks {
     jvmArgs("-Dotel.metrics.exporter=none")
     jvmArgs("-Dotel.logs.exporter=none")
 
-    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
+    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }.map { it.asFile.absolutePath }))
 
     testLogging {
       events("started")
@@ -302,10 +304,27 @@ tasks {
     delete(rootProject.file("licenses"))
   }
 
+  val trimLicenseTrailingWhitespace by registering {
+    val licenseFile = rootDir.toPath().resolve("licenses/licenses.md")
+    val newline = System.lineSeparator()
+    doLast {
+      if (Files.exists(licenseFile)) {
+        val content = String(Files.readAllBytes(licenseFile), Charsets.UTF_8)
+        val normalized = content.lineSequence()
+          .map { it.trimEnd() }
+          .toList()
+          .dropLastWhile { it.isEmpty() }
+          .joinToString(newline) + newline
+        Files.write(licenseFile, normalized.toByteArray(Charsets.UTF_8))
+      }
+    }
+  }
+
   val removeLicenseDate by registering {
     // removing the license report date makes it idempotent
+    val rootDirPath = rootDir.toPath()
     doLast {
-      val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
+      val filePath = rootDirPath.resolve("licenses").resolve("licenses.md")
       if (Files.exists(filePath)) {
         val datePattern =
           Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
@@ -320,19 +339,27 @@ tasks {
     }
   }
 
-  val generateLicenseReportEnabled =
+  val generateLicenseReportEnabled = providers.provider {
     gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
-  named("generateLicenseReport").configure {
+  }
+  val generateLicenseReportTask = named("generateLicenseReport")
+  generateLicenseReportTask.configure {
     dependsOn(cleanLicenses)
-    finalizedBy(":spotlessApply")
+    finalizedBy(trimLicenseTrailingWhitespace)
     finalizedBy(removeLicenseDate)
     // disable licence report generation unless this task is explicitly run
     // the files produced by this task are used by other tasks without declaring them as dependency
     // which gradle considers an error
-    enabled = enabled && generateLicenseReportEnabled
+    enabled = enabled && generateLicenseReportEnabled.get()
+    // License report plugin is not configuration cache compatible
+    // https://github.com/jk1/Gradle-License-Report/issues/280
+    notCompatibleWithConfigurationCache("License report plugin uses Project at execution time")
   }
-  if (generateLicenseReportEnabled) {
-    project.parent?.tasks?.getByName("spotlessMisc")?.dependsOn(named("generateLicenseReport"))
+  val parentSpotlessMiscTask = project.parent?.tasks?.named("spotlessMisc")
+  if (generateLicenseReportEnabled.get()) {
+    parentSpotlessMiscTask?.configure {
+      dependsOn(generateLicenseReportTask)
+    }
   }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
@@ -389,7 +416,7 @@ project.afterEvaluate {
 }
 
 licenseReport {
-  outputDir = rootProject.file("licenses").absolutePath
+  outputDir = rootProject.layout.projectDirectory.dir("licenses").asFile.absolutePath
 
   renderers = arrayOf(InventoryMarkdownReportRenderer())
 
@@ -459,12 +486,11 @@ fun ShadowJar.excludeBootstrapClasses() {
 }
 
 class JavaagentProvider(
-  @InputFile
-  @PathSensitive(PathSensitivity.RELATIVE)
-  val agentJar: Provider<RegularFile>,
+  @Input
+  val agentJarPath: Provider<String>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}",
+    "-javaagent:${agentJarPath.get()}",
     "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
   )
 }

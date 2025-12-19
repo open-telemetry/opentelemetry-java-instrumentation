@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 
 public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
@@ -85,7 +88,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
     ServletAsyncContext.setAsyncListenerResponse(context, response);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we set the response in setAsyncListenerResponse
   public RESPONSE getAsyncListenerResponse(Context context) {
     return (RESPONSE) ServletAsyncContext.getAsyncListenerResponse(context);
   }
@@ -97,7 +100,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
 
     Object response = getAsyncListenerResponse(context);
 
-    ServletRequestContext<REQUEST> requestContext = new ServletRequestContext<>(request, null);
+    ServletRequestContext<REQUEST> requestContext = new ServletRequestContext<>(request);
     accessor.addRequestAsyncListener(
         request,
         new AsyncRequestCompletionListener<>(this, instrumenter, requestContext, context),

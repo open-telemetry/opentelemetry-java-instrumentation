@@ -27,7 +27,7 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean messagingReceiveInstrumentationEnabled() {
+    protected boolean messagingReceiveTelemetryEnabled() {
       return ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
     }
 

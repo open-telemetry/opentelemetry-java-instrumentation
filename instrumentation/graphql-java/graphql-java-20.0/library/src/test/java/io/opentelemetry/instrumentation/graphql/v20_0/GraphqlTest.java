@@ -16,6 +16,8 @@ import io.opentelemetry.instrumentation.graphql.AbstractGraphqlTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -237,6 +239,160 @@ class GraphqlTest extends AbstractGraphqlTest {
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("query findBookById"))));
+  }
+
+  // test data fetcher throwing an exception
+  @Test
+  void dataFetcherException() {
+    // Arrange
+    GraphQLTelemetry telemetry =
+        GraphQLTelemetry.builder(testing.getOpenTelemetry())
+            .setDataFetcherInstrumentationEnabled(true)
+            .setAddOperationNameToSpanName(true)
+            .build();
+
+    GraphQL graphql =
+        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+
+    // Act
+    // book-exception triggers exception in data fetcher
+    ExecutionResult result =
+        graphql.execute(
+            ""
+                + "  query findBookById {\n"
+                + "    bookById(id: \"book-exception\") {\n"
+                + "      name\n"
+                + "      author {\n"
+                + "        name\n"
+                + "      }\n"
+                + "    }\n"
+                + "  }");
+
+    // Assert
+    assertThat(result.getErrors()).isNotEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("query findBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
+                            normalizedQueryEqualsTo(
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
+                                "query findBookById { bookById(id: ?) { name author { name } } }"))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_TYPE,
+                                            "DataFetchingException"),
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_MESSAGE,
+                                            "Exception while fetching data (/bookById) : fetching book failed"))),
+                span ->
+                    span.hasName("bookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("query findBookById"))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GRAPHQL_FIELD_NAME, "bookById"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById"))
+                        .hasStatus(StatusData.error())
+                        .hasException(new IllegalStateException("fetching book failed")),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById"))
+                        .hasStatus(StatusData.error())
+                        .hasException(new IllegalStateException("fetching book failed"))));
+  }
+
+  // test data fetcher returning an error
+  @Test
+  void dataFetcherError() {
+    // Arrange
+    GraphQLTelemetry telemetry =
+        GraphQLTelemetry.builder(testing.getOpenTelemetry())
+            .setDataFetcherInstrumentationEnabled(true)
+            .setAddOperationNameToSpanName(true)
+            .build();
+
+    GraphQL graphql =
+        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+
+    // Act
+    // book-graphql-error triggers returning an error from data fetcher
+    ExecutionResult result =
+        graphql.execute(
+            ""
+                + "  query findBookById {\n"
+                + "    bookById(id: \"book-graphql-error\") {\n"
+                + "      name\n"
+                + "      author {\n"
+                + "        name\n"
+                + "      }\n"
+                + "    }\n"
+                + "  }");
+
+    // Assert
+    assertThat(result.getErrors()).isNotEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("query findBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
+                            normalizedQueryEqualsTo(
+                                GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
+                                "query findBookById { bookById(id: ?) { name author { name } } }"))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_TYPE,
+                                            "DataFetchingException"),
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_MESSAGE,
+                                            "failed to fetch book"))),
+                span ->
+                    span.hasName("bookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("query findBookById"))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GRAPHQL_FIELD_NAME, "bookById"),
+                            equalTo(GRAPHQL_FIELD_PATH, "/bookById"))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_TYPE,
+                                            "DataFetchingException"),
+                                        equalTo(
+                                            ExceptionAttributes.EXCEPTION_MESSAGE,
+                                            "failed to fetch book"))),
+                span ->
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(spanWithName("bookById"))));
   }
 
   private static SpanData spanWithName(String name) {

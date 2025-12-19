@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
@@ -28,7 +29,7 @@ public final class SpringAwsUtil {
   // put the TracingList into thread local, so we can use it in attachTracingState method
   public static void initialize(Collection<?> messages) {
     if (messages instanceof TracingList tracingList) {
-      // disable tracing int the iterator of TracingList, we'll do the tracing when message handler
+      // disable tracing in the iterator of TracingList, we'll do the tracing when message handler
       // is called
       tracingList.disableTracing();
       context.set(tracingList);
@@ -61,6 +62,7 @@ public final class SpringAwsUtil {
     tracingContextField.set(transformed, tracingContextField.get(original));
   }
 
+  @Nullable
   public static MessageScope handleMessage(Message<?> message) {
     TracingContext tracingContext = tracingContextField.get(message);
     if (tracingContext == null) {
@@ -71,6 +73,7 @@ public final class SpringAwsUtil {
   }
 
   // restore context from the first message of the batch
+  @Nullable
   public static Scope handleBatch(Collection<Message<?>> messages) {
     if (messages == null || messages.isEmpty()) {
       return null;
@@ -131,6 +134,7 @@ public final class SpringAwsUtil {
       this.sqsMessage = sqsMessage;
     }
 
+    @Nullable
     MessageScope trace() {
       SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage);
       Context parentContext = receiveContext;

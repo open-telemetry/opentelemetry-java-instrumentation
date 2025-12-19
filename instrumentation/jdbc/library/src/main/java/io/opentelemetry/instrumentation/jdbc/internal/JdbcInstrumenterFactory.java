@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import javax.sql.DataSource;
@@ -28,9 +27,6 @@ import javax.sql.DataSource;
  */
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
-  private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-  private static final JdbcNetworkAttributesGetter netAttributesGetter =
-      new JdbcNetworkAttributesGetter();
 
   public static boolean captureQueryParameters() {
     return ConfigPropertiesUtil.getBoolean(
@@ -71,13 +67,12 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(dbAttributesGetter))
+            DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(dbAttributesGetter)
+            SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(extractors)
         .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
@@ -114,9 +109,9 @@ public final class JdbcInstrumenterFactory {
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
-        .addAttributesExtractor(SqlClientAttributesExtractor.builder(dbAttributesGetter).build())
+        .addAttributesExtractor(
+            SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
-        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

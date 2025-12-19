@@ -46,7 +46,7 @@ public final class FutureListenerWrappers {
     return listener != null && shouldWrap.get(listener.getClass());
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // fine
   public static GenericFutureListener<?> wrap(
       Context context, GenericFutureListener<? extends Future<?>> delegate) {
 

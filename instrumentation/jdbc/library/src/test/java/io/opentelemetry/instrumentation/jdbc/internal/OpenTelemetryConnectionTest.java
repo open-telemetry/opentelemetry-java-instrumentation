@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -123,6 +124,6 @@ class OpenTelemetryConnectionTest {
         statementInstrumenter,
         transactionInstrumenter,
         false,
-        false);
+        SqlCommenter.noop());
   }
 }

@@ -39,10 +39,24 @@ public final class SpringWebfluxServerTelemetry {
     this.serverInstrumenter = serverInstrumenter;
   }
 
+  /**
+   * Returns an OpenTelemetry telemetry producing {@link WebFilter} that can be registered with
+   * Spring Webflux to instrument HTTP server requests.
+   *
+   * @return OpenTelemetry telemetry producing {@link WebFilter}
+   */
   public WebFilter createWebFilter() {
     return new TelemetryProducingWebFilter(serverInstrumenter);
   }
 
+  /**
+   * Returns an OpenTelemetry telemetry producing {@link WebFilter} that can be registered with
+   * Spring Webflux to instrument HTTP server requests. Also registers the Reactor context
+   * propagation hook {@link ContextPropagationOperator} for propagating OpenTelemetry context into
+   * reactive pipelines.
+   *
+   * @return OpenTelemetry telemetry producing {@link WebFilter}
+   */
   public WebFilter createWebFilterAndRegisterReactorHook() {
     registerReactorHook();
     return this.createWebFilter();

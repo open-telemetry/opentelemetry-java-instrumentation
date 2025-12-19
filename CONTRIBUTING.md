@@ -6,7 +6,6 @@ Before submitting new features or changes to current functionality, it is recomm
 [open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
 and discuss your ideas or propose the changes you wish to make.
 
-
 ## Breaking Changes
 
 When your PR introduces a breaking change:

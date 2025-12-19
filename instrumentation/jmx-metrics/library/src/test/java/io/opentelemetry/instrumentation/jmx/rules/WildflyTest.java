@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class WildflyTest extends TargetSystemTest {
+class WildflyTest extends TargetSystemTest {
 
   private static final int WILDFLY_SERVICE_PORT = 8080;
 

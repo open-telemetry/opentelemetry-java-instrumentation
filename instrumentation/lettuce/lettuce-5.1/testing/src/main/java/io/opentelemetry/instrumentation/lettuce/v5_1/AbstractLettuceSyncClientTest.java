@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -151,9 +150,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 SERVER_PORT,
                 NETWORK_PEER_ADDRESS,
                 NETWORK_PEER_PORT));
-    if (Boolean.getBoolean("testLatestDeps")) {
-      expected.add(DB_NAMESPACE);
-    }
     assertDurationMetric(testing(), "io.opentelemetry.lettuce-5.1", toArray(expected));
   }
 
@@ -526,11 +522,17 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, containerConnection.port),
                                   equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")))
-                          .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
+                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")));
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
-                        span.hasException(new RedisException("Connection disconnected"));
+                        // and also produces an exception event in addition to encode events
+                        span.hasException(new RedisException("Connection disconnected"))
+                            .hasEventsSatisfyingExactly(
+                                event -> event.hasName("redis.encode.start"),
+                                event -> event.hasName("redis.encode.end"),
+                                event -> event.hasName("exception"));
+                      } else {
+                        span.satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
                       }
                     }));
   }

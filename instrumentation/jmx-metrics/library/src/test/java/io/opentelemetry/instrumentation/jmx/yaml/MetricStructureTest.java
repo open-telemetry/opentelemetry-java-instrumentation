@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class MetricStructureTest {
+class MetricStructureTest {
 
   @ParameterizedTest
   @CsvSource({"const(Hello),Hello", "lowercase(const(Hello)),hello"})

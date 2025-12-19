@@ -25,7 +25,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 No targets are enabled by default. The supported target environments are listed below.
 
-- [activemq](javaagent/activemq.md)
+- [activemq](library/activemq.md)
 - [camel](javaagent/camel.md)
 - [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
@@ -273,18 +273,22 @@ For other values of `stateName`, we have:
 - `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `tomcat.connector.state` = `degraded`
 
 Each state key can be mapped to one or more values of the MBean attribute using:
+
 - a string literal or a string array
 - a `*` character to provide default option and avoid enumerating all values, this value must be quoted in YAML
 
 Exactly one `*` value must be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
 
 The default value indicated by `*` does not require a dedicated state key. For example, if we want to have `tomcat.connector.state` metric attribute with values `on` or `off`, we can use:
+
 ```yaml
           tomcat.connector.state:
             on: STARTED
             off: [STOPPED,FAILED,'*']
 ```
+
 In the particular case where only two values are defined, we can simplify further by explicitly defining one state and rely on default for the other.
+
 ```yaml
           tomcat.connector.state:
             on: STARTED
@@ -301,7 +305,6 @@ For example, with JVM memory, the `java.lang:name=*,type=MemoryPool` MBeans have
 However, in the semantic conventions the metric attribute `jvm.memory.type` should be lower-cased to fit the `jvm.memory.used` definition, in this case we can
 apply the `lowercase` metric attribute transformation as follows:
 
-
 ```yaml
 ---
 rules:
@@ -312,7 +315,7 @@ rules:
         metric: jvm.memory.used
         unit: By
         metricAttribute:
-          jvm.memory.pool.name	: param(name)
+          jvm.memory.pool.name: param(name)
           jvm.memory.type: lowercase(beanattr(Type))
 ```
 
@@ -337,6 +340,7 @@ Currently available unit conversions:
 | ns           | s      |
 
 Example of defining unit conversion in yaml file:
+
 ```yaml
 rules:
   - beans:
@@ -350,6 +354,7 @@ rules:
         unit: s
         desc: The longest request processing time
 ```
+
 `sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts))
 
 ### Filtering negative values
@@ -396,11 +401,13 @@ where the `name` parameter in the MBean name is NOT mapped to a metric attribute
 ```
 
 When two or more MBean parameters are used, it is also possible to perform a partial aggregation:
+
 - parameters not mapped as metric attributes are discarded
 - parameters mapped as metric attributes with `param(<mbeanParam>)` are preserved
 - values are aggregated with mapped metric attributes
 
 The applied aggregation depends on the metric type:
+
 - `counter` or `updowncounter`: sum aggregation
 - `gauge`: last-value aggregation
 
@@ -454,7 +461,7 @@ The following table explains the used terms with more details.
 | Syntactic Element  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | OBJECTNAME         | A syntactically valid string representing an [ObjectName](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-).                                                                                                                                                                                                                                                                                 |
-| ATTRIBUTE          | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key.                                                                                                                                                                                                                                                                                                       |
+| ATTRIBUTE          | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/specs/otel/common/#attribute).                                                                                                                                                                                                                                                                                                                        |
 | ATTR               | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used.                                                                                                                                                                                                                                                                                    |
 | PARAM              | A non-empty string used as a property key in the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used.                                                                                                                                                                                                                  |
 | METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names.                                                                                                                                                                                                                                                                                                                                                            |

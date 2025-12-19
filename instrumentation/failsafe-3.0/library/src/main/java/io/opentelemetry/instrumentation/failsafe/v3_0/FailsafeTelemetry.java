@@ -13,11 +13,15 @@ import static io.opentelemetry.instrumentation.failsafe.v3_0.CircuitBreakerEvent
 
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerConfig;
+import dev.failsafe.RetryPolicy;
+import dev.failsafe.RetryPolicyConfig;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import java.util.Arrays;
 
 /** Entrypoint for instrumenting Failsafe components. */
 public final class FailsafeTelemetry {
@@ -25,6 +29,8 @@ public final class FailsafeTelemetry {
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
       AttributeKey.stringKey("failsafe.circuit_breaker.name");
+  private static final AttributeKey<String> RETRY_POLICY_NAME =
+      AttributeKey.stringKey("failsafe.retry_policy.name");
 
   /** Returns a new {@link FailsafeTelemetry} configured with the given {@link OpenTelemetry}. */
   public static FailsafeTelemetry create(OpenTelemetry openTelemetry) {
@@ -68,6 +74,44 @@ public final class FailsafeTelemetry {
         .onOpen(buildInstrumentedOpenListener(userConfig, stateChangesCounter, attributes))
         .onHalfOpen(buildInstrumentedHalfOpenListener(userConfig, stateChangesCounter, attributes))
         .onClose(buildInstrumentedCloseListener(userConfig, stateChangesCounter, attributes))
+        .build();
+  }
+
+  /**
+   * Returns an instrumented {@link RetryPolicy} by given values.
+   *
+   * @param delegate user configured {@link RetryPolicy} to be instrumented
+   * @param retryPolicyName identifier of given {@link RetryPolicy}
+   * @param <R> {@link RetryPolicy}'s result type
+   * @return instrumented {@link RetryPolicy}
+   */
+  public <R> RetryPolicy<R> createRetryPolicy(RetryPolicy<R> delegate, String retryPolicyName) {
+    RetryPolicyConfig<R> userConfig = delegate.getConfig();
+    Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+    LongCounter executionCounter =
+        meter
+            .counterBuilder("failsafe.retry_policy.execution.count")
+            .setDescription(
+                "Count of execution attempts processed by the retry policy, "
+                    + "where one execution represents the total number of attempts.")
+            .setUnit("{execution}")
+            .build();
+    LongHistogram attemptsHistogram =
+        meter
+            .histogramBuilder("failsafe.retry_policy.attempts")
+            .setDescription("Number of attempts for each execution.")
+            .setUnit("{attempt}")
+            .ofLongs()
+            .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
+            .build();
+    Attributes attributes = Attributes.of(RETRY_POLICY_NAME, retryPolicyName);
+    return RetryPolicy.builder(userConfig)
+        .onFailure(
+            RetryPolicyEventListenerBuilders.buildInstrumentedFailureListener(
+                userConfig, executionCounter, attemptsHistogram, attributes))
+        .onSuccess(
+            RetryPolicyEventListenerBuilders.buildInstrumentedSuccessListener(
+                userConfig, executionCounter, attemptsHistogram, attributes))
         .build();
   }
 }

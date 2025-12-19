@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.ktor.v2_0.common.internal
 
 import io.ktor.server.application.*
+import io.ktor.server.application.hooks.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.*
@@ -25,14 +26,15 @@ import kotlinx.coroutines.withContext
  */
 object KtorServerTelemetryUtil {
 
-  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
+  fun PluginBuilder<*>.configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
+    val processedKey = AttributeKey<Unit>("OpenTelemetryProcessed")
 
     val instrumenter = instrumenter(builder)
     val tracer = KtorServerTracer(instrumenter)
-    val startPhase = PipelinePhase("OpenTelemetry")
 
+    val startPhase = PipelinePhase("OpenTelemetry")
     application.insertPhaseBefore(ApplicationCallPipeline.Setup, startPhase)
     application.intercept(startPhase) {
       val context = tracer.start(call)
@@ -59,22 +61,15 @@ object KtorServerTelemetryUtil {
       }
     }
 
-    val postSendPhase = PipelinePhase("OpenTelemetryPostSend")
-    application.sendPipeline.insertPhaseAfter(ApplicationSendPipeline.After, postSendPhase)
-    application.sendPipeline.intercept(postSendPhase) {
+    on(ResponseSent) { call ->
+      if (call.attributes.contains(processedKey)) {
+        return@on
+      }
+
       val context = call.attributes.getOrNull(contextKey)
       if (context != null) {
-        var error: Throwable? = call.attributes.getOrNull(errorKey)
-        try {
-          proceed()
-        } catch (t: Throwable) {
-          error = t
-          throw t
-        } finally {
-          tracer.end(context, call, error)
-        }
-      } else {
-        proceed()
+        tracer.end(context, call, call.attributes.getOrNull(errorKey))
+        call.attributes.put(processedKey, Unit)
       }
     }
   }

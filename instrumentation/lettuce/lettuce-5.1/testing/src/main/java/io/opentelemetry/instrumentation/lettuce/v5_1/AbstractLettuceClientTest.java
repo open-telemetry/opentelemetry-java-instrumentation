@@ -6,18 +6,13 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.TestInstance;
@@ -31,10 +26,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
-
-  private static final boolean COMMAND_ENCODING_EVENTS_ENABLED =
-      Boolean.getBoolean(
-          "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled");
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -88,30 +79,14 @@ public abstract class AbstractLettuceClientTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
-    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
-    if (Boolean.getBoolean("testLatestDeps")) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        result.add(equalTo(DB_NAMESPACE, "0"));
-      } else {
-        result.add(equalTo(DB_REDIS_DATABASE_INDEX, 0));
-      }
-    }
-    return result;
+    return Arrays.asList(assertions);
   }
 
   protected static void assertCommandEncodeEvents(SpanData span) {
-    if (COMMAND_ENCODING_EVENTS_ENABLED) {
-      assertThat(span)
-          .hasEventsSatisfyingExactly(
-              event -> event.hasName("redis.encode.start"),
-              event -> event.hasName("redis.encode.end"));
-    } else {
-      assertThat(span.getEvents())
-          .noneSatisfy(event -> assertThat(event).hasName("redis.encode.start"));
-      assertThat(span.getEvents())
-          .noneSatisfy(event -> assertThat(event).hasName("redis.encode.end"));
-    }
+    assertThat(span)
+        .hasEventsSatisfyingExactly(
+            event -> event.hasName("redis.encode.start"),
+            event -> event.hasName("redis.encode.end"));
   }
 }

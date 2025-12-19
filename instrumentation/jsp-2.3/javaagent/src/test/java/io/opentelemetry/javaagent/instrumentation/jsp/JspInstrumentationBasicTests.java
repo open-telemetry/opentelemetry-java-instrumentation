@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.jsp.JspSpanAssertions.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -44,8 +45,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static JspSpanAssertions spanAsserts;
 
@@ -428,10 +428,11 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.classFQCN"),
-                                "org.apache.jsp." + jspClassNamePrefix + jspClassName),
+                                experimental(
+                                    "org.apache.jsp." + jspClassNamePrefix + jspClassName)),
                             equalTo(
                                 stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler"))));
+                                experimental("org.apache.jasper.compiler.JDTCompiler")))));
   }
 
   private static Stream<Arguments> compileErrorsArgs() {

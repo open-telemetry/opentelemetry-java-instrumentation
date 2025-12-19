@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class JettyTest extends TargetSystemTest {
+class JettyTest extends TargetSystemTest {
 
   private static final int JETTY_PORT = 8080;
 

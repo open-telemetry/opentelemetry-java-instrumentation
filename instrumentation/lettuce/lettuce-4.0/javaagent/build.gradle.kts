@@ -22,20 +22,27 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes and span events
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }

@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimenta
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -97,22 +96,23 @@ public final class SpringWebfluxClientTelemetryBuilder {
   /**
    * Sets custom client {@link SpanNameExtractor} via transform function.
    *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<ClientRequest>, SpanNameExtractor<ClientRequest>>
-          clientSpanNameExtractor) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<ClientRequest>>) clientSpanNameExtractor::apply);
+      UnaryOperator<SpanNameExtractor<ClientRequest>> clientSpanNameExtractor) {
+    return setSpanNameExtractorCustomizer(clientSpanNameExtractor);
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public SpringWebfluxClientTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<ClientRequest>> clientSpanNameExtractor) {
-    builder.setSpanNameExtractor(clientSpanNameExtractor);
+  public SpringWebfluxClientTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ClientRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

@@ -24,7 +24,7 @@ import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-public class ResourceProviderPropertiesCustomizerTest {
+class ResourceProviderPropertiesCustomizerTest {
 
   public static final class Provider implements ResourceProvider {
     @Override

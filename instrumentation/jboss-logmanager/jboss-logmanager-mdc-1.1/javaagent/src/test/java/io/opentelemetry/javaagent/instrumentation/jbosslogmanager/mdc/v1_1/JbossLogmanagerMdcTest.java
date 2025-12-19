@@ -24,7 +24,7 @@ import org.jboss.logmanager.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JbossLogmanagerMdcTest {
+class JbossLogmanagerMdcTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

@@ -22,7 +22,7 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20251017.18602659902")
+        .springBoot()
         .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
         .extraResources(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"));
   }

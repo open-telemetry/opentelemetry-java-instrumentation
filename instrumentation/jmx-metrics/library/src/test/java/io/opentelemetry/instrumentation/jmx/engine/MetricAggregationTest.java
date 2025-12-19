@@ -35,7 +35,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class MetricAggregationTest {
+class MetricAggregationTest {
 
   @SuppressWarnings({"unused", "checkstyle:AbbreviationAsWordInName"})
   public interface HelloMBean {

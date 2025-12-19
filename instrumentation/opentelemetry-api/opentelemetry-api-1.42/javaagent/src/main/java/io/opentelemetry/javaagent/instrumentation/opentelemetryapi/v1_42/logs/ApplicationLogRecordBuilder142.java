@@ -30,7 +30,6 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
     return this;
   }
 
-  @SuppressWarnings("unchecked")
   protected static io.opentelemetry.api.common.Value<?> convertValue(Value<?> value) {
     if (value == null) {
       return null;
@@ -46,6 +45,7 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
       case DOUBLE:
         return io.opentelemetry.api.common.Value.of((Double) value.getValue());
       case ARRAY:
+        @SuppressWarnings("unchecked") // type is checked before casting
         List<Value<?>> values = (List<Value<?>>) value.getValue();
         List<io.opentelemetry.api.common.Value<?>> convertedValues = new ArrayList<>();
         for (Value<?> source : values) {
@@ -53,6 +53,7 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
         }
         return io.opentelemetry.api.common.Value.of(convertedValues);
       case KEY_VALUE_LIST:
+        @SuppressWarnings("unchecked") // type is checked before casting
         List<KeyValue> keyValueList = (List<KeyValue>) value.getValue();
         io.opentelemetry.api.common.KeyValue[] convertedKeyValueList =
             new io.opentelemetry.api.common.KeyValue[keyValueList.size()];

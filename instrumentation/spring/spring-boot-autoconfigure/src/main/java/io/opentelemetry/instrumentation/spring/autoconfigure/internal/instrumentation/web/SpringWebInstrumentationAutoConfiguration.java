@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -34,16 +34,16 @@ public class SpringWebInstrumentationAutoConfiguration {
   @Bean
   static RestTemplateBeanPostProcessor otelRestTemplateBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
-    return new RestTemplateBeanPostProcessor(openTelemetryProvider, configPropertiesProvider);
+      ObjectProvider<InstrumentationConfig> configProvider) {
+    return new RestTemplateBeanPostProcessor(openTelemetryProvider, configProvider);
   }
 
   @Bean
   RestTemplateCustomizer otelRestTemplateCustomizer(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<InstrumentationConfig> configProvider) {
     return restTemplate ->
         RestTemplateInstrumentation.addIfNotPresent(
-            restTemplate, openTelemetryProvider.getObject(), configPropertiesProvider.getObject());
+            restTemplate, openTelemetryProvider.getObject(), configProvider.getObject());
   }
 }

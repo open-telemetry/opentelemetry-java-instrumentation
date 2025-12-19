@@ -52,12 +52,19 @@ public class JmxMetricInsight {
    * @param conf metric configuration
    * @param connections supplier for list of remote connections
    */
+  @SuppressWarnings("unused") // used by jmx-scraper with remote connection
   public void startRemote(
       MetricConfiguration conf, Supplier<List<? extends MBeanServerConnection>> connections) {
     start(conf, connections);
   }
 
-  private void start(
+  /**
+   * Starts metric registration on the provided list of connections
+   *
+   * @param conf metric configuration
+   * @param connections supplier for list of connections (remote or local)
+   */
+  public void start(
       MetricConfiguration conf, Supplier<List<? extends MBeanServerConnection>> connections) {
     if (conf.isEmpty()) {
       logger.log(

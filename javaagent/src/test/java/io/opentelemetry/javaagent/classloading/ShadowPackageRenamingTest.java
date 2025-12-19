@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-public class ShadowPackageRenamingTest {
+class ShadowPackageRenamingTest {
 
   private static final List<String> AGENT_PACKAGE_PREFIXES =
       Arrays.asList(

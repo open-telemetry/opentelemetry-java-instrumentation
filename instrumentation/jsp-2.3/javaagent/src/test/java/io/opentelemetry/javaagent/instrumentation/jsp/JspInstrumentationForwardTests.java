@@ -38,8 +38,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static JspSpanAssertions spanAsserts;
 

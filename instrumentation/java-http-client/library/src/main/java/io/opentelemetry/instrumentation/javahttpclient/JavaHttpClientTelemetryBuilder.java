@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.javahttpclient.internal.JavaHttpClientIn
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class JavaHttpClientTelemetryBuilder {
@@ -92,22 +91,23 @@ public final class JavaHttpClientTelemetryBuilder {
   /**
    * Sets custom {@link SpanNameExtractor} via transform function.
    *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpRequest>, SpanNameExtractor<HttpRequest>>
-          spanNameExtractorTransformer) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<HttpRequest>>) spanNameExtractorTransformer::apply);
+      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractorTransformer) {
+    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+  public JavaHttpClientTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

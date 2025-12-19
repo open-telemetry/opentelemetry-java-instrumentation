@@ -7,7 +7,12 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import javax.annotation.Nullable;
 
-/** An interface for getting attributes common to database clients. */
+/**
+ * An interface for getting attributes common to database clients.
+ *
+ * @deprecated Use {@link DbClientAttributesGetter} instead.
+ */
+@Deprecated
 public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
 
   String getDbSystem(REQUEST request);

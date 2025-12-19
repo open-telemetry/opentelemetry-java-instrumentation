@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class TomcatTest extends TargetSystemTest {
+class TomcatTest extends TargetSystemTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"tomcat:10.0", "tomcat:9.0"})

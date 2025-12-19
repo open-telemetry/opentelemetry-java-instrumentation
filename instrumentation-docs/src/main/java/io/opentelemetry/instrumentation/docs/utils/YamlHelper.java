@@ -85,9 +85,7 @@ public class YamlHelper {
                         Collectors.toList(),
                         modules ->
                             modules.stream()
-                                .sorted(
-                                    Comparator.comparing(
-                                        InstrumentationModule::getInstrumentationName))
+                                .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
                                 .collect(Collectors.toList()))));
 
     Map<String, Object> output = new TreeMap<>();
@@ -113,6 +111,7 @@ public class YamlHelper {
     List<InstrumentationModule> filtered =
         list.stream()
             .filter(module -> module.getMetadata().getClassification().equals(classification))
+            .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
             .toList();
 
     List<Map<String, Object>> instrumentations = new ArrayList<>();

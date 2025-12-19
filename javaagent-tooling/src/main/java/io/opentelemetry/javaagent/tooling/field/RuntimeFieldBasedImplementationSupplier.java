@@ -33,7 +33,7 @@ final class RuntimeFieldBasedImplementationSupplier
           getVirtualFieldImplementationClassName(type.getTypeName(), fieldType.getTypeName());
       Class<?> contextStoreClass = Class.forName(virtualFieldImplClassName, false, null);
       Method method = contextStoreClass.getMethod("getVirtualField", Class.class, Class.class);
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // casting reflection result
       VirtualField<U, V> field = (VirtualField<U, V>) method.invoke(null, type, fieldType);
       return field;
     } catch (ClassNotFoundException exception) {

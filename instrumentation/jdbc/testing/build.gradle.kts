@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
   api("com.google.guava:guava")
 
   compileOnly("com.h2database:h2:1.3.169")

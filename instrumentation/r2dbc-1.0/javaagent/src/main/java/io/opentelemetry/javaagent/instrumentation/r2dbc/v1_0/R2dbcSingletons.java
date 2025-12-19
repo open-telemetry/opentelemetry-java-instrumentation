@@ -10,9 +10,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAtt
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.Experimental;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcNetAttributesGetter;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcSqlAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 
 public final class R2dbcSingletons {
 
@@ -28,7 +29,7 @@ public final class R2dbcSingletons {
                         AgentCommonConfig.get().isStatementSanitizationEnabled()))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    R2dbcNetAttributesGetter.INSTANCE,
+                    R2dbcSqlAttributesGetter.INSTANCE,
                     AgentCommonConfig.get().getPeerServiceResolver()));
     Experimental.setEnableSqlCommenter(
         builder,
@@ -36,6 +37,10 @@ public final class R2dbcSingletons {
             .getBoolean(
                 "otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled",
                 AgentCommonConfig.get().isSqlCommenterEnabled()));
+    Experimental.customizeSqlCommenter(
+        builder,
+        sqlCommenterBuilder ->
+            SqlCommenterCustomizerHolder.getCustomizer().customize(sqlCommenterBuilder));
     TELEMETRY = builder.build();
   }
 

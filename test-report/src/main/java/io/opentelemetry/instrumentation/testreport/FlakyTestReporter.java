@@ -67,13 +67,19 @@ public class FlakyTestReporter {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       return builder.parse(testReport.toFile());
     } catch (Exception exception) {
-      throw new IllegalStateException("failed to parse test report " + testReport, exception);
+      System.err.println("Failed to parse test report " + testReport);
+      exception.printStackTrace();
+      return null;
     }
   }
 
   @SuppressWarnings("JavaTimeDefaultTimeZone")
   private void scanTestFile(Path testReport) {
     Document doc = parse(testReport);
+    if (doc == null) {
+      return;
+    }
+
     doc.getDocumentElement().normalize();
     testCount += Integer.parseInt(doc.getDocumentElement().getAttribute("tests"));
     skippedCount += Integer.parseInt(doc.getDocumentElement().getAttribute("skipped"));

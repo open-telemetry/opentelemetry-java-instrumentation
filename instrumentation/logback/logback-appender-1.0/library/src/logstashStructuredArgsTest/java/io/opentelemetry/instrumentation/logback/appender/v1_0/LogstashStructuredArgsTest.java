@@ -9,6 +9,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.util.HashMap;
+import java.util.Map;
 import net.logstash.logback.argument.StructuredArguments;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -89,5 +91,18 @@ class LogstashStructuredArgsTest {
                 equalTo(AttributeKey.longKey("user_id"), 12345L),
                 equalTo(AttributeKey.longKey("timestamp"), timestamp),
                 equalTo(AttributeKey.booleanKey("session_active"), true)));
+  }
+
+  @Test
+  void logWithStructuredArgument() {
+    Map<String, Object> eventData = new HashMap<>();
+    eventData.put("foo", "bar");
+    logger.info("message: {}", StructuredArguments.entries(eventData));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("message: {foo=bar}")
+                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("foo"), "bar")));
   }
 }

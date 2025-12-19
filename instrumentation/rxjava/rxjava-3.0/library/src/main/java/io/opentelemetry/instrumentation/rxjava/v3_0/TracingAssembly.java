@@ -58,6 +58,7 @@ import org.reactivestreams.Subscriber;
  *
  * <p>Instrumentation can be disabled by calling the {@link TracingAssembly#disable()} method.
  */
+@SuppressWarnings("SuppressWarningsWithoutExplanation") // RxJavaPlugins uses raw types
 public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")

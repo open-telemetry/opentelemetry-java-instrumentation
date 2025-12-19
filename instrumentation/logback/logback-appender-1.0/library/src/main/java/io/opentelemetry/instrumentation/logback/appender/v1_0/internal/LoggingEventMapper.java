@@ -84,6 +84,7 @@ public final class LoggingEventMapper {
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
+  private final boolean captureTemplate;
   private final boolean captureArguments;
   private final boolean captureLogstashMarkerAttributes;
   private final boolean captureLogstashStructuredArguments;
@@ -96,6 +97,7 @@ public final class LoggingEventMapper {
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
+    this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
@@ -215,10 +217,16 @@ public final class LoggingEventMapper {
       captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
+    if (captureTemplate
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      captureTemplate(builder, loggingEvent);
+    }
+
     if (captureArguments
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
-      captureArguments(builder, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+      captureArguments(builder, loggingEvent.getArgumentArray());
     }
 
     if (supportsLogstashMarkers && captureLogstashMarkerAttributes) {
@@ -265,8 +273,11 @@ public final class LoggingEventMapper {
     }
   }
 
-  void captureArguments(LogRecordBuilder builder, String message, Object[] arguments) {
-    builder.setAttribute(LOG_BODY_TEMPLATE, message);
+  private static void captureTemplate(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    builder.setAttribute(LOG_BODY_TEMPLATE, loggingEvent.getMessage());
+  }
+
+  private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
         LOG_BODY_PARAMETERS,
         Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
@@ -640,7 +651,7 @@ public final class LoggingEventMapper {
   private void captureLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashStructuredArgument(builder, argument);
+        captureLogstashMarker(builder, argument);
       }
     }
   }
@@ -649,15 +660,8 @@ public final class LoggingEventMapper {
   private static boolean isLogstashStructuredArgument(Object argument) {
     // StructuredArguments implement the marker interface, so we can check for it
     // without importing the class directly (which may not be available at runtime)
-    return argument instanceof SingleFieldAppendingMarker;
-  }
-
-  @NoMuzzle
-  private void captureLogstashStructuredArgument(LogRecordBuilder builder, Object argument) {
-    // StructuredArguments created by v() or keyValue() extend SingleFieldAppendingMarker
-    // which has getFieldName() and provides field value via reflection
-    SingleFieldAppendingMarker marker = (SingleFieldAppendingMarker) argument;
-    captureLogstashMarker(builder, marker);
+    return argument instanceof SingleFieldAppendingMarker
+        || argument instanceof MapEntriesAppendingMarker;
   }
 
   private interface FieldReader {
@@ -686,6 +690,7 @@ public final class LoggingEventMapper {
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
+    private boolean captureTemplate;
     private boolean captureArguments;
     private boolean captureLogstashMarkerAttributes;
     private boolean captureLogstashStructuredArguments;
@@ -726,6 +731,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
       this.captureLoggerContext = captureLoggerContext;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureTemplate(boolean captureTemplate) {
+      this.captureTemplate = captureTemplate;
       return this;
     }
 

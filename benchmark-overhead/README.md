@@ -79,6 +79,7 @@ Currently, we test:
 - no agent versus latest released agent
 - no agent versus latest snapshot
 - latest release vs. latest snapshot
+- latest snapshot with indy enabled
 
 Additional configurations can be created by submitting a PR against the `Configs` class.
 

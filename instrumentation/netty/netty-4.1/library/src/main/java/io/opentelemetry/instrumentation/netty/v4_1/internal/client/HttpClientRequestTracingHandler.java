@@ -15,7 +15,7 @@ import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 
 /**
@@ -24,13 +24,12 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
  */
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
-  public static final AttributeKey<HttpRequestAndChannel> HTTP_CLIENT_REQUEST =
+  public static final AttributeKey<NettyRequest> HTTP_CLIENT_REQUEST =
       AttributeKey.valueOf(HttpClientRequestTracingHandler.class, "http-client-request");
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Instrumenter<NettyRequest, HttpResponse> instrumenter;
 
-  public HttpClientRequestTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+  public HttpClientRequestTracingHandler(Instrumenter<NettyRequest, HttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
@@ -46,7 +45,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       parentContext = Context.current();
     }
 
-    HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());
+    NettyRequest request = NettyRequest.create((HttpRequest) msg, ctx.channel());
     if (!instrumenter.shouldStart(parentContext, request) || isAwsRequest(request)) {
       super.write(ctx, msg, prm);
       return;
@@ -54,7 +53,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     Attribute<Context> parentContextAttr = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT);
     Attribute<Context> contextAttr = ctx.channel().attr(AttributeKeys.CLIENT_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = ctx.channel().attr(HTTP_CLIENT_REQUEST);
+    Attribute<NettyRequest> requestAttr = ctx.channel().attr(HTTP_CLIENT_REQUEST);
 
     Context context = instrumenter.start(parentContext, request);
     parentContextAttr.set(parentContext);
@@ -71,7 +70,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     // span is ended normally in HttpClientResponseTracingHandler
   }
 
-  private static boolean isAwsRequest(HttpRequestAndChannel request) {
+  private static boolean isAwsRequest(NettyRequest request) {
     // The AWS SDK uses Netty for asynchronous clients but constructs a request signature before
     // beginning transport. This means we MUST suppress Netty spans we would normally create or
     // they will inject their own trace header, which does not match what was present when the

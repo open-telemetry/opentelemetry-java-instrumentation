@@ -40,7 +40,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
   static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
 

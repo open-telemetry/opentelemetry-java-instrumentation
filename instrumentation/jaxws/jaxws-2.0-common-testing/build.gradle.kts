@@ -22,5 +22,5 @@ dependencies {
   api("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")
   api("org.springframework.ws:spring-ws-core:3.0.0.RELEASE")
 
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }

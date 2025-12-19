@@ -81,7 +81,7 @@ public class ApplicationLogRecordBuilder implements LogRecordBuilder {
   @Override
   @CanIgnoreReturnValue
   public <T> LogRecordBuilder setAttribute(AttributeKey<T> attributeKey, T t) {
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
     io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(attributeKey);
     if (agentKey != null) {
       agentLogRecordBuilder.setAttribute(agentKey, t);
