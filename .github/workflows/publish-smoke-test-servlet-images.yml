@@ -80,11 +80,11 @@ jobs:
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
-        run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
+        run: ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
   workflow-notification:
     permissions:
