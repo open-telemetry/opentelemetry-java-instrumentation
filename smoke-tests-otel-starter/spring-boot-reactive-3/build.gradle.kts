@@ -67,8 +67,8 @@ graalvmNative {
   }
 }
 
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
 tasks.named("collectReachabilityMetadata").configure {
-  // See https://github.com/gradle/gradle/issues/17559
-  // See https://github.com/graalvm/native-build-tools/issues/760
-  notCompatibleWithConfigurationCache("GraalVM native-build-tools plugin is incompatible with configuration cache")
+  enabled = false
 }
