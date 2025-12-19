@@ -64,17 +64,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   default String getDbSystemName(REQUEST request) {
-    // DbClientAttributesExtractor calls this first, then falls back to getDbSystem() if needed
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * @deprecated Use {@link #getDbSystemName} instead.
-   */
-  @Deprecated
-  default String getDbSystem(REQUEST request) {
-    // DbClientAttributesExtractor calls this only if getDbSystemName() is not overridden
-    throw new UnsupportedOperationException();
+    return getDbSystem(request);
   }
 
   // TODO: make this required to implement

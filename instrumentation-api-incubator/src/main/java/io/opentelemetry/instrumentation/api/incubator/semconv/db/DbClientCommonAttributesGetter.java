@@ -19,8 +19,10 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
    * @deprecated Use {@link DbClientAttributesGetter#getDbSystemName} instead.
    */
   @Deprecated
-  @Nullable
-  String getDbSystem(REQUEST request);
+  default String getDbSystem(REQUEST request) {
+    // it is not required to implement this method anymore
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * @deprecated There is no replacement at this time.
@@ -32,9 +34,7 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   @Nullable
-  default String getDbNamespace(REQUEST request) {
-    return null;
-  }
+  String getDbNamespace(REQUEST request);
 
   /**
    * @deprecated There is no replacement at this time.
