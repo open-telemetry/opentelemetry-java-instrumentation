@@ -52,7 +52,10 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         createConfig("otel.instrumentation.grpc.experimental-span-attributes", "true");
 
     assertThat(
-            config.getStructured("java").getStructured("grpc").getBoolean("experimental_span_attributes/development"))
+            config
+                .getStructured("java")
+                .getStructured("grpc")
+                .getBoolean("experimental_span_attributes/development"))
         .isNotNull()
         .isTrue();
   }
@@ -74,8 +77,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testAgentPrefix() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.javaagent.experimental.indy", "true");
+    DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.indy", "true");
 
     assertThat(config.getStructured("java").getStructured("agent").getBoolean("indy/development"))
         .isNotNull()
@@ -86,14 +88,15 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 
-    assertThat(config.getStructured("java").getStructured("jmx").getBoolean("enabled")).isNotNull().isTrue();
+    assertThat(config.getStructured("java").getStructured("jmx").getBoolean("enabled"))
+        .isNotNull()
+        .isTrue();
   }
 
   @Test
   void testGeneralHttpListMapping() {
     DeclarativeConfigProperties config =
-        createConfig(
-            "otel.instrumentation.http.client.capture-request-headers", "header1,header2");
+        createConfig("otel.instrumentation.http.client.capture-request-headers", "header1,header2");
 
     assertThat(
             config
@@ -121,7 +124,12 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   void testGetInt() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.discovery.delay", "5000");
 
-    assertThat(config.getStructured("java").getStructured("jmx").getStructured("discovery").getInt("delay"))
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getInt("delay"))
         .isEqualTo(5000);
   }
 
@@ -138,21 +146,29 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   void testGetDouble() {
     DeclarativeConfigProperties config = createConfig("otel.instrumentation.test.ratio", "0.5");
 
-    assertThat(config.getStructured("java").getStructured("test").getDouble("ratio")).isEqualTo(0.5);
+    assertThat(config.getStructured("java").getStructured("test").getDouble("ratio"))
+        .isEqualTo(0.5);
   }
 
   @Test
   void testGetScalarList_emptyList() {
     DeclarativeConfigProperties config = createConfig("nomatch", "value");
 
-    assertThat(config.getStructured("java").getStructured("test").getScalarList("items", String.class)).isNull();
+    assertThat(
+            config.getStructured("java").getStructured("test").getScalarList("items", String.class))
+        .isNull();
   }
 
   @Test
   void testGetScalarList_nonStringType() {
     DeclarativeConfigProperties config = createConfig("nomatch", "value");
 
-    assertThat(config.getStructured("java").getStructured("test").getScalarList("items", Integer.class)).isNull();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("test")
+                .getScalarList("items", Integer.class))
+        .isNull();
   }
 
   @Test
@@ -173,7 +189,11 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.spring-scheduling.test-property", "value");
 
-    assertThat(config.getStructured("java").getStructured("spring_scheduling").getString("test_property"))
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("spring_scheduling")
+                .getString("test_property"))
         .isEqualTo("value");
   }
 
@@ -197,7 +217,11 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         createConfig("otel.instrumentation.kafka.producer-propagation.enabled", "false");
 
     // Without "java" prefix, should not match the property
-    assertThat(config.getStructured("kafka").getStructured("producer_propagation").getBoolean("enabled"))
+    assertThat(
+            config
+                .getStructured("kafka")
+                .getStructured("producer_propagation")
+                .getBoolean("enabled"))
         .isNull();
   }
 

@@ -140,32 +140,30 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     return configProperties.getComponentLoader();
   }
 
-  @Nullable
   private String resolvePropertyKey(String name) {
     String fullPath = pathWithName(name);
-    
+
     // Check explicit property mappings first
     String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
     if (mappedKey != null) {
       return mappedKey;
     }
-    
-    // "java" must be the first segment to be special
+
     if (!fullPath.startsWith("java.")) {
-      return null;
+      return "";
     }
 
     // Remove "java." prefix and translate the remaining path
     String[] segments = fullPath.substring(5).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
-    
+
     for (int i = 0; i < segments.length; i++) {
       if (i > 0) {
         translatedPath.append(".");
       }
       translatedPath.append(translateName(segments[i]));
     }
-    
+
     String translated = translatedPath.toString();
 
     // Handle agent prefix: java.agent.* → otel.javaagent.*
