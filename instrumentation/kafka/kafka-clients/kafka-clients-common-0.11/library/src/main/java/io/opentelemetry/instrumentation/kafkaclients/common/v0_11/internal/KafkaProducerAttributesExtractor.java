@@ -53,7 +53,6 @@ final class KafkaProducerAttributesExtractor
       @Nullable Throwable error) {
 
     if (recordMetadata != null) {
-      recordMetadata.serializedValueSize();
       attributes.put(
           MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(recordMetadata.partition()));
       attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
