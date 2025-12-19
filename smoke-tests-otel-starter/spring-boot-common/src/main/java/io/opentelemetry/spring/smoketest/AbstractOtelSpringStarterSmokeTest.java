@@ -68,7 +68,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   abstract void makeClientCall();
 
-  abstract void restClientCall(String path);
+  abstract void restTemplateCall(String path);
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
@@ -144,7 +144,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   }
 
   @Test
-  @org.junit.jupiter.api.Order(1)
+  @org.junit.jupiter.api.Order(1) // This test validates startup telemetry, so must run first
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
     makeClientCall();
@@ -294,8 +294,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void databaseQuery() {
-    testing.clearAllExportedData();
-
     testing.runWithSpan(
         "server",
         () -> {
@@ -317,9 +315,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void restTemplate() {
-    testing.clearAllExportedData();
-
-    restClientCall(OtelSpringStarterSmokeTestController.PING);
+    restTemplateCall(OtelSpringStarterSmokeTestController.PING);
 
     testing.waitAndAssertTraces(
         traceAssert ->
@@ -332,9 +328,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void shouldRedactSomeUrlParameters() {
-    testing.clearAllExportedData();
-
-    restClientCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
+    restTemplateCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
 
     testing.waitAndAssertTraces(
         traceAssert ->
