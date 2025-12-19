@@ -77,19 +77,35 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(
           attributes,
           DB_SYSTEM_NAME,
-          SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
+          SemconvStability.stableDbSystemName(getDbSystemName(getter, request)));
       internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
       internalSet(attributes, DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
+      internalSet(attributes, DB_SYSTEM, getDbSystemName(getter, request));
       internalSet(attributes, DB_USER, getter.getUser(request));
       internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
+    }
+  }
+
+  @SuppressWarnings("deprecation") // getDbSystem is called for backward compatibility
+  private static <REQUEST, RESPONSE> String getDbSystemName(
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter, REQUEST request) {
+    try {
+      return getter.getDbSystemName(request);
+    } catch (UnsupportedOperationException e) {
+      // Fall back to deprecated method for backward compatibility
+      String dbSystem = getter.getDbSystem(request);
+      if (dbSystem == null) {
+        throw new UnsupportedOperationException(
+            "Must override getDbSystemName() or getDbSystem() (deprecated)");
+      }
+      return dbSystem;
     }
   }
 
