@@ -11,6 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -21,7 +24,6 @@ import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
@@ -67,8 +69,7 @@ public final class InstrumentationModuleInstaller {
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
       ConfigProperties config) {
-    if (!AgentConfig.isInstrumentationEnabled(
-        config,
+    if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(),
         instrumentationModule.defaultEnabled(config))) {
       logger.log(
@@ -77,16 +78,14 @@ public final class InstrumentationModuleInstaller {
     }
 
     if (instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
+      return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
+      return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
   private AgentBuilder installIndyModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -118,7 +117,7 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
@@ -170,9 +169,7 @@ public final class InstrumentationModuleInstaller {
   }
 
   private AgentBuilder installInjectingModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -189,7 +186,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
@@ -238,6 +235,20 @@ public final class InstrumentationModuleInstaller {
     }
 
     return agentBuilder;
+  }
+
+  static boolean isInstrumentationEnabled(
+      Iterable<String> instrumentationNames, boolean defaultEnabled) {
+    ExtendedDeclarativeConfigProperties config =
+        DeclarativeConfigUtil.get(GlobalOpenTelemetry.get());
+    for (String name : instrumentationNames) {
+      String normalizedName = name.replace('-', '_');
+      Boolean enabled = config.get(normalizedName).getBoolean("enabled");
+      if (enabled != null) {
+        return enabled;
+      }
+    }
+    return defaultEnabled;
   }
 
   private static AgentBuilder.Identified.Narrowable setTypeMatcher(

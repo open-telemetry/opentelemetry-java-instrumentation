@@ -9,16 +9,16 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,12 +45,10 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
   private volatile ReferenceMatcher referenceMatcher;
 
   MuzzleMatcher(
-      TransformSafeLogger instrumentationLogger,
-      InstrumentationModule instrumentationModule,
-      ConfigProperties config) {
+      TransformSafeLogger instrumentationLogger, InstrumentationModule instrumentationModule) {
     this.instrumentationLogger = instrumentationLogger;
     this.instrumentationModule = instrumentationModule;
-    this.muzzleLogLevel = AgentConfig.isDebugModeEnabled(config) ? WARNING : FINE;
+    this.muzzleLogLevel = isDebugModeEnabled() ? WARNING : FINE;
   }
 
   @Override
@@ -120,5 +118,11 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
       referenceMatcher = ReferenceMatcher.of(instrumentationModule);
     }
     return referenceMatcher;
+  }
+
+  private static boolean isDebugModeEnabled() {
+    return DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+        .get("agent")
+        .getBoolean("debug", false);
   }
 }
