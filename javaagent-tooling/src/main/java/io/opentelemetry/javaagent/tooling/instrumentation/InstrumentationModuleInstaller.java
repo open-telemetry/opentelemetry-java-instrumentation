@@ -78,14 +78,16 @@ public final class InstrumentationModuleInstaller {
     }
 
     if (instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder);
+      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder);
+      return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
     }
   }
 
   private AgentBuilder installIndyModule(
-      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
+      InstrumentationModule instrumentationModule,
+      AgentBuilder parentAgentBuilder,
+      ConfigProperties config) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -117,7 +119,7 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
@@ -169,7 +171,9 @@ public final class InstrumentationModuleInstaller {
   }
 
   private AgentBuilder installInjectingModule(
-      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
+      InstrumentationModule instrumentationModule,
+      AgentBuilder parentAgentBuilder,
+      ConfigProperties config) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -186,7 +190,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
