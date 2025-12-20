@@ -35,10 +35,22 @@ public final class ExtendedDeclarativeConfigProperties implements DeclarativeCon
     return delegate.getString(name);
   }
 
+  @Override
+  public String getString(String name, String defaultValue) {
+    String value = delegate.getString(name);
+    return value != null ? value : defaultValue;
+  }
+
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
     return delegate.getBoolean(name);
+  }
+
+  @Override
+  public boolean getBoolean(String name, boolean defaultValue) {
+    Boolean value = delegate.getBoolean(name);
+    return value != null ? value : defaultValue;
   }
 
   @Nullable
@@ -63,6 +75,12 @@ public final class ExtendedDeclarativeConfigProperties implements DeclarativeCon
   @Override
   public <T> List<T> getScalarList(String name, Class<T> scalarType) {
     return delegate.getScalarList(name, scalarType);
+  }
+
+  @Override
+  public <T> List<T> getScalarList(String name, Class<T> scalarType, List<T> defaultValue) {
+    List<T> value = delegate.getScalarList(name, scalarType);
+    return value != null ? value : defaultValue;
   }
 
   @Nullable

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
@@ -16,6 +17,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -110,6 +112,87 @@ public final class CommonConfig {
             "otel.instrumentation.common.logging.trace-flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
+  public CommonConfig(OpenTelemetry openTelemetry) {
+    ExtendedDeclarativeConfigProperties config = DeclarativeConfigUtil.get(openTelemetry);
+    ConfigProvider configProvider = null;
+    if (openTelemetry instanceof io.opentelemetry.api.incubator.ExtendedOpenTelemetry) {
+      configProvider =
+          ((io.opentelemetry.api.incubator.ExtendedOpenTelemetry) openTelemetry)
+              .getConfigProvider();
+    }
+
+    Map<String, String> peerServiceMap = emptyMap();
+    if (configProvider != null) {
+      Map<String, String> mapping = InstrumentationConfigUtil.peerServiceMapping(configProvider);
+      if (mapping != null) {
+        peerServiceMap = mapping;
+      }
+    }
+    peerServiceResolver = PeerServiceResolver.create(peerServiceMap);
+
+    clientRequestHeaders =
+        getFromDeclarativeConfig(
+            configProvider,
+            InstrumentationConfigUtil::httpClientRequestCapturedHeaders,
+            emptyList());
+    clientResponseHeaders =
+        getFromDeclarativeConfig(
+            configProvider,
+            InstrumentationConfigUtil::httpClientResponseCapturedHeaders,
+            emptyList());
+    serverRequestHeaders =
+        getFromDeclarativeConfig(
+            configProvider,
+            InstrumentationConfigUtil::httpServerRequestCapturedHeaders,
+            emptyList());
+    serverResponseHeaders =
+        getFromDeclarativeConfig(
+            configProvider,
+            InstrumentationConfigUtil::httpServerResponseCapturedHeaders,
+            emptyList());
+    knownHttpRequestMethods =
+        new HashSet<>(
+            config
+                .get("common")
+                .get("http")
+                .getScalarList("known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
+    statementSanitizationEnabled =
+        config
+            .get("common")
+            .get("db_statement_sanitizer/development")
+            .getBoolean("enabled", true);
+    sqlCommenterEnabled =
+        config.get("common").get("db_sqlcommenter/development").getBoolean("enabled", false);
+    emitExperimentalHttpClientTelemetry =
+        config
+            .get("http")
+            .get("client")
+            .get("emit_experimental_telemetry/development")
+            .getBoolean("enabled", false);
+    redactQueryParameters =
+        config
+            .get("http")
+            .get("client")
+            .get("redact_query_parameters/development")
+            .getBoolean("enabled", true);
+    emitExperimentalHttpServerTelemetry =
+        config
+            .get("http")
+            .get("server")
+            .get("emit_experimental_telemetry/development")
+            .getBoolean("enabled", false);
+    enduserConfig = new EnduserConfig(config);
+    loggingTraceIdKey =
+        config.get("common").get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
+    loggingSpanIdKey =
+        config.get("common").get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
+    loggingTraceFlagsKey =
+        config
+            .get("common")
+            .get("logging")
+            .getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+  }
+
   public PeerServiceResolver getPeerServiceResolver() {
     return peerServiceResolver;
   }
@@ -182,5 +265,16 @@ public final class CommonConfig {
     }
     // fallback doesn't return null, so we can safely call it
     return fallback.get();
+  }
+
+  private static <T> T getFromDeclarativeConfig(
+      @Nullable ConfigProvider configProvider,
+      ValueProvider<T> getFromConfigProvider,
+      T defaultValue) {
+    if (configProvider != null) {
+      T value = getFromConfigProvider.get(configProvider);
+      return value != null ? value : defaultValue;
+    }
+    return defaultValue;
   }
 }
