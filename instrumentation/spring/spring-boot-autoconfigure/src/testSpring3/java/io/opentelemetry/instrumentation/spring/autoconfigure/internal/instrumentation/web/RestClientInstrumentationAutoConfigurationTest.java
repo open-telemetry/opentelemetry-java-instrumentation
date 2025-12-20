@@ -5,8 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractRestClientInstrumentationAutoConfigurationTest;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.web.client.RestClient;
 
 class RestClientInstrumentationAutoConfigurationTest
     extends AbstractRestClientInstrumentationAutoConfigurationTest {

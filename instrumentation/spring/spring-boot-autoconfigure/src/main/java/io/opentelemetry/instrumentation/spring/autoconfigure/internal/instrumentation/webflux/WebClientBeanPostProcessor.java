@@ -10,8 +10,12 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -46,18 +50,30 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof WebClient) {
-      WebClient webClient = (WebClient) bean;
-      return wrapBuilder(webClient.mutate()).build();
-    } else if (bean instanceof WebClient.Builder) {
-      WebClient.Builder webClientBuilder = (WebClient.Builder) bean;
-      return wrapBuilder(webClientBuilder);
+      return addWebClientFilterIfNotPresent(
+          (WebClient) bean, openTelemetryProvider.getObject(), configProvider.getObject());
     }
     return bean;
   }
 
-  private WebClient.Builder wrapBuilder(WebClient.Builder webClientBuilder) {
-    SpringWebfluxClientTelemetry instrumentation =
-        getWebfluxClientTelemetry(openTelemetryProvider.getObject());
-    return webClientBuilder.filters(instrumentation::addFilter);
+  private static WebClient addWebClientFilterIfNotPresent(
+      WebClient webClient, OpenTelemetry openTelemetry, InstrumentationConfig config) {
+    AtomicBoolean filterAdded = new AtomicBoolean(false);
+    WebClient.Builder builder =
+        webClient
+            .mutate()
+            .filters(
+                filters -> {
+                  if (isFilterNotPresent(filters)) {
+                    getWebfluxClientTelemetry(openTelemetry, config).addFilter(filters);
+                    filterAdded.set(true);
+                  }
+                });
+
+    return filterAdded.get() ? builder.build() : webClient;
+  }
+
+  private static boolean isFilterNotPresent(List<ExchangeFilterFunction> filters) {
+    return filters.stream().noneMatch(WebClientTracingFilter.class::isInstance);
   }
 }

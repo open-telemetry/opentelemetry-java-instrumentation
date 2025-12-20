@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -51,7 +52,7 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
   }
 
   private static boolean isInterceptorNotPresent(
-      java.util.List<ClientHttpRequestInterceptor> interceptors,
+      List<ClientHttpRequestInterceptor> interceptors,
       ClientHttpRequestInterceptor instrumentationInterceptor) {
     return interceptors.stream()
         .noneMatch(interceptor -> interceptor.getClass() == instrumentationInterceptor.getClass());
