@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -29,7 +29,7 @@ public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
-    return LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
+    return LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
         .getBoolean("capture_query_parameters/development", false);
   }
 
@@ -41,7 +41,7 @@ public final class JdbcInstrumenterFactory {
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
     boolean statementSanitizationEnabled =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
             .get("db_statement_sanitizer")
             .getBoolean("enabled", true);
     return createStatementInstrumenter(
@@ -92,7 +92,7 @@ public final class JdbcInstrumenterFactory {
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
     boolean enabled =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
             .getBoolean("transaction/development", false);
     return createTransactionInstrumenter(openTelemetry, enabled);
   }

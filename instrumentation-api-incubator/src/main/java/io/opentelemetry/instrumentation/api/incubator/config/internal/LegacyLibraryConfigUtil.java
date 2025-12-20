@@ -12,10 +12,17 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Configuration utility methods for library instrumentations that support both declarative
+ * configuration and system properties / environment variables.
+ *
+ * <p>This class is only intended to be used for existing library instrumentations to not break
+ * backwards compatibility. New library instrumentations should directly use declarative
+ * configuration APIs via {@link DeclarativeConfigUtil}.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-public final class LibraryConfigUtil {
+public final class LegacyLibraryConfigUtil {
 
   /**
    * Retrieves structured configuration for the given instrumentation name. If no configuration is
@@ -26,8 +33,9 @@ public final class LibraryConfigUtil {
    * provider. Otherwise, the configuration is obtained from system properties or environment
    * variables.
    *
-   * <p>This method is only intended to be used for library instrumentation. For agent
-   * instrumentation, use {}
+   * <p>This method is only intended to be used for existing library instrumentations to not break
+   * backwards compatibility. New library instrumentations should directly use declarative
+   * configuration APIs via {@link DeclarativeConfigUtil}.
    *
    * @param openTelemetry the OpenTelemetry instance
    * @param name the name of the instrumentation
@@ -46,5 +54,5 @@ public final class LibraryConfigUtil {
     return new ExtendedDeclarativeConfigProperties(instrumentationConfig).get("java").get(name);
   }
 
-  private LibraryConfigUtil() {}
+  private LegacyLibraryConfigUtil() {}
 }

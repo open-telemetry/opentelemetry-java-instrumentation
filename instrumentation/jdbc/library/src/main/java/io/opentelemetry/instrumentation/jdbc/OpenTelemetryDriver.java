@@ -23,7 +23,7 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -65,13 +65,13 @@ public final class OpenTelemetryDriver implements Driver {
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
     boolean defaultValue =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
             .get("db_sqlcommenter/development")
             .getBoolean("enabled", false);
 
     return SqlCommenter.builder()
         .setEnabled(
-            LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
+            LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
                 .get("sqlcommenter/development")
                 .getBoolean("enabled", defaultValue))
         .build();

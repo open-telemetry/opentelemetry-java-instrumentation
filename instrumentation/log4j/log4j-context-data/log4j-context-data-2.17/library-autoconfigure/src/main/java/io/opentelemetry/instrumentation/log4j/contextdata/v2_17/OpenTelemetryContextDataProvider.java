@@ -11,7 +11,7 @@ import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.Collections;
@@ -26,7 +26,7 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   private static final boolean BAGGAGE_ENABLED =
-      LibraryConfigUtil.getJavaInstrumentationConfig(
+      LegacyLibraryConfigUtil.getJavaInstrumentationConfig(
               GlobalOpenTelemetry.get(), "log4j_context_data")
           .getBoolean("add_baggage", false);
 

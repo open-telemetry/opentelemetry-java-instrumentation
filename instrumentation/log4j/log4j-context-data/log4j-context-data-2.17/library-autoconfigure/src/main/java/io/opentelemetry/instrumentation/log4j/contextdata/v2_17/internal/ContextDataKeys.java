@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 
 /**
@@ -25,7 +25,7 @@ public final class ContextDataKeys {
       getLogging().getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
 
   private static DeclarativeConfigProperties getLogging() {
-    return LibraryConfigUtil.getJavaInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
+    return LegacyLibraryConfigUtil.getJavaInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
         .get("logging");
   }
 

@@ -12,7 +12,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -40,7 +40,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ExtendedDeclarativeConfigProperties messaging =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
 
     telemetry =
         KafkaTelemetry.builder(openTelemetry)

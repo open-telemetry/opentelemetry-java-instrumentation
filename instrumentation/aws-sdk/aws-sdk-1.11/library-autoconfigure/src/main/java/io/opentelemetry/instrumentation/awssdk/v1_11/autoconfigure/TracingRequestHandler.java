@@ -14,7 +14,7 @@ import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import java.util.Optional;
 
@@ -27,10 +27,10 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
     ExtendedDeclarativeConfigProperties messaging =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "aws_sdk")
+            LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "aws_sdk")
                 .getBoolean("span_attributes/development", false))
         .setMessagingReceiveTelemetryEnabled(
             messaging.get("receive_telemetry/development").getBoolean("enabled", false))

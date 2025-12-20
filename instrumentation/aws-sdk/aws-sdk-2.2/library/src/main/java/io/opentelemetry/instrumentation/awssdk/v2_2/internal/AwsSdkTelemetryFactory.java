@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 
 /**
@@ -22,9 +22,9 @@ public final class AwsSdkTelemetryFactory {
   public static AwsSdkTelemetry telemetry() {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ExtendedDeclarativeConfigProperties awsSdk =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "aws_sdk");
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "aws_sdk");
     ExtendedDeclarativeConfigProperties messaging =
-        LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
+        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
 
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCapturedHeaders(
@@ -38,7 +38,7 @@ public final class AwsSdkTelemetryFactory {
         .setRecordIndividualHttpError(
             awsSdk.getBoolean("record_individual_http_error/development", false))
         .setGenaiCaptureMessageContent(
-            LibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "genai")
+            LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "genai")
                 .getBoolean("capture_message_content", false))
         .build();
   }
