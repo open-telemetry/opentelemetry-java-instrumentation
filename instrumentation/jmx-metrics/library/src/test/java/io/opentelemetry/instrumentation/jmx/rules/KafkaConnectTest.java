@@ -44,7 +44,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class KafkaConnectRuleTest {
+class KafkaConnectTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -79,17 +79,17 @@ class KafkaConnectRuleTest {
   }
 
   @Test
-  void connectorStatusStateMappingPresent() throws Exception {
+  void statusStateMappingsPresent() throws Exception {
     JmxConfig config = loadKafkaConnectConfig();
 
     JmxRule connectorRule =
         getRuleForBean(config, "kafka.connect:type=connector-metrics,connector=*");
 
-    StateMapping stateMapping = getMetric(connectorRule, "status").getStateMapping();
+    StateMapping connectorStateMapping = getMetric(connectorRule, "status").getStateMapping();
     assertThat(getMetric(connectorRule, "status").getMetricType())
         .isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
-    assertThat(stateMapping.isEmpty()).isFalse();
-    assertThat(stateMapping.getStateKeys())
+    assertThat(connectorStateMapping.isEmpty()).isFalse();
+    assertThat(connectorStateMapping.getStateKeys())
         .contains(
             "running",
             "failed",
@@ -99,137 +99,132 @@ class KafkaConnectRuleTest {
             "degraded",
             "stopped",
             "unknown");
-    assertThat(stateMapping.getDefaultStateKey()).isEqualTo("unknown");
-    assertThat(stateMapping.getStateValue("RUNNING")).isEqualTo("running");
-    assertThat(stateMapping.getStateValue("FAILED")).isEqualTo("failed");
-    assertThat(stateMapping.getStateValue("PAUSED")).isEqualTo("paused");
-    assertThat(stateMapping.getStateValue("UNKNOWN")).isEqualTo("unknown");
-  }
-
-  @Test
-  void taskStatusStateMappingSuperset() throws Exception {
-    JmxConfig config = loadKafkaConnectConfig();
+    assertThat(connectorStateMapping.getDefaultStateKey()).isEqualTo("unknown");
+    assertThat(connectorStateMapping.getStateValue("RUNNING")).isEqualTo("running");
+    assertThat(connectorStateMapping.getStateValue("FAILED")).isEqualTo("failed");
+    assertThat(connectorStateMapping.getStateValue("PAUSED")).isEqualTo("paused");
+    assertThat(connectorStateMapping.getStateValue("UNKNOWN")).isEqualTo("unknown");
 
     JmxRule connectorTaskRule =
         getRuleForBean(config, "kafka.connect:type=connector-task-metrics,connector=*,task=*");
 
-    StateMapping stateMapping = getMetric(connectorTaskRule, "status").getStateMapping();
+    StateMapping taskStateMapping = getMetric(connectorTaskRule, "status").getStateMapping();
     assertThat(getMetric(connectorTaskRule, "status").getMetricType())
         .isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
-    assertThat(stateMapping.isEmpty()).isFalse();
-    assertThat(stateMapping.getStateKeys())
+    assertThat(taskStateMapping.isEmpty()).isFalse();
+    assertThat(taskStateMapping.getStateKeys())
         .contains(
             "running", "failed", "paused", "unassigned", "restarting", "destroyed", "unknown");
-    assertThat(stateMapping.getDefaultStateKey()).isEqualTo("unknown");
-    assertThat(stateMapping.getStateValue("DESTROYED")).isEqualTo("destroyed");
-    assertThat(stateMapping.getStateValue("RESTARTING")).isEqualTo("restarting");
-    assertThat(stateMapping.getStateValue("unexpected")).isEqualTo("unknown");
+    assertThat(taskStateMapping.getDefaultStateKey()).isEqualTo("unknown");
+    assertThat(taskStateMapping.getStateValue("DESTROYED")).isEqualTo("destroyed");
+    assertThat(taskStateMapping.getStateValue("RESTARTING")).isEqualTo("restarting");
+    assertThat(taskStateMapping.getStateValue("unexpected")).isEqualTo("unknown");
   }
 
   @Test
-  void confluentCompatibleMetricsCollectWithoutApacheOnlyAttributes() throws Exception {
-    registerMBean(
-        "kafka.connect:type=connect-worker-metrics",
-        mapOf("connector-count", 1L, "task-count", 2L));
+  void metricsAreReportedAcrossVariants() throws Exception {
+    String confluentConnector = "confluent-connector";
+    String confluentTaskId = "0";
+    String apacheConnector = "apache-connector";
+    String apacheTaskId = "1";
+    String errorConnector = "error-connector";
+    String errorTaskId = "1";
+    String errorNegativeTaskId = "2";
 
     registerMBean(
-        "kafka.connect:type=connector-metrics,connector=confluent-connector",
+        connectWorkerMetricsBean(),
         mapOf(
-            "connector-type", "source",
-            "status", "RUNNING"));
+            "connector-count",
+            1L,
+            "task-count",
+            2L,
+            "connector-startup-failure-total",
+            1L,
+            "connector-startup-success-total",
+            3L,
+            "task-startup-failure-total",
+            2L,
+            "task-startup-success-total",
+            4L));
+
+    registerMBean(connectorMetricsBean(confluentConnector), mapOf("status", "RUNNING"));
 
     registerMBean(
-        "kafka.connect:type=connector-task-metrics,connector=confluent-connector,task=0",
+        connectorTaskMetricsBean(confluentConnector, confluentTaskId),
         mapOf(
             "status",
             "DESTROYED",
-            "connector-type",
-            "sink",
-            "batch-size-avg",
-            1L,
-            "batch-size-max",
-            2L,
             "offset-commit-avg-time-ms",
-            5L,
-            "offset-commit-failure-percentage",
-            0.0d,
+            1500L,
             "offset-commit-max-time-ms",
-            6L,
-            "offset-commit-success-percentage",
-            100.0d,
-            "pause-ratio",
-            0.0d,
-            "running-ratio",
-            1.0d));
+            2500L));
+
+    registerMBean(
+        connectWorkerRebalanceMetricsBean(),
+        mapOf(
+            "connect-protocol",
+            "eager",
+            "rebalance-avg-time-ms",
+            1500L,
+            "rebalance-max-time-ms",
+            2500L,
+            "time-since-last-rebalance-ms",
+            3000L,
+            "rebalancing",
+            "true"));
+
+    registerMBean(
+        connectWorkerMetricsBeanForConnector(apacheConnector),
+        mapOf(
+            "connector-running-task-count", 2L,
+            "connector-failed-task-count", 1L,
+            "connector-paused-task-count", 1L));
+
+    registerMBean(
+        sourceTaskMetricsBean(apacheConnector, apacheTaskId),
+        mapOf("poll-batch-avg-time-ms", 500L, "transaction-size-max", 6L));
+
+    registerMBean(
+        sinkTaskMetricsBean(apacheConnector, apacheTaskId),
+        mapOf("put-batch-avg-time-ms", 1200L, "sink-record-lag-max", 11L));
+
+    registerMBean(
+        taskErrorMetricsBean(errorConnector, errorTaskId),
+        mapOf(
+            "deadletterqueue-produce-failures",
+            2L,
+            "last-error-timestamp",
+            2000L,
+            "total-errors-logged",
+            3L));
+
+    registerMBean(
+        taskErrorMetricsBean(errorConnector, errorNegativeTaskId),
+        mapOf("last-error-timestamp", -1L));
 
     startKafkaConnectTelemetry();
 
     assertLongSum("kafka.connect.worker.connector.count", Attributes.empty(), 1);
     assertLongSum("kafka.connect.worker.task.count", Attributes.empty(), 2);
+    assertLongSum(
+        "kafka.connect.worker.connector.startup", connectorStartupResultAttributes("failure"), 1);
+    assertLongSum(
+        "kafka.connect.worker.connector.startup", connectorStartupResultAttributes("success"), 3);
+    assertLongSum("kafka.connect.worker.task.startup", taskStartupResultAttributes("failure"), 2);
+    assertLongSum("kafka.connect.worker.task.startup", taskStartupResultAttributes("success"), 4);
 
-    Attributes connectorStatusAttributes =
-        Attributes.builder()
-            .put("kafka.connect.connector", "confluent-connector")
-            .put("kafka.connect.connector.state", "running")
-            .build();
-    assertLongSum("kafka.connect.connector.status", connectorStatusAttributes, 1);
+    assertLongSum(
+        "kafka.connect.connector.status",
+        connectorStatusAttributes(confluentConnector, "running"),
+        1);
+    assertLongSum(
+        "kafka.connect.task.status",
+        taskStatusAttributes(confluentConnector, confluentTaskId, "destroyed"),
+        1);
 
-    Attributes taskStatusAttributes =
-        Attributes.builder()
-            .put("kafka.connect.connector", "confluent-connector")
-            .put("kafka.connect.task.id", "0")
-            .put("kafka.connect.task.state", "destroyed")
-            .build();
-    assertLongSum("kafka.connect.task.status", taskStatusAttributes, 1);
-  }
-
-  @Test
-  void apacheSpecificMetricsAreReportedWhenPresent() throws Exception {
-    registerMBean(
-        "kafka.connect:type=connect-worker-rebalance-metrics", mapOf("connect-protocol", "eager"));
-
-    registerMBean(
-        "kafka.connect:type=connect-worker-metrics,connector=apache-connector",
-        mapOf(
-            "connector-running-task-count", 2L,
-            "connector-unassigned-task-count", 0L));
-
-    registerMBean(
-        "kafka.connect:type=connector-task-metrics,connector=apache-connector,task=1",
-        mapOf(
-            "connector-type",
-            "source",
-            "status",
-            "RUNNING",
-            "batch-size-avg",
-            4L,
-            "batch-size-max",
-            5L,
-            "offset-commit-avg-time-ms",
-            6L,
-            "offset-commit-failure-percentage",
-            0.0d,
-            "offset-commit-max-time-ms",
-            7L,
-            "offset-commit-success-percentage",
-            100.0d,
-            "pause-ratio",
-            0.0d,
-            "running-ratio",
-            1.0d));
-
-    registerMBean(
-        "kafka.connect:type=source-task-metrics,connector=apache-connector,task=1",
-        mapOf(
-            "transaction-size-avg", 3L,
-            "transaction-size-max", 6L,
-            "transaction-size-min", 1L));
-
-    registerMBean(
-        "kafka.connect:type=sink-task-metrics,connector=apache-connector,task=1",
-        mapOf("sink-record-lag-max", 11L));
-
-    startKafkaConnectTelemetry();
+    Attributes confluentTaskAttributes = taskAttributes(confluentConnector, confluentTaskId);
+    assertDoubleGauge("kafka.connect.task.offset.commit.avg.time", confluentTaskAttributes, 1.5d);
+    assertDoubleGauge("kafka.connect.task.offset.commit.max.time", confluentTaskAttributes, 2.5d);
 
     assertLongSum(
         "kafka.connect.worker.rebalance.protocol",
@@ -237,28 +232,37 @@ class KafkaConnectRuleTest {
             io.opentelemetry.api.common.AttributeKey.stringKey("kafka.connect.protocol.state"),
             "eager"),
         1);
+    assertDoubleGauge("kafka.connect.worker.rebalance.avg.time", Attributes.empty(), 1.5d);
+    assertDoubleGauge("kafka.connect.worker.rebalance.max.time", Attributes.empty(), 2.5d);
+    assertDoubleGauge("kafka.connect.worker.rebalance.since_last", Attributes.empty(), 3.0d);
+    assertLongSum(
+        "kafka.connect.worker.rebalance.active", rebalanceStateAttributes("rebalancing"), 1);
 
-    Attributes connectorTaskAttributes =
-        Attributes.of(
-            io.opentelemetry.api.common.AttributeKey.stringKey("kafka.connect.connector"),
-            "apache-connector");
-    assertLongSum("kafka.connect.worker.connector.task.running", connectorTaskAttributes, 2);
+    assertLongSum(
+        "kafka.connect.worker.connector.task.count",
+        connectorTaskStateAttributes(apacheConnector, "running"),
+        2);
+    assertLongSum(
+        "kafka.connect.worker.connector.task.count",
+        connectorTaskStateAttributes(apacheConnector, "failed"),
+        1);
+    assertLongSum(
+        "kafka.connect.worker.connector.task.count",
+        connectorTaskStateAttributes(apacheConnector, "paused"),
+        1);
 
-    assertLongGauge(
-        "kafka.connect.source.transaction.size.max",
-        Attributes.builder()
-            .put("kafka.connect.connector", "apache-connector")
-            .put("kafka.connect.task.id", "1")
-            .build(),
-        6);
+    Attributes apacheTaskAttributes = taskAttributes(apacheConnector, apacheTaskId);
+    assertDoubleGauge("kafka.connect.source.poll.batch.avg.time", apacheTaskAttributes, 0.5d);
+    assertDoubleGauge("kafka.connect.sink.put.batch.avg.time", apacheTaskAttributes, 1.2d);
+    assertLongGauge("kafka.connect.source.transaction.size.max", apacheTaskAttributes, 6);
+    assertLongGauge("kafka.connect.sink.record.lag.max", apacheTaskAttributes, 11);
 
-    assertLongGauge(
-        "kafka.connect.sink.record.lag.max",
-        Attributes.builder()
-            .put("kafka.connect.connector", "apache-connector")
-            .put("kafka.connect.task.id", "1")
-            .build(),
-        11);
+    Attributes task1Attributes = taskAttributes(errorConnector, errorTaskId);
+    Attributes task2Attributes = taskAttributes(errorConnector, errorNegativeTaskId);
+    assertLongSum("kafka.connect.task.error.deadletterqueue.produce.failures", task1Attributes, 2);
+    assertLongSum("kafka.connect.task.error.total.errors.logged", task1Attributes, 3);
+    assertDoubleGauge("kafka.connect.task.error.last.error.timestamp", task1Attributes, 2.0d);
+    assertNoDoubleGaugePoint("kafka.connect.task.error.last.error.timestamp", task2Attributes);
   }
 
   @BeforeAll
@@ -326,6 +330,81 @@ class KafkaConnectRuleTest {
     mbeanServer.registerMBean(new MapBackedDynamicMBean(attributes), new ObjectName(objectName));
   }
 
+  private static String connectWorkerMetricsBean() {
+    return "kafka.connect:type=connect-worker-metrics";
+  }
+
+  private static String connectWorkerMetricsBeanForConnector(String connector) {
+    return "kafka.connect:type=connect-worker-metrics,connector=" + connector;
+  }
+
+  private static String connectWorkerRebalanceMetricsBean() {
+    return "kafka.connect:type=connect-worker-rebalance-metrics";
+  }
+
+  private static String connectorMetricsBean(String connector) {
+    return "kafka.connect:type=connector-metrics,connector=" + connector;
+  }
+
+  private static String connectorTaskMetricsBean(String connector, String taskId) {
+    return "kafka.connect:type=connector-task-metrics,connector=" + connector + ",task=" + taskId;
+  }
+
+  private static String sourceTaskMetricsBean(String connector, String taskId) {
+    return "kafka.connect:type=source-task-metrics,connector=" + connector + ",task=" + taskId;
+  }
+
+  private static String sinkTaskMetricsBean(String connector, String taskId) {
+    return "kafka.connect:type=sink-task-metrics,connector=" + connector + ",task=" + taskId;
+  }
+
+  private static String taskErrorMetricsBean(String connector, String taskId) {
+    return "kafka.connect:type=task-error-metrics,connector=" + connector + ",task=" + taskId;
+  }
+
+  private static Attributes connectorStatusAttributes(String connector, String state) {
+    return Attributes.builder()
+        .put("kafka.connect.connector", connector)
+        .put("kafka.connect.connector.state", state)
+        .build();
+  }
+
+  private static Attributes taskStatusAttributes(String connector, String taskId, String state) {
+    return Attributes.builder()
+        .put("kafka.connect.connector", connector)
+        .put("kafka.connect.task.id", taskId)
+        .put("kafka.connect.task.state", state)
+        .build();
+  }
+
+  private static Attributes taskAttributes(String connector, String taskId) {
+    return Attributes.builder()
+        .put("kafka.connect.connector", connector)
+        .put("kafka.connect.task.id", taskId)
+        .build();
+  }
+
+  private static Attributes connectorTaskStateAttributes(String connector, String state) {
+    return Attributes.builder()
+        .put("kafka.connect.connector", connector)
+        .put("kafka.connect.worker.connector.task.state", state)
+        .build();
+  }
+
+  private static Attributes connectorStartupResultAttributes(String result) {
+    return Attributes.builder()
+        .put("kafka.connect.worker.connector.startup.result", result)
+        .build();
+  }
+
+  private static Attributes taskStartupResultAttributes(String result) {
+    return Attributes.builder().put("kafka.connect.worker.task.startup.result", result).build();
+  }
+
+  private static Attributes rebalanceStateAttributes(String state) {
+    return Attributes.builder().put("kafka.connect.worker.rebalance.state", state).build();
+  }
+
   private static void assertLongSum(String metricName, Attributes attributes, long expectedValue) {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
@@ -365,6 +444,44 @@ class KafkaConnectRuleTest {
                           "Expected %s to have a point with attributes %s and value %s",
                           metricName, attributes, expected)
                       .isTrue();
+                }));
+  }
+
+  private static void assertDoubleGauge(String metricName, Attributes attributes, double expected) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metricName,
+        metrics ->
+            metrics.anySatisfy(
+                metric -> {
+                  boolean matched =
+                      metric.getDoubleGaugeData().getPoints().stream()
+                          .anyMatch(
+                              pointData ->
+                                  attributesMatch(pointData.getAttributes(), attributes)
+                                      && Math.abs(pointData.getValue() - expected) < 1e-6);
+                  assertThat(matched)
+                      .as(
+                          "Expected %s to have a point with attributes %s and value %s",
+                          metricName, attributes, expected)
+                      .isTrue();
+                }));
+  }
+
+  private static void assertNoDoubleGaugePoint(String metricName, Attributes attributes) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metricName,
+        metrics ->
+            metrics.anySatisfy(
+                metric -> {
+                  boolean matched =
+                      metric.getDoubleGaugeData().getPoints().stream()
+                          .anyMatch(
+                              pointData -> attributesMatch(pointData.getAttributes(), attributes));
+                  assertThat(matched)
+                      .as("Expected %s to have no point with attributes %s", metricName, attributes)
+                      .isFalse();
                 }));
   }
 
