@@ -35,6 +35,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
+  private boolean captureTemplate = false;
   private boolean captureArguments = false;
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
@@ -88,6 +89,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
@@ -175,6 +177,16 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureLoggerContext(boolean captureLoggerContext) {
     this.captureLoggerContext = captureLoggerContext;
+  }
+
+  /**
+   * Sets whether the message template should be captured in logs if arguments are provided.
+   *
+   * @param captureTemplate whether the message template should be captured in logs if arguments are
+   *     provided
+   */
+  public void setCaptureTemplate(boolean captureTemplate) {
+    this.captureTemplate = captureTemplate;
   }
 
   /**

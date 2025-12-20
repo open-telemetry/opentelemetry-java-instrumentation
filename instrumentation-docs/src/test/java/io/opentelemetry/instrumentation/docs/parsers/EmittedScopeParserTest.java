@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -154,12 +156,7 @@ class EmittedScopeParserTest {
 
     FileManager fileManager = new FileManager(tempDir + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("test-lib-1.0")
-            .namespace("test-lib")
-            .group("test-lib")
-            .build();
+        new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
@@ -186,12 +183,7 @@ class EmittedScopeParserTest {
 
     FileManager fileManager = new FileManager(tempDir + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("spring-web-6.0")
-            .namespace("spring")
-            .group("spring")
-            .build();
+        new InstrumentationModule.Builder("spring-web-6.0").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
@@ -204,12 +196,7 @@ class EmittedScopeParserTest {
   void testGetScopeNoTelemetryDirectory(@TempDir Path tempDir) {
     FileManager fileManager = new FileManager(tempDir.toString() + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("test-lib-1.0")
-            .namespace("test-lib")
-            .group("test-lib")
-            .build();
+        new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
@@ -237,12 +224,7 @@ class EmittedScopeParserTest {
 
     FileManager fileManager = new FileManager(tempDir + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("test-lib-1.0")
-            .namespace("test-lib")
-            .group("test-lib")
-            .build();
+        new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
@@ -273,12 +255,7 @@ class EmittedScopeParserTest {
 
     FileManager fileManager = new FileManager(tempDir + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("hibernate-6.0")
-            .namespace("hibernate")
-            .group("hibernate")
-            .build();
+        new InstrumentationModule.Builder("hibernate-6.0").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
@@ -308,12 +285,7 @@ class EmittedScopeParserTest {
 
     FileManager fileManager = new FileManager(tempDir + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("jdbc")
-            .namespace("jdbc")
-            .group("jdbc")
-            .build();
+        new InstrumentationModule.Builder("jdbc").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
@@ -348,23 +320,17 @@ class EmittedScopeParserTest {
 
     FileManager fileManager = new FileManager(tempDir + "/");
     InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("test-instrumentation")
-            .instrumentationName("test-lib")
-            .namespace("test-lib")
-            .group("test-lib")
-            .build();
+        new InstrumentationModule.Builder("test-lib").srcPath("test-instrumentation").build();
 
     InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
 
     assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getAttributes()).isNotNull();
     assertThat(scopeInfo.getAttributes().get(stringKey("string.key"))).isEqualTo("string-value");
-    assertThat(scopeInfo.getAttributes().get(AttributeKey.longKey("int.key"))).isEqualTo(123L);
-    assertThat(scopeInfo.getAttributes().get(AttributeKey.longKey("long.key")))
-        .isEqualTo(9876543210L);
-    assertThat(scopeInfo.getAttributes().get(AttributeKey.doubleKey("double.key"))).isEqualTo(3.14);
-    assertThat(scopeInfo.getAttributes().get(AttributeKey.booleanKey("bool.key"))).isTrue();
+    assertThat(scopeInfo.getAttributes().get(longKey("int.key"))).isEqualTo(123L);
+    assertThat(scopeInfo.getAttributes().get(longKey("long.key"))).isEqualTo(9876543210L);
+    assertThat(scopeInfo.getAttributes().get(doubleKey("double.key"))).isEqualTo(3.14);
+    assertThat(scopeInfo.getAttributes().get(booleanKey("bool.key"))).isTrue();
   }
 
   @Test

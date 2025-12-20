@@ -20,7 +20,7 @@ public abstract class AbstractAwsSdkTelemetryFactory {
     return getBoolean("otel.instrumentation.aws-sdk.experimental-span-attributes", false);
   }
 
-  protected abstract boolean messagingReceiveInstrumentationEnabled();
+  protected abstract boolean messagingReceiveTelemetryEnabled();
 
   private boolean useMessagingPropagator() {
     return getBoolean(
@@ -42,7 +42,7 @@ public abstract class AbstractAwsSdkTelemetryFactory {
     return AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
         .setCapturedHeaders(getCapturedHeaders())
         .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
-        .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled())
+        .setMessagingReceiveTelemetryEnabled(messagingReceiveTelemetryEnabled())
         .setUseConfiguredPropagatorForMessaging(useMessagingPropagator())
         .setRecordIndividualHttpError(recordIndividualHttpError())
         .setGenaiCaptureMessageContent(genaiCaptureMessageContent())

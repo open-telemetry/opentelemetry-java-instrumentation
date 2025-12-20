@@ -11,7 +11,11 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.web.client.RestTemplate;
 
-final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
 

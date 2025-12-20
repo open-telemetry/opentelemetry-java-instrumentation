@@ -86,5 +86,6 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
   }
 }
 tasks.withType<Test>().configureEach {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

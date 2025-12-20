@@ -1,6 +1,6 @@
 [tools]
 lychee = "0.22.0"
-markdownlint-cli2 = "0.19.1"
+markdownlint-cli2 = "0.20.0"
 
 [settings]
 # Only install tools explicitly defined in the [tools] section above
