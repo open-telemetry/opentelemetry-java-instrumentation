@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.http;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.logging.Logger;
@@ -26,23 +25,13 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    DeclarativeConfigProperties instrumentationConfig =
-        ((ExtendedOpenTelemetry) GlobalOpenTelemetry.get())
-            .getConfigProvider()
-            .getInstrumentationConfig();
-    DeclarativeConfigProperties configuration =
-        instrumentationConfig != null
-            ? instrumentationConfig
-                .getStructured("java", empty())
-                .getStructured("http", empty())
-                .getStructured("client", empty())
-            : null;
     // url template is emitted only when http client experimental telemetry is enabled
-    if (configuration == null
-        || !configuration.getBoolean("emit_experimental_telemetry/development", false)) {
+    if (!AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
       return;
     }
-    configuration
+    DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+        .get("http")
+        .get("client")
         .getStructuredList("url_template_rules", emptyList())
         .forEach(
             rule -> {
