@@ -26,7 +26,7 @@ public class ExperimentalSnippetHolder {
     String snippet =
         DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
             .get("servlet")
-            .getString("javascript-snippet/development", null);
+            .getString("javascript_snippet/development", null);
     // Can remove deprecated fallback in 2.24.0
     if (snippet != null) {
       return snippet;
