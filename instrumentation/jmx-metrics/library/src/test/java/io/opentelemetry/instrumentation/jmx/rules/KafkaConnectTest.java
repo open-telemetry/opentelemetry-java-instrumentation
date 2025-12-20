@@ -63,12 +63,17 @@ class KafkaConnectTest {
     assertThat(config.getRules())
         .allSatisfy(
             rule -> {
-              assertThat(rule.getMetricType()).isNotEqualTo(io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.STATE);
+              assertThat(rule.getMetricType())
+                  .isNotEqualTo(
+                      io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.STATE);
               rule.getMapping()
                   .values()
                   .forEach(
                       metric ->
-                          assertThat(metric.getMetricType()).isNotEqualTo(io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.STATE));
+                          assertThat(metric.getMetricType())
+                              .isNotEqualTo(
+                                  io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo
+                                      .Type.STATE));
             });
   }
 
@@ -79,9 +84,11 @@ class KafkaConnectTest {
     io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule connectorRule =
         getRuleForBean(config, "kafka.connect:type=connector-metrics,connector=*");
 
-    io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping connectorStateMapping = getMetric(connectorRule, "status").getStateMapping();
+    io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping connectorStateMapping =
+        getMetric(connectorRule, "status").getStateMapping();
     assertThat(getMetric(connectorRule, "status").getMetricType())
-        .isEqualTo(io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.UPDOWNCOUNTER);
+        .isEqualTo(
+            io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.UPDOWNCOUNTER);
     assertThat(connectorStateMapping.isEmpty()).isFalse();
     assertThat(connectorStateMapping.getStateKeys())
         .contains(
@@ -102,9 +109,11 @@ class KafkaConnectTest {
     io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule connectorTaskRule =
         getRuleForBean(config, "kafka.connect:type=connector-task-metrics,connector=*,task=*");
 
-    io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping taskStateMapping = getMetric(connectorTaskRule, "status").getStateMapping();
+    io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping taskStateMapping =
+        getMetric(connectorTaskRule, "status").getStateMapping();
     assertThat(getMetric(connectorTaskRule, "status").getMetricType())
-        .isEqualTo(io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.UPDOWNCOUNTER);
+        .isEqualTo(
+            io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.UPDOWNCOUNTER);
     assertThat(taskStateMapping.isEmpty()).isFalse();
     assertThat(taskStateMapping.getStateKeys())
         .contains(
@@ -281,7 +290,8 @@ class KafkaConnectTest {
     MBeanServerFactory.releaseMBeanServer(mbeanServer);
   }
 
-  private io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig loadKafkaConnectConfig() throws Exception {
+  private io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig loadKafkaConnectConfig()
+      throws Exception {
     try (InputStream input =
         getClass().getClassLoader().getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
       assertThat(input).isNotNull();
@@ -291,7 +301,9 @@ class KafkaConnectTest {
 
   private static void startKafkaConnectTelemetry() throws Exception {
     try (InputStream input =
-        KafkaConnectTest.class.getClassLoader().getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
+        KafkaConnectTest.class
+            .getClassLoader()
+            .getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
       assertThat(input).isNotNull();
       JmxTelemetry.builder(testing.getOpenTelemetry())
           .addRules(input)
@@ -300,15 +312,18 @@ class KafkaConnectTest {
     }
   }
 
-  private static io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule getRuleForBean(io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config, String bean) {
+  private static io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule getRuleForBean(
+      io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config, String bean) {
     return config.getRules().stream()
         .filter(rule -> rule.getBeans().contains(bean))
         .findFirst()
         .orElseThrow(() -> new AssertionError("Missing rule for bean " + bean));
   }
 
-  private static io.opentelemetry.instrumentation.jmx.internal.yaml.Metric getMetric(io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule rule, String metricKey) {
-    io.opentelemetry.instrumentation.jmx.internal.yaml.Metric metric = rule.getMapping().get(metricKey);
+  private static io.opentelemetry.instrumentation.jmx.internal.yaml.Metric getMetric(
+      io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule rule, String metricKey) {
+    io.opentelemetry.instrumentation.jmx.internal.yaml.Metric metric =
+        rule.getMapping().get(metricKey);
     if (metric == null) {
       throw new AssertionError("Missing metric " + metricKey + " in rule " + rule.getBeans());
     }
