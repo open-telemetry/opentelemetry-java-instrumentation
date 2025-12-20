@@ -16,32 +16,22 @@ formatting between the docs are cosmetic; bean names align across both variants.
 
 ## Worker metrics
 
-| Metric Name                                               | Type          | Unit        | Attributes | Description                                                               |
-|-----------------------------------------------------------|---------------|-------------|------------|---------------------------------------------------------------------------|
-| kafka.connect.worker.connector.count                      | UpDownCounter | {connector} |            | The number of connectors run in this worker.                              |
-| kafka.connect.worker.connector.startup.attempts           | Counter       | {attempt}   |            | The total number of connector startups that this worker has attempted.    |
-| kafka.connect.worker.connector.startup.failure.percentage | Gauge         | 1           |            | The average percentage of this worker's connectors starts that failed.    |
-| kafka.connect.worker.connector.startup.failure.total      | Counter       | {startup}   |            | The total number of connector starts that failed.                         |
-| kafka.connect.worker.connector.startup.success.percentage | Gauge         | 1           |            | The average percentage of this worker's connectors starts that succeeded. |
-| kafka.connect.worker.connector.startup.success.total      | Counter       | {startup}   |            | The total number of connector starts that succeeded.                      |
-| kafka.connect.worker.task.count                           | UpDownCounter | {task}      |            | The number of tasks run in this worker.                                   |
-| kafka.connect.worker.task.startup.attempts                | Counter       | {attempt}   |            | The total number of task startups that this worker has attempted.         |
-| kafka.connect.worker.task.startup.failure.percentage      | Gauge         | 1           |            | The average percentage of this worker's tasks starts that failed.         |
-| kafka.connect.worker.task.startup.failure.total           | Counter       | {startup}   |            | The total number of task starts that failed.                              |
-| kafka.connect.worker.task.startup.success.percentage      | Gauge         | 1           |            | The average percentage of this worker's tasks starts that succeeded.      |
-| kafka.connect.worker.task.startup.success.total           | Counter       | {startup}   |            | The total number of task starts that succeeded.                           |
+| Metric Name                                  | Type          | Unit        | Attributes                                       | Description                                      |
+|----------------------------------------------|---------------|-------------|--------------------------------------------------|--------------------------------------------------|
+| kafka.connect.worker.connector.count         | UpDownCounter | {connector} |                                                  | The number of connectors run in this worker.     |
+| kafka.connect.worker.connector.startup       | Counter       | {startup}   | kafka.connect.worker.connector.startup.result    | The total number of connector starts by result.  |
+| kafka.connect.worker.task.count              | UpDownCounter | {task}      |                                                  | The number of tasks run in this worker.          |
+| kafka.connect.worker.task.startup            | Counter       | {startup}   | kafka.connect.worker.task.startup.result         | The total number of task starts by result.       |
+
+Result values: success, failure.
 
 ## Worker connector task metrics
 
-| Metric Name                                    | Type          | Unit   | Attributes              | Description                                                    |
-|------------------------------------------------|---------------|--------|-------------------------|----------------------------------------------------------------|
-| kafka.connect.worker.connector.task.destroyed  | UpDownCounter | {task} | kafka.connect.connector | The number of destroyed tasks of the connector on the worker.  |
-| kafka.connect.worker.connector.task.failed     | UpDownCounter | {task} | kafka.connect.connector | The number of failed tasks of the connector on the worker.     |
-| kafka.connect.worker.connector.task.paused     | UpDownCounter | {task} | kafka.connect.connector | The number of paused tasks of the connector on the worker.     |
-| kafka.connect.worker.connector.task.restarting | UpDownCounter | {task} | kafka.connect.connector | The number of restarting tasks of the connector on the worker. |
-| kafka.connect.worker.connector.task.running    | UpDownCounter | {task} | kafka.connect.connector | The number of running tasks of the connector on the worker.    |
-| kafka.connect.worker.connector.task.total      | UpDownCounter | {task} | kafka.connect.connector | The number of tasks of the connector on the worker.            |
-| kafka.connect.worker.connector.task.unassigned | UpDownCounter | {task} | kafka.connect.connector | The number of unassigned tasks of the connector on the worker. |
+| Metric Name                               | Type          | Unit   | Attributes                                                            | Description                                           |
+|-------------------------------------------|---------------|--------|-----------------------------------------------------------------------|-------------------------------------------------------|
+| kafka.connect.worker.connector.task.count | UpDownCounter | {task} | kafka.connect.connector, kafka.connect.worker.connector.task.state    | The number of tasks of the connector on the worker by state. |
+
+State values: destroyed, failed, paused, restarting, running, unassigned.
 
 ## Worker rebalance metrics
 
