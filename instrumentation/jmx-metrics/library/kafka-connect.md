@@ -27,8 +27,8 @@ Result values: success, failure.
 
 ## Worker connector task metrics
 
-| Metric Name                               | Type          | Unit   | Attributes                                                            | Description                                           |
-|-------------------------------------------|---------------|--------|-----------------------------------------------------------------------|-------------------------------------------------------|
+| Metric Name                               | Type          | Unit   | Attributes                                                            | Description                                                  |
+|-------------------------------------------|---------------|--------|-----------------------------------------------------------------------|--------------------------------------------------------------|
 | kafka.connect.worker.connector.task.count | UpDownCounter | {task} | kafka.connect.connector, kafka.connect.worker.connector.task.state    | The number of tasks of the connector on the worker by state. |
 
 State values: destroyed, failed, paused, restarting, running, unassigned.
