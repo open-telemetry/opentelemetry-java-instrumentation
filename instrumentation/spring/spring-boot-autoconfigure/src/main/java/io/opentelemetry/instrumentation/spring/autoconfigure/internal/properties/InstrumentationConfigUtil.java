@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
@@ -21,24 +22,24 @@ public final class InstrumentationConfigUtil {
 
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureClientBuilder(
-      InstrumentationConfig config,
+      OpenTelemetry openTelemetry,
       T builder,
       Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(getConfig(config));
+    getBuilder.apply(builder).configure(getConfig(openTelemetry));
     return builder;
   }
 
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureServerBuilder(
-      InstrumentationConfig config,
+      OpenTelemetry openTelemetry,
       T builder,
       Function<T, DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(getConfig(config));
+    getBuilder.apply(builder).configure(getConfig(openTelemetry));
     return builder;
   }
 
-  private static CommonConfig getConfig(InstrumentationConfig config) {
-    return new CommonConfig(config);
+  private static CommonConfig getConfig(OpenTelemetry openTelemetry) {
+    return new CommonConfig(openTelemetry);
   }
 
   public static boolean isStatementSanitizationEnabled(InstrumentationConfig config, String key) {
