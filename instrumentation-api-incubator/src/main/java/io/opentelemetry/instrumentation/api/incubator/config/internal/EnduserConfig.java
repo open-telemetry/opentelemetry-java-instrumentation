@@ -58,8 +58,8 @@ public class EnduserConfig {
             "otel.instrumentation.common.enduser.scope.enabled", false);
   }
 
-  EnduserConfig(ExtendedDeclarativeConfigProperties config) {
-    Objects.requireNonNull(config, "config must not be null");
+  EnduserConfig(ExtendedDeclarativeConfigProperties commonConfig) {
+    Objects.requireNonNull(commonConfig, "commonConfig must not be null");
 
     /*
      * Capturing enduser.* attributes is disabled by default, because of this requirement in the specification:
@@ -68,9 +68,9 @@ public class EnduserConfig {
      *
      * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
      */
-    this.idEnabled = config.get("common").get("enduser").getBoolean("id/development", false);
-    this.roleEnabled = config.get("common").get("enduser").getBoolean("role/development", false);
-    this.scopeEnabled = config.get("common").get("enduser").getBoolean("scope/development", false);
+    this.idEnabled = commonConfig.get("enduser").get("id").getBoolean("enabled", false);
+    this.roleEnabled = commonConfig.get("enduser").get("role").getBoolean("enabled", false);
+    this.scopeEnabled = commonConfig.get("enduser").get("scope").getBoolean("enabled", false);
   }
 
   /**

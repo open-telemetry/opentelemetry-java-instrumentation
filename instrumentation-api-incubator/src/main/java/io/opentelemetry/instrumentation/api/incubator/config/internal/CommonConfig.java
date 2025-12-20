@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -113,84 +112,64 @@ public final class CommonConfig {
   }
 
   public CommonConfig(OpenTelemetry openTelemetry) {
-    ExtendedDeclarativeConfigProperties config = DeclarativeConfigUtil.get(openTelemetry);
-    ConfigProvider configProvider = null;
-    if (openTelemetry instanceof io.opentelemetry.api.incubator.ExtendedOpenTelemetry) {
-      configProvider =
-          ((io.opentelemetry.api.incubator.ExtendedOpenTelemetry) openTelemetry)
-              .getConfigProvider();
-    }
-
-    Map<String, String> peerServiceMap = emptyMap();
-    if (configProvider != null) {
-      Map<String, String> mapping = InstrumentationConfigUtil.peerServiceMapping(configProvider);
-      if (mapping != null) {
-        peerServiceMap = mapping;
-      }
-    }
-    peerServiceResolver = PeerServiceResolver.create(peerServiceMap);
+    ExtendedDeclarativeConfigProperties generalConfig =
+        DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    peerServiceResolver = PeerServiceResolver.create(openTelemetry);
 
     clientRequestHeaders =
-        getFromDeclarativeConfig(
-            configProvider,
-            InstrumentationConfigUtil::httpClientRequestCapturedHeaders,
-            emptyList());
+        generalConfig
+            .get("http")
+            .get("client")
+            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
     clientResponseHeaders =
-        getFromDeclarativeConfig(
-            configProvider,
-            InstrumentationConfigUtil::httpClientResponseCapturedHeaders,
-            emptyList());
+        generalConfig
+            .get("http")
+            .get("client")
+            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
     serverRequestHeaders =
-        getFromDeclarativeConfig(
-            configProvider,
-            InstrumentationConfigUtil::httpServerRequestCapturedHeaders,
-            emptyList());
-    serverResponseHeaders =
-        getFromDeclarativeConfig(
-            configProvider,
-            InstrumentationConfigUtil::httpServerResponseCapturedHeaders,
-            emptyList());
-    knownHttpRequestMethods =
-        new HashSet<>(
-            config
-                .get("common")
-                .get("http")
-                .getScalarList("known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
-    statementSanitizationEnabled =
-        config
-            .get("common")
-            .get("db_statement_sanitizer/development")
-            .getBoolean("enabled", true);
-    sqlCommenterEnabled =
-        config.get("common").get("db_sqlcommenter/development").getBoolean("enabled", false);
-    emitExperimentalHttpClientTelemetry =
-        config
-            .get("http")
-            .get("client")
-            .get("emit_experimental_telemetry/development")
-            .getBoolean("enabled", false);
-    redactQueryParameters =
-        config
-            .get("http")
-            .get("client")
-            .get("redact_query_parameters/development")
-            .getBoolean("enabled", true);
-    emitExperimentalHttpServerTelemetry =
-        config
+        generalConfig
             .get("http")
             .get("server")
-            .get("emit_experimental_telemetry/development")
-            .getBoolean("enabled", false);
-    enduserConfig = new EnduserConfig(config);
+            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+    serverResponseHeaders =
+        generalConfig
+            .get("http")
+            .get("server")
+            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+    knownHttpRequestMethods =
+        new HashSet<>(
+            commonConfig
+                .get("http")
+                .getScalarList(
+                    "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
+    statementSanitizationEnabled =
+        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true);
+    sqlCommenterEnabled =
+        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled", false);
+    emitExperimentalHttpClientTelemetry =
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("emit_experimental_telemetry/development", false);
+    redactQueryParameters =
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("redact_query_parameters/development", true);
+    emitExperimentalHttpServerTelemetry =
+        commonConfig
+            .get("http")
+            .get("server")
+            .getBoolean("emit_experimental_telemetry/development", false);
+    enduserConfig = new EnduserConfig(commonConfig);
     loggingTraceIdKey =
-        config.get("common").get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
+        commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
-        config.get("common").get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
+        commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
-        config
-            .get("common")
-            .get("logging")
-            .getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+        commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
@@ -265,16 +244,5 @@ public final class CommonConfig {
     }
     // fallback doesn't return null, so we can safely call it
     return fallback.get();
-  }
-
-  private static <T> T getFromDeclarativeConfig(
-      @Nullable ConfigProvider configProvider,
-      ValueProvider<T> getFromConfigProvider,
-      T defaultValue) {
-    if (configProvider != null) {
-      T value = getFromConfigProvider.get(configProvider);
-      return value != null ? value : defaultValue;
-    }
-    return defaultValue;
   }
 }
