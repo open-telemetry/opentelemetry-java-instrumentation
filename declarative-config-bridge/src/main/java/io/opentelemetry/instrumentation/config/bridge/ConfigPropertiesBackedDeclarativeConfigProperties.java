@@ -46,10 +46,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
     SPECIAL_MAPPINGS.put(
-        "java.common.messaging.experimental.receive_telemetry.enabled",
+        "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
     SPECIAL_MAPPINGS.put(
-        "java.common.messaging.experimental.capture_headers",
+        "java.common.messaging.capture_headers/development",
         "otel.instrumentation.messaging.experimental.capture-headers");
   }
 
