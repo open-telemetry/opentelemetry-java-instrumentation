@@ -8,10 +8,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.net;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -30,18 +28,17 @@ public interface PeerServiceResolver {
   static PeerServiceResolver create(OpenTelemetry openTelemetry) {
     Map<String, String> peerServiceMap = new HashMap<>();
 
-    List<DeclarativeConfigProperties> mappings =
-        DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry)
-            .get("peer")
-            .getStructuredList("service_mapping", emptyList());
-
-    for (DeclarativeConfigProperties mapping : mappings) {
-      String peer = mapping.getString("peer");
-      String service = mapping.getString("service");
-      if (peer != null && service != null) {
-        peerServiceMap.put(peer, service);
-      }
-    }
+    DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry)
+        .get("peer")
+        .getStructuredList("service_mapping", emptyList())
+        .forEach(
+            mapping -> {
+              String peer = mapping.getString("peer");
+              String service = mapping.getString("service");
+              if (peer != null && service != null) {
+                peerServiceMap.put(peer, service);
+              }
+            });
 
     return new PeerServiceResolverImpl(peerServiceMap);
   }

@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.http;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.logging.Logger;
@@ -26,16 +24,22 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(), "common");
+
     // url template is emitted only when http client experimental telemetry is enabled
     boolean urlTemplateEnabled =
-        config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
-    if (!urlTemplateEnabled || !config.isDeclarative()) {
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("emit_experimental_telemetry/development", false);
+    if (!urlTemplateEnabled) {
       return;
     }
-    DeclarativeConfigProperties configuration =
-        config.getDeclarativeConfig("http").getStructured("client", empty());
-    configuration
+    commonConfig
+        .get("http")
+        .get("client")
         .getStructuredList("url_template_rules", emptyList())
         .forEach(
             rule -> {
