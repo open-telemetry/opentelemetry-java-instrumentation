@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.concurrent.atomic.AtomicLong;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -26,10 +28,7 @@ class WebClientBeanPostProcessorTest {
 
   @BeforeEach
   void setUp() {
-    underTest =
-        new WebClientBeanPostProcessor(
-            beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(InstrumentationConfig.class));
+    underTest = new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
   }
 
   @Test

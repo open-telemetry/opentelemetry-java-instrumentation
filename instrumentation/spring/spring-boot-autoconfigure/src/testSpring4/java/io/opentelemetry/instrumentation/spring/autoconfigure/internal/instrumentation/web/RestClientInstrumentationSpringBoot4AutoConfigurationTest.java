@@ -24,8 +24,7 @@ class RestClientInstrumentationSpringBoot4AutoConfigurationTest
   }
 
   @Override
-  protected ClientHttpRequestInterceptor getInterceptor(
-      OpenTelemetry openTelemetry, InstrumentationConfig config) {
-    return RestClientBeanPostProcessorSpring4.getInterceptor(openTelemetry, config);
+  protected ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry) {
+    return RestClientBeanPostProcessorSpring4.getInterceptor(openTelemetry);
   }
 }

@@ -6,6 +6,7 @@ val springBootVersion = "2.7.18"
 
 dependencies {
   compileOnly("org.springframework.boot:spring-boot-restclient:4.0.0")
+  compileOnly("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
   compileOnly("org.springframework.kafka:spring-kafka:2.9.0")
 
   compileOnly("org.springframework.boot:spring-boot-starter-test:$springBootVersion")

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractRestClientInstrumentationAutoConfigurationTest;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -25,8 +24,7 @@ class RestClientInstrumentationAutoConfigurationTest
   }
 
   @Override
-  protected ClientHttpRequestInterceptor getInterceptor(
-      OpenTelemetry openTelemetry, InstrumentationConfig config) {
-    return RestClientBeanPostProcessor.getInterceptor(openTelemetry, config);
+  protected ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry) {
+    return RestClientBeanPostProcessor.getInterceptor(openTelemetry);
   }
 }

@@ -50,14 +50,13 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof WebClient) {
-      return addWebClientFilterIfNotPresent(
-          (WebClient) bean, openTelemetryProvider.getObject(), configProvider.getObject());
+      return addWebClientFilterIfNotPresent((WebClient) bean, openTelemetryProvider.getObject());
     }
     return bean;
   }
 
   private static WebClient addWebClientFilterIfNotPresent(
-      WebClient webClient, OpenTelemetry openTelemetry, InstrumentationConfig config) {
+      WebClient webClient, OpenTelemetry openTelemetry) {
     AtomicBoolean filterAdded = new AtomicBoolean(false);
     WebClient.Builder builder =
         webClient
@@ -65,7 +64,7 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
             .filters(
                 filters -> {
                   if (isFilterNotPresent(filters)) {
-                    getWebfluxClientTelemetry(openTelemetry, config).addFilter(filters);
+                    getWebfluxClientTelemetry(openTelemetry).addFilter(filters);
                     filterAdded.set(true);
                   }
                 });

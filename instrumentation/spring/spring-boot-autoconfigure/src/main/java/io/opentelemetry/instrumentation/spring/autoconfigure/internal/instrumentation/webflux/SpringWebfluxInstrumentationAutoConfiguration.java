@@ -27,7 +27,7 @@ import org.springframework.web.server.WebFilter;
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-webflux")
-@ConditionalOnClass({WebClient.class, WebClientCustomizer.class})
+@ConditionalOnClass(WebClient.class)
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {
 
@@ -41,17 +41,21 @@ public class SpringWebfluxInstrumentationAutoConfiguration {
   }
 
   @Bean
-  @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-  WebClientCustomizer otelWebClientCustomizer(
-      OpenTelemetry openTelemetry) {
-    SpringWebfluxClientTelemetry webfluxClientTelemetry =
-        WebClientBeanPostProcessor.getWebfluxClientTelemetry(openTelemetry);
-    return builder -> builder.filters(webfluxClientTelemetry::addFilter);
-  }
-
-  @Bean
   WebFilter telemetryFilter(OpenTelemetry openTelemetry) {
     return WebClientBeanPostProcessor.getWebfluxServerTelemetry(openTelemetry)
         .createWebFilterAndRegisterReactorHook();
+  }
+
+  @Configuration
+  @ConditionalOnClass(WebClientCustomizer.class)
+  static class OpentelemetryWebClientCustomizerConfiguration {
+
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE + 10)
+    WebClientCustomizer otelWebClientCustomizer(OpenTelemetry openTelemetry) {
+      SpringWebfluxClientTelemetry webfluxClientTelemetry =
+          WebClientBeanPostProcessor.getWebfluxClientTelemetry(openTelemetry);
+      return builder -> builder.filters(webfluxClientTelemetry::addFilter);
+    }
   }
 }
