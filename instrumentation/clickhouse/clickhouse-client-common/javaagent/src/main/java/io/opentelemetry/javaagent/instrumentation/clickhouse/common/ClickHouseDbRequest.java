@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.CLICKHOUSE;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
@@ -19,7 +21,8 @@ public abstract class ClickHouseDbRequest {
 
   public static ClickHouseDbRequest create(
       @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sanitizer.sanitize(sql));
+    return new AutoValue_ClickHouseDbRequest(
+        host, port, dbName, sanitizer.sanitize(sql, CLICKHOUSE));
   }
 
   @Nullable

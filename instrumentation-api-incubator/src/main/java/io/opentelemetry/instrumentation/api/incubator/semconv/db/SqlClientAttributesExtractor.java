@@ -67,17 +67,20 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
   private final boolean captureQueryParameters;
+  private final boolean statementSanitizationAnsiQuotes;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled,
+      boolean statementSanitizationAnsiQuotes,
       boolean captureQueryParameters) {
     this.getter = getter;
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     // capturing query parameters disables statement sanitization
     this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
+    this.statementSanitizationAnsiQuotes = statementSanitizationAnsiQuotes;
     internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
@@ -86,6 +89,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+    SqlDialect dialect =
+        SqlStatementSanitizerUtil.getDialect(
+            getter.getDbSystem(request), statementSanitizationAnsiQuotes);
 
     Long batchSize = getter.getBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
@@ -93,7 +99,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
+        SqlStatementInfo sanitizedStatement =
+            SqlStatementSanitizerUtil.sanitize(rawQueryText, dialect);
         String operation = sanitizedStatement.getOperation();
         internalSet(
             attributes,
@@ -112,7 +119,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       }
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
+        SqlStatementInfo sanitizedStatement =
+            SqlStatementSanitizerUtil.sanitize(rawQueryText, dialect);
         String operation = sanitizedStatement.getOperation();
         internalSet(
             attributes,
@@ -124,7 +132,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         }
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
-            MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
+            MultiQuery.analyze(
+                getter.getRawQueryTexts(request), dialect, statementSanitizationEnabled);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getStatements()));
 
         String operation =

@@ -53,7 +53,7 @@ public final class SqlStatementSanitizer {
 
   private static SqlStatementInfo sanitizeImpl(String statement, SqlDialect dialect) {
     supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizer.sanitize(statement, dialect);
+    return AutoSqlSanitizer.sanitize(statement, dialect.ansiQuotes());
   }
 
   // visible for tests

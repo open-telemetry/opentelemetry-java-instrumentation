@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameE
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -46,6 +47,8 @@ public final class JdbcInstrumenterFactory {
         true,
         ConfigPropertiesUtil.getBoolean(
             "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.common.db-statement-sanitizer.ansi-quotes", false),
         captureQueryParameters);
   }
 
@@ -53,9 +56,15 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry,
       boolean enabled,
       boolean statementSanitizationEnabled,
+      boolean statementSanitizationAnsiQuotes,
       boolean captureQueryParameters) {
     return createStatementInstrumenter(
-        openTelemetry, emptyList(), enabled, statementSanitizationEnabled, captureQueryParameters);
+        openTelemetry,
+        emptyList(),
+        enabled,
+        statementSanitizationEnabled,
+        statementSanitizationAnsiQuotes,
+        captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -63,14 +72,18 @@ public final class JdbcInstrumenterFactory {
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled,
       boolean statementSanitizationEnabled,
+      boolean statementSanitizationAnsiQuotes,
       boolean captureQueryParameters) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
+            DbClientSpanNameExtractor.create(
+                JdbcAttributesGetter.INSTANCE,
+                statementSanitizationAnsiQuotes ? SqlDialect.ANSI_QUOTES : SqlDialect.DEFAULT))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setSetStatementSanitizationAnsiQuotes(statementSanitizationAnsiQuotes)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractors(extractors)
