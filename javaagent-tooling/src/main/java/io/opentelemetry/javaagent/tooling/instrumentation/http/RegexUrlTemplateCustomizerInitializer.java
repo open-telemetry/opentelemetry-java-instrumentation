@@ -31,8 +31,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
       return;
     }
     ExtendedDeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(
-            GlobalOpenTelemetry.get(), "common");
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
     commonConfig
         .get("http")
         .get("client")
