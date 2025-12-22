@@ -23,6 +23,7 @@ dependencies {
   // we compile against 3.4.0, so we could use reactor.util.context.ContextView
   // instrumentation is tested against 3.1.0.RELEASE
   compileOnly("io.projectreactor:reactor-core:3.4.0")
+  compileOnly(project(":instrumentation-api-incubator"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
