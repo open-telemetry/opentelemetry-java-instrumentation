@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
@@ -16,33 +16,45 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
  * any time.
  */
 public final class ContextDataKeys {
-  public static final String TRACE_ID_KEY =
-      getLogging()
-          .getString(
-              "trace_id",
-              ConfigPropertiesUtil.getString(
-                  "otel.instrumentation.common.logging.trace-id",
-                  LoggingContextConstants.TRACE_ID));
 
-  public static final String SPAN_ID_KEY =
-      getLogging()
-          .getString(
-              "span_id",
-              ConfigPropertiesUtil.getString(
-                  "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID));
+  private final String traceIdKey;
+  private final String spanIdKey;
+  private final String traceFlags;
 
-  public static final String TRACE_FLAGS_KEY =
-      getLogging()
-          .getString(
-              "trace_flags",
-              ConfigPropertiesUtil.getString(
-                  "otel.instrumentation.common.logging.trace-flags",
-                  LoggingContextConstants.TRACE_FLAGS));
-
-  private static DeclarativeConfigProperties getLogging() {
-    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
-        .get("logging");
+  private ContextDataKeys(String traceIdKey, String spanIdKey, String traceFlags) {
+    this.traceIdKey = traceIdKey;
+    this.spanIdKey = spanIdKey;
+    this.traceFlags = traceFlags;
   }
 
-  private ContextDataKeys() {}
+  public static ContextDataKeys create(OpenTelemetry openTelemetry) {
+    DeclarativeConfigProperties logging =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("logging");
+    return new ContextDataKeys(
+        logging.getString(
+            "trace_id",
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID)),
+        logging.getString(
+            "span_id",
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID)),
+        logging.getString(
+            "trace_flags",
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.common.logging.trace-flags",
+                LoggingContextConstants.TRACE_FLAGS)));
+  }
+
+  public String getTraceIdKey() {
+    return traceIdKey;
+  }
+
+  public String getSpanIdKey() {
+    return spanIdKey;
+  }
+
+  public String getTraceFlags() {
+    return traceFlags;
+  }
 }

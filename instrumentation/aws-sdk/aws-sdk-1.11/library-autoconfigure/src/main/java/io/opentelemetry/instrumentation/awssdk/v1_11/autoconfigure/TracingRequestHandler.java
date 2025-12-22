@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
-import java.util.Optional;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.

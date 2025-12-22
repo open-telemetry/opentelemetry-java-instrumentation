@@ -76,16 +76,17 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
       return staticContextData;
     }
 
-    if (ThreadContext.containsKey(ContextDataKeys.TRACE_ID_KEY)) {
+    ContextDataKeys contextDataKeys = ContextDataKeys.create(GlobalOpenTelemetry.get());
+    if (ThreadContext.containsKey(contextDataKeys.getTraceIdKey())) {
       // Assume already instrumented event if traceId is present.
       return staticContextData;
     }
 
     Map<String, String> contextData = new HashMap<>(staticContextData);
     SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(ContextDataKeys.TRACE_ID_KEY, spanContext.getTraceId());
-    contextData.put(ContextDataKeys.SPAN_ID_KEY, spanContext.getSpanId());
-    contextData.put(ContextDataKeys.TRACE_FLAGS_KEY, spanContext.getTraceFlags().asHex());
+    contextData.put(contextDataKeys.getTraceIdKey(), spanContext.getTraceId());
+    contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
+    contextData.put(contextDataKeys.getTraceFlags(), spanContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);
