@@ -15,7 +15,13 @@ public final class OpenAiSingletons {
           .setCaptureMessageContent(
               AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.genai.capture-message-content", false))
+          .setEmitExperimentalConventions(emitExperimentalConventions())
           .build();
+
+  private static boolean emitExperimentalConventions() {
+    String config = AgentInstrumentationConfig.get().getString("otel.semconv-stability.opt-in", "");
+    return config.contains("gen_ai_latest_experimental");
+  }
 
   private OpenAiSingletons() {}
 }

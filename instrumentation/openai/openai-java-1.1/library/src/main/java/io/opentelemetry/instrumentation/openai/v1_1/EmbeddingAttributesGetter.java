@@ -24,6 +24,11 @@ enum EmbeddingAttributesGetter
   }
 
   @Override
+  public String getOperationTarget(EmbeddingCreateParams request) {
+    return getRequestModel(request);
+  }
+
+  @Override
   public String getSystem(EmbeddingCreateParams request) {
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
