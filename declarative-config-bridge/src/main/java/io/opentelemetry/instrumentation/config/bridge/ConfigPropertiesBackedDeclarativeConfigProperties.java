@@ -77,6 +77,9 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.opentelemetry_extension_annotations.exclude_methods",
         "otel.instrumentation.opentelemetry-annotations.exclude-methods");
+    SPECIAL_MAPPINGS.put(
+        "java.common.span_suppression_strategy/development",
+          "otel.instrumentation.experimental.span-suppression-strategy");
   }
 
   private final ConfigProperties configProperties;
