@@ -33,6 +33,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   static {
     SPECIAL_MAPPINGS = new HashMap<>();
+    // mapping of general configs to old property names
     SPECIAL_MAPPINGS.put(
         "general.http.client.request_captured_headers",
         "otel.instrumentation.http.client.capture-request-headers");
@@ -45,6 +46,24 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
+    // moving common http, database and messaging configs under common
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.client.redact_query_parameters/development",
+        "otel.instrumentation.http.client.experimental.redact-query-parameters");
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.client.emit_experimental_telemetry/development",
+        "otel.instrumentation.http.client.emit-experimental-telemetry");
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.server.emit_experimental_telemetry/development",
+        "otel.instrumentation.http.server.emit-experimental-telemetry");
+    SPECIAL_MAPPINGS.put(
+        "java.common.database.statement_sanitizer.enabled",
+        "otel.instrumentation.common.db-statement-sanitizer.enabled");
+    SPECIAL_MAPPINGS.put(
+        "java.common.database.sqlcommenter/development.enabled",
+        "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     SPECIAL_MAPPINGS.put(
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
