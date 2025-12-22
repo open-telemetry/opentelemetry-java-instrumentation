@@ -21,8 +21,7 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
 
   protected abstract Class<? extends BeanPostProcessor> postProcessorClass();
 
-  protected abstract ClientHttpRequestInterceptor getInterceptor(
-      OpenTelemetry openTelemetry, InstrumentationConfig config);
+  protected abstract ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry);
 
   protected final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -94,10 +93,7 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
 
               RestClient restClientWithInterceptor =
                   RestClient.builder()
-                      .requestInterceptor(
-                          getInterceptor(
-                              context.getBean(OpenTelemetry.class),
-                              context.getBean(InstrumentationConfig.class)))
+                      .requestInterceptor(getInterceptor(context.getBean(OpenTelemetry.class)))
                       .build();
 
               RestClient processed =
