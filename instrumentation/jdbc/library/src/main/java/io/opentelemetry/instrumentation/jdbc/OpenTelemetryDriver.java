@@ -76,7 +76,8 @@ public final class OpenTelemetryDriver implements Driver {
                   "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false),
           openTelemetry ->
               DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-                  .get("db_sqlcommenter/development")
+                  .get("database")
+                  .get("sqlcommenter/development")
                   .getBoolean("enabled", false),
           openTelemetry ->
               ConfigPropertiesUtil.getBoolean(

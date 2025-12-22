@@ -46,7 +46,8 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
     boolean statementSanitizationEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-            .get("db_statement_sanitizer")
+            .get("database")
+            .get("statement_sanitizer")
             .getBoolean(
                 "enabled",
                 ConfigPropertiesUtil.getBoolean(
