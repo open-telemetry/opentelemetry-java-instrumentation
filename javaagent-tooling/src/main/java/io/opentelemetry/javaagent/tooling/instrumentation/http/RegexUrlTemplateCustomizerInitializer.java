@@ -30,9 +30,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
     if (!AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
       return;
     }
-    ExtendedDeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
-    commonConfig
+    DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
         .get("http")
         .get("client")
         .getStructuredList("url_template_rules", emptyList())
