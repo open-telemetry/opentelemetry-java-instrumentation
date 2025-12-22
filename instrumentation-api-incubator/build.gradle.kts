@@ -24,7 +24,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
-  testImplementation("org.junit-pioneer:junit-pioneer")
 }
 
 val jflexSourceDir = layout.projectDirectory.dir("src/main/jflex")
@@ -98,12 +97,5 @@ tasks {
 
   check {
     dependsOn(testStableSemconv, testBothSemconv)
-  }
-
-  withType<Test>().configureEach {
-    // required on jdk17 for junit pioneer
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 }

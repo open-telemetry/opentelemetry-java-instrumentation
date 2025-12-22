@@ -13,8 +13,9 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import java.util.Optional;
 
@@ -27,17 +28,29 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
     ExtendedDeclarativeConfigProperties messaging =
-        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "aws_sdk")
-                .getBoolean("span_attributes/development", false))
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk")
+                .getBoolean(
+                    "span_attributes/development",
+                    ConfigPropertiesUtil.getBoolean(
+                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
         .setMessagingReceiveTelemetryEnabled(
-            messaging.get("receive_telemetry/development").getBoolean("enabled", false))
+            messaging
+                .get("receive_telemetry/development")
+                .getBoolean(
+                    "enabled",
+                    ConfigPropertiesUtil.getBoolean(
+                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                        false)))
         .setCapturedHeaders(
             Optional.ofNullable(
                     messaging.getScalarList("capture_headers/development", String.class))
-                .orElse(emptyList()))
+                .orElse(
+                    ConfigPropertiesUtil.getList(
+                        "otel.instrumentation.messaging.experimental.capture-headers",
+                        emptyList())))
         .build()
         .newRequestHandler();
   }

@@ -7,8 +7,9 @@ package io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -16,16 +17,30 @@ import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstant
  */
 public final class ContextDataKeys {
   public static final String TRACE_ID_KEY =
-      getLogging().getString("trace_id", LoggingContextConstants.TRACE_ID);
+      getLogging()
+          .getString(
+              "trace_id",
+              ConfigPropertiesUtil.getString(
+                  "otel.instrumentation.common.logging.trace-id",
+                  LoggingContextConstants.TRACE_ID));
 
   public static final String SPAN_ID_KEY =
-      getLogging().getString("span_id", LoggingContextConstants.SPAN_ID);
+      getLogging()
+          .getString(
+              "span_id",
+              ConfigPropertiesUtil.getString(
+                  "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID));
 
   public static final String TRACE_FLAGS_KEY =
-      getLogging().getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
+      getLogging()
+          .getString(
+              "trace_flags",
+              ConfigPropertiesUtil.getString(
+                  "otel.instrumentation.common.logging.trace-flags",
+                  LoggingContextConstants.TRACE_FLAGS));
 
   private static DeclarativeConfigProperties getLogging() {
-    return LegacyLibraryConfigUtil.getJavaInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
+    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
         .get("logging");
   }
 

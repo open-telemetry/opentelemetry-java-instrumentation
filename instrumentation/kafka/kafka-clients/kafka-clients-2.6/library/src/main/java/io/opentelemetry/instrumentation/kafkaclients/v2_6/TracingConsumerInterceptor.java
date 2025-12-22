@@ -11,8 +11,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -40,16 +41,25 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ExtendedDeclarativeConfigProperties messaging =
-        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "messaging");
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
 
     telemetry =
         KafkaTelemetry.builder(openTelemetry)
             .setMessagingReceiveInstrumentationEnabled(
-                messaging.get("receive_telemetry/development").getBoolean("enabled", false))
+                messaging
+                    .get("receive_telemetry/development")
+                    .getBoolean(
+                        "enabled",
+                        ConfigPropertiesUtil.getBoolean(
+                            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                            false)))
             .setCapturedHeaders(
                 Optional.ofNullable(
                         messaging.getScalarList("capture_headers/development", String.class))
-                    .orElse(emptyList()))
+                    .orElse(
+                        ConfigPropertiesUtil.getList(
+                            "otel.instrumentation.messaging.experimental.capture-headers",
+                            emptyList())))
             .build();
   }
 

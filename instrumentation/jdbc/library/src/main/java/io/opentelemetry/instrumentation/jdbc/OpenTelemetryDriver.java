@@ -23,9 +23,10 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.LegacyLibraryConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -38,6 +39,7 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -62,19 +65,32 @@ public final class OpenTelemetryDriver implements Driver {
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
+  private static final List<Function<OpenTelemetry, Boolean>> SQL_COMMENTER_VALUE_PROVIDERS =
+      Arrays.asList(
+          openTelemetry ->
+              DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+                  .get("sqlcommenter/development")
+                  .getBoolean("enabled", false),
+          openTelemetry ->
+              DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+                  .get("db_sqlcommenter/development")
+                  .getBoolean("enabled", false),
+          openTelemetry ->
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false),
+          openTelemetry ->
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false));
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    boolean defaultValue =
-        LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "common")
-            .get("db_sqlcommenter/development")
-            .getBoolean("enabled", false);
-
-    return SqlCommenter.builder()
-        .setEnabled(
-            LegacyLibraryConfigUtil.getJavaInstrumentationConfig(openTelemetry, "jdbc")
-                .get("sqlcommenter/development")
-                .getBoolean("enabled", defaultValue))
-        .build();
+    boolean value = false;
+    for (Function<OpenTelemetry, Boolean> provider : SQL_COMMENTER_VALUE_PROVIDERS) {
+      value = provider.apply(openTelemetry);
+      if (value) {
+        break;
+      }
+    }
+    return SqlCommenter.builder().setEnabled(value).build();
   }
 
   static {
