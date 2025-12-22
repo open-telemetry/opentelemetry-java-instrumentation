@@ -5,7 +5,10 @@ instrumentation/development:
   java:
     http:
       client:
-        emit_experimental_telemetry: true
-        url_template_rules:
-          - pattern: "http://localhost:.*/hello/.*"
-            template: "/hello/*"
+        emit_experimental_telemetry: true # will move to common section in https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15707
+    common:
+      http:
+        client:
+          url_template_rules:
+            - pattern: "http://localhost:.*/hello/.*"
+              template: "/hello/*"

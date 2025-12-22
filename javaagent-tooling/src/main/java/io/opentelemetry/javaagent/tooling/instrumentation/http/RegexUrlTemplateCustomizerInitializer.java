@@ -29,7 +29,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
     if (!AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
       return;
     }
-    DeclarativeConfigUtil.get(GlobalOpenTelemetry.get())
+    DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
         .get("http")
         .get("client")
         .getStructuredList("url_template_rules", emptyList())
