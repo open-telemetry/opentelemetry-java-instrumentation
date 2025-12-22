@@ -9,8 +9,10 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.logging.Logger;
@@ -24,19 +26,13 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    ExtendedDeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(
-            autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(), "common");
-
     // url template is emitted only when http client experimental telemetry is enabled
-    boolean urlTemplateEnabled =
-        commonConfig
-            .get("http")
-            .get("client")
-            .getBoolean("emit_experimental_telemetry/development", false);
-    if (!urlTemplateEnabled) {
+    if (!AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
       return;
     }
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), "common");
     commonConfig
         .get("http")
         .get("client")
