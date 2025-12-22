@@ -393,8 +393,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   @Nullable
   private String getSpanSuppressionStrategy() {
-    String key = "otel.instrumentation.common.experimental.span-suppression-strategy";
-    String deprecatedKey = "otel.instrumentation.experimental.span-suppression-strategy";
     // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
     if (maybeDeclarativeConfig(openTelemetry)) {
       DeclarativeConfigProperties instrumentationConfig =
@@ -403,22 +401,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         return null;
       }
 
-      return DeprecatedConfigProperties.warnIfUsed(
-          deprecatedKey,
-          instrumentationConfig
-              .getStructured("java", empty())
-              .getString("span_suppression_strategy/development"),
-          key,
-          instrumentationConfig
-              .getStructured("java", empty())
-              .getStructured("common", empty())
-              .getString("span_suppression_strategy/development"));
+      return instrumentationConfig
+          .getStructured("java", empty())
+          .getStructured("common", empty())
+          .getString("span_suppression_strategy/development");
     } else {
-      return DeprecatedConfigProperties.warnIfUsed(
-          deprecatedKey,
-          ConfigPropertiesUtil.getString(deprecatedKey),
-          key,
-          ConfigPropertiesUtil.getString(key));
+      return ConfigPropertiesUtil.getString(
+          "otel.instrumentation.experimental.span-suppression-strategy");
     }
   }
 
