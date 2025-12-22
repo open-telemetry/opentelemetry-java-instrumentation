@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -54,12 +53,12 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
                             "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
                             false)))
             .setCapturedHeaders(
-                Optional.ofNullable(
-                        messaging.getScalarList("capture_headers/development", String.class))
-                    .orElse(
-                        ConfigPropertiesUtil.getList(
-                            "otel.instrumentation.messaging.experimental.capture-headers",
-                            emptyList())))
+                messaging.getScalarList(
+                    "capture_headers/development",
+                    String.class,
+                    ConfigPropertiesUtil.getList(
+                        "otel.instrumentation.messaging.experimental.capture-headers",
+                        emptyList())))
             .build();
   }
 
