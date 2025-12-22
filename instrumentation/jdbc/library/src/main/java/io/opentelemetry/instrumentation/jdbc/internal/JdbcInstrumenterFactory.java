@@ -100,8 +100,9 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry) {
     boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+            .get("transaction/development")
             .getBoolean(
-                "transaction/development",
+                "enabled",
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
     return createTransactionInstrumenter(openTelemetry, enabled);
