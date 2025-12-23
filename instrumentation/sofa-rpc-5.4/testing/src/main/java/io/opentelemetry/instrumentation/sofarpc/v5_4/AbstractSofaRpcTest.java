@@ -41,8 +41,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -53,23 +51,6 @@ public abstract class AbstractSofaRpcTest {
   protected abstract boolean hasPeerService();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
-  @BeforeAll
-  static void setUp() {}
-
-  @AfterAll
-  static void tearDown() {}
-
-  ConsumerConfig<HelloService> configureClient(int port) {
-    ConsumerConfig<HelloService> consumer = new ConsumerConfig<>();
-    consumer
-        .setInterfaceId(HelloService.class.getName())
-        .setApplication(new ApplicationConfig().setAppName("sofa-rpc-test-consumer"))
-        .setDirectUrl("bolt://127.0.0.1:" + port)
-        .setRegister(false)
-        .setTimeout(30000);
-    return consumer;
-  }
 
   ConsumerConfig<GenericService> configureGenericClient(int port) {
     ConsumerConfig<GenericService> consumer = new ConsumerConfig<>();
@@ -171,7 +152,7 @@ public abstract class AbstractSofaRpcTest {
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
@@ -282,7 +263,7 @@ public abstract class AbstractSofaRpcTest {
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
@@ -419,7 +400,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
@@ -472,7 +453,7 @@ public abstract class AbstractSofaRpcTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                                 equalTo(
                                                     RPC_SERVICE,
@@ -545,7 +526,7 @@ public abstract class AbstractSofaRpcTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,

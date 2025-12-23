@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static com.alipay.sofa.rpc.core.exception.RpcErrorType.SERVER_UNDECLARED_ERROR;
+
 import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.config.AbstractInterfaceConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
@@ -100,8 +102,7 @@ final class TracingFilter extends Filter {
         || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
       String errorMsg = response.getErrorMsg();
       if (errorMsg != null) {
-        return new SofaRpcException(
-            com.alipay.sofa.rpc.core.exception.RpcErrorType.SERVER_UNDECLARED_ERROR, errorMsg);
+        return new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg);
       }
     }
 
@@ -122,6 +123,7 @@ final class TracingFilter extends Filter {
       return;
     }
     Throwable error = exception != null ? exception : extractException(response);
+    ASYNC_CONTEXT.set(request, null);
     instrumenter.end(context, SofaRpcRequest.create(request), response, error);
   }
 }

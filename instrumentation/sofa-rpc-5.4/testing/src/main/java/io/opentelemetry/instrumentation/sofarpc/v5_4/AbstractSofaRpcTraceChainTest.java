@@ -32,8 +32,6 @@ import io.opentelemetry.instrumentation.sofarpc.v5_4.impl.MiddleServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,12 +39,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class AbstractSofaRpcTraceChainTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
-  @BeforeAll
-  static void setUp() {}
-
-  @AfterAll
-  static void tearDown() {}
 
   protected abstract InstrumentationExtension testing();
 
@@ -180,7 +172,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.MiddleService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
@@ -217,7 +209,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(3))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
@@ -362,7 +354,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.MiddleService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
@@ -385,7 +377,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasNoParent() // No parent because CLIENT span was skipped
-                            .hasAttributesSatisfying(
+                            .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "sofa_rpc"),
                                 equalTo(
                                     RPC_SERVICE,
