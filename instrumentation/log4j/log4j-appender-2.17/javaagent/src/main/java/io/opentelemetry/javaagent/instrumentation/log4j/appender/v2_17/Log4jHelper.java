@@ -46,7 +46,7 @@ public final class Log4jHelper {
     boolean captureMarkerAttribute =
         config.getBoolean("capture_marker_attribute/development", false);
     List<String> captureContextDataAttributes =
-        config.getScalarList("capture_mdc_attributes/development", emptyList());
+        config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     boolean captureEventName = config.getBoolean("capture_event_name/development", false);
 
     mapper =

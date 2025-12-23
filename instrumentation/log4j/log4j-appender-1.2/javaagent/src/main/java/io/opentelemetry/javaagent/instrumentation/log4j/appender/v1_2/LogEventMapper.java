@@ -63,7 +63,7 @@ public final class LogEventMapper {
   private LogEventMapper() {
     List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
-            .getScalarList("capture_mdc_attributes/development", emptyList());
+            .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     this.captureMdcAttributes =
         captureMdcAttributes.stream()
             .collect(Collectors.toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));

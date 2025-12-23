@@ -11,7 +11,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import java.util.List;
 
 public final class LogbackSingletons {
@@ -35,15 +34,11 @@ public final class LogbackSingletons {
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
     boolean captureArguments = config.getBoolean("capture_arguments/development", false);
     boolean captureLogstashMarkerAttributes =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
-            false);
+        config.getBoolean("capture_logstash_marker_attributes/development", false);
     boolean captureLogstashStructuredArguments =
         config.getBoolean("capture_logstash_structured_arguments/development", false);
     List<String> captureMdcAttributes =
-        config.getScalarList("capture_mdc_attributes/development", emptyList());
+        config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     boolean captureEventName = config.getBoolean("capture_event_name/development", false);
 
     mapper =
