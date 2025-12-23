@@ -7,6 +7,5 @@ plugins {
 
 dependencies {
   compileOnly(project(":instrumentation:servlet:servlet-common:bootstrap"))
-  compileOnly(project(":instrumentation-api-incubator"))
   api(project(":instrumentation:servlet:servlet-common:library"))
 }
