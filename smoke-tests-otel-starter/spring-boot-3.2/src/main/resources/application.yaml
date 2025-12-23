@@ -43,6 +43,6 @@ otel:
       common:
         http:
           client:
-            emit_experimental_telemetry: true
-      runtime-telemetry:
-        emit_experimental_telemetry: true
+            emit_experimental_telemetry/development: true
+      runtime_telemetry:
+        emit_experimental_telemetry/development: true
