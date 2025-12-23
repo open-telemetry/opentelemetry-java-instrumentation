@@ -31,7 +31,7 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
           .getScalarList("capture_request_parameters/development", String.class, emptyList());
   private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getBoolean("experimental_span_attributes", false);
+          .getBoolean("experimental_span_attributes/development", false);
 
   private AgentServletInstrumenterBuilder() {}
 
