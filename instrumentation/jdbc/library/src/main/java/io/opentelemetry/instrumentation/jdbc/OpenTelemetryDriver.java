@@ -39,7 +39,6 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -47,7 +46,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -65,33 +63,30 @@ public final class OpenTelemetryDriver implements Driver {
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
-  private static final List<Function<OpenTelemetry, Boolean>> SQL_COMMENTER_VALUE_PROVIDERS =
-      Arrays.asList(
-          openTelemetry ->
-              DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
-                  .get("sqlcommenter/development")
-                  .getBoolean("enabled", false),
-          openTelemetry ->
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false),
-          openTelemetry ->
-              DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-                  .get("database")
-                  .get("sqlcommenter/development")
-                  .getBoolean("enabled", false),
-          openTelemetry ->
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false));
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    boolean value = false;
-    for (Function<OpenTelemetry, Boolean> provider : SQL_COMMENTER_VALUE_PROVIDERS) {
-      value = provider.apply(openTelemetry);
-      if (value) {
-        break;
-      }
+    boolean enabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+            .get("sqlcommenter/development")
+            .getBoolean("enabled", false);
+    if (!enabled) {
+      enabled =
+          ConfigPropertiesUtil.getBoolean(
+              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false);
     }
-    return SqlCommenter.builder().setEnabled(value).build();
+    if (!enabled) {
+      enabled =
+          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+              .get("database")
+              .get("sqlcommenter/development")
+              .getBoolean("enabled", false);
+    }
+    if (!enabled) {
+      enabled =
+          ConfigPropertiesUtil.getBoolean(
+              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false);
+    }
+    return SqlCommenter.builder().setEnabled(enabled).build();
   }
 
   static {
