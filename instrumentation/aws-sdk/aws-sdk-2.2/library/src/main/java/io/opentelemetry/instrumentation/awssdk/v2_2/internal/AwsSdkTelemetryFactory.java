@@ -38,7 +38,7 @@ public final class AwsSdkTelemetryFactory {
                     "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
         .setCaptureExperimentalSpanAttributes(
             awsSdk.getBoolean(
-                "span_attributes/development",
+                "experimental_span_attributes/development",
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
         .setMessagingReceiveTelemetryEnabled(
