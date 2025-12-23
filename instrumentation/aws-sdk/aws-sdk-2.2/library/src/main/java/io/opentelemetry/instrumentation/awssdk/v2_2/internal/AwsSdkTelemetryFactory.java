@@ -62,7 +62,8 @@ public final class AwsSdkTelemetryFactory {
                     "otel.instrumentation.aws-sdk.experimental-record-individual-http-error",
                     false)))
         .setGenaiCaptureMessageContent(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "genai")
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+                .get("gen_ai")
                 .getBoolean(
                     "capture_message_content",
                     ConfigPropertiesUtil.getBoolean(
