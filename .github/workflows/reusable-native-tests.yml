@@ -31,7 +31,6 @@ jobs:
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}
-          components: "native-image"
       - name: Running test
         env:
           DOCKER_COMPOSE_TEST: "true"
