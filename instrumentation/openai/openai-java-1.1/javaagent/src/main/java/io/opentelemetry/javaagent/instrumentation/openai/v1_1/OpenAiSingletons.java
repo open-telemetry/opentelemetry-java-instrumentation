@@ -13,7 +13,8 @@ public final class OpenAiSingletons {
   public static final OpenAITelemetry TELEMETRY =
       OpenAITelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureMessageContent(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "genai")
+              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
+                  .get("gen_ai")
                   .getBoolean("capture_message_content", false))
           .build();
 
