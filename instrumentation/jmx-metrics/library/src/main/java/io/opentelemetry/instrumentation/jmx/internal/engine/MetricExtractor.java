@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import java.util.List;
 import javax.annotation.Nullable;
@@ -14,6 +14,9 @@ import javax.annotation.Nullable;
  *
  * <p>Objects of this class are stateful, the DetectionStatus may change over time to keep track of
  * all ObjectNames that should be used to deliver the metric values.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class MetricExtractor {
 

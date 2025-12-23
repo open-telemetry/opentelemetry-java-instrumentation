@@ -58,6 +58,21 @@ public class EnduserConfig {
             "otel.instrumentation.common.enduser.scope.enabled", false);
   }
 
+  EnduserConfig(ExtendedDeclarativeConfigProperties commonConfig) {
+    Objects.requireNonNull(commonConfig, "commonConfig must not be null");
+
+    /*
+     * Capturing enduser.* attributes is disabled by default, because of this requirement in the specification:
+     *
+     * Given the sensitive nature of this information, SDKs and exporters SHOULD drop these attributes by default and then provide a configuration parameter to turn on retention for use cases where the information is required and would not violate any policies or regulations.
+     *
+     * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
+     */
+    this.idEnabled = commonConfig.get("enduser").get("id").getBoolean("enabled", false);
+    this.roleEnabled = commonConfig.get("enduser").get("role").getBoolean("enabled", false);
+    this.scopeEnabled = commonConfig.get("enduser").get("scope").getBoolean("enabled", false);
+  }
+
   /**
    * Returns true if capturing of any {@code enduser.*} semantic attribute is enabled.
    *

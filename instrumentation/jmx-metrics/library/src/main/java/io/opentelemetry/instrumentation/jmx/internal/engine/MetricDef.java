@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import java.util.List;
 
@@ -11,6 +11,9 @@ import java.util.List;
  * A class providing a complete definition on how to create an OpenTelemetry metric out of the JMX
  * system: how to extract values from MBeans and how to model, name and decorate them with
  * attributes using OpenTelemetry Metric API. Objects of this class are immutable.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 
 // Example: The rule described by the following YAML definition

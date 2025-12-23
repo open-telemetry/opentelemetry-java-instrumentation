@@ -3,15 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.yaml;
+package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
-import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
-import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.util.List;
 
 /**
  * JMX configuration as a set of JMX rules. Objects of this class are created and populated by the
  * YAML parser.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class JmxConfig {
 

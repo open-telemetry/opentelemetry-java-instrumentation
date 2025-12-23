@@ -123,11 +123,6 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   }
 
   @Override
-  public boolean isDeclarative() {
-    return configProvider != null;
-  }
-
-  @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
     DeclarativeConfigProperties config =
         InstrumentationConfigUtil.javaInstrumentationConfig(requireNonNull(configProvider), node);

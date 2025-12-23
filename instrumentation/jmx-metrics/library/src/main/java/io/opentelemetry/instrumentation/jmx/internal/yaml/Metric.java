@@ -3,15 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.yaml;
+package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import javax.annotation.Nullable;
 
 /**
  * A class representing metric definition as a part of YAML metric rule. Objects of this class are
  * created and populated by the YAML parser.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class Metric extends MetricStructure {
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine;
+package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 // This test is put in the io.opentelemetry.instrumentation.jmx.engine package
 // because it needs to access package-private methods from a number of classes.
@@ -14,10 +14,10 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
-import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
-import io.opentelemetry.instrumentation.jmx.yaml.Metric;
-import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

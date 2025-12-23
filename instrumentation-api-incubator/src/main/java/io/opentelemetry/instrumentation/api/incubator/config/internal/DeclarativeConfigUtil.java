@@ -19,16 +19,25 @@ public final class DeclarativeConfigUtil {
 
   private DeclarativeConfigUtil() {}
 
-  public static ExtendedDeclarativeConfigProperties get(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties javaConfig = empty();
+  public static ExtendedDeclarativeConfigProperties getInstrumentationConfig(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return getConfig(openTelemetry).get("java").get(instrumentationName);
+  }
+
+  public static ExtendedDeclarativeConfigProperties getGeneralInstrumentationConfig(
+      OpenTelemetry openTelemetry) {
+    return getConfig(openTelemetry).get("general");
+  }
+
+  private static ExtendedDeclarativeConfigProperties getConfig(OpenTelemetry openTelemetry) {
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       DeclarativeConfigProperties instrumentationConfig =
           extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
       if (instrumentationConfig != null) {
-        javaConfig = instrumentationConfig.getStructured("java", empty());
+        return new ExtendedDeclarativeConfigProperties(instrumentationConfig);
       }
     }
-    return new ExtendedDeclarativeConfigProperties(javaConfig);
+    return new ExtendedDeclarativeConfigProperties(empty());
   }
 }

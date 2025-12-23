@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.gateway.common;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -36,9 +37,9 @@ public final class GatewayRouteHelper {
 
   static {
     CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-        AgentInstrumentationConfig.get()
-            .getBoolean(
-                "otel.instrumentation.spring-cloud-gateway.experimental-span-attributes", false);
+        DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "spring_cloud_gateway")
+            .getBoolean("experimental_span_attributes/development", false);
   }
 
   /* Regex for UUID */

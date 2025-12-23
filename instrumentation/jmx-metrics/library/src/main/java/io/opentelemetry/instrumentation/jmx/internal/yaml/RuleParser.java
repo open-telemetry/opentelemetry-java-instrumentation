@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.yaml;
+package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,7 +19,12 @@ import javax.annotation.Nullable;
 import org.snakeyaml.engine.v2.api.Load;
 import org.snakeyaml.engine.v2.api.LoadSettings;
 
-/** Parse a YAML file containing a number of rules. */
+/**
+ * Parse a YAML file containing a number of rules.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public class RuleParser {
 
   // The YAML parser will create and populate objects of the following classes from the

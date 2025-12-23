@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public class EnduserAttributesCapturerSingletons {
 
@@ -27,17 +28,19 @@ public class EnduserAttributesCapturerSingletons {
     capturer.setEnduserScopeEnabled(AgentCommonConfig.get().getEnduserConfig().isScopeEnabled());
 
     String rolePrefix =
-        AgentInstrumentationConfig.get()
-            .getString(
-                "otel.instrumentation.spring-security.enduser.role.granted-authority-prefix");
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_security")
+            .get("enduser")
+            .get("role")
+            .getString("granted_authority_prefix");
     if (rolePrefix != null) {
       capturer.setRoleGrantedAuthorityPrefix(rolePrefix);
     }
 
     String scopePrefix =
-        AgentInstrumentationConfig.get()
-            .getString(
-                "otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix");
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_security")
+            .get("enduser")
+            .get("scope")
+            .getString("granted_authority_prefix");
     if (scopePrefix != null) {
       capturer.setScopeGrantedAuthorityPrefix(scopePrefix);
     }

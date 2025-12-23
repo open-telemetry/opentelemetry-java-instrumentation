@@ -9,8 +9,8 @@ import static java.util.logging.Level.FINE;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
-import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -54,8 +54,9 @@ public final class JmxTelemetryBuilder {
    * @param target name of target in /jmx/rules/{target}.yaml classpath resource
    * @return builder instance
    * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   * @deprecated use {@link #addRules(InputStream)} instead
    */
-  // TODO: deprecate this method after 2.23.0 release in favor of addRules
+  @Deprecated
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathRules(String target) {
     String resourcePath = String.format("jmx/rules/%s.yaml", target);
@@ -111,8 +112,9 @@ public final class JmxTelemetryBuilder {
    * @param path path to yaml file
    * @return builder instance
    * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   * @deprecated use {@link #addRules(Path)} instead
    */
-  // TODO: deprecate this method after 2.23.0 release in favor of addRules
+  @Deprecated
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addCustomRules(Path path) {
     return addRules(path);
