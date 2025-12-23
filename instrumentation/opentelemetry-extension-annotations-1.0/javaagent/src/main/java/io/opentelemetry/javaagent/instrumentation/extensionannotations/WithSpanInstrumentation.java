@@ -99,7 +99,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
             DeclarativeConfigUtil.getInstrumentationConfig(
-                    GlobalOpenTelemetry.get(), "opentelemetry_annotations")
+                    GlobalOpenTelemetry.get(), "opentelemetry_extension_annotations")
                 .getString("exclude_methods"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();

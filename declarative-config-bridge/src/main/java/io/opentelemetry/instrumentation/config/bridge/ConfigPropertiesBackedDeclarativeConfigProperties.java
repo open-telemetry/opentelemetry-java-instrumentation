@@ -73,6 +73,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
+    // renaming to match instrumentation module name
+    SPECIAL_MAPPINGS.put(
+        "java.opentelemetry_extension_annotations.exclude_methods",
+        "otel.instrumentation.opentelemetry-annotations.exclude-methods");
   }
 
   private final ConfigProperties configProperties;
