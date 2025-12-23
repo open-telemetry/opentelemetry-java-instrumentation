@@ -81,8 +81,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
         "java.common.span_suppression_strategy/development",
         "otel.instrumentation.experimental.span-suppression-strategy");
     SPECIAL_MAPPINGS.put(
-        "java.common.gen_ai",
-        "otel.instrumentation.genai.capture-message-content");
+        "java.common.gen_ai", "otel.instrumentation.genai.capture-message-content");
   }
 
   private final ConfigProperties configProperties;
