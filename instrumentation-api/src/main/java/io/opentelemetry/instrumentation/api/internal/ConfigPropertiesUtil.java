@@ -36,6 +36,7 @@ public final class ConfigPropertiesUtil {
    * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
    * to support Declarative Config.
    */
+  @Nullable
   public static Boolean getBoolean(String propertyName) {
     String strValue = getString(propertyName);
     return strValue == null ? null : Boolean.parseBoolean(strValue);
