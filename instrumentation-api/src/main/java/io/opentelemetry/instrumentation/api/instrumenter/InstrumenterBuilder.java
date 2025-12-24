@@ -394,21 +394,19 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @Nullable
   private String getSpanSuppressionStrategy() {
     // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
-    if (maybeDeclarativeConfig(openTelemetry)) {
+    DeclarativeConfigProperties commonConfig = empty();
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
       DeclarativeConfigProperties instrumentationConfig =
           ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
-      if (instrumentationConfig == null) {
-        return null;
+      if (instrumentationConfig != null) {
+        commonConfig =
+            instrumentationConfig.getStructured("java", empty()).getStructured("common", empty());
       }
-
-      return instrumentationConfig
-          .getStructured("java", empty())
-          .getStructured("common", empty())
-          .getString("span_suppression_strategy/development");
-    } else {
-      return ConfigPropertiesUtil.getString(
-          "otel.instrumentation.experimental.span-suppression-strategy");
     }
+    return commonConfig.getString(
+        "span_suppression_strategy/development",
+        ConfigPropertiesUtil.getString(
+            "otel.instrumentation.experimental.span-suppression-strategy"));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
@@ -486,15 +484,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
           });
     }
-  }
-
-  /**
-   * Returns true if the current classpath supports declarative config and the instance may support
-   * declarative config (the agent implements ExtendedOpenTelemetry even when declarative config
-   * isn't used).
-   */
-  private static boolean maybeDeclarativeConfig(OpenTelemetry openTelemetry) {
-    return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
   private interface InstrumenterConstructor<RQ, RS> {
