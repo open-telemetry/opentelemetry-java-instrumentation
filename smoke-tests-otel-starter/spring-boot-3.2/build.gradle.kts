@@ -78,11 +78,3 @@ graalvmNative {
 tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
-
-// Mark native tasks as incompatible with configuration cache
-// See https://github.com/graalvm/native-build-tools/issues/477
-tasks.withType<Test>().configureEach {
-  if (name.contains("native", ignoreCase = true)) {
-    notCompatibleWithConfigurationCache("GraalVM native build tools are not compatible with configuration cache")
-  }
-}
