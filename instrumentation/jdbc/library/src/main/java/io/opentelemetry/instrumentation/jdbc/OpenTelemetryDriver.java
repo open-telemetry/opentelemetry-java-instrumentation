@@ -65,26 +65,26 @@ public final class OpenTelemetryDriver implements Driver {
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    boolean enabled =
+    Boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
             .get("sqlcommenter/development")
-            .getBoolean("enabled", false);
-    if (!enabled) {
+            .getBoolean("enabled");
+    if (enabled == null) {
       enabled =
           ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false);
+              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled");
     }
-    if (!enabled) {
+    if (enabled == null) {
       enabled =
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
               .get("database")
               .get("sqlcommenter/development")
-              .getBoolean("enabled", false);
+              .getBoolean("enabled");
     }
-    if (!enabled) {
+    if (enabled == null) {
       enabled =
           ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false);
+              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     }
     return SqlCommenter.builder().setEnabled(enabled).build();
   }

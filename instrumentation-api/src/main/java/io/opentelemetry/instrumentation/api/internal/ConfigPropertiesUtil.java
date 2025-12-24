@@ -25,8 +25,20 @@ public final class ConfigPropertiesUtil {
    * to support Declarative Config.
    */
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
+    Boolean value = getBoolean(propertyName);
+    return value == null ? defaultValue : value;
+  }
+
+  /**
+   * Returns the boolean value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
+  public static Boolean getBoolean(String propertyName) {
     String strValue = getString(propertyName);
-    return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
+    return strValue == null ? null : Boolean.parseBoolean(strValue);
   }
 
   /**
