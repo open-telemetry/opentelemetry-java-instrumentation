@@ -23,7 +23,15 @@ public final class AwsSdkTelemetryFactory {
 
   private final boolean useLegacyLibraryConfig;
 
-  public static AwsSdkTelemetry telemetry(boolean useLegacyLibraryConfig) {
+  public static AwsSdkTelemetry legacyLibraryTelemetry() {
+    return telemetry(true);
+  }
+
+  public static AwsSdkTelemetry telemetry() {
+    return telemetry(false);
+  }
+
+  private static AwsSdkTelemetry telemetry(boolean useLegacyLibraryConfig) {
     AwsSdkTelemetryFactory factory = new AwsSdkTelemetryFactory(useLegacyLibraryConfig);
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
