@@ -72,8 +72,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
       if (OpenSearchSingletons.CAPTURE_SEARCH_QUERY
           && (request instanceof SearchRequest || request instanceof MsearchRequest)) {
-        String rawBody = OpenSearchBodyExtractor.extract(jsonpMapper, request);
-        queryBody = OpenSearchBodySanitizer.sanitize(rawBody);
+        queryBody = OpenSearchBodyExtractor.extractSanitized(jsonpMapper, request);
       }
 
       OpenSearchRequest otelRequest =
