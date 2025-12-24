@@ -86,6 +86,9 @@ public final class OpenTelemetryDriver implements Driver {
           ConfigPropertiesUtil.getBoolean(
               "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     }
+    if (enabled == null) {
+      enabled = false; // default value
+    }
     return SqlCommenter.builder().setEnabled(enabled).build();
   }
 
