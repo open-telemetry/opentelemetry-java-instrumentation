@@ -84,6 +84,11 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // renaming to avoid top level config
     SPECIAL_MAPPINGS.put(
         "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
+    // jmx properties don't have an "instrumentation" segment
+    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
+    SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
+    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
+    SPECIAL_MAPPINGS.put("java.jmx.target_system", "otel.jmx.target.system");
   }
 
   private final ConfigProperties configProperties;
@@ -208,11 +213,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // Handle agent prefix: java.agent.* → otel.javaagent.*
     if (translated.startsWith("agent.")) {
       return "otel.java" + translated;
-    }
-
-    // Handle jmx prefix: java.jmx.* → otel.jmx.*
-    if (translated.startsWith("jmx.")) {
-      return "otel." + translated;
     }
 
     // Standard mapping
