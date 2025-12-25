@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import java.util.Comparator;
 import java.util.Optional;
@@ -45,7 +44,6 @@ public class RuntimeMetricsAutoConfiguration {
   public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
     ConfigurableApplicationContext applicationContext = event.getApplicationContext();
     OpenTelemetry openTelemetry = applicationContext.getBean(OpenTelemetry.class);
-    InstrumentationConfig config = applicationContext.getBean(InstrumentationConfig.class);
 
     double version =
         Math.max(8, Double.parseDouble(System.getProperty("java.specification.version")));
@@ -56,7 +54,7 @@ public class RuntimeMetricsAutoConfiguration {
             .findFirst();
 
     if (metricsProvider.isPresent()) {
-      this.closeable = metricsProvider.get().start(openTelemetry, config);
+      this.closeable = metricsProvider.get().start(openTelemetry);
     } else {
       logger.debug("No runtime metrics instrumentation available for Java {}", version);
     }

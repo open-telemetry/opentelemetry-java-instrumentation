@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetricsBuilder;
 import javax.annotation.Nullable;
@@ -19,19 +20,23 @@ public final class RuntimeMetricsConfigUtil {
 
   @Nullable
   public static RuntimeMetrics configure(
-      RuntimeMetricsBuilder builder, InstrumentationConfig config) {
-    boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
-    if (!config.getBoolean("otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)) {
+      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry) {
+    boolean defaultEnabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+            .getBoolean("default_enabled", true);
+    if (!DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
+        .getBoolean("enabled", defaultEnabled)) {
       // nothing is enabled
       return null;
     }
 
-    if (config.getBoolean(
-        "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry", false)) {
+    if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
+        .getBoolean("emit_experimental_telemetry/development", false)) {
       builder.emitExperimentalTelemetry();
     }
 
-    if (config.getBoolean("otel.instrumentation.runtime-telemetry.capture-gc-cause", false)) {
+    if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
+        .getBoolean("capture_gc_cause", false)) {
       builder.captureGcCause();
     }
 
