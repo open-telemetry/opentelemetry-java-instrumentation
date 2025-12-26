@@ -47,7 +47,8 @@ class EmbeddedConfigFile {
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
     Map<String, Object> props = extractSpringProperties(environment);
-    return convertToOpenTelemetryConfigurationModel(props);
+    Map<String, Object> nested = convertFlatPropsToNested(props);
+    return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
   private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
@@ -97,17 +98,6 @@ class EmbeddedConfigFile {
               + "'environment.getProperty(\"otel.file_format\", String.class) != null' earlier");
     }
     return props;
-  }
-
-  static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(
-      Map<String, Object> flatProps) {
-    Map<String, Object> nested = convertFlatPropsToNested(flatProps);
-
-    return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
-  }
-
-  static ObjectMapper getObjectMapper() {
-    return MAPPER;
   }
 
   /**
