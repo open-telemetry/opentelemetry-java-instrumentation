@@ -89,6 +89,18 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    */
+  public boolean defaultEnabled() {
+    // TODO implementation in next major release when deleting the deprecated method
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   *
+   * @deprecated Use {@link #defaultEnabled()} instead.
+   */
+  @Deprecated
   public boolean defaultEnabled(ConfigProperties config) {
     return config.getBoolean("otel.instrumentation.common.default-enabled", true);
   }
@@ -157,7 +169,6 @@ public abstract class InstrumentationModule implements Ordered {
     return Collections.emptyList();
   }
 
-  // InstrumentationModule is loaded before ExperimentalConfig is initialized
   private static class IndyConfigurationHolder {
     private static final boolean indyEnabled;
 
