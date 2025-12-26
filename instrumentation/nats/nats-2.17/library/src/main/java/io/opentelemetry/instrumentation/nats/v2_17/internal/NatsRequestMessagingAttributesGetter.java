@@ -11,9 +11,13 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum NatsRequestMessagingAttributesGetter
+class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
-  INSTANCE;
+  private final List<String> temporaryPrefixes;
+
+  public NatsRequestMessagingAttributesGetter(List<String> temporaryPrefixes) {
+    this.temporaryPrefixes = temporaryPrefixes;
+  }
 
   @Override
   public String getSystem(NatsRequest request) {
@@ -29,15 +33,12 @@ enum NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
-    if (isTemporaryDestination(request)) {
-      return request.getInboxPrefix();
-    }
-    return null;
+    return getTemporaryPrefix(request);
   }
 
   @Override
   public boolean isTemporaryDestination(NatsRequest request) {
-    return request.getSubject().startsWith(request.getInboxPrefix());
+    return getTemporaryPrefix(request) != null;
   }
 
   @Override
@@ -87,5 +88,22 @@ enum NatsRequestMessagingAttributesGetter
     }
     List<String> result = headers.get(name);
     return result == null ? Collections.emptyList() : result;
+  }
+
+  /**
+   * @return the temporary prefix used for this request, or null
+   */
+  private String getTemporaryPrefix(NatsRequest request) {
+    if (request.getSubject().startsWith(request.getInboxPrefix())) {
+      return request.getInboxPrefix();
+    }
+
+    for (String prefix : temporaryPrefixes) {
+      if (request.getSubject().startsWith(prefix)) {
+        return prefix;
+      }
+    }
+
+    return null;
   }
 }

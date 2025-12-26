@@ -21,31 +21,35 @@ public final class NatsInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nats-2.17";
 
   public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
-      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders, List<String> temporaryPrefixes) {
     return Instrumenter.<NatsRequest, NatsRequest>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
-                NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH))
+                new NatsRequestMessagingAttributesGetter(temporaryPrefixes),
+                MessageOperation.PUBLISH))
         .addAttributesExtractor(
             MessagingAttributesExtractor.builder(
-                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH)
+                    new NatsRequestMessagingAttributesGetter(temporaryPrefixes),
+                    MessageOperation.PUBLISH)
                 .setCapturedHeaders(capturedHeaders)
                 .build())
         .buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders, List<String> temporaryPrefixes) {
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS))
+                    new NatsRequestMessagingAttributesGetter(temporaryPrefixes),
+                    MessageOperation.PROCESS))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
-                        NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS)
+                        new NatsRequestMessagingAttributesGetter(temporaryPrefixes),
+                        MessageOperation.PROCESS)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
 
