@@ -22,6 +22,11 @@ public class NatsInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.nats.client.impl.OpenTelemetryDispatcherFactory");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ConnectionPublishInstrumentation(),
