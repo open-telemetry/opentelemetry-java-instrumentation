@@ -1,0 +1,7 @@
+display_name: Quarkus RESTEasy Reactive
+description: >
+  This instrumentation enriches HTTP server spans with route information for Quarkus
+  RESTEasy Reactive, it does not emit any telemetry on its own.
+features:
+  - HTTP_ROUTE
+library_link: https://quarkus.io/guides/resteasy-reactive/
