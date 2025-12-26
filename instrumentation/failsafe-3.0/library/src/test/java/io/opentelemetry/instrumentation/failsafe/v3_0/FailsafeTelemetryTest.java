@@ -8,11 +8,15 @@ package io.opentelemetry.instrumentation.failsafe.v3_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerOpenException;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
+import dev.failsafe.RetryPolicyConfig;
+import dev.failsafe.event.EventListener;
+import dev.failsafe.event.ExecutionCompletedEvent;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
@@ -22,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.Mockito;
 
 final class FailsafeTelemetryTest {
   @RegisterExtension
@@ -143,6 +148,70 @@ final class FailsafeTelemetryTest {
                                         equalTo(
                                             stringKey("failsafe.retry_policy.outcome"), "failure"))
                                     .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createInstrumentedFailureListener() throws Throwable {
+    // given
+    FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
+    RetryPolicyConfig<Object> delegate =
+        dev.failsafe.RetryPolicy.builder()
+            .handleResultIf(Objects::isNull)
+            .withMaxAttempts(3)
+            .build()
+            .getConfig();
+    String retryPolicyName = "testing";
+
+    // when
+    EventListener<ExecutionCompletedEvent<Object>> actual =
+        failsafeTelemetry.createInstrumentedFailureListener(delegate, retryPolicyName);
+    ExecutionCompletedEvent<Object> event = Mockito.mock(ExecutionCompletedEvent.class);
+    when(event.getAttemptCount()).thenReturn(1);
+    actual.accept(event);
+
+    // then
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.failsafe-3.0",
+        metricAssert ->
+            metricAssert
+                .hasName("failsafe.retry_policy.execution.count")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(buildRetryPolicyAssertion(1, "failure"))));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createInstrumentedSuccessListener() throws Throwable {
+    // given
+    FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
+    RetryPolicyConfig<Object> delegate =
+        dev.failsafe.RetryPolicy.builder()
+            .handleResultIf(Objects::isNull)
+            .withMaxAttempts(3)
+            .build()
+            .getConfig();
+    String retryPolicyName = "testing";
+
+    // when
+    EventListener<ExecutionCompletedEvent<Object>> actual =
+        failsafeTelemetry.createInstrumentedSuccessListener(delegate, retryPolicyName);
+    ExecutionCompletedEvent<Object> event = Mockito.mock(ExecutionCompletedEvent.class);
+    when(event.getAttemptCount()).thenReturn(1);
+    actual.accept(event);
+
+    // then
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.failsafe-3.0",
+        metricAssert ->
+            metricAssert
+                .hasName("failsafe.retry_policy.execution.count")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(buildRetryPolicyAssertion(1, "success"))));
   }
 
   private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(
