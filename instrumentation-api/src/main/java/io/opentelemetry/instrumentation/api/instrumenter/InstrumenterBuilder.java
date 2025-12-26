@@ -393,7 +393,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             "otel.instrumentation.experimental.span-suppression-strategy");
     String result =
         commonConfig.getString(
-            "span_suppression_strategy/development", experimentalOverride == null ? "" : experimentalOverride);
+            "span_suppression_strategy/development",
+            experimentalOverride == null ? "" : experimentalOverride);
     return result.isEmpty() ? null : result;
   }
 
