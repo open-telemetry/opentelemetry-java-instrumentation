@@ -64,13 +64,20 @@ public final class InstrumentationModuleInstaller {
     this.instrumentation = instrumentation;
   }
 
+  // Need to call deprecated API for backward compatibility with modules that haven't migrated
+  @SuppressWarnings("deprecation")
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
       ConfigProperties config) {
-    if (!isInstrumentationEnabled(
-        instrumentationModule.instrumentationNames(),
-        instrumentationModule.defaultEnabled(config))) {
+    boolean defaultEnabled;
+    try {
+      defaultEnabled = instrumentationModule.defaultEnabled();
+    } catch (UnsupportedOperationException e) {
+      // fall back to the deprecated method
+      defaultEnabled = instrumentationModule.defaultEnabled(config);
+    }
+    if (!isInstrumentationEnabled(instrumentationModule.instrumentationNames(), defaultEnabled)) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;

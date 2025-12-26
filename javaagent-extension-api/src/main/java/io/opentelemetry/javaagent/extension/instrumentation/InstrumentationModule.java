@@ -9,7 +9,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
@@ -88,6 +89,18 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    */
+  public boolean defaultEnabled() {
+    // TODO implementation in next major release when deleting the deprecated method
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   *
+   * @deprecated Use {@link #defaultEnabled()} instead.
+   */
+  @Deprecated
   public boolean defaultEnabled(ConfigProperties config) {
     return config.getBoolean("otel.instrumentation.common.default-enabled", true);
   }
@@ -156,13 +169,13 @@ public abstract class InstrumentationModule implements Ordered {
     return Collections.emptyList();
   }
 
-  // InstrumentationModule is loaded before ExperimentalConfig is initialized
   private static class IndyConfigurationHolder {
     private static final boolean indyEnabled;
 
     static {
       indyEnabled =
-          AgentInstrumentationConfig.get().getBoolean("otel.javaagent.experimental.indy", false);
+          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+              .getBoolean("indy/development", false);
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }
