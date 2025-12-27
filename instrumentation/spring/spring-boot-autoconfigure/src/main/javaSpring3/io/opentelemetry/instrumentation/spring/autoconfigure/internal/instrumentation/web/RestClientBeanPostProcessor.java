@@ -57,7 +57,7 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
   static ClientHttpRequestInterceptor getInterceptor(
       OpenTelemetry openTelemetry, InstrumentationConfig config) {
     return InstrumentationConfigUtil.configureClientBuilder(
-            config,
+            openTelemetry,
             SpringWebTelemetry.builder(openTelemetry),
             WebTelemetryUtil.getBuilderExtractor())
         .build()

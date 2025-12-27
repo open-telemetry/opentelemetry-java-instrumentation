@@ -99,6 +99,7 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   testImplementation(project(":instrumentation:resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
