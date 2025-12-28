@@ -97,10 +97,9 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(
+        MethodsConfigurationParser.parseExcludeMethods(
             DeclarativeConfigUtil.getInstrumentationConfig(
-                    GlobalOpenTelemetry.get(), "opentelemetry_extension_annotations")
-                .getString("exclude_methods"));
+                GlobalOpenTelemetry.get(), "opentelemetry_extension_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> matcher =
