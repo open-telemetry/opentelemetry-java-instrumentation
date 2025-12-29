@@ -25,11 +25,6 @@ public final class NatsTelemetryBuilder {
   private List<String> capturedHeaders = emptyList();
   private List<Pattern> temporaryPatterns = DEFAULT_TEMPORARY_PATTERNS;
 
-  /**
-   * _INBOX. is the prefix used in the NATS Java client for request/reply. Usually one-off
-   * subscription is used for each request. _R_. is the prefix used in NodeJS environments for
-   * request/reply. There is only one shared subscription per connection for all requests.
-   */
   public static final List<Pattern> DEFAULT_TEMPORARY_PATTERNS =
       Arrays.asList(NatsSubjectPattern.compile("_INBOX.*"), NatsSubjectPattern.compile("_R_.*"));
 
