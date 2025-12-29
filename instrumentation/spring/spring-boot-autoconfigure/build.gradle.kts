@@ -99,6 +99,7 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   testImplementation(project(":instrumentation:resources:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
@@ -134,6 +135,7 @@ dependencies {
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -221,6 +223,7 @@ testing {
         implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
         implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
         implementation("org.springframework.boot:spring-boot-starter-test:$version")
+        implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
       }
     }
 

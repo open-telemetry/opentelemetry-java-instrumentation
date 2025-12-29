@@ -191,12 +191,18 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
-  val pushMatrix by registering(DockerPushImage::class) {
+  val pushLinuxImages by registering(DockerPushImage::class) {
     dependsOn(buildLinuxTestImages)
+    group = "publishing"
+    description = "Push Linux Docker images for the test matrix"
+    images.set(linuxImages)
+  }
+
+  val pushWindowsImages by registering(DockerPushImage::class) {
     dependsOn(buildWindowsTestImages)
     group = "publishing"
-    description = "Push all Docker images for the test matrix"
-    images.set(linuxImages + windowsImages)
+    description = "Push Windows Docker images for the test matrix"
+    images.set(windowsImages)
   }
 
   val printSmokeTestsConfigurations by registering {

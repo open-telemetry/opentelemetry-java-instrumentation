@@ -29,22 +29,66 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private static final String GENERAL_PEER_SERVICE_MAPPING = "general.peer.service_mapping";
 
-  private static final Map<String, String> LIST_MAPPINGS;
+  private static final Map<String, String> SPECIAL_MAPPINGS;
 
   static {
-    LIST_MAPPINGS = new HashMap<>();
-    LIST_MAPPINGS.put(
+    SPECIAL_MAPPINGS = new HashMap<>();
+    // mapping of general configs to old property names
+    SPECIAL_MAPPINGS.put(
         "general.http.client.request_captured_headers",
         "otel.instrumentation.http.client.capture-request-headers");
-    LIST_MAPPINGS.put(
+    SPECIAL_MAPPINGS.put(
         "general.http.client.response_captured_headers",
         "otel.instrumentation.http.client.capture-response-headers");
-    LIST_MAPPINGS.put(
+    SPECIAL_MAPPINGS.put(
         "general.http.server.request_captured_headers",
         "otel.instrumentation.http.server.capture-request-headers");
-    LIST_MAPPINGS.put(
+    SPECIAL_MAPPINGS.put(
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
+    // moving common http, database, messaging, and gen_ai configs under common
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.known_methods", "otel.instrumentation.http.known-methods");
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.client.redact_query_parameters/development",
+        "otel.instrumentation.http.client.experimental.redact-query-parameters");
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.client.emit_experimental_telemetry/development",
+        "otel.instrumentation.http.client.emit-experimental-telemetry");
+    SPECIAL_MAPPINGS.put(
+        "java.common.http.server.emit_experimental_telemetry/development",
+        "otel.instrumentation.http.server.emit-experimental-telemetry");
+    SPECIAL_MAPPINGS.put(
+        "java.common.database.statement_sanitizer.enabled",
+        "otel.instrumentation.common.db-statement-sanitizer.enabled");
+    SPECIAL_MAPPINGS.put(
+        "java.common.database.sqlcommenter/development.enabled",
+        "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
+    SPECIAL_MAPPINGS.put(
+        "java.common.messaging.receive_telemetry/development.enabled",
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    SPECIAL_MAPPINGS.put(
+        "java.common.messaging.capture_headers/development",
+        "otel.instrumentation.messaging.experimental.capture-headers");
+    SPECIAL_MAPPINGS.put(
+        "java.common.gen_ai.capture_message_content",
+        "otel.instrumentation.genai.capture-message-content");
+    // top-level common configs
+    SPECIAL_MAPPINGS.put(
+        "java.common.span_suppression_strategy/development",
+        "otel.instrumentation.experimental.span-suppression-strategy");
+    // renaming to match instrumentation module name
+    SPECIAL_MAPPINGS.put(
+        "java.opentelemetry_extension_annotations.exclude_methods",
+        "otel.instrumentation.opentelemetry-annotations.exclude-methods");
+    // renaming to avoid top level config
+    SPECIAL_MAPPINGS.put(
+        "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
+    // jmx properties don't have an "instrumentation" segment
+    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
+    SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
+    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
+    SPECIAL_MAPPINGS.put("java.jmx.target_system", "otel.jmx.target.system");
   }
 
   private final ConfigProperties configProperties;
@@ -65,36 +109,31 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public String getString(String name) {
-    String fullPath = pathWithName(name);
-    return configProperties.getString(toPropertyKey(fullPath));
+    return configProperties.getString(resolvePropertyKey(name));
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    String fullPath = pathWithName(name);
-    return configProperties.getBoolean(toPropertyKey(fullPath));
+    return configProperties.getBoolean(resolvePropertyKey(name));
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
-    String fullPath = pathWithName(name);
-    return configProperties.getInt(toPropertyKey(fullPath));
+    return configProperties.getInt(resolvePropertyKey(name));
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    String fullPath = pathWithName(name);
-    return configProperties.getLong(toPropertyKey(fullPath));
+    return configProperties.getLong(resolvePropertyKey(name));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    String fullPath = pathWithName(name);
-    return configProperties.getDouble(toPropertyKey(fullPath));
+    return configProperties.getDouble(resolvePropertyKey(name));
   }
 
   /**
@@ -117,20 +156,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     if (scalarType != String.class) {
       return null;
     }
-    String fullPath = pathWithName(name);
-
-    // Check explicit list mappings first
-    String mappedKey = LIST_MAPPINGS.get(fullPath);
-    if (mappedKey != null) {
-      List<String> list = configProperties.getList(mappedKey);
-      if (!list.isEmpty()) {
-        return (List<T>) list;
-      }
-      return null;
-    }
-
-    // Standard mapping
-    List<String> list = configProperties.getList(toPropertyKey(fullPath));
+    List<String> list = configProperties.getList(resolvePropertyKey(name));
     if (list.isEmpty()) {
       return null;
     }
@@ -158,6 +184,41 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     return configProperties.getComponentLoader();
   }
 
+  private String resolvePropertyKey(String name) {
+    String fullPath = pathWithName(name);
+
+    // Check explicit property mappings first
+    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
+    if (mappedKey != null) {
+      return mappedKey;
+    }
+
+    if (!fullPath.startsWith("java.")) {
+      return "";
+    }
+
+    // Remove "java." prefix and translate the remaining path
+    String[] segments = fullPath.substring(5).split("\\.");
+    StringBuilder translatedPath = new StringBuilder();
+
+    for (int i = 0; i < segments.length; i++) {
+      if (i > 0) {
+        translatedPath.append(".");
+      }
+      translatedPath.append(translateName(segments[i]));
+    }
+
+    String translated = translatedPath.toString();
+
+    // Handle agent prefix: java.agent.* → otel.javaagent.*
+    if (translated.startsWith("agent.")) {
+      return "otel.java" + translated;
+    }
+
+    // Standard mapping
+    return "otel.instrumentation." + translated;
+  }
+
   private String pathWithName(String name) {
     if (path.isEmpty()) {
       return name;
@@ -165,42 +226,12 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     return String.join(".", path) + "." + name;
   }
 
-  private static String toPropertyKey(String fullPath) {
-    String translatedPath = translatePath(fullPath);
-
-    // Handle agent prefix: java.agent.* → otel.javaagent.*
-    if (translatedPath.startsWith("agent.")) {
-      return "otel.java" + translatedPath;
-    }
-
-    // Handle jmx prefix: java.jmx.* → otel.jmx.*
-    if (translatedPath.startsWith("jmx.")) {
-      return "otel." + translatedPath;
-    }
-
-    // Standard mapping
-    return "otel.instrumentation." + translatedPath;
-  }
-
-  private static String translatePath(String path) {
-    StringBuilder result = new StringBuilder();
-    for (String segment : path.split("\\.")) {
-      // Skip "java" segment - it doesn't exist in system properties
-      if ("java".equals(segment)) {
-        continue;
-      }
-      if (result.length() > 0) {
-        result.append(".");
-      }
-      result.append(translateName(segment));
-    }
-    return result.toString();
-  }
-
   private static String translateName(String name) {
     if (name.endsWith("/development")) {
-      return "experimental."
-          + name.substring(0, name.length() - "/development".length()).replace('_', '-');
+      name = name.substring(0, name.length() - "/development".length());
+      if (!name.contains("experimental")) {
+        name = "experimental." + name;
+      }
     }
     return name.replace('_', '-');
   }

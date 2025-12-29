@@ -5,8 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
+import static java.util.Collections.emptyList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
@@ -28,17 +32,21 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ExtendedDeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    if (config.getBoolean("otel.jmx.enabled", true)) {
+    if (config.getBoolean("enabled", true)) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(config));
+              .beanDiscoveryDelay(beanDiscoveryDelay(config, configProperties));
 
-      config.getList("otel.jmx.config").stream()
+      config.getScalarList("config", String.class, emptyList()).stream()
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
-      config.getList("otel.jmx.target.system").forEach(target -> addClasspathRules(target, jmx));
+      config
+          .getScalarList("target_system", String.class, emptyList())
+          .forEach(target -> addClasspathRules(target, jmx));
 
       jmx.build().start();
     }
@@ -66,10 +74,11 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static Duration beanDiscoveryDelay(ConfigProperties configProperties) {
-    Duration discoveryDelay = configProperties.getDuration("otel.jmx.discovery.delay");
-    if (discoveryDelay != null) {
-      return discoveryDelay;
+  private static Duration beanDiscoveryDelay(
+      ExtendedDeclarativeConfigProperties config, ConfigProperties configProperties) {
+    Long discoveryDelayMs = config.get("discovery").getLong("delay");
+    if (discoveryDelayMs != null) {
+      return Duration.ofMillis(discoveryDelayMs);
     }
 
     // If discovery delay has not been configured, have a peek at the metric export interval.

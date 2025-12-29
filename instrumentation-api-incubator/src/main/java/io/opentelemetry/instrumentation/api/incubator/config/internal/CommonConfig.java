@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
@@ -108,6 +109,67 @@ public final class CommonConfig {
     loggingTraceFlagsKey =
         config.getString(
             "otel.instrumentation.common.logging.trace-flags", LoggingContextConstants.TRACE_FLAGS);
+  }
+
+  public CommonConfig(OpenTelemetry openTelemetry) {
+    ExtendedDeclarativeConfigProperties generalConfig =
+        DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    peerServiceResolver = PeerServiceResolver.create(openTelemetry);
+
+    clientRequestHeaders =
+        generalConfig
+            .get("http")
+            .get("client")
+            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+    clientResponseHeaders =
+        generalConfig
+            .get("http")
+            .get("client")
+            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+    serverRequestHeaders =
+        generalConfig
+            .get("http")
+            .get("server")
+            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+    serverResponseHeaders =
+        generalConfig
+            .get("http")
+            .get("server")
+            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+    knownHttpRequestMethods =
+        new HashSet<>(
+            commonConfig
+                .get("http")
+                .getScalarList(
+                    "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
+    statementSanitizationEnabled =
+        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true);
+    sqlCommenterEnabled =
+        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled", false);
+    emitExperimentalHttpClientTelemetry =
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("emit_experimental_telemetry/development", false);
+    redactQueryParameters =
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("redact_query_parameters/development", true);
+    emitExperimentalHttpServerTelemetry =
+        commonConfig
+            .get("http")
+            .get("server")
+            .getBoolean("emit_experimental_telemetry/development", false);
+    enduserConfig = new EnduserConfig(commonConfig);
+    loggingTraceIdKey =
+        commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
+    loggingSpanIdKey =
+        commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
+    loggingTraceFlagsKey =
+        commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {

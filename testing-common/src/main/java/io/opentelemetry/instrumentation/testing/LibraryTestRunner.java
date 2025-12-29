@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.util.KeysVerifyingPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
@@ -101,6 +102,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
             .setPropagators(
                 ContextPropagators.create(
                     TextMapPropagator.composite(
+                        KeysVerifyingPropagator.getInstance(),
                         W3CTraceContextPropagator.getInstance(),
                         W3CBaggagePropagator.getInstance())))
             .buildAndRegisterGlobal();

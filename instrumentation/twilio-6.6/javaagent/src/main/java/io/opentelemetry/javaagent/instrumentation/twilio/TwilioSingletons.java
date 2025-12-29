@@ -8,16 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class TwilioSingletons {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.twilio.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "twilio")
+          .getBoolean("experimental_span_attributes/development", false);
 
   private static final Instrumenter<String, Object> INSTRUMENTER;
 

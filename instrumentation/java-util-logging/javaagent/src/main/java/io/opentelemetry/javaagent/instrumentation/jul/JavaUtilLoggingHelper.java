@@ -13,7 +13,7 @@ import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Formatter;
@@ -25,8 +25,8 @@ public final class JavaUtilLoggingHelper {
   private static final Formatter FORMATTER = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
+          .getBoolean("experimental_log_attributes/development", false);
 
   public static void capture(Logger logger, LogRecord logRecord) {
 

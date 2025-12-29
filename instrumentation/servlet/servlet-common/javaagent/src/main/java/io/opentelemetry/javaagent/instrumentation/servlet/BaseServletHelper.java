@@ -9,9 +9,11 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteS
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -22,7 +24,6 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
@@ -33,13 +34,11 @@ import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      AgentInstrumentationConfig.get()
-          .getList(
-              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getScalarList("capture_request_parameters/development", String.class, emptyList());
   private static final boolean ADD_TRACE_ID_REQUEST_ATTRIBUTE =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.servlet.experimental.add-trace-id-request-attribute", true);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getBoolean("add_trace_id_request_attribute/development", true);
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;

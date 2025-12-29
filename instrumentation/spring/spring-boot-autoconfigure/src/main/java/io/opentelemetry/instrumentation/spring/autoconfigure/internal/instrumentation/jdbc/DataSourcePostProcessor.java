@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
@@ -31,13 +32,9 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
   @Nullable private static final Class<?> ROUTING_DATA_SOURCE_CLASS = getRoutingDataSourceClass();
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
-  private final ObjectProvider<InstrumentationConfig> configProvider;
 
-  DataSourcePostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<InstrumentationConfig> configProvider) {
+  DataSourcePostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
-    this.configProvider = configProvider;
   }
 
   @Nullable
@@ -61,24 +58,21 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
         && !isRoutingDatasource(bean)
         && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
-      InstrumentationConfig config = configProvider.getObject();
+      OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
+      ExtendedDeclarativeConfigProperties config =
+          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc");
       JdbcTelemetryBuilder builder =
-          JdbcTelemetry.builder(openTelemetryProvider.getObject())
+          JdbcTelemetry.builder(openTelemetry)
               .setStatementSanitizationEnabled(
-                  InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                      config, "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+                  InstrumentationConfigUtil.isStatementSanitizationEnabled(openTelemetry, "jdbc"))
               .setCaptureQueryParameters(
-                  config.getBoolean(
-                      "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
+                  config.getBoolean("capture_query_parameters/development", false))
               .setTransactionInstrumenterEnabled(
-                  config.getBoolean(
-                      "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
+                  config.get("transaction/development").getBoolean("enabled", false))
               .setDataSourceInstrumenterEnabled(
-                  config.getBoolean(
-                      "otel.instrumentation.jdbc.experimental.datasource.enabled", false));
+                  config.get("datasource/development").getBoolean("enabled", false));
       Experimental.setEnableSqlCommenter(
-          builder,
-          config.getBoolean("otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false));
+          builder, config.get("sqlcommenter/development").getBoolean("enabled", false));
       DataSource otelDataSource = builder.build().wrap(dataSource);
 
       // wrap instrumented data source into a proxy that unwraps to the original data source
