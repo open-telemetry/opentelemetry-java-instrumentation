@@ -50,14 +50,10 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, RABBITMQ),
-                            equalTo(stringKey("rabbitmq.command"), "exchange.declare"),
-                            satisfies(
-                                NETWORK_PEER_ADDRESS,
-                                addr -> addr.satisfies(a -> assertThat(a).isIn(rabbitMqIp, null))),
-                            satisfies(
-                                NETWORK_TYPE,
-                                type ->
-                                    type.satisfies(t -> assertThat(t).isIn("ipv4", "ipv6", null))),
+                            equalTo(
+                                stringKey("rabbitmq.command"), experimental("exchange.declare")),
+                            satisfies(NETWORK_PEER_ADDRESS, addr -> addr.isIn(rabbitMqIp, null)),
+                            satisfies(NETWORK_TYPE, type -> type.isIn("ipv4", "ipv6", null)),
                             satisfies(NETWORK_PEER_PORT, port -> assertThat(port).isNotNull()))));
   }
 }
