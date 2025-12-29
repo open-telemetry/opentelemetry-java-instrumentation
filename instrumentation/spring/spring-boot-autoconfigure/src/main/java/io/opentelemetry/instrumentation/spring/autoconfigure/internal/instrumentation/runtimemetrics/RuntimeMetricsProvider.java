@@ -18,5 +18,5 @@ public interface RuntimeMetricsProvider {
   int minJavaVersion();
 
   @Nullable
-  AutoCloseable start(OpenTelemetry openTelemetry);
+  AutoCloseable start(OpenTelemetry openTelemetry, String instrumentationMode);
 }

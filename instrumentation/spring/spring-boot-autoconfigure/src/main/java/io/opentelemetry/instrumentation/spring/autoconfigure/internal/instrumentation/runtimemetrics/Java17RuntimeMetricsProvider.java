@@ -28,8 +28,9 @@ public class Java17RuntimeMetricsProvider implements RuntimeMetricsProvider {
 
   @Nullable
   @Override
-  public AutoCloseable start(OpenTelemetry openTelemetry) {
+  public AutoCloseable start(OpenTelemetry openTelemetry, String instrumentationMode) {
     logger.debug("Use runtime metrics instrumentation for Java 17+");
-    return RuntimeMetricsConfigUtil.configure(RuntimeMetrics.builder(openTelemetry), openTelemetry);
+    return RuntimeMetricsConfigUtil.configure(
+        RuntimeMetrics.builder(openTelemetry), openTelemetry, instrumentationMode);
   }
 }
