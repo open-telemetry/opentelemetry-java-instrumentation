@@ -244,7 +244,7 @@ public final class InstrumentationModuleInstaller {
   static boolean isInstrumentationEnabled(
       Iterable<String> instrumentationNames, boolean defaultEnabled) {
     ExtendedDeclarativeConfigProperties config =
-        DeclarativeConfigUtil.get(GlobalOpenTelemetry.get());
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java");
     for (String name : instrumentationNames) {
       String normalizedName = name.replace('-', '_');
       Boolean enabled = config.get(normalizedName).getBoolean("enabled");
