@@ -9,14 +9,16 @@ import io.nats.client.impl.Headers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
-  private final List<String> temporaryPrefixes;
 
-  public NatsRequestMessagingAttributesGetter(List<String> temporaryPrefixes) {
-    this.temporaryPrefixes = temporaryPrefixes;
+  private final List<Pattern> temporaryPatterns;
+
+  public NatsRequestMessagingAttributesGetter(List<Pattern> temporaryPatterns) {
+    this.temporaryPatterns = temporaryPatterns;
   }
 
   @Override
@@ -33,12 +35,13 @@ class NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
-    return getTemporaryPrefix(request);
+    Pattern pattern = getTemporaryPattern(request);
+    return pattern == null ? null : pattern.pattern();
   }
 
   @Override
   public boolean isTemporaryDestination(NatsRequest request) {
-    return getTemporaryPrefix(request) != null;
+    return getTemporaryPattern(request) != null;
   }
 
   @Override
@@ -91,16 +94,16 @@ class NatsRequestMessagingAttributesGetter
   }
 
   /**
-   * @return the temporary prefix used for this request, or null
+   * @return the temporary pattern used for this request, or null
    */
-  private String getTemporaryPrefix(NatsRequest request) {
+  private Pattern getTemporaryPattern(NatsRequest request) {
     if (request.getSubject().startsWith(request.getInboxPrefix())) {
-      return request.getInboxPrefix();
+      return NatsSubjectPattern.compile(request.getInboxPrefix() + "*");
     }
 
-    for (String prefix : temporaryPrefixes) {
-      if (request.getSubject().startsWith(prefix)) {
-        return prefix;
+    for (Pattern pattern : temporaryPatterns) {
+      if (pattern.matcher(request.getSubject()).matches()) {
+        return pattern;
       }
     }
 

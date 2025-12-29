@@ -10,10 +10,12 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsSubjectPattern;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /** A builder of {@link NatsTelemetry}. */
 public final class NatsTelemetryBuilder {
@@ -21,14 +23,15 @@ public final class NatsTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private List<String> capturedHeaders = emptyList();
-  private List<String> temporaryPrefixes = DEFAULT_TEMPORARY_PREFIXES;
+  private List<Pattern> temporaryPatterns = DEFAULT_TEMPORARY_PATTERNS;
 
   /**
    * _INBOX. is the prefix used in the NATS Java client for request/reply. Usually one-off
    * subscription is used for each request. _R_. is the prefix used in NodeJS environments for
    * request/reply. There is only one shared subscription per connection for all requests.
    */
-  public static final List<String> DEFAULT_TEMPORARY_PREFIXES = Arrays.asList("_INBOX.", "_R_.");
+  public static final List<Pattern> DEFAULT_TEMPORARY_PATTERNS =
+      Arrays.asList(NatsSubjectPattern.compile("_INBOX.*"), NatsSubjectPattern.compile("_R_.*"));
 
   NatsTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -46,13 +49,22 @@ public final class NatsTelemetryBuilder {
   }
 
   /**
-   * Configures the prefixes used for temporary subjects.
+   * Configures the patterns used for temporary subjects.
    *
-   * @param temporaryPrefixes A list of prefixes.
+   * @param temporaryPatterns A list of patterns.
    */
   @CanIgnoreReturnValue
-  public NatsTelemetryBuilder setTemporaryPrefixes(Collection<String> temporaryPrefixes) {
-    this.temporaryPrefixes = new ArrayList<>(temporaryPrefixes);
+  public NatsTelemetryBuilder setTemporaryPatterns(Collection<Pattern> temporaryPatterns) {
+    this.temporaryPatterns = new ArrayList<>(temporaryPatterns);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public NatsTelemetryBuilder setTemporarySubjects(Collection<String> temporarySubjects) {
+    this.temporaryPatterns = new ArrayList<>();
+    for (String subject : temporarySubjects) {
+      this.temporaryPatterns.add(NatsSubjectPattern.compile(subject));
+    }
     return this;
   }
 
@@ -60,8 +72,8 @@ public final class NatsTelemetryBuilder {
   public NatsTelemetry build() {
     return new NatsTelemetry(
         NatsInstrumenterFactory.createProducerInstrumenter(
-            openTelemetry, capturedHeaders, temporaryPrefixes),
+            openTelemetry, capturedHeaders, temporaryPatterns),
         NatsInstrumenterFactory.createConsumerProcessInstrumenter(
-            openTelemetry, capturedHeaders, temporaryPrefixes));
+            openTelemetry, capturedHeaders, temporaryPatterns));
   }
 }
