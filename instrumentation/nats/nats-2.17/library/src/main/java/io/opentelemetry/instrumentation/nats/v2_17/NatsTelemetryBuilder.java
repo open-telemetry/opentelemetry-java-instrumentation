@@ -44,7 +44,7 @@ public final class NatsTelemetryBuilder {
   }
 
   /**
-   * Configures the patterns used for temporary subjects.
+   * Configures the patterns used for temporary subjects. Eg: `^_INBOX\\..+$`
    *
    * @param temporaryPatterns A list of patterns.
    */
@@ -54,6 +54,11 @@ public final class NatsTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Configures the subjects used for temporary subjects. Eg: `_INBOX.*`
+   *
+   * @param temporarySubjects A list of subjects.
+   */
   @CanIgnoreReturnValue
   public NatsTelemetryBuilder setTemporarySubjects(Collection<String> temporarySubjects) {
     this.temporaryPatterns = new ArrayList<>();
