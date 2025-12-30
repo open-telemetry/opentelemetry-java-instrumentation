@@ -3,21 +3,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedDeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.TreeSet;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class AgentConfigTest {
+class InstrumentationModuleInstallerTest {
+
+  @AfterEach
+  void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @ParameterizedTest(name = "isInstrumentationEnabled({0}) = {4}")
   @MethodSource("instrumentationEnabledParams")
@@ -32,10 +43,13 @@ class AgentConfigTest {
     when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
 
-    assertEquals(
-        expected,
-        AgentConfig.isInstrumentationEnabled(
-            config, new TreeSet<>(asList("first", "second")), defaultEnabled));
+    OpenTelemetry openTelemetry = createOpenTelemetry(config);
+    GlobalOpenTelemetry.set(openTelemetry);
+
+    assertThat(
+            InstrumentationModuleInstaller.isInstrumentationEnabled(
+                new TreeSet<>(asList("first", "second")), defaultEnabled))
+        .isEqualTo(expected);
   }
 
   private static Stream<Arguments> instrumentationEnabledParams() {
@@ -76,5 +90,15 @@ class AgentConfigTest {
             false,
             true),
         Arguments.of("disabled by default", null, null, false, false));
+  }
+
+  private static OpenTelemetry createOpenTelemetry(ConfigProperties config) {
+    ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
+    ConfigProvider configProvider = mock(ConfigProvider.class);
+    when(otel.getConfigProvider()).thenReturn(configProvider);
+    when(configProvider.getInstrumentationConfig())
+        .thenReturn(
+            ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(config));
+    return otel;
   }
 }
