@@ -38,8 +38,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
@@ -2100,14 +2104,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of("content", Value.of(text.toString())))));
   }
 
-  @Test
-  void testInvokeModelAnthropicClaude() {
+  @ParameterizedTest
+  @MethodSource("modelArgs")
+  void testInvokeModelAnthropicClaude(String modelId) {
     BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
     configureClient(builder);
     BedrockRuntimeClient client = builder.build();
-
-    String modelId = "anthropic.claude-v2";
 
     Document requestPayload =
         Document.mapBuilder()
@@ -2154,7 +2157,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("chat anthropic.claude-v2")
+                        span.hasName("chat " + modelId)
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2254,6 +2257,11 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "content", Value.of("Okay, I just said \"This is a test")))));
+  }
+
+  private static Stream<Arguments> modelArgs() {
+    return Stream.of(
+        Arguments.of("anthropic.claude-v2"), Arguments.of("global.anthropic.claude-v2"));
   }
 
   @Test
