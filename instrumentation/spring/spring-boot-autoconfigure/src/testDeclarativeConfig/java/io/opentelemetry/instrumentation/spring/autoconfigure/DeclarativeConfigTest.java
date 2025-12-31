@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -58,17 +58,12 @@ class DeclarativeConfigTest {
         context ->
             assertThat(context)
                 .hasBean("openTelemetry")
-                .hasBean("otelProperties")
-                .getBean(InstrumentationConfig.class)
+                .getBean("otelProperties", ConfigProperties.class)
                 .isNotNull()
                 .satisfies(
-                    c ->
-                        assertThat(c.getDeclarativeConfig("foo"))
-                            .isNotNull()
-                            .satisfies(
-                                instrumentationConfig ->
-                                    assertThat(instrumentationConfig.getString("bar"))
-                                        .isEqualTo("baz"))));
+                    configProperties ->
+                        assertThat(configProperties.getString("otel.instrumentation.foo.bar"))
+                            .isEqualTo("baz")));
   }
 
   @Test
