@@ -388,13 +388,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             instrumentationConfig.getStructured("java", empty()).getStructured("common", empty());
       }
     }
-    String experimentalOverride =
-        ConfigPropertiesUtil.getString(
-            "otel.instrumentation.experimental.span-suppression-strategy");
     String result =
         commonConfig.getString(
             "span_suppression_strategy/development",
-            experimentalOverride == null ? "" : experimentalOverride);
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.experimental.span-suppression-strategy", ""));
     return result.isEmpty() ? null : result;
   }
 
