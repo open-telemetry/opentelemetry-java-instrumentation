@@ -42,6 +42,11 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
   }
 
   @Test
+  void captureRetryPolicyMetrics() {
+    captureRetryPolicyMetrics("testing");
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
   void createInstrumentedFailureListener() throws Throwable {
     // given
@@ -70,7 +75,8 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
                 .hasLongSumSatisfying(
                     sum ->
                         sum.isMonotonic()
-                            .hasPointsSatisfying(buildRetryPolicyAssertion(1, "failure"))));
+                            .hasPointsSatisfying(
+                                buildRetryPolicyAssertion(1, retryPolicyName, "failure"))));
   }
 
   @Test
@@ -102,6 +108,7 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
                 .hasLongSumSatisfying(
                     sum ->
                         sum.isMonotonic()
-                            .hasPointsSatisfying(buildRetryPolicyAssertion(1, "success"))));
+                            .hasPointsSatisfying(
+                                buildRetryPolicyAssertion(1, retryPolicyName, "success"))));
   }
 }
