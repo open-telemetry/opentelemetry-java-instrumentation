@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractFailsafeInstrumentationTest {
@@ -30,7 +31,7 @@ public abstract class AbstractFailsafeInstrumentationTest {
   protected abstract RetryPolicy<Object> configure(RetryPolicy<Object> userRetryPolicy);
 
   @Test
-  void captureCircuitBreakerMetrics() {
+  public void captureCircuitBreakerMetrics() {
     // given
     CircuitBreaker<Object> userCircuitBreaker =
         CircuitBreaker.builder()
@@ -81,15 +82,21 @@ public abstract class AbstractFailsafeInstrumentationTest {
                                         1, "failsafe.circuit_breaker.state", "closed"))));
   }
 
-  @Test
-  void captureRetryPolicyMetrics() {
-    // given
+  protected void captureRetryPolicyMetrics(@Nullable String expectedPolicyName) {
     RetryPolicy<Object> userRetryPolicy =
         dev.failsafe.RetryPolicy.builder()
             .handleResultIf(Objects::isNull)
             .withMaxAttempts(3)
             .build();
     RetryPolicy<Object> instrumentedRetryPolicy = configure(userRetryPolicy);
+    captureRetryPolicyMetrics(
+        instrumentedRetryPolicy,
+        expectedPolicyName != null ? expectedPolicyName : instrumentedRetryPolicy.toString());
+  }
+
+  private void captureRetryPolicyMetrics(
+      RetryPolicy<Object> instrumentedRetryPolicy, String expectedPolicyName) {
+    // given
 
     // when
     for (int i = 0; i <= 4; i++) {
@@ -118,8 +125,8 @@ public abstract class AbstractFailsafeInstrumentationTest {
                         sum ->
                             sum.isMonotonic()
                                 .hasPointsSatisfying(
-                                    buildRetryPolicyAssertion(2, "failure"),
-                                    buildRetryPolicyAssertion(3, "success"))),
+                                    buildRetryPolicyAssertion(2, expectedPolicyName, "failure"),
+                                    buildRetryPolicyAssertion(3, expectedPolicyName, "success"))),
             metricAssert ->
                 metricAssert
                     .hasName("failsafe.retry_policy.attempts")
@@ -132,7 +139,8 @@ public abstract class AbstractFailsafeInstrumentationTest {
                                         .hasMin(1)
                                         .hasMax(3)
                                         .hasAttributes(
-                                            buildExpectedRetryPolicyAttributes("success"))
+                                            buildExpectedRetryPolicyAttributes(
+                                                expectedPolicyName, "success"))
                                         .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
                                 histogramPointAssert ->
                                     histogramPointAssert
@@ -140,16 +148,18 @@ public abstract class AbstractFailsafeInstrumentationTest {
                                         .hasMin(3)
                                         .hasMax(3)
                                         .hasAttributes(
-                                            buildExpectedRetryPolicyAttributes("failure"))
+                                            buildExpectedRetryPolicyAttributes(
+                                                expectedPolicyName, "failure"))
                                         .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
   }
 
   protected static Consumer<LongPointAssert> buildRetryPolicyAssertion(
-      long expectedValue, String expectedOutcomeValue) {
+      long expectedValue, String expectedPolicyName, String expectedOutcomeValue) {
     return longSumAssert ->
         longSumAssert
             .hasValue(expectedValue)
-            .hasAttributes(buildExpectedRetryPolicyAttributes(expectedOutcomeValue));
+            .hasAttributes(
+                buildExpectedRetryPolicyAttributes(expectedPolicyName, expectedOutcomeValue));
   }
 
   private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(
@@ -162,9 +172,10 @@ public abstract class AbstractFailsafeInstrumentationTest {
                 equalTo(stringKey(expectedAttributeKey), expectedAttributeValue));
   }
 
-  private static Attributes buildExpectedRetryPolicyAttributes(String expectedOutcome) {
+  private static Attributes buildExpectedRetryPolicyAttributes(
+      String expectedPolicyName, String expectedOutcome) {
     return Attributes.builder()
-        .put("failsafe.retry_policy.name", "testing")
+        .put("failsafe.retry_policy.name", expectedPolicyName)
         .put("failsafe.retry_policy.outcome", expectedOutcome)
         .build();
   }
