@@ -8,9 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -23,9 +20,6 @@ class WebClientBeanPostProcessorTest {
 
   static {
     beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
-    beanFactory.registerSingleton(
-        "configProperties",
-        new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(Collections.emptyMap())));
   }
 
   @Test
