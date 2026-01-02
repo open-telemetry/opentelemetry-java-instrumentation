@@ -106,7 +106,7 @@ class HelperInjectionTest {
     AgentInstaller.installBytebuddyAgent(
         ByteBuddyAgent.getInstrumentation(),
         this.getClass().getClassLoader(),
-        EarlyInitAgentConfig.create());
+        EarlyInitAgentConfig.get());
 
     String helperClassName = HelperInjectionTest.class.getPackage().getName() + ".HelperClass";
     HelperInjector injector =

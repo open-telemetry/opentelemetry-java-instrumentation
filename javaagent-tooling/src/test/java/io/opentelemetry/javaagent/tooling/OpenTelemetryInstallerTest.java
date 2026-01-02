@@ -37,7 +37,7 @@ class OpenTelemetryInstallerTest {
   void globalOpenTelemetry() {
     AutoConfiguredOpenTelemetrySdk sdk =
         OpenTelemetryInstaller.installOpenTelemetrySdk(
-            EarlyInitAgentConfig.class.getClassLoader(), EarlyInitAgentConfig.create());
+            EarlyInitAgentConfig.class.getClassLoader(), EarlyInitAgentConfig.get());
 
     assertThat(sdk).isNotNull().isNotEqualTo(OpenTelemetry.noop());
   }
@@ -63,7 +63,7 @@ class OpenTelemetryInstallerTest {
     Supplier<ConfigProperties> configPropertiesSupplier =
         () ->
             OpenTelemetryInstaller.getDeclarativeConfigBridgedProperties(
-                EarlyInitAgentConfig.create(),
+                EarlyInitAgentConfig.get(),
                 SdkConfigProvider.create(
                     DeclarativeConfiguration.parse(
                         new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)))));

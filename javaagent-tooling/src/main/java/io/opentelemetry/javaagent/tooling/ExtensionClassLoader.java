@@ -42,7 +42,6 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 // TODO find a way to initialize logging before using this class
 @SuppressWarnings("SystemOut")
 public class ExtensionClassLoader extends URLClassLoader {
-  public static final String EXTENSIONS_CONFIG = "otel.javaagent.extensions";
 
   private final boolean isSecurityManagerSupportEnabled;
 
@@ -62,7 +61,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     includeEmbeddedExtensionsIfFound(extensions, javaagentFile);
 
-    extensions.addAll(parseLocation(earlyConfig.getString(EXTENSIONS_CONFIG), javaagentFile));
+    extensions.addAll(parseLocation(earlyConfig.getOtelJavaagentExtensions(), javaagentFile));
 
     // TODO when logging is configured add warning about deprecated property
 

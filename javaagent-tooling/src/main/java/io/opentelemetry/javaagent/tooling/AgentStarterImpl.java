@@ -71,12 +71,12 @@ public class AgentStarterImpl implements AgentStarter {
   public void start() {
     installTransformers();
 
-    EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
+    EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.get();
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
     // allows loading instrumenter customizers from agent and extensions
     ServiceLoaderUtil.setLoadFunction(clazz -> ServiceLoader.load(clazz, extensionClassLoader));
 
-    String loggerImplementationName = earlyConfig.getString("otel.javaagent.logging");
+    String loggerImplementationName = earlyConfig.getOtelJavaagentLogging();
     // default to the built-in stderr slf4j-simple logger
     if (loggerImplementationName == null) {
       loggerImplementationName = "simple";
