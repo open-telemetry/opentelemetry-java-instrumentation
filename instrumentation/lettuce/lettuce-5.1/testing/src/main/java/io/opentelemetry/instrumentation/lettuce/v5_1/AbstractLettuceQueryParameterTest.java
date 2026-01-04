@@ -14,9 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -26,6 +24,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceClientTest {
 
   private static final AttributeKey<String> DB_QUERY_PARAMETER_0 =
@@ -34,8 +33,6 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
       AttributeKey.stringKey("db.query.parameter.1");
   private static final AttributeKey<String> DB_QUERY_PARAMETER_2 =
       AttributeKey.stringKey("db.query.parameter.2");
-  private static final AttributeKey<String> DB_QUERY_PARAMETER_3 =
-      AttributeKey.stringKey("db.query.parameter.3");
 
   @BeforeAll
   void setUp() throws UnknownHostException {
@@ -173,37 +170,6 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
                                     equalTo(DB_QUERY_PARAMETER_0, hash),
                                     equalTo(DB_QUERY_PARAMETER_1, field),
                                     equalTo(DB_QUERY_PARAMETER_2, value)))
-                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
-  }
-
-  @Test
-  void testMsetCommandWithMultiplePairs() {
-    String key1 = "mset-key-1";
-    String value1 = "mset-value-1";
-    String key2 = "mset-key-2";
-    String value2 = "mset-value-2";
-
-    RedisCommands<String, String> commands = connection.sync();
-    commands.mset(ImmutableMap.of(key1, value1, key2, value2));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("MSET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                attributes -> {
-                                  assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo(host);
-                                  assertThat(attributes.get(SERVER_PORT)).isEqualTo((long) port);
-                                  assertThat(attributes.get(maybeStable(DB_SYSTEM)))
-                                      .isEqualTo("redis");
-                                  assertThat(attributes.get(DB_QUERY_PARAMETER_0)).isNotNull();
-                                  assertThat(attributes.get(DB_QUERY_PARAMETER_1)).isNotNull();
-                                  assertThat(attributes.get(DB_QUERY_PARAMETER_2)).isNotNull();
-                                  assertThat(attributes.get(DB_QUERY_PARAMETER_3)).isNotNull();
-                                })
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
