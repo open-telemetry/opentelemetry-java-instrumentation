@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -49,6 +50,8 @@ final class OpenTelemetryTracing implements Tracing {
       AttributeKey.longKey("db.redis.database_index");
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String REDIS = "redis";
+  private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
+      AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
       ServerAttributesExtractor.create(new LettuceServerAttributesGetter());
@@ -60,9 +63,11 @@ final class OpenTelemetryTracing implements Tracing {
       io.opentelemetry.api.trace.Tracer tracer,
       RedisCommandSanitizer sanitizer,
       OperationListener metrics,
-      boolean encodingEventsEnabled) {
+      boolean encodingEventsEnabled,
+      boolean captureQueryParameters) {
     this.tracerProvider =
-        new OpenTelemetryTracerProvider(tracer, sanitizer, metrics, encodingEventsEnabled);
+        new OpenTelemetryTracerProvider(
+            tracer, sanitizer, metrics, encodingEventsEnabled, captureQueryParameters);
   }
 
   @Override
@@ -103,9 +108,11 @@ final class OpenTelemetryTracing implements Tracing {
         io.opentelemetry.api.trace.Tracer tracer,
         RedisCommandSanitizer sanitizer,
         OperationListener metrics,
-        boolean encodingEventsEnabled) {
+        boolean encodingEventsEnabled,
+        boolean captureQueryParameters) {
       openTelemetryTracer =
-          new OpenTelemetryTracer(tracer, sanitizer, metrics, encodingEventsEnabled);
+          new OpenTelemetryTracer(
+              tracer, sanitizer, metrics, encodingEventsEnabled, captureQueryParameters);
     }
 
     @Override
@@ -148,16 +155,19 @@ final class OpenTelemetryTracing implements Tracing {
     private final RedisCommandSanitizer sanitizer;
     private final OperationListener metrics;
     private final boolean encodingEventsEnabled;
+    private final boolean captureQueryParameters;
 
     OpenTelemetryTracer(
         io.opentelemetry.api.trace.Tracer tracer,
         RedisCommandSanitizer sanitizer,
         OperationListener metrics,
-        boolean encodingEventsEnabled) {
+        boolean encodingEventsEnabled,
+        boolean captureQueryParameters) {
       this.tracer = tracer;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
       this.encodingEventsEnabled = encodingEventsEnabled;
+      this.captureQueryParameters = captureQueryParameters;
     }
 
     @Override
@@ -186,7 +196,8 @@ final class OpenTelemetryTracing implements Tracing {
       if (SemconvStability.emitOldDatabaseSemconv()) {
         spanBuilder.setAttribute(DB_SYSTEM, REDIS);
       }
-      return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics, encodingEventsEnabled);
+      return new OpenTelemetrySpan(
+          context, spanBuilder, sanitizer, metrics, encodingEventsEnabled, captureQueryParameters);
     }
   }
 
@@ -201,6 +212,7 @@ final class OpenTelemetryTracing implements Tracing {
     private final RedisCommandSanitizer sanitizer;
     private final OperationListener metrics;
     private final boolean encodingEventsEnabled;
+    private final boolean captureQueryParameters;
 
     @Nullable private String name;
     @Nullable private List<Object> events;
@@ -216,13 +228,15 @@ final class OpenTelemetryTracing implements Tracing {
         SpanBuilder spanBuilder,
         RedisCommandSanitizer sanitizer,
         OperationListener metrics,
-        boolean encodingEventsEnabled) {
+        boolean encodingEventsEnabled,
+        boolean captureQueryParameters) {
       this.context = context;
       this.spanBuilder = spanBuilder;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
       this.attributesBuilder = Attributes.builder();
       this.encodingEventsEnabled = encodingEventsEnabled;
+      this.captureQueryParameters = captureQueryParameters;
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributesBuilder.put(DB_SYSTEM_NAME, REDIS);
       }
@@ -314,9 +328,11 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
       // Set db.statement on SpanBuilder before starting span so it's available to samplers
+      List<String> args = argsList != null ? argsList : splitArgs(argsString);
       if (name != null) {
-        String statement =
-            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
+        // sanitizer.sanitize() already handles the captureQueryParameters case:
+        // when statementSanitizationEnabled=false, it returns the full unsanitized statement
+        String statement = sanitizer.sanitize(name, args);
         if (statement != null) {
           if (SemconvStability.emitStableDatabaseSemconv()) {
             spanBuilder.setAttribute(DB_QUERY_TEXT, statement);
@@ -331,6 +347,12 @@ final class OpenTelemetryTracing implements Tracing {
 
       span = spanBuilder.startSpan();
       spanStartNanos = System.nanoTime();
+
+      // Set query parameters from the args list if capturing is enabled
+      if (captureQueryParameters && !args.isEmpty()) {
+        setQueryParameters(span, args);
+      }
+
       // Note: Span name cannot be set on SpanBuilder because it's set during
       // tracer.spanBuilder(name) call in nextSpan(), and we don't know the actual command name at
       // that point. We have to update the name after the span starts.
@@ -352,6 +374,15 @@ final class OpenTelemetryTracing implements Tracing {
       }
 
       return this;
+    }
+
+    private void setQueryParameters(Span span, List<String> args) {
+      for (int i = 0; i < args.size(); i++) {
+        String value = args.get(i);
+        AttributeKey<String> key = DB_QUERY_PARAMETER.getAttributeKey(String.valueOf(i));
+        span.setAttribute(key, value);
+        attributesBuilder.put(key, value);
+      }
     }
 
     @Override

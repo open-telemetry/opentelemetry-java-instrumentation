@@ -18,6 +18,7 @@ public final class LettuceTelemetryBuilder {
 
   private boolean statementSanitizationEnabled = true;
   private boolean encodingEventsEnabled = false;
+  private boolean captureQueryParameters = false;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -46,6 +47,19 @@ public final class LettuceTelemetryBuilder {
   }
 
   /**
+   * Sets whether query parameters should be captured as {@code db.query.parameter.*} span
+   * attributes. When enabled, this will disable statement sanitization. Disabled by default.
+   *
+   * <p><b>WARNING:</b> Captured query parameters may contain sensitive information such as
+   * passwords, personally identifiable information, or protected health information.
+   */
+  @CanIgnoreReturnValue
+  public LettuceTelemetryBuilder setCaptureQueryParameters(boolean captureQueryParameters) {
+    this.captureQueryParameters = captureQueryParameters;
+    return this;
+  }
+
+  /**
    * Returns a new {@link LettuceTelemetry} with the settings of this {@link
    * LettuceTelemetryBuilder}.
    */
@@ -54,6 +68,7 @@ public final class LettuceTelemetryBuilder {
         openTelemetry,
         statementSanitizationEnabled,
         encodingEventsEnabled,
+        captureQueryParameters,
         DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
   }
 }
