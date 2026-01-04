@@ -330,8 +330,6 @@ final class OpenTelemetryTracing implements Tracing {
       // Set db.statement on SpanBuilder before starting span so it's available to samplers
       List<String> args = argsList != null ? argsList : splitArgs(argsString);
       if (name != null) {
-        // sanitizer.sanitize() already handles the captureQueryParameters case:
-        // when statementSanitizationEnabled=false, it returns the full unsanitized statement
         String statement = sanitizer.sanitize(name, args);
         if (statement != null) {
           if (SemconvStability.emitStableDatabaseSemconv()) {
@@ -348,7 +346,6 @@ final class OpenTelemetryTracing implements Tracing {
       span = spanBuilder.startSpan();
       spanStartNanos = System.nanoTime();
 
-      // Set query parameters from the args list if capturing is enabled
       if (captureQueryParameters && !args.isEmpty()) {
         setQueryParameters(span, args);
       }

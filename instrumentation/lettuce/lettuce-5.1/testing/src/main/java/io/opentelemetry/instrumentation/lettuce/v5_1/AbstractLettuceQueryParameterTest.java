@@ -26,12 +26,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-/**
- * Base test class for verifying db.query.parameter capture functionality.
- *
- * <p>This test is designed to run with capture-query-parameters enabled via gradle configuration.
- */
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceClientTest {
 
   private static final AttributeKey<String> DB_QUERY_PARAMETER_0 =
@@ -55,26 +49,14 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
     redisClient = createClient(embeddedDbUri);
     connection = redisClient.connect();
 
-    // Initial setup commands
-    RedisCommands<String, String> commands = connection.sync();
-    commands.set("TESTKEY", "TESTVAL");
-
-    // Wait for setup traces and clear
-    testing().waitForTraces(1);
     testing().clearData();
   }
 
   @AfterAll
   static void cleanUp() {
-    if (connection != null) {
-      connection.close();
-    }
-    if (redisClient != null) {
-      redisClient.shutdown();
-    }
-    if (redisServer != null) {
-      redisServer.stop();
-    }
+    connection.close();
+    redisClient.shutdown();
+    redisServer.stop();
   }
 
   @Test
@@ -108,9 +90,7 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    // With parameter capture enabled, statement is NOT sanitized
                                     equalTo(maybeStable(DB_STATEMENT), "SET " + key + " " + value),
-                                    // Query parameters should be captured
                                     equalTo(DB_QUERY_PARAMETER_0, key),
                                     equalTo(DB_QUERY_PARAMETER_1, value)))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
@@ -121,12 +101,10 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
     String key = "test-key-2";
 
     RedisCommands<String, String> commands = connection.sync();
-    // Set a value first
     commands.set(key, "test-value-2");
     testing().waitForTraces(1);
     testing().clearData();
 
-    // Now test GET with parameter capture
     testing()
         .runWithSpan(
             "parent",
@@ -152,9 +130,7 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    // Statement should include the actual key (not sanitized)
                                     equalTo(maybeStable(DB_STATEMENT), "GET " + key),
-                                    // Query parameter for key
                                     equalTo(DB_QUERY_PARAMETER_0, key)))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -191,11 +167,9 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    // Full statement without sanitization
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "HSET " + hash + " " + field + " " + value),
-                                    // Query parameters: hash, field, value
                                     equalTo(DB_QUERY_PARAMETER_0, hash),
                                     equalTo(DB_QUERY_PARAMETER_1, field),
                                     equalTo(DB_QUERY_PARAMETER_2, value)))
@@ -219,15 +193,12 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
                     span ->
                         span.hasName("MSET")
                             .hasKind(SpanKind.CLIENT)
-                            // MSET parameter order depends on map iteration order
-                            // Just verify that parameters exist
                             .hasAttributesSatisfying(
                                 attributes -> {
                                   assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo(host);
                                   assertThat(attributes.get(SERVER_PORT)).isEqualTo((long) port);
                                   assertThat(attributes.get(maybeStable(DB_SYSTEM)))
                                       .isEqualTo("redis");
-                                  // Verify parameters are captured (order may vary due to map)
                                   assertThat(attributes.get(DB_QUERY_PARAMETER_0)).isNotNull();
                                   assertThat(attributes.get(DB_QUERY_PARAMETER_1)).isNotNull();
                                   assertThat(attributes.get(DB_QUERY_PARAMETER_2)).isNotNull();
@@ -267,9 +238,7 @@ public abstract class AbstractLettuceQueryParameterTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    // Full statement with special characters
                                     equalTo(maybeStable(DB_STATEMENT), "SET " + key + " " + value),
-                                    // Query parameters should preserve special characters
                                     equalTo(DB_QUERY_PARAMETER_0, key),
                                     equalTo(DB_QUERY_PARAMETER_1, value)))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
