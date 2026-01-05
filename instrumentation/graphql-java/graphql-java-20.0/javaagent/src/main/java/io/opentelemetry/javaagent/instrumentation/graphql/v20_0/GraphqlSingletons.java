@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.graphql.v20_0;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v20_0.GraphQLTelemetry;
 
@@ -20,10 +18,11 @@ public final class GraphqlSingletons {
   private static final GraphQLTelemetry TELEMETRY;
 
   static {
-    Configuration config = new Configuration(GlobalOpenTelemetry.get());
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    Configuration config = new Configuration(openTelemetry);
 
     TELEMETRY =
-        GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
+        GraphQLTelemetry.builder(openTelemetry)
             .setCaptureQuery(config.captureQuery)
             .setSanitizeQuery(config.sanitizeQuery)
             .setDataFetcherInstrumentationEnabled(config.dataFetcherEnabled)
@@ -58,28 +57,16 @@ public final class GraphqlSingletons {
     private final boolean addOperationNameToSpanName;
 
     Configuration(OpenTelemetry openTelemetry) {
-      DeclarativeConfigProperties javaConfig = empty();
-      if (openTelemetry instanceof ExtendedOpenTelemetry) {
-        ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
-        DeclarativeConfigProperties instrumentationConfig =
-            extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
-        if (instrumentationConfig != null) {
-          javaConfig = instrumentationConfig.getStructured("java", empty());
-        }
-      }
-      DeclarativeConfigProperties graphqlConfig = javaConfig.getStructured("graphql", empty());
+      ExtendedDeclarativeConfigProperties config =
+          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
-      this.captureQuery = graphqlConfig.getBoolean("capture_query", true);
-      this.sanitizeQuery =
-          graphqlConfig.getStructured("query_sanitizer", empty()).getBoolean("enabled", true);
-      this.dataFetcherEnabled =
-          graphqlConfig.getStructured("data_fetcher", empty()).getBoolean("enabled", false);
+      this.captureQuery = config.getBoolean("capture_query", true);
+      this.sanitizeQuery = config.get("query_sanitizer").getBoolean("enabled", true);
+      this.dataFetcherEnabled = config.get("data_fetcher").getBoolean("enabled", false);
       this.trivialDataFetcherEnabled =
-          graphqlConfig.getStructured("trivial_data_fetcher", empty()).getBoolean("enabled", false);
+          config.get("trivial_data_fetcher").getBoolean("enabled", false);
       this.addOperationNameToSpanName =
-          graphqlConfig
-              .getStructured("add_operation_name_to_span_name", empty())
-              .getBoolean("enabled", false);
+          config.get("add_operation_name_to_span_name").getBoolean("enabled", false);
     }
   }
 

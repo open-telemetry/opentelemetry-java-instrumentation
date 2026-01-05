@@ -38,7 +38,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.45.0"
-val byteBuddyVersion = "1.18.2"
+val byteBuddyVersion = "1.18.3"
 val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -85,7 +85,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.14",
+  "com.uber.nullaway:nullaway:0.12.15",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.20.0",

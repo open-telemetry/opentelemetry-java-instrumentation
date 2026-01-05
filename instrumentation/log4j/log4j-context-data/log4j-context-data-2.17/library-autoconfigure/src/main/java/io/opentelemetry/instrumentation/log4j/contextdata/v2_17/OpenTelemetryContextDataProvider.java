@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
@@ -25,7 +27,13 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   private static final boolean BAGGAGE_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "log4j_context_data")
+          .getBoolean(
+              "add_baggage",
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.log4j-context-data.add-baggage", false));
+
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
   private static final Map<String, String> staticContextData = getStaticContextData();
@@ -68,16 +76,17 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
       return staticContextData;
     }
 
-    if (ThreadContext.containsKey(ContextDataKeys.TRACE_ID_KEY)) {
+    ContextDataKeys contextDataKeys = ContextDataKeys.create(GlobalOpenTelemetry.get());
+    if (ThreadContext.containsKey(contextDataKeys.getTraceIdKey())) {
       // Assume already instrumented event if traceId is present.
       return staticContextData;
     }
 
     Map<String, String> contextData = new HashMap<>(staticContextData);
     SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(ContextDataKeys.TRACE_ID_KEY, spanContext.getTraceId());
-    contextData.put(ContextDataKeys.SPAN_ID_KEY, spanContext.getSpanId());
-    contextData.put(ContextDataKeys.TRACE_FLAGS_KEY, spanContext.getTraceFlags().asHex());
+    contextData.put(contextDataKeys.getTraceIdKey(), spanContext.getTraceId());
+    contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
+    contextData.put(contextDataKeys.getTraceFlags(), spanContext.getTraceFlags().asHex());
 
     if (BAGGAGE_ENABLED) {
       Baggage baggage = Baggage.fromContext(context);

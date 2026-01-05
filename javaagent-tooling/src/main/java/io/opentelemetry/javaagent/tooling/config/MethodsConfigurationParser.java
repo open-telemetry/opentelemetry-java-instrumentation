@@ -5,14 +5,20 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public final class MethodsConfigurationParser {
 
@@ -24,6 +30,49 @@ public final class MethodsConfigurationParser {
       PACKAGE_CLASS_NAME_REGEX + "(?:\\[" + METHOD_LIST_REGEX + "])?";
 
   /**
+   * Parse exclude methods configuration from declarative config.
+   *
+   * <p>First tries structured declarative config (YAML format), then falls back to old string/list
+   * property format for backward compatibility.
+   *
+   * <p>Example YAML structure:
+   *
+   * <pre>{@code
+   * exclude_methods:
+   *   - class: com.example.MyClass
+   *     methods: [method1, method2]
+   *   - class: com.example.AnotherClass
+   *     methods: [someMethod]
+   * }</pre>
+   */
+  public static Map<String, Set<String>> parseExcludeMethods(
+      ExtendedDeclarativeConfigProperties config) {
+    // First try structured declarative config (YAML format)
+    List<DeclarativeConfigProperties> excludeList = config.getStructuredList("exclude_methods");
+    if (excludeList != null) {
+      return excludeList.stream()
+          .filter(
+              entry -> {
+                String className = entry.getString("class");
+                return className != null && !className.isEmpty();
+              })
+          .collect(
+              Collectors.toMap(
+                  entry -> entry.getString("class"),
+                  entry ->
+                      new HashSet<>(entry.getScalarList("methods", String.class, emptyList()))));
+    }
+
+    // Fall back to old string property format for backward compatibility
+    String excludeMethodsString = config.getString("exclude_methods");
+    if (excludeMethodsString != null) {
+      return parse(excludeMethodsString);
+    }
+
+    return emptyMap();
+  }
+
+  /**
    * This method takes a string in a form of {@code
    * "io.package.ClassName[method1,method2];my.example[someMethodName];"} and returns a map where
    * keys are class names and corresponding value is a set of methods for that class.
@@ -32,13 +81,13 @@ public final class MethodsConfigurationParser {
    */
   public static Map<String, Set<String>> parse(String configString) {
     if (configString == null || configString.trim().isEmpty()) {
-      return Collections.emptyMap();
+      return emptyMap();
     } else if (!validateConfigString(configString)) {
       logger.log(
           WARNING,
           "Invalid trace method config \"{0}\". Must match 'package.Class$Name[method1,method2];*'.",
           configString);
-      return Collections.emptyMap();
+      return emptyMap();
     } else {
       Map<String, Set<String>> toTrace = new HashMap<>();
       String[] classMethods = configString.split(";", -1);

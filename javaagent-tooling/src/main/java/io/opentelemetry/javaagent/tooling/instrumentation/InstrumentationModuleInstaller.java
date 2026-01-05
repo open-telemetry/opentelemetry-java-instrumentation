@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -21,7 +23,6 @@ import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
@@ -67,8 +68,7 @@ public final class InstrumentationModuleInstaller {
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
       ConfigProperties config) {
-    if (!AgentConfig.isInstrumentationEnabled(
-        config,
+    if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(),
         instrumentationModule.defaultEnabled(config))) {
       logger.log(
@@ -238,6 +238,20 @@ public final class InstrumentationModuleInstaller {
     }
 
     return agentBuilder;
+  }
+
+  static boolean isInstrumentationEnabled(
+      Iterable<String> instrumentationNames, boolean defaultEnabled) {
+    for (String name : instrumentationNames) {
+      String normalizedName = name.replace('-', '_');
+      Boolean enabled =
+          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), normalizedName)
+              .getBoolean("enabled");
+      if (enabled != null) {
+        return enabled;
+      }
+    }
+    return defaultEnabled;
   }
 
   private static AgentBuilder.Identified.Narrowable setTypeMatcher(

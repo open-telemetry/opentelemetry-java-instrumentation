@@ -46,6 +46,19 @@ tasks {
     jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
   }
 
+  val testDeclarativeConfigInclude by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("ConfiguredTraceAnnotationsTest")
+    }
+    include("**/ConfiguredTraceAnnotationsTest.*")
+    jvmArgs(
+      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
+    )
+  }
+
   val testExcludeMethodsProperty by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -59,6 +72,19 @@ tasks {
     )
   }
 
+  val testDeclarativeConfigExcludeMethods by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("TracedMethodsExclusionTest")
+    }
+    include("**/TracedMethodsExclusionTest.*")
+    jvmArgs(
+      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
+    )
+  }
+
   test {
     filter {
       excludeTestsMatching("ConfiguredTraceAnnotationsTest")
@@ -67,6 +93,6 @@ tasks {
   }
 
   check {
-    dependsOn(testIncludeProperty, testExcludeMethodsProperty)
+    dependsOn(testIncludeProperty, testExcludeMethodsProperty, testDeclarativeConfigInclude, testDeclarativeConfigExcludeMethods)
   }
 }

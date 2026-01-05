@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -20,19 +21,17 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletInstrumenterBuil
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      AgentInstrumentationConfig.get()
-          .getList(
-              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getScalarList("capture_request_parameters/development", String.class, emptyList());
   private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getBoolean("experimental_span_attributes/development", false);
 
   private AgentServletInstrumenterBuilder() {}
 

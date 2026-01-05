@@ -11,13 +11,12 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
+  public void configure(IgnoredTypesBuilder builder) {
     configureIgnoredTypes(builder);
     configureIgnoredClassLoaders(builder);
     configureIgnoredTasks(builder);
