@@ -39,7 +39,7 @@ final class ClickHouseAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(ClickHouseDbRequest request) {
+  public String getDbSystemName(ClickHouseDbRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
   }
 
@@ -55,7 +55,7 @@ final class ClickHouseAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
   }
 }
