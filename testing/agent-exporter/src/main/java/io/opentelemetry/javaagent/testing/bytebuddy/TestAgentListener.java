@@ -45,10 +45,11 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   private static Trie<IgnoreAllow> buildAdditionalLibraryIgnores() {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
-    new AdditionalLibraryIgnoredTypesConfigurer().configure(builder);
+    new AdditionalLibraryIgnoredTypesConfigurer().configureInternal(builder);
     return builder.buildIgnoredTypesTrie();
   }
 
+  @SuppressWarnings("deprecation") // supporting deprecated method for backward compatibility
   private static Trie<IgnoreAllow> buildOtherConfiguredIgnores() {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
@@ -59,7 +60,12 @@ public class TestAgentListener implements AgentBuilder.Listener {
           || configurer instanceof GlobalIgnoredTypesConfigurer) {
         continue;
       }
-      configurer.configure(builder, EmptyConfigProperties.INSTANCE);
+      try {
+        configurer.configure(builder);
+      } catch (UnsupportedOperationException e) {
+        // fall back to the deprecated method
+        configurer.configure(builder, EmptyConfigProperties.INSTANCE);
+      }
     }
     return builder.buildIgnoredTypesTrie();
   }

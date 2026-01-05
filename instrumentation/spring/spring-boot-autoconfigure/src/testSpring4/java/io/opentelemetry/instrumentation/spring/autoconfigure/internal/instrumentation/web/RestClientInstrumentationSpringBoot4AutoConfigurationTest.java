@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractRestClientInstrumentationAutoConfigurationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -41,8 +40,7 @@ class RestClientInstrumentationSpringBoot4AutoConfigurationTest
                   RestClient.builder()
                       .requestInterceptor(
                           RestClientBeanPostProcessor.getInterceptor(
-                              context.getBean(OpenTelemetry.class),
-                              context.getBean(InstrumentationConfig.class)))
+                              context.getBean(OpenTelemetry.class)))
                       .build();
 
               RestClient processed =

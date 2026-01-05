@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.extannotations.External
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,12 +25,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class IncludeTest {
 
-  @Mock InstrumentationConfig config;
+  @Mock ExtendedDeclarativeConfigProperties config;
 
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testConfiguration(String value, List<String> expected) {
-    when(config.getString("otel.instrumentation.external-annotations.include")).thenReturn(value);
+    when(config.getScalarList("include", String.class)).thenReturn(null);
+    when(config.getString("include")).thenReturn(value);
 
     assertThat(ExternalAnnotationInstrumentation.configureAdditionalTraceAnnotations(config))
         .isEqualTo(new HashSet<>(expected));

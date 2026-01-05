@@ -29,6 +29,12 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private static final String GENERAL_PEER_SERVICE_MAPPING = "general.peer.service_mapping";
 
+  private static final String AGENT_INSTRUMENTATION_MODE = "java.agent.instrumentation_mode";
+  private static final String SPRING_STARTER_INSTRUMENTATION_MODE =
+      "java.spring_starter.instrumentation_mode";
+  private static final String COMMON_DEFAULT_ENABLED =
+      "otel.instrumentation.common.default-enabled";
+
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
   static {
@@ -73,10 +79,22 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
+    // top-level common configs
+    SPECIAL_MAPPINGS.put(
+        "java.common.span_suppression_strategy/development",
+        "otel.instrumentation.experimental.span-suppression-strategy");
     // renaming to match instrumentation module name
     SPECIAL_MAPPINGS.put(
         "java.opentelemetry_extension_annotations.exclude_methods",
         "otel.instrumentation.opentelemetry-annotations.exclude-methods");
+    // renaming to avoid top level config
+    SPECIAL_MAPPINGS.put(
+        "java.servlet.javascript_snippet/development", "otel.experimental.javascript-snippet");
+    // jmx properties don't have an "instrumentation" segment
+    SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
+    SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
+    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
+    SPECIAL_MAPPINGS.put("java.jmx.target_system", "otel.jmx.target.system");
   }
 
   private final ConfigProperties configProperties;
@@ -97,6 +115,17 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public String getString(String name) {
+    String fullPath = pathWithName(name);
+
+    if (fullPath.equals(AGENT_INSTRUMENTATION_MODE)
+        || fullPath.equals(SPRING_STARTER_INSTRUMENTATION_MODE)) {
+      Boolean value = configProperties.getBoolean(COMMON_DEFAULT_ENABLED);
+      if (value != null) {
+        return value ? "default" : "none";
+      }
+      return null;
+    }
+
     return configProperties.getString(resolvePropertyKey(name));
   }
 
@@ -201,11 +230,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // Handle agent prefix: java.agent.* → otel.javaagent.*
     if (translated.startsWith("agent.")) {
       return "otel.java" + translated;
-    }
-
-    // Handle jmx prefix: java.jmx.* → otel.jmx.*
-    if (translated.startsWith("jmx.")) {
-      return "otel." + translated;
     }
 
     // Standard mapping

@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetricsBuilder;
 import javax.annotation.Nullable;
@@ -19,18 +20,20 @@ public final class RuntimeMetricsConfigUtil {
 
   @Nullable
   public static RuntimeMetrics configure(
-      RuntimeMetricsBuilder builder, InstrumentationConfig config) {
+      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry, String instrumentationMode) {
     /*
     By default, don't use any JFR metrics. May change this once semantic conventions are updated.
     If enabled, default to only the metrics not already covered by runtime-telemetry-java8
     */
-    boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
-    if (config.getBoolean("otel.instrumentation.runtime-telemetry-java17.enable-all", false)) {
+    if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17")
+        .getBoolean("enable_all", false)) {
       builder.enableAllFeatures();
-    } else if (config.getBoolean("otel.instrumentation.runtime-telemetry-java17.enabled", false)) {
+    } else if (DeclarativeConfigUtil.getInstrumentationConfig(
+            openTelemetry, "runtime_telemetry_java17")
+        .getBoolean("enabled", false)) {
       // default configuration
-    } else if (config.getBoolean(
-        "otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)) {
+    } else if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
+        .getBoolean("enabled", instrumentationMode.equals("default"))) {
       // This only uses metrics gathered by JMX
       builder.disableAllFeatures();
     } else {
@@ -38,12 +41,13 @@ public final class RuntimeMetricsConfigUtil {
       return null;
     }
 
-    if (config.getBoolean(
-        "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry", false)) {
+    if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
+        .getBoolean("emit_experimental_telemetry/development", false)) {
       builder.emitExperimentalTelemetry();
     }
 
-    if (config.getBoolean("otel.instrumentation.runtime-telemetry.capture-gc-cause", false)) {
+    if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
+        .getBoolean("capture_gc_cause", false)) {
       builder.captureGcCause();
     }
 

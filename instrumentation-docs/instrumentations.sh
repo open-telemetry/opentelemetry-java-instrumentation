@@ -204,6 +204,8 @@ readonly INSTRUMENTATIONS=(
   "pulsar:pulsar-2.8:javaagent:testExperimental"
   "r2dbc-1.0:javaagent:test"
   "r2dbc-1.0:javaagent:testStableSemconv"
+  "rabbitmq-2.7:javaagent:test"
+  "rabbitmq-2.7:javaagent:testExperimental"
   "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
   "rediscala-1.8:javaagent:test"

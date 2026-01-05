@@ -9,17 +9,16 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
-import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
@@ -30,7 +29,6 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizer;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
@@ -40,7 +38,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
-import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
@@ -50,7 +47,6 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
@@ -91,7 +87,7 @@ public class AgentInstaller {
   // too much javaagent users can file a bug, force sync execution by setting this property to true
   // and continue using the javaagent
   private static final String FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG =
-      "otel.javaagent.experimental.force-synchronous-agent-listeners";
+      "force-synchronous-agent-listeners/development";
 
   private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
       "otel.javaagent.testing.strict-context-stressor-millis";
@@ -170,15 +166,6 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    OpenTelemetrySdk openTelemetry = autoConfiguredSdk.getOpenTelemetrySdk();
-    ConfigProvider configProvider =
-        openTelemetry instanceof ExtendedOpenTelemetry
-            ? ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider()
-            : null;
-
-    AgentInstrumentationConfig.internalInitializeConfig(
-        new ConfigPropertiesBridge(sdkConfig, configProvider));
-    copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
@@ -233,7 +220,7 @@ public class AgentInstaller {
     addHttpServerResponseCustomizers(extensionClassLoader);
     addSqlCommenterCustomizers(extensionClassLoader);
 
-    runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
+    runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
@@ -291,15 +278,6 @@ public class AgentInstaller {
     agentBuilder.installOn(instrumentation);
   }
 
-  private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {
-    for (String property : asList("otel.instrumentation.experimental.span-suppression-strategy")) {
-      String value = config.getString(property);
-      if (value != null) {
-        System.setProperty(property, value);
-      }
-    }
-  }
-
   private static void setBootstrapPackages(
       ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
@@ -314,12 +292,19 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
+  // Need to call deprecated API for backward compatibility with extensions that haven't migrated
+  @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
       ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config);
+      try {
+        configurer.configure(builder);
+      } catch (UnsupportedOperationException e) {
+        // fall back to the deprecated method
+        configurer.configure(builder, config);
+      }
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
@@ -364,9 +349,7 @@ public class AgentInstaller {
   }
 
   private static void runAfterAgentListeners(
-      Iterable<AgentListener> agentListeners,
-      AutoConfiguredOpenTelemetrySdk autoConfiguredSdk,
-      ConfigProperties sdkConfigProperties) {
+      Iterable<AgentListener> agentListeners, AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     // java.util.logging.LogManager maintains a final static LogManager, which is created during
     // class initialization. Some AgentListener implementations may use JRE bootstrap classes
     // which touch this class (e.g. JFR classes or some MBeans).
@@ -384,7 +367,8 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        sdkConfigProperties.getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+            .getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
     if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");

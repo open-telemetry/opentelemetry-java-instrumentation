@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -48,11 +51,6 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
-
-  private static final SpanSuppressionStrategy spanSuppressionStrategy =
-      SpanSuppressionStrategy.fromConfig(
-          ConfigPropertiesUtil.getString(
-              "otel.instrumentation.experimental.span-suppression-strategy"));
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -374,7 +372,28 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   SpanSuppressor buildSpanSuppressor() {
     return new SpanSuppressors.ByContextKey(
-        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+        SpanSuppressionStrategy.fromConfig(getSpanSuppressionStrategy())
+            .create(getSpanKeysFromAttributesExtractors()));
+  }
+
+  @Nullable
+  private String getSpanSuppressionStrategy() {
+    // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
+    DeclarativeConfigProperties commonConfig = empty();
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      DeclarativeConfigProperties instrumentationConfig =
+          ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
+      if (instrumentationConfig != null) {
+        commonConfig =
+            instrumentationConfig.getStructured("java", empty()).getStructured("common", empty());
+      }
+    }
+    String result =
+        commonConfig.getString(
+            "span_suppression_strategy/development",
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.experimental.span-suppression-strategy", ""));
+    return result.isEmpty() ? null : result;
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {

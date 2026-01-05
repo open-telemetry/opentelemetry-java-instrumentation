@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,8 +32,7 @@ public class IgnoredTypesMatcherBenchmark {
 
   static {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
-    new AdditionalLibraryIgnoredTypesConfigurer()
-        .configure(builder, EmptyConfigProperties.INSTANCE);
+    new AdditionalLibraryIgnoredTypesConfigurer().configureInternal(builder);
     ignoredTypesMatcher = new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie());
   }
 
