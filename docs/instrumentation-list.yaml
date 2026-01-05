@@ -10538,12 +10538,142 @@ libraries:
       - io.r2dbc:r2dbc-spi:1.0.0.RELEASE
   rabbitmq:
   - name: rabbitmq-2.7
+    display_name: RabbitMQ
+    description: This instrumentation enables messaging spans for RabbitMQ message
+      producers and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://www.rabbitmq.com/client-libraries/java-api-guide
     source_path: instrumentation/rabbitmq-2.7
     scope:
       name: io.opentelemetry.rabbitmq-2.7
     target_versions:
       javaagent:
       - com.rabbitmq:amqp-client:[2.7.0,)
+    configurations:
+    - name: otel.instrumentation.rabbitmq.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`, `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables the creation of consumer spans on messaging receive operations. These spans will measure the time between receiving a message and the consumer processing that message.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.messaging.capture-headers
+      description: List of messaging headers to capture.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: messaging.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rabbitmq.destination.routing_key
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rabbitmq.destination.routing_key
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.instrumentation.rabbitmq.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: messaging.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rabbitmq.command
+          type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rabbitmq.destination.routing_key
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rabbitmq.command
+          type: STRING
+        - name: rabbitmq.queue
+          type: STRING
+        - name: rabbitmq.record.queue_time_ms
+          type: LONG
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rabbitmq.destination.routing_key
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rabbitmq.command
+          type: STRING
+        - name: rabbitmq.delivery_mode
+          type: LONG
   ratpack:
   - name: ratpack-1.4
     source_path: instrumentation/ratpack/ratpack-1.4

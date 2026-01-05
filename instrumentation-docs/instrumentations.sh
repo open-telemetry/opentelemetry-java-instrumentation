@@ -202,6 +202,8 @@ readonly INSTRUMENTATIONS=(
   "powerjob-4.0:javaagent:testExperimental"
   "pulsar:pulsar-2.8:javaagent:test"
   "pulsar:pulsar-2.8:javaagent:testExperimental"
+  "rabbitmq-2.7:javaagent:test"
+  "rabbitmq-2.7:javaagent:testExperimental"
   "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
   "spring:spring-batch-3.0:javaagent:test"
