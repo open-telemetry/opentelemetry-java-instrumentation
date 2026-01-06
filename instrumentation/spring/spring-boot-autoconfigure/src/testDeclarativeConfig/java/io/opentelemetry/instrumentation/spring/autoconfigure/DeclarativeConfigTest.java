@@ -8,11 +8,13 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -53,17 +55,40 @@ class DeclarativeConfigTest {
   @Test
   @DisplayName(
       "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
+  @SetEnvironmentVariable(key = "STRING_ENV", value = "string_value")
+  @SetEnvironmentVariable(key = "BOOL_ENV", value = "true")
+  @SetEnvironmentVariable(key = "INT_ENV", value = "42")
+  @SetEnvironmentVariable(key = "DOUBLE_ENV", value = "3.14")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
         context ->
             assertThat(context)
-                .hasBean("openTelemetry")
-                .getBean("otelProperties", ConfigProperties.class)
+                .getBean("openTelemetry", OpenTelemetry.class)
                 .isNotNull()
                 .satisfies(
-                    configProperties ->
-                        assertThat(configProperties.getString("otel.instrumentation.foo.bar"))
-                            .isEqualTo("baz")));
+                    o -> {
+                      ExtendedDeclarativeConfigProperties config =
+                          DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+                      assertThat(config.getString("string_key")).isEqualTo("string_value");
+                      assertThat(config.getString("string_key_with_env")).isEqualTo("string_value");
+                      assertThat(config.getString("string_key_with_env_quoted"))
+                          .isEqualTo("string_value");
+
+                      assertThat(config.getBoolean("bool_key")).isTrue();
+                      assertThat(config.getBoolean("bool_key_with_env")).isTrue();
+                      assertThat(config.getBoolean("bool_key_with_env_quoted"))
+                          .isNull(); // quoted "true" is not recognized as boolean
+
+                      assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+                      assertThat(config.getDouble("double_key_with_env")).isEqualTo(3.14);
+                      assertThat(config.getDouble("double_key_with_env_quoted"))
+                          .isNull(); // quoted "3.14" is not recognized as double
+
+                      assertThat(config.getLong("int_key")).isEqualTo(42);
+                      assertThat(config.getLong("int_key_with_env")).isEqualTo(42);
+                      assertThat(config.getLong("int_key_with_env_quoted"))
+                          .isNull(); // quoted "42" is not recognized as long
+                    }));
   }
 
   @Test
