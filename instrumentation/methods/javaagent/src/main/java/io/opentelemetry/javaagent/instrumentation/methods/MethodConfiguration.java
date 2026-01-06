@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.ArrayList;
@@ -34,27 +34,18 @@ public class MethodConfiguration {
   private final List<TypeInstrumentation> typeInstrumentations;
 
   MethodConfiguration(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties javaConfig = empty();
-    if (openTelemetry instanceof ExtendedOpenTelemetry) {
-      ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
-      DeclarativeConfigProperties instrumentationConfig =
-          extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
-      if (instrumentationConfig != null) {
-        javaConfig = instrumentationConfig.getStructured("java", empty());
-      }
-    }
-    DeclarativeConfigProperties methodsConfig = javaConfig.getStructured("methods", empty());
-
-    this.typeInstrumentations = parse(methodsConfig);
+    this.typeInstrumentations = parse(openTelemetry);
   }
 
   List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
   }
 
-  private static List<TypeInstrumentation> parse(DeclarativeConfigProperties methods) {
+  private static List<TypeInstrumentation> parse(OpenTelemetry openTelemetry) {
+    ExtendedDeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "methods");
     // First try structured declarative config (YAML format)
-    List<DeclarativeConfigProperties> includeList = methods.getStructuredList("include");
+    List<DeclarativeConfigProperties> includeList = config.getStructuredList("include");
     if (includeList != null) {
       return includeList.stream()
           .flatMap(MethodConfiguration::parseMethodInstrumentation)
@@ -62,7 +53,7 @@ public class MethodConfiguration {
     }
 
     // Fall back to old string property format
-    String include = methods.getString("include");
+    String include = config.getString("include");
     if (include != null) {
       return parseConfigString(include);
     }
