@@ -26,6 +26,36 @@ public final class EarlyInitAgentConfig {
   }
 
   @Nullable
+  public String getOtelJavaagentLogging() {
+    return getString("otel.javaagent.logging");
+  }
+
+  @Nullable
+  public String getOtelJavaagentExtensions() {
+    return getString("otel.javaagent.extensions");
+  }
+
+  public boolean isOtelJavaagentEnabled() {
+    return getBoolean("otel.javaagent.enabled", true);
+  }
+
+  public boolean isOtelJavaagentDebug() {
+    return getBoolean("otel.javaagent.debug", false);
+  }
+
+  public int getOtelJavaagentLoggingApplicationLogsBufferMaxRecords() {
+    return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
+  }
+
+  public boolean isOtelJavaagentExperimentalFieldInjectionEnabled() {
+    return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
+  }
+
+  /**
+   * @deprecated Use the specific getter methods instead, e.g. {@link #getOtelJavaagentLogging()}.
+   */
+  @Deprecated
+  @Nullable
   public String getString(String propertyName) {
     String value = ConfigPropertiesUtil.getString(propertyName);
     if (value != null) {
@@ -34,6 +64,10 @@ public final class EarlyInitAgentConfig {
     return configFileContents.get(propertyName);
   }
 
+  /**
+   * @deprecated Use the specific getter methods instead, e.g. {@link #isOtelJavaagentEnabled()}.
+   */
+  @Deprecated
   public boolean getBoolean(String propertyName, boolean defaultValue) {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
@@ -41,6 +75,11 @@ public final class EarlyInitAgentConfig {
     return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
   }
 
+  /**
+   * @deprecated Use the specific getter methods instead, e.g. {@link
+   *     #getOtelJavaagentLoggingApplicationLogsBufferMaxRecords()}.
+   */
+  @Deprecated
   public int getInt(String propertyName, int defaultValue) {
     try {
       String configFileValueStr = configFileContents.get(propertyName);

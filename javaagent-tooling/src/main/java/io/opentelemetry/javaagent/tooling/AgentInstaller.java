@@ -107,7 +107,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (earlyConfig.isOtelJavaagentEnabled()) {
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
