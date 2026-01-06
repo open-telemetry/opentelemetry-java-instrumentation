@@ -21,10 +21,12 @@ public final class RuntimeMetricsConfigUtil {
 
   @Nullable
   public static RuntimeMetrics configure(
-      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry, String instrumentationMode) {
+      RuntimeMetricsBuilder builder,
+      OpenTelemetry openTelemetry,
+      InstrumentationMode instrumentationMode) {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
-    if (!config.getBoolean("enabled", instrumentationMode.equals("default"))) {
+    if (!config.getBoolean("enabled", instrumentationMode.equals(InstrumentationMode.DEFAULT))) {
       // nothing is enabled
       return null;
     }

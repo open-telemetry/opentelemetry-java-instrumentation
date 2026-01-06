@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
+import io.opentelemetry.instrumentation.api.incubator.config.InstrumentationMode;
 import org.springframework.core.env.Environment;
 
 /**
@@ -28,7 +28,7 @@ public class EarlyConfig {
     return environment.getProperty("otel.file_format", String.class) != null;
   }
 
-  public static boolean isDefaultEnabled(Environment environment) {
+  public static InstrumentationMode getInstrumentationMode(Environment environment) {
     if (isDeclarativeConfig(environment)) {
       String mode =
           environment.getProperty(
@@ -36,17 +36,12 @@ public class EarlyConfig {
               String.class,
               "default");
 
-      switch (mode) {
-        case "none":
-          return false;
-        case "default":
-          return true;
-        default:
-          throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-      }
+      return InstrumentationMode.from(mode);
     } else {
       return environment.getProperty(
-          "otel.instrumentation.common.default-enabled", Boolean.class, true);
+              "otel.instrumentation.common.default-enabled", Boolean.class, true)
+          ? InstrumentationMode.DEFAULT
+          : InstrumentationMode.NONE;
     }
   }
 
@@ -81,10 +76,7 @@ public class EarlyConfig {
     if (explicit != null) {
       return explicit;
     }
-    if (!defaultValue) {
-      return false;
-    }
-    return isDefaultEnabled(environment);
+    return defaultValue && getInstrumentationMode(environment).equals(InstrumentationMode.DEFAULT);
   }
 
   private static String getPropertyName(
