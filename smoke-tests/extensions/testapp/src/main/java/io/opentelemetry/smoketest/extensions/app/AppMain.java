@@ -6,7 +6,6 @@
 package io.opentelemetry.smoketest.extensions.app;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.io.PrintStream;
 import java.util.Arrays;
 
 public class AppMain {
@@ -20,10 +19,9 @@ public class AppMain {
     testLocalValue();
   }
 
+  @SuppressWarnings("SystemOut") // prevent checkstyle complaining about using System.out
   private static void msg(String msg) {
-    // avoid checkstyle to complain
-    PrintStream out = System.out;
-    out.println(msg);
+    System.out.println(msg);
   }
 
   private static void testReturnValue() {
