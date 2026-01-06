@@ -35,7 +35,7 @@ class InstrumenterContextTest {
     SqlClientAttributesGetter<Object, Void> getter =
         new SqlClientAttributesGetter<Object, Void>() {
           @Override
-          public String getDbSystem(Object o) {
+          public String getDbSystemName(Object o) {
             return "testdb";
           }
 

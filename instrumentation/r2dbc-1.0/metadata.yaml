@@ -1,0 +1,31 @@
+display_name: R2DBC
+description: >
+  This instrumentation enables database client spans and database client metrics for R2DBC
+  (Reactive Relational Database Connectivity).
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://r2dbc.io/
+configurations:
+  - name: otel.instrumentation.r2dbc.statement-sanitizer.enabled
+    description: >
+      Enables statement sanitization for database queries. Takes precedence over
+      otel.instrumentation.common.db-statement-sanitizer.enabled.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
+    description: >
+      Enables augmenting queries with a comment containing the tracing information. See
+      [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
+      queries with tracing context will make query texts unique, which may have adverse impact on
+      database performance.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""
