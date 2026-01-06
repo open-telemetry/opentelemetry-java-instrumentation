@@ -11,7 +11,7 @@ public final class FieldBackedImplementationConfiguration {
   static boolean fieldInjectionEnabled = true;
 
   public static void configure(EarlyInitAgentConfig config) {
-    fieldInjectionEnabled = config.getOtelJavaagentExperimentalFieldInjectionEnabled();
+    fieldInjectionEnabled = config.getFieldInjectionEnabled();
   }
 
   private FieldBackedImplementationConfiguration() {}

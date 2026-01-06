@@ -18,12 +18,12 @@ import javax.annotation.Nullable;
  */
 public final class EarlyInitAgentConfig {
 
-  @Nullable private final String otelJavaagentLogging;
-  @Nullable private final String otelJavaagentExtensions;
-  private final boolean otelJavaagentEnabled;
-  private final boolean otelJavaagentDebug;
-  private final int otelJavaagentLoggingApplicationLogsBufferMaxRecords;
-  private final boolean otelJavaagentExperimentalFieldInjectionEnabled;
+  @Nullable private final String logging;
+  @Nullable private final String extensions;
+  private final boolean enabled;
+  private final boolean debug;
+  private final int loggingApplicationLogsBufferMaxRecords;
+  private final boolean fieldInjectionEnabled;
 
   public static EarlyInitAgentConfig create() {
     if (DeclarativeConfigurationFile.isConfigured()) {
@@ -39,59 +39,56 @@ public final class EarlyInitAgentConfig {
             .getStructured("java", empty())
             .getStructured("agent", empty());
 
-    this.otelJavaagentLogging = agent.getString("logging");
-    this.otelJavaagentExtensions = agent.getString("extensions");
-    this.otelJavaagentEnabled = agent.getBoolean("enabled", true);
-    this.otelJavaagentDebug = agent.getBoolean("debug", false);
-    this.otelJavaagentLoggingApplicationLogsBufferMaxRecords =
+    this.logging = agent.getString("logging");
+    this.extensions = agent.getString("extensions");
+    this.enabled = agent.getBoolean("enabled", true);
+    this.debug = agent.getBoolean("debug", false);
+    this.loggingApplicationLogsBufferMaxRecords =
         agent
             .getStructured("logging", empty())
             .getStructured("application", empty())
             .getInt("logs_buffer_max_records", 2048);
-    this.otelJavaagentExperimentalFieldInjectionEnabled =
-        agent
-            .getStructured("experimental", empty())
-            .getStructured("field_injection", empty())
-            .getBoolean("enabled", true);
+    this.fieldInjectionEnabled =
+        agent.getStructured("field_injection/development", empty()).getBoolean("enabled", true);
   }
 
   private EarlyInitAgentConfig(Map<String, String> configFileContents) {
-    this.otelJavaagentLogging = loadString(configFileContents, "otel.javaagent.logging");
-    this.otelJavaagentExtensions = loadString(configFileContents, "otel.javaagent.extensions");
-    this.otelJavaagentEnabled = loadBoolean(configFileContents, "otel.javaagent.enabled", true);
-    this.otelJavaagentDebug = loadBoolean(configFileContents, "otel.javaagent.debug", false);
-    this.otelJavaagentLoggingApplicationLogsBufferMaxRecords =
+    this.logging = loadString(configFileContents, "otel.javaagent.logging");
+    this.extensions = loadString(configFileContents, "otel.javaagent.extensions");
+    this.enabled = loadBoolean(configFileContents, "otel.javaagent.enabled", true);
+    this.debug = loadBoolean(configFileContents, "otel.javaagent.debug", false);
+    this.loggingApplicationLogsBufferMaxRecords =
         loadInt(
             configFileContents, "otel.javaagent.logging.application.logs-buffer-max-records", 2048);
-    this.otelJavaagentExperimentalFieldInjectionEnabled =
+    this.fieldInjectionEnabled =
         loadBoolean(
             configFileContents, "otel.javaagent.experimental.field-injection.enabled", true);
   }
 
   @Nullable
-  public String getOtelJavaagentLogging() {
-    return otelJavaagentLogging;
+  public String getLogging() {
+    return logging;
   }
 
   @Nullable
-  public String getOtelJavaagentExtensions() {
-    return otelJavaagentExtensions;
+  public String getExtensions() {
+    return extensions;
   }
 
-  public boolean getOtelJavaagentEnabled() {
-    return otelJavaagentEnabled;
+  public boolean getEnabled() {
+    return enabled;
   }
 
-  public boolean getOtelJavaagentDebug() {
-    return otelJavaagentDebug;
+  public boolean getDebug() {
+    return debug;
   }
 
-  public int getOtelJavaagentLoggingApplicationLogsBufferMaxRecords() {
-    return otelJavaagentLoggingApplicationLogsBufferMaxRecords;
+  public int getLoggingApplicationLogsBufferMaxRecords() {
+    return loggingApplicationLogsBufferMaxRecords;
   }
 
-  public boolean getOtelJavaagentExperimentalFieldInjectionEnabled() {
-    return otelJavaagentExperimentalFieldInjectionEnabled;
+  public boolean getFieldInjectionEnabled() {
+    return fieldInjectionEnabled;
   }
 
   @Nullable
