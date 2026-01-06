@@ -14,4 +14,16 @@ otel:
   instrumentation/development:
     java:
       foo:
-        bar: baz
+        string_key: string_value
+        string_key_with_env: ${STRING_ENV:default_value}
+        string_key_with_env_quoted: "${STRING_ENV:default_quoted_value}"
+        int_key: 42
+        int_key_with_env: ${INT_ENV:100}
+        int_key_with_env_quoted: "${INT_ENV:200}"
+        bool_key: true
+        bool_key_with_env: ${BOOL_ENV:false}
+        bool_key_with_env_quoted: "${BOOL_ENV:true}"
+        double_key: 3.14
+        double_key_with_env: ${DOUBLE_ENV:2.71}
+        double_key_with_env_quoted: "${DOUBLE_ENV:1.61}"
+

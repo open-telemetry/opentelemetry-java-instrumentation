@@ -348,6 +348,13 @@ tasks {
     isEnabled = testSpring3 // same condition as Spring 3 (requires Java 17+)
   }
 
+  withType<Test>().configureEach {
+    // for @SetEnvironmentVariable
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
   named<Jar>("jar") {
     from(sourceSets["javaSpring3"].output)
     from(sourceSets["javaSpring4"].output)
