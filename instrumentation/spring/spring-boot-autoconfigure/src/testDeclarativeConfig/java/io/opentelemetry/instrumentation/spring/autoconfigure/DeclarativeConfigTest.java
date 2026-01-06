@@ -77,17 +77,17 @@ class DeclarativeConfigTest {
                       assertThat(config.getBoolean("bool_key")).isTrue();
                       assertThat(config.getBoolean("bool_key_with_env")).isTrue();
                       assertThat(config.getBoolean("bool_key_with_env_quoted"))
-                          .isNull(); // quoted "true" is not recognized as boolean
+                          .isTrue(); // quoted "true" works because of coercion
 
                       assertThat(config.getDouble("double_key")).isEqualTo(3.14);
                       assertThat(config.getDouble("double_key_with_env")).isEqualTo(3.14);
                       assertThat(config.getDouble("double_key_with_env_quoted"))
-                          .isNull(); // quoted "3.14" is not recognized as double
+                          .isEqualTo(3.14); // quoted "3.14" works because of coercion
 
                       assertThat(config.getLong("int_key")).isEqualTo(42);
                       assertThat(config.getLong("int_key_with_env")).isEqualTo(42);
                       assertThat(config.getLong("int_key_with_env_quoted"))
-                          .isNull(); // quoted "42" is not recognized as long
+                          .isEqualTo(42); // quoted "42" works because of coercion
                     }));
   }
 
