@@ -16,7 +16,7 @@ final class OpenSearchRestAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(OpenSearchRestRequest request) {
+  public String getDbSystemName(OpenSearchRestRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
   }
 
@@ -40,7 +40,7 @@ final class OpenSearchRestAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(
+  public String getResponseStatusCode(
       @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
     return response != null ? dbResponseStatusCode(response.getStatusCode()) : null;
   }

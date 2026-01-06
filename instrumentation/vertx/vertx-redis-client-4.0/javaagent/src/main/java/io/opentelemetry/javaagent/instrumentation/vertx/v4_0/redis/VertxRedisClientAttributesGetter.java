@@ -21,7 +21,7 @@ public enum VertxRedisClientAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(VertxRedisClientRequest request) {
+  public String getDbSystemName(VertxRedisClientRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
