@@ -111,7 +111,7 @@ public class AgentInstaller {
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
-      logger.fine("Tracing is disabled, not installing instrumentations.");
+      logger.fine("Agent is disabled, not installing instrumentations.");
     }
   }
 
