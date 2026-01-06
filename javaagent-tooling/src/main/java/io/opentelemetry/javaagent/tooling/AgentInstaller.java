@@ -107,7 +107,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    if (earlyConfig.isOtelJavaagentEnabled()) {
+    if (earlyConfig.getOtelJavaagentEnabled()) {
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
@@ -133,12 +133,12 @@ public class AgentInstaller {
 
     AgentBuilder agentBuilder =
         newAgentBuilder(
-                // default method graph compiler inspects the class hierarchy, we don't need it, so
-                // we use a simpler and faster strategy instead
-                new ByteBuddy()
-                    .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
-                    .with(VisibilityBridgeStrategy.Default.NEVER)
-                    .with(InstrumentedType.Factory.Default.FROZEN))
+            // default method graph compiler inspects the class hierarchy, we don't need it, so
+            // we use a simpler and faster strategy instead
+            new ByteBuddy()
+                .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
+                .with(VisibilityBridgeStrategy.Default.NEVER)
+                .with(InstrumentedType.Factory.Default.FROZEN))
             .with(AgentBuilder.TypeStrategy.Default.DECORATE)
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)

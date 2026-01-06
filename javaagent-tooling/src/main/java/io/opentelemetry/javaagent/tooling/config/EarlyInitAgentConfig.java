@@ -35,11 +35,11 @@ public final class EarlyInitAgentConfig {
     return getString("otel.javaagent.extensions");
   }
 
-  public boolean isOtelJavaagentEnabled() {
+  public boolean getOtelJavaagentEnabled() {
     return getBoolean("otel.javaagent.enabled", true);
   }
 
-  public boolean isOtelJavaagentDebug() {
+  public boolean getOtelJavaagentDebug() {
     return getBoolean("otel.javaagent.debug", false);
   }
 
@@ -47,7 +47,7 @@ public final class EarlyInitAgentConfig {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
 
-  public boolean isOtelJavaagentExperimentalFieldInjectionEnabled() {
+  public boolean getOtelJavaagentExperimentalFieldInjectionEnabled() {
     return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
   }
 
@@ -65,7 +65,7 @@ public final class EarlyInitAgentConfig {
   }
 
   /**
-   * @deprecated Use the specific getter methods instead, e.g. {@link #isOtelJavaagentEnabled()}.
+   * @deprecated Use the specific getter methods instead, e.g. {@link #getOtelJavaagentEnabled()}.
    */
   @Deprecated
   public boolean getBoolean(String propertyName, boolean defaultValue) {
