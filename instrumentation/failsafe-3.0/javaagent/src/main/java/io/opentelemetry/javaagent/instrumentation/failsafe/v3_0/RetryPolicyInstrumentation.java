@@ -31,7 +31,7 @@ final class RetryPolicyInstrumentation implements TypeInstrumentation {
         named("build").and(takesNoArguments()), this.getClass().getName() + "$BuildAdvice");
   }
 
-  static final class BuildAdvice {
+  public static final class BuildAdvice {
     @Advice.OnMethodExit
     public static void onExit(@Advice.Return Object retryPolicyImpl)
         throws NoSuchFieldException, IllegalAccessException {
