@@ -57,16 +57,16 @@ public final class GraphqlSingletons {
     private final boolean addOperationNameToSpanName;
 
     Configuration(OpenTelemetry openTelemetry) {
-      ExtendedDeclarativeConfigProperties config = DeclarativeConfigUtil.get(openTelemetry);
+      ExtendedDeclarativeConfigProperties config =
+          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
-      this.captureQuery = config.get("graphql").getBoolean("capture_query", true);
-      this.sanitizeQuery = config.get("graphql").get("query_sanitizer").getBoolean("enabled", true);
-      this.dataFetcherEnabled =
-          config.get("graphql").get("data_fetcher").getBoolean("enabled", false);
+      this.captureQuery = config.getBoolean("capture_query", true);
+      this.sanitizeQuery = config.get("query_sanitizer").getBoolean("enabled", true);
+      this.dataFetcherEnabled = config.get("data_fetcher").getBoolean("enabled", false);
       this.trivialDataFetcherEnabled =
-          config.get("graphql").get("trivial_data_fetcher").getBoolean("enabled", false);
+          config.get("trivial_data_fetcher").getBoolean("enabled", false);
       this.addOperationNameToSpanName =
-          config.get("graphql").get("add_operation_name_to_span_name").getBoolean("enabled", false);
+          config.get("add_operation_name_to_span_name").getBoolean("enabled", false);
     }
   }
 

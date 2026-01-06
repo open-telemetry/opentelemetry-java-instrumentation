@@ -22,7 +22,7 @@ public final class ExperimentalConfig {
   private static final ExperimentalConfig instance =
       new ExperimentalConfig(GlobalOpenTelemetry.get());
 
-  private final ExtendedDeclarativeConfigProperties config;
+  private final ExtendedDeclarativeConfigProperties commonConfig;
   private final List<String> messagingHeaders;
 
   /** Returns the global agent configuration. */
@@ -31,33 +31,26 @@ public final class ExperimentalConfig {
   }
 
   public ExperimentalConfig(OpenTelemetry openTelemetry) {
-    this.config = DeclarativeConfigUtil.get(openTelemetry);
+    this.commonConfig = DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     this.messagingHeaders =
-        config
+        commonConfig
             .get("messaging")
             .getScalarList("capture_headers/development", String.class, emptyList());
   }
 
   public boolean controllerTelemetryEnabled() {
-    return config
-        .get("common")
-        .get("controller_telemetry/development")
-        .getBoolean("enabled", false);
+    return commonConfig.get("controller_telemetry/development").getBoolean("enabled", false);
   }
 
   public boolean viewTelemetryEnabled() {
-    return config.get("common").get("view_telemetry/development").getBoolean("enabled", false);
+    return commonConfig.get("view_telemetry/development").getBoolean("enabled", false);
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {
-    return config
+    return commonConfig
         .get("messaging")
         .get("receive_telemetry/development")
         .getBoolean("enabled", false);
-  }
-
-  public boolean indyEnabled() {
-    return config.get("agent").getBoolean("indy/development", false);
   }
 
   public List<String> getMessagingHeaders() {

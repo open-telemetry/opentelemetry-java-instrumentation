@@ -323,10 +323,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // reconstruct the context from context data
     if (context == Context.root()) {
       ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
-      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
+      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
+      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
       String traceFlags =
-          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
       if (traceId != null && spanId != null && traceFlags != null) {
         context =
             Context.root()

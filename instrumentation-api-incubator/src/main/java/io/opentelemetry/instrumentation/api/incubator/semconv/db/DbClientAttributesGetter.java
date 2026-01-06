@@ -61,4 +61,15 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   default String getDbOperationName(REQUEST request) {
     return getOperation(request);
   }
+
+  // TODO: make this required to implement
+  default String getDbSystemName(REQUEST request) {
+    return getDbSystem(request);
+  }
+
+  // TODO: make this required to implement
+  @Nullable
+  default String getResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
+    return getResponseStatus(response, error);
+  }
 }

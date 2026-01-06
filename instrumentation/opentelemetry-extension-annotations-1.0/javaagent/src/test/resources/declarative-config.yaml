@@ -1,0 +1,8 @@
+file_format: "1.0-rc.1"
+instrumentation/development:
+  java:
+    opentelemetry_extension_annotations:
+      exclude_methods:
+        - class: io.opentelemetry.test.annotation.TracedWithSpan
+          methods:
+            - ignored

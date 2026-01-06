@@ -416,7 +416,7 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "12.3.0"
+  toolVersion = "13.0.0"
   maxWarnings = 0
 }
 

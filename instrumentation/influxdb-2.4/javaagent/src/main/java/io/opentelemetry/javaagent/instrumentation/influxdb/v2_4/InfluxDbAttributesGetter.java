@@ -26,7 +26,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   }
 
   @Override
-  public String getDbSystem(InfluxDbRequest request) {
+  public String getDbSystemName(InfluxDbRequest request) {
     return "influxdb";
   }
 

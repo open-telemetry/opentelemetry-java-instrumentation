@@ -16,11 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
@@ -67,11 +68,6 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           "kamon.annotation.api.Trace",
           "org.springframework.cloud.sleuth.annotation.NewSpan");
 
-  private static final String TRACE_ANNOTATIONS_CONFIG =
-      "otel.instrumentation.external-annotations.include";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.external-annotations.exclude-methods";
-
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
 
@@ -80,7 +76,9 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   public ExternalAnnotationInstrumentation() {
     Set<String> additionalTraceAnnotations =
-        configureAdditionalTraceAnnotations(AgentInstrumentationConfig.get());
+        configureAdditionalTraceAnnotations(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "external_annotations"));
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
@@ -115,10 +113,18 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   }
 
   // visible for testing
-  static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
-    String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
+  static Set<String> configureAdditionalTraceAnnotations(
+      ExtendedDeclarativeConfigProperties config) {
+    // First try structured declarative config (YAML list format)
+    List<String> list = config.getScalarList("include", String.class);
+    if (list != null) {
+      return new HashSet<>(list);
+    }
+
+    // Fall back to old string property format for backward compatibility
+    String configString = config.getString("include");
     if (configString == null) {
-      return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
+      return new HashSet<>(DEFAULT_ANNOTATIONS);
     } else if (configString.isEmpty()) {
       return Collections.emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
@@ -135,7 +141,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           annotations.add(annotationClass.trim());
         }
       }
-      return Collections.unmodifiableSet(annotations);
+      return annotations;
     }
   }
 
@@ -147,19 +153,20 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+        MethodsConfigurationParser.parseExcludeMethods(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "external_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> classMather =
+      ElementMatcher.Junction<ByteCodeElement> matcher =
           isDeclaredBy(ElementMatchers.named(className));
 
-      ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher = none();
-      for (String methodName : entry.getValue()) {
-        excludedMethodsMatcher = excludedMethodsMatcher.or(ElementMatchers.named(methodName));
+      Set<String> methodNames = entry.getValue();
+      if (!methodNames.isEmpty()) {
+        matcher = matcher.and(namedOneOf(methodNames.toArray(new String[0])));
       }
 
-      result = result.or(classMather.and(excludedMethodsMatcher));
+      result = result.or(matcher);
     }
 
     return result;
