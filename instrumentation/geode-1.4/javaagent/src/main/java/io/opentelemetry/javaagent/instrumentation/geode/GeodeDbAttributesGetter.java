@@ -18,7 +18,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(GeodeRequest request) {
+  public String getDbSystemName(GeodeRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.GEODE;
   }
 

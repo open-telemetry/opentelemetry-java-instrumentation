@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -16,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
@@ -38,6 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -236,6 +241,41 @@ public abstract class AbstractR2dbcStatementTest {
                                 "SELECT " + DB + ".person",
                                 "person",
                                 "SELECT")))));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  void testMetrics() {
+    DbSystemProps props = SYSTEMS.get(MARIADB.system);
+    startContainer(props);
+    ConnectionFactory connectionFactory =
+        createProxyConnectionFactory(
+            ConnectionFactoryOptions.builder()
+                .option(DRIVER, props.system)
+                .option(HOST, container.getHost())
+                .option(PORT, port)
+                .option(USER, USER_DB)
+                .option(PASSWORD, PW_DB)
+                .option(DATABASE, DB)
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
+                .build());
+
+    Mono.from(connectionFactory.create())
+        .flatMapMany(
+            connection ->
+                Mono.from(connection.createStatement("SELECT 3").execute())
+                    .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .blockLast(Duration.ofMinutes(1));
+
+    assertDurationMetric(
+        getTesting(),
+        "io.opentelemetry.r2dbc-1.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   private static class Parameter {

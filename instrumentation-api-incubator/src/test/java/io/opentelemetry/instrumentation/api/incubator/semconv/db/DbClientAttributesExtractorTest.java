@@ -26,7 +26,7 @@ class DbClientAttributesExtractorTest {
   static final class TestAttributesGetter
       implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
-    public String getDbSystem(Map<String, String> map) {
+    public String getDbSystemName(Map<String, String> map) {
       return map.get("db.system");
     }
 

@@ -24,7 +24,7 @@ enum VertxSqlClientAttributesGetter
       createResponseStatusExtractors();
 
   @Override
-  public String getDbSystem(VertxSqlClientRequest request) {
+  public String getDbSystemName(VertxSqlClientRequest request) {
     return null;
   }
 
@@ -60,7 +60,7 @@ enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     for (Function<Exception, String> extractor : responseStatusExtractors) {
       String status = extractor.apply((Exception) error);
       if (status != null) {

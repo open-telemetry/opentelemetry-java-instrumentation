@@ -51,7 +51,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String getDbSystem(CommandStartedEvent event) {
+  public String getDbSystemName(CommandStartedEvent event) {
     return MONGODB;
   }
 
@@ -93,7 +93,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof MongoException) {
       return Integer.toString(((MongoException) error).getCode());
     }

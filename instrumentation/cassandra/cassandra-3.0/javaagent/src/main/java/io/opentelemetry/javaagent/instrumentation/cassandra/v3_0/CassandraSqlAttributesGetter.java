@@ -19,7 +19,7 @@ final class CassandraSqlAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(CassandraRequest request) {
+  public String getDbSystemName(CassandraRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.CASSANDRA;
   }
 

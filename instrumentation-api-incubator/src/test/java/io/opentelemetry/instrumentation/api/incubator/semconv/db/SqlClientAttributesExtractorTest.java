@@ -39,7 +39,7 @@ class SqlClientAttributesExtractorTest {
     }
 
     @Override
-    public String getDbSystem(Map<String, Object> map) {
+    public String getDbSystemName(Map<String, Object> map) {
       return read(map, "db.system");
     }
 

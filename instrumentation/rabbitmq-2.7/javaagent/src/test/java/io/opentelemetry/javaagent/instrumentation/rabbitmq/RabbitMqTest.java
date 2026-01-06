@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -19,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.rabbitmq.client.AMQP;
@@ -30,7 +32,6 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -52,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -114,11 +117,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
               return internalQueueName;
             });
     GetResponse response =
-        testing.runWithSpan(
-            "consumer parent",
-            () -> {
-              return channel.basicGet(queueName, true);
-            });
+        testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
 
     assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
 
@@ -127,18 +126,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-                },
-                span -> {
-                  verifySpan(trace, span, 1, "exchange.declare", trace.getSpan(0));
-                },
-                span -> {
-                  verifySpan(trace, span, 2, "queue.declare", trace.getSpan(0));
-                },
-                span -> {
-                  verifySpan(trace, span, 3, "queue.bind", trace.getSpan(0));
-                },
+                span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySpan(trace, span, 1, "exchange.declare", trace.getSpan(0)),
+                span -> verifySpan(trace, span, 2, "queue.declare", trace.getSpan(0)),
+                span -> verifySpan(trace, span, 3, "queue.bind", trace.getSpan(0)),
                 span -> {
                   verifySpan(
                       trace,
@@ -151,27 +142,23 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(4));
                 }),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-              },
-              span -> {
-                verifySpan(
-                    trace,
-                    span,
-                    1,
-                    exchangeName,
-                    routingKey,
-                    "receive",
-                    "<generated>",
-                    trace.getSpan(0),
-                    producerSpan.get(),
-                    null,
-                    null,
-                    false);
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        1,
+                        exchangeName,
+                        routingKey,
+                        "receive",
+                        "<generated>",
+                        trace.getSpan(0),
+                        producerSpan.get(),
+                        null,
+                        null,
+                        false)));
   }
 
   @Test
@@ -186,11 +173,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
               return internalQueueName;
             });
     GetResponse response =
-        testing.runWithSpan(
-            "consumer parent",
-            () -> {
-              return channel.basicGet(queueName, true);
-            });
+        testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
 
     assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
 
@@ -199,38 +182,30 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-                },
-                span -> {
-                  verifySpan(trace, span, 1, "queue.declare", trace.getSpan(0));
-                },
+                span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySpan(trace, span, 1, "queue.declare", trace.getSpan(0)),
                 span -> {
                   verifySpan(
                       trace, span, 2, "<default>", null, "publish", "<default>", trace.getSpan(0));
                   producerSpan.set(trace.getSpan(2));
                 }),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-              },
-              span -> {
-                verifySpan(
-                    trace,
-                    span,
-                    1,
-                    "<default>",
-                    null,
-                    "receive",
-                    "<generated>",
-                    trace.getSpan(0),
-                    producerSpan.get(),
-                    null,
-                    null,
-                    false);
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        1,
+                        "<default>",
+                        null,
+                        "receive",
+                        "<generated>",
+                        trace.getSpan(0),
+                        producerSpan.get(),
+                        null,
+                        null,
+                        false)));
   }
 
   @ParameterizedTest(name = "test rabbit consume {1} messages and setTimestamp={2}")
@@ -251,8 +226,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         new DefaultConsumer(channel) {
           @Override
           public void handleDelivery(
-              String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-              throws IOException {
+              String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
             deliveries.add(new String(body, Charset.defaultCharset()));
           }
         };
@@ -276,57 +250,37 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     List<java.util.function.Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
     traceAssertions.add(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                verifySpan(trace, span, 0, "exchange.declare");
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> verifySpan(trace, span, 0, "exchange.declare")));
     traceAssertions.add(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                verifySpan(trace, span, 0, "queue.declare");
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.declare")));
     traceAssertions.add(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                verifySpan(trace, span, 0, "queue.bind");
-              });
-        });
+        trace -> trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.bind")));
     traceAssertions.add(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                verifySpan(trace, span, 0, "basic.consume");
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")));
 
     for (int i = 1; i <= messageCount; i++) {
       traceAssertions.add(
-          trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName);
-                },
-                span -> {
-                  verifySpan(
-                      trace,
-                      span,
-                      1,
-                      exchangeName,
-                      null,
-                      "process",
-                      resource,
-                      trace.getSpan(0),
-                      null,
-                      null,
-                      null,
-                      setTimestamp);
-                });
-          });
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
+                  span ->
+                      verifySpan(
+                          trace,
+                          span,
+                          1,
+                          exchangeName,
+                          null,
+                          "process",
+                          resource,
+                          trace.getSpan(0),
+                          null,
+                          null,
+                          null,
+                          setTimestamp)));
     }
 
     testing.waitAndAssertTraces(traceAssertions);
@@ -363,46 +317,29 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, "exchange.declare");
-                }),
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "exchange.declare")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.declare")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.bind")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, "queue.declare");
-                }),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, "queue.bind");
-                }),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, "basic.consume");
-                }),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName);
-              },
-              span -> {
-                verifySpan(
-                    trace,
-                    span,
-                    1,
-                    exchangeName,
-                    null,
-                    "process",
-                    "<generated>",
-                    trace.getSpan(0),
-                    null,
-                    error,
-                    error.getMessage(),
-                    false);
-              });
-        });
+                span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        1,
+                        exchangeName,
+                        null,
+                        "process",
+                        "<generated>",
+                        trace.getSpan(0),
+                        null,
+                        error,
+                        error.getMessage(),
+                        false)));
   }
 
   @SuppressWarnings("unchecked")
@@ -423,21 +360,20 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(
-                      trace,
-                      span,
-                      0,
-                      null,
-                      null,
-                      accessor.getString(3),
-                      accessor.getString(0),
-                      null,
-                      null,
-                      finalThrown,
-                      accessor.getString(2),
-                      false);
-                }));
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        0,
+                        null,
+                        null,
+                        accessor.getString(3),
+                        accessor.getString(0),
+                        null,
+                        null,
+                        finalThrown,
+                        accessor.getString(2),
+                        false)));
   }
 
   @Test
@@ -466,12 +402,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-                },
-                span -> {
-                  verifySpan(trace, span, 1, "queue.declare", trace.getSpan(0));
-                },
+                span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySpan(trace, span, 1, "queue.declare", trace.getSpan(0)),
                 span -> {
                   verifySpan(
                       trace,
@@ -484,27 +416,23 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(2));
                 }),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-              },
-              span -> {
-                verifySpan(
-                    trace,
-                    span,
-                    1,
-                    "<default>",
-                    "some-routing-queue",
-                    "receive",
-                    queue.getName(),
-                    trace.getSpan(0),
-                    producerSpan.get(),
-                    null,
-                    null,
-                    false);
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        1,
+                        "<default>",
+                        "some-routing-queue",
+                        "receive",
+                        queue.getName(),
+                        trace.getSpan(0),
+                        producerSpan.get(),
+                        null,
+                        null,
+                        false)));
 
     cachingConnectionFactory.destroy();
   }
@@ -525,8 +453,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         new DefaultConsumer(channel) {
           @Override
           public void handleDelivery(
-              String consumerTag, Envelope envelope, AMQP.BasicProperties props, byte[] body)
-              throws IOException {
+              String consumerTag, Envelope envelope, AMQP.BasicProperties props, byte[] body) {
             deliveries.add(new String(body, Charset.defaultCharset()));
             latch.countDown();
           }
@@ -539,27 +466,15 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, "queue.declare");
-                }),
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.declare")),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   verifySpan(trace, span, 0, "<default>", null, "publish", "<default>");
                   span.hasAttributesSatisfying(
-                      attributes -> {
-                        assertThat(attributes)
-                            .satisfies(
-                                attrs -> {
-                                  List<String> verifyHeaders =
-                                      attrs.get(
-                                          AttributeKey.stringArrayKey(
-                                              "messaging.header.Test_Message_Header"));
-                                  assertNotNull(verifyHeaders);
-                                  assertTrue(verifyHeaders.contains("test"));
-                                });
-                      });
+                      satisfies(
+                          stringArrayKey("messaging.header.Test_Message_Header"),
+                          val -> val.contains("test")));
                 },
                 span -> {
                   verifySpan(
@@ -572,24 +487,12 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       "<generated>",
                       trace.getSpan(0));
                   span.hasAttributesSatisfying(
-                      attributes -> {
-                        assertThat(attributes)
-                            .satisfies(
-                                attrs -> {
-                                  List<String> verifyHeaders =
-                                      attrs.get(
-                                          AttributeKey.stringArrayKey(
-                                              "messaging.header.Test_Message_Header"));
-                                  assertNotNull(verifyHeaders);
-                                  assertTrue(verifyHeaders.contains("test"));
-                                });
-                      });
+                      satisfies(
+                          stringArrayKey("messaging.header.Test_Message_Header"),
+                          val -> val.contains("test")));
                 }),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  verifySpan(trace, span, 0, "basic.consume");
-                }));
+            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
@@ -710,12 +613,16 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       spanName += " " + operation;
     }
 
-    String rabbitCommand =
-        trace.getSpan(index).getAttributes().get(AttributeKey.stringKey("rabbitmq.command"));
+    span.hasName(spanName);
 
-    SpanKind spanKind = captureSpanKind(rabbitCommand);
+    String rabbitCommand = null;
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      rabbitCommand = trace.getSpan(index).getAttributes().get(stringKey("rabbitmq.command"));
 
-    span.hasName(spanName).hasKind(spanKind);
+      SpanKind spanKind = captureSpanKind(rabbitCommand);
+
+      span.hasKind(spanKind);
+    }
 
     verifyParentAndLink(span, parentSpan, linkSpan);
 
@@ -728,131 +635,89 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     if (expectTimestamp) {
       span.hasAttributesSatisfying(
-          attributes -> {
-            assertThat(attributes)
-                .satisfies(
-                    attrs -> {
-                      Long timestamp =
-                          attrs.get(AttributeKey.longKey("rabbitmq.record.queue_time_ms"));
-                      assertNotNull(timestamp);
-                      assertTrue(timestamp >= 0);
-                    });
-          });
+          satisfies(
+              longKey("rabbitmq.record.queue_time_ms"),
+              val -> {
+                if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                  val.isNotNegative();
+                }
+              }));
     }
 
-    if (null != rabbitCommand) {
+    if (rabbitCommand != null) {
       switch (rabbitCommand) {
         case "basic.publish":
-          span.hasAttribute(AttributeKey.stringKey("rabbitmq.command"), "basic.publish")
-              .hasAttributesSatisfying(
-                  attributes -> {
-                    assertThat(attributes)
-                        .satisfies(
-                            attrs -> {
-                              String routingKeyAttr =
-                                  attrs.get(
-                                      MessagingIncubatingAttributes
-                                          .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY);
-                              assertTrue(
-                                  routingKeyAttr == null
-                                      || routingKeyAttr.equals("some-routing-key")
-                                      || routingKeyAttr.equals("some-routing-queue")
-                                      || routingKeyAttr.startsWith("amq.gen-"));
-
-                              Long deliveryMode =
-                                  attrs.get(AttributeKey.longKey("rabbitmq.delivery_mode"));
-                              assertTrue(deliveryMode == null || deliveryMode == 2);
-
-                              assertNotNull(attrs.get(MESSAGING_MESSAGE_BODY_SIZE));
-                            });
-                  });
+          span.hasAttributesSatisfying(
+              equalTo(stringKey("rabbitmq.command"), "basic.publish"),
+              satisfies(
+                  MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                  val ->
+                      val.satisfiesAnyOf(
+                          v -> assertThat(v).isNull(),
+                          v -> assertThat(v).isEqualTo("some-routing-key"),
+                          v -> assertThat(v).isEqualTo("some-routing-queue"),
+                          v -> assertThat(v).startsWith("amq.gen-"))),
+              satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+              satisfies(longKey("rabbitmq.delivery_mode"), val -> val.isIn(null, 2L)));
           break;
         case "basic.get":
-          span.hasAttribute(AttributeKey.stringKey("rabbitmq.command"), "basic.get")
-              .hasAttributesSatisfying(
-                  attributes -> {
-                    assertThat(attributes)
-                        .satisfies(
-                            attrs -> {
-                              // TODO why this queue name is not a destination for semantic
-                              // convention
-                              String queue = attrs.get(AttributeKey.stringKey("rabbitmq.queue"));
-                              assertNotNull(queue);
-                              assertTrue(
-                                  queue.equals("some-queue")
-                                      || queue.equals("some-routing-queue")
-                                      || queue.startsWith("amq.gen-"));
-
-                              attrs.get(MESSAGING_MESSAGE_BODY_SIZE);
-                            });
-                  });
+          span.hasAttributesSatisfying(
+              equalTo(stringKey("rabbitmq.command"), "basic.get"),
+              // TODO why this queue name is not a destination for semantic convention
+              satisfies(
+                  stringKey("rabbitmq.queue"),
+                  val ->
+                      val.satisfiesAnyOf(
+                          v -> assertThat(v).isEqualTo("some-queue"),
+                          v -> assertThat(v).isEqualTo("some-routing-queue"),
+                          v -> assertThat(v).startsWith("amq.gen-"))),
+              satisfies(
+                  MESSAGING_MESSAGE_BODY_SIZE,
+                  val ->
+                      val.satisfiesAnyOf(
+                          v -> assertThat(v).isNull(), v -> assertThat(v).isNotNegative())));
           break;
         case "basic.deliver":
-          span.hasAttribute(AttributeKey.stringKey("rabbitmq.command"), "basic.deliver")
-              .hasAttributesSatisfying(
-                  attributes -> {
-                    assertThat(attributes)
-                        .satisfies(
-                            attrs -> {
-                              attrs.get(MESSAGING_MESSAGE_BODY_SIZE);
-                            });
-                  });
+          span.hasAttributesSatisfying(
+              equalTo(stringKey("rabbitmq.command"), "basic.deliver"),
+              satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
           break;
         default:
           span.hasAttributesSatisfying(
-              attributes -> {
-                assertThat(attributes)
-                    .satisfies(
-                        attrs -> {
-                          String command = attrs.get(AttributeKey.stringKey("rabbitmq.command"));
-                          assertTrue(command == null || command.equals(resource));
-                        });
-              });
+              satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, resource)));
       }
     } else {
       span.hasAttributesSatisfying(
-          attributes -> {
-            assertThat(attributes)
-                .satisfies(
-                    attrs -> {
-                      String command = attrs.get(AttributeKey.stringKey("rabbitmq.command"));
-                      assertTrue(command == null || command.equals(resource));
-                    });
-          });
+          satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, resource)));
     }
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyMessagingAttributes(
       SpanDataAssert span, String exchange, String routingKey, String operation) {
-    span.hasAttribute(MESSAGING_SYSTEM, "rabbitmq")
-        .hasAttributesSatisfying(
-            attributes -> {
-              assertThat(attributes)
-                  .satisfies(
-                      attrs -> {
-                        String destinationName = attrs.get(MESSAGING_DESTINATION_NAME);
-                        assertTrue(destinationName == null || destinationName.equals(exchange));
-                        String routingKeyAttr =
-                            attrs.get(
-                                MessagingIncubatingAttributes
-                                    .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY);
-                        assertTrue(
-                            routingKeyAttr == null
-                                || routingKeyAttr.equals(routingKey)
-                                || routingKeyAttr.startsWith("amq.gen-"));
-                      });
-            });
-
-    if (operation != null && !operation.equals("publish")) {
-      span.hasAttribute(MESSAGING_OPERATION, operation);
-    }
+    span.hasAttributesSatisfying(
+        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+        satisfies(MESSAGING_DESTINATION_NAME, val -> val.isIn(exchange, null)),
+        satisfies(
+            MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+            val ->
+                val.satisfiesAnyOf(
+                    v -> assertThat(v).isNull(),
+                    v -> assertThat(v).isEqualTo(routingKey),
+                    v -> assertThat(v).startsWith("amq.gen-"))),
+        satisfies(
+            MESSAGING_OPERATION,
+            val -> {
+              if (operation != null && !operation.equals("publish")) {
+                val.isEqualTo(operation);
+              }
+            }));
   }
 
   private static SpanKind captureSpanKind(String rabbitCommand) {
     SpanKind spanKind = SpanKind.CLIENT;
 
-    if (null != rabbitCommand) {
+    if (rabbitCommand != null) {
       switch (rabbitCommand) {
         case "basic.publish":
           spanKind = SpanKind.PRODUCER;
@@ -871,32 +736,21 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
   private static void verifyNetAttributes(SpanDataAssert span) {
     span.hasAttributesSatisfying(
-        attributes -> {
-          assertThat(attributes)
-              .satisfies(
-                  attrs -> {
-                    String peerAddr = attrs.get(NETWORK_PEER_ADDRESS);
-                    assertThat(peerAddr).isIn(rabbitMqIp, null);
-
-                    String networkType = attrs.get(NETWORK_TYPE);
-                    assertThat(networkType).isIn("ipv4", "ipv6", null);
-
-                    assertNotNull(attrs.get(NETWORK_PEER_PORT));
-                  });
-        });
+        satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
+        satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
+        satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull));
   }
 
   private static void verifyException(SpanDataAssert span, Throwable exception, String errorMsg) {
     span.hasStatus(StatusData.error())
         .hasEventsSatisfying(
-            events -> {
-              assertThat(events.get(0))
-                  .hasName("exception")
-                  .hasAttributesSatisfying(
-                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
-                      equalTo(EXCEPTION_MESSAGE, errorMsg),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
-            });
+            events ->
+                assertThat(events.get(0))
+                    .hasName("exception")
+                    .hasAttributesSatisfying(
+                        equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, errorMsg),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
   }
 
   private static void verifyParentAndLink(
