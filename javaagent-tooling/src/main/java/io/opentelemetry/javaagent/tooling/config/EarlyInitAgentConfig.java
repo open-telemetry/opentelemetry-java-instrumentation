@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -15,48 +18,84 @@ import javax.annotation.Nullable;
  */
 public final class EarlyInitAgentConfig {
 
+  @Nullable private final String otelJavaagentLogging;
+  @Nullable private final String otelJavaagentExtensions;
+  private final boolean otelJavaagentEnabled;
+  private final boolean otelJavaagentDebug;
+  private final int otelJavaagentLoggingApplicationLogsBufferMaxRecords;
+  private final boolean otelJavaagentExperimentalFieldInjectionEnabled;
+
   public static EarlyInitAgentConfig create() {
+    if (DeclarativeConfigurationFile.isConfigured()) {
+      return new EarlyInitAgentConfig(DeclarativeConfigurationFile.getProperties());
+    }
     return new EarlyInitAgentConfig(ConfigurationFile.getProperties());
   }
 
-  private final Map<String, String> configFileContents;
+  private EarlyInitAgentConfig(@Nullable DeclarativeConfigProperties properties) {
+    DeclarativeConfigProperties agent =
+        (properties != null ? properties : empty())
+            .getStructured("instrumentation/development", empty())
+            .getStructured("java", empty())
+            .getStructured("agent", empty());
+
+    this.otelJavaagentLogging = agent.getString("logging");
+    this.otelJavaagentExtensions = agent.getString("extensions");
+    this.otelJavaagentEnabled = agent.getBoolean("enabled", true);
+    this.otelJavaagentDebug = agent.getBoolean("debug", false);
+    this.otelJavaagentLoggingApplicationLogsBufferMaxRecords =
+        agent
+            .getStructured("logging", empty())
+            .getStructured("application", empty())
+            .getInt("logs_buffer_max_records", 2048);
+    this.otelJavaagentExperimentalFieldInjectionEnabled =
+        agent
+            .getStructured("experimental", empty())
+            .getStructured("field_injection", empty())
+            .getBoolean("enabled", true);
+  }
 
   private EarlyInitAgentConfig(Map<String, String> configFileContents) {
-    this.configFileContents = configFileContents;
+    this.otelJavaagentLogging = loadString(configFileContents, "otel.javaagent.logging");
+    this.otelJavaagentExtensions = loadString(configFileContents, "otel.javaagent.extensions");
+    this.otelJavaagentEnabled = loadBoolean(configFileContents, "otel.javaagent.enabled", true);
+    this.otelJavaagentDebug = loadBoolean(configFileContents, "otel.javaagent.debug", false);
+    this.otelJavaagentLoggingApplicationLogsBufferMaxRecords =
+        loadInt(
+            configFileContents, "otel.javaagent.logging.application.logs-buffer-max-records", 2048);
+    this.otelJavaagentExperimentalFieldInjectionEnabled =
+        loadBoolean(
+            configFileContents, "otel.javaagent.experimental.field-injection.enabled", true);
   }
 
   @Nullable
   public String getOtelJavaagentLogging() {
-    return getString("otel.javaagent.logging");
+    return otelJavaagentLogging;
   }
 
   @Nullable
   public String getOtelJavaagentExtensions() {
-    return getString("otel.javaagent.extensions");
+    return otelJavaagentExtensions;
   }
 
   public boolean getOtelJavaagentEnabled() {
-    return getBoolean("otel.javaagent.enabled", true);
+    return otelJavaagentEnabled;
   }
 
   public boolean getOtelJavaagentDebug() {
-    return getBoolean("otel.javaagent.debug", false);
+    return otelJavaagentDebug;
   }
 
   public int getOtelJavaagentLoggingApplicationLogsBufferMaxRecords() {
-    return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
+    return otelJavaagentLoggingApplicationLogsBufferMaxRecords;
   }
 
   public boolean getOtelJavaagentExperimentalFieldInjectionEnabled() {
-    return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
+    return otelJavaagentExperimentalFieldInjectionEnabled;
   }
 
-  /**
-   * @deprecated Use the specific getter methods instead, e.g. {@link #getOtelJavaagentLogging()}.
-   */
-  @Deprecated
   @Nullable
-  public String getString(String propertyName) {
+  private static String loadString(Map<String, String> configFileContents, String propertyName) {
     String value = ConfigPropertiesUtil.getString(propertyName);
     if (value != null) {
       return value;
@@ -64,23 +103,16 @@ public final class EarlyInitAgentConfig {
     return configFileContents.get(propertyName);
   }
 
-  /**
-   * @deprecated Use the specific getter methods instead, e.g. {@link #getOtelJavaagentEnabled()}.
-   */
-  @Deprecated
-  public boolean getBoolean(String propertyName, boolean defaultValue) {
+  private static boolean loadBoolean(
+      Map<String, String> configFileContents, String propertyName, boolean defaultValue) {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
     return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
   }
 
-  /**
-   * @deprecated Use the specific getter methods instead, e.g. {@link
-   *     #getOtelJavaagentLoggingApplicationLogsBufferMaxRecords()}.
-   */
-  @Deprecated
-  public int getInt(String propertyName, int defaultValue) {
+  private static int loadInt(
+      Map<String, String> configFileContents, String propertyName, int defaultValue) {
     try {
       String configFileValueStr = configFileContents.get(propertyName);
       int configFileValue =
@@ -93,5 +125,6 @@ public final class EarlyInitAgentConfig {
 
   public void logEarlyConfigErrorsIfAny() {
     ConfigurationFile.logErrorIfAny();
+    DeclarativeConfigurationFile.logErrorIfAny();
   }
 }
