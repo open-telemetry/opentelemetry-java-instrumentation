@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
@@ -32,9 +31,6 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   @CanIgnoreReturnValue
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
-    if (!config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
-      return sdkTracerProviderBuilder;
-    }
 
     // Register additional thread details logging span processor
     if (config.getBoolean(ADD_THREAD_DETAILS, true)) {
