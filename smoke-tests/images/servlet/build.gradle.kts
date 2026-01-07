@@ -191,12 +191,18 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
-  val pushMatrix by registering(DockerPushImage::class) {
+  val pushLinuxImages by registering(DockerPushImage::class) {
     dependsOn(buildLinuxTestImages)
+    group = "publishing"
+    description = "Push Linux Docker images for the test matrix"
+    images.set(linuxImages)
+  }
+
+  val pushWindowsImages by registering(DockerPushImage::class) {
     dependsOn(buildWindowsTestImages)
     group = "publishing"
-    description = "Push all Docker images for the test matrix"
-    images.set(linuxImages + windowsImages)
+    description = "Push Windows Docker images for the test matrix"
+    images.set(windowsImages)
   }
 
   val printSmokeTestsConfigurations by registering {
@@ -284,20 +290,20 @@ fun configureImage(
       "openjdk:$jdk"
     } else if (isWindows) {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:46d804b1c8a658fd84b8f3b3f39a1739b0f0ffccf41a682cea4847982de3bd08"
-        "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:3b16568beff29ff623e7d72018cd6b08f4003964a342a907ad410a0b953f40e6"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk-windowsservercore-ltsc2022@sha256:7c9e423728d04540c0a30d68ca0922390665dfec20e012beb95861d80aa2dd70"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:45a3d356d018942a497b877633f19db401828ecb2a1de3cda635b98d08bfbaeb"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:556d727eb539fd9c6242e75d17e1a2bf59456ea8a37478cfbd6406ca6db0d2d1"
+        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:10378d3e65fce884784f33d25c17a3b105518a1289e492a5db73ac8d86245452"
+        "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:de1cc00f28ed38893d40114296db066ab5e26e5efcf7585a38ff65d838d7c2cd"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk-windowsservercore-ltsc2022@sha256:6a4f2ab0d3f3f2cf87ba7e2b8bfeb228ccec02b04b8197ae2d6349a330509e89"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:2ef8a2d39eda78a0c9074e1b2c206433da70f80331c6e084f47520f4cebdc4e7"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:8f676f475861a1c26ba51dfeca447279f8cab1109ab4d5b8f87373ca3305997e"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:b4e05de303ea02659ee17044d6b68caadfc462f1530f3a461482afee23379cdd"
-        "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:189ce1c8831fa5bdd801127dad99f68a17615f81f4aa839b1a4aae693261929a"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:5a66a3ffd8728ed6c76eb4ec674c37991ac679927381f71774f5aa44cf420082"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:ec2005c536f3661c6ef1253292c9c623e582186749a3ef2ed90903d1aaf74640"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:adc4533ea69967c783ac2327dac7ff548fcf6401a7e595e723b414c0a7920eb2"
+        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:da3ae797295d6abce3b484a1eaa5c8856479e7e165f979820ade45ffe538c8da"
+        "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:f16caedceea97fd2591a122c6515481ec2961b908c83e101313aacd96ae3439d"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:7995efb7f9276fc16433aa8e2856a06082cd09f7f6603579db2534937ccc6778"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:cd772abe6bc42ddc2f5927756ea33fb26470726438fe0631472cccd4c5ecc304"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:572fe7b5b3ca8beb3b3aca96a7a88f1f7bc98a3bdffd03784a4568962c1a963a"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }

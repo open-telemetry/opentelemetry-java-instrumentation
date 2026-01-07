@@ -522,11 +522,17 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, containerConnection.port),
                                   equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")))
-                          .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
+                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")));
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
-                        span.hasException(new RedisException("Connection disconnected"));
+                        // and also produces an exception event in addition to encode events
+                        span.hasException(new RedisException("Connection disconnected"))
+                            .hasEventsSatisfyingExactly(
+                                event -> event.hasName("redis.encode.start"),
+                                event -> event.hasName("redis.encode.end"),
+                                event -> event.hasName("exception"));
+                      } else {
+                        span.satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
                       }
                     }));
   }

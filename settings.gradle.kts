@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.0.1"
-    id("com.google.cloud.tools.jib") version "3.5.1"
+    id("com.google.cloud.tools.jib") version "3.5.2"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
@@ -9,7 +9,7 @@ pluginManagement {
     id("com.github.bjornvester.xjc") version "1.9.0"
     id("org.graalvm.buildtools.native") version "0.11.3"
     id("com.google.osdetector") version "1.7.3"
-    id("com.google.protobuf") version "0.9.5"
+    id("com.google.protobuf") version "0.9.6"
   }
 }
 
@@ -19,8 +19,8 @@ plugins {
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
-  // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
-  // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
+  // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
+  // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
   id("com.gradle.develocity") version "4.3"
 }
