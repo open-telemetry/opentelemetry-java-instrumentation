@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Objects.requireNonNull;
+
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 
 class EmbeddedConfigFile {
 
@@ -51,15 +54,29 @@ class EmbeddedConfigFile {
     return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
+  private static String toEnvVarName(String propertyName) {
+    return "OTEL_" + propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
+  }
+
   private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
     Map<String, Object> props = new HashMap<>();
-    for (PropertySource<?> propertySource : propertySources) {
+    // iterate in reverse order to respect Spring property source precedence
+    ArrayList<PropertySource<?>> sourcesList = new ArrayList<>();
+    propertySources.forEach(sourcesList::add);
+    for (int i = sourcesList.size() - 1; i >= 0; i--) {
+      PropertySource<?> propertySource = sourcesList.get(i);
       if (propertySource instanceof EnumerablePropertySource<?>) {
         for (String propertyName :
             ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-          if (propertyName.startsWith("otel.")) {
+
+          String prefix = "otel.";
+          if (propertySource instanceof SystemEnvironmentPropertySource) {
+            prefix = "OTEL_";
+          }
+
+          if (propertyName.startsWith(prefix)) {
             Object property = propertySource.getProperty(propertyName);
             // Resolve ${} placeholders in String values while preserving types for others
             if (property instanceof String) {
@@ -68,25 +85,14 @@ class EmbeddedConfigFile {
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
-            if (propertyName.contains("[")) {
-              // fix override via env var or system property
-              // see
-              // https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding
-              // For example, the configuration property my.service[0].other would use an
-              // environment variable named MY_SERVICE_0_OTHER.
-              String envVarName =
-                  propertyName
-                      .replace("[", "_")
-                      .replace("]", "")
-                      .replace(".", "_")
-                      .toUpperCase(Locale.ROOT);
-              String envVarValue = environment.getProperty(envVarName);
-              if (envVarValue != null) {
-                property = envVarValue;
-              }
-            }
 
-            props.put(propertyName.substring("otel.".length()), property);
+            if (propertySource instanceof SystemEnvironmentPropertySource) {
+              if (property != null) {
+                addEnvironmentVariableOverride(props, propertyName, property.toString());
+              }
+            } else {
+              props.put(propertyName.substring(prefix.length()), property);
+            }
           }
         }
       }
@@ -98,6 +104,46 @@ class EmbeddedConfigFile {
               + "'environment.getProperty(\"otel.file_format\", String.class) != null' earlier");
     }
     return props;
+  }
+
+  private static void addEnvironmentVariableOverride(
+      Map<String, Object> props, String envVarName, String envVarValue) {
+    // update the entry where toEnvVarName of propertyName is the key
+    for (String key : props.keySet()) {
+      String envVarName1 = fixEnvVarName(toEnvVarName(key));
+      if (Objects.equals(envVarName, envVarName1)) {
+        // preserve the original type if possible
+        props.put(key, convertEnvVar(envVarValue, props, key));
+        return;
+      }
+    }
+  }
+
+  private static String fixEnvVarName(String envVarName) {
+    if (envVarName.contains("[")) {
+      // fix override via env var or system property
+      // see
+      // https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding
+      // For example, the configuration property my.service[0].other would use an
+      // environment variable named MY_SERVICE_0_OTHER.
+      return envVarName.replace("[", "_").replace("]", "").replace(".", "_");
+    }
+    return envVarName;
+  }
+
+  private static Object convertEnvVar(String property, Map<String, Object> props, String key) {
+    Class<?> type = requireNonNull(props.get(key)).getClass();
+    if (type == String.class) {
+      return property;
+    } else if (type == Integer.class) {
+      return Integer.parseInt(property);
+    } else if (type == Double.class) {
+      return Double.parseDouble(property);
+    } else if (type == Boolean.class) {
+      return Boolean.parseBoolean(property);
+    } else {
+      throw new IllegalStateException("Unsupported property type: " + type + " for key: " + key);
+    }
   }
 
   /**
