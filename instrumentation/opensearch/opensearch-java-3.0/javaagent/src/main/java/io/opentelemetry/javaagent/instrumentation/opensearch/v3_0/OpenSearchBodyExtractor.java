@@ -31,16 +31,18 @@ public final class OpenSearchBodyExtractor {
     try {
       if (request instanceof NdJsonpSerializable) {
         return serializeNdJsonSanitized(mapper, (NdJsonpSerializable) request);
-      } else if (request instanceof GenericSerializable) {
+      }
+
+      if (request instanceof GenericSerializable) {
         // GenericSerializable writes directly to output stream, cannot sanitize
         // This path is typically not used for search queries
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ((GenericSerializable) request).serialize(baos);
         String body = baos.toString(StandardCharsets.UTF_8);
         return body.isEmpty() ? null : body;
-      } else {
-        return serializeSanitized(mapper, request);
       }
+
+      return serializeSanitized(mapper, request);
     } catch (RuntimeException e) {
       logger.log(FINE, "Failure extracting body", e);
       return null;
