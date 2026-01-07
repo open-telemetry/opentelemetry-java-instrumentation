@@ -1,7 +1,12 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.annotations.incubator;
 
-import org.junit.jupiter.api.Test;
 import java.util.concurrent.CompletableFuture;
+import org.junit.jupiter.api.Test;
 
 public class TimedUsageNoOpTest {
   @Test
@@ -21,7 +26,8 @@ public class TimedUsageNoOpTest {
 
   @Test
   void testExampleWithAttributes() {
-    new TimedUsageExamples().exampleWithAttributes("attr1", 2, new TimedUsageExamples.ToStringObject());
+    new TimedUsageExamples()
+        .exampleWithAttributes("attr1", 2, new TimedUsageExamples.ToStringObject());
   }
 
   @Test
