@@ -74,6 +74,16 @@ class DeclarativeConfigTest {
 
   @Test
   @DisplayName("test env var overrides for declarative config")
+  void envVarOverrides() {
+    this.contextRunner.run(
+        context ->
+            assertThat(context)
+                .getBean("openTelemetry", OpenTelemetry.class)
+                .isNotNull()
+                .satisfies(o -> {}));
+  }
+
+  @Test
   @SetEnvironmentVariable(
       key = "OTEL_INSTRUMENTATION/DEVELOPMENT_JAVA_FOO_STRING_KEY",
       value = "new_value")
@@ -84,20 +94,66 @@ class DeclarativeConfigTest {
   @SetEnvironmentVariable(
       key = "OTEL_INSTRUMENTATION/DEVELOPMENT_JAVA_FOO_DOUBLE_KEY",
       value = "4.14")
-  void envVarOverrides() {
+  @SetEnvironmentVariable(
+      key = "OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT",
+      value = "http://custom:4318/v1/traces")
+  void envVarOverrideSpringStyle() {
     this.contextRunner.run(
         context ->
             assertThat(context)
-                .getBean("openTelemetry", OpenTelemetry.class)
+                .getBean(OpenTelemetry.class)
                 .isNotNull()
                 .satisfies(
                     o -> {
                       ExtendedDeclarativeConfigProperties config =
                           DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+                      // spring style env var overrides always work
                       assertThat(config.getString("string_key")).isEqualTo("new_value");
                       assertThat(config.getBoolean("bool_key")).isFalse();
                       assertThat(config.getDouble("double_key")).isEqualTo(4.14);
                       assertThat(config.getLong("int_key")).isEqualTo(43);
+
+                      assertThat(o.toString())
+                          .contains("OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces");
+                    }));
+  }
+
+  @Test
+  @SetEnvironmentVariable(key = "STRING_ENV", value = "string_value")
+  @SetEnvironmentVariable(key = "BOOL_ENV", value = "true")
+  @SetEnvironmentVariable(key = "INT_ENV", value = "42")
+  @SetEnvironmentVariable(key = "DOUBLE_ENV", value = "3.14")
+  @SetEnvironmentVariable(key = "OTEL_EXPORTER_OTLP_ENDPOINT", value = "http://custom:4318")
+  void envVarOverrideOtelStyle() {
+    this.contextRunner.run(
+        context ->
+            assertThat(context)
+                .getBean(OpenTelemetry.class)
+                .isNotNull()
+                .satisfies(
+                    o -> {
+                      ExtendedDeclarativeConfigProperties config =
+                          DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+                      // otel style env var overrides work only for string values
+                      assertThat(config.getString("string_key")).isEqualTo("string_value");
+                      assertThat(config.getString("string_key_with_env")).isEqualTo("string_value");
+                      assertThat(config.getString("string_key_with_env_quoted"))
+                          .isEqualTo("string_value");
+
+                      assertThat(config.getBoolean("bool_key")).isTrue();
+                      assertThat(config.getBoolean("bool_key_with_env")).isNull();
+                      assertThat(config.getBoolean("bool_key_with_env_quoted")).isNull();
+
+                      assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+                      assertThat(config.getDouble("double_key_with_env")).isNull();
+                      assertThat(config.getDouble("double_key_with_env_quoted")).isNull();
+
+                      assertThat(config.getLong("int_key")).isEqualTo(42);
+                      assertThat(config.getLong("int_key_with_env")).isNull();
+                      assertThat(config.getLong("int_key_with_env_quoted")).isNull();
+
+                      assertThat(o.toString())
+                          .contains("OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces");
                     }));
   }
 
@@ -160,37 +216,5 @@ class DeclarativeConfigTest {
             "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none",
             "otel.instrumentation/development.java.spring_web.enabled=false")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
-  }
-
-  @Test
-  @SetEnvironmentVariable(
-      key = "OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT",
-      value = "http://custom:4318/v1/traces")
-  void envVarOverrideSpringStyle() {
-    this.contextRunner.run(
-        context ->
-            assertThat(context)
-                .getBean(OpenTelemetry.class)
-                .isNotNull()
-                .satisfies(
-                    c ->
-                        assertThat(c.toString())
-                            .contains(
-                                "OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces")));
-  }
-
-  @Test
-  @SetEnvironmentVariable(key = "OTEL_EXPORTER_OTLP_ENDPOINT", value = "http://custom:4318")
-  void envVarOverrideOtelStyle() {
-    this.contextRunner.run(
-        context ->
-            assertThat(context)
-                .getBean(OpenTelemetry.class)
-                .isNotNull()
-                .satisfies(
-                    c ->
-                        assertThat(c.toString())
-                            .contains(
-                                "OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces")));
   }
 }
