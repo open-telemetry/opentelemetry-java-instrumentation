@@ -56,7 +56,7 @@ dependencies {
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.1.0")
   implementation("com.google.guava:guava:33.5.0-jre")
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.0")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.3")
   implementation("org.owasp:dependency-check-gradle:12.1.9")
@@ -70,7 +70,7 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.3.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.27.6")

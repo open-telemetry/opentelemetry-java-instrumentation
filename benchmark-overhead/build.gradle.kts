@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-  implementation(enforcedPlatform("org.junit:junit-bom:5.14.1"))
+  implementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
 
   testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.3"))
   testImplementation("org.testcontainers:testcontainers:2.0.3")

@@ -10,7 +10,7 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.gradleup.shadow" version "9.3.0"
+  id "com.gradleup.shadow" version "9.3.1"
   id "com.diffplug.spotless" version "8.1.0"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "2.24.0-alpha-SNAPSHOT"
@@ -105,12 +105,12 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.23")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.24")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
