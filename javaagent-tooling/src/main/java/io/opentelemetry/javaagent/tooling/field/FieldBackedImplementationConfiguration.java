@@ -10,8 +10,9 @@ import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 public final class FieldBackedImplementationConfiguration {
   static boolean fieldInjectionEnabled = true;
 
-  public static void configure(EarlyInitAgentConfig config) {
-    fieldInjectionEnabled = config.isOtelJavaagentExperimentalFieldInjectionEnabled();
+  public static void configure() {
+    fieldInjectionEnabled =
+        EarlyInitAgentConfig.get().isOtelJavaagentExperimentalFieldInjectionEnabled();
   }
 
   private FieldBackedImplementationConfiguration() {}

@@ -53,15 +53,13 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   public static ClassLoader getInstance(
-      ClassLoader parent,
-      File javaagentFile,
-      boolean isSecurityManagerSupportEnabled,
-      EarlyInitAgentConfig earlyConfig) {
+      ClassLoader parent, File javaagentFile, boolean isSecurityManagerSupportEnabled) {
     List<URL> extensions = new ArrayList<>();
 
     includeEmbeddedExtensionsIfFound(extensions, javaagentFile);
 
-    extensions.addAll(parseLocation(earlyConfig.getOtelJavaagentExtensions(), javaagentFile));
+    extensions.addAll(
+        parseLocation(EarlyInitAgentConfig.get().getOtelJavaagentExtensions(), javaagentFile));
 
     // TODO when logging is configured add warning about deprecated property
 
