@@ -15,7 +15,7 @@ import org.springframework.boot.web.reactive.function.client.WebClientCustomizer
 import org.springframework.web.reactive.function.client.WebClient;
 
 class SpringWebfluxInstrumentationAutoConfigurationTest
-    extends AbstractWebClientCustomizerAutoConfigurationTest {
+    extends AbstractWebClientCustomizerAutoConfigurationTest<WebClientCustomizer> {
 
   @Override
   protected AutoConfigurations autoConfigurations() {
@@ -23,13 +23,13 @@ class SpringWebfluxInstrumentationAutoConfigurationTest
   }
 
   @Override
-  protected Class<?> webClientCustomizerClass() {
+  protected Class<WebClientCustomizer> webClientCustomizerClass() {
     return WebClientCustomizer.class;
   }
 
   @Override
-  protected void customizeWebClient(Object customizer, WebClient.Builder builder) {
-    ((WebClientCustomizer) customizer).customize(builder);
+  protected void customizeWebClient(WebClientCustomizer customizer, WebClient.Builder builder) {
+    customizer.customize(builder);
   }
 
   @Test

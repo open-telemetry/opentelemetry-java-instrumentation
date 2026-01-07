@@ -18,15 +18,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Abstract base test for WebClient customizer auto-configurations. Subclasses must provide the
- * auto-configuration class and WebClientCustomizer class for their Spring Boot version.
+ * autoconfiguration class and WebClientCustomizer class for their Spring Boot version.
+ *
+ * @param <T> the WebClientCustomizer type for the specific Spring Boot version
  */
-public abstract class AbstractWebClientCustomizerAutoConfigurationTest {
+public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
 
   protected abstract AutoConfigurations autoConfigurations();
 
-  protected abstract Class<?> webClientCustomizerClass();
+  protected abstract Class<T> webClientCustomizerClass();
 
-  protected abstract void customizeWebClient(Object customizer, WebClient.Builder builder);
+  protected abstract void customizeWebClient(T customizer, WebClient.Builder builder);
 
   protected ApplicationContextRunner contextRunner;
 
@@ -69,8 +71,7 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest {
   void shouldAddTracingFilterWhenCustomizerApplied() {
     contextRunner.run(
         context -> {
-          Object customizer =
-              context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
+          T customizer = context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
           WebClient.Builder builder = WebClient.builder();
           customizeWebClient(customizer, builder);
 
