@@ -15,18 +15,11 @@ import javax.annotation.Nullable;
  */
 public final class EarlyInitAgentConfig {
 
-  private static final EarlyInitAgentConfig INSTANCE = create();
+  private static final EarlyInitAgentConfig INSTANCE =
+      new EarlyInitAgentConfig(ConfigurationFile.getProperties());
 
   public static EarlyInitAgentConfig get() {
     return INSTANCE;
-  }
-
-  /**
-   * @deprecated Use {@link #get()} instead.
-   */
-  @Deprecated
-  public static EarlyInitAgentConfig create() {
-    return new EarlyInitAgentConfig(ConfigurationFile.getProperties());
   }
 
   private final Map<String, String> configFileContents;
@@ -61,12 +54,8 @@ public final class EarlyInitAgentConfig {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
 
-  /**
-   * @deprecated Use specific property accessors instead.
-   */
   @Nullable
-  @Deprecated
-  public String getString(String propertyName) {
+  private String getString(String propertyName) {
     String value = ConfigPropertiesUtil.getString(propertyName);
     if (value != null) {
       return value;
@@ -74,22 +63,14 @@ public final class EarlyInitAgentConfig {
     return configFileContents.get(propertyName);
   }
 
-  /**
-   * @deprecated Use specific property accessors instead.
-   */
-  @Deprecated
-  public boolean getBoolean(String propertyName, boolean defaultValue) {
+  private boolean getBoolean(String propertyName, boolean defaultValue) {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
     return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
   }
 
-  /**
-   * @deprecated Use specific property accessors instead.
-   */
-  @Deprecated
-  public int getInt(String propertyName, int defaultValue) {
+  private int getInt(String propertyName, int defaultValue) {
     try {
       String configFileValueStr = configFileContents.get(propertyName);
       int configFileValue =
