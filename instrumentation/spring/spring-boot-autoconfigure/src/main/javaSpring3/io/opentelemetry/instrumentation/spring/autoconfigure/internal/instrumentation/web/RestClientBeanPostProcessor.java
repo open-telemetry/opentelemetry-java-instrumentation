@@ -36,7 +36,7 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
       RestClient restClient, OpenTelemetry openTelemetry) {
     ClientHttpRequestInterceptor instrumentationInterceptor = getInterceptor(openTelemetry);
 
-    AtomicBoolean shouldAddInterceptor = new AtomicBoolean(false);
+    AtomicBoolean interceptorAdded = new AtomicBoolean(false);
     RestClient.Builder result =
         restClient
             .mutate()
@@ -44,11 +44,11 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
                 interceptors -> {
                   if (isInterceptorNotPresent(interceptors, instrumentationInterceptor)) {
                     interceptors.add(0, instrumentationInterceptor);
-                    shouldAddInterceptor.set(true);
+                    interceptorAdded.set(true);
                   }
                 });
 
-    return shouldAddInterceptor.get() ? result.build() : restClient;
+    return interceptorAdded.get() ? result.build() : restClient;
   }
 
   private static boolean isInterceptorNotPresent(
