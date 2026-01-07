@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
   id("otel.library-instrumentation")
@@ -19,7 +18,7 @@ dependencies {
 
 tasks {
   test {
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val testAppTask = project(":instrumentation:jmx-metrics:testing-webapp").tasks.named<War>("war")
 
     dependsOn(shadowTask)

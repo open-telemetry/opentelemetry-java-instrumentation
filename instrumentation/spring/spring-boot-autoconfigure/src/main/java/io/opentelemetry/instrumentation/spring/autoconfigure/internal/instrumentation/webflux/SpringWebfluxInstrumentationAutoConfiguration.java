@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webflux;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -33,14 +32,13 @@ public class SpringWebfluxInstrumentationAutoConfiguration {
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
   static WebClientBeanPostProcessor otelWebClientBeanPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<InstrumentationConfig> configProvider) {
-    return new WebClientBeanPostProcessor(openTelemetryProvider, configProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new WebClientBeanPostProcessor(openTelemetryProvider);
   }
 
   @Bean
-  WebFilter telemetryFilter(OpenTelemetry openTelemetry, InstrumentationConfig config) {
-    return WebClientBeanPostProcessor.getWebfluxServerTelemetry(openTelemetry, config)
+  WebFilter telemetryFilter(OpenTelemetry openTelemetry) {
+    return WebClientBeanPostProcessor.getWebfluxServerTelemetry(openTelemetry)
         .createWebFilterAndRegisterReactorHook();
   }
 }

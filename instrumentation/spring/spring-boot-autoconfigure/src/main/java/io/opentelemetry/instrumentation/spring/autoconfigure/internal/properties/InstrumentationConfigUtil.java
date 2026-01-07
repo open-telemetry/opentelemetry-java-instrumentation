@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.function.Function;
 
 /**
@@ -21,28 +23,36 @@ public final class InstrumentationConfigUtil {
 
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureClientBuilder(
-      InstrumentationConfig config,
+      OpenTelemetry openTelemetry,
       T builder,
       Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(getConfig(config));
+    getBuilder.apply(builder).configure(getConfig(openTelemetry));
     return builder;
   }
 
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureServerBuilder(
-      InstrumentationConfig config,
+      OpenTelemetry openTelemetry,
       T builder,
       Function<T, DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
-    getBuilder.apply(builder).configure(getConfig(config));
+    getBuilder.apply(builder).configure(getConfig(openTelemetry));
     return builder;
   }
 
-  private static CommonConfig getConfig(InstrumentationConfig config) {
-    return new CommonConfig(config);
+  private static CommonConfig getConfig(OpenTelemetry openTelemetry) {
+    return new CommonConfig(openTelemetry);
   }
 
-  public static boolean isStatementSanitizationEnabled(InstrumentationConfig config, String key) {
-    return config.getBoolean(
-        key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+  public static boolean isStatementSanitizationEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    ExtendedDeclarativeConfigProperties instrumentationConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    return instrumentationConfig
+        .get("statement_sanitizer")
+        .getBoolean(
+            "enabled",
+            commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true));
   }
 }

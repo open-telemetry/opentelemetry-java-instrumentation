@@ -5,11 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -17,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -47,67 +43,65 @@ public final class CommonConfig {
     T get(ConfigProvider configProvider);
   }
 
-  public CommonConfig(InstrumentationConfig config) {
-    peerServiceResolver =
-        PeerServiceResolver.create(
-            getFromConfigProviderOrFallback(
-                config,
-                InstrumentationConfigUtil::peerServiceMapping,
-                emptyMap(),
-                () ->
-                    config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap())));
+  public CommonConfig(OpenTelemetry openTelemetry) {
+    ExtendedDeclarativeConfigProperties generalConfig =
+        DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    peerServiceResolver = PeerServiceResolver.create(openTelemetry);
 
     clientRequestHeaders =
-        getFromConfigProviderOrFallback(
-            config,
-            InstrumentationConfigUtil::httpClientRequestCapturedHeaders,
-            emptyList(),
-            () -> config.getList("otel.instrumentation.http.client.capture-request-headers"));
+        generalConfig
+            .get("http")
+            .get("client")
+            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
     clientResponseHeaders =
-        getFromConfigProviderOrFallback(
-            config,
-            InstrumentationConfigUtil::httpClientResponseCapturedHeaders,
-            emptyList(),
-            () -> config.getList("otel.instrumentation.http.client.capture-response-headers"));
+        generalConfig
+            .get("http")
+            .get("client")
+            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
     serverRequestHeaders =
-        getFromConfigProviderOrFallback(
-            config,
-            InstrumentationConfigUtil::httpServerRequestCapturedHeaders,
-            emptyList(),
-            () -> config.getList("otel.instrumentation.http.server.capture-request-headers"));
+        generalConfig
+            .get("http")
+            .get("server")
+            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
     serverResponseHeaders =
-        getFromConfigProviderOrFallback(
-            config,
-            InstrumentationConfigUtil::httpServerResponseCapturedHeaders,
-            emptyList(),
-            () -> config.getList("otel.instrumentation.http.server.capture-response-headers"));
+        generalConfig
+            .get("http")
+            .get("server")
+            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
     knownHttpRequestMethods =
         new HashSet<>(
-            config.getList(
-                "otel.instrumentation.http.known-methods",
-                new ArrayList<>(HttpConstants.KNOWN_METHODS)));
+            commonConfig
+                .get("http")
+                .getScalarList(
+                    "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
-        config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
+        commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true);
     sqlCommenterEnabled =
-        config.getBoolean(
-            "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false);
+        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled", false);
     emitExperimentalHttpClientTelemetry =
-        config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("emit_experimental_telemetry/development", false);
     redactQueryParameters =
-        config.getBoolean(
-            "otel.instrumentation.http.client.experimental.redact-query-parameters", true);
+        commonConfig
+            .get("http")
+            .get("client")
+            .getBoolean("redact_query_parameters/development", true);
     emitExperimentalHttpServerTelemetry =
-        config.getBoolean("otel.instrumentation.http.server.emit-experimental-telemetry", false);
-    enduserConfig = new EnduserConfig(config);
+        commonConfig
+            .get("http")
+            .get("server")
+            .getBoolean("emit_experimental_telemetry/development", false);
+    enduserConfig = new EnduserConfig(commonConfig);
     loggingTraceIdKey =
-        config.getString(
-            "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID);
+        commonConfig.get("logging").getString("trace_id", LoggingContextConstants.TRACE_ID);
     loggingSpanIdKey =
-        config.getString(
-            "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID);
+        commonConfig.get("logging").getString("span_id", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
-        config.getString(
-            "otel.instrumentation.common.logging.trace-flags", LoggingContextConstants.TRACE_FLAGS);
+        commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
   public PeerServiceResolver getPeerServiceResolver() {
@@ -168,19 +162,5 @@ public final class CommonConfig {
 
   public String getTraceFlagsKey() {
     return loggingTraceFlagsKey;
-  }
-
-  private static <T> T getFromConfigProviderOrFallback(
-      InstrumentationConfig config,
-      ValueProvider<T> getFromConfigProvider,
-      T defaultValue,
-      Supplier<T> fallback) {
-    ConfigProvider configProvider = config.getConfigProvider();
-    if (configProvider != null) {
-      T value = getFromConfigProvider.get(configProvider);
-      return value != null ? value : defaultValue;
-    }
-    // fallback doesn't return null, so we can safely call it
-    return fallback.get();
   }
 }

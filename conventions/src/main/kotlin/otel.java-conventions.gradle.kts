@@ -6,7 +6,6 @@ plugins {
   `java-library`
   groovy
   checkstyle
-  codenarc
   idea
 
   id("otel.errorprone-conventions")
@@ -72,7 +71,9 @@ tasks.withType<JavaCompile>().configureEach {
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
           // jdk21 generates more serial warnings than previous versions
-          "-Xlint:-serial"
+          "-Xlint:-serial",
+          // suppress warning: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
+          "-Xlint:-classfile"
         )
       )
       if (System.getProperty("dev") != "true") {
@@ -142,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.128.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.130.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -158,9 +159,6 @@ dependencies {
 
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
-
-  codenarc("org.codenarc:CodeNarc:3.6.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.25"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -415,14 +413,10 @@ afterEvaluate {
   }
 }
 
-codenarc {
-  configFile = rootProject.file("buildscripts/codenarc.groovy")
-}
-
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "12.1.2"
+  toolVersion = "13.0.0"
   maxWarnings = 0
 }
 

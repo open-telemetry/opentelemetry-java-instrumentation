@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
-import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.PREFIX;
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

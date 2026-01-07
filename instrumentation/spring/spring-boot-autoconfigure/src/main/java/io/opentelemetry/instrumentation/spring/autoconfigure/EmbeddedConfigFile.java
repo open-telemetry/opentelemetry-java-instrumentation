@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -45,23 +46,46 @@ class EmbeddedConfigFile {
   private EmbeddedConfigFile() {}
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
-    Map<String, String> props = extractSpringProperties(environment);
-    return convertToOpenTelemetryConfigurationModel(props);
+    Map<String, Object> props = extractSpringProperties(environment);
+    Map<String, Object> nested = convertFlatPropsToNested(props);
+    return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
-  private static Map<String, String> extractSpringProperties(ConfigurableEnvironment environment) {
+  private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
-    Map<String, String> props = new HashMap<>();
+    Map<String, Object> props = new HashMap<>();
     for (PropertySource<?> propertySource : propertySources) {
       if (propertySource instanceof EnumerablePropertySource<?>) {
         for (String propertyName :
             ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
           if (propertyName.startsWith("otel.")) {
-            String property = environment.getProperty(propertyName);
+            Object property = propertySource.getProperty(propertyName);
+            // Resolve ${} placeholders in String values while preserving types for others
+            if (property instanceof String) {
+              property = environment.resolvePlaceholders((String) property);
+            }
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
+            if (propertyName.contains("[")) {
+              // fix override via env var or system property
+              // see
+              // https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding
+              // For example, the configuration property my.service[0].other would use an
+              // environment variable named MY_SERVICE_0_OTHER.
+              String envVarName =
+                  propertyName
+                      .replace("[", "_")
+                      .replace("]", "")
+                      .replace(".", "_")
+                      .toUpperCase(Locale.ROOT);
+              String envVarValue = environment.getProperty(envVarName);
+              if (envVarValue != null) {
+                property = envVarValue;
+              }
+            }
+
             props.put(propertyName.substring("otel.".length()), property);
           }
         }
@@ -76,29 +100,18 @@ class EmbeddedConfigFile {
     return props;
   }
 
-  static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(
-      Map<String, String> flatProps) {
-    Map<String, Object> nested = convertFlatPropsToNested(flatProps);
-
-    return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
-  }
-
-  static ObjectMapper getObjectMapper() {
-    return MAPPER;
-  }
-
   /**
    * Convert flat property map to nested structure. e.g. "otel.instrumentation.java.list[0]" = "one"
    * and "otel.instrumentation.java.list[1]" = "two" becomes: {otel: {instrumentation: {java: {list:
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  static Map<String, Object> convertFlatPropsToNested(Map<String, String> flatProps) {
+  static Map<String, Object> convertFlatPropsToNested(Map<String, Object> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
-    for (Map.Entry<String, String> entry : flatProps.entrySet()) {
+    for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
       String key = entry.getKey();
-      String value = entry.getValue();
+      Object value = entry.getValue();
 
       // Split the key by dots
       String[] parts = key.split("\\.");

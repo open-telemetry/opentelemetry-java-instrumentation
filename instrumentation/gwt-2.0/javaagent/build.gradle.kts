@@ -45,7 +45,6 @@ dependencies {
   }
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
   testImplementation("org.testcontainers:testcontainers-selenium")

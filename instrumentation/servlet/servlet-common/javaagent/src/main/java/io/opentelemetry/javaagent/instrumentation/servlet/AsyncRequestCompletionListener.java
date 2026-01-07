@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
@@ -24,7 +27,7 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
       ServletRequestContext<REQUEST> requestContext,
       Context context) {
     // The context passed into this method may contain other spans besides the server span. To end
-    // the server span we get the context that set at the start of the request with
+    // the server span we get the context that was set at the start of the request with
     // ServletHelper#setAsyncListenerResponse that contains just the server span.
     Context serverSpanContext = servletHelper.getAsyncListenerContext(context);
     this.servletHelper = servletHelper;

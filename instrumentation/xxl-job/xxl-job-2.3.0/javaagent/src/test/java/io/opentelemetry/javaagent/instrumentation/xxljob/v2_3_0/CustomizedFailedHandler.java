@@ -11,7 +11,7 @@ import com.xxl.job.core.handler.IJobHandler;
 class CustomizedFailedHandler extends IJobHandler {
 
   @Override
-  public void execute() throws Exception {
+  public void execute() {
     XxlJobHelper.handleFail();
   }
 }

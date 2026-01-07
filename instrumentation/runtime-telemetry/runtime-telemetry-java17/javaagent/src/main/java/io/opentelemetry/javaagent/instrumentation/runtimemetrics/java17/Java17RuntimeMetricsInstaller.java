@@ -1,0 +1,33 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java17;
+
+import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsConfigUtil;
+import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+
+/** An {@link AgentListener} that enables runtime metrics during agent startup. */
+@AutoService(AgentListener.class)
+public class Java17RuntimeMetricsInstaller implements AgentListener {
+
+  @Override
+  public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+    RuntimeMetrics runtimeMetrics =
+        RuntimeMetricsConfigUtil.configure(
+            RuntimeMetrics.builder(GlobalOpenTelemetry.get()),
+            GlobalOpenTelemetry.get(),
+            AgentConfig.instrumentationMode());
+    if (runtimeMetrics != null) {
+      Runtime.getRuntime()
+          .addShutdownHook(
+              new Thread(runtimeMetrics::close, "OpenTelemetry RuntimeMetricsShutdownHook"));
+    }
+  }
+}

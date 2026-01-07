@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -58,17 +58,12 @@ class DeclarativeConfigTest {
         context ->
             assertThat(context)
                 .hasBean("openTelemetry")
-                .hasBean("otelProperties")
-                .getBean(InstrumentationConfig.class)
+                .getBean("otelProperties", ConfigProperties.class)
                 .isNotNull()
                 .satisfies(
-                    c ->
-                        assertThat(c.getDeclarativeConfig("foo"))
-                            .isNotNull()
-                            .satisfies(
-                                instrumentationConfig ->
-                                    assertThat(instrumentationConfig.getString("bar"))
-                                        .isEqualTo("baz"))));
+                    configProperties ->
+                        assertThat(configProperties.getString("otel.instrumentation.foo.bar"))
+                            .isEqualTo("baz")));
   }
 
   @Test
@@ -130,5 +125,40 @@ class DeclarativeConfigTest {
             "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none",
             "otel.instrumentation/development.java.spring_web.enabled=false")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
+  }
+
+  @Test
+  void envVarOverrideSpringStyle() {
+    this.contextRunner
+        // this is typically set via env var
+        .withSystemProperties(
+            "OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT=http://custom:4318/v1/traces")
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean(OpenTelemetry.class)
+                    .isNotNull()
+                    .satisfies(
+                        c ->
+                            assertThat(c.toString())
+                                .contains(
+                                    "OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces")));
+  }
+
+  @Test
+  void envVarOverrideOtelStyle() {
+    this.contextRunner
+        // this is typically set via env var
+        .withSystemProperties("OTEL_EXPORTER_OTLP_ENDPOINT=http://custom:4318")
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean(OpenTelemetry.class)
+                    .isNotNull()
+                    .satisfies(
+                        c ->
+                            assertThat(c.toString())
+                                .contains(
+                                    "OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces")));
   }
 }

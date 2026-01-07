@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.jetty.v11_0.Jetty11Sing
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import javax.annotation.Nullable;

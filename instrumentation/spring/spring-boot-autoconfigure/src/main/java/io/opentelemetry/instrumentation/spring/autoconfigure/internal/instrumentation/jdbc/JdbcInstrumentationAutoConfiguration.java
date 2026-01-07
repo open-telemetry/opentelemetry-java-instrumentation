@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.jdbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnEnabledInstrumentation(module = "jdbc")
 @AutoConfiguration(after = DataSourceAutoConfiguration.class)
 @ConditionalOnBean({DataSource.class})
+@ConditionalOnClass(DataSourceAutoConfiguration.class) // module changed in Spring Boot 4
 @Configuration(proxyBeanMethods = false)
 public class JdbcInstrumentationAutoConfiguration {
 
@@ -32,8 +33,7 @@ public class JdbcInstrumentationAutoConfiguration {
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   static DataSourcePostProcessor dataSourcePostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<InstrumentationConfig> configProvider) {
-    return new DataSourcePostProcessor(openTelemetryProvider, configProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new DataSourcePostProcessor(openTelemetryProvider);
   }
 }

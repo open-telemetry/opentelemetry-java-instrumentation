@@ -25,6 +25,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
 
   val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
   if (testLatestDeps) {

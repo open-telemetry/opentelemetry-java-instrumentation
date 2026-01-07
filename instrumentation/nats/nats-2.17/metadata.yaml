@@ -1,7 +1,12 @@
-disabled_by_default: false
-description: This instrumentation provides messaging spans for NATS
+display_name: NATS Client
+description: This instrumentation enables messaging spans for NATS message producers and consumers.
+semantic_conventions:
+  - MESSAGING_SPANS
+library_link: https://nats.io/
 configurations:
   - name: otel.instrumentation.messaging.experimental.capture-headers
-    description: Allows configuring headers to capture as span attributes.
+    description: >
+      Enables capturing messaging headers as span attributes. Provide a comma-separated list of
+      header names to capture.
     type: list
     default: ''

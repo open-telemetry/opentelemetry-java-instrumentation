@@ -87,5 +87,6 @@ class SpringBootIntegrationTest extends IntegrationTest {
     Assertions.assertNotEquals(
         0, countResourcesByValue(traces, "telemetry.distro.version", currentAgentVersion));
     Assertions.assertNotEquals(0, countResourcesByValue(traces, "custom.resource", "demo"));
+    Assertions.assertEquals(1, countSpansByAttributeValue(traces, "demo.custom", "demo-extension"));
   }
 }

@@ -17,14 +17,14 @@ jobs:
       contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
         # need to run this script before we switch branches
         # since the script doesn't exist on the cloudfoundry branch
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           ref: 'cloudfoundry'
 
@@ -39,7 +39,7 @@ jobs:
       - name: display changes
         run: git diff
 
-      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}

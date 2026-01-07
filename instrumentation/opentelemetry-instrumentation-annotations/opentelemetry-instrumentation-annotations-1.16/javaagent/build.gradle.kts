@@ -41,4 +41,16 @@ tasks {
   test {
     jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
   }
+
+  val testDeclarativeConfig by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs(
+      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+    )
+  }
+
+  check {
+    dependsOn(testDeclarativeConfig)
+  }
 }

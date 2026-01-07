@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import com.mongodb.MongoClientSettings;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
@@ -20,20 +19,22 @@ import org.springframework.context.annotation.Configuration;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnClass({MongoClientSettings.class, MongoClientSettingsBuilderCustomizer.class})
+@ConditionalOnClass({
+  MongoClientSettings.class,
+  MongoClientSettingsBuilderCustomizer.class
+}) // module changed in Spring Boot 4
 @ConditionalOnEnabledInstrumentation(module = "mongo")
 @Configuration
 public class MongoClientInstrumentationAutoConfiguration {
 
   @Bean
-  MongoClientSettingsBuilderCustomizer customizer(
-      OpenTelemetry openTelemetry, InstrumentationConfig config) {
+  MongoClientSettingsBuilderCustomizer customizer(OpenTelemetry openTelemetry) {
     return builder ->
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
                 .setStatementSanitizationEnabled(
                     InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                        config, "otel.instrumentation.mongo.statement-sanitizer.enabled"))
+                        openTelemetry, "mongo"))
                 .build()
                 .newCommandListener());
   }

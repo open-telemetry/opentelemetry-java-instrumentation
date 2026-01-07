@@ -17,11 +17,38 @@ import javax.annotation.Nullable;
  */
 public final class ConfigPropertiesUtil {
 
+  /**
+   * Returns the boolean value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
-    String strValue = getString(propertyName);
-    return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
+    Boolean value = getBoolean(propertyName);
+    return value == null ? defaultValue : value;
   }
 
+  /**
+   * Returns the boolean value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
+  @Nullable
+  public static Boolean getBoolean(String propertyName) {
+    String strValue = getString(propertyName);
+    return strValue == null ? null : Boolean.parseBoolean(strValue);
+  }
+
+  /**
+   * Returns the int value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
   public static int getInt(String propertyName, int defaultValue) {
     String strValue = getString(propertyName);
     if (strValue == null) {
@@ -34,6 +61,13 @@ public final class ConfigPropertiesUtil {
     }
   }
 
+  /**
+   * Returns the string value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
   @Nullable
   public static String getString(String propertyName) {
     String value = System.getProperty(propertyName);
@@ -43,11 +77,26 @@ public final class ConfigPropertiesUtil {
     return System.getenv(toEnvVarName(propertyName));
   }
 
+  /**
+   * Returns the string value of the given property name from system properties and environment
+   * variables, or the default value if not found.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
   public static String getString(String propertyName, String defaultValue) {
     String strValue = getString(propertyName);
     return strValue == null ? defaultValue : strValue;
   }
 
+  /**
+   * Returns the list of strings value of the given property name from system properties and
+   * environment variables, or the default value if not found. The property value is expected to be
+   * a comma-separated list.
+   *
+   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
+   * to support Declarative Config.
+   */
   public static List<String> getList(String propertyName, List<String> defaultValue) {
     String value = getString(propertyName);
     if (value == null) {

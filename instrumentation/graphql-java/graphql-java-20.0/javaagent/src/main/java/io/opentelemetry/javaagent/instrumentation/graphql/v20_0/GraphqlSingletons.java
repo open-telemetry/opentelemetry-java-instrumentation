@@ -7,42 +7,68 @@ package io.opentelemetry.javaagent.instrumentation.graphql.v20_0;
 
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v20_0.GraphQLTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class GraphqlSingletons {
 
-  private static final boolean CAPTURE_QUERY =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.capture-query", true);
-  private static final boolean QUERY_SANITIZATION_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
-  private static final boolean DATA_FETCHER_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.data-fetcher.enabled", false);
-  private static final boolean TRIVIAL_DATA_FETCHER_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.trivial-data-fetcher.enabled", false);
-  private static final boolean ADD_OPERATION_NAME_TO_SPAN_NAME =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.graphql.add-operation-name-to-span-name.enabled", false);
+  private static final GraphQLTelemetry TELEMETRY;
 
-  private static final GraphQLTelemetry TELEMETRY =
-      GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCaptureQuery(CAPTURE_QUERY)
-          .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
-          .setDataFetcherInstrumentationEnabled(DATA_FETCHER_ENABLED)
-          .setTrivialDataFetcherInstrumentationEnabled(TRIVIAL_DATA_FETCHER_ENABLED)
-          .setAddOperationNameToSpanName(ADD_OPERATION_NAME_TO_SPAN_NAME)
-          .build();
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    Configuration config = new Configuration(openTelemetry);
 
-  private GraphqlSingletons() {}
+    TELEMETRY =
+        GraphQLTelemetry.builder(openTelemetry)
+            .setCaptureQuery(config.captureQuery)
+            .setSanitizeQuery(config.sanitizeQuery)
+            .setDataFetcherInstrumentationEnabled(config.dataFetcherEnabled)
+            .setTrivialDataFetcherInstrumentationEnabled(config.trivialDataFetcherEnabled)
+            .setAddOperationNameToSpanName(config.addOperationNameToSpanName)
+            .build();
+  }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
     Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
   }
+
+  // instrumentation/development:
+  //   java:
+  //     graphql:
+  //       capture_query: true
+  //       query_sanitizer:
+  //         enabled: true
+  //       data_fetcher:
+  //         enabled: false
+  //       trivial_data_fetcher:
+  //         enabled: false
+  //       add_operation_name_to_span_name:
+  //         enabled: false
+  private static final class Configuration {
+
+    private final boolean captureQuery;
+    private final boolean sanitizeQuery;
+    private final boolean dataFetcherEnabled;
+    private final boolean trivialDataFetcherEnabled;
+    private final boolean addOperationNameToSpanName;
+
+    Configuration(OpenTelemetry openTelemetry) {
+      ExtendedDeclarativeConfigProperties config =
+          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
+
+      this.captureQuery = config.getBoolean("capture_query", true);
+      this.sanitizeQuery = config.get("query_sanitizer").getBoolean("enabled", true);
+      this.dataFetcherEnabled = config.get("data_fetcher").getBoolean("enabled", false);
+      this.trivialDataFetcherEnabled =
+          config.get("trivial_data_fetcher").getBoolean("enabled", false);
+      this.addOperationNameToSpanName =
+          config.get("add_operation_name_to_span_name").getBoolean("enabled", false);
+    }
+  }
+
+  private GraphqlSingletons() {}
 }
