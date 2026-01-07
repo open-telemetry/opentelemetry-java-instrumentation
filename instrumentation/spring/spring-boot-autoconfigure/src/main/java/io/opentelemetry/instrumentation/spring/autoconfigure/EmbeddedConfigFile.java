@@ -54,10 +54,6 @@ class EmbeddedConfigFile {
     return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
-  private static String toEnvVarName(String propertyName) {
-    return "OTEL_" + propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
-  }
-
   private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
@@ -88,7 +84,7 @@ class EmbeddedConfigFile {
 
             if (propertySource instanceof SystemEnvironmentPropertySource) {
               if (property != null) {
-                addEnvironmentVariableOverride(props, propertyName, property.toString());
+                tryAddEnvironmentVariableOverride(props, propertyName, property.toString());
               }
             } else {
               props.put(propertyName.substring(prefix.length()), property);
@@ -106,12 +102,11 @@ class EmbeddedConfigFile {
     return props;
   }
 
-  private static void addEnvironmentVariableOverride(
+  private static void tryAddEnvironmentVariableOverride(
       Map<String, Object> props, String envVarName, String envVarValue) {
     // update the entry where toEnvVarName of propertyName is the key
     for (String key : props.keySet()) {
-      String envVarName1 = fixEnvVarName(toEnvVarName(key));
-      if (Objects.equals(envVarName, envVarName1)) {
+      if (Objects.equals(envVarName, toEnvVarName(key))) {
         // preserve the original type if possible
         props.put(key, convertEnvVar(envVarValue, props, key));
         return;
@@ -119,7 +114,9 @@ class EmbeddedConfigFile {
     }
   }
 
-  private static String fixEnvVarName(String envVarName) {
+  private static String toEnvVarName(String propertyName) {
+    String envVarName =
+        "OTEL_" + propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
     if (envVarName.contains("[")) {
       // fix override via env var or system property
       // see
