@@ -31,4 +31,10 @@ public class DenyUnsafeInstrumentationModule extends InstrumentationModule {
         new ServerInstrumentation(),
         new DefaultStreamMessageInstrumentation());
   }
+
+  @Override
+  public boolean defaultEnabled() {
+    // experimental instrumentation, disabled by default
+    return false;
+  }
 }
