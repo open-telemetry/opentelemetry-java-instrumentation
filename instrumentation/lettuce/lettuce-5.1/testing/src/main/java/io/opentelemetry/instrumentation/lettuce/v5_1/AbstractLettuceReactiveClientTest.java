@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -105,6 +106,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
@@ -148,6 +150,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -196,6 +199,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
@@ -232,6 +236,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                                     equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -255,6 +260,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                                     equalTo(maybeStable(DB_STATEMENT), "COMMAND")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -299,6 +305,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
@@ -313,6 +320,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -341,6 +349,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
@@ -355,6 +364,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
