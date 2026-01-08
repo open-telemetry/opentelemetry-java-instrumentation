@@ -192,9 +192,10 @@ public final class RedisCommandSanitizer {
     // Server
     // CONFIG SET can set any property, including the master password
     sanitizers.put("CONFIG", keepTwoArgs);
+    // ACL SETUSER can contain passwords (prefixed with '>') or password hashes (prefixed with '#')
+    sanitizers.put("ACL", keepOneArg);
     for (String command :
         asList(
-            "ACL",
             "BGREWRITEAOF",
             "BGSAVE",
             "COMMAND",
