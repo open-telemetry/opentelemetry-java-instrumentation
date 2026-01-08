@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 /**
@@ -35,9 +34,11 @@ public class DenyUnsafeInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean defaultEnabled() {
-    // using a system property here will enable the instrumentation even when declarative config is
-    // used
-    // otherwise, we'd need to patch YAML files to enable this instrumentation
+    // We're using a system property here will enable the instrumentation even when declarative
+    // config is used.
+    // Otherwise, we'd need to patch YAML files to enable this instrumentation.
+    // It's still possible to enable/disable it via declarative config, this just controls the
+    // default.
     return Boolean.getBoolean("otel.instrumentation.deny-unsafe.enabled");
   }
 }
