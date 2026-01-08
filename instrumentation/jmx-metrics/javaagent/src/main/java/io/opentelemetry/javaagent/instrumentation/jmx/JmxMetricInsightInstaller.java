@@ -36,7 +36,9 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (config.getBoolean("enabled", true)) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(config));
+              .beanDiscoveryDelay(
+                  Duration.ofMillis(
+                      config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
 
       config.getScalarList("config", String.class, emptyList()).stream()
           .map(Paths::get)
@@ -69,10 +71,5 @@ public class JmxMetricInsightInstaller implements AgentListener {
       logger.log(
           Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
-  }
-
-  private static Duration beanDiscoveryDelay(ExtendedDeclarativeConfigProperties config) {
-    return Duration.ofMillis(
-        config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis()));
   }
 }
