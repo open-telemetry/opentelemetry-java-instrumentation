@@ -10902,6 +10902,8 @@ libraries:
           type: LONG
         - name: http.route
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -11086,6 +11088,23 @@ libraries:
     target_versions:
       javaagent:
       - org.redisson:redisson:[3.0.0,3.17.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
   - name: redisson-3.17
     description: This instrumentation enables database client spans and database client
       metrics for Redisson Redis client operations.
@@ -11100,6 +11119,22 @@ libraries:
       javaagent:
       - org.redisson:redisson:[3.17.0,)
     telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
     - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
