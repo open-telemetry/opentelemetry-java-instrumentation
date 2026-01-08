@@ -19,19 +19,19 @@ public final class GenAiSpanNameExtractor<REQUEST> implements SpanNameExtractor<
     return new GenAiSpanNameExtractor<>(attributesGetter);
   }
 
-  private final GenAiAttributesGetter<REQUEST, ?> getter;
+  private final GenAiOperationAttributesGetter<REQUEST, ?> getter;
 
-  private GenAiSpanNameExtractor(GenAiAttributesGetter<REQUEST, ?> getter) {
+  private GenAiSpanNameExtractor(GenAiOperationAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
   @Override
   public String extract(REQUEST request) {
     String operation = getter.getOperationName(request);
-    String model = getter.getRequestModel(request);
-    if (model == null) {
+    String operationTarget = getter.getOperationTarget(request);
+    if (operationTarget == null) {
       return operation;
     }
-    return operation + ' ' + model;
+    return operation + ' ' + operationTarget;
   }
 }
