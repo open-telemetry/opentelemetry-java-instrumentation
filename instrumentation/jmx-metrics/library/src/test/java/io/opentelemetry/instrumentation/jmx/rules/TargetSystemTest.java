@@ -152,6 +152,7 @@ class TargetSystemTest {
     config.put("otel.exporter.otlp.protocol", "grpc");
     // short export interval for testing
     config.put("otel.metric.export.interval", "5s");
+    config.put("otel.instrumentation.jmx.discovery.delay", "1000");
     // disable runtime telemetry metrics
     config.put("otel.instrumentation.runtime-telemetry.enabled", "false");
     // set yaml config files to test
