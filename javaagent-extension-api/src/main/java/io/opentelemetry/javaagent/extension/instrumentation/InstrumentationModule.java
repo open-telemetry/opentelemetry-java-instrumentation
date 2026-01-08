@@ -102,7 +102,11 @@ public abstract class InstrumentationModule implements Ordered {
    */
   @Deprecated
   public boolean defaultEnabled(ConfigProperties config) {
-    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
+    String mode =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+            .getString("instrumentation_mode", "default");
+
+    return mode.equals("default");
   }
 
   /**
