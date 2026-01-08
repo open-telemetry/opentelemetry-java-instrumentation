@@ -124,6 +124,7 @@ tasks {
         disable("NonFinalStaticField")
 
         // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
         if (testLatestDeps) {
