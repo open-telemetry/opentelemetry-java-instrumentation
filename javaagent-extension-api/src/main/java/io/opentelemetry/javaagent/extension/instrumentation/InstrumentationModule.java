@@ -90,8 +90,11 @@ public abstract class InstrumentationModule implements Ordered {
    * themselves on some other condition.
    */
   public boolean defaultEnabled() {
-    // TODO implementation in next major release when deleting the deprecated method
-    throw new UnsupportedOperationException();
+    String mode =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+            .getString("instrumentation_mode", "default");
+
+    return mode.equals("default");
   }
 
   /**
@@ -100,13 +103,9 @@ public abstract class InstrumentationModule implements Ordered {
    *
    * @deprecated Use {@link #defaultEnabled()} instead.
    */
-  @Deprecated
+  @Deprecated // will be removed in 3.0.0
   public boolean defaultEnabled(ConfigProperties config) {
-    String mode =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
-            .getString("instrumentation_mode", "default");
-
-    return mode.equals("default");
+    return defaultEnabled();
   }
 
   /**
