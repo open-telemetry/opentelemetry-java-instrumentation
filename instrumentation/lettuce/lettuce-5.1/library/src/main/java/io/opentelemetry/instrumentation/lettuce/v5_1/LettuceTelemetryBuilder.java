@@ -9,7 +9,11 @@ import static io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry.INS
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -50,10 +54,17 @@ public final class LettuceTelemetryBuilder {
    * LettuceTelemetryBuilder}.
    */
   public LettuceTelemetry build() {
-    return new LettuceTelemetry(
-        openTelemetry,
-        statementSanitizationEnabled,
-        encodingEventsEnabled,
-        DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
+    LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+
+    Instrumenter<LettuceRequest, Void> instrumenter =
+        Instrumenter.<LettuceRequest, Void>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get())
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+
+    return new LettuceTelemetry(instrumenter, statementSanitizationEnabled, encodingEventsEnabled);
   }
 }
