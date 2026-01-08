@@ -122,14 +122,10 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testGetInt() {
-    DeclarativeConfigProperties config = createConfig("otel.jmx.discovery.delay", "5000");
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.aws-lambda.flush-timeout", "5000");
 
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("jmx")
-                .getStructured("discovery")
-                .getInt("delay"))
+    assertThat(config.getStructured("java").getStructured("aws_lambda").getInt("flush_timeout"))
         .isEqualTo(5000);
   }
 
