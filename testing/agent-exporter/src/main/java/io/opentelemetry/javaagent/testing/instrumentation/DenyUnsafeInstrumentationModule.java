@@ -34,7 +34,7 @@ public class DenyUnsafeInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // using a system property here will enable the instrumentation even when declarative config is
     // used
     // otherwise, we'd need to patch YAML files to enable this instrumentation
