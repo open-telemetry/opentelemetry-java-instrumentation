@@ -151,6 +151,11 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       if (duration != null) {
         return duration.toMillis();
       }
+      Duration fallback = configProperties.getDuration("otel.metric.export.interval");
+      if (fallback != null) {
+        return fallback.toMillis();
+      }
+      return null;
     }
 
     return configProperties.getLong(resolvePropertyKey(name));

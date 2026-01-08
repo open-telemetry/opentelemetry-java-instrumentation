@@ -150,6 +150,13 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("discovery")
                 .getLong("delay"))
         .isEqualTo(30000L);
+    assertThat(
+            createConfig("otel.metric.export.interval", "30s")
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
+        .isEqualTo(30000L);
   }
 
   @Test
