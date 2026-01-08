@@ -38,6 +38,7 @@ tasks {
       listOf(
         "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
         "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
+        "-Dotel.jmx.discovery.delay=1000",
       )
     }
   }
