@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 /**
@@ -33,8 +34,10 @@ public class DenyUnsafeInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean defaultEnabled() {
-    // experimental instrumentation, disabled by default
-    return false;
+  public boolean defaultEnabled(ConfigProperties config) {
+    // using a system property here will enable the instrumentation even when declarative config is
+    // used
+    // otherwise, we'd need to patch YAML files to enable this instrumentation
+    return Boolean.getBoolean("otel.instrumentation.deny-unsafe.enabled");
   }
 }
