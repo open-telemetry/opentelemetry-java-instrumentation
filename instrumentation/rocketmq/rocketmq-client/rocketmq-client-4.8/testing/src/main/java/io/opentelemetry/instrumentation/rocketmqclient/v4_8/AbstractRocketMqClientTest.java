@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -412,8 +413,8 @@ abstract class AbstractRocketMqClientTest {
                                     AttributeKey.stringKey("messaging.rocketmq.send_result"),
                                     "SEND_OK"),
                                 equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                    SemconvMessageStabilityUtil.headerAttributeKey(
+                                        "Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -439,8 +440,8 @@ abstract class AbstractRocketMqClientTest {
                                     AttributeKey.longKey("messaging.rocketmq.queue_offset"),
                                     val -> val.isInstanceOf(Long.class)),
                                 equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                    SemconvMessageStabilityUtil.headerAttributeKey(
+                                        "Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")

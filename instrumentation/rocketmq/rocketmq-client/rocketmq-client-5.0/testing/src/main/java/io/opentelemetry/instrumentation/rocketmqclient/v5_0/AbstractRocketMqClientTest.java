@@ -20,9 +20,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -371,8 +371,8 @@ public abstract class AbstractRocketMqClientTest {
                               body,
                               sendReceipt,
                               equalTo(
-                                  AttributeKey.stringArrayKey(
-                                      "messaging.header.Test_Message_Header"),
+                                  SemconvMessageStabilityUtil.headerAttributeKey(
+                                      "Test-Message-Header"),
                                   Collections.singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
@@ -391,8 +391,8 @@ public abstract class AbstractRocketMqClientTest {
                                 body,
                                 sendReceipt,
                                 equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                    SemconvMessageStabilityUtil.headerAttributeKey(
+                                        "Test-Message-Header"),
                                     Collections.singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),
