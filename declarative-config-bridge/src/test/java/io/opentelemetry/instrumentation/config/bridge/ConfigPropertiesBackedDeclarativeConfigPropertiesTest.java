@@ -135,10 +135,20 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
   @Test
   void testGetLong() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.aws-lambda.flush-timeout", "30000");
+    assertThat(
+            createConfig("otel.instrumentation.aws-lambda.flush-timeout", "30000")
+                .getStructured("java")
+                .getStructured("aws_lambda")
+                .getLong("flush_timeout"))
+        .isEqualTo(30000L);
 
-    assertThat(config.getStructured("java").getStructured("aws_lambda").getLong("flush_timeout"))
+    // special case: duration string
+    assertThat(
+            createConfig("otel.jmx.discovery.delay", "30s")
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
         .isEqualTo(30000L);
   }
 
