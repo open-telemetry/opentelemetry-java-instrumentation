@@ -28,15 +28,15 @@ public class EnduserAttributesCapturerSingletons {
     capturer.setEnduserRoleEnabled(AgentCommonConfig.get().getEnduserConfig().isRoleEnabled());
     capturer.setEnduserScopeEnabled(AgentCommonConfig.get().getEnduserConfig().isScopeEnabled());
 
-    ExtendedDeclarativeConfigProperties config =
+    ExtendedDeclarativeConfigProperties endUserConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_security")
             .get("enduser");
-    String rolePrefix = config.get("role").getString("granted_authority_prefix");
+    String rolePrefix = endUserConfig.get("role").getString("granted_authority_prefix");
     if (rolePrefix != null) {
       capturer.setRoleGrantedAuthorityPrefix(rolePrefix);
     }
 
-    String scopePrefix = config.get("scope").getString("granted_authority_prefix");
+    String scopePrefix = endUserConfig.get("scope").getString("granted_authority_prefix");
     if (scopePrefix != null) {
       capturer.setScopeGrantedAuthorityPrefix(scopePrefix);
     }
