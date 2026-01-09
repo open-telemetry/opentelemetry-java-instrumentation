@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,11 +17,9 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties;
-import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.Map;
-
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
@@ -56,7 +56,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         model -> {
           Object distribution = model.getAdditionalProperties().get("distribution");
           if (distribution != null) {
-            EarlyInitAgentConfig.setJavaagentConfig(
+            JavaagentDistribution.set(
                 toProperties(distribution).getStructured("javaagent", empty()));
           }
           return model;

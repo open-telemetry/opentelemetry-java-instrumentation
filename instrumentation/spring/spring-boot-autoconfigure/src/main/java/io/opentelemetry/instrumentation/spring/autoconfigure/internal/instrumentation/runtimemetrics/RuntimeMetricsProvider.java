@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -18,5 +19,8 @@ public interface RuntimeMetricsProvider {
   int minJavaVersion();
 
   @Nullable
-  AutoCloseable start(OpenTelemetry openTelemetry, boolean defaultEnabled);
+  AutoCloseable start(
+      OpenTelemetry openTelemetry,
+      boolean defaultEnabled,
+      Function<String, Boolean> isModuleEnabled);
 }

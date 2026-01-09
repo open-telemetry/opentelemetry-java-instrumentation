@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
+import static java.util.Collections.emptyList;
+
+import java.util.List;
+import javax.annotation.Nullable;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
-import javax.annotation.Nullable;
-import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -73,7 +73,7 @@ public class EarlyConfig {
 
   @SuppressWarnings("unchecked")
   @Nullable
-  private static Boolean isExplicitEnabled(ConfigurableEnvironment environment, String name) {
+  public static Boolean isExplicitEnabled(ConfigurableEnvironment environment, String name) {
     if (isDeclarativeConfig(environment)) {
       String snakeCase = name.replace('-', '_');
 

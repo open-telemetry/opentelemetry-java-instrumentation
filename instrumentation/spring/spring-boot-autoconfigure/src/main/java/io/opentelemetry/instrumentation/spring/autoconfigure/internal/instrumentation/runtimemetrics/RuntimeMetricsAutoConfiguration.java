@@ -59,7 +59,10 @@ public class RuntimeMetricsAutoConfiguration {
           metricsProvider
               .get()
               .start(
-                  openTelemetry, EarlyConfig.isDefaultEnabled(applicationContext.getEnvironment()));
+                  openTelemetry,
+                  EarlyConfig.isDefaultEnabled(applicationContext.getEnvironment()),
+                  module ->
+                      EarlyConfig.isExplicitEnabled(applicationContext.getEnvironment(), module));
     } else {
       logger.debug("No runtime metrics instrumentation available for Java {}", version);
     }

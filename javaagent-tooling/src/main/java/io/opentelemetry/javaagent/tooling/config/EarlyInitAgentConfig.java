@@ -5,12 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Map;
 import javax.annotation.Nullable;
-
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 /**
  * Agent config class that is only supposed to be used before the SDK (and {@link
@@ -21,8 +18,6 @@ public final class EarlyInitAgentConfig {
   private static final EarlyInitAgentConfig INSTANCE =
       new EarlyInitAgentConfig(ConfigurationFile.getProperties());
 
-  private static DeclarativeConfigProperties javaagentConfig = empty();
-
   public static EarlyInitAgentConfig get() {
     return INSTANCE;
   }
@@ -31,14 +26,6 @@ public final class EarlyInitAgentConfig {
 
   private EarlyInitAgentConfig(Map<String, String> configFileContents) {
     this.configFileContents = configFileContents;
-  }
-
-  public static DeclarativeConfigProperties getJavaagentConfig() {
-    return javaagentConfig;
-  }
-
-  public static void setJavaagentConfig(DeclarativeConfigProperties javaagentConfig) {
-    EarlyInitAgentConfig.javaagentConfig = javaagentConfig;
   }
 
   @Nullable
