@@ -63,8 +63,7 @@ class ConfigurationPropertiesSupplierTest {
   void userPropertiesSupplier() {
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(
-            this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(
