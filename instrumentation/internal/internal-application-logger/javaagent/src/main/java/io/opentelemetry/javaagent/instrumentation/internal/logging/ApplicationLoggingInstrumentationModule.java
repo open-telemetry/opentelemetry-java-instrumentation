@@ -26,8 +26,7 @@ public class ApplicationLoggingInstrumentationModule extends InstrumentationModu
   @Override
   public boolean defaultEnabled() {
     // only enable this instrumentation if the application logger is enabled
-    return super.defaultEnabled(config)
-        && "application".equals(EarlyInitAgentConfig.get().getLogging());
+    return super.defaultEnabled() && "application".equals(EarlyInitAgentConfig.get().getLogging());
   }
 
   @Override
