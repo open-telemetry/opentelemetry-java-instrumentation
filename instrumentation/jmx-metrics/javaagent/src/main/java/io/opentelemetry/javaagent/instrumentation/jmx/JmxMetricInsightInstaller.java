@@ -15,8 +15,6 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -32,14 +30,15 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     ExtendedDeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
     if (config.getBoolean("enabled", true)) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(config, configProperties));
+              .beanDiscoveryDelay(
+                  Duration.ofMillis(
+                      config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
 
       config.getScalarList("config", String.class, emptyList()).stream()
           .map(Paths::get)
@@ -72,17 +71,5 @@ public class JmxMetricInsightInstaller implements AgentListener {
       logger.log(
           Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
-  }
-
-  private static Duration beanDiscoveryDelay(
-      ExtendedDeclarativeConfigProperties config, ConfigProperties configProperties) {
-    Long discoveryDelayMs = config.get("discovery").getLong("delay");
-    if (discoveryDelayMs != null) {
-      return Duration.ofMillis(discoveryDelayMs);
-    }
-
-    // If discovery delay has not been configured, have a peek at the metric export interval.
-    // It makes sense for both of these values to be similar.
-    return configProperties.getDuration("otel.metric.export.interval", Duration.ofMinutes(1));
   }
 }

@@ -10,6 +10,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,7 +94,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // jmx properties don't have an "instrumentation" segment
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
-    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
     SPECIAL_MAPPINGS.put("java.jmx.target_system", "otel.jmx.target.system");
   }
 
@@ -144,6 +144,22 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public Long getLong(String name) {
+    String fullPath = pathWithName(name);
+
+    if (fullPath.equals("java.jmx.discovery.delay")) {
+      Duration duration = configProperties.getDuration("otel.jmx.discovery.delay");
+      if (duration != null) {
+        return duration.toMillis();
+      }
+      // If discovery delay has not been configured, have a peek at the metric export interval.
+      // It makes sense for both of these values to be similar.
+      Duration fallback = configProperties.getDuration("otel.metric.export.interval");
+      if (fallback != null) {
+        return fallback.toMillis();
+      }
+      return null;
+    }
+
     return configProperties.getLong(resolvePropertyKey(name));
   }
 
