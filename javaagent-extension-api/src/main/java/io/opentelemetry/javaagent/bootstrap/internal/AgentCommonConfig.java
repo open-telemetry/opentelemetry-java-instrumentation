@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import java.util.function.Function;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -19,6 +20,8 @@ public class AgentCommonConfig {
 
   private static boolean isDefaultEnabled = true;
 
+  private static Function<String, Boolean> isModuleEnabled = moduleName -> null;
+
   public static CommonConfig get() {
     return instance;
   }
@@ -29,5 +32,13 @@ public class AgentCommonConfig {
 
   public static void setIsDefaultEnabled(boolean isDefaultEnabled) {
     AgentCommonConfig.isDefaultEnabled = isDefaultEnabled;
+  }
+
+  public static void setIsModuleEnabled(Function<String, Boolean> isModuleEnabled) {
+    AgentCommonConfig.isModuleEnabled = isModuleEnabled;
+  }
+
+  public static Boolean isModuleEnabledExplicitly(String moduleName) {
+    return isModuleEnabled.apply(moduleName);
   }
 }
