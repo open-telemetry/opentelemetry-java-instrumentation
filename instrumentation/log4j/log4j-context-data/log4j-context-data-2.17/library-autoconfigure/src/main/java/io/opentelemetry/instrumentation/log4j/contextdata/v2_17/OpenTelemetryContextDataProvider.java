@@ -26,6 +26,8 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  * #supplyContextData()} is called when a log entry is created.
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
+
+  @SuppressWarnings("deprecation")
   private static final boolean BAGGAGE_ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "log4j_context_data")

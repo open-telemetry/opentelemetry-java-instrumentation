@@ -388,6 +388,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             instrumentationConfig.getStructured("java", empty()).getStructured("common", empty());
       }
     }
+
+    @SuppressWarnings("deprecation")
     String result =
         commonConfig.getString(
             "span_suppression_strategy/development",

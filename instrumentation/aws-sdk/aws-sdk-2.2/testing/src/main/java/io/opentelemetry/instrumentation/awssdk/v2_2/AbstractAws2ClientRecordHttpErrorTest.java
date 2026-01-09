@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedLibraryConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -124,9 +123,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   }
 
   public boolean isRecordIndividualHttpErrorEnabled() {
-    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
-    return DeprecatedLibraryConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
+    // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
+    return Boolean.getBoolean(
+        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error");
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
