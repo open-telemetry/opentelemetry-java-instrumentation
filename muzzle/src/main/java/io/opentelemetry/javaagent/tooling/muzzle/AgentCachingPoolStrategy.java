@@ -52,8 +52,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 
+  // cannot use EarlyInitAgentConfig here
   private static final boolean REFLECTION_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.internal-reflection.enabled", true);
+      ConfigPropertiesUtil.getBoolean("otel.javaagent.internal-reflection.enabled", true);
+
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;

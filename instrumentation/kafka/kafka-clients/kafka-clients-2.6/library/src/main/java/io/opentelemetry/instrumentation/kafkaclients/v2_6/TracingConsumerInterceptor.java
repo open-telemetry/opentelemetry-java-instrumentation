@@ -13,7 +13,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedLibraryConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -49,14 +49,14 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
                     .get("receive_telemetry/development")
                     .getBoolean(
                         "enabled",
-                        ConfigPropertiesUtil.getBoolean(
+                        DeprecatedLibraryConfigPropertiesUtil.getBoolean(
                             "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
                             false)))
             .setCapturedHeaders(
                 messaging.getScalarList(
                     "capture_headers/development",
                     String.class,
-                    ConfigPropertiesUtil.getList(
+                    DeprecatedLibraryConfigPropertiesUtil.getList(
                         "otel.instrumentation.messaging.experimental.capture-headers",
                         emptyList())))
             .build();
