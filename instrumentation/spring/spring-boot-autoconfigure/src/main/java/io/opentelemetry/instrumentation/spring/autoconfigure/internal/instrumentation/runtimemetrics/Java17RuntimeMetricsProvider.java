@@ -35,6 +35,9 @@ public class Java17RuntimeMetricsProvider implements RuntimeMetricsProvider {
       Function<String, Boolean> isModuleEnabledExplicitly) {
     logger.debug("Use runtime metrics instrumentation for Java 17+");
     return RuntimeMetricsConfigUtil.configure(
-        RuntimeMetrics.builder(openTelemetry), openTelemetry, defaultEnabled, isModuleEnabledExplicitly);
+        RuntimeMetrics.builder(openTelemetry),
+        openTelemetry,
+        defaultEnabled,
+        isModuleEnabledExplicitly);
   }
 }
