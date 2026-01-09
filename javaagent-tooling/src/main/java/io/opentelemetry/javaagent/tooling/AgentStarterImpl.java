@@ -75,7 +75,7 @@ public class AgentStarterImpl implements AgentStarter {
     // allows loading instrumenter customizers from agent and extensions
     ServiceLoaderUtil.setLoadFunction(clazz -> ServiceLoader.load(clazz, extensionClassLoader));
 
-    String loggerImplementationName = EarlyInitAgentConfig.get().getOtelJavaagentLogging();
+    String loggerImplementationName = EarlyInitAgentConfig.get().getLogging();
     // default to the built-in stderr slf4j-simple logger
     if (loggerImplementationName == null) {
       loggerImplementationName = "simple";

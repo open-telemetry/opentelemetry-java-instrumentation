@@ -58,8 +58,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
     includeEmbeddedExtensionsIfFound(extensions, javaagentFile);
 
-    extensions.addAll(
-        parseLocation(EarlyInitAgentConfig.get().getOtelJavaagentExtensions(), javaagentFile));
+    extensions.addAll(parseLocation(EarlyInitAgentConfig.get().getExtensions(), javaagentFile));
 
     // TODO when logging is configured add warning about deprecated property
 

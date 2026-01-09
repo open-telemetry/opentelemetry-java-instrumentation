@@ -29,28 +29,28 @@ public final class EarlyInitAgentConfig {
   }
 
   @Nullable
-  public String getOtelJavaagentLogging() {
+  public String getLogging() {
     return getString("otel.javaagent.logging");
   }
 
   @Nullable
-  public String getOtelJavaagentExtensions() {
+  public String getExtensions() {
     return getString("otel.javaagent.extensions");
   }
 
-  public boolean isOtelJavaagentDebug() {
+  public boolean isDebug() {
     return getBoolean("otel.javaagent.debug", false);
   }
 
-  public boolean isOtelJavaagentEnabled() {
+  public boolean isEnabled() {
     return getBoolean("otel.javaagent.enabled", true);
   }
 
-  public boolean isOtelJavaagentExperimentalFieldInjectionEnabled() {
+  public boolean isExperimentalFieldInjectionEnabled() {
     return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
   }
 
-  public int getOtelJavaagentLoggingApplicationLogsBufferMaxRecords() {
+  public int getLoggingApplicationLogsBufferMaxRecords() {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
 

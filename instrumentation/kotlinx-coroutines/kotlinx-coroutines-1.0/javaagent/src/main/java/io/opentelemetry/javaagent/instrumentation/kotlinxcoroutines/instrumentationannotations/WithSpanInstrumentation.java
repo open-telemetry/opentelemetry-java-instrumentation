@@ -58,7 +58,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   private static final boolean CHECK_CLASS =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "kotlinx_coroutines")
-          .getBoolean("check_class", EarlyInitAgentConfig.get().isOtelJavaagentDebug());
+          .getBoolean("check_class", EarlyInitAgentConfig.get().isDebug());
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   // this matcher matches all methods that should be excluded from transformation

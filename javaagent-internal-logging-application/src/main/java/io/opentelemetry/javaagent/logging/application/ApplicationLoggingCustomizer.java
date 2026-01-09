@@ -21,7 +21,7 @@ public final class ApplicationLoggingCustomizer implements LoggingCustomizer {
 
   @Override
   public void init() {
-    int limit = EarlyInitAgentConfig.get().getOtelJavaagentLoggingApplicationLogsBufferMaxRecords();
+    int limit = EarlyInitAgentConfig.get().getLoggingApplicationLogsBufferMaxRecords();
     InMemoryLogStore inMemoryLogStore = new InMemoryLogStore(limit);
     ApplicationLoggerFactory loggerFactory = new ApplicationLoggerFactory(inMemoryLogStore);
     // register a shutdown hook that'll dump the logs to stderr in case something goes wrong

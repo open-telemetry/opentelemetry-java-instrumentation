@@ -47,7 +47,7 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
       TransformSafeLogger instrumentationLogger, InstrumentationModule instrumentationModule) {
     this.instrumentationLogger = instrumentationLogger;
     this.instrumentationModule = instrumentationModule;
-    this.muzzleLogLevel = EarlyInitAgentConfig.get().isOtelJavaagentDebug() ? WARNING : FINE;
+    this.muzzleLogLevel = EarlyInitAgentConfig.get().isDebug() ? WARNING : FINE;
   }
 
   @Override

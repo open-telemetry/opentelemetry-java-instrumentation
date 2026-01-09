@@ -17,6 +17,6 @@ public class SpanLoggingCustomizerProvider extends AbstractSpanLoggingCustomizer
 
   @Override
   protected boolean isEnabled(OpenTelemetryConfigurationModel model) {
-    return EarlyInitAgentConfig.get().isOtelJavaagentDebug();
+    return EarlyInitAgentConfig.get().isDebug();
   }
 }

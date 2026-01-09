@@ -73,8 +73,8 @@ public final class OpenTelemetryInstaller {
         // these properties are used to initialize the SDK before the configuration file
         // is loaded for consistency, we pass them to the bridge, so that they can be read
         // later with the same value from the {@link DeclarativeConfigPropertiesBridge}
-        .addOverride("otel.javaagent.debug", EarlyInitAgentConfig.get().isOtelJavaagentDebug())
-        .addOverride("otel.javaagent.logging", EarlyInitAgentConfig.get().getOtelJavaagentLogging())
+        .addOverride("otel.javaagent.debug", EarlyInitAgentConfig.get().isDebug())
+        .addOverride("otel.javaagent.logging", EarlyInitAgentConfig.get().getLogging())
         .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
   }
 
