@@ -29,7 +29,7 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated config property
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
         .getBoolean(
@@ -45,7 +45,7 @@ public final class JdbcInstrumenterFactory {
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation") // using deprecated config property
     boolean statementSanitizationEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
             .get("database")
@@ -101,7 +101,7 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation") // using deprecated config property
     boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
             .get("transaction/development")

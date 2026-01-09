@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated config property
 class DeprecatedLibraryConfigPropertiesUtilTest {
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "false")
