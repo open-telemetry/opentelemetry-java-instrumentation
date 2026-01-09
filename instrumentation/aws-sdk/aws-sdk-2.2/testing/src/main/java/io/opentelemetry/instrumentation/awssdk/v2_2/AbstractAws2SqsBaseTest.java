@@ -128,7 +128,7 @@ public abstract class AbstractAws2SqsBaseTest {
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
-  protected static boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
     return Boolean.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging");
