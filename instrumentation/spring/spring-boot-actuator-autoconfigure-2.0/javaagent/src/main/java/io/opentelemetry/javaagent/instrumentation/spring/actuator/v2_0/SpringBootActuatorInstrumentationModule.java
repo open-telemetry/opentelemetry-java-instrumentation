@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -65,7 +64,7 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // produces a lot of metrics that are already captured - e.g. JVM memory usage
     return false;
   }
