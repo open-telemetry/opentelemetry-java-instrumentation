@@ -26,6 +26,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -65,7 +66,7 @@ public final class OpenTelemetryInstaller {
       configProperties =
           getDeclarativeConfigBridgedProperties(((ExtendedOpenTelemetry) sdk).getConfigProvider());
       isDefaultEnabled =
-          JavaagentDistribution.get()
+          Objects.requireNonNull(JavaagentDistribution.get())
               .getStructured("instrumentation", empty())
               .getBoolean("default_enabled", true);
       isModuleEnabled = OpenTelemetryInstaller::moduleEnabledFromConfigDistribution;
