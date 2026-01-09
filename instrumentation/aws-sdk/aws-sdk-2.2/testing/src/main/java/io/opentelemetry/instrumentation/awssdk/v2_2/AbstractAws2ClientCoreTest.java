@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedLibraryConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -100,7 +100,7 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
-    return ConfigPropertiesUtil.getBoolean(
+    return DeprecatedLibraryConfigPropertiesUtil.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
   }
 
