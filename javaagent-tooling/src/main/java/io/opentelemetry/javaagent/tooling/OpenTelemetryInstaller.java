@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertie
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+import io.opentelemetry.javaagent.tooling.config.JavaagentDistribution;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
@@ -24,6 +25,9 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 
 public final class OpenTelemetryInstaller {
 
@@ -45,6 +49,7 @@ public final class OpenTelemetryInstaller {
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     ConfigProvider configProvider;
     boolean isDefaultEnabled;
+    Function<String, Boolean> isModuleEnabled;
     if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
@@ -52,15 +57,21 @@ public final class OpenTelemetryInstaller {
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
       isDefaultEnabled =
           configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
+      isModuleEnabled = moduleEnabledFromConfigProperties(configProperties);
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
       configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
       configProperties = getDeclarativeConfigBridgedProperties(configProvider);
-      isDefaultEnabled = isDefaultEnabled(configProvider);
+      isDefaultEnabled =
+          JavaagentDistribution.get()
+              .getStructured("instrumentation", empty())
+              .getBoolean("default_enabled", true);
+      isModuleEnabled = OpenTelemetryInstaller::moduleEnabledFromConfigDistribution;
     }
 
     AgentCommonConfig.setIsDefaultEnabled(isDefaultEnabled);
+    AgentCommonConfig.setIsModuleEnabled(isModuleEnabled);
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
@@ -72,29 +83,26 @@ public final class OpenTelemetryInstaller {
         configProvider);
   }
 
-  private static boolean isDefaultEnabled(ConfigProvider configProvider) {
-    DeclarativeConfigProperties javaagentConfig = EarlyInitAgentConfig.getJavaagentConfig();
-    // todo
+  private static Function<String, Boolean> moduleEnabledFromConfigProperties(
+      ConfigProperties configProperties) {
+    return moduleName ->
+        configProperties.getBoolean("otel.instrumentation." + moduleName + ".enabled");
+  }
 
-    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
-    if (instrumentationConfig == null) {
+  @Nullable
+  private static Boolean moduleEnabledFromConfigDistribution(String moduleName) {
+    String normalizedName = moduleName.replace('-', '_');
+
+    List<String> disabled = JavaagentDistribution.getDisabledModules();
+    if (disabled != null && disabled.contains(normalizedName)) {
+      return false;
+    }
+
+    List<String> enabled = JavaagentDistribution.getEnabledModules();
+    if (enabled != null && enabled.contains(normalizedName)) {
       return true;
     }
-
-    String mode =
-        instrumentationConfig
-            .getStructured("java", empty())
-            .getStructured("agent", empty())
-            .getString("instrumentation_mode", "default");
-
-    switch (mode) {
-      case "none":
-        return false;
-      case "default":
-        return true;
-      default:
-        throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-    }
+    return null;
   }
 
   // Visible for testing
