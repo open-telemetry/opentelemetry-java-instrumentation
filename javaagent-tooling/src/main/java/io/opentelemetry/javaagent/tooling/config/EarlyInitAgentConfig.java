@@ -50,6 +50,11 @@ public final class EarlyInitAgentConfig {
     return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
   }
 
+  public boolean isInternalReflectionEnabled() {
+    // internal instrumentations are always enabled by default
+    return getBoolean("otel.javaagent.internal-reflection.enabled", true);
+  }
+
   public int getLoggingApplicationLogsBufferMaxRecords() {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
