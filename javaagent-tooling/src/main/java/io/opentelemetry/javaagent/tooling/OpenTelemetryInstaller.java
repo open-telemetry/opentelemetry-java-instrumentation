@@ -14,6 +14,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -42,24 +43,56 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProvider configProvider;
+    boolean isDefaultEnabled;
     if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+      isDefaultEnabled =
+          configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
       configProperties =
           getDeclarativeConfigBridgedProperties(((ExtendedOpenTelemetry) sdk).getConfigProvider());
+      isDefaultEnabled = isDefaultEnabled(configProvider);
     }
+
+    AgentCommonConfig.setIsDefaultEnabled(isDefaultEnabled);
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
 
     return SdkAutoconfigureAccess.create(
         sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
+  }
+
+  private static boolean isDefaultEnabled(ConfigProvider configProvider) {
+    DeclarativeConfigProperties javaagentConfig = EarlyInitAgentConfig.getJavaagentConfig();
+    // todo
+
+    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
+    if (instrumentationConfig == null) {
+      return true;
+    }
+
+    String mode =
+        instrumentationConfig
+            .getStructured("java", empty())
+            .getStructured("agent", empty())
+            .getString("instrumentation_mode", "default");
+
+    switch (mode) {
+      case "none":
+        return false;
+      case "default":
+        return true;
+      default:
+        throw new ConfigurationException("Unknown instrumentation mode: " + mode);
+    }
   }
 
   // Visible for testing
