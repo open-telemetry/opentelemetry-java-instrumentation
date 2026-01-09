@@ -35,10 +35,6 @@ val deps = mapOf(
   "autoservice" to "com.google.auto.service:auto-service:1.1.1"
 )
 
-// Make them available in extra for compatibility
-extra["versions"] = versions
-extra["deps"] = deps
-
 repositories {
   mavenCentral()
   maven {
