@@ -23,7 +23,7 @@ public class Java17RuntimeMetricsInstaller implements AgentListener {
         RuntimeMetricsConfigUtil.configure(
             RuntimeMetrics.builder(GlobalOpenTelemetry.get()),
             GlobalOpenTelemetry.get(),
-            AgentConfig.instrumentationMode());
+            AgentConfig.isDefaultEnabled());
     if (runtimeMetrics != null) {
       Runtime.getRuntime()
           .addShutdownHook(

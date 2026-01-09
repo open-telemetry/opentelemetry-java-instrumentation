@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.InstrumentationMode;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
@@ -24,10 +23,10 @@ public final class RuntimeMetricsConfigUtil {
   public static RuntimeMetrics configure(
       RuntimeMetricsBuilder builder,
       OpenTelemetry openTelemetry,
-      InstrumentationMode instrumentationMode) {
+      boolean isDefaultEnabled) {
     ExtendedDeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
-    if (!config.getBoolean("enabled", instrumentationMode.equals(InstrumentationMode.DEFAULT))) {
+    if (!config.getBoolean("enabled", isDefaultEnabled)) {
       // nothing is enabled
       return null;
     }
