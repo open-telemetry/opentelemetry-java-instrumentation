@@ -72,10 +72,15 @@ public final class EarlyInitAgentConfig {
 
   private int getInt(String propertyName, int defaultValue) {
     try {
+      String value = ConfigPropertiesUtil.getString(propertyName);
+      if (value != null) {
+        return Integer.parseInt(value);
+      }
       String configFileValueStr = configFileContents.get(propertyName);
-      int configFileValue =
-          configFileValueStr == null ? defaultValue : Integer.parseInt(configFileValueStr);
-      return ConfigPropertiesUtil.getInt(propertyName, configFileValue);
+      if (configFileValueStr != null) {
+        return Integer.parseInt(configFileValueStr);
+      }
+      return defaultValue;
     } catch (NumberFormatException ignored) {
       return defaultValue;
     }
