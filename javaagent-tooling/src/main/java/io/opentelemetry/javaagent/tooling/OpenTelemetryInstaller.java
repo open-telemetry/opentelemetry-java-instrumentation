@@ -24,11 +24,11 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public final class OpenTelemetryInstaller {
 
@@ -64,11 +64,12 @@ public final class OpenTelemetryInstaller {
       // access to use declarative configuration API
       configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
       configProperties = getDeclarativeConfigBridgedProperties(configProvider);
+      DeclarativeConfigProperties distribution = JavaagentDistribution.get();
       isDefaultEnabled =
-          Objects.requireNonNull(JavaagentDistribution.get())
+          Objects.requireNonNull(distribution)
               .getStructured("instrumentation", empty())
               .getBoolean("default_enabled", true);
-      isModuleEnabled = OpenTelemetryInstaller::moduleEnabledFromConfigDistribution;
+      isModuleEnabled = moduleEnabledFromConfigDistribution(distribution);
     }
 
     AgentCommonConfig.setIsDefaultEnabled(isDefaultEnabled);
@@ -90,20 +91,33 @@ public final class OpenTelemetryInstaller {
         configProperties.getBoolean("otel.instrumentation." + moduleName + ".enabled");
   }
 
-  @Nullable
-  private static Boolean moduleEnabledFromConfigDistribution(String moduleName) {
-    String normalizedName = moduleName.replace('-', '_');
+  private static Function<String, Boolean> moduleEnabledFromConfigDistribution(
+      DeclarativeConfigProperties distribution) {
+    // Should not be parsed for each call
+    List<String> enabledModules = null;
+    List<String> disabledModules = null;
 
-    List<String> disabled = JavaagentDistribution.getDisabledModules();
-    if (disabled != null && disabled.contains(normalizedName)) {
-      return false;
+    DeclarativeConfigProperties instrumentation = distribution.getStructured("instrumentation");
+    if (instrumentation != null) {
+      disabledModules = instrumentation.getScalarList("disabled", String.class);
+      enabledModules = instrumentation.getScalarList("enabled", String.class);
     }
 
-    List<String> enabled = JavaagentDistribution.getEnabledModules();
-    if (enabled != null && enabled.contains(normalizedName)) {
-      return true;
-    }
-    return null;
+    List<String> disabled = disabledModules;
+    List<String> enabled = enabledModules;
+
+    return moduleName -> {
+      String normalizedName = moduleName.replace('-', '_');
+
+      if (disabled != null && disabled.contains(normalizedName)) {
+        return false;
+      }
+
+      if (enabled != null && enabled.contains(normalizedName)) {
+        return true;
+      }
+      return null;
+    };
   }
 
   // Visible for testing
