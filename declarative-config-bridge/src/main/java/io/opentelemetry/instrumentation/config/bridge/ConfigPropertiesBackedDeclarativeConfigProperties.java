@@ -228,6 +228,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
     // Handle agent prefix: java.agent.* → otel.javaagent.*
     if (translated.startsWith("agent.")) {
+      // todo remove
       return "otel.java" + translated;
     }
 
