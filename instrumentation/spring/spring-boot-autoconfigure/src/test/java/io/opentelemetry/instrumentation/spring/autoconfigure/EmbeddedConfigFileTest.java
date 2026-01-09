@@ -10,8 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EmbeddedConfigFile;
 import org.junit.jupiter.api.Test;
 
 class EmbeddedConfigFileTest {

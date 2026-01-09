@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConf
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EmbeddedConfigFile;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
@@ -159,7 +158,7 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
           ConfigurableEnvironment environment) {
-        return EmbeddedConfigFile.get(environment).getModel();
+        return EmbeddedConfigFile.extractModel(environment);
       }
 
       @Bean
