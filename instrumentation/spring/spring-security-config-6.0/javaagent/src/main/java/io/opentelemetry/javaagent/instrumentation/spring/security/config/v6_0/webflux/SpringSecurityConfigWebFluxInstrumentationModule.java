@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import java.util.List;
 
 /** Instrumentation module for webflux-based applications that use spring-security-config. */
