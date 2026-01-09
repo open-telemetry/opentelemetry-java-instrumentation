@@ -44,9 +44,9 @@ public final class CommonConfig {
   }
 
   public CommonConfig(OpenTelemetry openTelemetry) {
-    ExtendedDeclarativeConfigProperties generalConfig =
+    DeclarativeConfigProperties generalConfig =
         DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
-    ExtendedDeclarativeConfigProperties commonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     peerServiceResolver = PeerServiceResolver.create(openTelemetry);
 

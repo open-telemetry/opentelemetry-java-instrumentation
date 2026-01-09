@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
@@ -37,7 +36,7 @@ public class KafkaInstrumentationAutoConfiguration {
   @Bean
   static SpringKafkaTelemetry getTelemetry(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
-    ExtendedDeclarativeConfigProperties commonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     return SpringKafkaTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(

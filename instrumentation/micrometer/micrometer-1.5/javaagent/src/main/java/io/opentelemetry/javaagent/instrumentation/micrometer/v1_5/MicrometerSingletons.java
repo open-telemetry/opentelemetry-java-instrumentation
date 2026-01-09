@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.Iterator;
@@ -18,7 +17,7 @@ public final class MicrometerSingletons {
   private static final MeterRegistry METER_REGISTRY;
 
   static {
-    ExtendedDeclarativeConfigProperties config =
+    DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "micrometer");
     METER_REGISTRY =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())

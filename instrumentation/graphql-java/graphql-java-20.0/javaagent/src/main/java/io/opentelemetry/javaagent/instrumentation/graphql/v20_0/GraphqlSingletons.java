@@ -9,7 +9,6 @@ import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v20_0.GraphQLTelemetry;
 
@@ -57,7 +56,7 @@ public final class GraphqlSingletons {
     private final boolean addOperationNameToSpanName;
 
     Configuration(OpenTelemetry openTelemetry) {
-      ExtendedDeclarativeConfigProperties config =
+      DeclarativeConfigProperties config =
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
       this.captureQuery = config.getBoolean("capture_query", true);
