@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import javax.annotation.Nullable;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -33,9 +35,7 @@ public class EarlyConfig {
   public static boolean isDefaultEnabled(Environment environment) {
     if (isDeclarativeConfig(environment)) {
       return environment.getProperty(
-          "otel.distribution.spring_starter.module_configuration.default_config.enabled",
-          Boolean.class,
-          true);
+          "otel.distribution.spring_starter.instrumentation.default_enabled", Boolean.class, true);
     } else {
       return environment.getProperty(
           "otel.instrumentation.common.default-enabled", Boolean.class, true);
@@ -71,26 +71,26 @@ public class EarlyConfig {
     return defaultValue && isDefaultEnabled(environment);
   }
 
+  @SuppressWarnings("unchecked")
   @Nullable
   private static Boolean isExplicitEnabled(ConfigurableEnvironment environment, String name) {
     if (isDeclarativeConfig(environment)) {
-      String snakeCase = toSnakeCase(name);
+      String snakeCase = name.replace('-', '_');
 
-      OpenTelemetryConfigurationModel model = EmbeddedConfigFile.get(environment).getModel();
+      List<String> enabled =
+          environment.getProperty(
+              "otel.distribution.spring_starter.instrumentation.enabled", List.class, emptyList());
+      if (enabled.contains(snakeCase)) {
+        return true;
+      }
 
-      //      otel.distribution.spring_starter.module_configuration.default_config.enabled
+      List<String> disabled =
+          environment.getProperty(
+              "otel.distribution.spring_starter.instrumentation.disabled", List.class, emptyList());
+      if (disabled.contains(snakeCase)) {
+        return false;
+      }
 
-      //      distribution:
-      //        javaagent:
-      //          module_configuration:
-      //            default_config:
-      //              enabled: true
-      //            modules:
-      //              - name: dropwizard_metrics
-      //                config:
-      //                  enabled: false
-
-      // todo
       return null;
     } else {
       return environment.getProperty(
