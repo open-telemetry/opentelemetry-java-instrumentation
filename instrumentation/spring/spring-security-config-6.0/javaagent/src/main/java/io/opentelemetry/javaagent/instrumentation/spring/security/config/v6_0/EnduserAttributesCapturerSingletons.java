@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
