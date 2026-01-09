@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
 
 class LogbackAppenderInstaller {
 
@@ -238,23 +237,20 @@ class LogbackAppenderInstaller {
   private static Boolean evaluateBooleanPropertyDeclarativeConfigOrLegacy(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
-    return environment.getProperty(translatePropertyName(environment, property), Boolean.class);
-  }
-
-  public static String translatePropertyName(Environment environment, String name) {
+    String key = property;
     if (EarlyConfig.isDeclarativeConfig(environment)) {
-      if (name.startsWith("otel.instrumentation.")) {
-        return String.format(
-                "otel.instrumentation/development.java.%s",
-                name.substring("otel.instrumentation.".length()))
-            .replace('-', '_');
+      if (property.startsWith("otel.instrumentation.")) {
+        key =
+            String.format(
+                    "otel.instrumentation/development.java.%s",
+                    property.substring("otel.instrumentation.".length()))
+                .replace('-', '_');
+      } else {
+        throw new IllegalStateException(
+            "No mapping found for property name: " + property + ". Please report this bug.");
       }
-
-      throw new IllegalStateException(
-          "No mapping found for property name: " + name + ". Please report this bug.");
-    } else {
-      return name;
     }
+    return environment.getProperty(key, Boolean.class);
   }
 
   private static <T> Optional<T> findAppender(Class<T> appenderClass) {
