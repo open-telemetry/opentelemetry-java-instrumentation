@@ -9,12 +9,12 @@ import static io.opentelemetry.javaagent.instrumentation.extannotations.External
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
