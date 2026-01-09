@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
@@ -26,7 +27,7 @@ public class InstrumentationPropertyEnabled implements Condition {
             metadata.getAnnotationAttributes(ConditionalOnEnabledInstrumentation.class.getName()));
 
     return EarlyConfig.isInstrumentationEnabled(
-        context.getEnvironment(),
+        (ConfigurableEnvironment) context.getEnvironment(),
         requireNonNull(attributes.get("module")).toString(),
         (boolean) requireNonNull(attributes.get("enabledByDefault")));
   }

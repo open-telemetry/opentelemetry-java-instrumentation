@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.InstrumentationMode;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+  import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 public final class AgentConfig {
 
@@ -16,10 +13,12 @@ public final class AgentConfig {
     return config.getBoolean("otel.javaagent.debug", false);
   }
 
-  public static InstrumentationMode instrumentationMode() {
-    return InstrumentationMode.from(
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
-            .getString("instrumentation_mode", "default"));
+  public static boolean isDefaultEnabled() {
+    // todo
+    return true;
+//    return InstrumentationMode.from(
+//        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+//            .getString("instrumentation_mode", "default"));
   }
 
   private AgentConfig() {}
