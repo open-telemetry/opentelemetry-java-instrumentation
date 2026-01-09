@@ -10,13 +10,15 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class JavaagentDistribution {
-  // null = no declarative config used
-  // empty() = declarative config used, but no properties set
   @Nullable private static DeclarativeConfigProperties instance;
   // Should not be parsed for each call
   @Nullable private static List<String> enabledModules;
   @Nullable private static List<String> disabledModules;
 
+  /**
+   * @return the declarative config properties used to configure the javaagent, or null if no
+   *     declarative config was used
+   */
   @Nullable
   public static DeclarativeConfigProperties get() {
     return instance;
