@@ -9,7 +9,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeprecatedConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import java.util.Iterator;
 import java.util.Optional;
@@ -148,9 +147,8 @@ class LogbackAppenderInstaller {
     }
 
     Boolean captureLogstashMarkerAttributes =
-        DeprecatedConfigProperties.getBoolean(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-markers",
             "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes");
     if (captureLogstashMarkerAttributes != null) {
       openTelemetryAppender.setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes);
