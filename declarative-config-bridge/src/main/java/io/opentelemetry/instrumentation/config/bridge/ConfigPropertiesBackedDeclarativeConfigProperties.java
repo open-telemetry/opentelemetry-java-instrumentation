@@ -151,6 +151,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       if (duration != null) {
         return duration.toMillis();
       }
+      // If discovery delay has not been configured, have a peek at the metric export interval.
+      // It makes sense for both of these values to be similar.
       Duration fallback = configProperties.getDuration("otel.metric.export.interval");
       if (fallback != null) {
         return fallback.toMillis();

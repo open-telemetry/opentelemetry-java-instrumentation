@@ -6,10 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.instrument.Instrumentation;
 
@@ -19,9 +22,9 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ExtendedDeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(
-                autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(), "runtime_telemetry")
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
             .get("package_emitter");
     if (!config.getBoolean("enabled", false)) {
       return;
@@ -31,9 +34,7 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
       return;
     }
     JarAnalyzer jarAnalyzer =
-        JarAnalyzer.create(
-            autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk(),
-            config.getInt("jars_per_second", 10));
+        JarAnalyzer.create(openTelemetry, config.getInt("jars_per_second", 10));
     inst.addTransformer(jarAnalyzer);
   }
 }
