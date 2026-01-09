@@ -87,18 +87,6 @@ public final class OkHttpTelemetryBuilder {
   }
 
   /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<Interceptor.Chain>> spanNameExtractorTransformer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
