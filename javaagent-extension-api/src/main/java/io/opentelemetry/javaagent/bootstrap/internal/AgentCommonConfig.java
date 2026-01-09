@@ -17,7 +17,17 @@ public class AgentCommonConfig {
 
   private static final CommonConfig instance = new CommonConfig(GlobalOpenTelemetry.get());
 
+  private static boolean isDefaultEnabled = true;
+
   public static CommonConfig get() {
     return instance;
+  }
+
+  public static boolean isIsDefaultEnabled() {
+    return isDefaultEnabled;
+  }
+
+  public static void setIsDefaultEnabled(boolean isDefaultEnabled) {
+    AgentCommonConfig.isDefaultEnabled = isDefaultEnabled;
   }
 }

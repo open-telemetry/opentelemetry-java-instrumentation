@@ -55,9 +55,6 @@ class DeclarativeConfigPropertiesBridgeTest {
     // asking for properties which don't exist or inaccessible shouldn't result in an error
     assertThat(bridge.getString("file_format")).isNull();
     assertThat(bridge.getString("file_format", "foo")).isEqualTo("foo");
-    assertThat(emptyBridge.getBoolean("otel.instrumentation.common.default-enabled")).isNull();
-    assertThat(emptyBridge.getBoolean("otel.instrumentation.common.default-enabled", true))
-        .isTrue();
 
     // common cases
     assertThat(bridge.getBoolean("otel.instrumentation.runtime-telemetry.enabled")).isFalse();
