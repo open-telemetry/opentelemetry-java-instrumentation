@@ -92,59 +92,59 @@ class LogbackAppenderInstaller {
     // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
     // available
     Boolean codeAttribute =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-code-attributes");
     if (codeAttribute != null) {
-      openTelemetryAppender.setCaptureCodeAttributes(codeAttribute.booleanValue());
+      openTelemetryAppender.setCaptureCodeAttributes(codeAttribute);
     }
 
     Boolean markerAttribute =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-marker-attribute");
     if (markerAttribute != null) {
-      openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute.booleanValue());
+      openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute);
     }
 
     Boolean keyValuePairAttributes =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
     if (keyValuePairAttributes != null) {
-      openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes.booleanValue());
+      openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes);
     }
 
     Boolean logAttributes =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental-log-attributes");
     if (logAttributes != null) {
-      openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes.booleanValue());
+      openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes);
     }
 
     Boolean loggerContextAttributes =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes");
     if (loggerContextAttributes != null) {
-      openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes.booleanValue());
+      openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes);
     }
 
     Boolean captureTemplate =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-template");
     if (captureTemplate != null) {
-      openTelemetryAppender.setCaptureTemplate(captureTemplate.booleanValue());
+      openTelemetryAppender.setCaptureTemplate(captureTemplate);
     }
 
     Boolean captureArguments =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-arguments");
     if (captureArguments != null) {
-      openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
+      openTelemetryAppender.setCaptureArguments(captureArguments);
     }
 
     Boolean captureLogstashMarkerAttributes =
@@ -153,17 +153,16 @@ class LogbackAppenderInstaller {
             "otel.instrumentation.logback-appender.experimental.capture-logstash-markers",
             "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes");
     if (captureLogstashMarkerAttributes != null) {
-      openTelemetryAppender.setCaptureLogstashMarkerAttributes(
-          captureLogstashMarkerAttributes.booleanValue());
+      openTelemetryAppender.setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes);
     }
 
     Boolean captureLogstashStructuredArguments =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments");
     if (captureLogstashStructuredArguments != null) {
       openTelemetryAppender.setCaptureLogstashStructuredArguments(
-          captureLogstashStructuredArguments.booleanValue());
+          captureLogstashStructuredArguments);
     }
 
     String mdcAttributeProperty =
@@ -206,7 +205,7 @@ class LogbackAppenderInstaller {
     // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
     // available
     Boolean addBaggage =
-        evaluateBooleanProperty(
+        evaluateBooleanPropertyDeclarativeConifigOrLegacy(
             applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-mdc.add-baggage");
     if (addBaggage != null) {
       openTelemetryAppender.setAddBaggage(addBaggage);
@@ -237,7 +236,7 @@ class LogbackAppenderInstaller {
     }
   }
 
-  private static Boolean evaluateBooleanProperty(
+  private static Boolean evaluateBooleanPropertyDeclarativeConifigOrLegacy(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
     return environment.getProperty(
