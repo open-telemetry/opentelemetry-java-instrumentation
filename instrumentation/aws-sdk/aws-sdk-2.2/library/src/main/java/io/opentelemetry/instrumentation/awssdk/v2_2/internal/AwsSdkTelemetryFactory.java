@@ -81,14 +81,14 @@ public final class AwsSdkTelemetryFactory {
         .build();
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated config property
   private List<String> legacyListValue(String key) {
     return useLegacyLibraryConfig
         ? DeprecatedLibraryConfigPropertiesUtil.getList(key, emptyList())
         : emptyList();
   }
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated config property
   private boolean legacyBooleanValue(String key) {
     return useLegacyLibraryConfig && DeprecatedLibraryConfigPropertiesUtil.getBoolean(key, false);
   }

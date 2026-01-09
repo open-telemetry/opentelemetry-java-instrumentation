@@ -27,7 +27,7 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated config property
   private static final boolean BAGGAGE_ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "log4j_context_data")

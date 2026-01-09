@@ -14,20 +14,17 @@ import javax.annotation.Nullable;
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
- *
- * @deprecated allows library configuration via system properties and environment variables, which
- *     will be removed in 3.0.
  */
-@Deprecated
 public final class DeprecatedLibraryConfigPropertiesUtil {
 
   /**
    * Returns the boolean value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
+   * @deprecated allows library configuration via system properties and environment variables, which
+   *     will be removed in 3.0.
    */
+  @Deprecated
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
     Boolean value = getBoolean(propertyName);
     return value == null ? defaultValue : value;
@@ -37,10 +34,11 @@ public final class DeprecatedLibraryConfigPropertiesUtil {
    * Returns the boolean value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
+   * @deprecated allows library configuration via system properties and environment variables, which
+   *     will be removed in 3.0.
    */
   @Nullable
+  @Deprecated
   public static Boolean getBoolean(String propertyName) {
     String strValue = getString(propertyName);
     return strValue == null ? null : Boolean.parseBoolean(strValue);
@@ -50,10 +48,11 @@ public final class DeprecatedLibraryConfigPropertiesUtil {
    * Returns the string value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
+   * @deprecated allows library configuration via system properties and environment variables, which
+   *     will be removed in 3.0.
    */
   @Nullable
+  @Deprecated
   private static String getString(String propertyName) {
     String value = System.getProperty(propertyName);
     if (value != null) {
@@ -66,9 +65,10 @@ public final class DeprecatedLibraryConfigPropertiesUtil {
    * Returns the string value of the given property name from system properties and environment
    * variables, or the default value if not found.
    *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
+   * @deprecated allows library configuration via system properties and environment variables, which
+   *     will be removed in 3.0.
    */
+  @Deprecated
   public static String getString(String propertyName, String defaultValue) {
     String strValue = getString(propertyName);
     return strValue == null ? defaultValue : strValue;
@@ -79,9 +79,10 @@ public final class DeprecatedLibraryConfigPropertiesUtil {
    * environment variables, or the default value if not found. The property value is expected to be
    * a comma-separated list.
    *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
+   * @deprecated allows library configuration via system properties and environment variables, which
+   *     will be removed in 3.0.
    */
+  @Deprecated
   public static List<String> getList(String propertyName, List<String> defaultValue) {
     String value = getString(propertyName);
     if (value == null) {
