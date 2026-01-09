@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
@@ -53,7 +54,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // others to avoid creation of synthetic accessors
 
   private static final boolean REFLECTION_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.javaagent.testing.internal-reflection.enabled", true);
+      DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "internal_reflection")
+          .getBoolean("enabled", true);
+
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;
