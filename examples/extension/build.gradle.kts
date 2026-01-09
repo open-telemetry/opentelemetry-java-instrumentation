@@ -77,8 +77,10 @@ dependencies {
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
   //Provides @AutoService annotation that makes registration of our SPI implementations much easier
-  compileOnly(deps["autoservice"]!!)
-  annotationProcessor(deps["autoservice"]!!)
+  deps["autoservice"]?.let {
+    compileOnly(it)
+    annotationProcessor(it)
+  }
 
   /*
    Used by our demo instrumentation module to reference classes of the target instrumented library.
