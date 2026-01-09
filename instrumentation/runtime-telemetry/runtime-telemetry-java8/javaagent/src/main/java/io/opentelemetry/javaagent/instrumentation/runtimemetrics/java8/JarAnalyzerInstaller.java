@@ -24,9 +24,8 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     ExtendedDeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
-            .get("package_emitter");
-    if (!config.getBoolean("enabled", false)) {
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
+    if (!config.get("package_emitter").getBoolean("enabled", false)) {
       return;
     }
     Instrumentation inst = InstrumentationHolder.getInstrumentation();
@@ -34,7 +33,8 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
       return;
     }
     JarAnalyzer jarAnalyzer =
-        JarAnalyzer.create(openTelemetry, config.getInt("jars_per_second", 10));
+        JarAnalyzer.create(
+            openTelemetry, config.get("package_emitter").getInt("jars_per_second", 10));
     inst.addTransformer(jarAnalyzer);
   }
 }
