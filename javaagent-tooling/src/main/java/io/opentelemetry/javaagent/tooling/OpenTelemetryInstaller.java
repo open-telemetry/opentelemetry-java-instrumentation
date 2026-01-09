@@ -72,7 +72,7 @@ public final class OpenTelemetryInstaller {
     }
 
     AgentCommonConfig.setIsDefaultEnabled(isDefaultEnabled);
-    AgentCommonConfig.setIsModuleEnabled(isModuleEnabled);
+    AgentCommonConfig.setIsModuleEnabledExplicitly(isModuleEnabled);
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);

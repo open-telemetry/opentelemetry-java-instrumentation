@@ -20,13 +20,13 @@ public class AgentCommonConfig {
 
   private static boolean isDefaultEnabled = true;
 
-  private static Function<String, Boolean> isModuleEnabled = moduleName -> null;
+  private static Function<String, Boolean> isModuleEnabledExplicitly = moduleName -> null;
 
   public static CommonConfig get() {
     return instance;
   }
 
-  public static boolean isIsDefaultEnabled() {
+  public static boolean isDefaultEnabled() {
     return isDefaultEnabled;
   }
 
@@ -34,11 +34,12 @@ public class AgentCommonConfig {
     AgentCommonConfig.isDefaultEnabled = isDefaultEnabled;
   }
 
-  public static void setIsModuleEnabled(Function<String, Boolean> isModuleEnabled) {
-    AgentCommonConfig.isModuleEnabled = isModuleEnabled;
+  public static void setIsModuleEnabledExplicitly(
+      Function<String, Boolean> isModuleEnabledExplicitly) {
+    AgentCommonConfig.isModuleEnabledExplicitly = isModuleEnabledExplicitly;
   }
 
   public static Boolean isModuleEnabledExplicitly(String moduleName) {
-    return isModuleEnabled.apply(moduleName);
+    return isModuleEnabledExplicitly.apply(moduleName);
   }
 }
