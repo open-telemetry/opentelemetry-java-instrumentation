@@ -80,8 +80,6 @@ public class AgentInstaller {
 
   private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
 
-  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
   // too much javaagent users can file a bug, force sync execution by setting this property to true
@@ -96,8 +94,7 @@ public class AgentInstaller {
 
   private static volatile boolean instrumentationInstalled;
 
-  public static void installBytebuddyAgent(
-      Instrumentation inst, ClassLoader extensionClassLoader, EarlyInitAgentConfig earlyConfig) {
+  public static void installBytebuddyAgent(Instrumentation inst, ClassLoader extensionClassLoader) {
     addByteBuddyRawSetting();
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
@@ -107,9 +104,9 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (EarlyInitAgentConfig.get().isEnabled()) {
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
-      installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
+      installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
     } else {
       logger.fine("Agent is disabled, not installing instrumentations.");
     }
@@ -118,13 +115,12 @@ public class AgentInstaller {
   private static void installBytebuddyAgent(
       Instrumentation inst,
       ClassLoader extensionClassLoader,
-      Iterable<AgentListener> agentListeners,
-      EarlyInitAgentConfig earlyConfig) {
+      Iterable<AgentListener> agentListeners) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
-    FieldBackedImplementationConfiguration.configure(earlyConfig);
+    FieldBackedImplementationConfiguration.configure();
     // preload ThreadLocalRandom to avoid occasional
     // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
     // see https://github.com/raphw/byte-buddy/issues/1666 and
@@ -163,7 +159,7 @@ public class AgentInstaller {
     installEarlyInstrumentation(agentBuilder, inst);
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
+        installOpenTelemetrySdk(extensionClassLoader);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
