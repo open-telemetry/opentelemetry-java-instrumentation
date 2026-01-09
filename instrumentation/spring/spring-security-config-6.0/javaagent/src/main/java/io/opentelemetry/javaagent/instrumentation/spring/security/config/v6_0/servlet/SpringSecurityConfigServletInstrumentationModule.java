@@ -31,7 +31,7 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
 
   @Override
   public boolean defaultEnabled() {
-    return AgentConfig.instrumentationMode().equals("default")
+    return super.defaultEnabled()
         /*
          * Since the only thing this module currently does is capture enduser attributes,
          * the module can be completely disabled if enduser attributes are disabled.

@@ -30,8 +30,7 @@ public class JwsInstrumentationModule extends InstrumentationModule
   @Override
   public boolean defaultEnabled() {
     // this instrumentation only produces controller telemetry
-    return AgentConfig.instrumentationMode().equals("default")
-        && ExperimentalConfig.get().controllerTelemetryEnabled();
+    return super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled();
   }
 
   @Override

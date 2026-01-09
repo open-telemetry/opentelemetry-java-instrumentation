@@ -41,8 +41,7 @@ public class JaxrsInstrumentationModule extends InstrumentationModule
     // This instrumentation produces controller telemetry and sets http route. Http route is set by
     // this instrumentation only when it was not already set by a jax-rs framework instrumentation.
     // This instrumentation uses complex type matcher, disabling it can improve startup performance.
-    return AgentConfig.instrumentationMode().equals("default")
-        && ExperimentalConfig.get().controllerTelemetryEnabled();
+    return super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled();
   }
 
   @Override
