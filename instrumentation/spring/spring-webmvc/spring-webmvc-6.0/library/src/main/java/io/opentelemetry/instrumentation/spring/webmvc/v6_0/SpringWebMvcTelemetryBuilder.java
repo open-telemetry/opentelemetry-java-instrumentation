@@ -75,18 +75,6 @@ public final class SpringWebMvcTelemetryBuilder {
   }
 
   /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractor) {
-    return setSpanNameExtractorCustomizer(spanNameExtractor);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */

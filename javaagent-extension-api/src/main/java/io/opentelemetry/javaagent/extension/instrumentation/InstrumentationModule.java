@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -89,8 +90,25 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    */
+  public boolean defaultEnabled() {
+    String mode =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+            .getString("instrumentation_mode", "default");
+    if (!mode.equals("default") && !mode.equals("none")) {
+      throw new ConfigurationException("Unknown instrumentation mode: " + mode);
+    }
+    return mode.equals("default");
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   *
+   * @deprecated Use {@link #defaultEnabled()} instead.
+   */
+  @Deprecated // will be removed in 3.0.0
   public boolean defaultEnabled(ConfigProperties config) {
-    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
+    return defaultEnabled();
   }
 
   /**
@@ -157,7 +175,6 @@ public abstract class InstrumentationModule implements Ordered {
     return Collections.emptyList();
   }
 
-  // InstrumentationModule is loaded before ExperimentalConfig is initialized
   private static class IndyConfigurationHolder {
     private static final boolean indyEnabled;
 

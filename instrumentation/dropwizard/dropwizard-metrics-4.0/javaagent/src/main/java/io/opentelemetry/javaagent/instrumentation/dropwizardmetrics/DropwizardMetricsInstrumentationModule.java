@@ -13,7 +13,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,7 +31,7 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // the Dropwizard metrics API does not have a concept of metric labels/tags/attributes, thus the
     // data produced by this integration might be of very low quality, depending on how the API is
     // used in the instrumented application

@@ -14,7 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -25,7 +24,7 @@ public class ReflectionInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     return EarlyInitAgentConfig.get().isInternalReflectionEnabled();
   }
 

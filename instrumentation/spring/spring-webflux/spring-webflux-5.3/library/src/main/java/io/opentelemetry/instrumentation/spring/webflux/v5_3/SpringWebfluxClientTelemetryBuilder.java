@@ -94,18 +94,6 @@ public final class SpringWebfluxClientTelemetryBuilder {
   }
 
   /**
-   * Sets custom client {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebfluxClientTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<ClientRequest>> clientSpanNameExtractor) {
-    return setSpanNameExtractorCustomizer(clientSpanNameExtractor);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
