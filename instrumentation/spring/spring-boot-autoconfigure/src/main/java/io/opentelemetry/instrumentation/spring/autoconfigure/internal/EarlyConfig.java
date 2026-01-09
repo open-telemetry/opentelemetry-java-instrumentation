@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import javax.annotation.Nullable;
@@ -75,19 +76,19 @@ public class EarlyConfig {
     if (isDeclarativeConfig(environment)) {
       String snakeCase = toSnakeCase(name);
 
-//      otel.distribution.spring_starter.module_configuration.default_config.enabled
+      OpenTelemetryConfigurationModel model = EmbeddedConfigFile.get(environment).getModel();
 
+      //      otel.distribution.spring_starter.module_configuration.default_config.enabled
 
-
-//      distribution:
-//        javaagent:
-//          module_configuration:
-//            default_config:
-//              enabled: true
-//            modules:
-//              - name: dropwizard_metrics
-//                config:
-//                  enabled: false
+      //      distribution:
+      //        javaagent:
+      //          module_configuration:
+      //            default_config:
+      //              enabled: true
+      //            modules:
+      //              - name: dropwizard_metrics
+      //                config:
+      //                  enabled: false
 
       // todo
       return null;

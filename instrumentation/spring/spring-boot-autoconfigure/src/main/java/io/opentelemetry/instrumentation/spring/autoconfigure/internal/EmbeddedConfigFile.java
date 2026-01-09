@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
@@ -21,7 +21,11 @@ import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
-class EmbeddedConfigFile {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public class EmbeddedConfigFile {
 
   private static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)]$");
 
@@ -46,7 +50,7 @@ class EmbeddedConfigFile {
   private static EmbeddedConfigFile instance;
   private final OpenTelemetryConfigurationModel model;
 
-  public static EmbeddedConfigFile getInstance(ConfigurableEnvironment environment) {
+  public static EmbeddedConfigFile get(ConfigurableEnvironment environment) {
     if (instance == null) {
       instance = new EmbeddedConfigFile(environment);
     }
@@ -54,10 +58,14 @@ class EmbeddedConfigFile {
   }
 
   private EmbeddedConfigFile(ConfigurableEnvironment environment) {
-    model = extractModel();
+    model = extractModel(environment);
   }
 
-  OpenTelemetryConfigurationModel extractModel() {
+  public OpenTelemetryConfigurationModel getModel() {
+    return model;
+  }
+
+  private OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
     Map<String, Object> props = extractSpringProperties(environment);
     Map<String, Object> nested = convertFlatPropsToNested(props);
     return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
