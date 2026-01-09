@@ -43,9 +43,21 @@ class EmbeddedConfigFile {
     MAPPER.configOverride(Boolean.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
   }
 
-  private EmbeddedConfigFile() {}
+  private static EmbeddedConfigFile instance;
+  private final OpenTelemetryConfigurationModel model;
 
-  static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
+  public static EmbeddedConfigFile getInstance(ConfigurableEnvironment environment) {
+    if (instance == null) {
+      instance = new EmbeddedConfigFile(environment);
+    }
+    return instance;
+  }
+
+  private EmbeddedConfigFile(ConfigurableEnvironment environment) {
+    model = extractModel();
+  }
+
+  OpenTelemetryConfigurationModel extractModel() {
     Map<String, Object> props = extractSpringProperties(environment);
     Map<String, Object> nested = convertFlatPropsToNested(props);
     return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
