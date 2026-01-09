@@ -59,6 +59,9 @@ public final class OpenTelemetryInstaller {
       isDefaultEnabled =
           configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
       isModuleEnabled = moduleEnabledFromConfigProperties(configProperties);
+      JavaagentDistribution.set(
+          configProvider.getInstrumentationConfig()
+      );
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
