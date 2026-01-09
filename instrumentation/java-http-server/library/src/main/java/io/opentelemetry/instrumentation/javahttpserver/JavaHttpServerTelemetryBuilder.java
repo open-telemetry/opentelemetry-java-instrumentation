@@ -40,18 +40,6 @@ public final class JavaHttpServerTelemetryBuilder {
   }
 
   /**
-   * Sets the status extractor for server spans.
-   *
-   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JavaHttpServerTelemetryBuilder setStatusExtractor(
-      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
-    return setSpanStatusExtractorCustomizer(statusExtractor);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
    * customized one.
    */
@@ -115,18 +103,6 @@ public final class JavaHttpServerTelemetryBuilder {
   public JavaHttpServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
-  }
-
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
   }
 
   /**

@@ -90,18 +90,6 @@ public final class ApacheHttpClientTelemetryBuilder {
   }
 
   /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<ApacheHttpClientRequest>> spanNameExtractorTransformer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
