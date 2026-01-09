@@ -17,7 +17,7 @@ public final class SdkAutoconfigureAccess {
   }
 
   public static AutoConfiguredOpenTelemetrySdk create(
-      OpenTelemetrySdk sdk, Resource resource, ConfigProperties config, Object configProvider) {
-    return AutoConfiguredOpenTelemetrySdk.create(sdk, resource, config, configProvider);
+      OpenTelemetrySdk sdk, Resource resource, ConfigProperties config) {
+    return AutoConfiguredOpenTelemetrySdk.create(sdk, resource, config);
   }
 }

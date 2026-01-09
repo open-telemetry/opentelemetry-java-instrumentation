@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Objects;
 
 /**

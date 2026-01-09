@@ -59,10 +59,7 @@ public final class OpenTelemetryInstaller {
     GlobalOpenTelemetry.set(sdk);
 
     return SdkAutoconfigureAccess.create(
-        sdk,
-        SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
-        configProperties,
-        configProvider);
+        sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
   }
 
   // Visible for testing
