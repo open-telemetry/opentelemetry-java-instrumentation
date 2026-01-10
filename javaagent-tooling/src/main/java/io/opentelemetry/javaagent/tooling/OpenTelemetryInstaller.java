@@ -63,8 +63,9 @@ public final class OpenTelemetryInstaller {
       configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
       configProperties = getDeclarativeConfigBridgedProperties(configProvider);
       // distribution node is set by the JavaagentDistributionAccessCustomizerProvider
-      enabledInstrumentations = enabledInstrumentationsFromConfigDistribution(
-          Objects.requireNonNull(JavaagentDistribution.get()));
+      enabledInstrumentations =
+          enabledInstrumentationsFromConfigDistribution(
+              Objects.requireNonNull(JavaagentDistribution.get()));
     }
 
     AgentCommonConfig.setEnabledInstrumentations(enabledInstrumentations);
