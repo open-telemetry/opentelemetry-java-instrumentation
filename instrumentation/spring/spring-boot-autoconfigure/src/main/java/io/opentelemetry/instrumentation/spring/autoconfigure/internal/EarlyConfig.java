@@ -33,45 +33,59 @@ public class EarlyConfig {
     return environment.getProperty("otel.file_format", String.class) != null;
   }
 
-  public static EnabledInstrumentations getEnabledInstrumentations(ConfigurableEnvironment environment) {
-    return new EnabledInstrumentations() {
-      @SuppressWarnings("unchecked")
-      @Nullable
-      @Override
-      public Boolean getEnabled(String instrumentationName) {
-        if (isDeclarativeConfig(environment)) {
+  public static EnabledInstrumentations getEnabledInstrumentations(
+      ConfigurableEnvironment environment) {
+    if (isDeclarativeConfig(environment)) {
+      return new EnabledInstrumentations() {
+        @SuppressWarnings("unchecked")
+        @Nullable
+        @Override
+        public Boolean getEnabled(String instrumentationName) {
           String snakeCase = instrumentationName.replace('-', '_');
 
           List<String> enabled =
               environment.getProperty(
-                  "otel.distribution.spring_starter.instrumentation.enabled", List.class, emptyList());
+                  "otel.distribution.spring_starter.instrumentation.enabled",
+                  List.class,
+                  emptyList());
           if (enabled.contains(snakeCase)) {
             return true;
           }
 
           List<String> disabled =
               environment.getProperty(
-                  "otel.distribution.spring_starter.instrumentation.disabled", List.class, emptyList());
+                  "otel.distribution.spring_starter.instrumentation.disabled",
+                  List.class,
+                  emptyList());
           if (disabled.contains(snakeCase)) {
             return false;
           }
 
           return null;
-        } else {
-          return environment.getProperty(
-              String.format("otel.instrumentation.%s.enabled", instrumentationName), Boolean.class);
         }
+
+        @Override
+        public boolean isDefaultEnabled() {
+          return environment.getProperty(
+              "otel.distribution.spring_starter.instrumentation.default_enabled",
+              Boolean.class,
+              true);
+        }
+      };
+    }
+
+    return new EnabledInstrumentations() {
+      @Nullable
+      @Override
+      public Boolean getEnabled(String instrumentationName) {
+        return environment.getProperty(
+            String.format("otel.instrumentation.%s.enabled", instrumentationName), Boolean.class);
       }
 
       @Override
       public boolean isDefaultEnabled() {
-        if (isDeclarativeConfig(environment)) {
-          return environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.default_enabled", Boolean.class, true);
-        } else {
-          return environment.getProperty(
-              "otel.instrumentation.common.default-enabled", Boolean.class, true);
-        }
+        return environment.getProperty(
+            "otel.instrumentation.common.default-enabled", Boolean.class, true);
       }
     };
   }
@@ -95,5 +109,4 @@ public class EarlyConfig {
   private static String toSnakeCase(String string) {
     return string.replace('-', '_');
   }
-
 }
