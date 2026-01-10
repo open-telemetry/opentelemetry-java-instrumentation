@@ -48,7 +48,10 @@ public final class NettyServerTelemetryBuilder {
    * Configures emission of experimental events.
    *
    * @param emitExperimentalHttpServerEvents set to true to emit events
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyServerTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setEmitExperimentalHttpServerEvents(
       boolean emitExperimentalHttpServerEvents) {
