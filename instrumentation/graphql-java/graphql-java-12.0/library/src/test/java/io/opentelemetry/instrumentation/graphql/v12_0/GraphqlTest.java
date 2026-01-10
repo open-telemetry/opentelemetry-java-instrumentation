@@ -27,6 +27,6 @@ class GraphqlTest extends AbstractGraphqlTest {
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setAddOperationNameToSpanName(true)
             .build();
-    builder.instrumentation(telemetry.newInstrumentation());
+    builder.instrumentation(telemetry.createInstrumentation());
   }
 }

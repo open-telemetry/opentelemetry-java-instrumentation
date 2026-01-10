@@ -50,7 +50,7 @@ public class TracingRequestHandler extends RequestHandler2 {
                 ConfigPropertiesUtil.getList(
                     "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
         .build()
-        .newRequestHandler();
+        .createRequestHandler();
   }
 
   @Override

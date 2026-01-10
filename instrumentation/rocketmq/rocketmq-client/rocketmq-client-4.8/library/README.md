@@ -36,8 +36,8 @@ RocketMqTelemetry rocketMqTelemetry;
 void configure(OpenTelemetry openTelemetry, DefaultMQProducerImpl producer, DefaultMQPushConsumerImpl pushConsumer) {
   rocketMqTelemetry = RocketMqTelemetry.create(openTelemetry);
   // For producer.
-  producer.registerSendMessageHook(rocketMqTelemetry.newTracingSendMessageHook());
+  producer.registerSendMessageHook(rocketMqTelemetry.createSendMessageHook());
   // For push consumer.
-  pushConsumer.registerConsumeMessageHook(rocketMqTelemetry.newTracingConsumeMessageHook());
+  pushConsumer.registerConsumeMessageHook(rocketMqTelemetry.createConsumeMessageHook());
 }
 ```

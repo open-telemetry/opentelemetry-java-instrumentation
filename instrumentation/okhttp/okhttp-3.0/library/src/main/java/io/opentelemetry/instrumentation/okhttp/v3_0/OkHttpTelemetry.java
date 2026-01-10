@@ -50,7 +50,7 @@ public final class OkHttpTelemetry {
    * @param baseClient An instance of OkHttpClient configured as desired.
    * @return a {@link Call.Factory} for creating new {@link Call} instances.
    */
-  public Call.Factory newCallFactory(OkHttpClient baseClient) {
+  public Call.Factory createCallFactory(OkHttpClient baseClient) {
     OkHttpClient.Builder builder = baseClient.newBuilder();
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());
@@ -58,5 +58,21 @@ public final class OkHttpTelemetry {
     builder.networkInterceptors().add(0, new TracingInterceptor(instrumenter, propagators));
     OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);
+  }
+
+  /**
+   * Construct a new OpenTelemetry tracing-enabled {@link okhttp3.Call.Factory} using the provided
+   * {@link OkHttpClient} instance.
+   *
+   * <p>Using this method will result in proper propagation and span parenting, for both {@linkplain
+   * Call#execute() synchronous} and {@linkplain Call#enqueue(Callback) asynchronous} usages.
+   *
+   * @param baseClient An instance of OkHttpClient configured as desired.
+   * @return a {@link Call.Factory} for creating new {@link Call} instances.
+   * @deprecated Use {@link #createCallFactory(OkHttpClient)} instead.
+   */
+  @Deprecated
+  public Call.Factory newCallFactory(OkHttpClient baseClient) {
+    return createCallFactory(baseClient);
   }
 }
