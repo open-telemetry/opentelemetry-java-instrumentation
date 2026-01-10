@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,12 +29,11 @@ class ExtendedOpenTelemetryTest {
   @Test
   void getConfig() {
     assertThat(openTelemetry).isInstanceOf(ExtendedOpenTelemetry.class);
-
-    DeclarativeConfigProperties instrumentationConfig =
-        ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
-    assertThat(instrumentationConfig).isNotNull();
-
-    assertThat(instrumentationConfig.getStructured("java").getStructured("foo").getString("bar"))
+    assertThat(
+            ((ExtendedOpenTelemetry) openTelemetry)
+                .getConfigProvider()
+                .getInstrumentationConfig("foo")
+                .getString("bar"))
         .isEqualTo("baz");
   }
 }

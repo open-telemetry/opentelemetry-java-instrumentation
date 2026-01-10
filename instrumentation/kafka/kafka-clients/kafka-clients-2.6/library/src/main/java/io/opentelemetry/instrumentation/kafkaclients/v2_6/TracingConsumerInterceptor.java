@@ -10,9 +10,9 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
@@ -39,7 +39,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    ExtendedDeclarativeConfigProperties messaging =
+    DeclarativeConfigProperties messaging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
 
     telemetry =

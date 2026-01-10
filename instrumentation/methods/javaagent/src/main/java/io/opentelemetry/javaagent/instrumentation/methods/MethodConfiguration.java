@@ -12,7 +12,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public class MethodConfiguration {
   }
 
   private static List<TypeInstrumentation> parse(OpenTelemetry openTelemetry) {
-    ExtendedDeclarativeConfigProperties config =
+    DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "methods");
     // First try structured declarative config (YAML format)
     List<DeclarativeConfigProperties> includeList = config.getStructuredList("include");

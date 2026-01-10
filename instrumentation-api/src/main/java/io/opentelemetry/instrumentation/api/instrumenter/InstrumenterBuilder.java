@@ -381,12 +381,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
     DeclarativeConfigProperties commonConfig = empty();
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
-      DeclarativeConfigProperties instrumentationConfig =
-          ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
-      if (instrumentationConfig != null) {
-        commonConfig =
-            instrumentationConfig.getStructured("java", empty()).getStructured("common", empty());
-      }
+      commonConfig =
+          ((ExtendedOpenTelemetry) openTelemetry)
+              .getConfigProvider()
+              .getInstrumentationConfig("common");
     }
     String result =
         commonConfig.getString(

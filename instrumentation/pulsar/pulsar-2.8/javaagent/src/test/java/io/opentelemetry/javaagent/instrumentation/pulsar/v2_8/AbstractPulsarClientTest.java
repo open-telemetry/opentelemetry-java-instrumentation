@@ -186,6 +186,8 @@ abstract class AbstractPulsarClientTest {
 
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
+            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
+            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")

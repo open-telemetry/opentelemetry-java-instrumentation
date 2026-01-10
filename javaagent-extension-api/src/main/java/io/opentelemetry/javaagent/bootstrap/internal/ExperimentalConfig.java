@@ -9,8 +9,8 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.List;
 
 /**
@@ -22,7 +22,7 @@ public final class ExperimentalConfig {
   private static final ExperimentalConfig instance =
       new ExperimentalConfig(GlobalOpenTelemetry.get());
 
-  private final ExtendedDeclarativeConfigProperties commonConfig;
+  private final DeclarativeConfigProperties commonConfig;
   private final List<String> messagingHeaders;
 
   /** Returns the global agent configuration. */

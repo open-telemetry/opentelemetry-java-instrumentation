@@ -42,27 +42,24 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    ConfigProvider configProvider;
     if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
-      configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
-      sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
+      sdk =
+          new ExtendedOpenTelemetrySdkWrapper(
+              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
-      configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
-      configProperties = getDeclarativeConfigBridgedProperties(configProvider);
+      configProperties =
+          getDeclarativeConfigBridgedProperties(((ExtendedOpenTelemetry) sdk).getConfigProvider());
     }
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
 
     return SdkAutoconfigureAccess.create(
-        sdk,
-        SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
-        configProperties,
-        configProvider);
+        sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
   }
 
   // Visible for testing
