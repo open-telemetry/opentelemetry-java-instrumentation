@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import java.util.List;
 import javax.annotation.Nullable;
-import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
@@ -37,7 +37,8 @@ public class EarlyConfig {
       ConfigurableEnvironment environment) {
     if (isDeclarativeConfig(environment)) {
       return new EnabledInstrumentations() {
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings(
+            "unchecked") // Spring's Environment.getProperty with List.class returns a raw List
         @Nullable
         @Override
         public Boolean getEnabled(String instrumentationName) {

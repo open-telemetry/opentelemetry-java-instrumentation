@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Objects.requireNonNull;
 
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import java.util.Map;
 import java.util.Objects;
-import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -29,8 +29,8 @@ public class InstrumentationPropertyEnabled implements Condition {
 
     String name = requireNonNull(attributes.get("module")).toString();
     boolean enabledByDefault = (boolean) requireNonNull(attributes.get("enabledByDefault"));
-    EnabledInstrumentations enabledInstrumentations = EarlyConfig.getEnabledInstrumentations(
-        (ConfigurableEnvironment) context.getEnvironment());
+    EnabledInstrumentations enabledInstrumentations =
+        EarlyConfig.getEnabledInstrumentations((ConfigurableEnvironment) context.getEnvironment());
 
     Boolean enabled = enabledInstrumentations.getEnabled(name);
     if (enabled != null) {
