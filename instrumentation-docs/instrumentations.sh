@@ -218,6 +218,7 @@ readonly INSTRUMENTATIONS=(
   "redisson:redisson-3.17:javaagent:testStableSemconv"
   "restlet:restlet-1.1:library:test"
   "restlet:restlet-2.0:library:test"
+  "sofa-rpc-5.4:javaagent:testSofaRpc"
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-data:spring-data-1.8:javaagent:test"
   "spring:spring-integration-4.1:javaagent:test"
