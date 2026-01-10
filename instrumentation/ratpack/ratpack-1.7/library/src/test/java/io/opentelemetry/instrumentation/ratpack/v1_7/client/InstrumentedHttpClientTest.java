@@ -77,8 +77,7 @@ class InstrumentedHttpClientTest {
                       bindings -> {
                         serverTelemetry.configureRegistry(bindings);
                         bindings.bindInstance(
-                            HttpClient.class,
-                            clientTelemetry.instrument(HttpClient.of(Action.noop())));
+                            HttpClient.class, clientTelemetry.wrap(HttpClient.of(Action.noop())));
                       }));
 
               spec.handlers(
@@ -160,8 +159,7 @@ class InstrumentedHttpClientTest {
                       bindings -> {
                         serverTelemetry.configureRegistry(bindings);
                         bindings.bindInstance(
-                            HttpClient.class,
-                            clientTelemetry.instrument(HttpClient.of(Action.noop())));
+                            HttpClient.class, clientTelemetry.wrap(HttpClient.of(Action.noop())));
                       }));
 
               spec.handlers(
@@ -250,7 +248,7 @@ class InstrumentedHttpClientTest {
                         serverTelemetry.configureRegistry(bindings);
                         bindings.bindInstance(
                             HttpClient.class,
-                            clientTelemetry.instrument(
+                            clientTelemetry.wrap(
                                 HttpClient.of(s -> s.readTimeout(Duration.ofMillis(10)))));
                       }));
 
@@ -323,8 +321,7 @@ class InstrumentedHttpClientTest {
                       bindings -> {
                         serverTelemetry.configureRegistry(bindings);
                         bindings.bindInstance(
-                            HttpClient.class,
-                            clientTelemetry.instrument(HttpClient.of(Action.noop())));
+                            HttpClient.class, clientTelemetry.wrap(HttpClient.of(Action.noop())));
                         bindings.bindInstance(
                             serviceClass
                                 .getConstructor(String.class, InstrumentationExtension.class)
