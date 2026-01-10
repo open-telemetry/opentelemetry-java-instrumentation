@@ -1,4 +1,11 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.bootstrap.internal;
+
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
@@ -13,7 +20,8 @@ import io.opentelemetry.instrumentation.api.internal.Initializer;
  */
 public class AgentDistributionConfig {
   static EnabledInstrumentations enabledInstrumentations;
-  static ExtendedDeclarativeConfigProperties distributionConfig;
+  static ExtendedDeclarativeConfigProperties distributionConfig =
+      new ExtendedDeclarativeConfigProperties(empty());
 
   public static EnabledInstrumentations getEnabledInstrumentations() {
     return enabledInstrumentations;

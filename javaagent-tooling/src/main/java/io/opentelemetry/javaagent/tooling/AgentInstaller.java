@@ -362,8 +362,7 @@ public class AgentInstaller {
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
     boolean shouldForceSynchronousAgentListenersCalls =
-        AgentDistributionConfig.get()
-            .getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
+        AgentDistributionConfig.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
     if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
