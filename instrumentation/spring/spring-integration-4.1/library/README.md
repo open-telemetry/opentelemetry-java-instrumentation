@@ -43,7 +43,7 @@ public class SpringIntegrationConfiguration {
   public ChannelInterceptor createInterceptor(OpenTelemetry openTelemetry) {
     return SpringIntegrationTelemetry.builder(openTelemetry)
         .build()
-        .newChannelInterceptor();
+        .createChannelInterceptor();
   }
 
   // Apply the interceptor to your message channels in your Spring configuration.

@@ -49,7 +49,7 @@ class GrpcTest extends AbstractGrpcTest {
             .setCapturedServerRequestMetadata(
                 Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
             .build()
-            .newServerInterceptor());
+            .createServerInterceptor());
   }
 
   @Override
@@ -59,7 +59,7 @@ class GrpcTest extends AbstractGrpcTest {
             .setCapturedClientRequestMetadata(
                 Collections.singletonList(CLIENT_REQUEST_METADATA_KEY))
             .build()
-            .newClientInterceptor());
+            .createClientInterceptor());
   }
 
   @Override
@@ -94,7 +94,7 @@ class GrpcTest extends AbstractGrpcTest {
                     .addAttributesExtractor(new CustomAttributesExtractor())
                     .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
                     .build()
-                    .newServerInterceptor())
+                    .createServerInterceptor())
             .build()
             .start();
 
@@ -107,7 +107,7 @@ class GrpcTest extends AbstractGrpcTest {
                         .addClientAttributeExtractor(
                             new CustomAttributesExtractorV2("clientSideValue"))
                         .build()
-                        .newClientInterceptor()));
+                        .createClientInterceptor()));
 
     closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());

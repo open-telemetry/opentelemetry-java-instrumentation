@@ -42,12 +42,32 @@ public final class ApacheHttpClientTelemetry {
   }
 
   /** Returns a new {@link CloseableHttpClient} with tracing configured. */
+  public CloseableHttpClient createHttpClient() {
+    return createHttpClientBuilder().build();
+  }
+
+  /**
+   * Returns a new {@link CloseableHttpClient} with tracing configured.
+   *
+   * @deprecated Use {@link #createHttpClient()} instead.
+   */
+  @Deprecated
   public CloseableHttpClient newHttpClient() {
-    return newHttpClientBuilder().build();
+    return createHttpClient();
   }
 
   /** Returns a new {@link HttpClientBuilder} to create a client with tracing configured. */
-  public HttpClientBuilder newHttpClientBuilder() {
+  public HttpClientBuilder createHttpClientBuilder() {
     return new TracingHttpClientBuilder(instrumenter, propagators);
+  }
+
+  /**
+   * Returns a new {@link HttpClientBuilder} to create a client with tracing configured.
+   *
+   * @deprecated Use {@link #createHttpClientBuilder()} instead.
+   */
+  @Deprecated
+  public HttpClientBuilder newHttpClientBuilder() {
+    return createHttpClientBuilder();
   }
 }

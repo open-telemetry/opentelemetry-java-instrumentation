@@ -34,7 +34,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                 .setCapturedHeaders(singletonList("Test-Message-Header"))
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
-                .newTracingSendMessageHook());
+                .createSendMessageHook());
   }
 
   @Override
@@ -48,6 +48,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                 .setCapturedHeaders(singletonList("Test-Message-Header"))
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
-                .newTracingConsumeMessageHook());
+                .createConsumeMessageHook());
   }
 }

@@ -25,6 +25,6 @@ class S3ClientTest extends AbstractS3ClientTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .build()
-            .newRequestHandler());
+            .createRequestHandler());
   }
 }

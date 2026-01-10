@@ -28,7 +28,7 @@ class JavaHttpServerTest extends AbstractJavaHttpServerTest {
             .setCapturedResponseHeaders(
                 Collections.singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build()
-            .newFilter();
+            .createFilter();
     contexts.forEach(ctx -> ctx.getFilters().add(filter));
   }
 }

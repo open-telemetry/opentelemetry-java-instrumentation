@@ -43,7 +43,7 @@ public class JavaHttpClientConfiguration {
 
   //Use this HttpClient implementation for making standard http client calls.
   public HttpClient createTracedClient(OpenTelemetry openTelemetry) {
-    return JavaHttpClientTelemetry.builder(openTelemetry).build().newHttpClient(createClient());
+    return JavaHttpClientTelemetry.builder(openTelemetry).build().createHttpClient(createClient());
   }
 
   //your configuration of the Java HTTP Client goes here:

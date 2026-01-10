@@ -64,6 +64,6 @@ final class RestClientBeanPostProcessorSpring4 implements BeanPostProcessor {
             SpringWebTelemetry.builder(openTelemetry),
             WebTelemetryUtil.getBuilderExtractor())
         .build()
-        .newInterceptor();
+        .createInterceptor();
   }
 }

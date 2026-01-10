@@ -47,7 +47,18 @@ public final class MongoTelemetry {
    * Returns a new {@link CommandListener} that can be used with methods like {@link
    * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
    */
-  public CommandListener newCommandListener() {
+  public CommandListener createCommandListener() {
     return new TracingCommandListener(instrumenter);
+  }
+
+  /**
+   * Returns a new {@link CommandListener} that can be used with methods like {@link
+   * com.mongodb.MongoClientOptions.Builder#addCommandListener(CommandListener)}.
+   *
+   * @deprecated Use {@link #createCommandListener()} instead.
+   */
+  @Deprecated
+  public CommandListener newCommandListener() {
+    return createCommandListener();
   }
 }

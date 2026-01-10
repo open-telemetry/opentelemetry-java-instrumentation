@@ -36,7 +36,18 @@ public final class RestletTelemetry {
    * Returns a new {@link Filter} which can be used to wrap {@link org.restlet.Restlet}
    * implementations.
    */
-  public Filter newFilter(String path) {
+  public Filter createFilter(String path) {
     return new TracingFilter(serverInstrumenter, path);
+  }
+
+  /**
+   * Returns a new {@link Filter} which can be used to wrap {@link org.restlet.Restlet}
+   * implementations.
+   *
+   * @deprecated Use {@link #createFilter(String)} instead.
+   */
+  @Deprecated
+  public Filter newFilter(String path) {
+    return createFilter(path);
   }
 }

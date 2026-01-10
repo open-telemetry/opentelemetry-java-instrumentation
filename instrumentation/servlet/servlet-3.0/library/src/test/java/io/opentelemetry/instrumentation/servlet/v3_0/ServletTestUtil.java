@@ -24,7 +24,7 @@ public class ServletTestUtil {
             .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .setCapturedRequestParameters(singletonList("test-parameter"));
     Experimental.addTraceIdRequestAttribute(builder, true);
-    return builder.build().newFilter();
+    return builder.build().createFilter();
   }
 
   public static void configureTomcat(OpenTelemetry openTelemetry, Context servletContext) {

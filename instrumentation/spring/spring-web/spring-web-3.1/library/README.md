@@ -80,7 +80,7 @@ public class RestTemplateConfig {
 
     RestTemplate restTemplate = new RestTemplate();
     SpringWebTelemetry telemetry = SpringWebTelemetry.create(openTelemetry);
-    restTemplate.getInterceptors().add(telemetry.newInterceptor());
+    restTemplate.getInterceptors().add(telemetry.createInterceptor());
 
     return restTemplate;
   }

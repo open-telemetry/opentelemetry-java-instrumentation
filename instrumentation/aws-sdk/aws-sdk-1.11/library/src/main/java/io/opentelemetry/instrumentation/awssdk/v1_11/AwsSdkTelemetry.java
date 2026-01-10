@@ -73,12 +73,23 @@ public class AwsSdkTelemetry {
    * Returns a {@link RequestHandler2} for registration to AWS SDK client builders using {@code
    * withRequestHandlers}.
    */
-  public RequestHandler2 newRequestHandler() {
+  public RequestHandler2 createRequestHandler() {
     return new TracingRequestHandler(
         requestInstrumenter,
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
         producerInstrumenter,
         dynamoDbInstrumenter);
+  }
+
+  /**
+   * Returns a {@link RequestHandler2} for registration to AWS SDK client builders using {@code
+   * withRequestHandlers}.
+   *
+   * @deprecated Use {@link #createRequestHandler()} instead.
+   */
+  @Deprecated
+  public RequestHandler2 newRequestHandler() {
+    return createRequestHandler();
   }
 }

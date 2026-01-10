@@ -42,7 +42,7 @@ public class TracingRequestHandler extends RequestHandler2 {
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .build()
-          .newRequestHandler();
+          .createRequestHandler();
 
   @Override
   public void beforeRequest(Request<?> request) {

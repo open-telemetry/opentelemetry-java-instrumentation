@@ -43,7 +43,20 @@ public final class JavaHttpClientTelemetry {
    * @param client An instance of HttpClient configured as desired.
    * @return a tracing-enabled {@link HttpClient}.
    */
-  public HttpClient newHttpClient(HttpClient client) {
+  public HttpClient createHttpClient(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
+  }
+
+  /**
+   * Construct a new OpenTelemetry tracing-enabled {@link HttpClient} using the provided {@link
+   * HttpClient} instance.
+   *
+   * @param client An instance of HttpClient configured as desired.
+   * @return a tracing-enabled {@link HttpClient}.
+   * @deprecated Use {@link #createHttpClient(HttpClient)} instead.
+   */
+  @Deprecated
+  public HttpClient newHttpClient(HttpClient client) {
+    return createHttpClient(client);
   }
 }

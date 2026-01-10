@@ -26,7 +26,7 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private final ExecutionInterceptor delegate =
-      AwsSdkSingletons.telemetry().newExecutionInterceptor();
+      AwsSdkSingletons.telemetry().createExecutionInterceptor();
 
   @Override
   public void beforeExecution(

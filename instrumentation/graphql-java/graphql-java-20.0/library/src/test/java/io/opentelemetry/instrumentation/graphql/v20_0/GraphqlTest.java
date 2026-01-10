@@ -45,7 +45,7 @@ class GraphqlTest extends AbstractGraphqlTest {
             .setDataFetcherInstrumentationEnabled(true)
             .setAddOperationNameToSpanName(true)
             .build();
-    builder.instrumentation(telemetry.newInstrumentation());
+    builder.instrumentation(telemetry.createInstrumentation());
   }
 
   @Override
@@ -63,7 +63,9 @@ class GraphqlTest extends AbstractGraphqlTest {
             .build();
 
     GraphQL graphql =
-        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+        GraphQL.newGraphQL(graphqlSchema)
+            .instrumentation(telemetry.createInstrumentation())
+            .build();
 
     // Act
     ExecutionResult result =
@@ -126,7 +128,9 @@ class GraphqlTest extends AbstractGraphqlTest {
             .build();
 
     GraphQL graphql =
-        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+        GraphQL.newGraphQL(graphqlSchema)
+            .instrumentation(telemetry.createInstrumentation())
+            .build();
 
     // Act
     ExecutionResult result =
@@ -203,7 +207,9 @@ class GraphqlTest extends AbstractGraphqlTest {
             .build();
 
     GraphQL graphql =
-        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+        GraphQL.newGraphQL(graphqlSchema)
+            .instrumentation(telemetry.createInstrumentation())
+            .build();
 
     // Act
     ExecutionResult result =
@@ -252,7 +258,9 @@ class GraphqlTest extends AbstractGraphqlTest {
             .build();
 
     GraphQL graphql =
-        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+        GraphQL.newGraphQL(graphqlSchema)
+            .instrumentation(telemetry.createInstrumentation())
+            .build();
 
     // Act
     // book-exception triggers exception in data fetcher
@@ -325,7 +333,9 @@ class GraphqlTest extends AbstractGraphqlTest {
             .build();
 
     GraphQL graphql =
-        GraphQL.newGraphQL(graphqlSchema).instrumentation(telemetry.newInstrumentation()).build();
+        GraphQL.newGraphQL(graphqlSchema)
+            .instrumentation(telemetry.createInstrumentation())
+            .build();
 
     // Act
     // book-graphql-error triggers returning an error from data fetcher
