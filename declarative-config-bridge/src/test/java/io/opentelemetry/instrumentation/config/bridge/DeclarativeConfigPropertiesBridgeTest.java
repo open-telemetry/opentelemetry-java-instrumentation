@@ -16,28 +16,16 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
 
   private ConfigProperties bridge;
-  private ConfigProperties emptyBridge;
 
   @BeforeEach
   void setup() {
     bridge = create(new DeclarativeConfigPropertiesBridgeBuilder());
-
-    OpenTelemetryConfigurationModel emptyModel =
-        new OpenTelemetryConfigurationModel()
-            .withAdditionalProperty(
-                "instrumentation/development", new ExperimentalInstrumentationModel());
-    SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
-    emptyBridge =
-        new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
   private static ConfigProperties create(DeclarativeConfigPropertiesBridgeBuilder builder) {
