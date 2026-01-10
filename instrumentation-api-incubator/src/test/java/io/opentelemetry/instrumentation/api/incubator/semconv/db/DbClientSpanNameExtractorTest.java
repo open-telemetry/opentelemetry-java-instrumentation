@@ -231,7 +231,7 @@ class DbClientSpanNameExtractorTest {
     DbRequest dbRequest = new DbRequest();
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      when(dbAttributesGetter.getDbSystem(dbRequest)).thenReturn("postgresql");
+      when(dbAttributesGetter.getDbSystemName(dbRequest)).thenReturn("postgresql");
     }
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);

@@ -128,7 +128,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     }
 
     // Final fallback to db.system.name (required attribute per spec)
-    String dbSystem = getter.getDbSystem(request);
+    String dbSystem = getter.getDbSystemName(request);
     return dbSystem != null ? dbSystem : DEFAULT_SPAN_NAME;
   }
 
