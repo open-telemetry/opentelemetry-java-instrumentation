@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
 import java.util.LinkedHashSet;
