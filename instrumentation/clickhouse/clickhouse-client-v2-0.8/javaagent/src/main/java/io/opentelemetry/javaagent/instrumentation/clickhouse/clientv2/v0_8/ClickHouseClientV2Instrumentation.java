@@ -68,10 +68,15 @@ public class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
       }
 
       String database = client.getConfiguration().get("database");
+      String queryId = null;
+      if (querySettings != null) {
+        queryId = querySettings.getQueryId();
+      }
+
       Context parentContext = currentContext();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(
-              addressAndPort.getAddress(), addressAndPort.getPort(), database, sqlQuery);
+              addressAndPort.getAddress(), addressAndPort.getPort(), database, queryId, sqlQuery);
 
       return ClickHouseScope.start(instrumenter(), parentContext, request);
     }

@@ -60,6 +60,7 @@ public class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
                   .getServer()
                   .getDatabase()
                   .orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
+              clickHouseRequest.getQueryId().orElse(null),
               ClickHouseRequestAccess.getQuery(clickHouseRequest));
 
       return ClickHouseScope.start(instrumenter(), currentContext(), request);

@@ -28,6 +28,7 @@ public final class ClickHouseInstrumenterFactory {
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(
             ServerAttributesExtractor.create(new ClickHouseNetworkAttributesGetter()))
+        .addAttributesExtractor(new ClickHouseAttributesExtractor())
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
