@@ -10,33 +10,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
 
   private ConfigProperties bridge;
-  private ConfigProperties emptyBridge;
 
   @BeforeEach
   void setup() {
     bridge = create(new DeclarativeConfigPropertiesBridgeBuilder());
-
-    OpenTelemetryConfigurationModel emptyModel =
-        new OpenTelemetryConfigurationModel()
-            .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
-    SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
-    emptyBridge =
-        new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
   private static ConfigProperties create(DeclarativeConfigPropertiesBridgeBuilder builder) {
