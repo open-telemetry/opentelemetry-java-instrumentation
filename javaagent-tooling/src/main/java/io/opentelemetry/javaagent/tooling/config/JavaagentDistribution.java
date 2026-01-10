@@ -6,15 +6,14 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.List;
 import javax.annotation.Nullable;
 
 public class JavaagentDistribution {
   @Nullable private static DeclarativeConfigProperties instance;
 
   /**
-   * @return the declarative config properties used to configure the javaagent, or null if no
-   *     declarative config was used
+   * Returns the declarative config properties used to configure the javaagent, or null if no
+   * declarative config was used.
    */
   @Nullable
   public static DeclarativeConfigProperties get() {

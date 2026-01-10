@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.bootstrap.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
-import java.util.function.Function;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -18,28 +18,17 @@ public class AgentCommonConfig {
 
   private static final CommonConfig instance = new CommonConfig(GlobalOpenTelemetry.get());
 
-  private static boolean isDefaultEnabled = true;
-
-  private static Function<String, Boolean> isModuleEnabledExplicitly = moduleName -> null;
+  private static EnabledInstrumentations enabledInstrumentations;
 
   public static CommonConfig get() {
     return instance;
   }
 
-  public static boolean isDefaultEnabled() {
-    return isDefaultEnabled;
+  public static EnabledInstrumentations getEnabledInstrumentations() {
+    return enabledInstrumentations;
   }
 
-  public static void setIsDefaultEnabled(boolean isDefaultEnabled) {
-    AgentCommonConfig.isDefaultEnabled = isDefaultEnabled;
-  }
-
-  public static void setIsModuleEnabledExplicitly(
-      Function<String, Boolean> isModuleEnabledExplicitly) {
-    AgentCommonConfig.isModuleEnabledExplicitly = isModuleEnabledExplicitly;
-  }
-
-  public static Boolean isModuleEnabledExplicitly(String moduleName) {
-    return isModuleEnabledExplicitly.apply(moduleName);
+  public static void setEnabledInstrumentations(EnabledInstrumentations enabledInstrumentations) {
+    AgentCommonConfig.enabledInstrumentations = enabledInstrumentations;
   }
 }
