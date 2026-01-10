@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentat
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -55,7 +55,7 @@ public final class OpenTelemetryInstaller {
       configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
       enabledInstrumentations = enabledInstrumentationsFromConfigProperties(configProperties);
-      AgentCommonConfig.setDistributionConfig(getPropertiesDistributionConfig(configProvider));
+      AgentDistributionConfig.set(getPropertiesDistributionConfig(configProvider));
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
@@ -64,10 +64,10 @@ public final class OpenTelemetryInstaller {
       // distribution node is set by the JavaagentDistributionAccessCustomizerProvider
       enabledInstrumentations =
           enabledInstrumentationsFromConfigDistribution(
-              Objects.requireNonNull(AgentCommonConfig.getDistributionConfig()));
+              Objects.requireNonNull(AgentDistributionConfig.get()));
     }
 
-    AgentCommonConfig.setEnabledInstrumentations(enabledInstrumentations);
+    AgentDistributionConfig.setEnabledInstrumentations(enabledInstrumentations);
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);

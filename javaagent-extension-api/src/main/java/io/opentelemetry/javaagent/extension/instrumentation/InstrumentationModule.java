@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
@@ -89,7 +89,7 @@ public abstract class InstrumentationModule implements Ordered {
    * themselves on some other condition.
    */
   public boolean defaultEnabled() {
-    return AgentCommonConfig.getEnabledInstrumentations().isDefaultEnabled();
+    return AgentDistributionConfig.getEnabledInstrumentations().isDefaultEnabled();
   }
 
   /**
@@ -171,7 +171,7 @@ public abstract class InstrumentationModule implements Ordered {
     private static final boolean indyEnabled;
 
     static {
-      indyEnabled = AgentCommonConfig.getDistributionConfig().getBoolean("indy/development", false);
+      indyEnabled = AgentDistributionConfig.get().getBoolean("indy/development", false);
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }
