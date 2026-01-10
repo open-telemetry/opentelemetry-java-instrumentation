@@ -19,8 +19,7 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
   @Override
   public void configure(IgnoredTypesBuilder builder) {
     List<String> excludedClasses =
-        AgentDistributionConfig.get()
-            .getScalarList("exclude_classes", String.class, emptyList());
+        AgentDistributionConfig.get().getScalarList("exclude_classes", String.class, emptyList());
     configureInternal(builder, excludedClasses);
   }
 

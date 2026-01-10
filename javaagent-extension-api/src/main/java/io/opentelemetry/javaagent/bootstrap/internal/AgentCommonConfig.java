@@ -20,5 +20,4 @@ public class AgentCommonConfig {
   public static CommonConfig get() {
     return instance;
   }
-
 }
