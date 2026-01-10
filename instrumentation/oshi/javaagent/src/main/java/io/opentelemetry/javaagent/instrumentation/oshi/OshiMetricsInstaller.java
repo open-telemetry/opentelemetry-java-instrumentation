@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
