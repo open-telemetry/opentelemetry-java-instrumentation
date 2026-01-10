@@ -26,7 +26,7 @@ public final class OpenTelemetryHttpClient {
     this.instrumenter = instrumenter;
   }
 
-  public HttpClient instrument(HttpClient httpClient) throws Exception {
+  public HttpClient wrap(HttpClient httpClient) throws Exception {
     return httpClient.copyWith(
         httpClientSpec -> {
           httpClientSpec.requestIntercept(
