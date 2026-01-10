@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
@@ -92,7 +92,7 @@ public abstract class InstrumentationModule implements Ordered {
    * themselves on some other condition.
    */
   public boolean defaultEnabled() {
-    return AgentCommonConfig.getEnabledInstrumentations().isDefaultEnabled();
+    return AgentDistributionConfig.getEnabledInstrumentations().isDefaultEnabled();
   }
 
   /**

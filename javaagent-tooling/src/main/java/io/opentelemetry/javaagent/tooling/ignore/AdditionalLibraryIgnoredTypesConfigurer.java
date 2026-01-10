@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 
@@ -27,7 +27,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
     // don't ignore libraries that we actually attempt to instrument. It means either the list is
     // wrong or a type matcher is.
     boolean enabled =
-        AgentCommonConfig.getDistributionConfig()
+        AgentDistributionConfig.get()
             .get("testing")
             .get("additional_library_ignores")
             .getBoolean("enabled", true);
