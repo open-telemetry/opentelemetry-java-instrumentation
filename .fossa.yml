@@ -1134,13 +1134,13 @@ targets:
       target: ':instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent'
+      target: ':instrumentation:rocketmq:rocketmq-client-4.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library'
+      target: ':instrumentation:rocketmq:rocketmq-client-4.8:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent'
+      target: ':instrumentation:rocketmq:rocketmq-client-5.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent'
