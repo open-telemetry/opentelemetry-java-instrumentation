@@ -21,7 +21,8 @@ public final class ExtendedDeclarativeConfigProperties implements DeclarativeCon
 
   private final DeclarativeConfigProperties delegate;
 
-  ExtendedDeclarativeConfigProperties(DeclarativeConfigProperties delegate) {
+  // will be deleted soon
+  public ExtendedDeclarativeConfigProperties(DeclarativeConfigProperties delegate) {
     this.delegate = delegate;
   }
 
