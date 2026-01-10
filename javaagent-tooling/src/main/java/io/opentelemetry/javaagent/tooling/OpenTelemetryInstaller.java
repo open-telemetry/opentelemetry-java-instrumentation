@@ -56,7 +56,7 @@ public final class OpenTelemetryInstaller {
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
       enabledInstrumentations = enabledInstrumentationsFromConfigProperties(configProperties);
-      AgentCommonConfig.setDistributionConfig(configProvider.getInstrumentationConfig());
+      AgentCommonConfig.setDistributionConfig(getPropertiesDistributionConfig(configProvider));
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
@@ -75,6 +75,15 @@ public final class OpenTelemetryInstaller {
 
     return SdkAutoconfigureAccess.create(
         sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
+  }
+
+  private static DeclarativeConfigProperties getPropertiesDistributionConfig(
+      ConfigProvider configProvider) {
+    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
+    if (instrumentationConfig == null) {
+      instrumentationConfig = empty();
+    }
+    return instrumentationConfig.getStructured("agent", empty());
   }
 
   private static EnabledInstrumentations enabledInstrumentationsFromConfigProperties(
