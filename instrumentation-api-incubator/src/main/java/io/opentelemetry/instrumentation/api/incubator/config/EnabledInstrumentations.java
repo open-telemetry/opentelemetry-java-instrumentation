@@ -7,9 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config;
 
 import javax.annotation.Nullable;
 
-/**
- * Provides information about which instrumentations are enabled.
- */
+/** Provides information about which instrumentations are enabled. */
 public interface EnabledInstrumentations {
   /**
    * Returns whether the given instrumentation is enabled.
