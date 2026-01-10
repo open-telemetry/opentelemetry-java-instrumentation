@@ -5,6 +5,12 @@ import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentat
 import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 
+/**
+ * Javaagent distribution-specific configuration.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public class AgentDistributionConfig {
   static EnabledInstrumentations enabledInstrumentations;
   static ExtendedDeclarativeConfigProperties distributionConfig;
@@ -27,4 +33,6 @@ public class AgentDistributionConfig {
     AgentDistributionConfig.distributionConfig =
         new ExtendedDeclarativeConfigProperties(distributionConfig);
   }
+
+  private AgentDistributionConfig() {}
 }
