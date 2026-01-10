@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties;
@@ -57,7 +57,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         model -> {
           Object distribution = model.getAdditionalProperties().get("distribution");
           if (distribution != null) {
-            AgentCommonConfig.setDistributionConfig(
+            AgentDistributionConfig.set(
                 toProperties(distribution).getStructured("javaagent", empty()));
           }
           return model;
