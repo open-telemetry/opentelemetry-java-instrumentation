@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
@@ -32,14 +33,47 @@ public class EarlyConfig {
     return environment.getProperty("otel.file_format", String.class) != null;
   }
 
-  public static boolean isDefaultEnabled(Environment environment) {
-    if (isDeclarativeConfig(environment)) {
-      return environment.getProperty(
-          "otel.distribution.spring_starter.instrumentation.default_enabled", Boolean.class, true);
-    } else {
-      return environment.getProperty(
-          "otel.instrumentation.common.default-enabled", Boolean.class, true);
-    }
+  public static EnabledInstrumentations getEnabledInstrumentations(ConfigurableEnvironment environment) {
+    return new EnabledInstrumentations() {
+      @SuppressWarnings("unchecked")
+      @Nullable
+      @Override
+      public Boolean getEnabled(String instrumentationName) {
+        if (isDeclarativeConfig(environment)) {
+          String snakeCase = instrumentationName.replace('-', '_');
+
+          List<String> enabled =
+              environment.getProperty(
+                  "otel.distribution.spring_starter.instrumentation.enabled", List.class, emptyList());
+          if (enabled.contains(snakeCase)) {
+            return true;
+          }
+
+          List<String> disabled =
+              environment.getProperty(
+                  "otel.distribution.spring_starter.instrumentation.disabled", List.class, emptyList());
+          if (disabled.contains(snakeCase)) {
+            return false;
+          }
+
+          return null;
+        } else {
+          return environment.getProperty(
+              String.format("otel.instrumentation.%s.enabled", instrumentationName), Boolean.class);
+        }
+      }
+
+      @Override
+      public boolean isDefaultEnabled() {
+        if (isDeclarativeConfig(environment)) {
+          return environment.getProperty(
+              "otel.distribution.spring_starter.instrumentation.default_enabled", Boolean.class, true);
+        } else {
+          return environment.getProperty(
+              "otel.instrumentation.common.default-enabled", Boolean.class, true);
+        }
+      }
+    };
   }
 
   public static String translatePropertyName(Environment environment, String name) {
@@ -62,39 +96,4 @@ public class EarlyConfig {
     return string.replace('-', '_');
   }
 
-  public static boolean isInstrumentationEnabled(
-      ConfigurableEnvironment environment, String name, boolean defaultValue) {
-    Boolean explicit = isExplicitEnabled(environment, name);
-    if (explicit != null) {
-      return explicit;
-    }
-    return defaultValue && isDefaultEnabled(environment);
-  }
-
-  @SuppressWarnings("unchecked")
-  @Nullable
-  public static Boolean isExplicitEnabled(ConfigurableEnvironment environment, String name) {
-    if (isDeclarativeConfig(environment)) {
-      String snakeCase = name.replace('-', '_');
-
-      List<String> enabled =
-          environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.enabled", List.class, emptyList());
-      if (enabled.contains(snakeCase)) {
-        return true;
-      }
-
-      List<String> disabled =
-          environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.disabled", List.class, emptyList());
-      if (disabled.contains(snakeCase)) {
-        return false;
-      }
-
-      return null;
-    } else {
-      return environment.getProperty(
-          String.format("otel.instrumentation.%s.enabled", name), Boolean.class);
-    }
-  }
 }

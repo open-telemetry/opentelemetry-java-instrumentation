@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetricsBuilder;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -23,8 +23,7 @@ public final class RuntimeMetricsConfigUtil {
   public static RuntimeMetrics configure(
       RuntimeMetricsBuilder builder,
       OpenTelemetry openTelemetry,
-      boolean isDefaultEnabled,
-      Function<String, Boolean> isModuleEnabledExplicitly) {
+      EnabledInstrumentations enabledInstrumentations) {
     /*
     By default, don't use any JFR metrics. May change this once semantic conventions are updated.
     If enabled, default to only the metrics not already covered by runtime-telemetry-java8
@@ -32,11 +31,10 @@ public final class RuntimeMetricsConfigUtil {
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17")
         .getBoolean("enable_all", false)) {
       builder.enableAllFeatures();
-    } else if (Boolean.TRUE.equals(isModuleEnabledExplicitly.apply("runtime_telemetry_java17"))) {
+    } else if (enabledInstrumentations.isEnabledExplicitly("runtime_telemetry_java17")) {
       // default configuration
     } else {
-      Boolean explicit = isModuleEnabledExplicitly.apply("runtime_telemetry");
-      if (explicit || isDefaultEnabled) {
+      if (enabledInstrumentations.isEnabled("runtime_telemetry")) {
         // This only uses metrics gathered by JMX
         builder.disableAllFeatures();
       } else {

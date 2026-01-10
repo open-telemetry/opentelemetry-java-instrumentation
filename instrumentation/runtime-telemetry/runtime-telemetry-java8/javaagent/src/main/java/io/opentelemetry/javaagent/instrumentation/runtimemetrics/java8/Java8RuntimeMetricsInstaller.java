@@ -27,8 +27,7 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
         RuntimeMetricsConfigUtil.configure(
             RuntimeMetrics.builder(GlobalOpenTelemetry.get()),
             GlobalOpenTelemetry.get(),
-            AgentCommonConfig.isDefaultEnabled(),
-            AgentCommonConfig::isModuleEnabledExplicitly);
+            AgentCommonConfig.getEnabledInstrumentations());
     if (runtimeMetrics != null) {
       Runtime.getRuntime()
           .addShutdownHook(

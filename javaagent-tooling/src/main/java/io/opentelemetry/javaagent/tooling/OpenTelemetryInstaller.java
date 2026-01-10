@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
@@ -24,11 +25,10 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
+import org.jetbrains.annotations.Nullable;
 
 public final class OpenTelemetryInstaller {
 
@@ -49,34 +49,25 @@ public final class OpenTelemetryInstaller {
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     ConfigProvider configProvider;
-    boolean isDefaultEnabled;
-    Function<String, Boolean> isModuleEnabled;
+    EnabledInstrumentations enabledInstrumentations;
     if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
-      isDefaultEnabled =
-          configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
-      isModuleEnabled = moduleEnabledFromConfigProperties(configProperties);
-      JavaagentDistribution.set(
-          configProvider.getInstrumentationConfig()
-      );
+      enabledInstrumentations = enabledInstrumentationsFromConfigProperties(configProperties);
+      JavaagentDistribution.set(configProvider.getInstrumentationConfig());
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
       configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
       configProperties = getDeclarativeConfigBridgedProperties(configProvider);
-      DeclarativeConfigProperties distribution = JavaagentDistribution.get();
-      isDefaultEnabled =
-          Objects.requireNonNull(distribution)
-              .getStructured("instrumentation", empty())
-              .getBoolean("default_enabled", true);
-      isModuleEnabled = moduleEnabledFromConfigDistribution(distribution);
+      // distribution node is set by the JavaagentDistributionAccessCustomizerProvider
+      enabledInstrumentations = enabledInstrumentationsFromConfigDistribution(
+          Objects.requireNonNull(JavaagentDistribution.get()));
     }
 
-    AgentCommonConfig.setIsDefaultEnabled(isDefaultEnabled);
-    AgentCommonConfig.setIsModuleEnabledExplicitly(isModuleEnabled);
+    AgentCommonConfig.setEnabledInstrumentations(enabledInstrumentations);
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
@@ -88,13 +79,27 @@ public final class OpenTelemetryInstaller {
         configProvider);
   }
 
-  private static Function<String, Boolean> moduleEnabledFromConfigProperties(
+  private static EnabledInstrumentations enabledInstrumentationsFromConfigProperties(
       ConfigProperties configProperties) {
-    return moduleName ->
-        configProperties.getBoolean("otel.instrumentation." + moduleName + ".enabled");
+    boolean isDefaultEnabled =
+        configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
+
+    return new EnabledInstrumentations() {
+      @Nullable
+      @Override
+      public Boolean getEnabled(String instrumentationName) {
+        return configProperties.getBoolean(
+            "otel.instrumentation." + instrumentationName + ".enabled");
+      }
+
+      @Override
+      public boolean isDefaultEnabled() {
+        return isDefaultEnabled;
+      }
+    };
   }
 
-  private static Function<String, Boolean> moduleEnabledFromConfigDistribution(
+  private static EnabledInstrumentations enabledInstrumentationsFromConfigDistribution(
       DeclarativeConfigProperties distribution) {
     // Should not be parsed for each call
     List<String> enabledModules = null;
@@ -109,17 +114,31 @@ public final class OpenTelemetryInstaller {
     List<String> disabled = disabledModules;
     List<String> enabled = enabledModules;
 
-    return moduleName -> {
-      String normalizedName = moduleName.replace('-', '_');
+    boolean isDefaultEnabled =
+        Objects.requireNonNull(distribution)
+            .getStructured("instrumentation", empty())
+            .getBoolean("default_enabled", true);
 
-      if (disabled != null && disabled.contains(normalizedName)) {
-        return false;
+    return new EnabledInstrumentations() {
+      @Nullable
+      @Override
+      public Boolean getEnabled(String instrumentationName) {
+        String normalizedName = instrumentationName.replace('-', '_');
+
+        if (disabled != null && disabled.contains(normalizedName)) {
+          return false;
+        }
+
+        if (enabled != null && enabled.contains(normalizedName)) {
+          return true;
+        }
+        return null;
       }
 
-      if (enabled != null && enabled.contains(normalizedName)) {
-        return true;
+      @Override
+      public boolean isDefaultEnabled() {
+        return isDefaultEnabled;
       }
-      return null;
     };
   }
 
