@@ -15,9 +15,7 @@ import javax.annotation.Nullable;
 /**
  * A {@link ConfigProvider} implementation backed by {@link ConfigProperties}.
  *
- * <p>
- * This allows instrumentations to always use
- * {@code ExtendedOpenTelemetry.getConfigProvider()}
+ * <p>This allows instrumentations to always use {@code ExtendedOpenTelemetry.getConfigProvider()}
  * regardless of whether the user started with system properties or YAML.
  */
 public final class ConfigPropertiesBackedConfigProvider implements ConfigProvider {
@@ -41,6 +39,7 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
   public static final class Builder {
     private final Map<String, String> mappings = new HashMap<>();
 
+    @com.google.errorprone.annotations.CanIgnoreReturnValue
     public Builder addMapping(String declarativeProperty, String configProperty) {
       mappings.put(declarativeProperty, configProperty);
       return this;

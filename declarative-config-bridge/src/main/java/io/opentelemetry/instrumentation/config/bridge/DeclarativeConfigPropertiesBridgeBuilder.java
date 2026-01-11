@@ -20,39 +20,32 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding
- * translations and fixed
+ * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
  * values for properties.
  *
- * @deprecated Use {@link ConfigPropertiesBackedConfigProvider#builder()}
- *             instead.
+ * @deprecated Use {@link ConfigPropertiesBackedConfigProvider#builder()} instead.
  */
 @Deprecated
 public class DeclarativeConfigPropertiesBridgeBuilder {
   /**
-   * order is important here, so we use LinkedHashMap - see
-   * {@link #addMapping(String, String)} for
+   * order is important here, so we use LinkedHashMap - see {@link #addMapping(String, String)} for
    * more details
    */
   private final Map<String, String> mappings = new LinkedHashMap<>();
 
   private final Map<String, Object> overrideValues = new HashMap<>();
 
-  public DeclarativeConfigPropertiesBridgeBuilder() {
-  }
+  public DeclarativeConfigPropertiesBridgeBuilder() {}
 
   /**
    * Adds a mapping from a property prefix to a YAML path.
    *
-   * <p>
-   * For example, if the property prefix is "otel.javaagent" and the YAML path is
-   * "agent", then
-   * any property starting with "otel.javaagent." will be resolved against the
-   * "agent" node in the
+   * <p>For example, if the property prefix is "otel.javaagent" and the YAML path is "agent", then
+   * any property starting with "otel.javaagent." will be resolved against the "agent" node in the
    * instrumentation/java section of the YAML configuration.
    *
    * @param propertyPrefix the prefix of the property to translate
-   * @param yamlPath       the YAML path to resolve the property against
+   * @param yamlPath the YAML path to resolve the property against
    */
   @CanIgnoreReturnValue
   public DeclarativeConfigPropertiesBridgeBuilder addMapping(
@@ -65,7 +58,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
    * Adds a fixed override value for a property.
    *
    * @param propertyName the name of the property to override
-   * @param value        the value to return when the property is requested
+   * @param value the value to return when the property is requested
    */
   @CanIgnoreReturnValue
   public DeclarativeConfigPropertiesBridgeBuilder addOverride(String propertyName, Object value) {
@@ -73,10 +66,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
     return this;
   }
 
-  /**
-   * Build {@link ConfigProperties} from the
-   * {@code autoConfiguredOpenTelemetrySdk}.
-   */
+  /** Build {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
   public ConfigProperties build(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
     OpenTelemetry openTelemetry = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
@@ -84,7 +74,8 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
           ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig());
     }
 
-    ConfigProperties sdkConfigProperties = AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+    ConfigProperties sdkConfigProperties =
+        AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
     if (sdkConfigProperties != null) {
       return sdkConfigProperties;
     }
@@ -95,8 +86,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
   }
 
   /**
-   * Build {@link ConfigProperties} from the provided
-   * {@link DeclarativeConfigProperties} node.
+   * Build {@link ConfigProperties} from the provided {@link DeclarativeConfigProperties} node.
    *
    * @param node the declarative config properties to build from
    * @return a new instance of {@link ConfigProperties}
@@ -107,12 +97,10 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
   }
 
   /**
-   * Build {@link ConfigProperties} from the {@link DeclarativeConfigProperties}
-   * provided by the
+   * Build {@link ConfigProperties} from the {@link DeclarativeConfigProperties} provided by the
    * instrumentation configuration.
    *
-   * <p>
-   * If the provided {@code instrumentationConfig} is null, an empty {@link
+   * <p>If the provided {@code instrumentationConfig} is null, an empty {@link
    * DeclarativeConfigProperties} will be used.
    *
    * @param instrumentationConfig the instrumentation configuration to build from
