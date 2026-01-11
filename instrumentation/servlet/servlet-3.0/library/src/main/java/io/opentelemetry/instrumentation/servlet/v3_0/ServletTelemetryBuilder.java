@@ -48,6 +48,8 @@ public final class ServletTelemetryBuilder {
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
     Experimental.internalSetAddTraceIdRequestAttribute(
         (builder, value) -> builder.addTraceIdRequestAttribute = value);
+    Experimental.internalSetCapturedRequestParameters(
+        (builder, params) -> builder.servletBuilder.setCaptureRequestParameters(params));
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -114,11 +116,14 @@ public final class ServletTelemetryBuilder {
    * Configures the HTTP request parameters that will be captured as span attributes.
    *
    * @param captureRequestParameters A list of request parameter names.
+   * @deprecated Use {@link Experimental#setCapturedRequestParameters(ServletTelemetryBuilder,
+   *     Collection)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setCapturedRequestParameters(
       List<String> captureRequestParameters) {
-    servletBuilder.captureRequestParameters(captureRequestParameters);
+    servletBuilder.setCaptureRequestParameters(captureRequestParameters);
     return this;
   }
 

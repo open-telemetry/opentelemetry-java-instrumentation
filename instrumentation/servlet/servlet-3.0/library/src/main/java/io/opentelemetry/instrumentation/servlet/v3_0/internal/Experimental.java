@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v3_0.internal;
 
 import io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder;
+import java.util.Collection;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -25,6 +26,10 @@ public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
+
+  @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, Collection<String>>
+      setCapturedRequestParameters;
 
   public static void setEmitExperimentalTelemetry(
       ServletTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
@@ -47,6 +52,13 @@ public final class Experimental {
     }
   }
 
+  public static void setCapturedRequestParameters(
+      ServletTelemetryBuilder builder, Collection<String> capturedRequestParameters) {
+    if (setCapturedRequestParameters != null) {
+      setCapturedRequestParameters.accept(builder, capturedRequestParameters);
+    }
+  }
+
   public static void internalSetEmitExperimentalTelemetry(
       BiConsumer<ServletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
@@ -60,6 +72,11 @@ public final class Experimental {
   public static void internalSetCaptureEnduserId(
       BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId) {
     Experimental.setCaptureEnduserId = setCaptureEnduserId;
+  }
+
+  public static void internalSetCapturedRequestParameters(
+      BiConsumer<ServletTelemetryBuilder, Collection<String>> setCapturedRequestParameters) {
+    Experimental.setCapturedRequestParameters = setCapturedRequestParameters;
   }
 
   private Experimental() {}
