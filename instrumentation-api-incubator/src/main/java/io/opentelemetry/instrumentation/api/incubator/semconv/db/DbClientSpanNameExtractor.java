@@ -35,12 +35,16 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private DbClientSpanNameExtractor() {}
 
   protected String computeSpanName(
-      @Nullable String namespace, @Nullable String operationName, @Nullable String mainIdentifier) {
+      @Nullable String namespace,
+      @Nullable String operationName,
+      @Nullable String collectionName,
+      @Nullable String storedProcedureName) {
     if (operationName == null) {
       return namespace == null ? DEFAULT_SPAN_NAME : namespace;
     }
 
     StringBuilder spanName = new StringBuilder(operationName);
+    String mainIdentifier = collectionName != null ? collectionName : storedProcedureName;
     if (namespace != null || mainIdentifier != null) {
       spanName.append(' ');
     }
@@ -70,7 +74,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     public String extract(REQUEST request) {
       String namespace = getter.getDbNamespace(request);
       String operationName = getter.getDbOperationName(request);
-      return computeSpanName(namespace, operationName, null);
+      return computeSpanName(namespace, operationName, null, null);
     }
   }
 
@@ -89,12 +93,12 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
-        return computeSpanName(namespace, null, null);
+        return computeSpanName(namespace, null, null, null);
       }
 
       if (!SemconvStability.emitStableDatabaseSemconv()) {
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
-          return computeSpanName(namespace, null, null);
+          return computeSpanName(namespace, null, null, null);
         }
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
@@ -102,7 +106,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         return computeSpanName(
             namespace,
             sanitizedStatement.getOperationName(),
-            sanitizedStatement.getMainIdentifier());
+            sanitizedStatement.getCollectionName(),
+            sanitizedStatement.getStoredProcedureName());
       }
 
       if (rawQueryTexts.size() == 1) {
@@ -112,7 +117,11 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (isBatch(request)) {
           operationName = "BATCH " + operationName;
         }
-        return computeSpanName(namespace, operationName, sanitizedStatement.getMainIdentifier());
+        return computeSpanName(
+            namespace,
+            operationName,
+            sanitizedStatement.getCollectionName(),
+            sanitizedStatement.getStoredProcedureName());
       }
 
       MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
@@ -121,7 +130,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           multiQuery.getOperationName() != null
               ? "BATCH " + multiQuery.getOperationName()
               : "BATCH",
-          multiQuery.getMainIdentifier());
+          multiQuery.getCollectionName(),
+          multiQuery.getStoredProcedureName());
     }
 
     private boolean isBatch(REQUEST request) {

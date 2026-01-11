@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -356,7 +357,17 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"));
+            "INFORMATION_SCHEMA.SYSTEM_USERS"),
+        // stored procedure test
+        Arguments.of(
+            "h2",
+            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            null,
+            "CALL ABS(-3)",
+            "CALL ABS(?)",
+            "CALL " + dbNameLower + ".ABS",
+            "h2:mem:",
+            null));
   }
 
   @ParameterizedTest
@@ -379,6 +390,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -395,8 +407,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table))));
+                                equalTo(
+                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME,
+                                    isCallStatement && emitStableDatabaseSemconv()
+                                        ? "ABS"
+                                        : null))));
 
     if (table != null) {
       assertDurationMetric(
@@ -485,7 +503,17 @@ public abstract class AbstractJdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"));
+            "SYSIBM.SYSDUMMY1"),
+        // stored procedure test
+        Arguments.of(
+            "h2",
+            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            null,
+            "CALL ABS(-3)",
+            "CALL ABS(?)",
+            "CALL " + dbNameLower + ".ABS",
+            "h2:mem:",
+            null));
   }
 
   @ParameterizedTest
@@ -515,6 +543,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -531,8 +560,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table))));
+                                equalTo(
+                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME,
+                                    isCallStatement && emitStableDatabaseSemconv()
+                                        ? "ABS"
+                                        : null))));
   }
 
   @ParameterizedTest
@@ -555,6 +590,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -571,8 +607,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table))));
+                                equalTo(
+                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME,
+                                    isCallStatement && emitStableDatabaseSemconv()
+                                        ? "ABS"
+                                        : null))));
   }
 
   @ParameterizedTest
@@ -595,6 +637,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -611,8 +654,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table))));
+                                equalTo(
+                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME,
+                                    isCallStatement && emitStableDatabaseSemconv()
+                                        ? "ABS"
+                                        : null))));
   }
 
   static Stream<Arguments> statementUpdateStream() throws SQLException {
