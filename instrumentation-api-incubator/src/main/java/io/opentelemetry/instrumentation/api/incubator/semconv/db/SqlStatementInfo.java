@@ -12,16 +12,43 @@ import javax.annotation.Nullable;
 public abstract class SqlStatementInfo {
 
   public static SqlStatementInfo create(
-      @Nullable String fullStatement, @Nullable String operation, @Nullable String identifier) {
-    return new AutoValue_SqlStatementInfo(fullStatement, operation, identifier);
+      @Nullable String queryText, @Nullable String operationName, @Nullable String target) {
+    return new AutoValue_SqlStatementInfo(queryText, operationName, target);
   }
 
   @Nullable
-  public abstract String getFullStatement();
+  public abstract String getQueryText();
+
+  /**
+   * @deprecated Use {@link #getQueryText()} instead.
+   */
+  @Deprecated
+  @Nullable
+  public String getFullStatement() {
+    return getQueryText();
+  }
 
   @Nullable
-  public abstract String getOperation();
+  public abstract String getOperationName();
+
+  /**
+   * @deprecated Use {@link #getOperationName()} instead.
+   */
+  @Deprecated
+  @Nullable
+  public String getOperation() {
+    return getOperationName();
+  }
 
   @Nullable
-  public abstract String getMainIdentifier();
+  public abstract String getTarget();
+
+  /**
+   * @deprecated Use {@link #getTarget()} instead.
+   */
+  @Deprecated
+  @Nullable
+  public String getMainIdentifier() {
+    return getTarget();
+  }
 }

@@ -12,44 +12,62 @@ import javax.annotation.Nullable;
 
 class MultiQuery {
 
-  @Nullable private final String mainIdentifier;
-  @Nullable private final String operation;
+  @Nullable private final String target;
+  @Nullable private final String operationName;
   private final Set<String> statements;
 
   private MultiQuery(
-      @Nullable String mainIdentifier, @Nullable String operation, Set<String> statements) {
-    this.mainIdentifier = mainIdentifier;
-    this.operation = operation;
+      @Nullable String target, @Nullable String operationName, Set<String> statements) {
+    this.target = target;
+    this.operationName = operationName;
     this.statements = statements;
   }
 
   static MultiQuery analyze(
       Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
-    UniqueValue uniqueMainIdentifier = new UniqueValue();
-    UniqueValue uniqueOperation = new UniqueValue();
+    UniqueValue uniqueTarget = new UniqueValue();
+    UniqueValue uniqueOperationName = new UniqueValue();
     Set<String> uniqueStatements = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
       SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
-      String mainIdentifier = sanitizedStatement.getMainIdentifier();
-      uniqueMainIdentifier.set(mainIdentifier);
-      String operation = sanitizedStatement.getOperation();
-      uniqueOperation.set(operation);
+      String target = sanitizedStatement.getTarget();
+      uniqueTarget.set(target);
+      String operationName = sanitizedStatement.getOperationName();
+      uniqueOperationName.set(operationName);
       uniqueStatements.add(
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+          statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
     }
 
     return new MultiQuery(
-        uniqueMainIdentifier.getValue(), uniqueOperation.getValue(), uniqueStatements);
+        uniqueTarget.getValue(), uniqueOperationName.getValue(), uniqueStatements);
   }
 
+  @Nullable
+  public String getTarget() {
+    return target;
+  }
+
+  /**
+   * @deprecated Use {@link #getTarget()} instead.
+   */
+  @Deprecated
   @Nullable
   public String getMainIdentifier() {
-    return mainIdentifier;
+    return getTarget();
   }
 
   @Nullable
+  public String getOperationName() {
+    return operationName;
+  }
+
+  /**
+   * @deprecated Use {@link #getOperationName()} instead.
+   */
+  @Deprecated
+  @Nullable
   public String getOperation() {
-    return operation;
+    return getOperationName();
   }
 
   public Set<String> getStatements() {

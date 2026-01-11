@@ -29,10 +29,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
-   * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
+   * @see SqlStatementInfo#getOperationName() used to extract {@code <db.operation.name>}.
    * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
-   * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
-   *     procedure name.
+   * @see SqlStatementInfo#getTarget() used to extract {@code <db.table>} or stored procedure name.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST, ?> getter) {
@@ -108,24 +107,26 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
         return computeSpanName(
-            namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
+            namespace, sanitizedStatement.getOperationName(), sanitizedStatement.getTarget());
       }
 
       if (rawQueryTexts.size() == 1) {
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
-        String operation = sanitizedStatement.getOperation();
+        String operation = sanitizedStatement.getOperationName();
         if (isBatch(request)) {
           operation = "BATCH " + operation;
         }
-        return computeSpanName(namespace, operation, sanitizedStatement.getMainIdentifier());
+        return computeSpanName(namespace, operation, sanitizedStatement.getTarget());
       }
 
       MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
       return computeSpanName(
           namespace,
-          multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",
-          multiQuery.getMainIdentifier());
+          multiQuery.getOperationName() != null
+              ? "BATCH " + multiQuery.getOperationName()
+              : "BATCH",
+          multiQuery.getTarget());
     }
 
     private boolean isBatch(REQUEST request) {
