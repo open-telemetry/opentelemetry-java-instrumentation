@@ -13,33 +13,33 @@ import javax.annotation.Nullable;
 class MultiQuery {
 
   @Nullable private final String mainIdentifier;
-  @Nullable private final String operation;
-  private final Set<String> statements;
+  @Nullable private final String operationName;
+  private final Set<String> queryTexts;
 
   private MultiQuery(
-      @Nullable String mainIdentifier, @Nullable String operation, Set<String> statements) {
+      @Nullable String mainIdentifier, @Nullable String operationName, Set<String> queryTexts) {
     this.mainIdentifier = mainIdentifier;
-    this.operation = operation;
-    this.statements = statements;
+    this.operationName = operationName;
+    this.queryTexts = queryTexts;
   }
 
   static MultiQuery analyze(
       Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
     UniqueValue uniqueMainIdentifier = new UniqueValue();
-    UniqueValue uniqueOperation = new UniqueValue();
-    Set<String> uniqueStatements = new LinkedHashSet<>();
+    UniqueValue uniqueOperationName = new UniqueValue();
+    Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
       SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
       String mainIdentifier = sanitizedStatement.getMainIdentifier();
       uniqueMainIdentifier.set(mainIdentifier);
-      String operation = sanitizedStatement.getOperation();
-      uniqueOperation.set(operation);
-      uniqueStatements.add(
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+      String operationName = sanitizedStatement.getOperationName();
+      uniqueOperationName.set(operationName);
+      uniqueQueryTexts.add(
+          statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
     }
 
     return new MultiQuery(
-        uniqueMainIdentifier.getValue(), uniqueOperation.getValue(), uniqueStatements);
+        uniqueMainIdentifier.getValue(), uniqueOperationName.getValue(), uniqueQueryTexts);
   }
 
   @Nullable
@@ -48,12 +48,29 @@ class MultiQuery {
   }
 
   @Nullable
-  public String getOperation() {
-    return operation;
+  public String getOperationName() {
+    return operationName;
   }
 
+  /**
+   * @deprecated Use {@link #getOperationName()} instead.
+   */
+  @Deprecated
+  @Nullable
+  public String getOperation() {
+    return getOperationName();
+  }
+
+  public Set<String> getQueryTexts() {
+    return queryTexts;
+  }
+
+  /**
+   * @deprecated Use {@link #getQueryTexts()} instead.
+   */
+  @Deprecated
   public Set<String> getStatements() {
-    return statements;
+    return getQueryTexts();
   }
 
   private static class UniqueValue {
