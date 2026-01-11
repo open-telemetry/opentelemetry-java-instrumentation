@@ -20,9 +20,12 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of {@link DeclarativeConfigProperties} backed by {@link ConfigProperties}.
+ * Implementation of {@link DeclarativeConfigProperties} backed by
+ * {@link ConfigProperties}.
  *
- * <p>It tracks the navigation path and only resolves to system properties at the leaf node when a
+ * <p>
+ * It tracks the navigation path and only resolves to system properties at the
+ * leaf node when a
  * value is actually requested.
  */
 public final class ConfigPropertiesBackedDeclarativeConfigProperties
@@ -31,10 +34,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   private static final String GENERAL_PEER_SERVICE_MAPPING = "general.peer.service_mapping";
 
   private static final String AGENT_INSTRUMENTATION_MODE = "java.agent.instrumentation_mode";
-  private static final String SPRING_STARTER_INSTRUMENTATION_MODE =
-      "java.spring_starter.instrumentation_mode";
-  private static final String COMMON_DEFAULT_ENABLED =
-      "otel.instrumentation.common.default-enabled";
+  private static final String SPRING_STARTER_INSTRUMENTATION_MODE = "java.spring_starter.instrumentation_mode";
+  private static final String COMMON_DEFAULT_ENABLED = "otel.instrumentation.common.default-enabled";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -99,17 +100,24 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private final ConfigProperties configProperties;
   private final List<String> path;
+  private final Map<String, String> mappings;
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
+    return createInstrumentationConfig(configProperties, SPECIAL_MAPPINGS);
+  }
+
+  public static DeclarativeConfigProperties createInstrumentationConfig(
+      ConfigProperties configProperties, Map<String, String> mappings) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, Collections.emptyList());
+        configProperties, Collections.emptyList(), mappings);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path) {
+      ConfigProperties configProperties, List<String> path, Map<String, String> mappings) {
     this.configProperties = configProperties;
     this.path = path;
+    this.mappings = mappings;
   }
 
   @Nullable
@@ -151,7 +159,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       if (duration != null) {
         return duration.toMillis();
       }
-      // If discovery delay has not been configured, have a peek at the metric export interval.
+      // If discovery delay has not been configured, have a peek at the metric export
+      // interval.
       // It makes sense for both of these values to be similar.
       Duration fallback = configProperties.getDuration("otel.metric.export.interval");
       if (fallback != null) {
@@ -170,16 +179,18 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   /**
-   * Important: this method should return null if there is no structured child with the given name,
+   * Important: this method should return null if there is no structured child
+   * with the given name,
    * but unfortunately that is not implementable on top of ConfigProperties.
    *
-   * <p>This will be misleading if anyone is comparing the return value to null.
+   * <p>
+   * This will be misleading if anyone is comparing the return value to null.
    */
   @Override
   public DeclarativeConfigProperties getStructured(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, newPath);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, newPath, mappings);
   }
 
   @Nullable
@@ -221,7 +232,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     String fullPath = pathWithName(name);
 
     // Check explicit property mappings first
-    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
+    String mappedKey = mappings.get(fullPath);
     if (mappedKey != null) {
       return mappedKey;
     }

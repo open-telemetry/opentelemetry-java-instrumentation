@@ -23,23 +23,31 @@ import javax.annotation.Nullable;
  * A {@link ConfigProperties} which resolves properties based on {@link
  * DeclarativeConfigProperties}.
  *
- * <p>Only properties starting with "otel.instrumentation." are resolved. Others return null (or
+ * <p>
+ * Only properties starting with "otel.instrumentation." are resolved. Others
+ * return null (or
  * default value if provided).
  *
- * <p>To resolve:
+ * <p>
+ * To resolve:
  *
  * <ul>
- *   <li>"otel.instrumentation" refers to the ".instrumentation.java" node
- *   <li>The portion of the property after "otel.instrumentation." is split into segments based on
- *       ".".
- *   <li>For each N-1 segment, we walk down the tree to find the relevant leaf {@link
- *       DeclarativeConfigProperties}.
- *   <li>We extract the property from the resolved {@link DeclarativeConfigProperties} using the
- *       last segment as the property key.
+ * <li>"otel.instrumentation" refers to the ".instrumentation.java" node
+ * <li>The portion of the property after "otel.instrumentation." is split into
+ * segments based on
+ * ".".
+ * <li>For each N-1 segment, we walk down the tree to find the relevant leaf
+ * {@link
+ * DeclarativeConfigProperties}.
+ * <li>We extract the property from the resolved
+ * {@link DeclarativeConfigProperties} using the
+ * last segment as the property key.
  * </ul>
  *
- * <p>For example, given the following YAML, asking for {@code
- * ConfigProperties#getString("otel.instrumentation.common.string_key")} yields "value":
+ * <p>
+ * For example, given the following YAML, asking for {@code
+ * ConfigProperties#getString("otel.instrumentation.common.string_key")} yields
+ * "value":
  *
  * <pre>
  *   instrumentation:
@@ -48,6 +56,7 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
+@Deprecated
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
@@ -110,21 +119,19 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @SuppressWarnings("unchecked") // we expect to have only lists of strings in override values
   @Override
   public List<String> getList(String propertyName) {
-    List<String> propertyValue =
-        getPropertyValue(
-            propertyName,
-            o -> (List<String>) o,
-            (properties, lastPart) -> properties.getScalarList(lastPart, String.class));
+    List<String> propertyValue = getPropertyValue(
+        propertyName,
+        o -> (List<String>) o,
+        (properties, lastPart) -> properties.getScalarList(lastPart, String.class));
     return propertyValue == null ? Collections.emptyList() : propertyValue;
   }
 
   @Override
   public Map<String, String> getMap(String propertyName) {
-    DeclarativeConfigProperties propertyValue =
-        getPropertyValue(
-            propertyName,
-            DeclarativeConfigProperties.class,
-            DeclarativeConfigProperties::getStructured);
+    DeclarativeConfigProperties propertyValue = getPropertyValue(
+        propertyName,
+        DeclarativeConfigProperties.class,
+        DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
       return Collections.emptyMap();
     }
