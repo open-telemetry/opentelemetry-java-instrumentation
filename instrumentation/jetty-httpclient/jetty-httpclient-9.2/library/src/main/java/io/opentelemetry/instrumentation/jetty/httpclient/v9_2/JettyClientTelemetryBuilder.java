@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.Experimental;
@@ -36,6 +37,11 @@ public final class JettyClientTelemetryBuilder {
     builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
+  /**
+   * @deprecated Use {@link JettyClientTelemetry#newHttpClient(HttpClientTransport,
+   *     SslContextFactory)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setHttpClientTransport(
       HttpClientTransport httpClientTransport) {
@@ -43,6 +49,10 @@ public final class JettyClientTelemetryBuilder {
     return this;
   }
 
+  /**
+   * @deprecated Use {@link JettyClientTelemetry#newHttpClient(SslContextFactory)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setSslContextFactory(SslContextFactory sslContextFactory) {
     this.sslContextFactory = sslContextFactory;
@@ -118,9 +128,10 @@ public final class JettyClientTelemetryBuilder {
    * JettyClientTelemetryBuilder}.
    */
   public JettyClientTelemetry build() {
+    Instrumenter<Request, Response> instrumenter = builder.build();
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(builder.build(), sslContextFactory, httpClientTransport);
+        TracingHttpClient.buildNew(instrumenter, sslContextFactory, httpClientTransport);
 
-    return new JettyClientTelemetry(tracingHttpClient);
+    return new JettyClientTelemetry(tracingHttpClient, instrumenter);
   }
 }
