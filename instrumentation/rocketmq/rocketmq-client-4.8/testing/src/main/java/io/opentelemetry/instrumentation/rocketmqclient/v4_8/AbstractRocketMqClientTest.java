@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -17,7 +20,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
@@ -40,6 +43,8 @@ import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -53,6 +58,26 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractRocketMqClientTest {
+
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
+
+  @Nullable
+  static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+  }
+
+  private static void experimentalString(AbstractStringAssert<?> val) {
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      val.isInstanceOf(String.class);
+    }
+  }
+
+  private static void experimentalLong(AbstractLongAssert<?> val) {
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      val.isInstanceOf(Long.class);
+    }
+  }
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
 
@@ -150,13 +175,13 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isInstanceOf(String.class)),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
                                 equalTo(
-                                    AttributeKey.stringKey("messaging.rocketmq.send_result"),
-                                    "SEND_OK")),
+                                    stringKey("messaging.rocketmq.send_result"),
+                                    experimental("SEND_OK"))),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -170,16 +195,16 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isInstanceOf(String.class)),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
-                                    val -> val.isInstanceOf(Long.class)),
+                                    longKey("messaging.rocketmq.queue_id"),
+                                    val -> experimentalLong(val)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
-                                    val -> val.isInstanceOf(Long.class))),
+                                    longKey("messaging.rocketmq.queue_offset"),
+                                    val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")
                             .hasKind(SpanKind.INTERNAL)
@@ -214,13 +239,13 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isInstanceOf(String.class)),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
                                 equalTo(
-                                    AttributeKey.stringKey("messaging.rocketmq.send_result"),
-                                    "SEND_OK")),
+                                    stringKey("messaging.rocketmq.send_result"),
+                                    experimental("SEND_OK"))),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -234,16 +259,16 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isInstanceOf(String.class)),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
-                                    val -> val.isInstanceOf(Long.class)),
+                                    longKey("messaging.rocketmq.queue_id"),
+                                    val -> experimentalLong(val)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
-                                    val -> val.isInstanceOf(Long.class))),
+                                    longKey("messaging.rocketmq.queue_offset"),
+                                    val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")
                             .hasKind(SpanKind.INTERNAL)
@@ -295,11 +320,11 @@ abstract class AbstractRocketMqClientTest {
                               satisfies(
                                   MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                               satisfies(
-                                  AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                  val -> val.isInstanceOf(String.class)),
+                                  stringKey("messaging.rocketmq.broker_address"),
+                                  val -> experimentalString(val)),
                               equalTo(
-                                  AttributeKey.stringKey("messaging.rocketmq.send_result"),
-                                  "SEND_OK")));
+                                  stringKey("messaging.rocketmq.send_result"),
+                                  experimental("SEND_OK"))));
 
               SpanContext spanContext = trace.getSpan(1).getSpanContext();
               producerSpanContext.set(
@@ -331,16 +356,28 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isNotEmpty()),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> {
+                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                        val.isNotEmpty();
+                                      }
+                                    }),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
-                                    val -> val.isNotNull()),
+                                    longKey("messaging.rocketmq.queue_id"),
+                                    val -> {
+                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                        val.isNotNull();
+                                      }
+                                    }),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
-                                    val -> val.isNotNull())),
+                                    longKey("messaging.rocketmq.queue_offset"),
+                                    val -> {
+                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                        val.isNotNull();
+                                      }
+                                    })),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -355,16 +392,28 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagB"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagB")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isNotEmpty()),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> {
+                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                        val.isNotEmpty();
+                                      }
+                                    }),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
-                                    val -> val.isNotNull()),
+                                    longKey("messaging.rocketmq.queue_id"),
+                                    val -> {
+                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                        val.isNotNull();
+                                      }
+                                    }),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
-                                    val -> val.isNotNull())),
+                                    longKey("messaging.rocketmq.queue_offset"),
+                                    val -> {
+                                      if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                        val.isNotNull();
+                                      }
+                                    })),
                     span ->
                         span.hasName("messageListener")
                             .hasParent(trace.getSpan(0))
@@ -404,16 +453,15 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isInstanceOf(String.class)),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
                                 equalTo(
-                                    AttributeKey.stringKey("messaging.rocketmq.send_result"),
-                                    "SEND_OK"),
+                                    stringKey("messaging.rocketmq.send_result"),
+                                    experimental("SEND_OK")),
                                 equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                    stringArrayKey("messaging.header.Test_Message_Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -428,19 +476,18 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
-                                    AttributeKey.stringKey("messaging.rocketmq.broker_address"),
-                                    val -> val.isInstanceOf(String.class)),
+                                    stringKey("messaging.rocketmq.broker_address"),
+                                    val -> experimentalString(val)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_id"),
-                                    val -> val.isInstanceOf(Long.class)),
+                                    longKey("messaging.rocketmq.queue_id"),
+                                    val -> experimentalLong(val)),
                                 satisfies(
-                                    AttributeKey.longKey("messaging.rocketmq.queue_offset"),
-                                    val -> val.isInstanceOf(Long.class)),
+                                    longKey("messaging.rocketmq.queue_offset"),
+                                    val -> experimentalLong(val)),
                                 equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                    stringArrayKey("messaging.header.Test_Message_Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
