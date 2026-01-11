@@ -90,7 +90,7 @@ public final class CouchbaseQuerySanitizer {
     String queryClassName = query.getClass().getName();
     if (queryClassName.equals("com.couchbase.client.java.view.ViewQuery")
         || queryClassName.equals("com.couchbase.client.java.view.SpatialViewQuery")) {
-      return SqlStatementInfo.create(query.toString(), null, null);
+      return SqlStatementInfo.create(query.toString(), null, null, null);
     }
     // N1qlQuery is present starting from Couchbase 2.2.0
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
@@ -106,7 +106,7 @@ public final class CouchbaseQuerySanitizer {
         return sanitizeString(statement);
       }
     }
-    return SqlStatementInfo.create(query.getClass().getSimpleName(), null, null);
+    return SqlStatementInfo.create(query.getClass().getSimpleName(), null, null, null);
   }
 
   private static String getStatementString(MethodHandle handle, Object query) {

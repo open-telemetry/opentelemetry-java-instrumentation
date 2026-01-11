@@ -60,7 +60,8 @@ public class ProcedureCallInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
-          new HibernateOperation("ProcedureCall." + name, call.getProcedureName(), sessionInfo);
+          HibernateOperation.fromOperationName(
+              "ProcedureCall." + name, call.getProcedureName(), sessionInfo);
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }

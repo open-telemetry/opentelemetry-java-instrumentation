@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -187,6 +188,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.spanName : null),
                                 equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
@@ -208,7 +212,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT 3",
                                 "SELECT ?",
-                                "SELECT " + DB,
+                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB,
                                 null,
                                 "SELECT"))),
                     Arguments.of(
@@ -218,7 +222,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                "CREATE TABLE " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "CREATE TABLE person"
+                                    : "CREATE TABLE " + DB + ".person",
                                 "person",
                                 "CREATE TABLE"))),
                     Arguments.of(
@@ -228,7 +234,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                "INSERT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT person"
+                                    : "INSERT " + DB + ".person",
                                 "person",
                                 "INSERT"))),
                     Arguments.of(
@@ -238,7 +246,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
-                                "SELECT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT person"
+                                    : "SELECT " + DB + ".person",
                                 "person",
                                 "SELECT")))));
   }

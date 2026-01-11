@@ -32,7 +32,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Nullable
   public String getDbQueryText(GeodeRequest request) {
     // sanitized statement is cached
-    return sanitizer.sanitize(request.getQuery()).getFullStatement();
+    return sanitizer.sanitize(request.getQuery()).getQueryText();
   }
 
   @Override

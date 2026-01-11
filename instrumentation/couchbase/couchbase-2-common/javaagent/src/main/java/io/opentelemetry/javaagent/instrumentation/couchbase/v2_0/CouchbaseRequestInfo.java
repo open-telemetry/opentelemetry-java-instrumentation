@@ -47,7 +47,7 @@ public abstract class CouchbaseRequestInfo {
     SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
 
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getFullStatement(), statement.getOperation(), false);
+        bucket, statement.getQueryText(), statement.getOperationName(), false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {

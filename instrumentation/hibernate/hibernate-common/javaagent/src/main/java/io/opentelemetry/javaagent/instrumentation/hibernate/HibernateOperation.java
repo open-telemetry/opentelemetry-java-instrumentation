@@ -9,16 +9,21 @@ public class HibernateOperation {
   private final String spanName;
   private final String sessionId;
 
-  public HibernateOperation(String operation, String entityName, SessionInfo sessionInfo) {
-    this(spanNameForOperation(operation, entityName), sessionInfo);
+  public static HibernateOperation fromOperationName(
+      String operationName, String entityName, SessionInfo sessionInfo) {
+    return fromSpanName(spanNameForOperation(operationName, entityName), sessionInfo);
   }
 
-  public HibernateOperation(String operation, SessionInfo sessionInfo) {
-    this.spanName = operation;
+  public static HibernateOperation fromSpanName(String spanName, SessionInfo sessionInfo) {
+    return new HibernateOperation(spanName, sessionInfo);
+  }
+
+  private HibernateOperation(String spanName, SessionInfo sessionInfo) {
+    this.spanName = spanName;
     this.sessionId = sessionInfo != null ? sessionInfo.getSessionId() : null;
   }
 
-  public String getName() {
+  public String getSpanName() {
     return spanName;
   }
 

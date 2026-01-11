@@ -67,7 +67,7 @@ public class CriteriaInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
-          new HibernateOperation("Criteria." + name, entityName, sessionInfo);
+          HibernateOperation.fromOperationName("Criteria." + name, entityName, sessionInfo);
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
