@@ -10,7 +10,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,8 +44,7 @@ public final class MethodsConfigurationParser {
    *     methods: [someMethod]
    * }</pre>
    */
-  public static Map<String, Set<String>> parseExcludeMethods(
-      ExtendedDeclarativeConfigProperties config) {
+  public static Map<String, Set<String>> parseExcludeMethods(DeclarativeConfigProperties config) {
     // First try structured declarative config (YAML format)
     List<DeclarativeConfigProperties> excludeList = config.getStructuredList("exclude_methods");
     if (excludeList != null) {
