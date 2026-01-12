@@ -39,10 +39,25 @@ public final class SpringWebTelemetry {
    * RestTemplate#getInterceptors()}. For example:
    *
    * <pre>{@code
-   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).newInterceptor());
+   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).createInterceptor());
    * }</pre>
    */
-  public ClientHttpRequestInterceptor newInterceptor() {
+  public ClientHttpRequestInterceptor createInterceptor() {
     return new RestTemplateInterceptor(instrumenter);
+  }
+
+  /**
+   * Returns a new {@link ClientHttpRequestInterceptor} that can be used with {@link
+   * RestTemplate#getInterceptors()}. For example:
+   *
+   * <pre>{@code
+   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).createInterceptor());
+   * }</pre>
+   *
+   * @deprecated Use {@link #createInterceptor()} instead.
+   */
+  @Deprecated
+  public ClientHttpRequestInterceptor newInterceptor() {
+    return createInterceptor();
   }
 }

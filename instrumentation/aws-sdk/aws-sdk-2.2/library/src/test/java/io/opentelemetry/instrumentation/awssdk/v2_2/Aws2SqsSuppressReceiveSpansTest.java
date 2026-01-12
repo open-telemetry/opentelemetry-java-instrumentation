@@ -38,7 +38,7 @@ public abstract class Aws2SqsSuppressReceiveSpansTest
   @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
-        .addExecutionInterceptor(telemetry.newExecutionInterceptor());
+        .addExecutionInterceptor(telemetry.createExecutionInterceptor());
   }
 
   protected abstract void configure(AwsSdkTelemetryBuilder telemetryBuilder);

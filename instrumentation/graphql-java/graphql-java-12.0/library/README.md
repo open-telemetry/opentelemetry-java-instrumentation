@@ -35,6 +35,6 @@ added to an instance of the `GraphQL` to provide OpenTelemetry-based spans.
 ```java
 void configure(OpenTelemetry openTelemetry, GraphQL.Builder builder) {
   GraphQLTelemetry telemetry = GraphQLTelemetry.builder(openTelemetry).build();
-  builder.instrumentation(telemetry.newInstrumentation());
+  builder.instrumentation(telemetry.createInstrumentation());
 }
 ```

@@ -19,7 +19,9 @@ class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
   protected ClientOverrideConfiguration.Builder createClientOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
-            AwsSdkTelemetry.builder(testing.getOpenTelemetry()).build().newExecutionInterceptor());
+            AwsSdkTelemetry.builder(testing.getOpenTelemetry())
+                .build()
+                .createExecutionInterceptor());
   }
 
   @Override

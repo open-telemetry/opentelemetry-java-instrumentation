@@ -29,7 +29,7 @@ public final class JavaHttpServerSingletons {
         .configure(config);
     JavaHttpServerTelemetry serverTelemetry = serverBuilder.build();
 
-    FILTERS = Arrays.asList(serverTelemetry.newFilter(), new ResponseCustomizingFilter());
+    FILTERS = Arrays.asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
   }
 
   private JavaHttpServerSingletons() {}

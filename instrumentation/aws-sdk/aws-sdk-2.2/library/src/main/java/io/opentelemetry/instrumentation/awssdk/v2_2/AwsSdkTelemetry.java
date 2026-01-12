@@ -42,7 +42,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
  * <pre>{@code
  * DynamoDbClient dynamoDb = DynamoDbClient.builder()
  *     .overrideConfiguration(ClientOverrideConfiguration.builder()
- *         .addExecutionInterceptor(AwsSdkTelemetry.create(openTelemetry).newExecutionInterceptor())
+ *         .addExecutionInterceptor(AwsSdkTelemetry.create(openTelemetry).createExecutionInterceptor())
  *         .build())
  *     .build();
  * }</pre>
@@ -112,7 +112,7 @@ public class AwsSdkTelemetry {
    * Returns a new {@link ExecutionInterceptor} that can be used with methods like {@link
    * ClientOverrideConfiguration.Builder#addExecutionInterceptor(ExecutionInterceptor)}.
    */
-  public ExecutionInterceptor newExecutionInterceptor() {
+  public ExecutionInterceptor createExecutionInterceptor() {
     return new TracingExecutionInterceptor(
         requestInstrumenter,
         consumerReceiveInstrumenter,
@@ -126,6 +126,17 @@ public class AwsSdkTelemetry {
         useXrayPropagator,
         recordIndividualHttpError,
         genAiCaptureMessageContent);
+  }
+
+  /**
+   * Returns a new {@link ExecutionInterceptor} that can be used with methods like {@link
+   * ClientOverrideConfiguration.Builder#addExecutionInterceptor(ExecutionInterceptor)}.
+   *
+   * @deprecated Use {@link #createExecutionInterceptor()} instead.
+   */
+  @Deprecated
+  public ExecutionInterceptor newExecutionInterceptor() {
+    return createExecutionInterceptor();
   }
 
   /**
