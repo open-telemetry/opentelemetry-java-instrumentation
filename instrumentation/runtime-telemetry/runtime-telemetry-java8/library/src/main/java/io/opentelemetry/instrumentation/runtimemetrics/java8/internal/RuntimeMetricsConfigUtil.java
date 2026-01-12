@@ -26,7 +26,7 @@ public final class RuntimeMetricsConfigUtil {
       OpenTelemetry openTelemetry,
       EnabledInstrumentations enabledInstrumentations) {
 
-    if (!enabledInstrumentations.isEnabled("runtime_telemetry")) {
+    if (!enabledInstrumentations.isEnabled("runtime-telemetry")) {
       // nothing is enabled
       return null;
     }

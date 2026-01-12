@@ -31,10 +31,10 @@ public final class RuntimeMetricsConfigUtil {
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17")
         .getBoolean("enable_all", false)) {
       builder.enableAllFeatures();
-    } else if (enabledInstrumentations.isEnabledExplicitly("runtime_telemetry_java17")) {
+    } else if (enabledInstrumentations.isEnabledExplicitly("runtime-telemetry-java17")) {
       // default configuration
     } else {
-      if (enabledInstrumentations.isEnabled("runtime_telemetry")) {
+      if (enabledInstrumentations.isEnabled("runtime-telemetry")) {
         // This only uses metrics gathered by JMX
         builder.disableAllFeatures();
       } else {
