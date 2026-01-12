@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.tooling.ignore;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
 import java.util.List;
 
 @AutoService(IgnoredTypesConfigurer.class)

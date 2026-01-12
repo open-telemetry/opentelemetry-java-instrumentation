@@ -15,7 +15,8 @@ import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentat
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
+import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -66,7 +67,7 @@ public final class OpenTelemetryInstaller {
               Objects.requireNonNull(AgentDistributionConfig.get()));
     }
 
-    AgentDistributionConfig.setEnabledInstrumentations(enabledInstrumentations);
+    AgentEnabledInstrumentations.set(enabledInstrumentations);
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
