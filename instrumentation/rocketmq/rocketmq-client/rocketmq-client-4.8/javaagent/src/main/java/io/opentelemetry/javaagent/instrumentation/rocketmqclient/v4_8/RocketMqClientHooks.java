@@ -25,9 +25,9 @@ public final class RocketMqClientHooks {
           .build();
 
   public static final ConsumeMessageHook CONSUME_MESSAGE_HOOK =
-      TELEMETRY.newTracingConsumeMessageHook();
+      TELEMETRY.createConsumeMessageHook();
 
-  public static final SendMessageHook SEND_MESSAGE_HOOK = TELEMETRY.newTracingSendMessageHook();
+  public static final SendMessageHook SEND_MESSAGE_HOOK = TELEMETRY.createSendMessageHook();
 
   private RocketMqClientHooks() {}
 }

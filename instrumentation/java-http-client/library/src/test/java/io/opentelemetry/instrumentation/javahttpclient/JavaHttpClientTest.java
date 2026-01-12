@@ -28,7 +28,7 @@ class JavaHttpClientTest {
           .setCapturedResponseHeaders(
               Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
           .build()
-          .newHttpClient(httpClient);
+          .createHttpClient(httpClient);
     }
   }
 

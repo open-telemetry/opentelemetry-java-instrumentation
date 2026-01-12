@@ -45,7 +45,17 @@ public final class ServletTelemetry {
   }
 
   /** Returns a new {@link Filter} for producing telemetry. */
-  public Filter newFilter() {
+  public Filter createFilter() {
     return new Servlet3TelemetryFilter(instrumenter, addTraceIdRequestAttribute);
+  }
+
+  /**
+   * Returns a new {@link Filter} for producing telemetry.
+   *
+   * @deprecated Use {@link #createFilter()} instead.
+   */
+  @Deprecated
+  public Filter newFilter() {
+    return createFilter();
   }
 }

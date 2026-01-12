@@ -27,7 +27,7 @@ class RestTemplateInstrumentation {
                 SpringWebTelemetry.builder(openTelemetry),
                 WebTelemetryUtil.getBuilderExtractor())
             .build()
-            .newInterceptor();
+            .createInterceptor();
 
     List<ClientHttpRequestInterceptor> restTemplateInterceptors = restTemplate.getInterceptors();
     if (restTemplateInterceptors.stream()
