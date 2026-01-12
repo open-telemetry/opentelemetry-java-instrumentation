@@ -20,10 +20,10 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
     super(
-        "kafka-clients-metrics",
-        "kafka-clients",
-        "kafka-clients-metrics-0.11",
-        "kafka-clients-0.11",
+        "kafka_clients_metrics",
+        "kafka_clients",
+        "kafka_clients_metrics-0.11",
+        "kafka_clients-0.11",
         "kafka");
   }
 
