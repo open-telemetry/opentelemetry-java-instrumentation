@@ -17,10 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -113,8 +113,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   }
 
   // visible for testing
-  static Set<String> configureAdditionalTraceAnnotations(
-      ExtendedDeclarativeConfigProperties config) {
+  static Set<String> configureAdditionalTraceAnnotations(DeclarativeConfigProperties config) {
     // First try structured declarative config (YAML list format)
     List<String> list = config.getScalarList("include", String.class);
     if (list != null) {
