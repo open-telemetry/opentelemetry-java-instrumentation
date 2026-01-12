@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AzureSdkInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AzureSdkInstrumentationModule() {
-    super("azure-core", "azure-core-1.53");
+    super("azure_core", "azure_core_1.53");
   }
 
   @Override

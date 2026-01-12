@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AwsLambdaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AwsLambdaInstrumentationModule() {
-    super("aws-lambda-events", "aws-lambda-events-2.2", "aws-lambda");
+    super("aws_lambda_events", "aws_lambda_events_2.2", "aws_lambda");
   }
 
   @Override

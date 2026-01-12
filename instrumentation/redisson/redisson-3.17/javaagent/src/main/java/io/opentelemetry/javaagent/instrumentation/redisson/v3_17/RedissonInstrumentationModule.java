@@ -20,7 +20,7 @@ public class RedissonInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public RedissonInstrumentationModule() {
-    super("redisson", "redisson-3.17");
+    super("redisson", "redisson_3.17");
   }
 
   @Override

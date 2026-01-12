@@ -17,7 +17,7 @@ import java.util.List;
 public class TomcatJdbcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public TomcatJdbcInstrumentationModule() {
-    super("tomcat-jdbc");
+    super("tomcat_jdbc");
   }
 
   @Override

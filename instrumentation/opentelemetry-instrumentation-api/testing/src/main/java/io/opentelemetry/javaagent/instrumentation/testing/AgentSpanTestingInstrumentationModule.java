@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AgentSpanTestingInstrumentationModule extends InstrumentationModule {
   public AgentSpanTestingInstrumentationModule() {
-    super("agent-span-testing");
+    super("agent_span_testing");
   }
 
   @Override

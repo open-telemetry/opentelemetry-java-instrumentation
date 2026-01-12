@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
-    super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");
+    super("elasticsearch_api_client", "elasticsearch_api_client_7.16", "elasticsearch");
   }
 
   @Override

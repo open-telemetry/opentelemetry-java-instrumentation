@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JerseyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JerseyInstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "jersey", "jersey-2.0");
+    super("jaxrs", "jaxrs_2.0", "jersey", "jersey_2.0");
   }
 
   @Override

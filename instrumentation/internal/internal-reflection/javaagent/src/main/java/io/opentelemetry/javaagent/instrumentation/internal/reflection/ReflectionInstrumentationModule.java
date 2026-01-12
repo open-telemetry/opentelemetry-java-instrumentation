@@ -19,7 +19,7 @@ import java.util.List;
 public class ReflectionInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ReflectionInstrumentationModule() {
-    super("internal-reflection");
+    super("internal_reflection");
   }
 
   @Override

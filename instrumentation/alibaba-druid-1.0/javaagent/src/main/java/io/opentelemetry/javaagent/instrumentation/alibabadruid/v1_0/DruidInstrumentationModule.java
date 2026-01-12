@@ -18,7 +18,7 @@ public class DruidInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public DruidInstrumentationModule() {
-    super("alibaba-druid", "alibaba-druid-1.0");
+    super("alibaba_druid", "alibaba_druid_1.0");
   }
 
   @Override

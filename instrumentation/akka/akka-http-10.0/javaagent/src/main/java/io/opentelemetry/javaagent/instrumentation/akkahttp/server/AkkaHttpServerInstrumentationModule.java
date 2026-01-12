@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AkkaHttpServerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaHttpServerInstrumentationModule() {
-    super("akka-http", "akka-http-10.0", "akka-http-server");
+    super("akka_http", "akka_http_10.0", "akka_http_server");
   }
 
   @Override

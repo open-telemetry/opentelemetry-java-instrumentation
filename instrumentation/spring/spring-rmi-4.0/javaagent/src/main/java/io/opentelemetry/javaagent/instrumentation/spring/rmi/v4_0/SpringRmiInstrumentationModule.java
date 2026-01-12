@@ -20,7 +20,7 @@ public class SpringRmiInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringRmiInstrumentationModule() {
-    super("spring-rmi", "spring-rmi-4.0");
+    super("spring_rmi", "spring_rmi_4.0");
   }
 
   @Override

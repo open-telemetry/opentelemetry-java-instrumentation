@@ -17,7 +17,7 @@ import java.util.List;
 public class OpenSearchInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenSearchInstrumentationModule() {
-    super("opensearch-java", "opensearch-java-3.0", "opensearch");
+    super("opensearch_java", "opensearch_java_3.0", "opensearch");
   }
 
   @Override

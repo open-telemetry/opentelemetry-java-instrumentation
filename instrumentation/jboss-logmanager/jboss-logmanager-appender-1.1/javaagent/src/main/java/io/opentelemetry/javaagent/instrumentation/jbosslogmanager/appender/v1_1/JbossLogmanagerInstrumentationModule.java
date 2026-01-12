@@ -18,7 +18,7 @@ public class JbossLogmanagerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JbossLogmanagerInstrumentationModule() {
-    super("jboss-logmanager-appender", "jboss-logmanager-appender-1.1");
+    super("jboss_logmanager_appender", "jboss_logmanager_appender_1.1");
   }
 
   @Override

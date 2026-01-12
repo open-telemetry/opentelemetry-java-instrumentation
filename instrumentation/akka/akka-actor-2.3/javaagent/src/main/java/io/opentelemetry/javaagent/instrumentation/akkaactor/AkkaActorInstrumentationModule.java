@@ -17,7 +17,7 @@ import java.util.List;
 public class AkkaActorInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaActorInstrumentationModule() {
-    super("akka-actor", "akka-actor-2.3");
+    super("akka_actor", "akka_actor_2.3");
   }
 
   @Override

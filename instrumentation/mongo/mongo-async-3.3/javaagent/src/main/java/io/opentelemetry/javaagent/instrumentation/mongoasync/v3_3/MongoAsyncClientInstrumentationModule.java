@@ -20,7 +20,7 @@ public class MongoAsyncClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public MongoAsyncClientInstrumentationModule() {
-    super("mongo-async", "mongo-async-3.3", "mongo");
+    super("mongo_async", "mongo_async_3.3", "mongo");
   }
 
   @Override

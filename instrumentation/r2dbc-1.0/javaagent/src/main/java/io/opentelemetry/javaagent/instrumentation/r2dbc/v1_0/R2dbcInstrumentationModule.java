@@ -17,7 +17,7 @@ public class R2dbcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public R2dbcInstrumentationModule() {
-    super("r2dbc", "r2dbc-1.0");
+    super("r2dbc", "r2dbc_1.0");
   }
 
   @Override

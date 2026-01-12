@@ -17,7 +17,7 @@ public class JoddHttpInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JoddHttpInstrumentationModule() {
-    super("jodd-http", "jodd-http-4.2");
+    super("jodd_http", "jodd_http_4.2");
   }
 
   @Override

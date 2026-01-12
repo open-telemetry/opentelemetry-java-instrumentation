@@ -16,7 +16,7 @@ import java.util.List;
 public class PulsarInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PulsarInstrumentationModule() {
-    super("pulsar", "pulsar-2.8");
+    super("pulsar", "pulsar_2.8");
   }
 
   @Override

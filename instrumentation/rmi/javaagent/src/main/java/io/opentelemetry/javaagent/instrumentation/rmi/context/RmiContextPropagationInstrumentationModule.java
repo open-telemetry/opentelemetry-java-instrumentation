@@ -24,7 +24,7 @@ import net.bytebuddy.utility.JavaModule;
 public class RmiContextPropagationInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public RmiContextPropagationInstrumentationModule() {
-    super("rmi", "rmi-context-propagation");
+    super("rmi", "rmi_context_propagation");
   }
 
   @Override

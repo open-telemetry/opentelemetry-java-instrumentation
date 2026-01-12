@@ -17,7 +17,7 @@ import java.util.List;
 public class TestInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public TestInstrumentationModule() {
-    super("test-instrumentation");
+    super("test_instrumentation");
   }
 
   @Override

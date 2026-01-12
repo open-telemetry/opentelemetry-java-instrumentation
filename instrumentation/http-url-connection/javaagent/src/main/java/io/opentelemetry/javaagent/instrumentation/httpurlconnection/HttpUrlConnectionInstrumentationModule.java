@@ -18,7 +18,7 @@ public class HttpUrlConnectionInstrumentationModule extends InstrumentationModul
     implements ExperimentalInstrumentationModule {
 
   public HttpUrlConnectionInstrumentationModule() {
-    super("http-url-connection");
+    super("http_url_connection");
   }
 
   @Override

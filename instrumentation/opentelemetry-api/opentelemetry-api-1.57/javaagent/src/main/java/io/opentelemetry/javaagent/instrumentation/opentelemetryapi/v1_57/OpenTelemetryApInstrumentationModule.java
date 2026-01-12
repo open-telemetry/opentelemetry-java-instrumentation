@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenTelemetryApInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.57");
+    super("opentelemetry_api", "opentelemetry_api_1.57");
   }
 
   @Override

@@ -17,7 +17,7 @@ import java.util.List;
 public class GrpcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GrpcInstrumentationModule() {
-    super("grpc", "grpc-1.6");
+    super("grpc", "grpc_1.6");
   }
 
   @Override

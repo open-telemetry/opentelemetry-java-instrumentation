@@ -31,7 +31,7 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 public class PlayWsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super("play-ws", "play-ws-2.0");
+    super("play_ws", "play_ws_2.0");
   }
 
   @Override

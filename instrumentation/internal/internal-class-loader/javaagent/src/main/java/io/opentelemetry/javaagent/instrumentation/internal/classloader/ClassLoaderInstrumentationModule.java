@@ -17,7 +17,7 @@ import java.util.List;
 public class ClassLoaderInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ClassLoaderInstrumentationModule() {
-    super("internal-class-loader");
+    super("internal_class_loader");
   }
 
   @Override

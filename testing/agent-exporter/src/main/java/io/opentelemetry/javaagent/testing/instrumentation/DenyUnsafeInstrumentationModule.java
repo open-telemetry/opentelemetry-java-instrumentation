@@ -20,7 +20,7 @@ import java.util.List;
 public class DenyUnsafeInstrumentationModule extends InstrumentationModule {
 
   public DenyUnsafeInstrumentationModule() {
-    super("deny-unsafe");
+    super("deny_unsafe");
   }
 
   @Override

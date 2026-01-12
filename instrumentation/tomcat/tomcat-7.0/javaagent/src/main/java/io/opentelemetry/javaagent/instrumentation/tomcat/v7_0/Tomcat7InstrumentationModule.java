@@ -21,7 +21,7 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public Tomcat7InstrumentationModule() {
-    super("tomcat", "tomcat-7.0");
+    super("tomcat", "tomcat_7.0");
   }
 
   @Override

@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JaxrsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JaxrsInstrumentationModule() {
-    super("jaxrs", "jaxrs-1.0");
+    super("jaxrs", "jaxrs_1.0");
   }
 
   // this is required to make sure instrumentation won't apply to jax-rs 2

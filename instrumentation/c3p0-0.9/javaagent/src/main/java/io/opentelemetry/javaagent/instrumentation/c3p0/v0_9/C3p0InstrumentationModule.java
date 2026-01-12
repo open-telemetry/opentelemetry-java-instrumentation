@@ -15,7 +15,7 @@ import java.util.List;
 public class C3p0InstrumentationModule extends InstrumentationModule {
 
   public C3p0InstrumentationModule() {
-    super("c3p0", "c3p0-0.9");
+    super("c3p0", "c3p0_0.9");
   }
 
   @Override

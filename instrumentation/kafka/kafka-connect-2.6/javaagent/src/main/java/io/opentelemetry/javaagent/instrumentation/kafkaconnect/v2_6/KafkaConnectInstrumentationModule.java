@@ -20,7 +20,7 @@ public class KafkaConnectInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public KafkaConnectInstrumentationModule() {
-    super("kafka-connect", "kafka-connect-2.6");
+    super("kafka_connect", "kafka_connect_2.6");
   }
 
   @Override

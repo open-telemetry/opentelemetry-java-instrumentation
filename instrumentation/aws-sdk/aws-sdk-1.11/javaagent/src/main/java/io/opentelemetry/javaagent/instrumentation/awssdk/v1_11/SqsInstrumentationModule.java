@@ -17,7 +17,7 @@ import net.bytebuddy.asm.Advice;
 public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SqsInstrumentationModule() {
-    super("aws-sdk-1.11-sqs");
+    super("aws_sdk_1.11_sqs");
   }
 
   @Override

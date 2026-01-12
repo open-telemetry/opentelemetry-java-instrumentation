@@ -18,7 +18,7 @@ public class HibernateReactiveMutinyInstrumentationModule extends Instrumentatio
     implements ExperimentalInstrumentationModule {
 
   public HibernateReactiveMutinyInstrumentationModule() {
-    super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-mutiny");
+    super("hibernate_reactive", "hibernate_reactive_1.0", "hibernate_reactive_mutiny");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class JwsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JwsInstrumentationModule() {
-    super("jaxws-jws-api", "jaxws-jws-api-1.1", "jaxws");
+    super("jaxws_jws_api", "jaxws_jws_api_1.1", "jaxws");
   }
 
   @Override

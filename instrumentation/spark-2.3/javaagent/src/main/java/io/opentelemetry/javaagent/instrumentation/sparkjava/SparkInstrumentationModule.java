@@ -16,7 +16,7 @@ import java.util.List;
 public class SparkInstrumentationModule extends InstrumentationModule {
 
   public SparkInstrumentationModule() {
-    super("spark", "spark-2.3");
+    super("spark", "spark_2.3");
   }
 
   @Override

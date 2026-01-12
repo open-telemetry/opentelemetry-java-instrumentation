@@ -15,7 +15,7 @@ import java.util.List;
 public class RxJava2InstrumentationModule extends InstrumentationModule {
 
   public RxJava2InstrumentationModule() {
-    super("rxjava", "rxjava-2.0");
+    super("rxjava", "rxjava_2.0");
   }
 
   @Override

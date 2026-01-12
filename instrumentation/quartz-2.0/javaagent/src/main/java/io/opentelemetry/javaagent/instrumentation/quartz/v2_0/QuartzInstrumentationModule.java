@@ -17,7 +17,7 @@ public class QuartzInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public QuartzInstrumentationModule() {
-    super("quartz", "quartz-2.0");
+    super("quartz", "quartz_2.0");
   }
 
   @Override

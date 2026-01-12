@@ -17,7 +17,7 @@ import java.util.List;
 public class SpringWsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringWsInstrumentationModule() {
-    super("spring-ws", "spring-ws-2.0");
+    super("spring_ws", "spring_ws_2.0");
   }
 
   @Override

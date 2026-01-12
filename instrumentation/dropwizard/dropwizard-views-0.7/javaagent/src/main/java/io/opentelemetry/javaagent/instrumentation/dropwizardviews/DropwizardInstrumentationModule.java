@@ -17,7 +17,7 @@ import java.util.List;
 public class DropwizardInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public DropwizardInstrumentationModule() {
-    super("dropwizard-views", "dropwizard-views-0.7");
+    super("dropwizard_views", "dropwizard_views_0.7");
   }
 
   @Override

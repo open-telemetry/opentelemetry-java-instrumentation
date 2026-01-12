@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MetroInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MetroInstrumentationModule() {
-    super("metro", "metro-2.2", "jaxws");
+    super("metro", "metro_2.2", "jaxws");
   }
 
   @Override

@@ -18,7 +18,7 @@ import java.util.List;
 public class LambdaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public LambdaInstrumentationModule() {
-    super("internal-lambda");
+    super("internal_lambda");
   }
 
   @Override

@@ -20,7 +20,7 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JettyHttpClient9InstrumentationModule() {
-    super("jetty-httpclient", "jetty-httpclient-9.2");
+    super("jetty_httpclient", "jetty_httpclient_9.2");
   }
 
   @Override

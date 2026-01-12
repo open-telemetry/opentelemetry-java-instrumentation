@@ -36,7 +36,7 @@ import org.springframework.data.repository.core.support.RepositoryProxyPostProce
 public class SpringDataInstrumentationModule extends InstrumentationModule {
 
   public SpringDataInstrumentationModule() {
-    super("spring-data", "spring-data-1.8");
+    super("spring_data", "spring_data_1.8");
   }
 
   @Override

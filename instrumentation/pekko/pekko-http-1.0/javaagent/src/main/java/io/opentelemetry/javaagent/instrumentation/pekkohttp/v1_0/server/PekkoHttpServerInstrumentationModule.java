@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class PekkoHttpServerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PekkoHttpServerInstrumentationModule() {
-    super("pekko-http", "pekko-http-1.0", "pekko-http-server");
+    super("pekko_http", "pekko_http_1.0", "pekko_http_server");
   }
 
   @Override

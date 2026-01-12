@@ -17,7 +17,7 @@ import java.util.List;
 public class ElasticsearchRest5InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ElasticsearchRest5InstrumentationModule() {
-    super("elasticsearch-rest", "elasticsearch-rest-5.0", "elasticsearch");
+    super("elasticsearch_rest", "elasticsearch_rest_5.0", "elasticsearch");
   }
 
   @Override

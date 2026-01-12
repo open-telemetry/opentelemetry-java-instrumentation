@@ -17,7 +17,7 @@ public class RestletInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public RestletInstrumentationModule() {
-    super("restlet", "restlet-2.0");
+    super("restlet", "restlet_2.0");
   }
 
   @Override
