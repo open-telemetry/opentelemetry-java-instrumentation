@@ -14,7 +14,7 @@ muzzle {
     // if you want to test them anyways, comment out "alpha" from the exclusions in AcceptableVersions.kt
     versions.set("[1.14.0-alpha,)")
     assertInverse.set(true)
-    excludeInstrumentationName("opentelemetry-api")
+    excludeInstrumentationName("opentelemetry_api")
   }
 }
 

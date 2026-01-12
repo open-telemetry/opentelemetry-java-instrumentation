@@ -9,7 +9,7 @@ muzzle {
     module.set("spring-pulsar")
     versions.set("[1.0.0,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pulsar-2.8")
+    excludeInstrumentationName("pulsar_2.8")
   }
 }
 

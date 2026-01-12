@@ -10,8 +10,8 @@ for file in $(find instrumentation -name "*Module.java"); do
     continue
   fi
 
-  module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
-  simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
+  module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#' | tr '-' '_')
+  simple_module_name=$(echo "$module_name" | sed 's/_[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
     # TODO these need some work still
