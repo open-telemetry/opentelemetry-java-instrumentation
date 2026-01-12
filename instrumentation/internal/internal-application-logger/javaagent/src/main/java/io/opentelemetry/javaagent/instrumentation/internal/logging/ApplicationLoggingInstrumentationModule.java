@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -22,10 +21,9 @@ public class ApplicationLoggingInstrumentationModule extends InstrumentationModu
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // only enable this instrumentation if the application logger is enabled
-    return super.defaultEnabled(config)
-        && "application".equals(EarlyInitAgentConfig.get().getLogging());
+    return super.defaultEnabled() && "application".equals(EarlyInitAgentConfig.get().getLogging());
   }
 
   @Override
