@@ -6,4 +6,4 @@ sed -Ei "s/val otelSdkVersion = \"[^\"]*\"/val otelSdkVersion = \"$version\"/" d
 
 sed -Ei "s/(opentelemetrySdk *: )\"[^\"]*\"/\1\"$version\"/" examples/distro/build.gradle
 
-sed -Ei "s/(opentelemetrySdk *: )\"[^\"]*\"/\1\"$version\"/" examples/extension/build.gradle
+sed -Ei "s/(opentelemetrySdk *: )\"[^\"]*\"/\1\"$version\"/" examples/extension/build.gradle.kts
