@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerIn
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 
+/** A builder for {@link JavaHttpServerTelemetry}. */
 public final class JavaHttpServerTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-server";
@@ -116,6 +117,10 @@ public final class JavaHttpServerTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Returns a new {@link JavaHttpServerTelemetry} with the settings of this {@link
+   * JavaHttpServerTelemetryBuilder}.
+   */
   public JavaHttpServerTelemetry build() {
     return new JavaHttpServerTelemetry(builder.build());
   }

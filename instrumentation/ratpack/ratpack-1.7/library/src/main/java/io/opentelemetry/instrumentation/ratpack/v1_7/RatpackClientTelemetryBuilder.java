@@ -34,6 +34,10 @@ public final class RatpackClientTelemetryBuilder {
     builder = RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   */
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<RequestSpec, HttpResponse> attributesExtractor) {

@@ -19,6 +19,7 @@ import java.net.http.HttpResponse;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 
+/** A builder for {@link JavaHttpClientTelemetry}. */
 public final class JavaHttpClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
@@ -99,6 +100,10 @@ public final class JavaHttpClientTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Returns a new {@link JavaHttpClientTelemetry} with the settings of this {@link
+   * JavaHttpClientTelemetryBuilder}.
+   */
   public JavaHttpClientTelemetry build() {
     return new JavaHttpClientTelemetry(
         builder.build(), new HttpHeadersSetter(openTelemetry.getPropagators()));

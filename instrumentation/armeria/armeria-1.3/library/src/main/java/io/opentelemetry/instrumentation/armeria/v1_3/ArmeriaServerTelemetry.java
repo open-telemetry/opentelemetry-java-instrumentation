@@ -22,6 +22,10 @@ public final class ArmeriaServerTelemetry {
     return builder(openTelemetry).build();
   }
 
+  /**
+   * Returns a new {@link ArmeriaServerTelemetryBuilder} configured with the given {@link
+   * OpenTelemetry}.
+   */
   public static ArmeriaServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ArmeriaServerTelemetryBuilder(openTelemetry);
   }

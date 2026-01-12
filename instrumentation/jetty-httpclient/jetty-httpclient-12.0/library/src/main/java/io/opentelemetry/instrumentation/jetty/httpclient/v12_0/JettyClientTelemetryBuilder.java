@@ -20,6 +20,7 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+/** A builder for {@link JettyClientTelemetry}. */
 public final class JettyClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;

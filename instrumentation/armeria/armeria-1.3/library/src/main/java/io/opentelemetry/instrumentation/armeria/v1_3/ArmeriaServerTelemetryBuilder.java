@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 
+/** A builder for {@link ArmeriaServerTelemetry}. */
 public final class ArmeriaServerTelemetryBuilder {
 
   private final DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog> builder;
@@ -111,6 +112,10 @@ public final class ArmeriaServerTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Returns a new {@link ArmeriaServerTelemetry} with the settings of this {@link
+   * ArmeriaServerTelemetryBuilder}.
+   */
   public ArmeriaServerTelemetry build() {
     return new ArmeriaServerTelemetry(builder.build());
   }

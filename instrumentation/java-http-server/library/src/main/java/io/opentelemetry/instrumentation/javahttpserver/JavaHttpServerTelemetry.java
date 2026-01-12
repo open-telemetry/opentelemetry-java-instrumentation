@@ -21,6 +21,10 @@ public final class JavaHttpServerTelemetry {
     return builder(openTelemetry).build();
   }
 
+  /**
+   * Returns a new {@link JavaHttpServerTelemetryBuilder} configured with the given {@link
+   * OpenTelemetry}.
+   */
   public static JavaHttpServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JavaHttpServerTelemetryBuilder(openTelemetry);
   }
