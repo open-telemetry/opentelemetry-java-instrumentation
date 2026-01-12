@@ -36,7 +36,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
-import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
@@ -78,13 +77,6 @@ import net.bytebuddy.utility.JavaModule;
 public class AgentInstaller {
 
   private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
-
-  // This property may be set to force synchronous AgentListener#afterAgent() execution: the
-  // condition for delaying the AgentListener initialization is pretty broad and in case it covers
-  // too much javaagent users can file a bug, force sync execution by setting this property to true
-  // and continue using the javaagent
-  private static final String FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG =
-      "force-synchronous-agent-listeners/development";
 
   private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
       "otel.javaagent.testing.strict-context-stressor-millis";
@@ -361,10 +353,10 @@ public class AgentInstaller {
     // Once we see the LogManager class loading, it's safe to run AgentListener#afterAgent() because
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
-    boolean shouldForceSynchronousAgentListenersCalls =
-        AgentDistributionConfig.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
-    if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
+    if (!EarlyInitAgentConfig.get().isExperimentalForceSynchronousAgentListeners()
+        && javaBefore9
+        && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager",

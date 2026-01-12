@@ -50,6 +50,16 @@ public final class EarlyInitAgentConfig {
     return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
   }
 
+  /**
+   * This property may be set to force synchronous AgentListener#afterAgent() execution: the
+   * condition for delaying the AgentListener initialization is pretty broad and in case it covers
+   * too much javaagent users can file a bug, force sync execution by setting this property to true
+   * and continue using the javaagent
+   */
+  public boolean isExperimentalForceSynchronousAgentListeners() {
+    return getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false);
+  }
+
   public int getLoggingApplicationLogsBufferMaxRecords() {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
