@@ -32,12 +32,22 @@ public final class JavaHttpServerTelemetry {
   }
 
   /** Returns a new {@link Filter} for telemetry usage */
-  public Filter newFilter() {
+  public Filter createFilter() {
     return new OpenTelemetryFilter(instrumenter);
+  }
+
+  /**
+   * Returns a new {@link Filter} for telemetry usage
+   *
+   * @deprecated Use {@link #createFilter()} instead.
+   */
+  @Deprecated
+  public Filter newFilter() {
+    return createFilter();
   }
 
   /** Configures the {@link HttpContext} with OpenTelemetry. */
   public void configure(HttpContext httpContext) {
-    httpContext.getFilters().add(0, newFilter());
+    httpContext.getFilters().add(0, createFilter());
   }
 }

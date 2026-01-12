@@ -32,7 +32,7 @@ public final class GraphqlSingletons {
   }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
-    Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
+    Instrumentation ourInstrumentation = TELEMETRY.createInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
   }
 

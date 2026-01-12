@@ -56,8 +56,23 @@ public final class SpringIntegrationTelemetry {
    * @see org.springframework.messaging.support.InterceptableChannel
    * @see org.springframework.integration.config.GlobalChannelInterceptor
    */
-  public ChannelInterceptor newChannelInterceptor() {
+  public ChannelInterceptor createChannelInterceptor() {
     return new TracingChannelInterceptor(
         propagators, consumerInstrumenter, producerInstrumenter, producerSpanEnabled);
+  }
+
+  /**
+   * Returns a new {@link ChannelInterceptor} that propagates context through {@link Message}s and
+   * when no other messaging instrumentation is detected, traces {@link
+   * MessageChannel#send(Message)} calls.
+   *
+   * @see org.springframework.integration.channel.ChannelInterceptorAware
+   * @see org.springframework.messaging.support.InterceptableChannel
+   * @see org.springframework.integration.config.GlobalChannelInterceptor
+   * @deprecated Use {@link #createChannelInterceptor()} instead.
+   */
+  @Deprecated
+  public ChannelInterceptor newChannelInterceptor() {
+    return createChannelInterceptor();
   }
 }

@@ -64,8 +64,8 @@ public final class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    CLIENT_INTERCEPTOR = telemetry.newClientInterceptor();
-    SERVER_INTERCEPTOR = telemetry.newServerInterceptor();
+    CLIENT_INTERCEPTOR = telemetry.createClientInterceptor();
+    SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
   }
 
   public static Context.Storage getStorage() {

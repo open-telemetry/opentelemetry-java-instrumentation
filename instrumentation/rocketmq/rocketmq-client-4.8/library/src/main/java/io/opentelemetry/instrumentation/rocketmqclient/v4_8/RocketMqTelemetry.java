@@ -46,15 +46,37 @@ public final class RocketMqTelemetry {
    * Returns a new {@link ConsumeMessageHook} for use with methods like {@link
    * org.apache.rocketmq.client.impl.consumer.DefaultMQPullConsumerImpl#registerConsumeMessageHook(ConsumeMessageHook)}.
    */
-  public ConsumeMessageHook newTracingConsumeMessageHook() {
+  public ConsumeMessageHook createConsumeMessageHook() {
     return new TracingConsumeMessageHookImpl(rocketMqConsumerInstrumenter);
+  }
+
+  /**
+   * Returns a new {@link ConsumeMessageHook} for use with methods like {@link
+   * org.apache.rocketmq.client.impl.consumer.DefaultMQPullConsumerImpl#registerConsumeMessageHook(ConsumeMessageHook)}.
+   *
+   * @deprecated Use {@link #createConsumeMessageHook()} instead.
+   */
+  @Deprecated
+  public ConsumeMessageHook newTracingConsumeMessageHook() {
+    return createConsumeMessageHook();
   }
 
   /**
    * Returns a new {@link SendMessageHook} for use with methods like {@link
    * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
    */
-  public SendMessageHook newTracingSendMessageHook() {
+  public SendMessageHook createSendMessageHook() {
     return new TracingSendMessageHookImpl(rocketMqProducerInstrumenter);
+  }
+
+  /**
+   * Returns a new {@link SendMessageHook} for use with methods like {@link
+   * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
+   *
+   * @deprecated Use {@link #createSendMessageHook()} instead.
+   */
+  @Deprecated
+  public SendMessageHook newTracingSendMessageHook() {
+    return createSendMessageHook();
   }
 }

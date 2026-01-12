@@ -23,7 +23,7 @@ public final class TracingHolder {
           .setStatementSanitizationEnabled(AgentCommonConfig.get().isStatementSanitizationEnabled())
           .setEncodingSpanEventsEnabled(CAPTURE_COMMAND_ENCODING_EVENTS)
           .build()
-          .newTracing();
+          .createTracing();
 
   private TracingHolder() {}
 }
