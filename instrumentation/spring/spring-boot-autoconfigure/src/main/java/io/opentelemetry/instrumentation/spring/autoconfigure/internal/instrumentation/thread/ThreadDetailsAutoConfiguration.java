@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.thread.internal.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
@@ -41,8 +42,11 @@ public class ThreadDetailsAutoConfiguration {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
       Environment environment = context.getEnvironment();
-      return environment.getProperty(
-          "otel.instrumentation.common.thread-details.enabled", Boolean.class, false);
+      String key =
+          EarlyConfig.isDeclarativeConfig(environment)
+              ? "otel.instrumentation/development.java.common.thread_details.enabled"
+              : "otel.instrumentation.common.thread-details.enabled";
+      return environment.getProperty(key, Boolean.class, false);
     }
   }
 }
