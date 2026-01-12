@@ -19,7 +19,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
   public AwsSdkInstrumentationModule() {
-    super("aws-sdk-2.2-core");
+    super("aws_sdk_2.2_core");
   }
 
   /**

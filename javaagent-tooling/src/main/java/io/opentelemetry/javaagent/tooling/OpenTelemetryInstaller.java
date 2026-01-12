@@ -99,7 +99,7 @@ public final class OpenTelemetryInstaller {
       @Override
       public Boolean getEnabled(String instrumentationName) {
         return configProperties.getBoolean(
-            "otel.instrumentation." + instrumentationName + ".enabled");
+            "otel.instrumentation." + instrumentationName.replace('_', '-') + ".enabled");
       }
 
       @Override
@@ -133,13 +133,11 @@ public final class OpenTelemetryInstaller {
       @Nullable
       @Override
       public Boolean getEnabled(String instrumentationName) {
-        String normalizedName = instrumentationName.replace('-', '_');
-
-        if (disabled != null && disabled.contains(normalizedName)) {
+        if (disabled != null && disabled.contains(instrumentationName)) {
           return false;
         }
 
-        if (enabled != null && enabled.contains(normalizedName)) {
+        if (enabled != null && enabled.contains(instrumentationName)) {
           return true;
         }
         return null;

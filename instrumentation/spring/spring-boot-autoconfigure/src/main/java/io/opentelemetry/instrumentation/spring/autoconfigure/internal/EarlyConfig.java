@@ -42,14 +42,12 @@ public class EarlyConfig {
         @Nullable
         @Override
         public Boolean getEnabled(String instrumentationName) {
-          String snakeCase = instrumentationName.replace('-', '_');
-
           List<String> enabled =
               environment.getProperty(
                   "otel.distribution.spring_starter.instrumentation.enabled",
                   List.class,
                   emptyList());
-          if (enabled.contains(snakeCase)) {
+          if (enabled.contains(instrumentationName)) {
             return true;
           }
 
@@ -58,7 +56,7 @@ public class EarlyConfig {
                   "otel.distribution.spring_starter.instrumentation.disabled",
                   List.class,
                   emptyList());
-          if (disabled.contains(snakeCase)) {
+          if (disabled.contains(instrumentationName)) {
             return false;
           }
 
@@ -80,7 +78,8 @@ public class EarlyConfig {
       @Override
       public Boolean getEnabled(String instrumentationName) {
         return environment.getProperty(
-            String.format("otel.instrumentation.%s.enabled", instrumentationName), Boolean.class);
+            String.format("otel.instrumentation.%s.enabled", instrumentationName.replace('_', '-')),
+            Boolean.class);
       }
 
       @Override

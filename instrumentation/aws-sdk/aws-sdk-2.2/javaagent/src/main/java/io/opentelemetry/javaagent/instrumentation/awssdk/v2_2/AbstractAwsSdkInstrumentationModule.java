@@ -21,7 +21,7 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   protected AbstractAwsSdkInstrumentationModule(String additionalInstrumentationName) {
-    super("aws-sdk", "aws-sdk-2.2", additionalInstrumentationName);
+    super("aws_sdk", "aws_sdk_2.2", additionalInstrumentationName);
   }
 
   @Override

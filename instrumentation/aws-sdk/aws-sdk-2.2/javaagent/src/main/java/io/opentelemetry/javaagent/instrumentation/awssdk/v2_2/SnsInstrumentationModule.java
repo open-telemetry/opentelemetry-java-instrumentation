@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SnsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SnsInstrumentationModule() {
-    super("aws-sdk-2.2-sns");
+    super("aws_sdk_2.2_sns");
   }
 
   @Override
