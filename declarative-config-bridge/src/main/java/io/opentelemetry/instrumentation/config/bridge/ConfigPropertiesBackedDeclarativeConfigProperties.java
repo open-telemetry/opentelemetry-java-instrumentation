@@ -226,10 +226,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
     String translated = translatedPath.toString();
 
-    // Handle agent prefix: java.agent.* → otel.javaagent.*
-    if (translated.startsWith("agent.")) {
-      // todo remove
-      return "otel.java" + translated;
+    // Handle agent prefix: java.javaagent.* → otel.javaagent.*
+    // is only called from OpenTelemetryInstaller
+    if (translated.startsWith("javaagent.")) {
+      return "otel." + translated;
     }
 
     // Standard mapping

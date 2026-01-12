@@ -84,7 +84,7 @@ public final class OpenTelemetryInstaller {
     if (instrumentationConfig == null) {
       instrumentationConfig = empty();
     }
-    return instrumentationConfig.getStructured("agent", empty());
+    return instrumentationConfig.getStructured("java", empty()).getStructured("javaagent", empty());
   }
 
   private static EnabledInstrumentations enabledInstrumentationsFromConfigProperties(
