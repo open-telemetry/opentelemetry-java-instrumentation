@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
@@ -179,9 +180,7 @@ public abstract class InstrumentationModule implements Ordered {
     private static final boolean indyEnabled;
 
     static {
-      indyEnabled =
-          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
-              .getBoolean("indy/development", false);
+      indyEnabled = ConfigPropertiesUtil.getBoolean("otel.javaagent.experimental.indy", false);
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }
