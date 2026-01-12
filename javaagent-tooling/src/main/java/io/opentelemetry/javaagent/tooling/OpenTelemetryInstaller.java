@@ -22,7 +22,6 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
 import java.util.List;
@@ -155,35 +154,12 @@ public final class OpenTelemetryInstaller {
   static ConfigProperties getDeclarativeConfigBridgedProperties(ConfigProvider configProvider) {
     return new DeclarativeConfigPropertiesBridgeBuilder()
         .addMapping("otel.javaagent", "agent")
-        .addOverride("otel.instrumentation.common.default-enabled", defaultEnabled(configProvider))
         // these properties are used to initialize the SDK before the configuration file
         // is loaded for consistency, we pass them to the bridge, so that they can be read
         // later with the same value from the {@link DeclarativeConfigPropertiesBridge}
         .addOverride("otel.javaagent.debug", EarlyInitAgentConfig.get().isDebug())
         .addOverride("otel.javaagent.logging", EarlyInitAgentConfig.get().getLogging())
         .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
-  }
-
-  private static boolean defaultEnabled(ConfigProvider configProvider) {
-    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
-    if (instrumentationConfig == null) {
-      return true;
-    }
-
-    String mode =
-        instrumentationConfig
-            .getStructured("java", empty())
-            .getStructured("agent", empty())
-            .getString("instrumentation_mode", "default");
-
-    switch (mode) {
-      case "none":
-        return false;
-      case "default":
-        return true;
-      default:
-        throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-    }
   }
 
   private static void setForceFlush(OpenTelemetrySdk sdk) {

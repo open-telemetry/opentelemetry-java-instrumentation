@@ -35,7 +35,7 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
     client().get("/greeting").aggregate().join();
 
     // There is one span (io.opentelemetry.opentelemetry-instrumentation-annotations-1.16 is
-    // not used, because instrumentation_mode=none)
+    // not used, because default_enabled=false)
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
