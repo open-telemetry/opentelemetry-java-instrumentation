@@ -31,7 +31,7 @@ public final class RuntimeMetricsConfigUtil {
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17")
         .getBoolean("enable_all", false)) {
       builder.enableAllFeatures();
-    } else if (enabledInstrumentations.isEnabledExplicitly("runtime_telemetry_java_17")) {
+    } else if (enabledInstrumentations.isEnabledExplicitly("runtime_telemetry_java17")) {
       // default configuration
     } else {
       if (enabledInstrumentations.isEnabled("runtime_telemetry")) {
