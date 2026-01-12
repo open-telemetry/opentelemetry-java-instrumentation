@@ -27,7 +27,6 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizer;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
@@ -37,6 +36,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
+import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;

@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentDistributionConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.TreeSet;
@@ -25,7 +25,7 @@ class InstrumentationModuleInstallerTest {
 
   @AfterEach
   void tearDown() {
-    AgentDistributionConfig.resetForTest();
+    AgentEnabledInstrumentations.resetForTest();
   }
 
   @ParameterizedTest(name = "isInstrumentationEnabled({0}) = {4}")
@@ -41,7 +41,7 @@ class InstrumentationModuleInstallerTest {
     when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
 
-    AgentDistributionConfig.setEnabledInstrumentations(
+    AgentEnabledInstrumentations.set(
         OpenTelemetryInstaller.enabledInstrumentationsFromConfigProperties(config));
 
     assertThat(
