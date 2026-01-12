@@ -24,6 +24,9 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
 
+// Suppressing deprecation warnings for DeclarativeConfigPropertiesBridgeBuilder usage.
+// This is safe because we're maintaining backward compatibility while transitioning to the new API.
+@SuppressWarnings("deprecation")
 public final class OpenTelemetryInstaller {
 
   /**
