@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -93,6 +94,11 @@ class CassandraClientTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideSyncParameters")
   void syncTest(Parameter parameter) {
+    String expectedSpanName =
+        emitStableDatabaseSemconv() && parameter.table != null
+            ? parameter.operation + " " + parameter.table.substring(parameter.table.lastIndexOf('.') + 1)
+            : parameter.spanName;
+
     Session session = cluster.connect(parameter.keyspace);
 
     session.execute(parameter.statement);
@@ -102,7 +108,7 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("DB Query")
+                      span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -116,7 +122,7 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(parameter.spanName)
+                      span.hasName(expectedSpanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -135,7 +141,7 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(parameter.spanName)
+                      span.hasName(expectedSpanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -156,6 +162,11 @@ class CassandraClientTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAsyncParameters")
   void asyncTest(Parameter parameter) {
+    String expectedSpanName =
+        emitStableDatabaseSemconv() && parameter.table != null
+            ? parameter.operation + " " + parameter.table.substring(parameter.table.lastIndexOf('.') + 1)
+            : parameter.spanName;
+
     @SuppressWarnings("WriteOnlyObject")
     AtomicBoolean callbackExecuted = new AtomicBoolean();
     Session session = cluster.connect(parameter.keyspace);
@@ -174,7 +185,7 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("DB Query")
+                      span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -189,7 +200,7 @@ class CassandraClientTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
-                      span.hasName(parameter.spanName)
+                      span.hasName(expectedSpanName)
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
