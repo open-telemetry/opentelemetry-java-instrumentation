@@ -21,7 +21,7 @@ import org.springframework.web.servlet.DispatcherServlet;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnEnabledInstrumentation(module = "spring-webmvc")
+@ConditionalOnEnabledInstrumentation(module = "spring_webmvc")
 @ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
 @Configuration
 public class SpringWebMvc5InstrumentationAutoConfiguration {
