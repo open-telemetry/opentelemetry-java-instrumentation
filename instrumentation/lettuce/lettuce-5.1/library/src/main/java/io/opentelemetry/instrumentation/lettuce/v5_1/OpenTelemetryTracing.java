@@ -263,12 +263,7 @@ final class OpenTelemetryTracing implements Tracing {
           events = null;
         }
 
-        // Apply buffered error
-        if (error != null) {
-          span.setStatus(StatusCode.ERROR);
-          span.recordException(error);
-          error = null;
-        }
+        // Apply buffered error - the error will be passed to instrumenter.end() in finish()
       }
 
       return this;
@@ -321,18 +316,14 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span error(Throwable throwable) {
-      if (context != null) {
-        Span.fromContext(context).recordException(throwable);
-      } else {
-        this.error = throwable;
-      }
+      this.error = throwable;
       return this;
     }
 
     @Override
     public synchronized void finish() {
       if (context != null) {
-        instrumenter.end(context, request, null, null);
+        instrumenter.end(context, request, null, error);
       }
     }
   }

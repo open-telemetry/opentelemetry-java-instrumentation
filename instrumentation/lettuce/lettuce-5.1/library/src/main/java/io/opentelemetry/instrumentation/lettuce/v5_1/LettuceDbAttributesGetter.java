@@ -6,16 +6,16 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class LettuceDbAttributesGetter implements DbClientAttributesGetter<LettuceRequest, Void> {
 
-  private static final String REDIS = "redis";
-
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(LettuceRequest request) {
-    return REDIS;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
   @Nullable
@@ -25,7 +25,6 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<Lettuc
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
-  @Deprecated
   @Nullable
   @Override
   public String getDbQueryText(LettuceRequest request) {
