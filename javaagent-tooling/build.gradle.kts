@@ -8,6 +8,12 @@ plugins {
 
 group = "io.opentelemetry.javaagent"
 
+tasks.withType<JavaCompile>().configureEach {
+  // Suppress deprecation warnings for DeclarativeConfigPropertiesBridgeBuilder usage
+  // This is intentional as we still support the deprecated API for backward compatibility
+  options.compilerArgs.add("-Xlint:-deprecation")
+}
+
 dependencies {
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":javaagent-extension-api"))

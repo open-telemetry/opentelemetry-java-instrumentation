@@ -66,6 +66,9 @@ import org.springframework.core.env.Environment;
  *
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
+// Suppressing deprecation warnings for DeclarativeConfigPropertiesBridgeBuilder usage.
+// This is safe because we're maintaining backward compatibility while transitioning to the new API.
+@SuppressWarnings("deprecation")
 @Configuration
 public class OpenTelemetryAutoConfiguration {
   private static final Logger logger =
