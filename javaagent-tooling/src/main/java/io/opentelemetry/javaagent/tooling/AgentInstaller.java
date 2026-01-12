@@ -85,7 +85,7 @@ public class AgentInstaller {
   // too much javaagent users can file a bug, force sync execution by setting this property to true
   // and continue using the javaagent
   private static final String FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG =
-      "force-synchronous-agent-listeners/development";
+      "force_synchronous_agent_listeners/development";
 
   private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
       "otel.javaagent.testing.strict-context-stressor-millis";
