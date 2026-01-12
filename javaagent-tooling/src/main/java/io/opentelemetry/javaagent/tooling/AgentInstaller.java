@@ -36,6 +36,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
+import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
@@ -360,10 +361,10 @@ public class AgentInstaller {
     // Once we see the LogManager class loading, it's safe to run AgentListener#afterAgent() because
     // the application is already setting the global LogManager and AgentListener won't be able
     // to touch it due to class loader locking.
+    boolean shouldForceSynchronousAgentListenersCalls =
+        AgentDistributionConfig.get().getBoolean(FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG, false);
     boolean javaBefore9 = isJavaBefore9();
-    if (!EarlyInitAgentConfig.get().isExperimentalForceSynchronousAgentListeners()
-        && javaBefore9
-        && isAppUsingCustomLogManager()) {
+    if (!shouldForceSynchronousAgentListenersCalls && javaBefore9 && isAppUsingCustomLogManager()) {
       logger.fine("Custom JUL LogManager detected: delaying AgentListener#afterAgent() calls");
       registerClassLoadCallback(
           "java.util.logging.LogManager",
