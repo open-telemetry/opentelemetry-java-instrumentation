@@ -7,7 +7,7 @@ dependencies {
   library("io.lettuce:lettuce-core:5.1.0.RELEASE")
 
   implementation(project(":instrumentation:lettuce:lettuce-common:library"))
-  
+
   compileOnly("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 
   testImplementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
