@@ -26,4 +26,6 @@ exclude = [
   '^https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/$',
   # new artifact, remove after 2.21.0 release
   '^https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-helidon-4.3$',
+  # flaky link
+  'http://www.slf4j.org',
 ]
