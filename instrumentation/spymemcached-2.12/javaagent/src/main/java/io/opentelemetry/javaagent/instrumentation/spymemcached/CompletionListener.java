@@ -11,9 +11,9 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.net.InetSocketAddress;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedNode;
