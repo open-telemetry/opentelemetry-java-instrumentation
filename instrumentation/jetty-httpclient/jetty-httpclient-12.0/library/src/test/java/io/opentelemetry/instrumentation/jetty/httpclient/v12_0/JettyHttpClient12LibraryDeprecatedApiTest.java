@@ -13,7 +13,8 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
+@SuppressWarnings("deprecation")
+class JettyHttpClient12LibraryDeprecatedApiTest extends AbstractJettyClient12Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
@@ -26,14 +27,14 @@ class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
         .setCapturedResponseHeaders(
             Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
         .build()
-        .newHttpClient();
+        .getHttpClient();
   }
 
   @Override
   protected HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory) {
-    HttpClient client =
-        JettyClientTelemetry.builder(testing.getOpenTelemetry()).build().newHttpClient();
-    client.setSslContextFactory(sslContextFactory);
-    return client;
+    return JettyClientTelemetry.builder(testing.getOpenTelemetry())
+        .setSslContextFactory(sslContextFactory)
+        .build()
+        .getHttpClient();
   }
 }

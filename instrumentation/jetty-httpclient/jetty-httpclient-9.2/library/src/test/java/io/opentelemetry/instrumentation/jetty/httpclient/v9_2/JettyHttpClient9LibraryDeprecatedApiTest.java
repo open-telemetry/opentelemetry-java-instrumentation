@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
+package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -13,10 +13,11 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
+@SuppressWarnings("deprecation")
+class JettyHttpClient9LibraryDeprecatedApiTest extends AbstractJettyClient9Test {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
+  static final InstrumentationExtension extension = HttpClientInstrumentationExtension.forLibrary();
 
   @Override
   protected HttpClient createStandardClient() {
@@ -26,14 +27,14 @@ class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
         .setCapturedResponseHeaders(
             Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
         .build()
-        .newHttpClient();
+        .getHttpClient();
   }
 
   @Override
-  protected HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory) {
-    HttpClient client =
-        JettyClientTelemetry.builder(testing.getOpenTelemetry()).build().newHttpClient();
-    client.setSslContextFactory(sslContextFactory);
-    return client;
+  protected HttpClient createHttpsClient(SslContextFactory sslContextFactory) {
+    return JettyClientTelemetry.builder(testing.getOpenTelemetry())
+        .setSslContextFactory(sslContextFactory)
+        .build()
+        .getHttpClient();
   }
 }
