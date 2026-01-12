@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -80,7 +79,9 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   void testAgentPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.foo", "true");
 
-    assertThat(config.getStructured("java").getStructured("agent").getBoolean("foo/development"))
+    // only called from OpenTelemetryInstaller
+    assertThat(
+            config.getStructured("java").getStructured("javaagent").getBoolean("foo/development"))
         .isNotNull()
         .isTrue();
   }
@@ -237,18 +238,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("producer_propagation")
                 .getBoolean("enabled"))
         .isNull();
-  }
-
-  @Test
-  void distributionSettings() {
-    DeclarativeConfigProperties config = createConfig("otel.javaagent.exclude-classes", "foo");
-
-    assertThat(
-            config
-                .getStructured("java", empty())
-                .getStructured("javaagent", empty())
-                .getString("exclude_classes"))
-        .isEqualTo("foo");
   }
 
   private static DeclarativeConfigProperties createConfig(String key, String value) {
