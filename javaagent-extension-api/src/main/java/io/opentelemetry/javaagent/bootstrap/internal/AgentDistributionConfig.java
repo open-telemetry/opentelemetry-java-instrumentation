@@ -42,5 +42,11 @@ public class AgentDistributionConfig {
         new ExtendedDeclarativeConfigProperties(distributionConfig);
   }
 
+  // Visible for testing
+  public static void resetForTest() {
+    enabledInstrumentations = null;
+    distributionConfig = new ExtendedDeclarativeConfigProperties(empty());
+  }
+
   private AgentDistributionConfig() {}
 }

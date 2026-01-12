@@ -87,7 +87,8 @@ public final class OpenTelemetryInstaller {
     return instrumentationConfig.getStructured("java", empty()).getStructured("javaagent", empty());
   }
 
-  private static EnabledInstrumentations enabledInstrumentationsFromConfigProperties(
+  // Visible for testing
+  public static EnabledInstrumentations enabledInstrumentationsFromConfigProperties(
       ConfigProperties configProperties) {
     boolean isDefaultEnabled =
         configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
