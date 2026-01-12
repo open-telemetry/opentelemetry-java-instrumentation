@@ -21,7 +21,7 @@ public class XxlJobInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public XxlJobInstrumentationModule() {
-    super("xxl-job", "xxl-job-1.9.2");
+    super("xxl_job", "xxl_job_1.9.2");
   }
 
   @Override

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Log4j1InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Log4j1InstrumentationModule() {
-    super("log4j-mdc", "log4j-mdc-1.2");
+    super("log4j_mdc", "log4j_mdc_1.2");
   }
 
   @Override

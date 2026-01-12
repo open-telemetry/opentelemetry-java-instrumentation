@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public final class DemoServlet3InstrumentationModule extends InstrumentationModule {
   public DemoServlet3InstrumentationModule() {
-    super("servlet-demo", "servlet-3");
+    super("servlet_demo", "servlet_3");
   }
 
   /*

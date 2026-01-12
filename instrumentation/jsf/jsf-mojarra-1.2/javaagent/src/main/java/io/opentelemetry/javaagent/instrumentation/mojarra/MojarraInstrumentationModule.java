@@ -17,7 +17,7 @@ import java.util.List;
 public class MojarraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MojarraInstrumentationModule() {
-    super("jsf-mojarra", "jsf-mojarra-1.2");
+    super("jsf_mojarra", "jsf_mojarra_1.2");
   }
 
   @Override

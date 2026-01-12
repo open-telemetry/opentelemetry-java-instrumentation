@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ArmeriaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ArmeriaInstrumentationModule() {
-    super("armeria", "armeria-1.3");
+    super("armeria", "armeria_1.3");
   }
 
   @Override

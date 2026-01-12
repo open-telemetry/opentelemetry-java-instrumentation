@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringPulsarInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringPulsarInstrumentationModule() {
-    super("spring-pulsar", "spring-pulsar-1.0");
+    super("spring_pulsar", "spring_pulsar_1.0");
   }
 
   @Override

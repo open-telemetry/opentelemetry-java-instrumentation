@@ -17,7 +17,7 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public FinagleHttpInstrumentationModule() {
-    super("finagle-http", "finagle-http-23.11");
+    super("finagle_http", "finagle_http_23.11");
   }
 
   @Override

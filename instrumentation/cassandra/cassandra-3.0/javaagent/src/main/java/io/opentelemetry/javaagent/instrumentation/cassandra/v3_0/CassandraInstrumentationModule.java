@@ -17,7 +17,7 @@ import java.util.List;
 public class CassandraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public CassandraInstrumentationModule() {
-    super("cassandra", "cassandra-3.0");
+    super("cassandra", "cassandra_3.0");
   }
 
   @Override

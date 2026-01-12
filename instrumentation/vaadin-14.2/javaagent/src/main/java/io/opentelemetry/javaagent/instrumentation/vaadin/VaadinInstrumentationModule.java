@@ -20,7 +20,7 @@ public class VaadinInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VaadinInstrumentationModule() {
-    super("vaadin", "vaadin-14.2");
+    super("vaadin", "vaadin_14.2");
   }
 
   @Override

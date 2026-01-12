@@ -6,10 +6,9 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
@@ -28,7 +27,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
     // don't ignore libraries that we actually attempt to instrument. It means either the list is
     // wrong or a type matcher is.
     boolean enabled =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+        AgentDistributionConfig.get()
             .get("testing")
             .get("additional_library_ignores")
             .getBoolean("enabled", true);

@@ -21,7 +21,7 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
     implements ExperimentalInstrumentationModule {
 
   public DropwizardMetricsInstrumentationModule() {
-    super("dropwizard-metrics", "dropwizard-metrics-4.0");
+    super("dropwizard_metrics", "dropwizard_metrics_4.0");
   }
 
   @Override

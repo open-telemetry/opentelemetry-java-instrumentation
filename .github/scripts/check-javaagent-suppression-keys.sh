@@ -10,8 +10,8 @@ for file in $(find instrumentation -name "*Module.java"); do
     continue
   fi
 
-  module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
-  simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
+  module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#' | tr '-' '_')
+  simple_module_name=$(echo "$module_name" | sed 's/_[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
     # TODO these need some work still
@@ -25,17 +25,17 @@ for file in $(find instrumentation -name "*Module.java"); do
     # TODO split jdbc-datasource out into separate instrumentation?
     continue
   fi
-  if [[ "$simple_module_name" == kafka-clients ]]; then
+  if [[ "$simple_module_name" == kafka_clients ]]; then
     # TODO split kafka client metrics out into separate instrumentation?
     continue
   fi
-  if [[ "$simple_module_name" == quarkus-resteasy-reactive ]]; then
+  if [[ "$simple_module_name" == quarkus_resteasy_reactive ]]; then
     # TODO module is missing a base version
     continue
   fi
-  if [[ "$simple_module_name" == spring-cloud-gateway-webmvc ]]; then
+  if [[ "$simple_module_name" == spring_cloud_gateway_webmvc ]]; then
     # webmvc variant uses spring-cloud-gateway as base name
-    simple_module_name="spring-cloud-gateway"
+    simple_module_name="spring_cloud_gateway"
   fi
 
   if [ "$module_name" == "$simple_module_name" ]; then

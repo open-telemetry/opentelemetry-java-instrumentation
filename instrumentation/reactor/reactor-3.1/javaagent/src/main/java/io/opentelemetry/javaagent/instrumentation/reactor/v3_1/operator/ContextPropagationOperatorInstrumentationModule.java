@@ -20,7 +20,7 @@ public class ContextPropagationOperatorInstrumentationModule extends Instrumenta
     implements ExperimentalInstrumentationModule {
 
   public ContextPropagationOperatorInstrumentationModule() {
-    super("reactor", "reactor-3.1", "reactor-context-propagation-operator");
+    super("reactor", "reactor_3.1", "reactor_context_propagation_operator");
   }
 
   @Override

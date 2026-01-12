@@ -21,7 +21,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringWebInstrumentationModule() {
-    super("spring-web", "spring-web-6.0");
+    super("spring_web", "spring_web_6.0");
   }
 
   @Override

@@ -17,7 +17,7 @@ import java.util.List;
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super("async-http-client", "async-http-client-2.0");
+    super("async_http_client", "async_http_client_2.0");
   }
 
   @Override

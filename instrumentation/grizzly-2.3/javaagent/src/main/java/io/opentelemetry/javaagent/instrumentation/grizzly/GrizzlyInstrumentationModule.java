@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GrizzlyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GrizzlyInstrumentationModule() {
-    super("grizzly", "grizzly-2.3");
+    super("grizzly", "grizzly_2.3");
   }
 
   @Override

@@ -13,10 +13,10 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationName("aws_sdk_2.2_bedrock_runtime")
+    excludeInstrumentationName("aws_sdk_2.2_sqs")
+    excludeInstrumentationName("aws_sdk_2.2_sns")
+    excludeInstrumentationName("aws_sdk_2.2_lambda")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -32,7 +32,7 @@ muzzle {
 
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
-    excludeInstrumentationName("aws-sdk-2.2-core")
+    excludeInstrumentationName("aws_sdk_2.2_core")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -46,9 +46,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationName("aws_sdk_2.2_bedrock_runtime")
+    excludeInstrumentationName("aws_sdk_2.2_sns")
+    excludeInstrumentationName("aws_sdk_2.2_lambda")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -62,9 +62,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationName("aws_sdk_2.2_bedrock_runtime")
+    excludeInstrumentationName("aws_sdk_2.2_sqs")
+    excludeInstrumentationName("aws_sdk_2.2_lambda")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -77,9 +77,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationName("aws_sdk_2.2_bedrock_runtime")
+    excludeInstrumentationName("aws_sdk_2.2_sqs")
+    excludeInstrumentationName("aws_sdk_2.2_sns")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -92,9 +92,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationName("aws_sdk_2.2_lambda")
+    excludeInstrumentationName("aws_sdk_2.2_sqs")
+    excludeInstrumentationName("aws_sdk_2.2_sns")
   }
 }
 

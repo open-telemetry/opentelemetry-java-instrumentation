@@ -19,7 +19,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@ConditionalOnEnabledInstrumentation(module = "spring-scheduling")
+@ConditionalOnEnabledInstrumentation(module = "spring_scheduling")
 @ConditionalOnClass({Scheduled.class, Aspect.class})
 @Configuration
 class SpringSchedulingInstrumentationAutoConfiguration {

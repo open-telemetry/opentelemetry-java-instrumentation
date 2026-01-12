@@ -17,7 +17,7 @@ import java.util.List;
 public class AkkaHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaHttpClientInstrumentationModule() {
-    super("akka-http", "akka-http-10.0", "akka-http-client");
+    super("akka_http", "akka_http_10.0", "akka_http_client");
   }
 
   @Override

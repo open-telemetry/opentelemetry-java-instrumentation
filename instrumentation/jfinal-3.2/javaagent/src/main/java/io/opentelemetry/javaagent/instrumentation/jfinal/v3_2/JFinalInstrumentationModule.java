@@ -21,7 +21,7 @@ public class JFinalInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JFinalInstrumentationModule() {
-    super("jfinal", "jfinal-3.2");
+    super("jfinal", "jfinal_3.2");
   }
 
   @Override

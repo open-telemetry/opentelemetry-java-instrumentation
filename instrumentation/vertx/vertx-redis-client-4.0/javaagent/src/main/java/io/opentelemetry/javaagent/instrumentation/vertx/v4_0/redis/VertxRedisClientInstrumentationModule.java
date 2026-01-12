@@ -19,7 +19,7 @@ public class VertxRedisClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
-    super("vertx-redis-client", "vertx-redis-client-4.0", "vertx");
+    super("vertx_redis_client", "vertx_redis_client_4.0", "vertx");
   }
 
   @Override

@@ -22,7 +22,7 @@ public class OpenTelemetryAppenderAutoConfiguration {
 
   public OpenTelemetryAppenderAutoConfiguration() {}
 
-  @ConditionalOnEnabledInstrumentation(module = "log4j-appender")
+  @ConditionalOnEnabledInstrumentation(module = "log4j_appender")
   @ConditionalOnClass(org.apache.logging.log4j.core.LoggerContext.class)
   @Configuration
   static class Log4jAppenderConfig {
@@ -37,7 +37,7 @@ public class OpenTelemetryAppenderAutoConfiguration {
     }
   }
 
-  @ConditionalOnEnabledInstrumentation(module = "logback-appender")
+  @ConditionalOnEnabledInstrumentation(module = "logback_appender")
   @ConditionalOnClass(ch.qos.logback.classic.LoggerContext.class)
   @Configuration
   static class LogbackAppenderConfig {

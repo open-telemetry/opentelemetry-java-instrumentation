@@ -18,7 +18,7 @@ public class HystrixInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public HystrixInstrumentationModule() {
-    super("hystrix", "hystrix-1.4");
+    super("hystrix", "hystrix_1.4");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class MyBatisInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public MyBatisInstrumentationModule() {
-    super("mybatis", "mybatis-3.2");
+    super("mybatis", "mybatis_3.2");
   }
 
   @Override

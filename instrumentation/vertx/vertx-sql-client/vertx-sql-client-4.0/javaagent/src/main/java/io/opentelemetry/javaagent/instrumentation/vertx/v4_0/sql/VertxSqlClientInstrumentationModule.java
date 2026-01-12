@@ -21,7 +21,7 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxSqlClientInstrumentationModule() {
-    super("vertx-sql-client", "vertx-sql-client-4.0", "vertx");
+    super("vertx_sql_client", "vertx_sql_client_4.0", "vertx");
   }
 
   @Override

@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Log4j27InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Log4j27InstrumentationModule() {
-    super("log4j-context-data", "log4j-context-data-2.7");
+    super("log4j_context_data", "log4j_context_data_2.7");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class RmiServerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public RmiServerInstrumentationModule() {
-    super("rmi", "rmi-server");
+    super("rmi", "rmi_server");
   }
 
   @Override

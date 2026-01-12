@@ -17,7 +17,7 @@ public class JaxWsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JaxWsInstrumentationModule() {
-    super("jaxws", "jaxws-2.0");
+    super("jaxws", "jaxws_2.0");
   }
 
   @Override

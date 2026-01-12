@@ -51,6 +51,7 @@ dependencies {
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
   implementation("org.ow2.asm:asm-util")
+  implementation("com.fasterxml.jackson.core:jackson-databind")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
@@ -63,7 +64,6 @@ dependencies {
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {

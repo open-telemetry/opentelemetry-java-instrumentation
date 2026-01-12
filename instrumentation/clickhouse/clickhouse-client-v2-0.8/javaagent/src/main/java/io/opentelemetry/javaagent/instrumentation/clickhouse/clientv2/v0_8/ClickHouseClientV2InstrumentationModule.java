@@ -18,7 +18,7 @@ public class ClickHouseClientV2InstrumentationModule extends InstrumentationModu
     implements ExperimentalInstrumentationModule {
 
   public ClickHouseClientV2InstrumentationModule() {
-    super("clickhouse-client-v2", "clickhouse-client-v2-0.8", "clickhouse", "clickhouse-client");
+    super("clickhouse_client_v2", "clickhouse_client_v2_0.8", "clickhouse", "clickhouse_client");
   }
 
   @Override

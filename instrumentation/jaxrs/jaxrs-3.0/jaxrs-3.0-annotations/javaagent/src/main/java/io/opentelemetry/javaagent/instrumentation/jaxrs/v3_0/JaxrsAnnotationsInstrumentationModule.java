@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JaxrsAnnotationsInstrumentationModule() {
-    super("jaxrs", "jaxrs-3.0", "jaxrs-annotations", "jaxrs-3.0-annotations");
+    super("jaxrs", "jaxrs_3.0", "jaxrs_annotations", "jaxrs_3.0_annotations");
   }
 
   // require jax-rs 3

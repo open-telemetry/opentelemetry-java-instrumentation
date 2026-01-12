@@ -25,8 +25,8 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   public AnnotationInstrumentationModule() {
     super(
-        "opentelemetry-instrumentation-annotations",
-        "opentelemetry-instrumentation-annotations-1.16",
+        "opentelemetry_instrumentation_annotations",
+        "opentelemetry_instrumentation_annotations_1.16",
         "annotations");
   }
 

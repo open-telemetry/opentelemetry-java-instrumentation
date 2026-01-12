@@ -16,7 +16,7 @@ import java.util.List;
 public class PowerJobInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PowerJobInstrumentationModule() {
-    super("powerjob", "powerjob-4.0");
+    super("powerjob", "powerjob_4.0");
   }
 
   @Override

@@ -10,7 +10,7 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_2.12:1.0.1")
-    excludeInstrumentationName("tapir-pekko-http-server")
+    excludeInstrumentationName("tapir_pekko_http_server")
   }
   pass {
     group.set("org.apache.pekko")
@@ -18,7 +18,7 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_2.13:1.0.1")
-    excludeInstrumentationName("tapir-pekko-http-server")
+    excludeInstrumentationName("tapir_pekko_http_server")
   }
   pass {
     group.set("org.apache.pekko")
@@ -26,28 +26,28 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_3:1.0.1")
-    excludeInstrumentationName("tapir-pekko-http-server")
+    excludeInstrumentationName("tapir_pekko_http_server")
   }
   pass {
     group.set("com.softwaremill.sttp.tapir")
     module.set("tapir-pekko-http-server_2.12")
     versions.set("[1.7,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pekko-http-server")
+    excludeInstrumentationName("pekko_http_server")
   }
   pass {
     group.set("com.softwaremill.sttp.tapir")
     module.set("tapir-pekko-http-server_2.13")
     versions.set("[1.7,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pekko-http-server")
+    excludeInstrumentationName("pekko_http_server")
   }
   pass {
     group.set("com.softwaremill.sttp.tapir")
     module.set("tapir-pekko-http-server_3")
     versions.set("[1.7,)")
     assertInverse.set(true)
-    excludeInstrumentationName("pekko-http-server")
+    excludeInstrumentationName("pekko_http_server")
   }
 }
 

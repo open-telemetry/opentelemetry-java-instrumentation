@@ -17,7 +17,7 @@ import java.util.List;
 public class MyFacesInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public MyFacesInstrumentationModule() {
-    super("jsf-myfaces", "jsf-myfaces-3.0");
+    super("jsf_myfaces", "jsf_myfaces_3.0");
   }
 
   @Override

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class LambdaInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public LambdaInstrumentationModule() {
-    super("aws-sdk-2.2-lambda");
+    super("aws_sdk_2.2_lambda");
   }
 
   @Override

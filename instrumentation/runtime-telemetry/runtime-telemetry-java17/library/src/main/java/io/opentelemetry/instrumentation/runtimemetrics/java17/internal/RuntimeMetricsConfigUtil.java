@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetricsBuilder;
@@ -20,7 +21,9 @@ public final class RuntimeMetricsConfigUtil {
 
   @Nullable
   public static RuntimeMetrics configure(
-      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry, String instrumentationMode) {
+      RuntimeMetricsBuilder builder,
+      OpenTelemetry openTelemetry,
+      EnabledInstrumentations enabledInstrumentations) {
     /*
     By default, don't use any JFR metrics. May change this once semantic conventions are updated.
     If enabled, default to only the metrics not already covered by runtime-telemetry-java8
@@ -28,17 +31,16 @@ public final class RuntimeMetricsConfigUtil {
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17")
         .getBoolean("enable_all", false)) {
       builder.enableAllFeatures();
-    } else if (DeclarativeConfigUtil.getInstrumentationConfig(
-            openTelemetry, "runtime_telemetry_java17")
-        .getBoolean("enabled", false)) {
+    } else if (enabledInstrumentations.isEnabledExplicitly("runtime_telemetry_java17")) {
       // default configuration
-    } else if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
-        .getBoolean("enabled", instrumentationMode.equals("default"))) {
-      // This only uses metrics gathered by JMX
-      builder.disableAllFeatures();
     } else {
-      // nothing is enabled
-      return null;
+      if (enabledInstrumentations.isEnabled("runtime_telemetry")) {
+        // This only uses metrics gathered by JMX
+        builder.disableAllFeatures();
+      } else {
+        // nothing is enabled
+        return null;
+      }
     }
 
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")

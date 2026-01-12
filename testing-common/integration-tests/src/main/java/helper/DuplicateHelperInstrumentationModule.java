@@ -16,7 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class DuplicateHelperInstrumentationModule extends InstrumentationModule {
   public DuplicateHelperInstrumentationModule() {
-    super("duplicate-helper");
+    super("duplicate_helper");
   }
 
   @Override

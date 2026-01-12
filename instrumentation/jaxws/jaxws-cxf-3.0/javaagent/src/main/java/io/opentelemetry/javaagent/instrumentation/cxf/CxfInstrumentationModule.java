@@ -16,7 +16,7 @@ import java.util.List;
 public class CxfInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public CxfInstrumentationModule() {
-    super("cxf", "cxf-3.0", "jaxws");
+    super("cxf", "cxf_3.0", "jaxws");
   }
 
   @Override

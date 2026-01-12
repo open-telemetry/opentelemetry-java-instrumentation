@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ElasticsearchRest6InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ElasticsearchRest6InstrumentationModule() {
-    super("elasticsearch-rest", "elasticsearch-rest-6.4", "elasticsearch");
+    super("elasticsearch_rest", "elasticsearch_rest_6.4", "elasticsearch");
   }
 
   @Override

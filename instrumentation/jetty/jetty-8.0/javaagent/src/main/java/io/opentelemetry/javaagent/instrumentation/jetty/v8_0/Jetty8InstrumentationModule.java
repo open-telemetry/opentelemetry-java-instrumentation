@@ -21,7 +21,7 @@ public class Jetty8InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public Jetty8InstrumentationModule() {
-    super("jetty", "jetty-8.0");
+    super("jetty", "jetty_8.0");
   }
 
   @Override

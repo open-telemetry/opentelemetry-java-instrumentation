@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
+import static java.util.Collections.emptyList;
+
+import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
+import java.util.List;
+import javax.annotation.Nullable;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
 /**
@@ -18,7 +23,7 @@ public class EarlyConfig {
   public static boolean otelEnabled(Environment environment) {
     boolean disabled =
         environment.getProperty(
-            getPropertyName(environment, "otel.sdk.disabled", "otel.disabled"),
+            isDeclarativeConfig(environment) ? "otel.disabled" : "otel.sdk.disabled",
             Boolean.class,
             false);
     return !disabled;
@@ -28,26 +33,61 @@ public class EarlyConfig {
     return environment.getProperty("otel.file_format", String.class) != null;
   }
 
-  public static boolean isDefaultEnabled(Environment environment) {
+  public static EnabledInstrumentations getEnabledInstrumentations(
+      ConfigurableEnvironment environment) {
     if (isDeclarativeConfig(environment)) {
-      String mode =
-          environment.getProperty(
-              "otel.instrumentation/development.java.spring_starter.instrumentation_mode",
-              String.class,
-              "default");
+      return new EnabledInstrumentations() {
+        @SuppressWarnings(
+            "unchecked") // Spring's Environment.getProperty with List.class returns a raw List
+        @Nullable
+        @Override
+        public Boolean getEnabled(String instrumentationName) {
+          List<String> enabled =
+              environment.getProperty(
+                  "otel.distribution.spring_starter.instrumentation.enabled",
+                  List.class,
+                  emptyList());
+          if (enabled.contains(instrumentationName)) {
+            return true;
+          }
 
-      switch (mode) {
-        case "none":
-          return false;
-        case "default":
-          return true;
-        default:
-          throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-      }
-    } else {
-      return environment.getProperty(
-          "otel.instrumentation.common.default-enabled", Boolean.class, true);
+          List<String> disabled =
+              environment.getProperty(
+                  "otel.distribution.spring_starter.instrumentation.disabled",
+                  List.class,
+                  emptyList());
+          if (disabled.contains(instrumentationName)) {
+            return false;
+          }
+
+          return null;
+        }
+
+        @Override
+        public boolean isDefaultEnabled() {
+          return environment.getProperty(
+              "otel.distribution.spring_starter.instrumentation.default_enabled",
+              Boolean.class,
+              true);
+        }
+      };
     }
+
+    return new EnabledInstrumentations() {
+      @Nullable
+      @Override
+      public Boolean getEnabled(String instrumentationName) {
+        return environment.getProperty(
+            String.format("otel.instrumentation.%s.enabled", instrumentationName.replace('_', '-')),
+            Boolean.class);
+      }
+
+      @Override
+      public boolean isDefaultEnabled() {
+        return environment.getProperty(
+            "otel.instrumentation.common.default-enabled", Boolean.class, true);
+      }
+    };
   }
 
   public static String translatePropertyName(Environment environment, String name) {
@@ -68,27 +108,5 @@ public class EarlyConfig {
 
   private static String toSnakeCase(String string) {
     return string.replace('-', '_');
-  }
-
-  public static boolean isInstrumentationEnabled(
-      Environment environment, String name, boolean defaultValue) {
-    String property =
-        getPropertyName(
-            environment,
-            String.format("otel.instrumentation.%s.enabled", name),
-            String.format("otel.instrumentation/development.java.%s.enabled", toSnakeCase(name)));
-    Boolean explicit = environment.getProperty(property, Boolean.class);
-    if (explicit != null) {
-      return explicit;
-    }
-    if (!defaultValue) {
-      return false;
-    }
-    return isDefaultEnabled(environment);
-  }
-
-  private static String getPropertyName(
-      Environment environment, String propertyBased, String declarative) {
-    return isDeclarativeConfig(environment) ? declarative : propertyBased;
   }
 }

@@ -22,7 +22,7 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringWebMvcInstrumentationModule() {
-    super("spring-webmvc", "spring-webmvc-3.1");
+    super("spring_webmvc", "spring_webmvc_3.1");
   }
 
   @Override

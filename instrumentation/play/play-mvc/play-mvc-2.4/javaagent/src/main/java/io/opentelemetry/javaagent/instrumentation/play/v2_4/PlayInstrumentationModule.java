@@ -20,7 +20,7 @@ public class PlayInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public PlayInstrumentationModule() {
-    super("play-mvc", "play-mvc-2.4", "play");
+    super("play_mvc", "play_mvc_2.4", "play");
   }
 
   @Override

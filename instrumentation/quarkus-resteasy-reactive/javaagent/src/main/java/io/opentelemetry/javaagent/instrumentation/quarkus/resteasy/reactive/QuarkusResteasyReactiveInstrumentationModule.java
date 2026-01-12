@@ -16,7 +16,7 @@ import java.util.List;
 public class QuarkusResteasyReactiveInstrumentationModule extends InstrumentationModule {
 
   public QuarkusResteasyReactiveInstrumentationModule() {
-    super("quarkus", "jaxrs", "quarkus-resteasy-reactive", "quarkus-resteasy-reactive-3.0");
+    super("quarkus", "jaxrs", "quarkus_resteasy_reactive", "quarkus_resteasy_reactive_3.0");
   }
 
   @Override

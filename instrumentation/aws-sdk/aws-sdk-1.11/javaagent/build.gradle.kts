@@ -16,7 +16,7 @@ muzzle {
     versions.set("[1.10.33,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("aws-sdk-1.11-sqs")
+    excludeInstrumentationName("aws_sdk_1.11_sqs")
   }
 
   fail {
@@ -24,7 +24,7 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
 
-    excludeInstrumentationName("aws-sdk-1.11-core")
+    excludeInstrumentationName("aws_sdk_1.11_core")
   }
 
   pass {

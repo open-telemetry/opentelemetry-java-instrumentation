@@ -24,7 +24,7 @@ import org.springframework.web.client.RestClient;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@ConditionalOnEnabledInstrumentation(module = "spring-web")
+@ConditionalOnEnabledInstrumentation(module = "spring_web")
 @ConditionalOnClass({RestClient.class, RestClientCustomizer.class})
 @AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration

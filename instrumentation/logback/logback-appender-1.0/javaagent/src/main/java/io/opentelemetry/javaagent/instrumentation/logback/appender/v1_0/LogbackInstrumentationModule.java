@@ -18,7 +18,7 @@ public class LogbackInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public LogbackInstrumentationModule() {
-    super("logback-appender", "logback-appender-1.0");
+    super("logback_appender", "logback_appender_1.0");
   }
 
   @Override

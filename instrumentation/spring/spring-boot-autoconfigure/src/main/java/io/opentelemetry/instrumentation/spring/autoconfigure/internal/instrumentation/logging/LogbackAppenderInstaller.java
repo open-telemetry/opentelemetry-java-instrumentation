@@ -44,17 +44,17 @@ class LogbackAppenderInstaller {
   }
 
   private static boolean isLogbackAppenderAddable(ApplicationEnvironmentPreparedEvent event) {
-    return isAppenderAddable(event, "logback-appender");
+    return isAppenderAddable(event, "logback_appender");
   }
 
   private static boolean isLogbackMdcAppenderAddable(ApplicationEnvironmentPreparedEvent event) {
-    return isAppenderAddable(event, "logback-mdc");
+    return isAppenderAddable(event, "logback_mdc");
   }
 
   private static boolean isAppenderAddable(ApplicationEnvironmentPreparedEvent event, String name) {
     ConfigurableEnvironment environment = event.getEnvironment();
     return EarlyConfig.otelEnabled(environment)
-        && EarlyConfig.isInstrumentationEnabled(environment, name, true);
+        && EarlyConfig.getEnabledInstrumentations(environment).isEnabled(name);
   }
 
   private static void reInitializeOpenTelemetryAppender(

@@ -20,7 +20,7 @@ public class GwtInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public GwtInstrumentationModule() {
-    super("gwt", "gwt-2.0");
+    super("gwt", "gwt_2.0");
   }
 
   @Override

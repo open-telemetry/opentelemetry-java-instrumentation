@@ -18,7 +18,7 @@ public class SpringAwsSqsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringAwsSqsInstrumentationModule() {
-    super("spring-cloud-aws", "spring-cloud-aws-3.0");
+    super("spring_cloud_aws", "spring_cloud_aws_3.0");
   }
 
   @Override

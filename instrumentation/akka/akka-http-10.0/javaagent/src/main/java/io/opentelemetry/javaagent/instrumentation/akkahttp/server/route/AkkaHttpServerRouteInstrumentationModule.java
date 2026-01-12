@@ -21,7 +21,7 @@ import java.util.List;
 public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AkkaHttpServerRouteInstrumentationModule() {
-    super("akka-http", "akka-http-10.0", "akka-http-server", "akka-http-server-route");
+    super("akka_http", "akka_http_10.0", "akka_http_server", "akka_http_server_route");
   }
 
   @Override

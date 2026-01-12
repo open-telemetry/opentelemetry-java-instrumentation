@@ -16,7 +16,7 @@ import java.util.List;
 public class WebfluxClientInstrumentationModule extends InstrumentationModule {
 
   public WebfluxClientInstrumentationModule() {
-    super("spring-webflux", "spring-webflux-5.0", "spring-webflux-client");
+    super("spring_webflux", "spring_webflux_5.0", "spring_webflux_client");
   }
 
   @Override

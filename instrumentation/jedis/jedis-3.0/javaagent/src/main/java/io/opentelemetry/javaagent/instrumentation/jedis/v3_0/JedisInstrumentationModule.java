@@ -21,7 +21,7 @@ public class JedisInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super("jedis", "jedis-3.0");
+    super("jedis", "jedis_3.0");
   }
 
   @Override

@@ -16,7 +16,7 @@ import java.util.List;
 public class KotlinCoroutinesFlowInstrumentationModule extends InstrumentationModule {
 
   public KotlinCoroutinesFlowInstrumentationModule() {
-    super("kotlinx-coroutines-flow", "kotlinx-coroutines-flow-1.3", "kotlinx-coroutines");
+    super("kotlinx_coroutines_flow", "kotlinx_coroutines_flow_1.3", "kotlinx_coroutines");
   }
 
   @Override

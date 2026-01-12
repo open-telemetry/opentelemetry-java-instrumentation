@@ -18,7 +18,7 @@ public class SpringSchedulingInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringSchedulingInstrumentationModule() {
-    super("spring-scheduling", "spring-scheduling-3.1");
+    super("spring_scheduling", "spring_scheduling_3.1");
   }
 
   @Override

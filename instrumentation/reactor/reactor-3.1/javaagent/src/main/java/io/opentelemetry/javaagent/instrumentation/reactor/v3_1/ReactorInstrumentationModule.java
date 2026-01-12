@@ -18,7 +18,7 @@ public class ReactorInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ReactorInstrumentationModule() {
-    super("reactor", "reactor-3.1");
+    super("reactor", "reactor_3.1");
   }
 
   @Override

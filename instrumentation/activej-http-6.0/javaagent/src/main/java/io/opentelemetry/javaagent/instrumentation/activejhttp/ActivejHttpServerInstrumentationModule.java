@@ -20,7 +20,7 @@ public class ActivejHttpServerInstrumentationModule extends InstrumentationModul
     implements ExperimentalInstrumentationModule {
 
   public ActivejHttpServerInstrumentationModule() {
-    super("activej-http", "activej-http-6.0");
+    super("activej_http", "activej_http_6.0");
   }
 
   @Override

@@ -24,8 +24,8 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
 
   public SpringBootActuatorInstrumentationModule() {
     super(
-        "spring-boot-actuator-autoconfigure",
-        "spring-boot-actuator-autoconfigure-2.0",
+        "spring_boot_actuator_autoconfigure",
+        "spring_boot_actuator_autoconfigure_2.0",
         // share the instrumentation name with MicrometerInstrumentationModule to lessen the users'
         // confusion
         "micrometer");

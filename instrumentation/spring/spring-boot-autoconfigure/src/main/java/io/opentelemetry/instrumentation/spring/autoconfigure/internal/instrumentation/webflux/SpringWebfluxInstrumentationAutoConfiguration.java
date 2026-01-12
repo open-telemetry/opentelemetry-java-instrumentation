@@ -22,7 +22,7 @@ import org.springframework.web.server.WebFilter;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@ConditionalOnEnabledInstrumentation(module = "spring-webflux")
+@ConditionalOnEnabledInstrumentation(module = "spring_webflux")
 @ConditionalOnClass(WebClient.class)
 @Configuration
 public class SpringWebfluxInstrumentationAutoConfiguration {

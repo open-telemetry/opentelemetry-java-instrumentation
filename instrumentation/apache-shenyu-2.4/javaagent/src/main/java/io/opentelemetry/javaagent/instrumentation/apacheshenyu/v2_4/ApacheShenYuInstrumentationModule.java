@@ -14,7 +14,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ApacheShenYuInstrumentationModule extends InstrumentationModule {
   public ApacheShenYuInstrumentationModule() {
-    super("apache-shenyu", "apache-shenyu-2.4");
+    super("apache_shenyu", "apache_shenyu_2.4");
   }
 
   @Override

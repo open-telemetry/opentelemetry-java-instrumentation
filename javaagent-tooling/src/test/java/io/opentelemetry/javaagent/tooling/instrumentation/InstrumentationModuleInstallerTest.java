@@ -10,11 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedDeclarativeConfigProperties;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
+import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.TreeSet;
 import java.util.stream.Stream;
@@ -27,7 +24,7 @@ class InstrumentationModuleInstallerTest {
 
   @AfterEach
   void tearDown() {
-    GlobalOpenTelemetry.resetForTest();
+    AgentEnabledInstrumentations.resetForTest();
   }
 
   @ParameterizedTest(name = "isInstrumentationEnabled({0}) = {4}")
@@ -43,8 +40,8 @@ class InstrumentationModuleInstallerTest {
     when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
 
-    OpenTelemetry openTelemetry = createOpenTelemetry(config);
-    GlobalOpenTelemetry.set(openTelemetry);
+    AgentEnabledInstrumentations.set(
+        OpenTelemetryInstaller.enabledInstrumentationsFromConfigProperties(config));
 
     assertThat(
             InstrumentationModuleInstaller.isInstrumentationEnabled(
@@ -90,15 +87,5 @@ class InstrumentationModuleInstallerTest {
             false,
             true),
         Arguments.of("disabled by default", null, null, false, false));
-  }
-
-  private static OpenTelemetry createOpenTelemetry(ConfigProperties config) {
-    ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
-    ConfigProvider configProvider = mock(ConfigProvider.class);
-    when(otel.getConfigProvider()).thenReturn(configProvider);
-    when(configProvider.getInstrumentationConfig())
-        .thenReturn(
-            ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(config));
-    return otel;
   }
 }

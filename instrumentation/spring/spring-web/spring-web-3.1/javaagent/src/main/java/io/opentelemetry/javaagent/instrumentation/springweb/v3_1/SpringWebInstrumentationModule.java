@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringWebInstrumentationModule() {
-    super("spring-web", "spring-web-3.1");
+    super("spring_web", "spring_web_3.1");
   }
 
   @Override

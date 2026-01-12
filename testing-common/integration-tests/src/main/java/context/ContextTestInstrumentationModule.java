@@ -17,7 +17,7 @@ import java.util.List;
 public class ContextTestInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ContextTestInstrumentationModule() {
-    super("context-test-instrumentation");
+    super("context_test_instrumentation");
   }
 
   @Override

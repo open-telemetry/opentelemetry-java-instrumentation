@@ -18,7 +18,7 @@ public class VertxRxInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxRxInstrumentationModule() {
-    super("vertx-rx-java", "vertx-rx-java-3.5", "vertx");
+    super("vertx_rx_java", "vertx_rx_java_3.5", "vertx");
   }
 
   @Override

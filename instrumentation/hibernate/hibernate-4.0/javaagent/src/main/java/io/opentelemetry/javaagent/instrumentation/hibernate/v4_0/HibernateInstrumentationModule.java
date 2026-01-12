@@ -20,7 +20,7 @@ public class HibernateInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-4.0");
+    super("hibernate", "hibernate_4.0");
   }
 
   @Override

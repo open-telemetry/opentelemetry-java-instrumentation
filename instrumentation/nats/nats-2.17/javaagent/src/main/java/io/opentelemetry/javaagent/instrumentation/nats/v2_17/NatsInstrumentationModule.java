@@ -18,7 +18,7 @@ public class NatsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public NatsInstrumentationModule() {
-    super("nats", "nats-2.17");
+    super("nats", "nats_2.17");
   }
 
   @Override

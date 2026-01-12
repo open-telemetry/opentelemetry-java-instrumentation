@@ -17,7 +17,7 @@ import java.util.List;
 public class LogbackMdcInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public LogbackMdcInstrumentationModule() {
-    super("logback-mdc", "logback-mdc-1.0");
+    super("logback_mdc", "logback_mdc_1.0");
   }
 
   @Override

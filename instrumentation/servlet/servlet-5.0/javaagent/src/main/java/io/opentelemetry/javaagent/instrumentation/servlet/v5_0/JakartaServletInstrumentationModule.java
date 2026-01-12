@@ -24,7 +24,7 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule
   private static final String BASE_PACKAGE = "jakarta.servlet";
 
   public JakartaServletInstrumentationModule() {
-    super("servlet", "servlet-5.0");
+    super("servlet", "servlet_5.0");
   }
 
   @Override

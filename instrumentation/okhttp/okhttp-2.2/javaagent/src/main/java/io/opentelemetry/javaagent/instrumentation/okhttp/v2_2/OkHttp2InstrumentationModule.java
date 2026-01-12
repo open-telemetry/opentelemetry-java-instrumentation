@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class OkHttp2InstrumentationModule extends InstrumentationModule {
   public OkHttp2InstrumentationModule() {
-    super("okhttp", "okhttp-2.2");
+    super("okhttp", "okhttp_2.2");
   }
 
   @Override

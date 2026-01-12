@@ -18,7 +18,7 @@ public class JbossLogmanagerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JbossLogmanagerInstrumentationModule() {
-    super("jboss-logmanager-mdc", "jboss-logmanager-mdc-1.1");
+    super("jboss_logmanager_mdc", "jboss_logmanager_mdc_1.1");
   }
 
   @Override
