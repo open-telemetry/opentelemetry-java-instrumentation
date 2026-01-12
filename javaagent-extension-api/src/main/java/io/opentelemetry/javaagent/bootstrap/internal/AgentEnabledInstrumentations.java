@@ -31,4 +31,6 @@ public class AgentEnabledInstrumentations {
   public static void resetForTest() {
     instance = null;
   }
+
+  private AgentEnabledInstrumentations() {}
 }
