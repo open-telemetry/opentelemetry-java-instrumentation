@@ -33,11 +33,6 @@ public final class JettyClientTelemetry {
   private final HttpClient httpClient;
   private final Instrumenter<Request, Response> instrumenter;
 
-  JettyClientTelemetry(HttpClient httpClient) {
-    this.httpClient = httpClient;
-    this.instrumenter = null;
-  }
-
   JettyClientTelemetry(HttpClient httpClient, Instrumenter<Request, Response> instrumenter) {
     this.httpClient = httpClient;
     this.instrumenter = instrumenter;
