@@ -31,6 +31,12 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, Collection<String>>
       setCapturedRequestParameters;
 
+  /**
+   * Sets whether experimental HTTP telemetry should be emitted.
+   *
+   * @param builder the telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       ServletTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {
@@ -38,6 +44,13 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether to add {@code trace_id} as a request attribute.
+   *
+   * @param builder the telemetry builder
+   * @param addTraceIdRequestAttribute {@code true} to add trace ID as request attribute
+   * @see javax.servlet.ServletRequest#setAttribute(String, Object)
+   */
   public static void addTraceIdRequestAttribute(
       ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
     if (setAddTraceIdRequestAttribute != null) {
@@ -45,6 +58,12 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether to capture the {@code enduser.id} span attribute.
+   *
+   * @param builder the telemetry builder
+   * @param captureEnduserId {@code true} to capture {@code enduser.id}
+   */
   public static void setCaptureEnduserId(
       ServletTelemetryBuilder builder, boolean captureEnduserId) {
     if (setCaptureEnduserId != null) {
@@ -52,6 +71,16 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets the request parameters to be captured as span attributes.
+   *
+   * <p>Request parameters will be captured as attributes with the format {@code
+   * servlet.request.parameter.<name>}.
+   *
+   * @param builder the telemetry builder
+   * @param capturedRequestParameters request parameter names to capture
+   * @see javax.servlet.ServletRequest#getParameterValues(String)
+   */
   public static void setCapturedRequestParameters(
       ServletTelemetryBuilder builder, Collection<String> capturedRequestParameters) {
     if (setCapturedRequestParameters != null) {
