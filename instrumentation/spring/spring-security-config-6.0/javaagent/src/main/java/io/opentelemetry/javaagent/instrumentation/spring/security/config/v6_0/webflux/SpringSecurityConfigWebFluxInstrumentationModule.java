@@ -19,10 +19,10 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
 
   public SpringSecurityConfigWebFluxInstrumentationModule() {
     super(
-        "spring-security-config",
-        "spring-security-config-6.0",
-        "spring-security-config-webflux",
-        "spring-security-config-webflux-6.0");
+        "spring_security_config",
+        "spring_security_config_6.0",
+        "spring_security_config_webflux",
+        "spring_security_config_webflux_6.0");
   }
 
   @Override

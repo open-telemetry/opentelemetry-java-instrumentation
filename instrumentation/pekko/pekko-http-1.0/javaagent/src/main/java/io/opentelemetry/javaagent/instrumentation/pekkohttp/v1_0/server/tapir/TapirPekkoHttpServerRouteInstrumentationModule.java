@@ -18,12 +18,12 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
     implements ExperimentalInstrumentationModule {
   public TapirPekkoHttpServerRouteInstrumentationModule() {
     super(
-        "pekko-http",
-        "pekko-http-1.0",
-        "pekko-http-server",
-        "pekko-http-server-route",
-        "tapir-pekko-http-server",
-        "tapir-pekko-http-server-route");
+        "pekko_http",
+        "pekko_http_1.0",
+        "pekko_http_server",
+        "pekko_http_server_route",
+        "tapir_pekko_http_server",
+        "tapir_pekko_http_server_route");
   }
 
   @Override

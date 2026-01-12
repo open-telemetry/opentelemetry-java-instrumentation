@@ -25,17 +25,17 @@ for file in $(find instrumentation -name "*Module.java"); do
     # TODO split jdbc-datasource out into separate instrumentation?
     continue
   fi
-  if [[ "$simple_module_name" == kafka-clients ]]; then
+  if [[ "$simple_module_name" == kafka_clients ]]; then
     # TODO split kafka client metrics out into separate instrumentation?
     continue
   fi
-  if [[ "$simple_module_name" == quarkus-resteasy-reactive ]]; then
+  if [[ "$simple_module_name" == quarkus_resteasy_reactive ]]; then
     # TODO module is missing a base version
     continue
   fi
-  if [[ "$simple_module_name" == spring-cloud-gateway-webmvc ]]; then
+  if [[ "$simple_module_name" == spring_cloud_gateway_webmvc ]]; then
     # webmvc variant uses spring-cloud-gateway as base name
-    simple_module_name="spring-cloud-gateway"
+    simple_module_name="spring_cloud_gateway"
   fi
 
   if [ "$module_name" == "$simple_module_name" ]; then
