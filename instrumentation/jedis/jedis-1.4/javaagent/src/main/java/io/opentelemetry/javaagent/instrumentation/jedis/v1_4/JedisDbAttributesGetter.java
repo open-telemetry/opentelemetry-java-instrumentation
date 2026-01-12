@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
@@ -17,25 +16,12 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String getDbSystem(JedisRequest request) {
+  public String getDbSystemName(JedisRequest request) {
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(JedisRequest request) {
-    return null;
   }
 
   @Override
   public String getDbNamespace(JedisRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  public String getConnectionString(JedisRequest request) {
     return null;
   }
 

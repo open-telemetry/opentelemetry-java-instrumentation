@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.HTTP_CLIENT_OPTIONS;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.http.HttpClientOptions;
@@ -53,13 +54,11 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) HttpClientImpl client,
         @Advice.Argument(2) String host,
         @Advice.Argument(3) int port) {
-      HttpClientOptions httpClientOptions =
-          VirtualField.find(HttpClientImpl.class, HttpClientOptions.class).get(client);
-      VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class)
-          .set(
-              request,
-              VertxRequestInfo.create(
-                  httpClientOptions != null && httpClientOptions.isSsl(), host, port));
+      HttpClientOptions httpClientOptions = HTTP_CLIENT_OPTIONS.get(client);
+      REQUEST_INFO.set(
+          request,
+          VertxRequestInfo.create(
+              httpClientOptions != null && httpClientOptions.isSsl(), host, port));
     }
   }
 
@@ -71,8 +70,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) boolean ssl,
         @Advice.Argument(3) String host,
         @Advice.Argument(4) int port) {
-      VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class)
-          .set(request, VertxRequestInfo.create(ssl, host, port));
+      REQUEST_INFO.set(request, VertxRequestInfo.create(ssl, host, port));
     }
   }
 
@@ -84,8 +82,7 @@ public class HttpRequestImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) boolean ssl,
         @Advice.Argument(4) String host,
         @Advice.Argument(5) int port) {
-      VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class)
-          .set(request, VertxRequestInfo.create(ssl, host, port));
+      REQUEST_INFO.set(request, VertxRequestInfo.create(ssl, host, port));
     }
   }
 }

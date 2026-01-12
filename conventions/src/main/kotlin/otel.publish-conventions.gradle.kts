@@ -1,6 +1,8 @@
 plugins {
   `maven-publish`
   signing
+
+  id("otel.japicmp-conventions")
 }
 
 publishing {
@@ -63,6 +65,13 @@ publishing {
           url.set("git@github.com:open-telemetry/opentelemetry-java-instrumentation.git")
         }
       }
+    }
+  }
+
+  repositories {
+    maven {
+      name = "ReleaseRepo"
+      url = File(project.rootDir.path, "releaseRepo").toURI()
     }
   }
 }

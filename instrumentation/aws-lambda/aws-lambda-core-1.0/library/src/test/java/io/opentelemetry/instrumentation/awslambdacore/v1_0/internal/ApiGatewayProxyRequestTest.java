@@ -30,7 +30,7 @@ class ApiGatewayProxyRequestTest {
   }
 
   @Test
-  public void shouldCreateNoopRequestIfNoPropagatorsSet() throws IOException {
+  void shouldCreateNoopRequestIfNoPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
     GlobalOpenTelemetry.set(OpenTelemetry.noop());
@@ -42,7 +42,7 @@ class ApiGatewayProxyRequestTest {
   }
 
   @Test
-  public void shouldCreateNoopRequestIfXrayPropagatorsSet() throws IOException {
+  void shouldCreateNoopRequestIfXrayPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
     GlobalOpenTelemetry.set(
@@ -55,7 +55,7 @@ class ApiGatewayProxyRequestTest {
   }
 
   @Test
-  public void shouldUseStreamMarkingIfHttpPropagatorsSet() throws IOException {
+  void shouldUseStreamMarkingIfHttpPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
     when(mock.markSupported()).thenReturn(true);
@@ -70,7 +70,7 @@ class ApiGatewayProxyRequestTest {
   }
 
   @Test
-  public void shouldUseNoopIfMarkingNotAvailableAndHttpPropagatorsSet() throws IOException {
+  void shouldUseNoopIfMarkingNotAvailableAndHttpPropagatorsSet() throws IOException {
     // given
     InputStream mock = mock(InputStream.class);
     when(mock.markSupported()).thenReturn(false);

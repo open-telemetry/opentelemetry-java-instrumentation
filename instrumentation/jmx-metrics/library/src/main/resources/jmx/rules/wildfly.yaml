@@ -1,0 +1,147 @@
+---
+rules:
+
+  - bean: jboss.as:deployment=*,subsystem=undertow
+    prefix: wildfly.session.
+    metricAttribute:
+      wildfly.deployment: param(deployment)
+    unit: "{session}"
+    mapping:
+      # wildfly.session.created
+      sessionsCreated:
+        metric: created
+        type: counter
+        desc: The number of sessions created
+      # wildfly.session.active.count
+      activeSessions:
+        metric: active.count
+        type: updowncounter
+        desc: The number of active sessions
+      # wildfly.session.active.limit
+      maxActiveSessions:
+        metric: active.limit
+        type: updowncounter
+        desc: The maximum number of active sessions
+        # discard negative values used to indicate absence of limit
+        dropNegativeValues: true
+      # wildfly.session.expired
+      expiredSessions:
+        metric: expired
+        type: counter
+        desc: The number of expired sessions
+      # wildfly.session.rejected
+      rejectedSessions:
+        metric: rejected
+        type: counter
+        desc: The number of rejected sessions
+
+  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+    prefix: wildfly.
+    metricAttribute:
+      wildfly.server: param(server)
+      wildfly.listener: param(http-listener)
+    type: counter
+    mapping:
+      # wildfly.request.count
+      requestCount:
+        metric: request.count
+        unit: "{request}"
+        desc: The number of requests served
+      # wildfly.request.duration.sum
+      processingTime:
+        metric: request.duration.sum
+        sourceUnit: ns
+        unit: s
+        desc: The total amount of time spent processing requests
+      # wildfly.error.count
+      errorCount:
+        metric: error.count
+        unit: "{request}"
+        desc: The number of requests that have resulted in a 5xx response
+
+  # wildly.network.io
+  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+    metricAttribute:
+      wildfly.server: param(server)
+      wildfly.listener: param(http-listener)
+    type: counter
+    unit: By
+    mapping:
+      bytesSent:
+        metric: &metric wildfly.network.io
+        desc: &desc Total number of bytes transferred
+        metricAttribute:
+          network.io.direction: const(transmit)
+      bytesReceived:
+        metric: *metric
+        desc: *desc
+        metricAttribute:
+          network.io.direction: const(receive)
+
+  - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
+    prefix: wildfly.db.client.connection.
+    metricAttribute:
+      db.client.connection.pool.name: param(data-source)
+    mapping:
+      # wildfly.db.client.connection.count
+      ActiveCount:
+        metric: &metric count
+        type: &type updowncounter
+        unit: &unit "{connection}"
+        desc: &desc The number of open physical database connections
+        metricAttribute:
+          db.client.connection.state: const(used)
+      IdleCount:
+        metric: *metric
+        type: *type
+        unit: *unit
+        desc: *desc
+        metricAttribute:
+          db.client.connection.state: const(idle)
+      # wildfly.db.client.connection.wait.count
+      WaitCount:
+        metric: wait.count
+        type: counter
+        # In this context, 'request' means 'connection request'
+        unit: "{request}"
+        desc: The number of connection requests that had to wait to obtain it
+
+  - bean: jboss.as:subsystem=transactions
+    prefix: wildfly.transaction.
+    unit: "{transaction}"
+    mapping:
+      # wildfly.transaction.count
+      numberOfInflightTransactions:
+        metric: count
+        type: updowncounter
+        desc: The number of in-flight transactions
+      # wildfly.transaction.created
+      numberOfTransactions:
+        metric: created
+        type: counter
+        desc: The total number of transactions created
+      # wildfly.transaction.committed
+      numberOfCommittedTransactions:
+        metric: committed
+        type: counter
+        desc: The total number of transactions committed
+      # wildfly.transaction.rollback
+      numberOfApplicationRollbacks:
+        metric: &metric rollback
+        type: &type counter
+        metricAttribute:
+          wildfly.rollback.cause: const(application)
+        desc: &desc The total number of transactions rolled back
+      numberOfResourceRollbacks:
+        metric: *metric
+        type: *type
+        metricAttribute:
+          wildfly.rollback.cause: const(resource)
+        desc: *desc
+      numberOfSystemRollbacks:
+        metric: *metric
+        type: *type
+        metricAttribute:
+          wildfly.rollback.cause: const(system)
+        desc: *desc
+

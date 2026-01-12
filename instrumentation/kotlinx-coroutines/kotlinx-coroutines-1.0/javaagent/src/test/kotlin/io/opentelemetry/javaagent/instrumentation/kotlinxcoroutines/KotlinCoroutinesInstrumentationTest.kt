@@ -15,10 +15,10 @@ import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -46,13 +46,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
-import org.junit.jupiter.params.provider.ArgumentsProvider
-import org.junit.jupiter.params.provider.ArgumentsSource
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -83,7 +81,7 @@ class KotlinCoroutinesInstrumentationTest {
   val tracer = testing.openTelemetry.getTracer("test")
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `cancellation prevents trace`(dispatcher: DispatcherWrapper) {
     runCatching {
       runTest(dispatcher) {
@@ -116,7 +114,7 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `propagates across nested jobs`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
       val goodDeferred = async { 1 }
@@ -310,7 +308,7 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `traced mono`(dispatcherWrapper: DispatcherWrapper) {
     runTest(dispatcherWrapper) {
       mono(dispatcherWrapper.dispatcher) {
@@ -337,7 +335,7 @@ class KotlinCoroutinesInstrumentationTest {
   private val animalKey: ContextKey<String> = ContextKey.named("animal")
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `context contains expected value`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
       val context1 = Context.current().with(animalKey, "cat")
@@ -379,6 +377,17 @@ class KotlinCoroutinesInstrumentationTest {
       annotated1()
     }
 
+    val assertions = codeFunctionAssertions(this.javaClass, "annotated2")
+    assertions.add(equalTo(AttributeKey.longKey("byteValue"), 1))
+    assertions.add(equalTo(AttributeKey.longKey("intValue"), 4))
+    assertions.add(equalTo(AttributeKey.longKey("longValue"), 5))
+    assertions.add(equalTo(AttributeKey.longKey("shortValue"), 6))
+    assertions.add(equalTo(AttributeKey.doubleKey("doubleValue"), 2.0))
+    assertions.add(equalTo(AttributeKey.doubleKey("floatValue"), 3.0))
+    assertions.add(equalTo(AttributeKey.booleanKey("booleanValue"), true))
+    assertions.add(equalTo(AttributeKey.stringKey("charValue"), "a"))
+    assertions.add(equalTo(AttributeKey.stringKey("stringValue"), "test"))
+
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly(
@@ -386,26 +395,13 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated1")
+                codeFunctionAssertions(this.javaClass, "annotated1")
               )
           },
           {
             it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
-              .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated2"),
-                equalTo(AttributeKey.longKey("byteValue"), 1),
-                equalTo(AttributeKey.longKey("intValue"), 4),
-                equalTo(AttributeKey.longKey("longValue"), 5),
-                equalTo(AttributeKey.longKey("shortValue"), 6),
-                equalTo(AttributeKey.doubleKey("doubleValue"), 2.0),
-                equalTo(AttributeKey.doubleKey("floatValue"), 3.0),
-                equalTo(AttributeKey.booleanKey("booleanValue"), true),
-                equalTo(AttributeKey.stringKey("charValue"), "a"),
-                equalTo(AttributeKey.stringKey("stringValue"), "test")
-              )
+              .hasAttributesSatisfyingExactly(assertions)
           }
         )
       }
@@ -448,8 +444,7 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello")
+                codeFunctionAssertions(ClazzWithDefaultConstructorArguments::class.qualifiedName, "sayHello")
               )
           }
         )
@@ -512,18 +507,16 @@ class KotlinCoroutinesInstrumentationTest {
     span.end()
   }
 
-  class DispatchersSource : ArgumentsProvider {
-    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = Stream.of(
-      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-      // Closeable arguments with no way to avoid it.
-      arguments(DispatcherWrapper(Dispatchers.Default)),
-      arguments(DispatcherWrapper(Dispatchers.IO)),
-      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-      arguments(DispatcherWrapper(vertx.dispatcher()))
-    )
-  }
+  private fun dispatchersSourceArguments(): Stream<Arguments> = Stream.of(
+    // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+    // Closeable arguments with no way to avoid it.
+    arguments(DispatcherWrapper(Dispatchers.Default)),
+    arguments(DispatcherWrapper(Dispatchers.IO)),
+    arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+    arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+    arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+    arguments(DispatcherWrapper(vertx.dispatcher()))
+  )
 
   class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {
     override fun toString(): String = dispatcher.toString()
@@ -566,7 +559,7 @@ class KotlinCoroutinesInstrumentationTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11411
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `dispatch does not propagate context`(dispatcher: DispatcherWrapper) {
     Assumptions.assumeTrue(dispatcher.dispatcher != Dispatchers.Unconfined)
 

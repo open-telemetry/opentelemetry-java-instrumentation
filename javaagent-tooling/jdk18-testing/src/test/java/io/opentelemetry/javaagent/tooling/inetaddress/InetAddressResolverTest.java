@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.InetAddress;
 import org.junit.jupiter.api.Test;
 
-public class InetAddressResolverTest {
+class InetAddressResolverTest {
 
   @Test
   void agentStartShouldNotTriggerLoadingCustomInetAddressResolvers() throws Exception {

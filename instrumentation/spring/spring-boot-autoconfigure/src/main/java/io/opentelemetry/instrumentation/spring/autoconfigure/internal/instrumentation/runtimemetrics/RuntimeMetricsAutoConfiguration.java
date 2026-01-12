@@ -6,11 +6,12 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.util.Comparator;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public class RuntimeMetricsAutoConfiguration {
   private static final Logger logger =
       LoggerFactory.getLogger(RuntimeMetricsAutoConfiguration.class);
 
-  private AutoCloseable closeable;
+  @Nullable private AutoCloseable closeable;
 
   @PreDestroy
   public void stopMetrics() throws Exception {
@@ -45,8 +46,6 @@ public class RuntimeMetricsAutoConfiguration {
   public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
     ConfigurableApplicationContext applicationContext = event.getApplicationContext();
     OpenTelemetry openTelemetry = applicationContext.getBean(OpenTelemetry.class);
-    ConfigPropertiesBridge config =
-        new ConfigPropertiesBridge(applicationContext.getBean(ConfigProperties.class));
 
     double version =
         Math.max(8, Double.parseDouble(System.getProperty("java.specification.version")));
@@ -57,9 +56,20 @@ public class RuntimeMetricsAutoConfiguration {
             .findFirst();
 
     if (metricsProvider.isPresent()) {
-      this.closeable = metricsProvider.get().start(openTelemetry, config);
+      this.closeable =
+          metricsProvider.get().start(openTelemetry, instrumentationMode(openTelemetry));
     } else {
       logger.debug("No runtime metrics instrumentation available for Java {}", version);
     }
+  }
+
+  private static String instrumentationMode(OpenTelemetry openTelemetry) {
+    String mode =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "spring_starter")
+            .getString("instrumentation_mode", "default");
+    if (!mode.equals("default") && !mode.equals("none")) {
+      throw new ConfigurationException("Unknown instrumentation mode: " + mode);
+    }
+    return mode;
   }
 }

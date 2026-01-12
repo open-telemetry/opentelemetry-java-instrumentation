@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.instrumentation.redisson.AbstractRedissonClien
 import org.redisson.api.RBatch;
 import org.redisson.api.RedissonClient;
 
-public class RedissonClientTest extends AbstractRedissonClientTest {
+class RedissonClientTest extends AbstractRedissonClientTest {
   @Override
   protected RBatch createBatch(RedissonClient redisson) {
     return redisson.createBatch();

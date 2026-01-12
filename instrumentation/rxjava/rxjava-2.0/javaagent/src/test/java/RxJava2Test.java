@@ -8,7 +8,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RxJava2Test extends AbstractRxJava2Test {
+class RxJava2Test extends AbstractRxJava2Test {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

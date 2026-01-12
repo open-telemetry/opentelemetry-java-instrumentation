@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Netty41ClientTest extends AbstractNetty41ClientTest {
+class Netty41ClientTest extends AbstractNetty41ClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

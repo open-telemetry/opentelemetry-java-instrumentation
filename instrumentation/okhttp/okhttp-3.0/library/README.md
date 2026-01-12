@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [okhttp3](https://square.github.io/ok
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-okhttp-3.0).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-okhttp-3.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -38,8 +38,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
-
-import java.util.concurrent.ExecutorService;
 
 public class OkHttpConfiguration {
 

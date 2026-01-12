@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -17,9 +18,11 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
+  public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
+
   @Nullable
   @Override
-  public String getDbSystem(DbRequest request) {
+  public String getDbSystemName(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
@@ -56,10 +59,27 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }
     return null;
+  }
+
+  @Override
+  public Map<String, String> getQueryParameters(DbRequest request) {
+    return request.getPreparedStatementParameters();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(DbRequest request) {
+    return request.getDbInfo().getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(DbRequest request) {
+    return request.getDbInfo().getPort();
   }
 }

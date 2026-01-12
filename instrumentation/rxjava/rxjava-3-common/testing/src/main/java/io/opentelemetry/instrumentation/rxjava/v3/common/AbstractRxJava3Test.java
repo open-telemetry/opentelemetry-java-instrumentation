@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -23,12 +24,19 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.internal.operators.flowable.FlowablePublish;
 import io.reactivex.rxjava3.internal.operators.observable.ObservablePublish;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -91,7 +99,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicMaybe() {
+  void basicMaybe() {
     int result = createParentSpan(() -> Maybe.just(1).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(2);
     testing()
@@ -106,7 +114,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void twoOperationsMaybe() {
+  void twoOperationsMaybe() {
     int result =
         createParentSpan(() -> Maybe.just(2).map(this::addOne).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(4);
@@ -126,7 +134,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void delayedMaybe() {
+  void delayedMaybe() {
     int result =
         createParentSpan(
             () -> Maybe.just(3).delay(100, TimeUnit.MILLISECONDS).map(this::addOne).blockingGet());
@@ -143,7 +151,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void delayedTwiceMaybe() {
+  void delayedTwiceMaybe() {
     int result =
         createParentSpan(
             () ->
@@ -170,7 +178,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicFlowable() {
+  void basicFlowable() {
     Iterable<Integer> result =
         createParentSpan(
             () -> Flowable.fromIterable(asList(5, 6)).map(this::addOne).toList().blockingGet());
@@ -191,7 +199,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void twoOperationsFlowable() {
+  void twoOperationsFlowable() {
     List<Integer> result =
         createParentSpan(
             () ->
@@ -225,7 +233,39 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void delayedFlowable() {
+  void observableFromCallableContextPropagation() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicReference<String> traceId = new AtomicReference<>();
+    AtomicReference<String> innerObservableTraceId = new AtomicReference<>();
+    AtomicReference<String> endObservableTraceId = new AtomicReference<>();
+
+    createParentSpan(
+        () -> {
+          traceId.set(Span.current().getSpanContext().getTraceId());
+          Disposable unused =
+              Observable.fromCallable(
+                      () -> {
+                        innerObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                        return "success";
+                      })
+                  .subscribeOn(Schedulers.io())
+                  .observeOn(Schedulers.single())
+                  .subscribe(
+                      data -> {
+                        endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                        latch.countDown();
+                        latch.countDown();
+                      });
+          assertThat(unused).isNotNull();
+        });
+
+    latch.await();
+    assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
+    assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
+  }
+
+  @Test
+  void delayedFlowable() {
     List<Integer> result =
         createParentSpan(
             () ->
@@ -251,7 +291,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void delayedTwiceFlowable() {
+  void delayedTwiceFlowable() {
     List<Integer> result =
         createParentSpan(
             () ->
@@ -287,7 +327,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void maybeFromCallable() {
+  void maybeFromCallable() {
     Integer result =
         createParentSpan(
             () -> Maybe.fromCallable(() -> addOne(10)).map(this::addOne).blockingGet());
@@ -308,7 +348,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicSingle() {
+  void basicSingle() {
     Integer result = createParentSpan(() -> Single.just(0).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(1);
     testing()
@@ -323,7 +363,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicObservable() {
+  void basicObservable() {
     List<Integer> result =
         createParentSpan(() -> Observable.just(0).map(this::addOne).toList().blockingGet());
     assertThat(result).contains(1);
@@ -339,7 +379,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void connectableFlowable() {
+  void connectableFlowable() {
     List<Integer> result =
         createParentSpan(
             () ->
@@ -361,7 +401,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void connectableObservable() {
+  void connectableObservable() {
     List<Integer> result =
         createParentSpan(
             () ->
@@ -383,7 +423,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void maybeError() {
+  void maybeError() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(() -> createParentSpan(() -> Maybe.error(error).blockingGet()))
         .isEqualTo(error);
@@ -395,7 +435,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void flowableError() {
+  void flowableError() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(() -> createParentSpan(() -> Flowable.error(error)).toList().blockingGet())
         .isEqualTo(error);
@@ -407,7 +447,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void singleError() {
+  void singleError() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(() -> createParentSpan(() -> Single.error(error)).blockingGet())
         .isEqualTo(error);
@@ -419,7 +459,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void observableError() {
+  void observableError() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(() -> createParentSpan(() -> Observable.error(error).toList().blockingGet()))
         .isEqualTo(error);
@@ -431,7 +471,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void completableError() {
+  void completableError() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(
             () -> createParentSpan(() -> Completable.error(error).toMaybe().blockingGet()))
@@ -444,7 +484,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicMaybeFailure() {
+  void basicMaybeFailure() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(
             () ->
@@ -470,7 +510,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicFlowableFailure() {
+  void basicFlowableFailure() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
     assertThatThrownBy(
             () ->
@@ -497,7 +537,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicMaybeCancel() {
+  void basicMaybeCancel() {
     createParentSpan(
         () ->
             Maybe.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
@@ -509,7 +549,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicFlowableCancel() {
+  void basicFlowableCancel() {
     createParentSpan(
         () ->
             Flowable.fromIterable(asList(5, 6))
@@ -523,7 +563,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicSingleCancel() {
+  void basicSingleCancel() {
     createParentSpan(
         () ->
             Single.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
@@ -535,7 +575,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicCompletableCancel() {
+  void basicCompletableCancel() {
     createParentSpan(
         () ->
             Completable.fromCallable(() -> 1)
@@ -549,7 +589,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicObservableCancel() {
+  void basicObservableCancel() {
     createParentSpan(
         () ->
             Observable.just(1)
@@ -564,7 +604,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicMaybeChain() {
+  void basicMaybeChain() {
     createParentSpan(
         () ->
             Maybe.just(1)
@@ -593,7 +633,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void basicFlowableChain() {
+  void basicFlowableChain() {
     createParentSpan(
         () ->
             Flowable.fromIterable(asList(5, 6))
@@ -631,7 +671,7 @@ public abstract class AbstractRxJava3Test {
 
   // Publisher chain spans have the correct parents from subscription time
   @Test
-  public void maybeChainParentSpan() {
+  void maybeChainParentSpan() {
     Maybe<Integer> maybe = Maybe.just(42).map(this::addOne).map(this::addTwo);
     testing().runWithSpan("trace-parent", () -> maybe.blockingGet());
     testing()
@@ -650,7 +690,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void maybeChainHasSubscriptionContext() {
+  void maybeChainHasSubscriptionContext() {
     Integer result =
         createParentSpan(
             () -> {
@@ -680,7 +720,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void flowableChainHasSubscriptionContext() {
+  void flowableChainHasSubscriptionContext() {
     List<Integer> result =
         createParentSpan(
             () -> {
@@ -719,7 +759,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void singleChainHasSubscriptionContext() {
+  void singleChainHasSubscriptionContext() {
     Integer result =
         createParentSpan(
             () -> {
@@ -749,7 +789,7 @@ public abstract class AbstractRxJava3Test {
   }
 
   @Test
-  public void observableChainHasSubscriptionContext() {
+  void observableChainHasSubscriptionContext() {
     List<Integer> result =
         createParentSpan(
             () -> {
@@ -781,7 +821,7 @@ public abstract class AbstractRxJava3Test {
 
   @ParameterizedTest
   @MethodSource("schedulers")
-  public void flowableMultiResults(Scheduler scheduler) {
+  void flowableMultiResults(Scheduler scheduler) {
     List<Integer> result =
         testing()
             .runWithSpan(
@@ -821,7 +861,7 @@ public abstract class AbstractRxJava3Test {
 
   @ParameterizedTest
   @MethodSource("schedulers")
-  public void maybeMultipleTraceChains(Scheduler scheduler) {
+  void maybeMultipleTraceChains(Scheduler scheduler) {
     int iterations = 100;
     RxJava3ConcurrencyTestHelper.launchAndWait(scheduler, iterations, 60000, testing());
     @SuppressWarnings("unchecked")
@@ -850,5 +890,54 @@ public abstract class AbstractRxJava3Test {
                 span -> span.get(0).getAttributes().get(AttributeKey.longKey("iteration"))),
             assertions);
     testing().clearData();
+  }
+
+  @Test
+  void scheduleHandlerChainingPreservesExistingHandler() throws InterruptedException {
+    AtomicInteger customHandlerCallCount = new AtomicInteger(0);
+    AtomicBoolean customHandlerExecuted = new AtomicBoolean(false);
+
+    Function<? super Runnable, ? extends Runnable> originalHandler =
+        RxJavaPlugins.getScheduleHandler();
+    Function<Runnable, Runnable> customHandler =
+        runnable ->
+            () -> {
+              customHandlerCallCount.incrementAndGet();
+              customHandlerExecuted.set(true);
+              runnable.run();
+            };
+
+    try {
+      RxJavaPlugins.setScheduleHandler(customHandler);
+
+      CountDownLatch latch = new CountDownLatch(1);
+      AtomicBoolean observableExecuted = new AtomicBoolean(false);
+      AtomicReference<String> traceId = new AtomicReference<>();
+
+      createParentSpan(
+          () -> {
+            traceId.set(Span.current().getSpanContext().getTraceId());
+            Disposable unused =
+                Observable.fromCallable(
+                        () -> {
+                          observableExecuted.set(true);
+                          return "test";
+                        })
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(result -> latch.countDown());
+          });
+
+      latch.await();
+      assertThat(observableExecuted.get()).isTrue();
+      assertThat(customHandlerExecuted.get()).isTrue();
+      assertThat(customHandlerCallCount.get()).isGreaterThan(0);
+
+      assertThat(traceId.get()).isNotNull();
+      assertThat(traceId.get()).isNotEqualTo("00000000000000000000000000000000");
+
+    } finally {
+      // Restore original handler to avoid affecting other tests
+      RxJavaPlugins.setScheduleHandler(originalHandler);
+    }
   }
 }

@@ -12,15 +12,15 @@ dependencies {
 }
 
 otelJava {
-  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  minJavaVersionSupported.set(JavaVersion.VERSION_21)
 }
 
 // We cannot use "--release" javac option here because that will forbid exporting com.sun.tools package.
 // We also can't seem to use the toolchain without the "--release" option. So disable everything.
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_17
-  targetCompatibility = JavaVersion.VERSION_17
+  sourceCompatibility = JavaVersion.VERSION_21
+  targetCompatibility = JavaVersion.VERSION_21
   toolchain {
     languageVersion.set(null as JavaLanguageVersion?)
   }

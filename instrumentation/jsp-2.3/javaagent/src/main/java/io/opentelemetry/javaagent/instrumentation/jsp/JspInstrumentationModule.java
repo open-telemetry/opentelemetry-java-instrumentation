@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JspInstrumentationModule extends InstrumentationModule {
+public class JspInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public JspInstrumentationModule() {
     super("jsp", "jsp-2.3");
   }
@@ -21,5 +23,10 @@ public class JspInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new HttpJspPageInstrumentation(), new JspCompilationContextInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

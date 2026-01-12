@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -81,28 +80,19 @@ class HttpServletResponseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestResponse.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendError")),
+                            codeFunctionAssertions(TestResponse.class, "sendError")),
                 span ->
                     span.hasName("TestResponse.sendError")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestResponse.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendError")),
+                            codeFunctionAssertions(TestResponse.class, "sendError")),
                 span ->
                     span.hasName("TestResponse.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestResponse.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendRedirect"))));
+                            codeFunctionAssertions(TestResponse.class, "sendRedirect"))));
   }
 
   @Test

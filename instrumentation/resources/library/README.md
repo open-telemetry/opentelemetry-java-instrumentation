@@ -86,4 +86,4 @@ Implemented attributes:
 This package currently does not run on Android. It has been verified on OpenJDK and should work on
 other server JVM distributions but if you find any issues please let us know.
 
-[declarative config]: https://github.com/open-telemetry/opentelemetry-specification/tree/main/specification/configuration#declarative-configuration
+[declarative config]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/configuration/README.md#declarative-configuration

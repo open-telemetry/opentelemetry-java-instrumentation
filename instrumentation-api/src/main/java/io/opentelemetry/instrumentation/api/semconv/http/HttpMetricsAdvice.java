@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.semconv.ErrorAttributes;
@@ -23,6 +25,9 @@ final class HttpMetricsAdvice {
       unmodifiableList(
           asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
 
+  // copied from UrlIncubatingAttributes
+  private static final AttributeKey<String> URL_TEMPLATE = stringKey("url.template");
+
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
@@ -36,7 +41,9 @@ final class HttpMetricsAdvice {
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                 ServerAttributes.SERVER_ADDRESS,
-                ServerAttributes.SERVER_PORT));
+                ServerAttributes.SERVER_PORT,
+                // we only add url.template when experimental http client telemetry is enabled
+                URL_TEMPLATE));
   }
 
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {

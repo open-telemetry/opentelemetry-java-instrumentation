@@ -87,7 +87,7 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
                           Collections.singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
+                              "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
     testing.clearData();

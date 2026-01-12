@@ -50,7 +50,7 @@ link to tracing information provided by Lambda itself. To do so, add a dependenc
 `io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.contrib%20AND%20a:opentelemetry-aws-xray-propagator).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
 Gradle:
 
@@ -100,4 +100,4 @@ In order to enable requested propagation for a handler, configure it on the SDK 
   }
 ```
 
-If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as described [here](https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#propagator).
+If using the wrappers, set the `OTEL_PROPAGATORS` environment variable as described [here](https://opentelemetry.io/docs/languages/sdk-configuration/general/#otel_propagators).

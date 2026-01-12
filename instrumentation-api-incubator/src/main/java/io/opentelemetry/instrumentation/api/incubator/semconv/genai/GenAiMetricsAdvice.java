@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_RESPONSE_MODEL;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_SYSTEM;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics.GEN_AI_TOKEN_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -44,7 +44,7 @@ final class GenAiMetricsAdvice {
         .setAttributesAdvice(
             asList(
                 GEN_AI_OPERATION_NAME,
-                GEN_AI_SYSTEM,
+                GEN_AI_PROVIDER_NAME,
                 GEN_AI_TOKEN_TYPE,
                 GEN_AI_REQUEST_MODEL,
                 SERVER_PORT,
@@ -60,7 +60,7 @@ final class GenAiMetricsAdvice {
         .setAttributesAdvice(
             asList(
                 GEN_AI_OPERATION_NAME,
-                GEN_AI_SYSTEM,
+                GEN_AI_PROVIDER_NAME,
                 ErrorAttributes.ERROR_TYPE,
                 GEN_AI_REQUEST_MODEL,
                 SERVER_PORT,

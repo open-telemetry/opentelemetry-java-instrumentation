@@ -2,7 +2,7 @@
 
 ## Java versions
 
-Open Telemetry Auto Instrumentation's minimal supported version is java 8.
+OpenTelemetry Auto Instrumentation's minimal supported version is java 8.
 All jar files that we produce, unless noted otherwise, have bytecode
 compatibility with the java 8 runtime. Our test suite is executed against
 java 8, all LTS versions and the latest non-LTS version.
@@ -100,13 +100,14 @@ old containers, images and volumes using `docker system prune --volumes`.
 For some container environments, such as rootless Podman or a remotely hosted Docker,
 testcontainers may need additional configuration to successfully run the tests.
 The following environment variables can be used for configuration:
+
 - `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` - The location of the Docker socket on the host. Default is `/var/run/docker.sock`
 - `TESTCONTAINERS_HOST_OVERRIDE` - The hostname used for container-to-container communication. Default Docker is `localhost`, but rootless Podman uses `host.containers.internal`
 
-# Troubleshooting CI Test Failures
+## Troubleshooting CI Test Failures
 
 See [Troubleshooting CI Test Failures](../../CONTRIBUTING.md#troubleshooting-pr-build-failures) for common issues and solutions.
 
-# Debugging
+## Debugging
 
 For information on debugging tests or instrumentation, see [Debugging](debugging.md).

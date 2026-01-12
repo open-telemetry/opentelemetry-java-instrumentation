@@ -15,10 +15,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
+import javax.annotation.Nullable;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -52,57 +52,73 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
         JmsMessageProducerInstrumentation.class.getName() + "$ProducerWithDestinationAdvice");
   }
 
+  public static class AdviceScope {
+    private final CallDepth callDepth;
+    @Nullable private final MessageWithDestination messageWithDestination;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
+
+    private AdviceScope(
+        CallDepth callDepth,
+        @Nullable MessageWithDestination messageWithDestination,
+        @Nullable Context context,
+        @Nullable Scope scope) {
+      this.callDepth = callDepth;
+      this.messageWithDestination = messageWithDestination;
+      this.context = context;
+      this.scope = scope;
+    }
+
+    public static AdviceScope start(CallDepth callDepth, Destination destination, Message message) {
+      if (callDepth.getAndIncrement() > 0) {
+        return new AdviceScope(callDepth, null, null, null);
+      }
+      Context parentContext = Context.current();
+
+      MessageWithDestination messageWithDestination =
+          MessageWithDestination.create(
+              JavaxMessageAdapter.create(message), JavaxDestinationAdapter.create(destination));
+      if (!producerInstrumenter().shouldStart(parentContext, messageWithDestination)) {
+        return new AdviceScope(callDepth, null, null, null);
+      }
+
+      Context context = producerInstrumenter().start(parentContext, messageWithDestination);
+      return new AdviceScope(callDepth, messageWithDestination, context, context.makeCurrent());
+    }
+
+    public void end(@Nullable Throwable throwable) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+      if (scope == null || context == null || messageWithDestination == null) {
+        return;
+      }
+
+      scope.close();
+      producerInstrumenter().end(context, messageWithDestination, null, throwable);
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Message message,
-        @Advice.This MessageProducer producer,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") MessageWithDestination request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(MessageProducer.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
-      }
-
-      Destination defaultDestination;
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) Message message, @Advice.This MessageProducer producer) {
+      Destination destination;
       try {
-        defaultDestination = producer.getDestination();
+        destination = producer.getDestination();
       } catch (JMSException e) {
-        defaultDestination = null;
+        destination = null;
       }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request =
-          MessageWithDestination.create(
-              JavaxMessageAdapter.create(message),
-              JavaxDestinationAdapter.create(defaultDestination));
-      if (!producerInstrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = producerInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      CallDepth callDepth = CallDepth.forClass(MessageProducer.class);
+      return AdviceScope.start(callDepth, destination, message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") MessageWithDestination request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (scope != null) {
-        scope.close();
-        producerInstrumenter().end(context, request, null, throwable);
-      }
+        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable);
     }
   }
 
@@ -110,45 +126,16 @@ public class JmsMessageProducerInstrumentation implements TypeInstrumentation {
   public static class ProducerWithDestinationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Destination destination,
-        @Advice.Argument(1) Message message,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") MessageWithDestination request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(MessageProducer.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request =
-          MessageWithDestination.create(
-              JavaxMessageAdapter.create(message), JavaxDestinationAdapter.create(destination));
-      if (!producerInstrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = producerInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) Destination destination, @Advice.Argument(1) Message message) {
+      CallDepth callDepth = CallDepth.forClass(MessageProducer.class);
+      return AdviceScope.start(callDepth, destination, message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") MessageWithDestination request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (scope != null) {
-        scope.close();
-        producerInstrumenter().end(context, request, null, throwable);
-      }
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable);
     }
   }
 }

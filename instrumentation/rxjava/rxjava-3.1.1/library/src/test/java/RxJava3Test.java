@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RxJava3Test extends AbstractRxJava3Test {
+class RxJava3Test extends AbstractRxJava3Test {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 

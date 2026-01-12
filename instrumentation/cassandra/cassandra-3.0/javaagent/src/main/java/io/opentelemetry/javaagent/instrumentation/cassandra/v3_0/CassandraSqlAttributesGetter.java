@@ -10,6 +10,7 @@ import static java.util.Collections.singleton;
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -18,15 +19,8 @@ final class CassandraSqlAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(CassandraRequest request) {
+  public String getDbSystemName(CassandraRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.CASSANDRA;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(CassandraRequest request) {
-    return null;
   }
 
   @Override
@@ -35,15 +29,15 @@ final class CassandraSqlAttributesGetter
     return request.getSession().getLoggedKeyspace();
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(CassandraRequest request) {
-    return null;
-  }
-
   @Override
   public Collection<String> getRawQueryTexts(CassandraRequest request) {
     return singleton(request.getQueryText());
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+    return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
   }
 }

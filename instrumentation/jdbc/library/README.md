@@ -8,7 +8,7 @@ Provides OpenTelemetry instrumentation for
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-jdbc).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-jdbc).
 
 For Maven, add to your `pom.xml` dependencies:
 

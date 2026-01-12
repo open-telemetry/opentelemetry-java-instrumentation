@@ -8,9 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -23,8 +20,6 @@ class WebClientBeanPostProcessorTest {
 
   static {
     beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
-    beanFactory.registerSingleton(
-        "configProperties", DefaultConfigProperties.createFromMap(Collections.emptyMap()));
   }
 
   @Test
@@ -32,9 +27,7 @@ class WebClientBeanPostProcessorTest {
       "when processed bean is NOT of type WebClient or WebClientBuilder should return Object")
   void returnsObject() {
     BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(
-            beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
         .isExactlyInstanceOf(Object.class);
@@ -44,9 +37,7 @@ class WebClientBeanPostProcessorTest {
   @DisplayName("when processed bean is of type WebClient should return WebClient")
   void returnsWebClient() {
     BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(
-            beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     assertThat(underTest.postProcessAfterInitialization(WebClient.create(), "testWebClient"))
         .isInstanceOf(WebClient.class);
@@ -56,9 +47,7 @@ class WebClientBeanPostProcessorTest {
   @DisplayName("when processed bean is of type WebClientBuilder should return WebClientBuilder")
   void returnsWebClientBuilder() {
     BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(
-            beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     assertThat(
             underTest.postProcessAfterInitialization(WebClient.builder(), "testWebClientBuilder"))
@@ -69,9 +58,7 @@ class WebClientBeanPostProcessorTest {
   @DisplayName("when processed bean is of type WebClient should add exchange filter to WebClient")
   void addsExchangeFilterWebClient() {
     BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(
-            beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     WebClient webClient = WebClient.create();
     Object processedWebClient =
@@ -94,9 +81,7 @@ class WebClientBeanPostProcessorTest {
       "when processed bean is of type WebClientBuilder should add ONE exchange filter to WebClientBuilder")
   void addsExchangeFilterWebClientBuilder() {
     BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(
-            beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
 
     WebClient.Builder webClientBuilder = WebClient.builder();
     underTest.postProcessAfterInitialization(webClientBuilder, "testWebClientBuilder");

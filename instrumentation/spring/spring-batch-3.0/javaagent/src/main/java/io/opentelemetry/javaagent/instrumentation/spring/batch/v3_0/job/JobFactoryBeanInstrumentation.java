@@ -12,15 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.ContextAndScope;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.jsr.configuration.xml.JobFactoryBean;
 
 public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
@@ -55,20 +54,17 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetListenersAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.AsScalar
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(value = 0, readOnly = false) Object[] listeners) {
-      VirtualField<JobExecution, ContextAndScope> executionVirtualField =
-          VirtualField.find(JobExecution.class, ContextAndScope.class);
-      JobExecutionListener tracingListener = new TracingJobExecutionListener(executionVirtualField);
-
+    public static Object[] onEnter(@Advice.Argument(0) @Nullable Object[] listeners) {
       if (listeners == null) {
-        listeners = new Object[] {tracingListener};
-      } else {
-        Object[] newListeners = new Object[listeners.length + 1];
-        newListeners[0] = tracingListener;
-        System.arraycopy(listeners, 0, newListeners, 1, listeners.length);
-        listeners = newListeners;
+        return new Object[] {new TracingJobExecutionListener()};
       }
+      Object[] newListeners = new Object[listeners.length + 1];
+      newListeners[0] = new TracingJobExecutionListener();
+      System.arraycopy(listeners, 0, newListeners, 1, listeners.length);
+      return newListeners;
     }
   }
 }

@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -20,7 +22,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
 
@@ -36,12 +38,10 @@ public final class DubboTelemetryBuilder {
   @Nullable private String peerService;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
-  private Function<
-          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-      clientSpanNameExtractorTransformer = Function.identity();
-  private Function<
-          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-      serverSpanNameExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer =
+      UnaryOperator.identity();
+  private UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorCustomizer =
+      UnaryOperator.identity();
 
   DubboTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -63,21 +63,49 @@ public final class DubboTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setClientSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setClientSpanNameExtractor(
-      Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-          clientSpanNameExtractor) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+      UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
+    return setClientSpanNameExtractorCustomizer(clientSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default client {@link SpanNameExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setClientSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer) {
+    this.clientSpanNameExtractorCustomizer = clientSpanNameExtractorCustomizer;
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setServerSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setServerSpanNameExtractor(
-      Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-          serverSpanNameExtractor) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+      UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractor) {
+    return setServerSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default server {@link SpanNameExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setServerSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorCustomizer) {
+    this.serverSpanNameExtractorCustomizer = serverSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -88,10 +116,10 @@ public final class DubboTelemetryBuilder {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
-    SpanNameExtractor<? super DubboRequest> clientSpanNameExtractor =
-        clientSpanNameExtractorTransformer.apply(spanNameExtractor);
-    SpanNameExtractor<? super DubboRequest> serverSpanNameExtractor =
-        serverSpanNameExtractorTransformer.apply(spanNameExtractor);
+    SpanNameExtractor<DubboRequest> clientSpanNameExtractor =
+        clientSpanNameExtractorCustomizer.apply(spanNameExtractor);
+    SpanNameExtractor<DubboRequest> serverSpanNameExtractor =
+        serverSpanNameExtractorCustomizer.apply(spanNameExtractor);
     DubboClientNetworkAttributesGetter netClientAttributesGetter =
         new DubboClientNetworkAttributesGetter();
     DubboNetworkServerAttributesGetter netServerAttributesGetter =
@@ -102,7 +130,8 @@ public final class DubboTelemetryBuilder {
                 openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
-            .addAttributesExtractors(attributesExtractors);
+            .addAttributesExtractors(attributesExtractors)
+            .addOperationMetrics(RpcServerMetrics.get());
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
@@ -110,7 +139,8 @@ public final class DubboTelemetryBuilder {
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
-            .addAttributesExtractors(attributesExtractors);
+            .addAttributesExtractors(attributesExtractors)
+            .addOperationMetrics(RpcClientMetrics.get());
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(

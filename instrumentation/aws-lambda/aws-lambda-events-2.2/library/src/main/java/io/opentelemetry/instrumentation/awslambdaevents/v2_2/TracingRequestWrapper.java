@@ -12,7 +12,8 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestStreamW
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.ApiGatewayProxyRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
-import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.SerializationUtil;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.LambdaParameters;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.SerializationUtil;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,7 +27,11 @@ import java.util.Map;
 
 /**
  * Wrapper for {@link com.amazonaws.services.lambda.runtime.RequestHandler} based Lambda handlers.
+ *
+ * @deprecated use {@link
+ *     io.opentelemetry.instrumentation.awslambdaevents.v3_11.TracingRequestWrapper} instead.
  */
+@Deprecated
 public class TracingRequestWrapper extends TracingRequestStreamWrapper {
   public TracingRequestWrapper() {
     super();

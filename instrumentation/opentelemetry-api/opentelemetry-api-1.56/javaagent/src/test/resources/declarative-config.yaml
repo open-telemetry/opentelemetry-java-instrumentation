@@ -1,0 +1,13 @@
+file_format: 1.0-rc.1
+
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          console:
+
+instrumentation/development:
+  java:
+    foo:
+      bar: baz
+

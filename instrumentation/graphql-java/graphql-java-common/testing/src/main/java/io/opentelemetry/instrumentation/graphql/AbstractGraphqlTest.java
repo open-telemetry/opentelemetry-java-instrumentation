@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import graphql.GraphqlErrorBuilder;
+import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
@@ -44,6 +46,9 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGraphqlTest {
 
+  private static final String DATA_FETCHER_PROPERTY =
+      "otel.instrumentation.graphql.data-fetcher.enabled";
+
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
 
@@ -56,6 +61,10 @@ public abstract class AbstractGraphqlTest {
 
   protected boolean hasDataFetcherSpans() {
     return false;
+  }
+
+  private boolean includeDataFetcher() {
+    return Boolean.getBoolean(DATA_FETCHER_PROPERTY) && hasDataFetcherSpans();
   }
 
   @BeforeAll
@@ -107,17 +116,32 @@ public abstract class AbstractGraphqlTest {
         .build();
   }
 
-  private DataFetcher<Map<String, String>> getBookByIdDataFetcher() {
+  private DataFetcher<DataFetcherResult<Map<String, String>>> getBookByIdDataFetcher() {
     return dataFetchingEnvironment ->
         getTesting()
             .runWithSpan(
                 "fetchBookById",
                 () -> {
                   String bookId = dataFetchingEnvironment.getArgument("id");
-                  return books.stream()
-                      .filter(book -> book.get("id").equals(bookId))
-                      .findFirst()
-                      .orElse(null);
+                  DataFetcherResult.Builder<Map<String, String>> builder =
+                      DataFetcherResult.newResult();
+                  if ("book-exception".equals(bookId)) {
+                    throw new IllegalStateException("fetching book failed");
+                  } else if ("book-graphql-error".equals(bookId)) {
+                    return builder
+                        .error(
+                            GraphqlErrorBuilder.newError(dataFetchingEnvironment)
+                                .message("failed to fetch book")
+                                .build())
+                        .build();
+                  }
+                  return builder
+                      .data(
+                          books.stream()
+                              .filter(book -> book.get("id").equals(bookId))
+                              .findFirst()
+                              .orElse(null))
+                      .build();
                 });
   }
 
@@ -162,7 +186,7 @@ public abstract class AbstractGraphqlTest {
                               normalizedQueryEqualsTo(
                                   GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                   "query findBookById { bookById(id: ?) { name } }")));
-              if (hasDataFetcherSpans()) {
+              if (includeDataFetcher()) {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
@@ -174,7 +198,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("fetchBookById")
-                          .hasParent(trace.getSpan(hasDataFetcherSpans() ? 1 : 0)));
+                          .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
 
               trace.hasSpansSatisfyingExactly(assertions);
             });
@@ -207,7 +231,7 @@ public abstract class AbstractGraphqlTest {
                               normalizedQueryEqualsTo(
                                   AttributeKey.stringKey("graphql.document"),
                                   "{ bookById(id: ?) { name } }")));
-              if (hasDataFetcherSpans()) {
+              if (includeDataFetcher()) {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
@@ -219,7 +243,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("fetchBookById")
-                          .hasParent(trace.getSpan(hasDataFetcherSpans() ? 1 : 0)));
+                          .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
               trace.hasSpansSatisfyingExactly(assertions);
             });
   }
@@ -332,11 +356,22 @@ public abstract class AbstractGraphqlTest {
         stringAssert ->
             stringAssert.satisfies(
                 querySource -> {
-                  String normalized = querySource.replaceAll("(?s)\\s+", " ");
-                  if (normalized.startsWith("query {")) {
-                    normalized = normalized.substring("query ".length());
-                  }
-                  assertThat(normalized).isEqualTo(value);
+                  String normalized = normalizeQuery(querySource);
+                  String valueNormalized = normalizeQuery(value);
+                  assertThat(normalized).isEqualTo(valueNormalized);
                 }));
+  }
+
+  private static String normalizeQuery(String query) {
+    if (query == null) {
+      return null;
+    }
+
+    String normalized =
+        query.replaceAll("(?s)\\s+", " ").replaceAll("([{:,]) ", "$1").replaceAll(" ([{}])", "$1");
+    if (normalized.startsWith("query{")) {
+      normalized = normalized.substring("query".length());
+    }
+    return normalized;
   }
 }

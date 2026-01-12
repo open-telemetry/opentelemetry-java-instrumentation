@@ -41,12 +41,12 @@ public class ContextPayload {
     return payload;
   }
 
-  @SuppressWarnings("BanSerializableRead")
+  @SuppressWarnings("BanSerializableRead") // fine
   public static ContextPayload read(ObjectInput oi) throws IOException {
     try {
       Object object = oi.readObject();
       if (object instanceof Map) {
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // convert it back to the expected type
         Map<String, String> map = (Map<String, String>) object;
         return new ContextPayload(map);
       }

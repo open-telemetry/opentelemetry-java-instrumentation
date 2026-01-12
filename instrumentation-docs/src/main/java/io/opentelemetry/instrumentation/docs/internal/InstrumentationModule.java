@@ -6,9 +6,13 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
+import static java.util.Objects.requireNonNullElseGet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -24,32 +28,36 @@ public class InstrumentationModule {
   private final String instrumentationName;
   private final String namespace;
   private final String group;
-  private final InstrumentationScopeInfo scopeInfo;
+  private InstrumentationScopeInfo scopeInfo;
+  private Map<String, List<EmittedMetrics.Metric>> metrics;
+  private Map<String, List<EmittedSpans.Span>> spans;
 
   @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
 
   @Nullable private Integer minJavaVersion;
 
-  @Nullable private InstrumentationMetaData metadata;
+  @Nullable private InstrumentationMetadata metadata;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public InstrumentationModule(Builder builder) {
-    requireNonNull(builder.srcPath, "srcPath required");
-    requireNonNull(builder.instrumentationName, "instrumentationName required");
-    requireNonNull(builder.namespace, "namespace required");
-    requireNonNull(builder.group, "group required");
-
-    this.srcPath = builder.srcPath;
-    this.instrumentationName = builder.instrumentationName;
-    this.namespace = builder.namespace;
-    this.group = builder.group;
+    this.instrumentationName =
+        requireNonNull(builder.instrumentationName, "instrumentationName required");
+    this.srcPath =
+        requireNonNullElse(builder.srcPath, "instrumentation/" + builder.instrumentationName);
+    this.namespace = requireNonNullElse(builder.namespace, builder.instrumentationName);
+    this.group = requireNonNullElse(builder.group, builder.instrumentationName);
+    this.metrics = requireNonNullElseGet(builder.metrics, HashMap::new);
+    this.spans = requireNonNullElseGet(builder.spans, HashMap::new);
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
     this.minJavaVersion = builder.minJavaVersion;
-    this.scopeInfo = InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName);
+    this.scopeInfo =
+        requireNonNullElseGet(
+            builder.scopeInfo,
+            () -> InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName));
   }
 
   public String getSrcPath() {
@@ -72,9 +80,9 @@ public class InstrumentationModule {
     return scopeInfo;
   }
 
-  public InstrumentationMetaData getMetadata() {
+  public InstrumentationMetadata getMetadata() {
     if (metadata == null) {
-      metadata = new InstrumentationMetaData();
+      metadata = new InstrumentationMetadata();
     }
 
     return metadata;
@@ -90,11 +98,23 @@ public class InstrumentationModule {
     return minJavaVersion;
   }
 
+  public Map<String, List<EmittedMetrics.Metric>> getMetrics() {
+    return metrics;
+  }
+
+  public Map<String, List<EmittedSpans.Span>> getSpans() {
+    return spans;
+  }
+
   public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
     this.targetVersions = targetVersions;
   }
 
-  public void setMetadata(InstrumentationMetaData metadata) {
+  public void setScopeInfo(InstrumentationScopeInfo scopeInfo) {
+    this.scopeInfo = scopeInfo;
+  }
+
+  public void setMetadata(InstrumentationMetadata metadata) {
     this.metadata = metadata;
   }
 
@@ -102,18 +122,35 @@ public class InstrumentationModule {
     this.minJavaVersion = minJavaVersion;
   }
 
+  public void setMetrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
+    this.metrics = metrics;
+  }
+
+  public void setSpans(Map<String, List<EmittedSpans.Span>> spans) {
+    this.spans = spans;
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public static class Builder {
-    private String srcPath;
-    private String instrumentationName;
-    private String namespace;
-    private String group;
-    private Integer minJavaVersion;
-    private InstrumentationMetaData metadata;
-    private Map<InstrumentationType, Set<String>> targetVersions;
+    @Nullable private String srcPath;
+    @Nullable private String instrumentationName;
+    @Nullable private String namespace;
+    @Nullable private String group;
+    @Nullable private Integer minJavaVersion;
+    @Nullable private InstrumentationMetadata metadata;
+    @Nullable private InstrumentationScopeInfo scopeInfo;
+    @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
+    @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
+    @Nullable private Map<String, List<EmittedSpans.Span>> spans;
+
+    public Builder() {}
+
+    public Builder(String instrumentationName) {
+      this.instrumentationName = instrumentationName;
+    }
 
     @CanIgnoreReturnValue
     public Builder srcPath(String srcPath) {
@@ -134,6 +171,12 @@ public class InstrumentationModule {
     }
 
     @CanIgnoreReturnValue
+    public Builder scope(InstrumentationScopeInfo scope) {
+      this.scopeInfo = scope;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
     public Builder minJavaVersion(Integer minJavaVersion) {
       this.minJavaVersion = minJavaVersion;
       return this;
@@ -146,7 +189,7 @@ public class InstrumentationModule {
     }
 
     @CanIgnoreReturnValue
-    public Builder metadata(InstrumentationMetaData metadata) {
+    public Builder metadata(InstrumentationMetadata metadata) {
       this.metadata = metadata;
       return this;
     }
@@ -154,6 +197,18 @@ public class InstrumentationModule {
     @CanIgnoreReturnValue
     public Builder targetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
       this.targetVersions = targetVersions;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder metrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
+      this.metrics = metrics;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder spans(Map<String, List<EmittedSpans.Span>> spans) {
+      this.spans = spans;
       return this;
     }
 

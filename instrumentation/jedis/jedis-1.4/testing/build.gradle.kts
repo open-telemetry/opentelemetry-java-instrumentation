@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
   compileOnly("redis.clients:jedis:1.4.0")
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("org.testcontainers:testcontainers")
 }

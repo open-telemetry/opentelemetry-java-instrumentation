@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.util.List;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.java.impl.consumer.ReceiveMessageResult;
-import org.apache.rocketmq.client.java.message.MessageViewImpl;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
 
 public final class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessageResult> {
@@ -27,15 +26,14 @@ public final class ReceiveSpanFinishingCallback implements FutureCallback<Receiv
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void onSuccess(ReceiveMessageResult receiveMessageResult) {
-    List<MessageViewImpl> messageViews = receiveMessageResult.getMessageViewImpls();
+    List<MessageView> messageViews = receiveMessageResult.getMessageViews();
     // Don't create spans when no messages were received.
     if (messageViews.isEmpty()) {
       return;
     }
     String consumerGroup = request.getGroup().getName();
-    for (MessageViewImpl messageView : messageViews) {
+    for (MessageView messageView : messageViews) {
       VirtualFieldStore.setConsumerGroupByMessage(messageView, consumerGroup);
     }
     Instrumenter<ReceiveMessageRequest, List<MessageView>> receiveInstrumenter =
@@ -47,11 +45,11 @@ public final class ReceiveSpanFinishingCallback implements FutureCallback<Receiv
               receiveInstrumenter,
               parentContext,
               request,
-              (List<MessageView>) (List) messageViews,
+              messageViews,
               null,
               timer.startTime(),
               timer.now());
-      for (MessageViewImpl messageView : messageViews) {
+      for (MessageView messageView : messageViews) {
         VirtualFieldStore.setContextByMessage(messageView, context);
       }
     }

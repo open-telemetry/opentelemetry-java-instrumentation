@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static java.util.Collections.emptyList;
+
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
@@ -30,19 +32,35 @@ final class ReactorNettyHttpClientAttributesGetter
 
   @Override
   public List<String> getHttpRequestHeader(HttpClientRequest request, String name) {
-    return request.requestHeaders().getAll(name);
+    try {
+      return request.requestHeaders().getAll(name);
+    } catch (IllegalStateException exception) {
+      // response not available
+      return emptyList();
+    }
   }
 
+  @Nullable
   @Override
   public Integer getHttpResponseStatusCode(
       HttpClientRequest request, HttpClientResponse response, @Nullable Throwable error) {
-    return response.status().code();
+    try {
+      return response.status().code();
+    } catch (IllegalStateException exception) {
+      // response not available
+      return null;
+    }
   }
 
   @Override
   public List<String> getHttpResponseHeader(
       HttpClientRequest request, HttpClientResponse response, String name) {
-    return response.responseHeaders().getAll(name);
+    try {
+      return response.responseHeaders().getAll(name);
+    } catch (IllegalStateException exception) {
+      // response not available
+      return emptyList();
+    }
   }
 
   @Nullable

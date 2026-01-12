@@ -39,27 +39,13 @@ final class ElasticsearchDbAttributesGetter
   }
 
   @Override
-  public String getDbSystem(ElasticsearchRestRequest request) {
+  public String getDbSystemName(ElasticsearchRestRequest request) {
     return ELASTICSEARCH;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(ElasticsearchRestRequest request) {
-    return null;
   }
 
   @Override
   @Nullable
   public String getDbNamespace(ElasticsearchRestRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(ElasticsearchRestRequest request) {
     return null;
   }
 
@@ -96,7 +82,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Response response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
     return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
   }
 }

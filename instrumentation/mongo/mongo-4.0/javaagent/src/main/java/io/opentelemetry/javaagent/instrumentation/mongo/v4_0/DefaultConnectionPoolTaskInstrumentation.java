@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Consumer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -34,25 +36,39 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(3, Consumer.class)),
         this.getClass().getName() + "$TaskArg3Advice");
+    // since 5.6.0
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(4, Consumer.class)),
+        this.getClass().getName() + "$TaskArg4Advice");
   }
 
   @SuppressWarnings("unused")
   public static class TaskArg2Advice {
 
+    @AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCallback(
-        @Advice.Argument(value = 2, readOnly = false) Consumer<Object> action) {
-      action = new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+    public static Consumer<Object> wrapCallback(@Advice.Argument(2) Consumer<Object> action) {
+      return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
     }
   }
 
   @SuppressWarnings("unused")
   public static class TaskArg3Advice {
 
+    @AssignReturned.ToArguments(@ToArgument(3))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCallback(
-        @Advice.Argument(value = 3, readOnly = false) Consumer<Object> action) {
-      action = new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+    public static Consumer<Object> wrapCallback(@Advice.Argument(3) Consumer<Object> action) {
+      return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TaskArg4Advice {
+
+    @AssignReturned.ToArguments(@ToArgument(4))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Consumer<Object> wrapCallback(@Advice.Argument(4) Consumer<Object> action) {
+      return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
     }
   }
 }

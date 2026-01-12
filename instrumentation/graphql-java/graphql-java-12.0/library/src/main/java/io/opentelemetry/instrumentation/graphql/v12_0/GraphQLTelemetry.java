@@ -27,10 +27,18 @@ public final class GraphQLTelemetry {
 
   private final OpenTelemetryInstrumentationHelper helper;
 
-  GraphQLTelemetry(OpenTelemetry openTelemetry, boolean sanitizeQuery) {
+  GraphQLTelemetry(
+      OpenTelemetry openTelemetry,
+      boolean captureQuery,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     helper =
         OpenTelemetryInstrumentationHelper.create(
-            openTelemetry, INSTRUMENTATION_NAME, sanitizeQuery);
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            captureQuery,
+            sanitizeQuery,
+            addOperationNameToSpanName);
   }
 
   /**

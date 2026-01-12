@@ -32,8 +32,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.Assume;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -196,7 +196,7 @@ public abstract class AbstractRedissonAsyncClientTest {
       // available since 3.7.2
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
     } catch (ClassNotFoundException exception) {
-      Assume.assumeNoException(exception);
+      Assumptions.abort();
     }
     // Don't specify explicit generic type, because `BatchResult` not exist in some versions.
     CompletionStage<?> result =

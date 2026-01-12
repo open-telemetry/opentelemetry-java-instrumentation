@@ -158,7 +158,7 @@ class SnippetServletOutputStreamTest {
 
     private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    public byte[] getBytes() {
+    byte[] getBytes() {
       return baos.toByteArray();
     }
 
@@ -171,7 +171,7 @@ class SnippetServletOutputStreamTest {
     public void setWriteListener(WriteListener writeListener) {}
 
     @Override
-    public void write(int b) throws IOException {
+    public void write(int b) {
       baos.write(b);
     }
   }

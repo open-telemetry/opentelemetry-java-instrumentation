@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -11,7 +12,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-grpc:1.32.5")
+  implementation("com.linecorp.armeria:armeria-grpc:1.35.0")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   runtimeOnly("org.slf4j:slf4j-simple")
 }
@@ -22,7 +23,19 @@ val extraTag = findProperty("extraTag")
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = "gcr.io/distroless/java-debian10:11"
+  from {
+    image = "eclipse-temurin:21-jre"
+    platforms {
+      platform {
+        architecture = "amd64"
+        os = "linux"
+      }
+      platform {
+        architecture = "arm64"
+        os = "linux"
+      }
+    }
+  }
   to.image = "ghcr.io/$repo/smoke-test-fake-backend:$extraTag"
 }
 
@@ -34,6 +47,11 @@ tasks {
     with(options) {
       release.set(11)
     }
+  }
+
+  withType<JibTask>().configureEach {
+    // Jib tasks access Task.project at execution time which is not compatible with configuration cache
+    notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
   }
 
   javadoc {
@@ -54,8 +72,6 @@ tasks {
       rename { "fake-backend.jar" }
     }
   }
-
-  val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
   val windowsBackendImageBuild by registering(DockerBuildImage::class) {
     dependsOn(windowsBackendImagePrepare)

@@ -11,7 +11,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import org.junit.jupiter.api.Test;
 
-public class IndyBootstrapDispatcherTest {
+class IndyBootstrapDispatcherTest {
 
   @Test
   void testVoidNoopMethodHandle() throws Throwable {

@@ -86,16 +86,16 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
 
     private final Context context;
 
-    protected EndOnFirstNotificationConsumer(Context context) {
+    EndOnFirstNotificationConsumer(Context context) {
       super(false);
       this.context = context;
     }
 
-    public <T> void onSuccess(T result) {
+    <T> void onSuccess(T result) {
       accept(result, null);
     }
 
-    public void onCancel() {
+    void onCancel() {
       if (compareAndSet(false, true)) {
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
@@ -120,6 +120,6 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
       }
     }
 
-    protected abstract void end(Object result, Throwable error);
+    abstract void end(Object result, Throwable error);
   }
 }

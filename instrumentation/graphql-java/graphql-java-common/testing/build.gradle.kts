@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("com.graphql-java:graphql-java:12.0")
 }

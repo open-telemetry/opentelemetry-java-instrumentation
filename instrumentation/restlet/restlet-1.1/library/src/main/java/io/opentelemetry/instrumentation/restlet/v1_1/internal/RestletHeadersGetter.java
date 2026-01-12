@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import org.restlet.data.Form;
 import org.restlet.data.Message;
 import org.restlet.data.Parameter;
 import org.restlet.data.Request;
 
-enum RestletHeadersGetter implements ExtendedTextMapGetter<Request> {
+enum RestletHeadersGetter implements TextMapGetter<Request> {
   INSTANCE;
 
   @Override

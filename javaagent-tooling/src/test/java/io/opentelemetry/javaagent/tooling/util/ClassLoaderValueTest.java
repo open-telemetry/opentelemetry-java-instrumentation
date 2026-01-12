@@ -17,16 +17,16 @@ class ClassLoaderValueTest {
 
   @Test
   void testValue() {
-    testClassLoader(this.getClass().getClassLoader());
+    testClassLoader(new TestClassLoader());
     testClassLoader(null);
   }
 
   void testClassLoader(ClassLoader classLoader) {
-    ClassLoaderValue<String> value1 = new ClassLoaderValue<>();
+    ClassLoaderValue<String> value1 = new ClassLoaderValue<>(new TestClassInjector());
     value1.put(classLoader, "value");
     assertThat(value1.get(classLoader)).isEqualTo("value");
 
-    ClassLoaderValue<String> value2 = new ClassLoaderValue<>();
+    ClassLoaderValue<String> value2 = new ClassLoaderValue<>(new TestClassInjector());
     String value = "value";
     String ret1 = value2.computeIfAbsent(classLoader, () -> value);
     String ret2 =
@@ -42,8 +42,8 @@ class ClassLoaderValueTest {
 
   @Test
   void testGc() throws InterruptedException, TimeoutException {
-    ClassLoader testClassLoader = new ClassLoader() {};
-    ClassLoaderValue<Value> classLoaderValue = new ClassLoaderValue<>();
+    ClassLoader testClassLoader = new TestClassLoader();
+    ClassLoaderValue<Value> classLoaderValue = new ClassLoaderValue<>(new TestClassInjector());
     Value value = new Value();
     classLoaderValue.put(testClassLoader, value);
     WeakReference<Value> valueWeakReference = new WeakReference<>(value);
@@ -60,6 +60,23 @@ class ClassLoaderValueTest {
 
     assertThat(classLoaderWeakReference.get()).isNull();
     assertThat(valueWeakReference.get()).isNull();
+  }
+
+  static class TestClassLoader extends ClassLoader {
+
+    public Class<?> defineClass(String name, byte[] bytes) {
+      return super.defineClass(name, bytes, 0, bytes.length);
+    }
+  }
+
+  static class TestClassInjector implements ClassLoaderMap.Injector {
+    @Override
+    public Class<?> inject(ClassLoader classLoader, String className, byte[] classBytes) {
+      if (classLoader instanceof TestClassLoader) {
+        return ((TestClassLoader) classLoader).defineClass(className, classBytes);
+      }
+      throw new IllegalArgumentException("Unsupported class loader: " + classLoader);
+    }
   }
 
   private static class Value {}

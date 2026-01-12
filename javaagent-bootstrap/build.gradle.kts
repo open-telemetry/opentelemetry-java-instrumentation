@@ -8,7 +8,8 @@ group = "io.opentelemetry.javaagent"
 dependencies {
   implementation(project(":instrumentation-api"))
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation(project(":instrumentation:resources:library"))
 }
 
 tasks.withType<Test>().configureEach {

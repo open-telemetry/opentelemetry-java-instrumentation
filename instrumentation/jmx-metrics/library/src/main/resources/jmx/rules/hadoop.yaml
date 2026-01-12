@@ -1,0 +1,68 @@
+---
+rules:
+  - bean: Hadoop:service=NameNode,name=FSNamesystem
+    prefix: hadoop.
+    metricAttribute:
+      hadoop.node.name: beanattr(tag\.Hostname)
+    mapping:
+      # hadoop.dfs.capacity.limit
+      CapacityTotal:
+        metric: dfs.capacity.limit
+        type: updowncounter
+        unit: By
+        desc: Current raw capacity of DataNodes.
+      # hadoop.dfs.capacity.used
+      CapacityUsed:
+        metric: dfs.capacity.used
+        type: updowncounter
+        unit: By
+        desc: Current used capacity across all DataNodes.
+      # hadoop.dfs.block.count
+      BlocksTotal:
+        metric: dfs.block.count
+        type: updowncounter
+        unit: "{block}"
+        desc: Current number of allocated blocks in the system.
+      # hadoop.dfs.block.missing
+      MissingBlocks:
+        metric: dfs.block.missing
+        type: updowncounter
+        unit: "{block}"
+        desc: Current number of missing blocks.
+      # hadoop.dfs.block.corrupt
+      CorruptBlocks:
+        metric: dfs.block.corrupt
+        type: updowncounter
+        unit: "{block}"
+        desc: Current number of blocks with corrupt replicas.
+      # hadoop.dfs.volume.failure.count
+      VolumeFailuresTotal:
+        metric: dfs.volume.failure.count
+        type: counter
+        unit: "{failure}"
+        desc: Total number of volume failures across all DataNodes.
+      # hadoop.dfs.file.count
+      FilesTotal:
+        metric: dfs.file.count
+        type: updowncounter
+        unit: "{file}"
+        desc: Current number of files and directories.
+      # hadoop.dfs.connection.count
+      TotalLoad:
+        metric: dfs.connection.count
+        type: updowncounter
+        unit: "{connection}"
+        desc: Current number of connections.
+
+      # hadoop.datanode.live
+      NumLiveDataNodes:
+        metric: datanode.live
+        type: updowncounter
+        unit: "{node}"
+        desc: Number of data nodes which are currently live.
+      # hadoop.datanode.dead
+      NumDeadDataNodes:
+        metric: datanode.dead
+        type: updowncounter
+        unit: "{node}"
+        desc: Number of data nodes which are currently dead.

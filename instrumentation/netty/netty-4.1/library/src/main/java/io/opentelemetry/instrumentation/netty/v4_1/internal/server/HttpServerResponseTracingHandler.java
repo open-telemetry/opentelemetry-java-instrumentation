@@ -18,7 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
@@ -34,12 +34,12 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
   private static final AttributeKey<HttpResponse> HTTP_SERVER_RESPONSE =
       AttributeKey.valueOf(HttpServerResponseTracingHandler.class, "http-server-response");
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Instrumenter<NettyRequest, HttpResponse> instrumenter;
   private final HttpServerResponseBeforeCommitHandler beforeCommitHandler;
   private final ProtocolEventHandler eventHandler;
 
   public HttpServerResponseTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      Instrumenter<NettyRequest, HttpResponse> instrumenter,
       HttpServerResponseBeforeCommitHandler beforeCommitHandler,
       ProtocolEventHandler eventHandler) {
     this.instrumenter = instrumenter;
@@ -131,14 +131,14 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
   }
 
   private void end(
-      Context context, HttpRequestAndChannel request, HttpResponse response, ChannelFuture future) {
+      Context context, NettyRequest request, HttpResponse response, ChannelFuture future) {
     Throwable error = future.isSuccess() ? null : future.cause();
     end(context, request, response, error);
   }
 
   private void end(
       Context context,
-      HttpRequestAndChannel request,
+      NettyRequest request,
       @Nullable HttpResponse response,
       @Nullable Throwable error) {
     error = NettyErrorHolder.getOrDefault(context, error);

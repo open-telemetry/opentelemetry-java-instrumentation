@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,14 +24,19 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
+import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
+import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,18 +52,15 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
 
-  private static final SpanSuppressionStrategy spanSuppressionStrategy =
-      SpanSuppressionStrategy.fromConfig(
-          ConfigPropertiesUtil.getString(
-              "otel.instrumentation.experimental.span-suppression-strategy"));
-
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
-  final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      operationListenerAttributesExtractors = new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   private final List<OperationListener> operationListeners = new ArrayList<>();
   private final List<OperationMetrics> operationMetrics = new ArrayList<>();
@@ -68,6 +73,14 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
+
+  static {
+    Experimental.internalAddOperationListenerAttributesExtractor(
+        (builder, operationListenerAttributesExtractor) ->
+            builder.operationListenerAttributesExtractors.add(
+                requireNonNull(
+                    operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
+  }
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -281,6 +294,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+
+    applyCustomizers(this);
+
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
   }
@@ -356,7 +372,28 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   SpanSuppressor buildSpanSuppressor() {
     return new SpanSuppressors.ByContextKey(
-        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+        SpanSuppressionStrategy.fromConfig(getSpanSuppressionStrategy())
+            .create(getSpanKeysFromAttributesExtractors()));
+  }
+
+  @Nullable
+  private String getSpanSuppressionStrategy() {
+    // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
+    DeclarativeConfigProperties commonConfig = empty();
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      DeclarativeConfigProperties instrumentationConfig =
+          ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
+      if (instrumentationConfig != null) {
+        commonConfig =
+            instrumentationConfig.getStructured("java", empty()).getStructured("common", empty());
+      }
+    }
+    String result =
+        commonConfig.getString(
+            "span_suppression_strategy/development",
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.experimental.span-suppression-strategy", ""));
+    return result.isEmpty() ? null : result;
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
@@ -373,6 +410,67 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private void propagateOperationListenersToOnEnd() {
     propagateOperationListenersToOnEnd = true;
+  }
+
+  private static <REQUEST, RESPONSE> void applyCustomizers(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+    List<InternalInstrumenterCustomizerProvider> customizerProviders =
+        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
+    if (customizerProviders.isEmpty()) {
+      return;
+    }
+
+    Set<SpanKey> spanKeys = builder.getSpanKeysFromAttributesExtractors();
+    for (InternalInstrumenterCustomizerProvider provider : customizerProviders) {
+      provider.customize(
+          new InternalInstrumenterCustomizer<REQUEST, RESPONSE>() {
+            @Override
+            public String getInstrumentationName() {
+              return builder.instrumentationName;
+            }
+
+            @Override
+            public boolean hasType(SpanKey type) {
+              return spanKeys.contains(type);
+            }
+
+            @Override
+            public void addAttributesExtractor(AttributesExtractor<REQUEST, RESPONSE> extractor) {
+              builder.addAttributesExtractor(extractor);
+            }
+
+            @Override
+            public void addAttributesExtractors(
+                Iterable<? extends AttributesExtractor<REQUEST, RESPONSE>> extractors) {
+              builder.addAttributesExtractors(extractors);
+            }
+
+            @Override
+            public void addOperationMetrics(OperationMetrics operationMetrics) {
+              builder.addOperationMetrics(operationMetrics);
+            }
+
+            @Override
+            public void addContextCustomizer(ContextCustomizer<REQUEST> customizer) {
+              builder.addContextCustomizer(customizer);
+            }
+
+            @Override
+            public void setSpanNameExtractorCustomizer(
+                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer) {
+              builder.spanNameExtractor =
+                  spanNameExtractorCustomizer.apply(builder.spanNameExtractor);
+            }
+
+            @Override
+            public void setSpanStatusExtractorCustomizer(
+                UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+                    spanStatusExtractorCustomizer) {
+              builder.spanStatusExtractor =
+                  spanStatusExtractorCustomizer.apply(builder.spanStatusExtractor);
+            }
+          });
+    }
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

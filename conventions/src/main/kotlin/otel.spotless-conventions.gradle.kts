@@ -14,15 +14,6 @@ spotless {
     toggleOffOn()
     target("src/**/*.java")
   }
-  plugins.withId("groovy") {
-    groovy {
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|(?:abstract )?class)"
-      )
-      endWithNewline()
-    }
-  }
   plugins.withId("scala") {
     scala {
       scalafmt()
@@ -94,10 +85,9 @@ if (project == rootProject) {
         ".gitattributes",
         ".gitconfig",
         ".editorconfig",
-        "**/*.md",
-        "**/*.sh",
-        "**/*.dockerfile",
-        "**/gradle.properties"
+        "gradle.properties",
+        ".github/**/*.sh",
+        "examples/**/gradle.properties"
       )
       leadingTabsToSpaces()
       trimTrailingWhitespace()

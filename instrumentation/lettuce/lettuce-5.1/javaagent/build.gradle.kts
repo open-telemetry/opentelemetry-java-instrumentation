@@ -21,19 +21,45 @@ dependencies {
   // Only 5.2+ will have command arguments in the db.statement tag.
   testLibrary("io.lettuce:lettuce-core:5.2.0.RELEASE")
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.0:javaagent"))
 }
 
 tasks {
   withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
     dependsOn(testStableSemconv)
+  }
+}
+
+testing {
+  suites {
+    val testCompatibility by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.lettuce:lettuce-core:6.1.10.RELEASE")
+        implementation("io.projectreactor:reactor-core:3.5.3")
+        implementation("org.testcontainers:testcontainers")
+        implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

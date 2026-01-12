@@ -37,7 +37,7 @@ public final class ElasticsearchRestInstrumenterFactory {
       boolean captureSearchQuery) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
         new ElasticsearchDbAttributesGetter(captureSearchQuery);
-    ElasticsearchClientAttributeExtractor esClientAtrributesExtractor =
+    ElasticsearchClientAttributeExtractor esClientAttributesExtractor =
         new ElasticsearchClientAttributeExtractor(knownMethods);
     SpanNameExtractor<? super ElasticsearchRestRequest> spanNameExtractor =
         spanNameExtractorTransformer.apply(
@@ -46,7 +46,7 @@ public final class ElasticsearchRestInstrumenterFactory {
     return Instrumenter.<ElasticsearchRestRequest, Response>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(esClientAtrributesExtractor)
+        .addAttributesExtractor(esClientAttributesExtractor)
         .addAttributesExtractors(attributesExtractors)
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

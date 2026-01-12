@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -22,9 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.CustomerRepository;
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.PersistenceConfig;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,10 +71,8 @@ class ReactiveSpringDataTest {
                     span.hasName("CustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                CustomerRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findAll")),
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                CustomerRepository.class, "findAll")),
                 span ->
                     span.hasName("SELECT db.CUSTOMER")
                         .hasKind(SpanKind.CLIENT)
@@ -93,6 +92,7 @@ class ReactiveSpringDataTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem://localhost"),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(stringKey("peer.service"), "test-peer-service"))));
   }
 }

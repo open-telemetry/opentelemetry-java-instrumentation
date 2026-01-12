@@ -11,11 +11,13 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import javax.annotation.Nullable;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
 public class SuppressNestedClientHelper {
 
+  @Nullable
   public static Scope disallowNestedClientSpanSync(com.azure.core.util.Context azContext) {
     Context parentContext = currentContext();
     boolean hasAzureClientSpan = azContext.getData("client-method-call-flag").isPresent();

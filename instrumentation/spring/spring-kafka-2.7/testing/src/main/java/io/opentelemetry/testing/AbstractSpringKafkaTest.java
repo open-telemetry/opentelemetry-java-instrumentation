@@ -30,7 +30,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.util.concurrent.ListenableFuture;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -98,14 +97,16 @@ public abstract class AbstractSpringKafkaTest {
     MethodHandle sendMethod = null;
     Exception failure = null;
     try {
+      Class<?> listenableFutureClass =
+          Class.forName("org.springframework.util.concurrent.ListenableFuture");
       sendMethod =
           MethodHandles.lookup()
               .findVirtual(
                   KafkaOperations.class,
                   "send",
                   MethodType.methodType(
-                      ListenableFuture.class, String.class, Object.class, Object.class));
-    } catch (NoSuchMethodException e) {
+                      listenableFutureClass, String.class, Object.class, Object.class));
+    } catch (ClassNotFoundException | NoSuchMethodException e) {
       // spring-kafka 3.0 changed the return type
       try {
         sendMethod =

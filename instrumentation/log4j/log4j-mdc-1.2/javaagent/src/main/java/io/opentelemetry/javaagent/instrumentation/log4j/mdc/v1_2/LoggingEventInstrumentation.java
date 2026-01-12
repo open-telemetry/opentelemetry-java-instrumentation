@@ -13,13 +13,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.log4j.spi.LoggingEvent;
@@ -44,41 +45,38 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static Object onExit(
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,
-        @Advice.Return(readOnly = false) Object value) {
-      if (AgentCommonConfig.get().getTraceIdKey().equals(key)
-          || AgentCommonConfig.get().getSpanIdKey().equals(key)
-          || AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
-        if (value != null) {
-          // Assume already instrumented event if traceId/spanId/sampled is present.
-          return;
-        }
+        @Advice.Return @Nullable Object returnValue) {
 
-        Context context = VirtualField.find(LoggingEvent.class, Context.class).get(event);
-        if (context == null) {
-          return;
-        }
-
-        SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
-        if (!spanContext.isValid()) {
-          return;
-        }
-
-        if (AgentCommonConfig.get().getTraceIdKey().equals(key)) {
-          value = spanContext.getTraceId();
-        }
-        if (AgentCommonConfig.get().getSpanIdKey().equals(key)) {
-          value = spanContext.getSpanId();
-        }
-        if (AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
-          value = spanContext.getTraceFlags().asHex();
-        }
-      } else if (value == null) {
-        value = ConfiguredResourceAttributesHolder.getAttributeValue(key);
+      if (returnValue != null) {
+        return returnValue;
       }
+      boolean traceId = AgentCommonConfig.get().getTraceIdKey().equals(key);
+      boolean spanId = AgentCommonConfig.get().getSpanIdKey().equals(key);
+      boolean traceFlags = AgentCommonConfig.get().getTraceFlagsKey().equals(key);
+
+      if (!traceId && !spanId && !traceFlags) {
+        return ConfiguredResourceAttributesHolder.getAttributeValue(key);
+      }
+      Context context = VirtualFieldHelper.CONTEXT.get(event);
+      if (context == null) {
+        return null;
+      }
+      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      if (!spanContext.isValid()) {
+        return null;
+      }
+      if (traceId) {
+        return spanContext.getTraceId();
+      }
+      if (spanId) {
+        return spanContext.getSpanId();
+      }
+      return spanContext.getTraceFlags().asHex();
     }
   }
 }

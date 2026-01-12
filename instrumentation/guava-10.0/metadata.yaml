@@ -1,0 +1,11 @@
+description: >
+  This instrumentation enables context propagation for Guava ListenableFuture, it does not emit
+  any telemetry on its own.
+features:
+  - CONTEXT_PROPAGATION
+library_link: https://github.com/google/guava
+configurations:
+  - name: otel.instrumentation.guava.experimental-span-attributes
+    description: Enables experimental span attribute `guava.canceled` for cancelled operations.
+    type: boolean
+    default: false

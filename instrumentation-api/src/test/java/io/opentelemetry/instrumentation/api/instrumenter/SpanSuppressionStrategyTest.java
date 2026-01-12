@@ -22,41 +22,35 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class SpanSuppressionStrategyTest {
 
   static final Span span = Span.getInvalid();
 
   @ParameterizedTest
-  @ArgumentsSource(ConfigArgs.class)
+  @MethodSource("configArgs")
   void shouldParseConfig(String value, SpanSuppressionStrategy expectedStrategy) {
     assertEquals(expectedStrategy, SpanSuppressionStrategy.fromConfig(value));
   }
 
-  static final class ConfigArgs implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("none", SpanSuppressionStrategy.NONE),
-          Arguments.of("NONE", SpanSuppressionStrategy.NONE),
-          Arguments.of("span-kind", SpanSuppressionStrategy.SPAN_KIND),
-          Arguments.of("Span-Kind", SpanSuppressionStrategy.SPAN_KIND),
-          Arguments.of("semconv", SpanSuppressionStrategy.SEMCONV),
-          Arguments.of("SemConv", SpanSuppressionStrategy.SEMCONV),
-          Arguments.of("asdfasdfasdf", SpanSuppressionStrategy.SEMCONV),
-          Arguments.of(null, SpanSuppressionStrategy.SEMCONV));
-    }
+  private static Stream<Arguments> configArgs() {
+    return Stream.of(
+        Arguments.of("none", SpanSuppressionStrategy.NONE),
+        Arguments.of("NONE", SpanSuppressionStrategy.NONE),
+        Arguments.of("span-kind", SpanSuppressionStrategy.SPAN_KIND),
+        Arguments.of("Span-Kind", SpanSuppressionStrategy.SPAN_KIND),
+        Arguments.of("semconv", SpanSuppressionStrategy.SEMCONV),
+        Arguments.of("SemConv", SpanSuppressionStrategy.SEMCONV),
+        Arguments.of("asdfasdfasdf", SpanSuppressionStrategy.SEMCONV),
+        Arguments.of(null, SpanSuppressionStrategy.SEMCONV));
   }
 
   @ParameterizedTest
-  @ArgumentsSource(SpanKindsAndKeys.class)
+  @MethodSource("spanKindsAndKeys")
   void none_shouldNotSuppressAnything(SpanKind spanKind, SpanKey spanKey) {
     SpanSuppressor suppressor = SpanSuppressionStrategy.NONE.create(emptySet());
 
@@ -77,7 +71,7 @@ class SpanSuppressionStrategyTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(SpanKindsAndKeys.class)
+  @MethodSource("spanKindsAndKeys")
   void spanKind_shouldStoreInContext(SpanKind spanKind, SpanKey spanKey) {
     SpanSuppressor suppressor = SpanSuppressionStrategy.SPAN_KIND.create(emptySet());
     Context context = Context.root();
@@ -89,7 +83,7 @@ class SpanSuppressionStrategyTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(SpanKindsAndKeys.class)
+  @MethodSource("spanKindsAndKeys")
   void spanKind_shouldSuppressSameKind(SpanKind spanKind, SpanKey spanKey) {
     SpanSuppressor suppressor = SpanSuppressionStrategy.SPAN_KIND.create(emptySet());
     Context context = Context.root();
@@ -100,16 +94,12 @@ class SpanSuppressionStrategyTest {
     assertSame(span, spanKey.fromContextOrNull(newContext));
   }
 
-  static final class SpanKindsAndKeys implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of(SpanKind.SERVER, SpanKey.KIND_SERVER),
-          Arguments.of(SpanKind.CLIENT, SpanKey.KIND_CLIENT),
-          Arguments.of(SpanKind.CONSUMER, SpanKey.KIND_CONSUMER),
-          Arguments.of(SpanKind.PRODUCER, SpanKey.KIND_PRODUCER));
-    }
+  private static Stream<Arguments> spanKindsAndKeys() {
+    return Stream.of(
+        Arguments.of(SpanKind.SERVER, SpanKey.KIND_SERVER),
+        Arguments.of(SpanKind.CLIENT, SpanKey.KIND_CLIENT),
+        Arguments.of(SpanKind.CONSUMER, SpanKey.KIND_CONSUMER),
+        Arguments.of(SpanKind.PRODUCER, SpanKey.KIND_PRODUCER));
   }
 
   @Test

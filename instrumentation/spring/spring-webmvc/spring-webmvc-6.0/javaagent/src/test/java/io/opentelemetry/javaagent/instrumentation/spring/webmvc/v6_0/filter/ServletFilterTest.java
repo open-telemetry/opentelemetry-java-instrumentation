@@ -50,7 +50,13 @@ class ServletFilterTest extends AbstractServletFilterTest {
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app =
         new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(Map.of("server.port", port, "server.error.include-message", "always"));
+
+    app.setDefaultProperties(
+        Map.of(
+            "server.port",
+            port,
+            testLatestDeps ? "spring.web.error.include-message" : "server.error.include-message",
+            "always"));
     return app.run();
   }
 
@@ -70,7 +76,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
                           equalTo(
                               EXCEPTION_TYPE,
                               "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          satisfies(EXCEPTION_MESSAGE, val -> assertThat(val).isNotNull()),
+                          satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {

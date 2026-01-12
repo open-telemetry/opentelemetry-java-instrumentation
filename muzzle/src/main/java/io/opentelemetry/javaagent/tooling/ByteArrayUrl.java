@@ -74,7 +74,7 @@ public class ByteArrayUrl {
 
       private final InputStream inputStream;
 
-      protected ByteArrayUrlConnection(URL url) {
+      ByteArrayUrlConnection(URL url) {
         super(url);
         inputStream = new ByteArrayInputStream(binaryRepresentation);
       }

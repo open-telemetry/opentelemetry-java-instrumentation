@@ -14,12 +14,14 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
@@ -184,7 +186,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                           equalTo(RPC_METHOD, operation),
                           equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                           equalTo(AWS_REQUEST_ID, requestId),
-                          equalTo(stringKey("aws.table.name"), "sometable"),
+                          equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
                           equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
                           equalTo(maybeStable(DB_OPERATION), operation));
                       if (isRecordIndividualHttpErrorEnabled()) {

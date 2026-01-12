@@ -19,6 +19,7 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
   private boolean isAsyncListenerAttached;
   private Throwable throwable;
   private Object response;
+  private Context context;
 
   public static Context init(Context context) {
     if (context.get(CONTEXT_KEY) != null) {
@@ -61,11 +62,20 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
     return servletAsyncContext != null ? servletAsyncContext.response : null;
   }
 
-  public static void setAsyncListenerResponse(@Nullable Context context, Object response) {
+  public static void setAsyncListenerResponse(Context context, Object response) {
     ServletAsyncContext servletAsyncContext = get(context);
     if (servletAsyncContext != null) {
       servletAsyncContext.response = response;
+      servletAsyncContext.context = context;
     }
+  }
+
+  public static Context getAsyncListenerContext(Context context) {
+    ServletAsyncContext servletAsyncContext = get(context);
+    if (servletAsyncContext != null) {
+      return servletAsyncContext.context;
+    }
+    return null;
   }
 
   @Override

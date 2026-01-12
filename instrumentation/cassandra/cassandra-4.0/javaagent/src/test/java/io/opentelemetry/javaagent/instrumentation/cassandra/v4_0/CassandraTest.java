@@ -12,6 +12,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraTest extends AbstractCassandraTest {
 
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.cassandra-4.0";
+  }
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

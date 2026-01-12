@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -130,7 +131,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SERVER_PORT, url.getPort()),
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS)));
+                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
+                equalTo(PEER_SERVICE, "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -175,7 +177,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SERVER_PORT, url.getPort()),
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS)));
+                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
+                equalTo(PEER_SERVICE, "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -226,7 +229,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SERVER_PORT, url.getPort()),
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS)));
+                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
+                equalTo(PEER_SERVICE, "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -279,7 +283,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SERVER_PORT, url.getPort()),
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS)));
+                equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
+                equalTo(PEER_SERVICE, "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -321,7 +326,8 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
                 equalTo(URL_FULL, uri),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
-                equalTo(ERROR_TYPE, "java.net.ConnectException")));
+                equalTo(ERROR_TYPE, "java.net.ConnectException"),
+                equalTo(PEER_SERVICE, "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->

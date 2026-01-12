@@ -41,4 +41,9 @@ public class RatpackInstrumentationModule extends InstrumentationModule
         new HttpClientInstrumentation(),
         new RequestActionSupportInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

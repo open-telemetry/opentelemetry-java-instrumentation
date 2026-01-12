@@ -42,4 +42,9 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
     return asList(
         new RestClientTransportInstrumentation(), new RestClientHttpClientInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

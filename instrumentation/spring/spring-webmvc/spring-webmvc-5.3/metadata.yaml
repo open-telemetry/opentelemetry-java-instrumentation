@@ -1,0 +1,5 @@
+description: >
+  This instrumentation provides a library integration for Spring WebMVC controllers, that enables
+  the creation of HTTP server spans and metrics for requests processed by the Spring servlet
+  container.
+library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html

@@ -1,0 +1,81 @@
+---
+id: c4bfe28f-f81c-42e4-94d5-99ca61640c2b
+name: chat_completions
+request:
+  url: /chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o-mini"
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |
+    {
+      "id": "chatcmpl-BpUinPP6uoKQ7wujISoeiCaI3hAIf",
+      "object": "chat.completion",
+      "created": 1751612521,
+      "model": "gpt-4o-mini-2024-07-18",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Atlantic Ocean",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 2,
+        "total_tokens": 24,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "service_tier": "default",
+      "system_fingerprint": "fp_34a54ae93c"
+    }
+  headers:
+    Date: "Fri, 04 Jul 2025 07:02:01 GMT"
+    Content-Type: application/json
+    access-control-expose-headers: X-Request-ID
+    openai-organization: test_organization
+    openai-processing-ms: "152"
+    openai-version: 2020-10-01
+    x-envoy-upstream-service-time: "154"
+    x-ratelimit-limit-requests: "5000"
+    x-ratelimit-limit-tokens: "4000000"
+    x-ratelimit-remaining-requests: "4999"
+    x-ratelimit-remaining-tokens: "3999983"
+    x-ratelimit-reset-requests: 12ms
+    x-ratelimit-reset-tokens: 0s
+    x-request-id: req_504feef0ab17efd0cec051350235ea03
+    strict-transport-security: max-age=31536000; includeSubDomains; preload
+    cf-cache-status: DYNAMIC
+    Set-Cookie: test_set_cookie
+    X-Content-Type-Options: nosniff
+    Server: cloudflare
+    CF-RAY: 959cc1314fe4d4dc-NRT
+    alt-svc: h3=":443"; ma=86400
+uuid: c4bfe28f-f81c-42e4-94d5-99ca61640c2b
+persistent: true
+insertionIndex: 2

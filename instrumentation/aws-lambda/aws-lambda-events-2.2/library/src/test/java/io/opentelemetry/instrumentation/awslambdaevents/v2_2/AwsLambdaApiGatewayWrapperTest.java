@@ -36,12 +36,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class AwsLambdaApiGatewayWrapperTest {
+class AwsLambdaApiGatewayWrapperTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Mock private Context context;
 

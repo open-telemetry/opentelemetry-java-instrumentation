@@ -23,6 +23,7 @@ import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.uri.Uri;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
@@ -97,5 +98,10 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
+    // On Windows, non-routable addresses timeout instead of failing fast, causing test timeout
+    // before the HTTP client can create a span, resulting in only the parent span.
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.disableTestRemoteConnection();
+    }
   }
 }

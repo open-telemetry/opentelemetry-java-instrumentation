@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 
 @SuppressWarnings("unused")
 public class TestAdvice {
 
+  @AssignReturned.ToReturned
   @Advice.OnMethodExit
-  public static void returnTrue(@Advice.Return(readOnly = false) boolean returnVal) {
-    returnVal = true;
+  public static boolean returnTrue() {
+    return true;
   }
 }

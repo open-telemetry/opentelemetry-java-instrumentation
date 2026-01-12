@@ -10,11 +10,17 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler;
-import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.AwsLambdaSqsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaSqsInstrumenterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 
+/**
+ * @deprecated use {@link
+ *     io.opentelemetry.instrumentation.awslambdaevents.v3_11.TracingSqsEventHandler} instead.
+ */
+@Deprecated
 public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEvent, Void> {
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-2.2";
 
   private final Instrumenter<SQSEvent, Void> instrumenter;
 
@@ -33,7 +39,9 @@ public abstract class TracingSqsEventHandler extends TracingRequestHandler<SQSEv
    */
   protected TracingSqsEventHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(
-        openTelemetrySdk, flushTimeout, AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk));
+        openTelemetrySdk,
+        flushTimeout,
+        AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk, INSTRUMENTATION_NAME));
   }
 
   /**

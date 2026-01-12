@@ -14,3 +14,7 @@ if (findProperty("testLatestDeps") as Boolean) {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+}

@@ -130,7 +130,7 @@ class RestClientWrapper {
     }
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static Instrumenter<ElasticsearchRestRequest, Response> getInstrumenter(Object proxy)
       throws IllegalAccessException {
     Supplier<Instrumenter<ElasticsearchRestRequest, Response>> supplier =

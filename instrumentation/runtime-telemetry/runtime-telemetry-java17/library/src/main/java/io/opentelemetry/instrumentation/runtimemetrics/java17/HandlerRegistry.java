@@ -10,7 +10,6 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.ThreadGrouper;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.buffer.DirectBufferStatisticsHandler;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.classes.ClassesLoadedHandler;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.container.ContainerConfigurationHandler;
@@ -84,17 +83,16 @@ final class HandlerRegistry {
       }
     }
 
-    ThreadGrouper grouper = new ThreadGrouper();
     List<RecordedEventHandler> basicHandlers =
         List.of(
-            new ObjectAllocationInNewTlabHandler(meter, grouper),
-            new ObjectAllocationOutsideTlabHandler(meter, grouper),
-            new NetworkReadHandler(meter, grouper),
-            new NetworkWriteHandler(meter, grouper),
+            new ObjectAllocationInNewTlabHandler(meter),
+            new ObjectAllocationOutsideTlabHandler(meter),
+            new NetworkReadHandler(meter),
+            new NetworkWriteHandler(meter),
             new ContextSwitchRateHandler(meter),
             new OverallCpuLoadHandler(meter),
             new ContainerConfigurationHandler(meter),
-            new LongLockHandler(meter, grouper),
+            new LongLockHandler(meter),
             new ThreadCountHandler(meter),
             new ClassesLoadedHandler(meter),
             new MetaspaceSummaryHandler(meter),

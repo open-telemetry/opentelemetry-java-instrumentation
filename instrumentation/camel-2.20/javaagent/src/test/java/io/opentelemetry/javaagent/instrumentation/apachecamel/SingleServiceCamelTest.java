@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -26,8 +27,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected ConfigurableApplicationContext setupServer() {
@@ -57,7 +57,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
   }
 
   @Test
-  public void singleCamelServiceSpan() {
+  void singleCamelServiceSpan() {
     URI requestUrl = address.resolve("/camelService");
 
     client.post(requestUrl.toString(), "testContent").aggregate().join();
@@ -73,6 +73,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                             equalTo(URL_FULL, requestUrl.toString()),
                             equalTo(
                                 stringKey("camel.uri"),
-                                requestUrl.toString().replace("localhost", "0.0.0.0")))));
+                                experimental(
+                                    requestUrl.toString().replace("localhost", "0.0.0.0"))))));
   }
 }

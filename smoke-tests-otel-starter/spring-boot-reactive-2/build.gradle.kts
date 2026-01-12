@@ -1,13 +1,13 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot2.plugins.versions)
 }
 
 description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
-  implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
+  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "2.+" else "2.6.15"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -18,10 +18,6 @@ dependencies {
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("io.projectreactor:reactor-test")
-}
-
-springBoot {
-  mainClass = "io.opentelemetry.spring.smoketest.OtelReactiveSpringStarterSmokeTestApplication"
 }
 
 configurations.configureEach {

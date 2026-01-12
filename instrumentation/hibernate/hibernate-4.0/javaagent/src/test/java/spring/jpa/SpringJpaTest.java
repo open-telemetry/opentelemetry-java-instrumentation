@@ -10,6 +10,8 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -66,9 +68,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
@@ -95,10 +97,11 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("hibernate.session_id"),
-                                trace
-                                    .getSpan(1)
-                                    .getAttributes()
-                                    .get(stringKey("hibernate.session_id"))))));
+                                experimental(
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(stringKey("hibernate.session_id")))))));
     testing.clearData();
 
     testing.runWithSpan(
@@ -123,9 +126,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("INSERT test.Customer")
                         .hasKind(CLIENT)
@@ -152,10 +155,11 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("hibernate.session_id"),
-                                trace
-                                    .getSpan(1)
-                                    .getAttributes()
-                                    .get(stringKey("hibernate.session_id")))));
+                                experimental(
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(stringKey("hibernate.session_id"))))));
           } else {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -168,9 +172,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("CALL test")
                         .hasKind(CLIENT)
@@ -193,10 +197,11 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("hibernate.session_id"),
-                                trace
-                                    .getSpan(1)
-                                    .getAttributes()
-                                    .get(stringKey("hibernate.session_id")))),
+                                experimental(
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(stringKey("hibernate.session_id"))))),
                 span ->
                     span.hasName("INSERT test.Customer")
                         .hasKind(CLIENT)
@@ -243,9 +248,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
@@ -272,10 +277,11 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("hibernate.session_id"),
-                                trace
-                                    .getSpan(1)
-                                    .getAttributes()
-                                    .get(stringKey("hibernate.session_id")))),
+                                experimental(
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(stringKey("hibernate.session_id"))))),
                 span ->
                     span.hasName("UPDATE test.Customer")
                         .hasKind(CLIENT)
@@ -313,9 +319,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
@@ -353,9 +359,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
@@ -380,17 +386,17 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("DELETE test.Customer")
                         .hasKind(CLIENT)
@@ -420,9 +426,9 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
@@ -447,25 +453,25 @@ class SpringJpaTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("DELETE test.Customer")
                         .hasKind(CLIENT)

@@ -56,7 +56,7 @@ abstract class TomcatServlet5FilterMappingTest extends TomcatServlet5MappingTest
         ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
         throws IOException, ServletException {
       if (servletRequest.getAttribute("firstFilterCalled") != null) {
-        servletRequest.setAttribute("testFilterCalled", Boolean.TRUE);
+        servletRequest.setAttribute("testFilterCalled", true);
         filterChain.doFilter(servletRequest, servletResponse);
       } else {
         throw new IllegalStateException("First filter should have been called.");
@@ -75,7 +75,7 @@ abstract class TomcatServlet5FilterMappingTest extends TomcatServlet5MappingTest
     public void doFilter(
         ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
         throws IOException, ServletException {
-      servletRequest.setAttribute("firstFilterCalled", Boolean.TRUE);
+      servletRequest.setAttribute("firstFilterCalled", true);
       filterChain.doFilter(servletRequest, servletResponse);
     }
 

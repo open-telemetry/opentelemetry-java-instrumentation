@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import javax.annotation.Nullable;
 
-enum HttpRequestHeadersSetter implements TextMapSetter<HttpRequestAndChannel> {
+enum HttpRequestHeadersSetter implements TextMapSetter<NettyRequest> {
   INSTANCE;
 
   @Override
-  public void set(@Nullable HttpRequestAndChannel carrier, String key, String value) {
+  public void set(@Nullable NettyRequest carrier, String key, String value) {
     carrier.request().headers().set(key, value);
   }
 }

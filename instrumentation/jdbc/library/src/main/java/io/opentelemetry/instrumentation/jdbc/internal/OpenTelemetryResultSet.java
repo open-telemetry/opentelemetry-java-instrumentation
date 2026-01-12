@@ -34,9 +34,16 @@ class OpenTelemetryResultSet implements ResultSet {
   private final ResultSet delegate;
   private final Statement statement;
 
-  OpenTelemetryResultSet(ResultSet delegate, Statement statement) {
+  private OpenTelemetryResultSet(ResultSet delegate, Statement statement) {
     this.delegate = delegate;
     this.statement = statement;
+  }
+
+  public static ResultSet wrap(ResultSet delegate, Statement statement) {
+    if (delegate == null) {
+      return null;
+    }
+    return new OpenTelemetryResultSet(delegate, statement);
   }
 
   @Override

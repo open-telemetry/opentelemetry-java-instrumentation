@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -73,7 +74,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                           .hasTotalRecordedLinks(0)
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(stringKey("aws.queue.url"), queueUrl),
+                              equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                               satisfies(
                                   AWS_REQUEST_ID,
                                   val ->

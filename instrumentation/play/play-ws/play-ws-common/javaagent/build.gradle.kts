@@ -7,3 +7,9 @@ val scalaVersion = "2.12"
 dependencies {
   compileOnly("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.0.2")
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

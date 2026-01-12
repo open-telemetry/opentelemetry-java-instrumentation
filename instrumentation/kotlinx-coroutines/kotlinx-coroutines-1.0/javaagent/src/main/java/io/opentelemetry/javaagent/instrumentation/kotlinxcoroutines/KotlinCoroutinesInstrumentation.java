@@ -12,6 +12,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import kotlin.coroutines.CoroutineContext;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,13 +35,12 @@ public class KotlinCoroutinesInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter
-    public static void enter(
-        @Advice.Argument(value = 1, readOnly = false) CoroutineContext coroutineContext) {
-      if (coroutineContext != null) {
-        coroutineContext =
-            KotlinCoroutinesInstrumentationHelper.addOpenTelemetryContext(coroutineContext);
-      }
+    public static CoroutineContext enter(@Advice.Argument(1) CoroutineContext coroutineContext) {
+      return coroutineContext == null
+          ? null
+          : KotlinCoroutinesInstrumentationHelper.addOpenTelemetryContext(coroutineContext);
     }
   }
 }

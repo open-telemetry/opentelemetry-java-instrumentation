@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
-  api("org.testcontainers:mongodb")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("org.testcontainers:testcontainers-mongodb")
 
   implementation("io.opentelemetry:opentelemetry-api")
 }

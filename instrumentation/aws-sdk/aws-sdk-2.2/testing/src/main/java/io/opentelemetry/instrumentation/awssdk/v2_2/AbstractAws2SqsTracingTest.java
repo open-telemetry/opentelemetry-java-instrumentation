@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -68,7 +69,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                               Arrays.asList(
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(
-                                      stringKey("aws.queue.url"),
+                                      AWS_SQS_QUEUE_URL,
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                   satisfies(
                                       AWS_REQUEST_ID,
@@ -93,7 +94,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       if (captureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 v -> v.isEqualTo(ImmutableList.of("test"))));
                       }
                       span.hasName("testSdkSqs publish")
@@ -121,7 +122,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                     equalTo(
-                                        stringKey("aws.queue.url"),
+                                        AWS_SQS_QUEUE_URL,
                                         "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                     satisfies(
                                         AWS_REQUEST_ID,
@@ -163,7 +164,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.test_message_header"),
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
                                   v -> v.isEqualTo(ImmutableList.of("test"))));
                         }
 
@@ -201,7 +202,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.test_message_header"),
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
                                   v -> v.isEqualTo(singletonList("test"))));
                         }
 
@@ -238,13 +239,13 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
         sendMessageRequest.toBuilder()
             .messageAttributes(
                 Collections.singletonMap(
-                    "test-message-header",
+                    "Test-Message-Header",
                     MessageAttributeValue.builder().dataType("String").stringValue("test").build()))
             .build();
     client.sendMessage(newSendMessageRequest);
 
     ReceiveMessageRequest newReceiveMessageRequest =
-        receiveMessageRequest.toBuilder().messageAttributeNames("test-message-header").build();
+        receiveMessageRequest.toBuilder().messageAttributeNames("Test-Message-Header").build();
     ReceiveMessageResponse response = client.receiveMessage(newReceiveMessageRequest);
 
     assertThat(response.messages().size()).isEqualTo(1);

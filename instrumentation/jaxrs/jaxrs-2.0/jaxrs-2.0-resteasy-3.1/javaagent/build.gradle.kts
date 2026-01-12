@@ -34,7 +34,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
+  library("javax.ws.rs:javax.ws.rs-api:2.0")
   library("org.jboss.resteasy:resteasy-jaxrs:3.1.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
@@ -43,7 +43,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:undertow-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent"))
@@ -68,14 +67,23 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
-  withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.jaxrs.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
   }
 }
 

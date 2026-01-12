@@ -67,13 +67,19 @@ public class FlakyTestReporter {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       return builder.parse(testReport.toFile());
     } catch (Exception exception) {
-      throw new IllegalStateException("failed to parse test report " + testReport, exception);
+      System.err.println("Failed to parse test report " + testReport);
+      exception.printStackTrace();
+      return null;
     }
   }
 
   @SuppressWarnings("JavaTimeDefaultTimeZone")
   private void scanTestFile(Path testReport) {
     Document doc = parse(testReport);
+    if (doc == null) {
+      return;
+    }
+
     doc.getDocumentElement().normalize();
     testCount += Integer.parseInt(doc.getDocumentElement().getAttribute("tests"));
     skippedCount += Integer.parseInt(doc.getDocumentElement().getAttribute("skipped"));
@@ -201,7 +207,7 @@ public class FlakyTestReporter {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             String name = file.getFileName().toString();
-            if (name.startsWith("TEST-") && name.endsWith(".xml")) {
+            if (name.startsWith("TEST-") && name.endsWith(".xml") && file.toFile().length() > 0) {
               scanTestFile(file);
             }
 
@@ -277,7 +283,8 @@ public class FlakyTestReporter {
       row.add(flakyTest.testName);
       row.add(buildScanUrl);
       row.add(jobUrl);
-      row.add(flakyTest.message);
+      // there is a limit of 50000 characters in a single cell
+      row.add(abbreviate(flakyTest.message, 10000));
       data.add(row);
     }
 
@@ -289,6 +296,14 @@ public class FlakyTestReporter {
         .append(SPREADSHEET_ID, "Sheet1!A:F", valueRange)
         .setValueInputOption("USER_ENTERED")
         .execute();
+  }
+
+  private static String abbreviate(String text, int maxLength) {
+    if (text.length() > maxLength) {
+      return text.substring(0, maxLength - 3) + "...";
+    }
+
+    return text;
   }
 
   public static void main(String... args) throws Exception {

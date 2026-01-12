@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -18,8 +20,11 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
+@SuppressWarnings("deprecation") // until DbClientCommonAttributesGetter is removed
 public interface DbClientAttributesGetter<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
+    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE>,
+        NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST> {
 
   /**
    * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
@@ -36,6 +41,12 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
     return getStatement(request);
   }
 
+  // TODO: make this required to implement
+  @Nullable
+  default String getDbQuerySummary(REQUEST request) {
+    return null;
+  }
+
   /**
    * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
    */
@@ -49,5 +60,16 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   default String getDbOperationName(REQUEST request) {
     return getOperation(request);
+  }
+
+  // TODO: make this required to implement
+  default String getDbSystemName(REQUEST request) {
+    return getDbSystem(request);
+  }
+
+  // TODO: make this required to implement
+  @Nullable
+  default String getResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
+    return getResponseStatus(response, error);
   }
 }

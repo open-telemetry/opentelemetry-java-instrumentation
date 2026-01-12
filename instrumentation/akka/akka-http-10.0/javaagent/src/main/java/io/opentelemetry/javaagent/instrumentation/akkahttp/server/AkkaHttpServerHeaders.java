@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-enum AkkaHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
+enum AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
   INSTANCE;
 
   @Override

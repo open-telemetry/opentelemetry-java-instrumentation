@@ -37,7 +37,7 @@ public final class JavaxMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // jms api returns a raw enumeration
   public List<String> getPropertyNames() throws JMSException {
     return Collections.list(message.getPropertyNames());
   }

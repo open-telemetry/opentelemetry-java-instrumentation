@@ -39,6 +39,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -141,6 +142,10 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
 
     optionsBuilder.setExpectedClientSpanNameMapper(Netty40ClientTest::expectedClientSpanName);
     optionsBuilder.setHttpAttributes(Netty40ClientTest::httpAttributes);
+    // On Windows, non-routable addresses behave differently, causing test failures.
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.disableTestRemoteConnection();
+    }
   }
 
   private static int getPort(URI uri) {

@@ -25,6 +25,11 @@ public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationMod
   }
 
   @Override
+  public boolean isIndyReady() {
+    return true;
+  }
+
+  @Override
   public String getModuleGroup() {
     return "akka-http";
   }
@@ -34,7 +39,6 @@ public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationMod
     return asList(
         new PathMatcherInstrumentation(),
         new PathMatcherStaticInstrumentation(),
-        new RouteConcatenationInstrumentation(),
-        new PathConcatenationInstrumentation());
+        new RouteConcatenationInstrumentation());
   }
 }

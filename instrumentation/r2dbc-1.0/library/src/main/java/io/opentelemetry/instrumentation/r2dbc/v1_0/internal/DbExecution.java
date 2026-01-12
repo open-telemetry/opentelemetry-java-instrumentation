@@ -67,7 +67,13 @@ public final class DbExecution {
             host != null ? "//" + host : "",
             port != null ? ":" + port : "");
     this.rawQueryText =
-        queryInfo.getQueries().stream().map(QueryInfo::getQuery).collect(Collectors.joining(";\n"));
+        queryInfo.getQueries().stream()
+            .map(QueryInfo::getQuery)
+            .map(
+                query ->
+                    R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
+            .collect(Collectors.joining(";\n"));
+    R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
   public Integer getPort() {

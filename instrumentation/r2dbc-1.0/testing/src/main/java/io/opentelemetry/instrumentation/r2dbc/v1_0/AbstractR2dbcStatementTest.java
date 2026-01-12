@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -16,7 +19,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -37,6 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -181,6 +187,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -236,16 +243,51 @@ public abstract class AbstractR2dbcStatementTest {
                                 "SELECT")))));
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  void testMetrics() {
+    DbSystemProps props = SYSTEMS.get(MARIADB.system);
+    startContainer(props);
+    ConnectionFactory connectionFactory =
+        createProxyConnectionFactory(
+            ConnectionFactoryOptions.builder()
+                .option(DRIVER, props.system)
+                .option(HOST, container.getHost())
+                .option(PORT, port)
+                .option(USER, USER_DB)
+                .option(PASSWORD, PW_DB)
+                .option(DATABASE, DB)
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
+                .build());
+
+    Mono.from(connectionFactory.create())
+        .flatMapMany(
+            connection ->
+                Mono.from(connection.createStatement("SELECT 3").execute())
+                    .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .blockLast(Duration.ofMinutes(1));
+
+    assertDurationMetric(
+        getTesting(),
+        "io.opentelemetry.r2dbc-1.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
   private static class Parameter {
 
-    public final String system;
-    public final String statement;
-    public final String expectedStatement;
-    public final String spanName;
-    public final String table;
-    public final String operation;
+    final String system;
+    final String statement;
+    final String expectedStatement;
+    final String spanName;
+    final String table;
+    final String operation;
 
-    public Parameter(
+    Parameter(
         String system,
         String statement,
         String expectedStatement,
@@ -262,19 +304,19 @@ public abstract class AbstractR2dbcStatementTest {
   }
 
   private static class DbSystemProps {
-    public final String system;
-    public final String image;
-    public final int port;
-    public final Map<String, String> envVariables = new HashMap<>();
+    final String system;
+    final String image;
+    final int port;
+    final Map<String, String> envVariables = new HashMap<>();
 
-    public DbSystemProps(String system, String image, int port) {
+    DbSystemProps(String system, String image, int port) {
       this.system = system;
       this.image = image;
       this.port = port;
     }
 
     @CanIgnoreReturnValue
-    public DbSystemProps envVariables(String... keyValues) {
+    DbSystemProps envVariables(String... keyValues) {
       for (int i = 0; i < keyValues.length / 2; i++) {
         envVariables.put(keyValues[2 * i], keyValues[2 * i + 1]);
       }

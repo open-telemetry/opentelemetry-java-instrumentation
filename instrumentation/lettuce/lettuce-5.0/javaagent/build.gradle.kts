@@ -20,23 +20,36 @@ dependencies {
   testImplementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.1:javaagent"))
 
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
 }
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }

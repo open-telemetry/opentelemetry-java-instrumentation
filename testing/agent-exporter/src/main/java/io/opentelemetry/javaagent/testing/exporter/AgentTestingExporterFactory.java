@@ -14,6 +14,10 @@ public final class AgentTestingExporterFactory {
   static final OtlpInMemoryMetricExporter metricExporter = new OtlpInMemoryMetricExporter();
   static final OtlpInMemoryLogRecordExporter logExporter = new OtlpInMemoryLogRecordExporter();
 
+  static {
+    TestExportersUtil.initTestExporters();
+  }
+
   public static List<byte[]> getSpanExportRequests() {
     return spanExporter.getCollectedExportRequests();
   }

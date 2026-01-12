@@ -20,12 +20,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -321,5 +323,96 @@ class TracerTest {
                         .hasTotalAttributeCount(0)
                         .hasInstrumentationScopeInfo(
                             InstrumentationScopeInfo.builder("test").setVersion("1.2.3").build())));
+  }
+
+  @Test
+  @DisplayName("capture span link without attributes")
+  void captureSpanLinkWithoutAttributes() {
+    // When
+    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
+    Span linkedSpan = tracer.spanBuilder("linked").startSpan();
+    linkedSpan.end();
+    SpanContext linkedSpanContext = linkedSpan.getSpanContext();
+
+    Span testSpan = tracer.spanBuilder("test").addLink(linkedSpanContext).startSpan();
+    testSpan.end();
+
+    // Then
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("linked").hasNoParent().hasTotalAttributeCount(0)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test")
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)
+                        .hasLinksSatisfying(
+                            links -> {
+                              assertThat(links).hasSize(1);
+                              LinkData link = links.get(0);
+                              assertThat(link.getSpanContext().getTraceId())
+                                  .isEqualTo(linkedSpanContext.getTraceId());
+                              assertThat(link.getSpanContext().getSpanId())
+                                  .isEqualTo(linkedSpanContext.getSpanId());
+                              assertThat(link.getSpanContext().getTraceFlags().asByte())
+                                  .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
+                              assertThat(link.getSpanContext().isRemote())
+                                  .isEqualTo(linkedSpanContext.isRemote());
+                              assertThat(link.getAttributes().size()).isEqualTo(0);
+                            })));
+  }
+
+  @Test
+  @DisplayName("capture span link with attributes")
+  void captureSpanLinkWithAttributes() {
+    // When
+    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
+    Span linkedSpan = tracer.spanBuilder("linked").startSpan();
+    linkedSpan.end();
+    SpanContext linkedSpanContext = linkedSpan.getSpanContext();
+
+    Attributes linkAttributes =
+        Attributes.builder()
+            .put("string", "1")
+            .put("long", 2L)
+            .put("double", 3.0)
+            .put("boolean", true)
+            .build();
+    Span testSpan =
+        tracer.spanBuilder("test").addLink(linkedSpanContext, linkAttributes).startSpan();
+    testSpan.end();
+
+    // Then
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("linked").hasNoParent().hasTotalAttributeCount(0)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test")
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0)
+                        .hasLinksSatisfying(
+                            links -> {
+                              assertThat(links).hasSize(1);
+                              LinkData link = links.get(0);
+                              assertThat(link.getSpanContext().getTraceId())
+                                  .isEqualTo(linkedSpanContext.getTraceId());
+                              assertThat(link.getSpanContext().getSpanId())
+                                  .isEqualTo(linkedSpanContext.getSpanId());
+                              assertThat(link.getSpanContext().getTraceFlags().asByte())
+                                  .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
+                              assertThat(link.getSpanContext().isRemote())
+                                  .isEqualTo(linkedSpanContext.isRemote());
+                              assertThat(link.getTotalAttributeCount()).isEqualTo(4);
+                              Attributes attrs = link.getAttributes();
+                              assertThat(attrs.get(stringKey("string"))).isEqualTo("1");
+                              assertThat(attrs.get(longKey("long"))).isEqualTo(2L);
+                              assertThat(attrs.get(doubleKey("double"))).isEqualTo(3.0);
+                              assertThat(attrs.get(booleanKey("boolean"))).isEqualTo(true);
+                            })));
   }
 }

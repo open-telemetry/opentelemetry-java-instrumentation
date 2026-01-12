@@ -4,12 +4,11 @@ plugins {
 
 dependencies {
   api(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
+  implementation(project(":instrumentation:aws-lambda:aws-lambda-events-common-2.2:library"))
+  compileOnly(project(":instrumentation:aws-lambda:aws-lambda-events-3.11:library"))
 
   compileOnly("io.opentelemetry:opentelemetry-sdk")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
 
   library("com.amazonaws:aws-lambda-java-core:1.0.0")
   // First version to includes support for SQSEvent, currently the most popular message queue used
@@ -24,13 +23,6 @@ dependencies {
   // by Java 8 based Lambda functions.
   // So that is the reason that why we add it as compile only dependency.
   compileOnly("com.amazonaws:aws-lambda-java-serialization:1.1.5")
-
-  // We need Jackson for wrappers to reproduce the serialization does when Lambda invokes a RequestHandler with event
-  // since Lambda will only be able to invoke the wrapper itself with a generic Object.
-  // Note that Lambda itself uses Jackson, but does not expose it to the function so we need to include it here.
-  // TODO: Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
-  implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   // allows to get the function ARN
   testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")

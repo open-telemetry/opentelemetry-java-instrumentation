@@ -36,10 +36,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class AwsLambdaStreamHandlerTest {
+class AwsLambdaStreamHandlerTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Mock private Context context;
 

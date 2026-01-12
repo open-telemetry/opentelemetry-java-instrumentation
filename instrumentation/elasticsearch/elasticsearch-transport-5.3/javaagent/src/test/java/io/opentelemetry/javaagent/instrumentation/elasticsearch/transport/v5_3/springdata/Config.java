@@ -71,7 +71,7 @@ class Config {
             new ClusterUpdateSettingsRequest()
                 .transientSettings(
                     Collections.singletonMap(
-                        "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
+                        "cluster.routing.allocation.disk.threshold_enabled", false)));
 
     return testNode;
   }

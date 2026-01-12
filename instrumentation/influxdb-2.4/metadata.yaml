@@ -1,0 +1,11 @@
+display_name: InfluxDB Client
+description: This instrumentation enables database client spans and metrics for the InfluxDB Java client.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/influxdata/influxdb-java
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables or disables statement sanitization for database queries.
+    type: boolean
+    default: true

@@ -45,10 +45,9 @@ dependencies {
   }
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
-  testImplementation("org.testcontainers:selenium")
+  testImplementation("org.testcontainers:testcontainers-selenium")
   testImplementation("org.seleniumhq.selenium:selenium-java:4.8.3")
 
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.35.v20201120")
@@ -60,15 +59,17 @@ val launcher = javaToolchains.launcherFor {
   languageVersion.set(JavaLanguageVersion.of(8))
 }
 
-class CompilerArgumentsProvider : CommandLineArgumentProvider {
+class CompilerArgumentsProvider(
+  private val buildDir: Directory
+) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     // gwt module
     "test.gwt.Greeting",
-    "-war", layout.buildDirectory.dir("testapp/war").get().asFile.absolutePath,
+    "-war", buildDir.dir("testapp/war").asFile.absolutePath,
     "-logLevel", "INFO",
     "-localWorkers", "2",
     "-compileReport",
-    "-extra", layout.buildDirectory.dir("testapp/extra").get().asFile.absolutePath,
+    "-extra", buildDir.dir("testapp/extra").asFile.absolutePath,
     // makes compile a bit faster
     "-draftCompile",
   )
@@ -87,7 +88,7 @@ tasks {
 
     classpath(sourceSets["testapp"].java.srcDirs, sourceSets["testapp"].compileClasspath)
 
-    argumentProviders.add(CompilerArgumentsProvider())
+    argumentProviders.add(CompilerArgumentsProvider(layout.buildDirectory.get()))
 
     if (findProperty("testLatestDeps") as Boolean) {
       javaLauncher.set(project.javaToolchains.launcherFor {
@@ -120,4 +121,5 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

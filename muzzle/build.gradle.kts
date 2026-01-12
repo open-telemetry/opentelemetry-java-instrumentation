@@ -1,6 +1,5 @@
 plugins {
   id("otel.java-conventions")
-  id("otel.japicmp-conventions")
   id("otel.publish-conventions")
 }
 
@@ -24,6 +23,6 @@ dependencies {
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("com.google.guava:guava")
 }

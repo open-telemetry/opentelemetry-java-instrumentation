@@ -184,7 +184,7 @@ class LogEventToReplay implements LogEvent {
     private final Object[] parameters;
     private final Throwable throwable;
 
-    public MessageCopy(Message message) {
+    MessageCopy(Message message) {
       this.formattedMessage = message.getFormattedMessage();
       this.format = message.getFormat();
       this.parameters = message.getParameters();

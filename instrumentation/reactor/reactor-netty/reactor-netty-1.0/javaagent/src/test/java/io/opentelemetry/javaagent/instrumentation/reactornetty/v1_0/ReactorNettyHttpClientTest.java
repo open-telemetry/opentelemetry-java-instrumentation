@@ -15,6 +15,7 @@ import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.jupiter.api.condition.OS;
 import reactor.netty.http.client.HttpClient;
 
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
@@ -32,28 +33,34 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 
-    optionsBuilder.setSingleConnectionFactory(
-        (host, port) -> {
-          HttpClient httpClient =
-              HttpClient.newConnection()
-                  .host(host)
-                  .port(port)
-                  .headers(headers -> headers.set(HttpHeaderNames.USER_AGENT, USER_AGENT));
+    if (OS.WINDOWS.isCurrentOs()) {
+      // Disable remote connection tests on Windows due to reactor-netty creating extra spans
+      optionsBuilder.setTestRemoteConnection(false);
+    } else {
+      // Only run single connection tests on Linux due to networking stack differences
+      optionsBuilder.setSingleConnectionFactory(
+          (host, port) -> {
+            HttpClient httpClient =
+                HttpClient.newConnection()
+                    .host(host)
+                    .port(port)
+                    .headers(headers -> headers.set(HttpHeaderNames.USER_AGENT, USER_AGENT));
 
-          return (path, headers) ->
-              httpClient
-                  .headers(h -> headers.forEach(h::add))
-                  .get()
-                  .uri(path)
-                  .responseSingle(
-                      (resp, content) -> {
-                        // Make sure to consume content since that's when we close the span.
-                        return content.map(unused -> resp);
-                      })
-                  .block()
-                  .status()
-                  .code();
-        });
+            return (path, headers) ->
+                httpClient
+                    .headers(h -> headers.forEach(h::add))
+                    .get()
+                    .uri(path)
+                    .responseSingle(
+                        (resp, content) -> {
+                          // Make sure to consume content since that's when we close the span.
+                          return content.map(unused -> resp);
+                        })
+                    .block()
+                    .status()
+                    .code();
+          });
+    }
   }
 
   @Override

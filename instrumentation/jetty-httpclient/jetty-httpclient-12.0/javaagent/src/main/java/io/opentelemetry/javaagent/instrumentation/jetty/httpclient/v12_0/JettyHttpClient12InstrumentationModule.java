@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JettyHttpClient12InstrumentationModule extends InstrumentationModule {
+public class JettyHttpClient12InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public JettyHttpClient12InstrumentationModule() {
     super("jetty-httpclient", "jetty-httpclient-12.0");
   }
@@ -23,5 +25,10 @@ public class JettyHttpClient12InstrumentationModule extends InstrumentationModul
     return asList(
         new JettyHttpClient12Instrumentation(),
         new JettyClient12ResponseListenersInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

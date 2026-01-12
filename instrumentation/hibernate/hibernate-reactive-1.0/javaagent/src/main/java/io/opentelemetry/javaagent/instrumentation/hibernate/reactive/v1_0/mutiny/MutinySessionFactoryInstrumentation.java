@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.smallrye.mutiny.Uni;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -34,9 +35,10 @@ public class MutinySessionFactoryInstrumentation implements TypeInstrumentation 
 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Uni<?> uni) {
-      uni = ContextOperator.plug(uni);
+    public static Uni<?> onExit(@Advice.Return Uni<?> uni) {
+      return ContextOperator.plug(uni);
     }
   }
 }

@@ -31,7 +31,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent"))
@@ -43,7 +42,6 @@ dependencies {
   testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
 
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-server:2.+") // see jaxrs-3.0-jersey-3.0 module
-  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+") // see jaxrs-3.0-jersey-3.0 module
   latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+") // see jaxrs-3.0-jersey-3.0 module
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+") // see jaxrs-3.0-jersey-3.0 module
 }
@@ -62,16 +60,27 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
 }
 
 tasks {
-  test {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
-
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.jaxrs.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
   }
 }

@@ -12,12 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DropwizardMetricsInstrumentationModule extends InstrumentationModule {
+public class DropwizardMetricsInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public DropwizardMetricsInstrumentationModule() {
     super("dropwizard-metrics", "dropwizard-metrics-4.0");
@@ -30,7 +31,7 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // the Dropwizard metrics API does not have a concept of metric labels/tags/attributes, thus the
     // data produced by this integration might be of very low quality, depending on how the API is
     // used in the instrumented application
@@ -45,5 +46,10 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
         new HistogramInstrumentation(),
         new MeterInstrumentation(),
         new TimerInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

@@ -324,12 +324,12 @@ public enum JdbcConnectionUrlParser {
       portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
       int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
 
-      int paramLoc = jdbcUrl.indexOf("?", dbLoc);
+      int paramLoc = dbLoc != -1 ? jdbcUrl.indexOf("?", dbLoc) : -1;
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
         builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
-      } else {
+      } else if (dbLoc != -1) {
         builder.db(jdbcUrl.substring(dbLoc + 1));
       }
 
@@ -337,6 +337,7 @@ public enum JdbcConnectionUrlParser {
         return MARIA_ADDRESS.doParse(jdbcUrl, builder);
       }
 
+      dbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
       if (portLoc > 0) {
         hostEndLoc = portLoc;
         int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
@@ -892,6 +893,102 @@ public enum JdbcConnectionUrlParser {
 
       return builder;
     }
+  },
+  /**
+   * <a
+   * href="https://clickhouse.com/docs/integrations/language-clients/java/jdbc#configuration">Driver
+   * configuration doc</a> mentions that besides <code>clickhouse</code> <code>ch</code> could also
+   * be used but ClickHouse Connection implementation always returns full prefix <code>
+   * jdbc:clickhouse:</code>
+   */
+  CLICKHOUSE("clickhouse") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      String clickhouseUrl = jdbcUrl.substring("clickhouse:".length());
+      int typeEndIndex = clickhouseUrl.indexOf("://");
+      if (typeEndIndex > 0) {
+        builder.subtype(clickhouseUrl.substring(0, typeEndIndex));
+      }
+      return GENERIC_URL_LIKE.doParse(clickhouseUrl, builder);
+    }
+  },
+  /**
+   * Sample urls:
+   *
+   * <ul>
+   *   <li>jdbc:oceanbase://host:port/dbname
+   *   <li>jdbc:oceanbase:oracle://host:port/dbname
+   * </ul>
+   */
+  OCEANBASE("oceanbase") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      int protoLoc = jdbcUrl.indexOf("://");
+      int typeEndLoc = jdbcUrl.indexOf(':');
+      if (protoLoc > typeEndLoc) {
+        String subtype = jdbcUrl.substring(typeEndLoc + 1, protoLoc);
+        builder.subtype(subtype);
+        if (subtype.equals(DbSystemValues.ORACLE)) {
+          builder.system(DbSystemValues.ORACLE);
+        }
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder);
+      } else {
+        return GENERIC_URL_LIKE.doParse(jdbcUrl, builder);
+      }
+    }
+  },
+  /**
+   * <a href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints">Driver
+   * configuration doc</a>
+   *
+   * <p>Sample urls:
+   *
+   * <ul>
+   *   <li>jdbc:lindorm:table:url=http//server_name:30060/test
+   *   <li>jdbc:lindorm:tsdb:url=http://server_name:8242/test
+   *   <li>jabc:lindorm:search:url=http://server_name:30070/test
+   * </ul>
+   */
+  LINDORM("lindorm") {
+    private static final String DEFAULT_HOST = "localhost";
+    private static final int DEFAULT_PORT = 30060;
+
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      String lindormUrl = jdbcUrl.substring("lindorm:".length());
+      DbInfo dbInfo = builder.build();
+      if (dbInfo.getHost() == null) {
+        builder.host(DEFAULT_HOST);
+      }
+      if (dbInfo.getPort() == null) {
+        builder.port(DEFAULT_PORT);
+      }
+
+      int urlIndex = lindormUrl.indexOf(":url=");
+      if (urlIndex < 0) {
+        return builder;
+      }
+      builder.subtype(lindormUrl.substring(0, urlIndex));
+      String realUrl = lindormUrl.substring(urlIndex + 5);
+      return GENERIC_URL_LIKE.doParse(realUrl, builder);
+    }
+  },
+  /** Sample url: jdbc:polardb://server_name:1901/dbname */
+  POLARDB("polardb") {
+    private static final int DEFAULT_PORT = 1521;
+    private static final String DEFAULT_HOST = "localhost";
+
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      DbInfo dbInfo = builder.build();
+      if (dbInfo.getHost() == null) {
+        builder.host(DEFAULT_HOST);
+      }
+      if (dbInfo.getPort() == null) {
+        builder.port(DEFAULT_PORT);
+      }
+      return GENERIC_URL_LIKE.doParse(jdbcUrl, builder);
+    }
   };
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
@@ -924,8 +1021,13 @@ public enum JdbcConnectionUrlParser {
     connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
 
     String jdbcUrl;
-    if (connectionUrl.startsWith("jdbc:")) {
+    if (connectionUrl.startsWith("jdbc:tracing:")) {
+      // see https://github.com/opentracing-contrib/java-jdbc
+      jdbcUrl = connectionUrl.substring("jdbc:tracing:".length());
+    } else if (connectionUrl.startsWith("jdbc:")) {
       jdbcUrl = connectionUrl.substring("jdbc:".length());
+    } else if (connectionUrl.startsWith("jdbc-secretsmanager:tracing:")) {
+      jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:tracing:".length());
     } else if (connectionUrl.startsWith("jdbc-secretsmanager:")) {
       jdbcUrl = connectionUrl.substring("jdbc-secretsmanager:".length());
     } else {
@@ -1049,7 +1151,7 @@ public enum JdbcConnectionUrlParser {
   }
 
   // see
-  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md
   private static String toDbSystem(String type) {
     switch (type) {
       case "as400": // IBM AS400 Database
@@ -1079,6 +1181,14 @@ public enum JdbcConnectionUrlParser {
         return DbSystemValues.MSSQL;
       case "sap": // SAP Hana
         return DbSystemValues.HANADB;
+      case "clickhouse": // ClickHouse
+        return DbSystemValues.CLICKHOUSE;
+      case "oceanbase": // Oceanbase
+        return DbSystemValues.OCEANBASE;
+      case "polardb": // PolarDB
+        return DbSystemValues.POLARDB;
+      case "lindorm": // Lindorm
+        return DbSystemValues.LINDORM;
       default:
         return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
@@ -1098,6 +1208,10 @@ public enum JdbcConnectionUrlParser {
     static final String DERBY = "derby";
     static final String MARIADB = "mariadb";
     static final String H2 = "h2";
+    static final String CLICKHOUSE = "clickhouse";
+    static final String OCEANBASE = "oceanbase";
+    static final String POLARDB = "polardb";
+    static final String LINDORM = "lindorm";
 
     private DbSystemValues() {}
   }

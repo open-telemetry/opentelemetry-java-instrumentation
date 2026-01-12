@@ -5,8 +5,13 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -19,17 +24,37 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * A ProducerInterceptor that adds tracing capability. Add this interceptor's class name or class
  * via ProducerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Producer's properties to get it
  * instantiated and used. See more details on ProducerInterceptor usage in its Javadoc.
+ *
+ * @deprecated Use {@link KafkaTelemetry#producerInterceptorConfigProperties()} instead.
  */
+@Deprecated
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
+  private static final KafkaTelemetry telemetry;
+
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+
+    telemetry =
+        KafkaTelemetry.builder(openTelemetry)
+            .setCapturedHeaders(
+                DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+                    .get("messaging")
+                    .getScalarList(
+                        "capture_headers/development",
+                        String.class,
+                        ConfigPropertiesUtil.getList(
+                            "otel.instrumentation.messaging.experimental.capture-headers",
+                            emptyList())))
+            .build();
+  }
 
   @Nullable private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    telemetry.buildAndInjectSpan(producerRecord, clientId);
+    telemetry.getProducerTelemetry().buildAndInjectSpan(producerRecord, clientId);
     return producerRecord;
   }
 

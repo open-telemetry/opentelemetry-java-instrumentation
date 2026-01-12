@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.annotations;
 
 import io.opentelemetry.api.OpenTelemetry;
+import javax.annotation.Nullable;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -24,6 +25,7 @@ class InstrumentationWithSpanAspect extends WithSpanAspect {
             .InstrumentationAnnotationAttributeNameSupplier());
   }
 
+  @Nullable
   @Override
   @Around("@annotation(io.opentelemetry.instrumentation.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {

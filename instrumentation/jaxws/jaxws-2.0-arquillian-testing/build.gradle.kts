@@ -5,7 +5,7 @@ plugins {
 dependencies {
   compileOnly("javax:javaee-api:7.0")
 
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.jsoup:jsoup:1.13.1")
 

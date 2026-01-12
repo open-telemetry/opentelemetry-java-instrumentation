@@ -31,7 +31,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class OpenTelemetryDriverTest {
+class OpenTelemetryDriverTest {
 
   @DisplayName("verify driver auto registered")
   @Order(1) // verifyRemoveDriverCandidate test method removes the drivers

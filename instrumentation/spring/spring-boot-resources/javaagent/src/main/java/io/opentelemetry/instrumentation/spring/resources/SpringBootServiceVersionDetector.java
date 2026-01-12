@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.resources;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
@@ -41,6 +42,14 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return create();
+  }
+
+  Resource createResource(DeclarativeConfigProperties config) {
+    return create();
+  }
+
+  private Resource create() {
     return getServiceVersionFromBuildInfo()
         .map(
             version -> {

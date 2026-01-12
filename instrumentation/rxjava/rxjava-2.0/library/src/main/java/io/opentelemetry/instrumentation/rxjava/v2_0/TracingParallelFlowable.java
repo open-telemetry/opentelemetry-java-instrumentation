@@ -38,14 +38,13 @@ class TracingParallelFlowable<T> extends ParallelFlowable<T> {
     this.context = context;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void subscribe(Subscriber<? super T>[] subscribers) {
     if (!validate(subscribers)) {
       return;
     }
     int n = subscribers.length;
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"unchecked", "rawtypes"}) // creating array with generic component type
     Subscriber<? super T>[] parents = new Subscriber[n];
     for (int i = 0; i < n; i++) {
       Subscriber<? super T> z = subscribers[i];

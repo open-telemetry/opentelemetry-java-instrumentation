@@ -15,6 +15,7 @@ import com.azure.core.http.HttpResponse;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -39,9 +40,10 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressNestedClientAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
-      mono = new SuppressNestedClientMono<>(mono);
+    public static Mono<HttpResponse> methodExit(@Advice.Return Mono<HttpResponse> mono) {
+      return new SuppressNestedClientMono<>(mono);
     }
   }
 }

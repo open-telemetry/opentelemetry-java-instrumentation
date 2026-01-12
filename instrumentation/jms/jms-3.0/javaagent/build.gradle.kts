@@ -27,6 +27,8 @@ dependencies {
   library("jakarta.jms:jakarta.jms-api:3.0.0")
 
   testImplementation("org.apache.activemq:artemis-jakarta-client:2.27.1")
+
+  testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
 }
 
 otelJava {
@@ -36,9 +38,13 @@ otelJava {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("Jms3SuppressReceiveSpansTest")
     }
@@ -53,6 +59,6 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testing.suites, testReceiveSpansDisabled)
   }
 }

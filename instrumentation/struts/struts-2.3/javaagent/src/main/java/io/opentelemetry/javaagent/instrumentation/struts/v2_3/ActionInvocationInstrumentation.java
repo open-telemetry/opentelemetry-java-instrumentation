@@ -17,9 +17,9 @@ import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,39 +46,50 @@ public class ActionInvocationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeActionOnlyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This ActionInvocation actionInvocation,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Java8BytecodeBridge.currentContext();
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
 
-      HttpServerRoute.update(
-          parentContext,
-          CONTROLLER,
-          StrutsServerSpanNaming.SERVER_SPAN_NAME,
-          actionInvocation.getProxy());
-
-      if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
-        return;
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, actionInvocation);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(ActionInvocation actionInvocation) {
+        Context parentContext = Context.current();
+        HttpServerRoute.update(
+            parentContext,
+            CONTROLLER,
+            StrutsServerSpanNaming.SERVER_SPAN_NAME,
+            actionInvocation.getProxy());
+
+        if (!instrumenter().shouldStart(parentContext, actionInvocation)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, actionInvocation);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void end(ActionInvocation actionInvocation, @Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, actionInvocation, null, throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.This ActionInvocation actionInvocation) {
+      return AdviceScope.start(actionInvocation);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.This ActionInvocation actionInvocation,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(actionInvocation, throwable);
       }
-      scope.close();
-
-      instrumenter().end(context, actionInvocation, null, throwable);
     }
   }
 }

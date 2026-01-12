@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.springframework.aop.scope.ScopedProxyUtils;
@@ -19,24 +18,19 @@ import org.springframework.boot.r2dbc.OptionsCapableConnectionFactory;
 class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
-  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
 
-  R2dbcInstrumentingPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+  R2dbcInstrumentingPostProcessor(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
-    this.configPropertiesProvider = configPropertiesProvider;
   }
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof ConnectionFactory && !ScopedProxyUtils.isScopedTarget(beanName)) {
       ConnectionFactory connectionFactory = (ConnectionFactory) bean;
-      return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
+      OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
+      return R2dbcTelemetry.builder(openTelemetry)
           .setStatementSanitizationEnabled(
-              InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                  configPropertiesProvider.getObject(),
-                  "otel.instrumentation.r2dbc.statement-sanitizer.enabled"))
+              InstrumentationConfigUtil.isStatementSanitizationEnabled(openTelemetry, "r2dbc"))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }

@@ -7,14 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import javax.annotation.Nullable;
 
 @AutoValue
 abstract class NettyClientRequestAndContexts {
 
   public static NettyClientRequestAndContexts create(
-      @Nullable Context parentContext, Context context, HttpRequestAndChannel request) {
+      @Nullable Context parentContext, Context context, NettyRequest request) {
     return new AutoValue_NettyClientRequestAndContexts(parentContext, context, request);
   }
 
@@ -22,5 +22,5 @@ abstract class NettyClientRequestAndContexts {
 
   abstract Context context();
 
-  abstract HttpRequestAndChannel request();
+  abstract NettyRequest request();
 }

@@ -8,15 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletInstrumenterBuilder;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public final class Servlet2Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-2.2";
+
+  public static final VirtualField<ServletResponse, Integer> RESPONSE_STATUS =
+      VirtualField.find(ServletResponse.class, Integer.class);
 
   private static final Servlet2Helper HELPER;
   private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER;
@@ -30,7 +35,7 @@ public final class Servlet2Singletons {
     Instrumenter<
             ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
         instrumenter =
-            ServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
+            AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
                 .build(
                     INSTRUMENTATION_NAME,
                     Servlet2Accessor.INSTANCE,

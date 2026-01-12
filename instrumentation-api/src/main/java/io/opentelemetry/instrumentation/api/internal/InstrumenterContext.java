@@ -20,26 +20,25 @@ import java.util.function.Function;
  * at any time.
  */
 public final class InstrumenterContext {
-  private static final ThreadLocal<InstrumenterContext> instrumenterContext =
-      new ThreadLocal<InstrumenterContext>() {
-        @Override
-        protected InstrumenterContext initialValue() {
-          return new InstrumenterContext();
-        }
-      };
+  private static final ThreadLocal<InstrumenterContext> instrumenterContext = new ThreadLocal<>();
 
   private final Map<String, Object> map = new HashMap<>();
 
   private InstrumenterContext() {}
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we expect the caller to use the same type for a given key
   public static <T> T computeIfAbsent(String key, Function<String, T> function) {
     return (T) get().computeIfAbsent(key, function);
   }
 
   // visible for testing
   static Map<String, Object> get() {
-    return instrumenterContext.get().map;
+    InstrumenterContext context = instrumenterContext.get();
+    if (context == null) {
+      context = new InstrumenterContext();
+      instrumenterContext.set(context);
+    }
+    return context.map;
   }
 
   public static void reset() {

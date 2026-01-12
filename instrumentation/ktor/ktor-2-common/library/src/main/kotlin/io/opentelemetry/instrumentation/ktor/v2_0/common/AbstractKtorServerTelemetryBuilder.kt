@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
 import java.util.function.Function
+import java.util.function.UnaryOperator
 
 abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationName: String) {
   companion object {
@@ -43,7 +44,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   }
 
   fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
-    builder.setStatusExtractor { prevExtractor ->
+    builder.setSpanStatusExtractorCustomizer { prevExtractor ->
       SpanStatusExtractor {
           spanStatusBuilder: SpanStatusBuilder,
           request: ApplicationRequest,
@@ -88,8 +89,8 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     )
   }
 
-  fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<ApplicationRequest>, SpanNameExtractor<ApplicationRequest>>) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer)
+  fun spanNameExtractor(spanNameExtractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractor)
   }
 
   class ExtractorBuilder {

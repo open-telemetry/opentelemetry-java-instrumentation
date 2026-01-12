@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }

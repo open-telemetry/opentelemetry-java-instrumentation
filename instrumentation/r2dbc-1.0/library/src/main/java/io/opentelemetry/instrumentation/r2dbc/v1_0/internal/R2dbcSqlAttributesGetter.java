@@ -20,7 +20,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   INSTANCE;
 
   @Override
-  public String getDbSystem(DbExecution request) {
+  public String getDbSystemName(DbExecution request) {
     return request.getSystem();
   }
 
@@ -51,10 +51,22 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof R2dbcException) {
       return ((R2dbcException) error).getSqlState();
     }
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(DbExecution request) {
+    return request.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(DbExecution request) {
+    return request.getPort();
   }
 }

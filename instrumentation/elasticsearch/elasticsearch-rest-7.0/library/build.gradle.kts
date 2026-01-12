@@ -8,7 +8,7 @@ dependencies {
   implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library"))
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
-  testImplementation("org.testcontainers:elasticsearch")
+  testImplementation("org.testcontainers:testcontainers-elasticsearch")
 }
 
 tasks {

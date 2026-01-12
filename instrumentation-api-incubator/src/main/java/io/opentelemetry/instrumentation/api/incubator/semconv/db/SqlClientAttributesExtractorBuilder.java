@@ -20,6 +20,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
+  boolean captureQueryParameters = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
@@ -49,11 +50,26 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Sets whether the query parameters should be captured as span attributes named {@code
+   * db.query.parameter.<key>}. Enabling this option disables the statement sanitization. Disabled
+   * by default.
+   *
+   * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
+   * personally identifiable information or protected health info.
+   */
+  @CanIgnoreReturnValue
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureQueryParameters(
+      boolean captureQueryParameters) {
+    this.captureQueryParameters = captureQueryParameters;
+    return this;
+  }
+
+  /**
    * Returns a new {@link SqlClientAttributesExtractor} with the settings of this {@link
    * SqlClientAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, oldSemconvTableAttribute, statementSanitizationEnabled);
+        getter, oldSemconvTableAttribute, statementSanitizationEnabled, captureQueryParameters);
   }
 }

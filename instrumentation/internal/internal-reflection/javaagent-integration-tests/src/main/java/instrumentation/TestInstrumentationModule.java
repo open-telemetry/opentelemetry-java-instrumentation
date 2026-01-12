@@ -35,9 +35,19 @@ public class TestInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return "instrumentation.TestSingletons".equals(className);
+  }
+
+  @Override
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder("instrumentation.TestHelperClass")
         .inject(InjectionMode.CLASS_AND_RESOURCE);
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

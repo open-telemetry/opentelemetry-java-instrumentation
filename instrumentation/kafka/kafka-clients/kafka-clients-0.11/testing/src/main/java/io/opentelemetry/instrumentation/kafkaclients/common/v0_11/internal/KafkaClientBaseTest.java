@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -58,7 +60,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("OtelInternalJavadoc")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class KafkaClientBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest.class);
@@ -71,6 +72,9 @@ public abstract class KafkaClientBaseTest {
   protected Producer<Integer, String> producer;
   protected Consumer<Integer, String> consumer;
   private final CountDownLatch consumerReady = new CountDownLatch(1);
+
+  static final boolean isExperimentalEnabled =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
   public static final int partition = 0;
   public static final TopicPartition topicPartition = new TopicPartition(SHARED_TOPIC, partition);
@@ -189,7 +193,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -212,7 +216,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -231,8 +235,11 @@ public abstract class KafkaClientBaseTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 satisfies(
-                    AttributeKey.longKey("kafka.record.queue_time_ms"),
-                    AbstractLongAssert::isNotNegative)));
+                    longKey("kafka.record.queue_time_ms"),
+                    val ->
+                        val.satisfiesAnyOf(
+                            v -> assertThat(v).isNotNegative(),
+                            v -> assertThat(isExperimentalEnabled).isFalse()))));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
@@ -250,7 +257,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
 

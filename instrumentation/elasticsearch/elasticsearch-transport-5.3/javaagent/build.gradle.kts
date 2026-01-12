@@ -31,7 +31,7 @@ muzzle {
 if (findProperty("testLatestDeps") as Boolean) {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
-    maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+    maxJavaVersionForTests.set(JavaVersion.VERSION_17)
   }
 }
 
@@ -53,6 +53,7 @@ dependencies {
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
+  testImplementation("com.google.guava:guava")
 
   // Unfortunately spring-data-elasticsearch requires 5.5.0
   testLibrary("org.elasticsearch.client:transport:5.5.0")
@@ -69,19 +70,36 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

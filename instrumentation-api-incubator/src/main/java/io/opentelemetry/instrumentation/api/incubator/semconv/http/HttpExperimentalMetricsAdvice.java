@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
@@ -18,6 +20,8 @@ import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 
 final class HttpExperimentalMetricsAdvice {
+  // copied from UrlIncubatingAttributes
+  private static final AttributeKey<String> URL_TEMPLATE = stringKey("url.template");
 
   static void applyClientRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
@@ -32,7 +36,8 @@ final class HttpExperimentalMetricsAdvice {
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                 ServerAttributes.SERVER_ADDRESS,
-                ServerAttributes.SERVER_PORT));
+                ServerAttributes.SERVER_PORT,
+                URL_TEMPLATE));
   }
 
   static void applyServerRequestSizeAdvice(LongHistogramBuilder builder) {

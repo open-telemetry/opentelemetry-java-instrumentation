@@ -88,7 +88,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       Context context = Java8BytecodeBridge.currentContext();
-      @SuppressWarnings({"unchecked", "rawtypes"})
+      @SuppressWarnings({"unchecked", "rawtypes"}) // creating array of generic type
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {
@@ -125,7 +125,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     public static GenericFutureListener<?>[] wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
-      @SuppressWarnings({"unchecked", "rawtypes"})
+      @SuppressWarnings({"unchecked", "rawtypes"}) // creating array of generic type
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];
       for (int i = 0; i < listeners.length; ++i) {

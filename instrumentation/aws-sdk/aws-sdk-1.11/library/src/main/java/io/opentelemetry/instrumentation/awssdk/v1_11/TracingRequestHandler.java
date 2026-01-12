@@ -81,7 +81,7 @@ final class TracingRequestHandler extends RequestHandler2 {
       Context context = InstrumenterUtil.suppressSpan(instrumenter, parentContext, request);
       context = context.with(REQUEST_TIMER_KEY, Timer.start());
       context = context.with(PARENT_CONTEXT_KEY, parentContext);
-      context = context.with(REQUEST_SPAN_SUPPRESSED_KEY, Boolean.TRUE);
+      context = context.with(REQUEST_SPAN_SUPPRESSED_KEY, true);
       request.addHandlerContext(CONTEXT, context);
       return;
     }

@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder;
 import java.util.function.Function;
 
@@ -19,7 +19,7 @@ public class NettyServerInstrumenterBuilderUtil {
 
   private static Function<
           NettyServerTelemetryBuilder,
-          DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse>>
+          DefaultHttpServerInstrumenterBuilder<NettyRequest, HttpResponse>>
       builderExtractor;
 
   private NettyServerInstrumenterBuilderUtil() {}
@@ -27,14 +27,14 @@ public class NettyServerInstrumenterBuilderUtil {
   public static void setBuilderExtractor(
       Function<
               NettyServerTelemetryBuilder,
-              DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse>>
+              DefaultHttpServerInstrumenterBuilder<NettyRequest, HttpResponse>>
           builderExtractor) {
     NettyServerInstrumenterBuilderUtil.builderExtractor = builderExtractor;
   }
 
   public static Function<
           NettyServerTelemetryBuilder,
-          DefaultHttpServerInstrumenterBuilder<HttpRequestAndChannel, HttpResponse>>
+          DefaultHttpServerInstrumenterBuilder<NettyRequest, HttpResponse>>
       getBuilderExtractor() {
     return builderExtractor;
   }

@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import java.util.Collections;
 import java.util.Iterator;
 import org.apache.coyote.Request;
 
-enum TomcatRequestGetter implements ExtendedTextMapGetter<Request> {
+enum TomcatRequestGetter implements TextMapGetter<Request> {
   INSTANCE;
 
   @Override

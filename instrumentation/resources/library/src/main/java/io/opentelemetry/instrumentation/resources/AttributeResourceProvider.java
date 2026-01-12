@@ -37,7 +37,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
 
     @CanIgnoreReturnValue
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes"}) // we lose generic types when storing in map
     public <T> AttributeBuilder add(AttributeKey<T> key, Function<D, Optional<T>> getter) {
       attributeGetters.put((AttributeKey) key, Objects.requireNonNull((Function) getter));
       return this;
@@ -45,7 +45,6 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
   }
 
   private Set<AttributeKey<?>> filteredKeys;
-
   private final Map<AttributeKey<Object>, Function<D, Optional<?>>> attributeGetters =
       new HashMap<>();
 

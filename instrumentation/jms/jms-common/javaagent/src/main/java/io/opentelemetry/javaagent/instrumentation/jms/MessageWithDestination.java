@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jms;
 
 import com.google.auto.value.AutoValue;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class MessageWithDestination {
@@ -20,7 +21,7 @@ public abstract class MessageWithDestination {
   public abstract boolean isTemporaryDestination();
 
   public static MessageWithDestination create(
-      MessageAdapter message, DestinationAdapter fallbackDestination) {
+      MessageAdapter message, @Nullable DestinationAdapter fallbackDestination) {
     DestinationAdapter jmsDestination = null;
     try {
       jmsDestination = message.getJmsDestination();

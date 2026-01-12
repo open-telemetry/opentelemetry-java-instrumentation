@@ -1,13 +1,14 @@
-ARG jdkImage
+ARG jdkImageName
+ARG jdkImageHash
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:b1e1bd182c21723af77037208115bdc387dcecbab3802ed243d572a76ac50853 as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:3750d7fcd320130cc2ce61954902b71729e85ec2c07c5a2e83a6d6c7f34a61e5 as builder
 ARG sourceVersion
 
 ADD https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/${sourceVersion}/jetty-home-${sourceVersion}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
-FROM ${jdkImage}-windowsservercore-ltsc2022
+FROM ${jdkImageName}@sha256:${jdkImageHash}
 ARG sourceVersion
 
 # Make /server the base directory to simplify all further paths

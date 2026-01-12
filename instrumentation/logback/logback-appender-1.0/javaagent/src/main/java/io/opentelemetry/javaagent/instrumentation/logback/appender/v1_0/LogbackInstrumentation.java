@@ -44,20 +44,19 @@ class LogbackInstrumentation implements TypeInstrumentation {
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(0) ILoggingEvent event,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth methodEnter(@Advice.Argument(0) ILoggingEvent event) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      callDepth = CallDepth.forClass(LoggerProvider.class);
+      CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
         mapper()
             .emit(GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
       }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

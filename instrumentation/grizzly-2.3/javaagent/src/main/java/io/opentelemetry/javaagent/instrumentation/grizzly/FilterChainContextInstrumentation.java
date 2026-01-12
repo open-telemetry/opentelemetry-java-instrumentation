@@ -53,15 +53,15 @@ public class FilterChainContextInstrumentation implements TypeInstrumentation {
   public static class WriteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(FilterChainContext.class);
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(FilterChainContext.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.This FilterChainContext filterChainContext,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.This FilterChainContext filterChainContext, @Advice.Enter CallDepth callDepth) {
       // When exiting the outermost call to write clear context & request from filter chain context.
       // Write makes a copy of the current filter chain context and passes it on. In older versions
       // new and old filter chain context share the attributes, but in newer versions the attributes

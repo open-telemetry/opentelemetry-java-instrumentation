@@ -50,17 +50,17 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   Double getRequestTopP(REQUEST request);
 
-  List<String> getResponseFinishReasons(REQUEST request, RESPONSE response);
+  List<String> getResponseFinishReasons(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  String getResponseId(REQUEST request, RESPONSE response);
+  String getResponseId(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  String getResponseModel(REQUEST request, RESPONSE response);
+  String getResponseModel(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  Long getUsageInputTokens(REQUEST request, RESPONSE response);
+  Long getUsageInputTokens(REQUEST request, @Nullable RESPONSE response);
 
   @Nullable
-  Long getUsageOutputTokens(REQUEST request, RESPONSE response);
+  Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 }

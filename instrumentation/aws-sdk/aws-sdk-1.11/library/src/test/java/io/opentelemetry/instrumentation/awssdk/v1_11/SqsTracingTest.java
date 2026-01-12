@@ -27,8 +27,8 @@ class SqsTracingTest extends AbstractSqsTracingTest {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveInstrumentationEnabled(true)
-            .setCapturedHeaders(singletonList("test-message-header"))
+            .setMessagingReceiveTelemetryEnabled(true)
+            .setCapturedHeaders(singletonList("Test-Message-Header"))
             .build()
             .newRequestHandler());
   }

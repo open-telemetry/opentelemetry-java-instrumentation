@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -59,20 +60,24 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
+
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.+") // see testing-webflux7 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see testing-webflux7 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
+  systemProperty("testLatestDeps", latestDepTest)
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 if (latestDepTest) {
   // spring 6 requires java 17

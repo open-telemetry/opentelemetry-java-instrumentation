@@ -14,7 +14,7 @@ import java.util.Map;
 import jodd.http.HttpRequest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
+class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

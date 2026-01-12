@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -53,8 +53,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // others to avoid creation of synthetic accessors
 
   private static final boolean REFLECTION_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.internal-reflection.enabled", true);
+      ConfigPropertiesUtil.getBoolean("otel.instrumentation.internal-reflection.enabled", true);
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;
@@ -146,7 +145,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     return typePool(classFileLocator, classLoader);
   }
 
-  private TypePool.CacheProvider getCacheProvider(ClassLoader classLoader) {
+  // visible for testing
+  TypePool.CacheProvider getCacheProvider(ClassLoader classLoader) {
     if (classLoader == null) {
       return bootstrapCacheProvider;
     }
@@ -167,7 +167,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *
    * <p>The loaderHash exists to avoid calling get & strengthening the Reference.
    */
-  private static final class TypeCacheKey {
+  // visible for testing
+  static final class TypeCacheKey {
     private final int loaderHash;
     @Nullable private final WeakReference<ClassLoader> loaderRef;
     private final String className;
@@ -318,7 +319,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     private final ThreadLocal<Boolean> loadingAnnotations = new ThreadLocal<>();
     private final WeakReference<ClassLoader> classLoaderRef;
 
-    public AgentTypePool(
+    AgentTypePool(
         TypePool.CacheProvider cacheProvider,
         ClassFileLocator classFileLocator,
         ClassLoader classLoader,
@@ -344,7 +345,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
      * @param name The name of the type to resolve.
      * @return The resolution for the type of this name.
      */
-    protected TypePool.Resolution doResolve(String name) {
+    private TypePool.Resolution doResolve(String name) {
       TypePool.Resolution resolution = cacheProvider.find(name);
       if (resolution == null) {
         // calling super.doDescribe that will locate the class bytes and parse them unlike
@@ -355,7 +356,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     void enterLoadAnnotations() {
-      loadingAnnotations.set(Boolean.TRUE);
+      loadingAnnotations.set(true);
     }
 
     void exitLoadAnnotations() {
@@ -691,7 +692,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   private static class DelegatingMethodDescription
       extends MethodDescription.InDefinedShape.AbstractBase {
-    protected final MethodDescription.InDefinedShape method;
+    final MethodDescription.InDefinedShape method;
 
     DelegatingMethodDescription(MethodDescription.InDefinedShape method) {
       this.method = method;

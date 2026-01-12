@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.condition.OS;
 import reactor.netty.http.client.HttpClient;
 
 class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
@@ -38,7 +39,13 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 
-    optionsBuilder.setSingleConnectionFactory(ReactorNettyHttpClientTest::createSingleConnection);
+    if (OS.WINDOWS.isCurrentOs()) {
+      // Disable remote connection tests on Windows due to reactor-netty creating extra spans
+      optionsBuilder.setTestRemoteConnection(false);
+    } else {
+      // Only run single connection tests on Linux due to networking stack differences
+      optionsBuilder.setSingleConnectionFactory(ReactorNettyHttpClientTest::createSingleConnection);
+    }
   }
 
   private static SingleConnection createSingleConnection(String host, int port) {

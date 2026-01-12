@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -111,7 +112,8 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
                 equalTo(URL_FULL, uri.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                equalTo(ERROR_TYPE, "500")));
+                equalTo(ERROR_TYPE, "500"),
+                equalTo(PEER_SERVICE, "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->

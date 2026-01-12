@@ -9,12 +9,12 @@ import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptyList;
 
 import com.sun.net.httpserver.HttpExchange;
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JavaHttpServerExchangeGetter implements ExtendedTextMapGetter<HttpExchange> {
+enum JavaHttpServerExchangeGetter implements TextMapGetter<HttpExchange> {
   INSTANCE;
 
   @Override

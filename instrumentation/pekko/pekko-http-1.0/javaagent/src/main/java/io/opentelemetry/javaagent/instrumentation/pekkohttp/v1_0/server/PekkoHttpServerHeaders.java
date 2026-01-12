@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.stream.StreamSupport;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 
-enum PekkoHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
+enum PekkoHttpServerHeaders implements TextMapGetter<HttpRequest> {
   INSTANCE;
 
   @Override

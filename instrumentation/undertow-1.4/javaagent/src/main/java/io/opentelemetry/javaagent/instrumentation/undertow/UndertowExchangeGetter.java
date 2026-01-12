@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.HttpString;
@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 
-enum UndertowExchangeGetter implements ExtendedTextMapGetter<HttpServerExchange> {
+enum UndertowExchangeGetter implements TextMapGetter<HttpServerExchange> {
   INSTANCE;
 
   @Override

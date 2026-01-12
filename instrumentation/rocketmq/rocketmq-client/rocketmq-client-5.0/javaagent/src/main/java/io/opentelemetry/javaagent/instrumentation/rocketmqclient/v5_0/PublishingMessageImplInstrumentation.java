@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.apis.message.Message;
@@ -67,18 +68,19 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class GetPropertiesAdvice {
     /** Update the message properties to propagate context recorded by {@link MessageMapSetter}. */
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This MessageImpl messageImpl,
-        @Advice.Return(readOnly = false) Map<String, String> properties) {
+    public static Map<String, String> onExit(
+        @Advice.This MessageImpl messageImpl, @Advice.Return Map<String, String> properties) {
       if (!(messageImpl instanceof PublishingMessageImpl)) {
-        return;
+        return properties;
       }
       PublishingMessageImpl message = (PublishingMessageImpl) messageImpl;
       Map<String, String> extraProperties = VirtualFieldStore.getExtraPropertiesByMessage(message);
       if (extraProperties != null) {
         properties.putAll(extraProperties);
       }
+      return properties;
     }
   }
 }

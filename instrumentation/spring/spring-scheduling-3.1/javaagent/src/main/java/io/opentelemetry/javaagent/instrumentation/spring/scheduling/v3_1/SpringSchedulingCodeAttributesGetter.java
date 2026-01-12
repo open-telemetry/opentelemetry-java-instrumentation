@@ -7,13 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import java.lang.reflect.Field;
+import javax.annotation.Nullable;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
 public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {
+  @Nullable
   private static final Class<?> outcomeTrackingRunnableClass = getOutcomeTrackingRunnableClass();
+
+  @Nullable
   private static final Field outcomeTrackingRunnableField =
       getOutcomeTrackingRunnableField(outcomeTrackingRunnableClass);
 
+  @Nullable
   private static Class<?> getOutcomeTrackingRunnableClass() {
     try {
       return Class.forName("org.springframework.scheduling.config.Task$OutcomeTrackingRunnable");
@@ -22,7 +27,11 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
     }
   }
 
-  private static Field getOutcomeTrackingRunnableField(Class<?> clazz) {
+  @Nullable
+  private static Field getOutcomeTrackingRunnableField(@Nullable Class<?> clazz) {
+    if (clazz == null) {
+      return null;
+    }
     try {
       Field field = clazz.getDeclaredField("runnable");
       field.setAccessible(true);

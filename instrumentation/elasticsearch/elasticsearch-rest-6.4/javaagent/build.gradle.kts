@@ -29,14 +29,27 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 
-  testImplementation("org.testcontainers:elasticsearch")
+  testImplementation("org.testcontainers:testcontainers-elasticsearch")
   testLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.4.0")
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.+") // see elasticsearch-rest-7.0 module
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

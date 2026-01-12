@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -126,7 +127,8 @@ class Netty41ConnectionSpanTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -137,7 +139,8 @@ class Netty41ConnectionSpanTest {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server")
@@ -167,7 +170,8 @@ class Netty41ConnectionSpanTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -195,6 +199,7 @@ class Netty41ConnectionSpanTest {
                                 k ->
                                     k.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                        v -> assertThat(v).isNull())))));
+                                        v -> assertThat(v).isNull())),
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 }

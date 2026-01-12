@@ -17,7 +17,11 @@ otelJava {
 }
 
 dependencies {
-  library("jakarta.el:jakarta.el-api:4.0.0")
+  // can't use library for now because 6.1.0-M1 is latest and its POM referes to a missing parent POM
+  // switch back to library when a new version is released
+  // library("jakarta.el:jakarta.el-api:4.0.0")
+  compileOnly("jakarta.el:jakarta.el-api:4.0.0")
+  testImplementation("jakarta.el:jakarta.el-api:4.0.0")
   library("jakarta.faces:jakarta.faces-api:3.0.0")
   testLibrary("org.glassfish:jakarta.faces:3.0.4")
 
@@ -36,5 +40,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 }

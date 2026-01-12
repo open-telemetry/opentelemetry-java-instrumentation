@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.kafka.receiver.KafkaReceiver;
@@ -33,11 +34,13 @@ public class KafkaReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CreateAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) KafkaReceiver<?, ?> receiver) {
-      if (!(receiver instanceof InstrumentedKafkaReceiver)) {
-        receiver = new InstrumentedKafkaReceiver<>(receiver);
+    public static KafkaReceiver<?, ?> onExit(@Advice.Return KafkaReceiver<?, ?> receiver) {
+      if (receiver instanceof InstrumentedKafkaReceiver) {
+        return receiver;
       }
+      return new InstrumentedKafkaReceiver<>(receiver);
     }
   }
 }

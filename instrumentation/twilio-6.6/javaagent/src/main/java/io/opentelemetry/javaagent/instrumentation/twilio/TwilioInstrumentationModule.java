@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TwilioInstrumentationModule extends InstrumentationModule {
+public class TwilioInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public TwilioInstrumentationModule() {
     super("twilio", "twilio-6.6");
   }
@@ -21,5 +23,10 @@ public class TwilioInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new TwilioAsyncInstrumentation(), new TwilioSyncInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

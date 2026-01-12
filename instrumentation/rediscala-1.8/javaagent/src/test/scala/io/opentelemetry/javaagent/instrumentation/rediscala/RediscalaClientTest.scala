@@ -8,12 +8,14 @@ package rediscala
 import io.opentelemetry.api.trace.SpanKind.CLIENT
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.REDIS
+import io.opentelemetry.semconv.DbAttributes.{DB_OPERATION_NAME, DB_SYSTEM_NAME}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -127,6 +129,13 @@ class RediscalaClientTest {
           }
         )
     })
+
+    assertDurationMetric(
+      testing,
+      "io.opentelemetry.rediscala-1.8",
+      DB_SYSTEM_NAME,
+      DB_OPERATION_NAME
+    )
   }
 
   @Test def testGetCommand(): Unit = {

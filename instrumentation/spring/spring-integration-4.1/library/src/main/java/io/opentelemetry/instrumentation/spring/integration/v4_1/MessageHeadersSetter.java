@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 
@@ -21,7 +22,10 @@ enum MessageHeadersSetter implements TextMapSetter<MessageHeaderAccessor> {
   INSTANCE;
 
   @Override
-  public void set(MessageHeaderAccessor carrier, String key, String value) {
+  public void set(@Nullable MessageHeaderAccessor carrier, String key, String value) {
+    if (carrier == null) {
+      return;
+    }
     carrier.setHeader(key, value);
     setNativeHeader(carrier, key, value);
   }
@@ -29,8 +33,8 @@ enum MessageHeadersSetter implements TextMapSetter<MessageHeaderAccessor> {
   private static void setNativeHeader(MessageHeaderAccessor carrier, String key, String value) {
     Object nativeMap = carrier.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
     if (nativeMap instanceof Map) {
-      @SuppressWarnings("unchecked")
-      Map<String, List<String>> map = ((Map<String, List<String>>) nativeMap);
+      @SuppressWarnings("unchecked") // casting to same type as used in NativeMessageHeaderAccessor
+      Map<String, List<String>> map = (Map<String, List<String>>) nativeMap;
       map.put(key, singletonList(value));
     }
   }

@@ -8,6 +8,8 @@ muzzle {
     module.set("camel-core")
     versions.set("[2.19,3)")
     assertInverse.set(true)
+    // https://repo.maven.apache.org/maven2/org/apache/camel/core/4.12.0/core-4.12.0.pom is missing
+    skip("4.12.0")
   }
 }
 
@@ -16,7 +18,7 @@ val camelversion = "2.20.1" // first version that the tests pass on
 description = "camel-2-20"
 
 dependencies {
-  library("org.apache.camel:camel-core:$camelversion")
+  compileOnly("org.apache.camel:camel-core:$camelversion")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   // without adding this dependency, javadoc fails:
@@ -33,6 +35,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
 
+  testImplementation("org.apache.camel:camel-core:$camelversion")
   testImplementation("org.apache.camel:camel-spring-boot-starter:$camelversion")
   testImplementation("org.apache.camel:camel-jetty-starter:$camelversion")
   testImplementation("org.apache.camel:camel-http-starter:$camelversion")
@@ -40,6 +43,8 @@ dependencies {
   testImplementation("org.apache.camel:camel-undertow:$camelversion")
   testImplementation("org.apache.camel:camel-aws:$camelversion")
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
+  testImplementation("org.apache.camel:camel-jms:$camelversion")
+  testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
@@ -47,9 +52,9 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
-  testImplementation("org.testcontainers:cassandra")
+  testImplementation("org.testcontainers:testcontainers-cassandra")
   testImplementation("org.testcontainers:testcontainers")
-  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
     exclude(group = "io.dropwizard.metrics", module = "metrics-core")
   }
@@ -66,8 +71,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
 
     // TODO: fix camel instrumentation so that it uses semantic attributes extractors
@@ -78,14 +81,34 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 

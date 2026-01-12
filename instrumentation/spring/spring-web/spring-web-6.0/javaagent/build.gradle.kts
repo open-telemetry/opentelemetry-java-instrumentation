@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -14,5 +15,16 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("org.springframework:spring-web:6.0.0")
+  library("org.springframework:spring-web:6.0.0")
+
+  testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
+}
+
+// spring 6 requires java 17
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
 }

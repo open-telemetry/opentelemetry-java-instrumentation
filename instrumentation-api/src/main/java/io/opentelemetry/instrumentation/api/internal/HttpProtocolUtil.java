@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
  */
 public final class HttpProtocolUtil {
 
+  @Nullable
   public static String getProtocol(@Nullable String protocol) {
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -20,6 +21,7 @@ public final class HttpProtocolUtil {
     return null;
   }
 
+  @Nullable
   public static String getVersion(@Nullable String protocol) {
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return normalizeHttpVersion(protocol.substring("HTTP/".length()));

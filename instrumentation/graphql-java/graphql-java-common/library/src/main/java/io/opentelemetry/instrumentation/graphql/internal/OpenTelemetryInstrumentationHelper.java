@@ -47,17 +47,27 @@ public final class OpenTelemetryInstrumentationHelper {
   private static final AstTransformer astTransformer = new AstTransformer();
 
   private final Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter;
+  private final boolean captureQuery;
   private final boolean sanitizeQuery;
+  private final boolean addOperationNameToSpanName;
 
   private OpenTelemetryInstrumentationHelper(
       Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter,
-      boolean sanitizeQuery) {
+      boolean captureQuery,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     this.instrumenter = instrumenter;
+    this.captureQuery = captureQuery;
     this.sanitizeQuery = sanitizeQuery;
+    this.addOperationNameToSpanName = addOperationNameToSpanName;
   }
 
   public static OpenTelemetryInstrumentationHelper create(
-      OpenTelemetry openTelemetry, String instrumentationName, boolean sanitizeQuery) {
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      boolean captureQuery,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     InstrumenterBuilder<OpenTelemetryInstrumentationState, ExecutionResult> builder =
         Instrumenter.<OpenTelemetryInstrumentationState, ExecutionResult>builder(
                 openTelemetry, instrumentationName, ignored -> "GraphQL Operation")
@@ -76,7 +86,8 @@ public final class OpenTelemetryInstrumentationHelper {
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
 
-    return new OpenTelemetryInstrumentationHelper(builder.buildInstrumenter(), sanitizeQuery);
+    return new OpenTelemetryInstrumentationHelper(
+        builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
   }
 
   public InstrumentationContext<ExecutionResult> beginExecution(
@@ -118,7 +129,7 @@ public final class OpenTelemetryInstrumentationHelper {
     String operationName = operationDefinition.getName();
 
     String spanName = operationType;
-    if (operationName != null && !operationName.isEmpty()) {
+    if (addOperationNameToSpanName && operationName != null && !operationName.isEmpty()) {
       spanName += " " + operationName;
     }
     span.updateName(spanName);
@@ -126,11 +137,13 @@ public final class OpenTelemetryInstrumentationHelper {
     state.setOperation(operation);
     state.setOperationName(operationName);
 
-    Node<?> node = operationDefinition;
-    if (sanitizeQuery) {
-      node = sanitize(node);
+    if (captureQuery) {
+      Node<?> node = operationDefinition;
+      if (sanitizeQuery) {
+        node = sanitize(node);
+      }
+      state.setQuery(AstPrinter.printAstCompact(node));
     }
-    state.setQuery(AstPrinter.printAst(node));
 
     return SimpleInstrumentationContext.noOp();
   }
@@ -141,7 +154,7 @@ public final class OpenTelemetryInstrumentationHelper {
 
     return (DataFetcher<Object>)
         environment -> {
-          try (Scope scope = context.makeCurrent()) {
+          try (Scope ignore = context.makeCurrent()) {
             return dataFetcher.get(environment);
           }
         };
@@ -151,7 +164,7 @@ public final class OpenTelemetryInstrumentationHelper {
     return astTransformer.transform(node, sanitizingVisitor);
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("rawtypes") // super class uses Node without type parameter
   private static class SanitizingVisitor extends NodeVisitorStub {
 
     @Override

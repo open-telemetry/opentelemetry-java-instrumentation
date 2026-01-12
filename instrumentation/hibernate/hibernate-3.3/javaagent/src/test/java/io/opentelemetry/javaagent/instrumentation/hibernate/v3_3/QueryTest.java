@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -58,10 +58,7 @@ class QueryTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)));
           } else {
             // Without Transaction
             trace.hasSpansSatisfyingExactly(
@@ -140,11 +137,11 @@ class QueryTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
-    public final String expectedSpanName;
-    public final boolean requiresTransaction;
-    public final Consumer<Session> queryInteraction;
+    final String expectedSpanName;
+    final boolean requiresTransaction;
+    final Consumer<Session> queryInteraction;
 
-    public Parameter(
+    Parameter(
         String expectedSpanName, boolean requiresTransaction, Consumer<Session> queryInteraction) {
       this.expectedSpanName = expectedSpanName;
       this.requiresTransaction = requiresTransaction;

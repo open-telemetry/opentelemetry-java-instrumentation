@@ -92,7 +92,7 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
 
   private static <T> Maybe<T> endWhenMaybeComplete(
       Maybe<T> maybe, EndOnFirstNotificationConsumer<?> notificationConsumer) {
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // notificationConsumer doesn't depend on T
     EndOnFirstNotificationConsumer<T> typedConsumer =
         (EndOnFirstNotificationConsumer<T>) notificationConsumer;
     return maybe.doOnEvent(typedConsumer).doOnDispose(notificationConsumer::onCancelOrDispose);
@@ -100,7 +100,7 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
 
   private static <T> Single<T> endWhenSingleComplete(
       Single<T> single, EndOnFirstNotificationConsumer<?> notificationConsumer) {
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // notificationConsumer doesn't depend on T
     EndOnFirstNotificationConsumer<T> typedConsumer =
         (EndOnFirstNotificationConsumer<T>) notificationConsumer;
     return single.doOnEvent(typedConsumer).doOnDispose(notificationConsumer::onCancelOrDispose);
@@ -143,7 +143,7 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
 
     private final Context context;
 
-    protected EndOnFirstNotificationConsumer(Context context) {
+    EndOnFirstNotificationConsumer(Context context) {
       this.context = context;
     }
 
@@ -152,7 +152,7 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
       accept(null, null);
     }
 
-    public void onCancelOrDispose() {
+    void onCancelOrDispose() {
       if (compareAndSet(false, true)) {
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
@@ -173,6 +173,6 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
       }
     }
 
-    protected abstract void end(Object response, Throwable error);
+    abstract void end(Object response, Throwable error);
   }
 }

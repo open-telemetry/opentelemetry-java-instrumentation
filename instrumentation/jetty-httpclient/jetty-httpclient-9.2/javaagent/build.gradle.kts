@@ -24,3 +24,9 @@ dependencies {
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

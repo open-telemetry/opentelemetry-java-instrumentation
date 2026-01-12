@@ -90,6 +90,7 @@ enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaRece
         .flatMap(
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
+        .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());
   }

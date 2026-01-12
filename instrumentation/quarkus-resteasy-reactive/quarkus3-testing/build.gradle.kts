@@ -1,7 +1,15 @@
+import io.quarkus.bootstrap.model.ApplicationModel
+import io.quarkus.bootstrap.model.gradle.impl.ModelParameterImpl
+import io.quarkus.bootstrap.util.BootstrapUtils
+import io.quarkus.gradle.tooling.GradleApplicationModelBuilder
+import io.quarkus.runtime.LaunchMode
+import kotlin.io.path.notExists
+import kotlin.jvm.java
+
 plugins {
   id("otel.javaagent-testing")
 
-  id("io.quarkus") version "3.0.0.Final"
+  id("io.opentelemetry.instrumentation.quarkus3") apply false
 }
 
 otelJava {
@@ -28,9 +36,56 @@ dependencies {
   testImplementation("io.quarkus:quarkus-junit5")
 }
 
-tasks.named("compileJava").configure {
-  dependsOn(tasks.named("compileQuarkusGeneratedSourcesJava"))
+tasks.register("integrationTestClasses") {}
+
+val quarkusTestBaseRuntimeClasspathConfiguration by configurations.creating {
+  extendsFrom(configurations["testRuntimeClasspath"])
 }
-tasks.named("sourcesJar").configure {
-  dependsOn(tasks.named("compileQuarkusGeneratedSourcesJava"))
+
+val quarkusTestCompileOnlyConfiguration by configurations.creating {
+}
+
+val testModelPath = layout.buildDirectory.file("quarkus-app-test-model.dat")
+
+val buildModel = if (findProperty("skipTests") as String? != "true") {
+  tasks.register("buildModel") {
+    val modelPath = testModelPath.get().asFile.toPath()
+
+    inputs.files(configurations.named("testRuntimeClasspath"))
+    outputs.file(testModelPath)
+
+    // Quarkus GradleApplicationModelBuilder requires Project at execution time
+    notCompatibleWithConfigurationCache("Quarkus GradleApplicationModelBuilder.buildAll() requires Project reference")
+
+    onlyIf { modelPath.notExists() }
+
+    doLast {
+      val modelParameter = ModelParameterImpl()
+      modelParameter.mode = LaunchMode.TEST.toString()
+      val model = GradleApplicationModelBuilder().buildAll(
+        ApplicationModel::class.java.getName(),
+        modelParameter,
+        project
+      )
+      BootstrapUtils.serializeAppModel(model as ApplicationModel?, modelPath)
+    }
+  }
+} else {
+  null
+}
+
+tasks {
+  test {
+    if (buildModel != null) {
+      dependsOn(buildModel)
+    }
+
+    systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }

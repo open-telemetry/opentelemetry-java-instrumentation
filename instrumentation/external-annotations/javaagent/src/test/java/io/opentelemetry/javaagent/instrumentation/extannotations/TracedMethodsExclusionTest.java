@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentracing.contrib.dropwizard.Trace;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,9 +31,8 @@ class TracedMethodsExclusionTest {
                 span ->
                     span.hasName("TestClass.annotated")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated"))));
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                TestClass.class, "annotated"))));
   }
 
   @Test

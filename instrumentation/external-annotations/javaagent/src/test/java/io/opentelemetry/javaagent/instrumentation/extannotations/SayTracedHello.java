@@ -12,6 +12,12 @@ import java.util.concurrent.Callable;
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class SayTracedHello {
 
+  public SayTracedHello() {}
+
+  // used to verify that constructor with tracing annotation doesn't break instrumentation
+  @com.appoptics.api.ext.LogMethod
+  public SayTracedHello(String unused) {}
+
   @com.appoptics.api.ext.LogMethod
   public String appoptics() {
     Span.current().setAttribute("providerAttr", "AppOptics");

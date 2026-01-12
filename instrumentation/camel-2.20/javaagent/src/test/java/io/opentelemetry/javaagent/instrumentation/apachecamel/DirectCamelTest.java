@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -24,8 +25,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 class DirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private ConfigurableApplicationContext appContext;
 
@@ -71,12 +71,12 @@ class DirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicatio
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://input")),
+                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                 span ->
                     span.hasName("receiver")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://receiver"))));
+                            equalTo(stringKey("camel.uri"), experimental("direct://receiver")))));
   }
 }

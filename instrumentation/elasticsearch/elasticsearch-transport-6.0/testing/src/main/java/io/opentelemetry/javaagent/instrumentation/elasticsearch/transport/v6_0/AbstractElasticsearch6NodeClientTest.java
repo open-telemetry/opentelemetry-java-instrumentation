@@ -17,6 +17,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public abstract class AbstractElasticsearch6NodeClientTest
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
                           Collections.singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
+                              "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
     testing.clearData();
@@ -97,5 +98,10 @@ public abstract class AbstractElasticsearch6NodeClientTest
         .setWaitForYellowStatus()
         .execute()
         .actionGet(TIMEOUT);
+  }
+
+  @Test
+  void testDurationMetric() throws Exception {
+    metricAssertion("io.opentelemetry.elasticsearch-transport-6.0");
   }
 }

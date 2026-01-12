@@ -20,24 +20,40 @@ dependencies {
   extensionLibs(project(":testing:agent-exporter", configuration = "shadow"))
   agent(project(":javaagent", configuration = "baseJar"))
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-api")
 }
 
+abstract class ExtractJar : Copy() {
+  @get:InputFiles
+  abstract val jarFile: ConfigurableFileCollection
+
+  @get:Inject
+  abstract val archiveOperations: ArchiveOperations
+
+  init {
+    from(jarFile.elements.map { files -> files.map { archiveOperations.zipTree(it) } })
+  }
+}
+
 tasks {
+  val extractAgent by registering(ExtractJar::class) {
+    jarFile.from(agent)
+    into(layout.buildDirectory.dir("extracted-agent"))
+  }
+
   jar {
-    dependsOn(agent)
-    from(zipTree(agent.singleFile))
+    from(extractAgent.map { it.outputs.files })
     from(extensionLibs) {
       into("extensions")
     }
 
+    val manifestFileProvider = extractAgent.flatMap { task ->
+      layout.buildDirectory.file("extracted-agent/META-INF/MANIFEST.MF")
+    }
+
     doFirst {
-      manifest.from(
-        zipTree(agent.singleFile).matching {
-          include("META-INF/MANIFEST.MF")
-        }.singleFile,
-      )
+      manifest.from(manifestFileProvider.get().asFile)
     }
   }
 
@@ -56,6 +72,6 @@ class JavaagentProvider(
   val agentJar: Provider<RegularFile>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}",
+    "-javaagent:${agentJar.get().asFile.absolutePath}",
   )
 }

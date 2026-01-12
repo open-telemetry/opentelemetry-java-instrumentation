@@ -1,1 +1,14 @@
+display_name: JAX-RS 1.x
+description: >
+  This instrumentation enriches HTTP server spans with route information and enables controller
+  spans for JAX-RS annotated methods (controller spans are disabled by default).
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
 disabled_by_default: true
+library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

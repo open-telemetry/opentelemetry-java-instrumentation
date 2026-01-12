@@ -57,7 +57,7 @@ public class ApplicationSpan implements Span {
   @Override
   @CanIgnoreReturnValue
   public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
     io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
       agentSpan.setAttribute(agentKey, value);

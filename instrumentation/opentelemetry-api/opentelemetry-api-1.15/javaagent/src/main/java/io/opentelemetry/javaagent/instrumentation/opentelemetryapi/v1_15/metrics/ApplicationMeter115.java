@@ -29,7 +29,6 @@ public class ApplicationMeter115 extends ApplicationMeter {
             callback, unwrap(observableMeasurement), unwrap(additionalMeasurements)));
   }
 
-  @SuppressWarnings("unchecked")
   private static io.opentelemetry.api.metrics.ObservableMeasurement unwrap(
       ObservableMeasurement observableMeasurement) {
     if (observableMeasurement == null) {
@@ -40,9 +39,7 @@ public class ApplicationMeter115 extends ApplicationMeter {
       // sdk ignores instruments that it didn't create
       return new io.opentelemetry.api.metrics.ObservableMeasurement() {};
     }
-    return ((ObservableMeasurementWrapper<io.opentelemetry.api.metrics.ObservableMeasurement>)
-            observableMeasurement)
-        .unwrap();
+    return ((ObservableMeasurementWrapper<?>) observableMeasurement).unwrap();
   }
 
   private static io.opentelemetry.api.metrics.ObservableMeasurement[] unwrap(

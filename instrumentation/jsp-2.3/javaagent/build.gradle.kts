@@ -32,7 +32,6 @@ dependencies {
   library("javax.servlet:javax.servlet-api:3.1.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 
   // using tomcat 7.0.37 because there seems to be some issues with Tomcat's jar scanning in versions < 7.0.37
   // https://stackoverflow.com/questions/23484098/org-apache-tomcat-util-bcel-classfile-classformatexception-invalid-byte-tag-in
@@ -45,21 +44,33 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:9.+") // documented limitation
 }
 
-tasks.withType<Test>().configureEach {
-  // skip jar scanning using environment variables:
-  // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
-  // having this set allows us to test with old versions of the tomcat api since
-  // JarScanFilter did not exist in the tomcat 7 api
-  jvmArgs("-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*")
-  jvmArgs("-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*")
+tasks {
+  withType<Test>().configureEach {
+    // skip jar scanning using environment variables:
+    // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
+    // having this set allows us to test with old versions of the tomcat api since
+    // JarScanFilter did not exist in the tomcat 7 api
+    jvmArgs("-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*")
+    jvmArgs("-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*")
 
-  // required on jdk17
-  jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    // required on jdk17
+    jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 
-  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+  test {
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
+  }
 }

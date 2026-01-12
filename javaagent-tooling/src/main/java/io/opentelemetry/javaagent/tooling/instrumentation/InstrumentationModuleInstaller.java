@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -21,13 +23,12 @@ import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
@@ -63,12 +64,13 @@ public final class InstrumentationModuleInstaller {
     this.instrumentation = instrumentation;
   }
 
+  // Need to call deprecated API for backward compatibility with modules that haven't migrated
+  @SuppressWarnings("deprecation")
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
       ConfigProperties config) {
-    if (!AgentConfig.isInstrumentationEnabled(
-        config,
+    if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(),
         instrumentationModule.defaultEnabled(config))) {
       logger.log(
@@ -77,16 +79,14 @@ public final class InstrumentationModuleInstaller {
     }
 
     if (instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
+      return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
+      return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
   private AgentBuilder installIndyModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -118,7 +118,7 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
@@ -134,7 +134,7 @@ public final class InstrumentationModuleInstaller {
           return helpers;
         };
 
-    AgentBuilder.Transformer helperInjector =
+    HelperInjector helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperGenerator,
@@ -150,13 +150,9 @@ public final class InstrumentationModuleInstaller {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
-              .transform(new PatchByteCodeVersionTransformer());
+              .transform(ConstantAdjuster.instance())
+              .transform(new ForwardIndyAdviceTransformer(helperInjector));
 
-      // TODO (Jonas): we are not calling
-      // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
-      // As a result the advices should store `VirtualFields` as static variables instead of having
-      // the lookup inline
-      // We need to update our documentation on that
       extendableAgentBuilder =
           IndyModuleRegistry.initializeModuleLoaderOnMatch(
               instrumentationModule, extendableAgentBuilder);
@@ -166,7 +162,6 @@ public final class InstrumentationModuleInstaller {
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
-      // TODO (Jonas): make instrumentation of bytecode older than 1.4 opt-in via a config option
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
@@ -175,9 +170,7 @@ public final class InstrumentationModuleInstaller {
   }
 
   private AgentBuilder installInjectingModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -194,7 +187,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
@@ -243,6 +236,20 @@ public final class InstrumentationModuleInstaller {
     }
 
     return agentBuilder;
+  }
+
+  static boolean isInstrumentationEnabled(
+      Iterable<String> instrumentationNames, boolean defaultEnabled) {
+    for (String name : instrumentationNames) {
+      String normalizedName = name.replace('-', '_');
+      Boolean enabled =
+          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), normalizedName)
+              .getBoolean("enabled");
+      if (enabled != null) {
+        return enabled;
+      }
+    }
+    return defaultEnabled;
   }
 
   private static AgentBuilder.Identified.Narrowable setTypeMatcher(

@@ -9,8 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RocketMqClientSuppressReceiveSpanTest
-    extends AbstractRocketMqClientSuppressReceiveSpanTest {
+class RocketMqClientSuppressReceiveSpanTest extends AbstractRocketMqClientSuppressReceiveSpanTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

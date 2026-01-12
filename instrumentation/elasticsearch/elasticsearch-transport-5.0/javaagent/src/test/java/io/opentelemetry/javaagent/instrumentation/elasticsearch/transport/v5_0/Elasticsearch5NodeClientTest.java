@@ -19,6 +19,7 @@ import org.elasticsearch.node.internal.InternalSettingsPreparer;
 import org.elasticsearch.transport.Netty3Plugin;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,5 +82,10 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
   @Override
   protected boolean hasWriteVersion() {
     return false;
+  }
+
+  @Test
+  void testDurationMetric() throws Exception {
+    metricAssertion("io.opentelemetry.elasticsearch-transport-5.0");
   }
 }

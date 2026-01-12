@@ -1,0 +1,7 @@
+display_name: Rediscala
+description: >
+  This instrumentation enables database client spans and database client metrics for Rediscala.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/rediscala/rediscala

@@ -26,15 +26,8 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   }
 
   @Override
-  public String getDbSystem(InfluxDbRequest request) {
+  public String getDbSystemName(InfluxDbRequest request) {
     return "influxdb";
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getUser(InfluxDbRequest request) {
-    return null;
   }
 
   @Nullable
@@ -42,12 +35,5 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   public String getDbNamespace(InfluxDbRequest request) {
     String dbName = request.getDbName();
     return "".equals(dbName) ? null : dbName;
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getConnectionString(InfluxDbRequest influxDbRequest) {
-    return null;
   }
 }

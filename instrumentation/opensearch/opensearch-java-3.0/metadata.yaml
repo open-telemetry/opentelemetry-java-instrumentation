@@ -1,0 +1,7 @@
+description: >
+  This instrumentation enables database client spans and database client metrics for the OpenSearch
+  Java client.
+library_link: https://docs.opensearch.org/latest/clients/java/
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS

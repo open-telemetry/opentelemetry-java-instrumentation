@@ -60,7 +60,7 @@ public class ModuleOpener {
         missingOpens.put(packageName, openToModuleSet);
         logger.log(
             FINE,
-            "Exposing package '{0}' in module '{1}' to module '{2}'",
+            "Exposing package {0} in module {1} to module {2}",
             new Object[] {packageName, targetModule, openToModule});
       }
     }

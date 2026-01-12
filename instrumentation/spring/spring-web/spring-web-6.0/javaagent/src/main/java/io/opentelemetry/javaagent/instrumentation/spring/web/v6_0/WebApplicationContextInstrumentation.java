@@ -59,7 +59,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
-      if (beanFactory instanceof BeanDefinitionRegistry
+      if (beanFactory instanceof BeanDefinitionRegistry beanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {
         // Explicitly loading classes allows to catch any class-loading issue or deal with cases
         // where the class is not visible.
@@ -83,8 +83,7 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
           beanDefinition.setScope(SCOPE_SINGLETON);
           beanDefinition.setBeanClass(clazz);
 
-          ((BeanDefinitionRegistry) beanFactory)
-              .registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
+          beanDefinitionRegistry.registerBeanDefinition("otelAutoDispatcherFilter", beanDefinition);
         } catch (ClassNotFoundException ignored) {
           // Ignore
         }

@@ -33,6 +33,8 @@ dependencies {
 
 tasks {
   val testConnectionSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("ReactorNettyConnectionSpanTest")
     }
@@ -42,6 +44,8 @@ tasks {
   }
 
   test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
     }

@@ -26,4 +26,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

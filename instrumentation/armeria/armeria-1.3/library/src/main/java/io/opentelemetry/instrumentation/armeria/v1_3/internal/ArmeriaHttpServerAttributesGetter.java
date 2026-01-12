@@ -100,11 +100,6 @@ enum ArmeriaHttpServerAttributesGetter
   }
 
   private static HttpRequest request(ServiceRequestContext ctx) {
-    HttpRequest request = ctx.request();
-    if (request == null) {
-      throw new IllegalStateException(
-          "Context always has a request in decorators, this exception indicates a programming bug.");
-    }
-    return request;
+    return ctx.request();
   }
 }

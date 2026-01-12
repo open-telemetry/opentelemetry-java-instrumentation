@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -19,9 +21,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -48,13 +49,22 @@ import org.springframework.security.web.util.OnCommittedResponseWrapper;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.servlet.view.RedirectView;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringBootBasedTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
+  static final ServerEndpoint DEFERRED_RESULT =
+      new ServerEndpoint("DEFERRED_RESULT", "deferred-result", 200, "deferred result");
+
+  private static final String EXPERIMENTAL_SPAN_CONFIG =
+      "otel.instrumentation.spring-webmvc.experimental-span-attributes";
 
   protected abstract ConfigurableApplicationContext context();
 
   protected abstract Class<?> securityConfigClass();
+
+  protected boolean shouldTestDeferredResult() {
+    return true;
+  }
 
   @Override
   protected void stopServer(ConfigurableApplicationContext ctx) {
@@ -142,6 +152,38 @@ public abstract class AbstractSpringBootBasedTest
                             .hasKind(SpanKind.INTERNAL)));
   }
 
+  @Test
+  void deferredResult() {
+    assumeTrue(shouldTestDeferredResult());
+
+    AggregatedHttpResponse response =
+        client.execute(request(DEFERRED_RESULT, "GET")).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(DEFERRED_RESULT.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(DEFERRED_RESULT.getBody());
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertServerSpan(span, "GET", DEFERRED_RESULT, DEFERRED_RESULT.getStatus())
+                            .hasNoParent(),
+                    span ->
+                        assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("async-call-child")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))
+                            .hasTotalAttributeCount(0),
+                    // Handler method runs once for the initial request and again for the async
+                    // redispatch when DeferredResult completes, so we expect two spans with the
+                    // same name. The second handler span is parented to the async child span.
+                    span ->
+                        assertHandlerSpan(span, "GET", DEFERRED_RESULT)
+                            .hasParent(trace.getSpan(2))));
+  }
+
   @Override
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
@@ -151,8 +193,7 @@ public abstract class AbstractSpringBootBasedTest
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
-                    satisfies(CODE_NAMESPACE, v -> v.endsWith(".BasicErrorController")),
-                    equalTo(CODE_FUNCTION, "error")));
+                    codeFunctionSuffixAssertions(".BasicErrorController", "error")));
     return spanAssertions;
   }
 
@@ -168,19 +209,7 @@ public abstract class AbstractSpringBootBasedTest
 
     span.hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                CODE_NAMESPACE,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isEqualTo(OnCommittedResponseWrapper.class.getName()),
-                        v ->
-                            assertThat(v)
-                                .isEqualTo(
-                                    "org.springframework.security.web.firewall.FirewalledResponse"),
-                        v ->
-                            assertThat(v)
-                                .isEqualTo("jakarta.servlet.http.HttpServletResponseWrapper"))),
-            equalTo(CODE_FUNCTION, methodName));
+            codeFunctionAssertions(OnCommittedResponseWrapper.class, methodName));
     return span;
   }
 
@@ -191,7 +220,8 @@ public abstract class AbstractSpringBootBasedTest
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
-                AttributeKey.stringKey("spring-webmvc.view.type"), RedirectView.class.getName()));
+                AttributeKey.stringKey("spring-webmvc.view.type"),
+                experimental(RedirectView.class.getName())));
     return span;
   }
 
@@ -207,8 +237,7 @@ public abstract class AbstractSpringBootBasedTest
     String codeFunction = handlerSpanName.substring(handlerSpanName.indexOf('.') + 1);
     span.hasName(handlerSpanName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(
-            equalTo(CODE_NAMESPACE, codeNamespace), equalTo(CODE_FUNCTION, codeFunction));
+        .hasAttributesSatisfyingExactly(codeFunctionAssertions(codeNamespace, codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasEventsSatisfyingExactly(
@@ -223,6 +252,13 @@ public abstract class AbstractSpringBootBasedTest
     return span;
   }
 
+  private static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_SPAN_CONFIG)) {
+      return null;
+    }
+    return value;
+  }
+
   private static String getHandlerSpanName(ServerEndpoint endpoint) {
     if (QUERY_PARAM.equals(endpoint)) {
       return "TestController.queryParam";
@@ -232,6 +268,8 @@ public abstract class AbstractSpringBootBasedTest
       return "TestController.captureHeaders";
     } else if (INDEXED_CHILD.equals(endpoint)) {
       return "TestController.indexedChild";
+    } else if (DEFERRED_RESULT.equals(endpoint)) {
+      return "TestController.deferredResult";
     }
     return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);
   }

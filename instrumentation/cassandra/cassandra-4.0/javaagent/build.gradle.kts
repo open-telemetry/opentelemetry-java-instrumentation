@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   library("com.datastax.oss:java-driver-core:4.0.0")
+  latestDepTestLibrary("com.datastax.oss:java-driver-core:4.3.+") // see cassandra-4.4 module
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -26,10 +27,15 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

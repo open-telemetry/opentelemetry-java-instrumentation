@@ -15,6 +15,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -36,15 +38,16 @@ public class StageSessionImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WithTransactionAdvice {
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) Function<?, ?> function) {
-      function = FunctionWrapper.wrap(function);
+    public static Function<?, ?> onEnter(@Advice.Argument(0) Function<?, ?> function) {
+      return FunctionWrapper.wrap(function);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) CompletionStage<?> completionStage) {
-      completionStage = CompletionStageWrapper.wrap(completionStage);
+    public static CompletionStage<?> onExit(@Advice.Return CompletionStage<?> completionStage) {
+      return CompletionStageWrapper.wrap(completionStage);
     }
   }
 }

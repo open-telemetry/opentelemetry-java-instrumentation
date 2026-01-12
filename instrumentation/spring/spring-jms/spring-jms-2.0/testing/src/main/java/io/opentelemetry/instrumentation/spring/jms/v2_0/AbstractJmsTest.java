@@ -53,11 +53,11 @@ public abstract class AbstractJmsTest {
     if (testHeaders) {
       attributeAssertions.add(
           equalTo(
-              stringArrayKey("messaging.header.test_message_header"),
+              stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
       attributeAssertions.add(
           equalTo(
-              stringArrayKey("messaging.header.test_message_int_header"),
+              stringArrayKey("messaging.header.Test_Message_Int_Header"),
               Collections.singletonList("1234")));
     }
     return attributeAssertions;
@@ -105,11 +105,11 @@ public abstract class AbstractJmsTest {
     if (testHeaders) {
       attributeAssertions.add(
           equalTo(
-              stringArrayKey("messaging.header.test_message_header"),
+              stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
       attributeAssertions.add(
           equalTo(
-              stringArrayKey("messaging.header.test_message_int_header"),
+              stringArrayKey("messaging.header.Test_Message_Int_Header"),
               Collections.singletonList("1234")));
     }
     return attributeAssertions;

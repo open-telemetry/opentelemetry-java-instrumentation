@@ -18,6 +18,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.function.server.HandlerFunction;
@@ -61,14 +62,16 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RouteAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
+    public static Mono<HandlerFunction<?>> methodExit(
         @Advice.This RouterFunction<?> thiz,
-        @Advice.Return(readOnly = false) Mono<HandlerFunction<?>> result,
+        @Advice.Return Mono<HandlerFunction<?>> result,
         @Advice.Thrown Throwable throwable) {
       if (throwable == null) {
-        result = result.doOnNext(new RouteOnSuccess(thiz));
+        return result.doOnNext(new RouteOnSuccess(thiz));
       }
+      return result;
     }
   }
 }

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 public final class NettyClientInstrumenterBuilderFactory {
   private NettyClientInstrumenterBuilderFactory() {}
 
-  public static DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> create(
+  public static DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> create(
       String instrumentationName, OpenTelemetry openTelemetry) {
 
     return DefaultHttpClientInstrumenterBuilder.create(

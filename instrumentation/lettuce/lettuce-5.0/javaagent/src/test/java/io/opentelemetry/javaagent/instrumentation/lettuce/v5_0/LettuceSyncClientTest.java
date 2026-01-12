@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
@@ -28,10 +32,10 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
-import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceSyncClientTest extends AbstractLettuceClientTest {
@@ -96,7 +100,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"))));
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 
   @Test
@@ -108,6 +113,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
     assertThat(exception).isInstanceOf(RedisConnectionException.class);
 
+    // Windows includes "getsockopt: " in the connection refused message
+    String windowsGetsockopt = OS.WINDOWS.isCurrentOs() ? "getsockopt: " : "";
+    String expectedMessage =
+        "Connection refused: " + windowsGetsockopt + host + "/" + ip + ":" + incorrectPort;
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -118,7 +128,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"))
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(PEER_SERVICE, "test-peer-service"))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -129,15 +140,10 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
                                         equalTo(
                                             AttributeKey.stringKey("exception.message"),
-                                            "Connection refused: "
-                                                + host
-                                                + "/"
-                                                + ip
-                                                + ":"
-                                                + incorrectPort),
+                                            expectedMessage),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),
-                                            AbstractAssert::isNotNull)))));
+                                            val -> val.isNotNull())))));
   }
 
   @Test
@@ -155,6 +161,9 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
+
+    assertDurationMetric(
+        testing, "io.opentelemetry.lettuce-5.0", DB_SYSTEM_NAME, DB_OPERATION_NAME);
   }
 
   @Test

@@ -15,8 +15,11 @@ import javax.annotation.Nullable;
  */
 public final class EarlyInitAgentConfig {
 
-  public static EarlyInitAgentConfig create() {
-    return new EarlyInitAgentConfig(ConfigurationFile.getProperties());
+  private static final EarlyInitAgentConfig INSTANCE =
+      new EarlyInitAgentConfig(ConfigurationFile.getProperties());
+
+  public static EarlyInitAgentConfig get() {
+    return INSTANCE;
   }
 
   private final Map<String, String> configFileContents;
@@ -26,7 +29,33 @@ public final class EarlyInitAgentConfig {
   }
 
   @Nullable
-  public String getString(String propertyName) {
+  public String getLogging() {
+    return getString("otel.javaagent.logging");
+  }
+
+  @Nullable
+  public String getExtensions() {
+    return getString("otel.javaagent.extensions");
+  }
+
+  public boolean isDebug() {
+    return getBoolean("otel.javaagent.debug", false);
+  }
+
+  public boolean isEnabled() {
+    return getBoolean("otel.javaagent.enabled", true);
+  }
+
+  public boolean isExperimentalFieldInjectionEnabled() {
+    return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
+  }
+
+  public int getLoggingApplicationLogsBufferMaxRecords() {
+    return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
+  }
+
+  @Nullable
+  private String getString(String propertyName) {
     String value = ConfigPropertiesUtil.getString(propertyName);
     if (value != null) {
       return value;
@@ -34,14 +63,14 @@ public final class EarlyInitAgentConfig {
     return configFileContents.get(propertyName);
   }
 
-  public boolean getBoolean(String propertyName, boolean defaultValue) {
+  private boolean getBoolean(String propertyName, boolean defaultValue) {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
     return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
   }
 
-  public int getInt(String propertyName, int defaultValue) {
+  private int getInt(String propertyName, int defaultValue) {
     try {
       String configFileValueStr = configFileContents.get(propertyName);
       int configFileValue =

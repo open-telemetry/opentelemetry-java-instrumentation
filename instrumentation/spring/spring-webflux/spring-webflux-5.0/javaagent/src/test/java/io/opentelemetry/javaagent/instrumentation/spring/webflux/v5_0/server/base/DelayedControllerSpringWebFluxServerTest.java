@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
+import io.opentelemetry.instrumentation.spring.webflux.server.AbstractControllerSpringWebFluxServerTest;
+import io.opentelemetry.instrumentation.spring.webflux.server.ServerTestController;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.time.Duration;
 import java.util.function.Supplier;
@@ -20,7 +22,7 @@ import reactor.core.publisher.Mono;
  * within a Mono map step, which follows a delay step. For exception endpoint, the exception is
  * thrown within the last map step.
  */
-public class DelayedControllerSpringWebFluxServerTest extends ControllerSpringWebFluxServerTest {
+class DelayedControllerSpringWebFluxServerTest extends AbstractControllerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application.class;

@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.grails;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
@@ -15,9 +17,14 @@ public final class GrailsSingletons {
   private static final Instrumenter<HandlerData, Void> INSTRUMENTER;
 
   static {
+    GrailsCodeAttributesGetter codeAttributesGetter = new GrailsCodeAttributesGetter();
+
     INSTRUMENTER =
         Instrumenter.<HandlerData, Void>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HandlerData::spanName)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }

@@ -6,9 +6,10 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
@@ -21,21 +22,23 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 @AutoService(IgnoredTypesConfigurer.class)
 public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
-  // We set this system property when running the agent with unit tests to allow verifying that we
-  // don't ignore libraries that we actually attempt to instrument. It means either the list is
-  // wrong or a type matcher is.
-  private static final String ADDITIONAL_LIBRARY_IGNORES_ENABLED =
-      "otel.javaagent.testing.additional-library-ignores.enabled";
-
   @Override
-  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
-    if (config.getBoolean(ADDITIONAL_LIBRARY_IGNORES_ENABLED, true)) {
-      configure(builder);
+  public void configure(IgnoredTypesBuilder builder) {
+    // We set this system property when running the agent with unit tests to allow verifying that we
+    // don't ignore libraries that we actually attempt to instrument. It means either the list is
+    // wrong or a type matcher is.
+    boolean enabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
+            .get("testing")
+            .get("additional_library_ignores")
+            .getBoolean("enabled", true);
+    if (enabled) {
+      configureInternal(builder);
     }
   }
 
   // only used by tests (to bypass the ignores check)
-  public void configure(IgnoredTypesBuilder builder) {
+  public void configureInternal(IgnoredTypesBuilder builder) {
     builder
         .ignoreClass("com.beust.jcommander.")
         .ignoreClass("com.fasterxml.classmate.")
@@ -53,6 +56,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.aop.")
+        .allowClass("org.springframework.aop.interceptor.AsyncExecutionInterceptor$")
         .ignoreClass("org.springframework.cache.")
         .ignoreClass("org.springframework.dao.")
         .ignoreClass("org.springframework.ejb.")
@@ -104,13 +108,20 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.logging.logback.")
         .allowClass("org.springframework.boot.web.filter.")
         .allowClass("org.springframework.boot.web.servlet.")
+        .allowClass("org.springframework.boot.servlet.filter.")
+        .allowClass("org.springframework.boot.web.server.servlet.context.")
         .allowClass("org.springframework.boot.web.embedded.netty.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.reactor.netty.GracefulShutdown$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.tomcat.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory$$Lambda")
         .allowClass(
             "org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory$$Lambda")
         .allowClass(
             "org.springframework.boot.actuate.metrics.web.reactive.server.MetricsWebFilter$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.preinitialize.BackgroundPreinitializingApplicationListener$")
         .allowClass(
             "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
@@ -119,7 +130,11 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass(
             "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.netty.NettyWebServer$")
+        .allowClass("org.springframework.boot.reactor.netty.NettyWebServer$")
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.TomcatEmbeddedContext$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.TomcatWebServer$")
+        .allowClass("org.springframework.boot.tomcat.TomcatEmbeddedWebappClassLoader")
         .allowClass(
             "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
         .allowClass(
@@ -136,7 +151,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader")
         .allowClass("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$")
         .allowClass("org.springframework.boot.StartupInfoLogger$")
-        .allowClass("org.springframework.boot.SpringApplicationShutdownHook");
+        .allowClass("org.springframework.boot.SpringApplicationShutdownHook")
+        .allowClass("org.springframework.boot.convert.ApplicationConversionService$$Lambda");
 
     builder
         .ignoreClass("org.springframework.cglib.")
@@ -191,6 +207,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.web.")
+        .allowClass("org.springframework.web.client.RestTemplate")
         .allowClass("org.springframework.web.servlet.")
         .allowClass("org.springframework.web.filter.")
         .allowClass("org.springframework.web.multipart.")
@@ -248,7 +265,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("com.google.common.")
         .allowClass("com.google.common.util.concurrent.")
         .allowClass("com.google.common.base.internal.Finalizer")
-        .allowClass("com.google.common.base.Java8Usage$$Lambda");
+        .allowClass("com.google.common.base.Java8Usage$$Lambda")
+        .allowClass("com.google.common.eventbus.Subscriber$");
 
     builder
         .ignoreClass("com.google.inject.")

@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -45,12 +44,10 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.Argument(value = 1) ServletResponse response) {
       // VirtualField depends on muzzle-generation. Using it here to verify that muzzle-generation
       // was set up.
-      VirtualField<ServletResponse, AtomicInteger> virtualField =
-          VirtualField.find(ServletResponse.class, AtomicInteger.class);
-      AtomicInteger counter = virtualField.get(response);
+      AtomicInteger counter = DemoServlet3HelperClass.VIRTUAL_FIELD.get(response);
       if (counter == null) {
         counter = new AtomicInteger();
-        virtualField.set(response, counter);
+        DemoServlet3HelperClass.VIRTUAL_FIELD.set(response, counter);
       }
       DemoServlet3HelperClass.doSomething(counter.incrementAndGet());
 

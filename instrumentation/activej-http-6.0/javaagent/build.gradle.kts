@@ -19,3 +19,9 @@ dependencies {
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
@@ -71,7 +72,14 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return create();
+  }
 
+  Resource createResource(DeclarativeConfigProperties config) {
+    return create();
+  }
+
+  private Resource create() {
     logger.log(FINER, "Performing Spring Boot service name auto-detection...");
     // Note: The order should be consistent with the order of Spring matching, but noting
     // that we have "first one wins" while Spring has "last one wins".
@@ -177,6 +185,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     return findByClasspathYamlFile("bootstrap.yaml");
   }
 
+  @Nullable
   private String findByClasspathYamlFile(String fileName) {
     String result = loadFromClasspath(fileName, SpringBootServiceNameDetector::parseNameFromYaml);
     if (logger.isLoggable(FINER)) {
@@ -210,7 +219,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
   }
 
   @Nullable
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static String parseNameFromYaml(InputStream in) {
     try {
       LoadSettings settings = LoadSettings.builder().build();

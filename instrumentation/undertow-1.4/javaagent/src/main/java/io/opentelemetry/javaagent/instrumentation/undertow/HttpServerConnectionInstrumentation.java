@@ -46,21 +46,20 @@ public class HttpServerConnectionInstrumentation implements TypeInstrumentation 
   public static class ResponseAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) HttpServerExchange exchange,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(ServerConnection.class);
+    public static CallDepth onEnter(@Advice.Argument(0) HttpServerExchange exchange) {
+      CallDepth callDepth = CallDepth.forClass(ServerConnection.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return callDepth;
       }
 
       Context context = helper().getServerContext(exchange);
       HttpServerResponseCustomizerHolder.getCustomizer()
           .customize(context, exchange, UndertowHttpResponseMutator.INSTANCE);
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void onExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

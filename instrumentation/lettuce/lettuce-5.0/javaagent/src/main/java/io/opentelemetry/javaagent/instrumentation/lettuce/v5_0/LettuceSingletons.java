@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -17,8 +19,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAtt
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -28,6 +30,9 @@ public final class LettuceSingletons {
 
   public static final ContextKey<Context> COMMAND_CONTEXT_KEY =
       ContextKey.named("opentelemetry-lettuce-v5_0-context-key");
+
+  public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
+      VirtualField.find(AsyncCommand.class, Context.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -55,8 +60,9 @@ public final class LettuceSingletons {
                     AgentCommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setEnabled(
-                AgentInstrumentationConfig.get()
-                    .getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled", false))
+                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
+                    .get("connection_telemetry")
+                    .getBoolean("enabled", false))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

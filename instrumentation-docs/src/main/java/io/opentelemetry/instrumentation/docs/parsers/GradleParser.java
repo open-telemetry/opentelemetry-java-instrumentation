@@ -6,16 +6,21 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
+/** Handles parsing of Gradle build files to extract muzzle and dependency information. */
 public class GradleParser {
 
   private static final Pattern variablePattern =
@@ -155,6 +160,7 @@ public class GradleParser {
     return new DependencyInfo(results, minJavaVersion);
   }
 
+  @Nullable
   public static Integer parseMinJavaVersion(String gradleFileContents) {
     List<int[]> excludedRanges = new ArrayList<>();
 
@@ -229,6 +235,7 @@ public class GradleParser {
    * @param regex Regex with a capturing group
    * @return The first captured group, or null if not found
    */
+  @Nullable
   private static String extractValue(String text, String regex) {
     Pattern pattern = Pattern.compile(regex);
     Matcher matcher = pattern.matcher(text);
@@ -236,6 +243,59 @@ public class GradleParser {
       return matcher.group(1);
     }
     return null;
+  }
+
+  public static Map<InstrumentationType, Set<String>> extractVersions(
+      List<String> gradleFiles, InstrumentationModule module) {
+    Map<InstrumentationType, Set<String>> versionsByType = new HashMap<>();
+    gradleFiles.forEach(file -> processGradleFile(file, versionsByType, module));
+    return versionsByType;
+  }
+
+  private static void processGradleFile(
+      String filePath,
+      Map<InstrumentationType, Set<String>> versionsByType,
+      InstrumentationModule module) {
+    String fileContents = FileManager.readFileToString(filePath);
+    if (fileContents == null) {
+      return;
+    }
+
+    Optional<InstrumentationType> type = determineInstrumentationType(filePath);
+    if (type.isEmpty()) {
+      return;
+    }
+
+    DependencyInfo dependencyInfo = parseGradleFile(fileContents, type.get());
+    if (dependencyInfo == null) {
+      return;
+    }
+
+    addVersions(versionsByType, type.get(), dependencyInfo.versions());
+    setMinJavaVersionIfPresent(module, dependencyInfo);
+  }
+
+  private static Optional<InstrumentationType> determineInstrumentationType(String filePath) {
+    if (filePath.contains("/javaagent/")) {
+      return Optional.of(InstrumentationType.JAVAAGENT);
+    } else if (filePath.contains("/library/")) {
+      return Optional.of(InstrumentationType.LIBRARY);
+    }
+    return Optional.empty();
+  }
+
+  private static void addVersions(
+      Map<InstrumentationType, Set<String>> versionsByType,
+      InstrumentationType type,
+      Set<String> versions) {
+    versionsByType.computeIfAbsent(type, k -> new HashSet<>()).addAll(versions);
+  }
+
+  private static void setMinJavaVersionIfPresent(
+      InstrumentationModule module, DependencyInfo dependencyInfo) {
+    if (dependencyInfo.minJavaVersionSupported() != null) {
+      module.setMinJavaVersion(dependencyInfo.minJavaVersionSupported());
+    }
   }
 
   private GradleParser() {}

@@ -12,15 +12,8 @@ public class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
 
   @Override
-  public String getDbSystem(SpymemcachedRequest spymemcachedRequest) {
+  public String getDbSystemName(SpymemcachedRequest spymemcachedRequest) {
     return "memcached";
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(SpymemcachedRequest spymemcachedRequest) {
-    return null;
   }
 
   @Override
@@ -30,12 +23,6 @@ public class SpymemcachedAttributesGetter
   }
 
   @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(SpymemcachedRequest spymemcachedRequest) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {

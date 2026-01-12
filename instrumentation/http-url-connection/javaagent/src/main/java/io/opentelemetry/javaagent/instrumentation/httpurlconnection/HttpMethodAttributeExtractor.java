@@ -11,7 +11,9 @@ import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientUrlTemplate;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.HttpAttributes;
 import java.net.HttpURLConnection;
 import java.util.Set;
@@ -22,9 +24,12 @@ public class HttpMethodAttributeExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final Set<String> knownMethods;
+  private final boolean emitExperimentalHttpClientTelemetry;
 
   private HttpMethodAttributeExtractor(Set<String> knownMethods) {
     this.knownMethods = knownMethods;
+    emitExperimentalHttpClientTelemetry =
+        AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry();
   }
 
   public static AttributesExtractor<? super HttpURLConnection, ? super Integer> create(
@@ -55,9 +60,12 @@ public class HttpMethodAttributeExtractor<
       } else {
         internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
         internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+        method = "HTTP";
       }
       Span span = Span.fromContext(context);
-      span.updateName(method);
+      String urlTemplate =
+          emitExperimentalHttpClientTelemetry ? HttpClientUrlTemplate.get(context) : null;
+      span.updateName(method + (urlTemplate != null ? " " + urlTemplate : ""));
     }
   }
 }

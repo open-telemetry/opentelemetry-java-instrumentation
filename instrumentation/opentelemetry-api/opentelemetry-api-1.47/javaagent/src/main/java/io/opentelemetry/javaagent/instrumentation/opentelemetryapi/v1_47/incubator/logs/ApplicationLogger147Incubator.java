@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incuba
 
 import application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import application.io.opentelemetry.api.incubator.logs.ExtendedLogger;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLogger;
 
 class ApplicationLogger147Incubator extends ApplicationLogger implements ExtendedLogger {
@@ -20,7 +21,8 @@ class ApplicationLogger147Incubator extends ApplicationLogger implements Extende
 
   @Override
   public boolean isEnabled() {
-    return ((io.opentelemetry.api.incubator.logs.ExtendedLogger) agentLogger).isEnabled();
+    return ((io.opentelemetry.api.incubator.logs.ExtendedLogger) agentLogger)
+        .isEnabled(Severity.UNDEFINED_SEVERITY_NUMBER);
   }
 
   @Override

@@ -21,7 +21,6 @@ dependencies {
 
   library("org.apache.struts:struts2-core:7.0.0")
 
-  testImplementation(project(":testing-common"))
   testImplementation("org.eclipse.jetty:jetty-server:11.0.0")
   testImplementation("org.eclipse.jetty:jetty-servlet:11.0.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")

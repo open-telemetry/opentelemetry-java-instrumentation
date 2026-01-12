@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -24,26 +25,33 @@ import org.springframework.kafka.core.KafkaTemplate;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
-@ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
+@ConditionalOnClass({
+  KafkaTemplate.class,
+  ConcurrentKafkaListenerContainerFactory.class,
+})
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
 
-  @Bean
-  DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
-      OpenTelemetry openTelemetry) {
-    KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
-    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
-  }
+  public KafkaInstrumentationAutoConfiguration() {}
 
   @Bean
-  static SpringKafkaTelemetry getTelemetry(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
-    return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
+  static SpringKafkaTelemetry getTelemetry(ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
+    ExtendedDeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    return SpringKafkaTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            configPropertiesProvider
-                .getObject()
-                .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "kafka")
+                .getBoolean("experimental_span_attributes/development", false))
+        .setMessagingReceiveTelemetryEnabled(
+            commonConfig
+                .get("messaging")
+                .get("receive_telemetry/development")
+                .getBoolean("enabled", false))
+        .setCapturedHeaders(
+            commonConfig
+                .get("messaging")
+                .getScalarList("capture_headers/development", String.class, emptyList()))
         .build();
   }
 
@@ -55,9 +63,8 @@ public class KafkaInstrumentationAutoConfiguration {
       matchIfMissing = true)
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
-          ObjectProvider<OpenTelemetry> openTelemetryProvider,
-          ObjectProvider<ConfigProperties> configPropertiesProvider) {
+          ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
-        () -> getTelemetry(openTelemetryProvider, configPropertiesProvider));
+        () -> getTelemetry(openTelemetryProvider));
   }
 }

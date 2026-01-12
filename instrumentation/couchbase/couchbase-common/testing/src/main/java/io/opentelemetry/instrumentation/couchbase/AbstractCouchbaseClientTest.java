@@ -39,7 +39,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -49,7 +49,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         Arguments.of(named(bucketMemcache.type().name(), bucketMemcache)));
   }
 
-  private CouchbaseCluster prepareCluster(BucketSettings bucketSettings) {
+  protected CouchbaseCluster prepareCluster(BucketSettings bucketSettings) {
     CouchbaseEnvironment environment = envBuilder(bucketSettings).build();
     CouchbaseCluster cluster =
         CouchbaseCluster.create(environment, Collections.singletonList("127.0.0.1"));

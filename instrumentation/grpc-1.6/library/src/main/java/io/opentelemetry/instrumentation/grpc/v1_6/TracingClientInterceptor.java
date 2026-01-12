@@ -37,11 +37,11 @@ final class TracingClientInterceptor implements ClientInterceptor {
   private static final String SENT = "SENT";
   private static final String RECEIVED = "RECEIVED";
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("rawtypes") // AtomicLongFieldUpdater.newUpdate loses generic type
   private static final AtomicLongFieldUpdater<TracingClientCall> SENT_MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingClientCall.class, "sentMessageId");
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("rawtypes") // AtomicLongFieldUpdater.newUpdate loses generic type
   private static final AtomicLongFieldUpdater<TracingClientCall> RECEIVED_MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingClientCall.class, "receivedMessageId");
 
@@ -126,6 +126,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(REQUEST message) {
+      request.setRequestSize(BodySizeUtil.getBodySize(message));
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       } catch (Throwable e) {
@@ -159,6 +160,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onMessage(RESPONSE message) {
+        request.setResponseSize(BodySizeUtil.getBodySize(message));
         long messageId = RECEIVED_MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this);
         if (emitMessageEvents) {
           Attributes attributes = Attributes.of(MESSAGE_TYPE, RECEIVED, MESSAGE_ID, messageId);

@@ -14,10 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.undertow.server.HttpServerExchange;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,45 +46,61 @@ public class HandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) HttpServerExchange exchange,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context attachedContext = helper().getServerContext(exchange);
-      if (attachedContext != null) {
-        if (!helper().sameTrace(Java8BytecodeBridge.currentContext(), attachedContext)) {
-          // request processing is dispatched to another thread
-          scope = attachedContext.makeCurrent();
-          context = attachedContext;
-          helper().handlerStarted(attachedContext);
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(HttpServerExchange exchange) {
+        Context attachedContext = helper().getServerContext(exchange);
+        if (attachedContext != null) {
+          if (!helper().sameTrace(Context.current(), attachedContext)) {
+            // request processing is dispatched to another thread
+            Scope scope = attachedContext.makeCurrent();
+            helper().handlerStarted(attachedContext);
+            return new AdviceScope(attachedContext, scope);
+          }
+          return null;
         }
-        return;
+
+        Context parentContext = Context.current();
+        if (!helper().shouldStart(parentContext, exchange)) {
+          return null;
+        }
+
+        Context context = helper().start(parentContext, exchange);
+        Scope scope = context.makeCurrent();
+
+        exchange.addExchangeCompleteListener(new EndSpanListener(context));
+        return new AdviceScope(context, scope);
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!helper().shouldStart(parentContext, exchange)) {
-        return;
+      public void end(HttpServerExchange exchange, @Nullable Throwable throwable) {
+        scope.close();
+
+        helper().handlerCompleted(context, throwable, exchange);
       }
+    }
 
-      context = helper().start(parentContext, exchange);
-      scope = context.makeCurrent();
-
-      exchange.addExchangeCompleteListener(new EndSpanListener(context));
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(0) HttpServerExchange exchange) {
+      return AdviceScope.start(exchange);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) HttpServerExchange exchange,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(exchange, throwable);
       }
-      scope.close();
-
-      helper().handlerCompleted(context, throwable, exchange);
     }
   }
 }

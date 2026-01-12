@@ -5,87 +5,80 @@
 
 package io.opentelemetry.agents;
 
-import static org.joox.JOOX.$;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import org.joox.Match;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 
 public class LatestAgentSnapshotResolver {
 
   private static final Logger logger = LoggerFactory.getLogger(LatestAgentSnapshotResolver.class);
 
-  static final String BASE_URL =
-      "https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent";
-  static final String LATEST_SNAPSHOT_META = BASE_URL + "/maven-metadata.xml";
-
   Optional<Path> resolve() throws IOException {
-    String version = fetchLatestSnapshotVersion();
-    logger.info("Latest snapshot version is {}", version);
-    String latestFilename = fetchLatestFilename(version);
-    String url = BASE_URL + "/" + version + "/" + latestFilename;
-    byte[] jarBytes = fetchBodyBytesFrom(url);
-    Path path = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT.jar");
-    Files.write(
-        path,
-        jarBytes,
-        StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE,
-        StandardOpenOption.TRUNCATE_EXISTING);
-    return Optional.of(path);
+    Path localJavaagentPath = findLocalJavaagentJar();
+
+    if (localJavaagentPath == null || !Files.exists(localJavaagentPath)) {
+      throw new IOException("Local javaagent JAR not found. Please run './gradlew :javaagent:assemble' from the project root first.");
+    }
+
+    logger.info("Using local javaagent JAR: {}", localJavaagentPath);
+
+    Path targetPath = Paths.get(".", "opentelemetry-javaagent-SNAPSHOT.jar");
+    Files.copy(localJavaagentPath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+    return Optional.of(targetPath);
   }
 
-  private String fetchLatestFilename(String version) throws IOException {
-    String url = BASE_URL + "/" + version + "/maven-metadata.xml";
-    String body = fetchBodyStringFrom(url);
-    Document document = $(body).document();
-    Match match = $(document).xpath("/metadata/versioning/snapshotVersions/snapshotVersion");
-    return match.get().stream()
-        .filter(
-            elem -> {
-              Match classifierMatch = $(elem).child("classifier");
-              String classifier = classifierMatch == null ? null : classifierMatch.content();
-              String extension = $(elem).child("extension").content();
-              return "jar".equals(extension) && (classifier == null);
-            })
-        .map(e -> $(e).child("value").content())
-        .findFirst()
-        .map(value -> "opentelemetry-javaagent-" + value + ".jar")
-        .orElseThrow();
+  private Path findLocalJavaagentJar() {
+    Path relativePath = Paths.get("../javaagent/build/libs").toAbsolutePath().normalize();
+    Path javaagentJar = findJavaagentJarInDirectory(relativePath);
+
+    if (javaagentJar != null) {
+      return javaagentJar;
+    }
+
+    // If not found, try from the project root (in case running from different location)
+    Path projectRoot = Paths.get(".").toAbsolutePath().normalize();
+    while (projectRoot.getParent() != null) {
+      Path gradlewFile = projectRoot.resolve("gradlew");
+      if (Files.exists(gradlewFile)) {
+        // Found the project root
+        Path javaagentLibsDir = projectRoot.resolve("javaagent/build/libs");
+        javaagentJar = findJavaagentJarInDirectory(javaagentLibsDir);
+        if (javaagentJar != null) {
+          return javaagentJar;
+        }
+        break;
+      }
+      projectRoot = projectRoot.getParent();
+    }
+
+    return null;
   }
 
-  private String fetchLatestSnapshotVersion() throws IOException {
-    String url = LATEST_SNAPSHOT_META;
-    String body = fetchBodyStringFrom(url);
-    Document document = $(body).document();
-    Match match = $(document).xpath("/metadata/versioning/latest");
-    return match.get(0).getTextContent();
-  }
+  private Path findJavaagentJarInDirectory(Path directory) {
+    if (!Files.exists(directory) || !Files.isDirectory(directory)) {
+      return null;
+    }
 
-  private String fetchBodyStringFrom(String url) throws IOException {
-    return fetchBodyFrom(url).string();
-  }
-
-  private byte[] fetchBodyBytesFrom(String url) throws IOException {
-    return fetchBodyFrom(url).bytes();
-  }
-
-  private ResponseBody fetchBodyFrom(String url) throws IOException {
-    Request request = new Request.Builder().url(url).build();
-    OkHttpClient client = new OkHttpClient();
-    Response response = client.newCall(request).execute();
-    ResponseBody body = response.body();
-    return body;
+    try {
+      return Files.list(directory)
+          .filter(path -> {
+            String filename = path.getFileName().toString();
+            // Look for the main jar: opentelemetry-javaagent-VERSION.jar (no additional suffixes)
+            return filename.startsWith("opentelemetry-javaagent-") &&
+                   filename.endsWith(".jar") &&
+                   !filename.matches(".*-[a-z]+\\.jar"); // excludes anything with -word.jar pattern
+          })
+          .findFirst()
+          .orElse(null);
+    } catch (IOException e) {
+      logger.warn("Failed to list files in directory {}: {}", directory, e.getMessage());
+      return null;
+    }
   }
 }
+

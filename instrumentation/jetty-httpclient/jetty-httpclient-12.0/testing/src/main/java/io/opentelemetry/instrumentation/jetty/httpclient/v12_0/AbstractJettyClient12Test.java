@@ -14,11 +14,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.eclipse.jetty.client.ContentResponse;
-import org.eclipse.jetty.client.FutureResponseListener;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
@@ -39,7 +39,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   protected HttpClient httpsClient;
 
   @BeforeEach
-  public void before() throws Exception {
+  void before() throws Exception {
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
 
@@ -50,7 +50,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @AfterEach
-  public void after() throws Exception {
+  void after() throws Exception {
     client.stop();
     httpsClient.stop();
   }
@@ -118,25 +118,12 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   void callbacksCalled() throws InterruptedException, ExecutionException {
     URI uri = resolveAddress("/success");
     Request request = client.newRequest(uri).method("GET");
-    FutureResponseListener responseListener =
-        new FutureResponseListener(request) {
-          @Override
-          public void onHeaders(Response response) {
-            testing.runWithSpan("onHeaders", () -> super.onHeaders(response));
-          }
 
-          @Override
-          public void onSuccess(Response response) {
-            testing.runWithSpan("onSuccess", () -> super.onSuccess(response));
-          }
+    CompletableFuture<Response> responseFuture = new CompletableFuture<>();
+    TracingResponseListener responseListener = new TracingResponseListener(responseFuture);
 
-          @Override
-          public void onComplete(Result result) {
-            testing.runWithSpan("onComplete", () -> super.onComplete(result));
-          }
-        };
     testing.runWithSpan("parent", () -> request.send(responseListener));
-    Response response = responseListener.get();
+    Response response = responseFuture.get();
 
     assertThat(response.getStatus()).isEqualTo(200);
     testing.waitAndAssertTraces(
@@ -160,6 +147,39 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                     span.hasName("onComplete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  private class TracingResponseListener
+      implements Response.HeadersListener, Response.SuccessListener, Response.CompleteListener {
+
+    private final CompletableFuture<Response> responseFuture;
+
+    TracingResponseListener(CompletableFuture<Response> responseFuture) {
+      this.responseFuture = responseFuture;
+    }
+
+    @Override
+    public void onHeaders(Response response) {
+      testing.runWithSpan("onHeaders", () -> {});
+    }
+
+    @Override
+    public void onSuccess(Response response) {
+      testing.runWithSpan("onSuccess", () -> {});
+    }
+
+    @Override
+    public void onComplete(Result result) {
+      testing.runWithSpan(
+          "onComplete",
+          () -> {
+            if (result.isSucceeded()) {
+              responseFuture.complete(result.getResponse());
+            } else {
+              responseFuture.completeExceptionally(result.getFailure());
+            }
+          });
+    }
   }
 
   private static class JettyClientListener

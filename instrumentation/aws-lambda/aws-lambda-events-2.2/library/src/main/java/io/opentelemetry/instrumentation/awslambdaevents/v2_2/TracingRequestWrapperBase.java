@@ -12,7 +12,8 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
-import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.AwsLambdaEventsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaEventsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.LambdaParameters;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
@@ -26,6 +27,7 @@ import java.util.function.BiFunction;
  * env property OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER in package.ClassName::methodName format
  */
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-2.2";
 
   private final WrappedLambda wrappedLambda;
   private final Method targetMethod;
@@ -47,14 +49,14 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
         openTelemetrySdk,
         WrapperConfiguration.flushTimeout(),
         AwsLambdaEventsInstrumenterFactory.createInstrumenter(
-            openTelemetrySdk, HttpConstants.KNOWN_METHODS));
+            openTelemetrySdk, INSTRUMENTATION_NAME, HttpConstants.KNOWN_METHODS));
     this.wrappedLambda = wrappedLambda;
     this.targetMethod = wrappedLambda.getRequestTargetMethod();
     this.parameterMapper = parameterMapper;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   protected O doHandleRequest(I input, Context context) {
     Object[] parameters = LambdaParameters.toArray(targetMethod, input, context, parameterMapper);
     O result;

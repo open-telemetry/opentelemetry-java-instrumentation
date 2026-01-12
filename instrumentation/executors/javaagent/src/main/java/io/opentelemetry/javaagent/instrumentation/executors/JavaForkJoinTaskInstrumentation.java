@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.CALLABLE_PROPAGATED_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.FORKJOINTASK_PROPAGATED_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.RUNNABLE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -13,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -61,14 +63,12 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> task) {
-      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
-          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
-      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(virtualField, task);
+      Scope scope =
+          TaskAdviceHelper.makePropagatedContextCurrent(FORKJOINTASK_PROPAGATED_CONTEXT, task);
       if (task instanceof Runnable) {
-        VirtualField<Runnable, PropagatedContext> runnableVirtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(runnableVirtualField, (Runnable) task);
+            TaskAdviceHelper.makePropagatedContextCurrent(
+                RUNNABLE_PROPAGATED_CONTEXT, (Runnable) task);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -78,10 +78,9 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         }
       }
       if (task instanceof Callable) {
-        VirtualField<Callable<?>, PropagatedContext> callableVirtualField =
-            VirtualField.find(Callable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(callableVirtualField, (Callable<?>) task);
+            TaskAdviceHelper.makePropagatedContextCurrent(
+                CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) task);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -108,9 +107,8 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
     public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
-            VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+        return ExecutorAdviceHelper.attachContextToTask(
+            context, FORKJOINTASK_PROPAGATED_CONTEXT, task);
       }
       return null;
     }
@@ -120,9 +118,8 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
         @Advice.This ForkJoinTask<?> task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
-      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
-          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, FORKJOINTASK_PROPAGATED_CONTEXT, task);
     }
   }
 }

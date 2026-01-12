@@ -6,20 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.otelannotations;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // CodeIncubatingAttributes.CODE_FUNCTION is deprecated
 public abstract class AbstractWithSpanTest<T extends U, U> {
 
   @RegisterExtension
@@ -43,6 +43,10 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     return testing;
   }
 
+  protected boolean isExperimentalSpanAttributesEnabled() {
+    return true;
+  }
+
   @Test
   void success() {
     AbstractTraced<T, U> traced = newTraced();
@@ -59,8 +63,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                            equalTo(CODE_FUNCTION, "completable"))));
+                            codeFunctionAssertions(traced.getClass(), "completable"))));
   }
 
   @Test
@@ -82,8 +85,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                            equalTo(CODE_FUNCTION, "completable"))));
+                            codeFunctionAssertions(traced.getClass(), "completable"))));
   }
 
   @Test
@@ -92,6 +94,13 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     T future = traced.completable();
     cancel(future);
 
+    List<AttributeAssertion> attributeAssertions =
+        codeFunctionAssertions(traced.getClass(), "completable");
+
+    if (isExperimentalSpanAttributesEnabled()) {
+      attributeAssertions.add(equalTo(booleanKey(canceledKey()), true));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -99,10 +108,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                     span.hasName("Traced.completable")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                            equalTo(CODE_FUNCTION, "completable"),
-                            equalTo(booleanKey(canceledKey()), true))));
+                        .hasAttributesSatisfyingExactly(attributeAssertions)));
   }
 
   @Test
@@ -118,8 +124,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                            equalTo(CODE_FUNCTION, "alreadySucceeded"))));
+                            codeFunctionAssertions(traced.getClass(), "alreadySucceeded"))));
   }
 
   @Test
@@ -138,7 +143,6 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                            equalTo(CODE_FUNCTION, "alreadyFailed"))));
+                            codeFunctionAssertions(traced.getClass(), "alreadyFailed"))));
   }
 }

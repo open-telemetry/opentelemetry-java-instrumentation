@@ -69,25 +69,25 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   public static class LogAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
+    public static CallDepth methodEnter(
         @Advice.This Logger logger,
         @Advice.Argument(0) Level level,
         @Advice.Argument(1) Marker marker,
         @Advice.Argument(2) String loggerClassName,
         @Advice.Argument(3) StackTraceElement location,
         @Advice.Argument(4) Message message,
-        @Advice.Argument(5) Throwable t,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Argument(5) Throwable t) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      callDepth = CallDepth.forClass(LoggerProvider.class);
+      CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
         Log4jHelper.capture(logger, loggerClassName, location, level, marker, message, t);
       }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }
@@ -96,24 +96,24 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
   public static class LogMessageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
+    public static CallDepth methodEnter(
         @Advice.This Logger logger,
         @Advice.Argument(0) String loggerClassName,
         @Advice.Argument(1) Level level,
         @Advice.Argument(2) Marker marker,
         @Advice.Argument(3) Message message,
-        @Advice.Argument(4) Throwable t,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Argument(4) Throwable t) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
-      callDepth = CallDepth.forClass(LoggerProvider.class);
+      CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
         Log4jHelper.capture(logger, loggerClassName, null, level, marker, message, t);
       }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void methodExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

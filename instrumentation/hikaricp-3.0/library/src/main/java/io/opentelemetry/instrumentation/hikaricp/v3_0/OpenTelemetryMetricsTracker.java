@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.hikaricp.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
@@ -15,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
+  private static final double MILLIS_PER_S = TimeUnit.SECONDS.toMillis(1);
 
   private final IMetricsTracker userMetricsTracker;
 
@@ -44,20 +48,26 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   @Override
   public void recordConnectionCreatedMillis(long connectionCreatedMillis) {
-    createTime.record((double) connectionCreatedMillis, attributes);
+    double time =
+        emitStableDatabaseSemconv()
+            ? connectionCreatedMillis / MILLIS_PER_S
+            : connectionCreatedMillis;
+    createTime.record(time, attributes);
     userMetricsTracker.recordConnectionCreatedMillis(connectionCreatedMillis);
   }
 
   @Override
   public void recordConnectionAcquiredNanos(long elapsedAcquiredNanos) {
-    double millis = elapsedAcquiredNanos / NANOS_PER_MS;
-    waitTime.record(millis, attributes);
+    double time = elapsedAcquiredNanos / (emitStableDatabaseSemconv() ? NANOS_PER_S : NANOS_PER_MS);
+    waitTime.record(time, attributes);
     userMetricsTracker.recordConnectionAcquiredNanos(elapsedAcquiredNanos);
   }
 
   @Override
   public void recordConnectionUsageMillis(long elapsedBorrowedMillis) {
-    useTime.record((double) elapsedBorrowedMillis, attributes);
+    double time =
+        emitStableDatabaseSemconv() ? elapsedBorrowedMillis / MILLIS_PER_S : elapsedBorrowedMillis;
+    useTime.record(time, attributes);
     userMetricsTracker.recordConnectionUsageMillis(elapsedBorrowedMillis);
   }
 

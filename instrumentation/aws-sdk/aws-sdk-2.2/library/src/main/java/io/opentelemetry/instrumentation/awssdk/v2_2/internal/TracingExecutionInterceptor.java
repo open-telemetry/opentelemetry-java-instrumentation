@@ -79,7 +79,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
-  private final boolean captureExperimentalSpanAttributes;
 
   static final AttributeKey<String> HTTP_ERROR_MSG =
       AttributeKey.stringKey("aws.http.error_message");
@@ -129,12 +128,11 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
     this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.eventLogger = eventLogger;
-    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
     this.recordIndividualHttpError = recordIndividualHttpError;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
-    this.fieldMapper = new FieldMapper();
+    this.fieldMapper = new FieldMapper(captureExperimentalSpanAttributes);
   }
 
   @Override
@@ -401,11 +399,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       BedrockRuntimeAccess.recordResponseEvents(
           otelContext, eventLogger, executionAttributes, response, genAiCaptureMessageContent);
     }
-    if (captureExperimentalSpanAttributes) {
-      AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
-      if (sdkRequest != null) {
-        fieldMapper.mapToAttributes(response, sdkRequest, span);
-      }
+    AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
+    if (sdkRequest != null) {
+      fieldMapper.mapToAttributes(response, sdkRequest, span);
     }
   }
 

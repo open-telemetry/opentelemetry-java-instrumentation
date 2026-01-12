@@ -11,7 +11,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 import static io.opentelemetry.testing.internal.armeria.common.MediaType.PLAIN_TEXT_UTF_8;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
@@ -124,6 +126,12 @@ public final class HttpClientTestServer extends ServerExtension {
 
               return writer;
             })
+        .service(
+            "/hello/{name}",
+            (ctx, req) -> {
+              String name = ctx.pathParam("name");
+              return HttpResponse.of("Hello, %s!", name != null ? name : "unknown");
+            })
         .decorator(
             (delegate, ctx, req) -> {
               for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {
@@ -131,7 +139,7 @@ public final class HttpClientTestServer extends ServerExtension {
                   throw new AssertionError((Object) ("more than one " + field + " header present"));
                 }
               }
-              SpanBuilder span =
+              SpanBuilder spanBuilder =
                   tracer
                       .spanBuilder("test-http-server")
                       .setSpanKind(SERVER)
@@ -143,11 +151,30 @@ public final class HttpClientTestServer extends ServerExtension {
 
               String traceRequestId = req.headers().get("test-request-id");
               if (traceRequestId != null) {
-                span.setAttribute("test.request.id", Integer.parseInt(traceRequestId));
+                spanBuilder.setAttribute("test.request.id", Integer.parseInt(traceRequestId));
               }
-              span.startSpan().end();
+              Span span = spanBuilder.startSpan();
+              ctx.log()
+                  .whenComplete()
+                  .thenAccept(
+                      log -> {
+                        Throwable error = log.responseCause();
+                        if (error != null) {
+                          span.recordException(error);
+                          span.setStatus(StatusCode.ERROR);
+                        }
+                        span.end();
+                      });
 
-              return delegate.serve(ctx, req);
+              // this header is set by java http client http/2 tests
+              // we delay the response a bit to ensure that client can send the full request before
+              // it receives the response
+              // this is a workaround for http/2 tests failing with java.io.IOException: RST_STREAM
+              // received
+              boolean delay = req.headers().get("java-http-client-http2") != null;
+
+              HttpResponse response = delegate.serve(ctx, req);
+              return delay ? HttpResponse.delayed(response, Duration.ofMillis(10)) : response;
             })
         .decorator(LoggingService.newDecorator());
   }

@@ -18,12 +18,14 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import kotlinx.coroutines.withContext
+import java.util.function.UnaryOperator
 
 class KtorServerTelemetry private constructor(
   private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>,
@@ -47,7 +49,7 @@ class KtorServerTelemetry private constructor(
     fun setStatusExtractor(
       extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
     ) {
-      builder.setStatusExtractor { prevExtractor ->
+      builder.setSpanStatusExtractorCustomizer { prevExtractor ->
         SpanStatusExtractor {
             spanStatusBuilder: SpanStatusBuilder,
             request: ApplicationRequest,
@@ -61,6 +63,10 @@ class KtorServerTelemetry private constructor(
 
     fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
       this.spanKindExtractor = extractor
+    }
+
+    fun setSpanNameExtractorCustomizer(extractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
+      builder.setSpanNameExtractorCustomizer(extractor)
     }
 
     fun addAttributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
@@ -161,7 +167,7 @@ class KtorServerTelemetry private constructor(
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         val context = call.attributes.getOrNull(contextKey)
         if (context != null) {
-          HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
+          HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg!!.route.parent.toString() }, call)
         }
       }
 

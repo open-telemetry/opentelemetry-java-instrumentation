@@ -18,7 +18,7 @@ class Elasticsearch6NodeFactory implements NodeFactory {
         InternalSettingsPreparer.prepareEnvironment(settings, null),
         Collections.singleton(Netty4Plugin.class)) {
 
-      @SuppressWarnings({"UnusedMethod", "UnusedVariable"})
+      @SuppressWarnings({"UnusedMethod", "UnusedVariable", "EffectivelyPrivate"})
       protected void registerDerivedNodeNameWithLogger(String s) {}
     };
   }

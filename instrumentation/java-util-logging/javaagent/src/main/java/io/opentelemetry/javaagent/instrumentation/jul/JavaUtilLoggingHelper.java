@@ -9,14 +9,12 @@ import application.java.util.logging.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -27,8 +25,8 @@ public final class JavaUtilLoggingHelper {
   private static final Formatter FORMATTER = new AccessibleFormatter();
 
   private static final boolean captureExperimentalAttributes =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
+          .getBoolean("experimental_log_attributes/development", false);
 
   public static void capture(Logger logger, LogRecord logRecord) {
 
@@ -85,13 +83,8 @@ public final class JavaUtilLoggingHelper {
     // throwable
     Throwable throwable = logRecord.getThrown();
     if (throwable != null) {
-      // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api
-      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      // this cast is safe within java agent instrumentation
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
     }
 
     if (captureExperimentalAttributes) {

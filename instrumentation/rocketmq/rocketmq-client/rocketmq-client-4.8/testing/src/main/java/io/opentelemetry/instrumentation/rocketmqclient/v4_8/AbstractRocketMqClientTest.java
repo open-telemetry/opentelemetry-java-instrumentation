@@ -41,6 +41,7 @@ import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -251,6 +252,9 @@ abstract class AbstractRocketMqClientTest {
 
   @Test
   void testRocketmqProduceAndBatchConsume() throws Exception {
+    // context propagation doesn't work for batch messages in 5.3.4
+    Assumptions.assumeFalse(Boolean.getBoolean("testLatestDeps"));
+
     consumer.setConsumeMessageBatchMaxSize(2);
     // This test assumes that messages are sent and received as a batch. Occasionally it happens
     // that the messages are not received as a batch, but one by one. This doesn't match what the
@@ -377,7 +381,7 @@ abstract class AbstractRocketMqClientTest {
               Message msg =
                   new Message(
                       sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
-              msg.putUserProperty("test-message-header", "test");
+              msg.putUserProperty("Test-Message-Header", "test");
               SendResult sendResult = producer.send(msg);
               assertEquals(
                   SendStatus.SEND_OK, sendResult.getSendStatus(), "Send status should be SEND_OK");
@@ -409,7 +413,7 @@ abstract class AbstractRocketMqClientTest {
                                     "SEND_OK"),
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.test_message_header"),
+                                        "messaging.header.Test_Message_Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -436,7 +440,7 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.test_message_header"),
+                                        "messaging.header.Test_Message_Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")

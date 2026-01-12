@@ -13,6 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.apis.consumer.MessageListener;
@@ -37,13 +39,11 @@ final class ConsumeServiceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 1, readOnly = false) MessageListener messageListener) {
+    public static MessageListener onEnter(@Advice.Argument(1) MessageListener messageListener) {
       // Replace messageListener by wrapper.
-      if (!(messageListener instanceof MessageListenerWrapper)) {
-        messageListener = new MessageListenerWrapper(messageListener);
-      }
+      return MessageListenerWrapper.wrapIfNeeded(messageListener);
     }
   }
 }

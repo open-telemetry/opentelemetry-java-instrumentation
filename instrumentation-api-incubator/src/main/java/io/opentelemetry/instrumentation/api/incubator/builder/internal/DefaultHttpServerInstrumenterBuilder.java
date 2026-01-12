@@ -26,13 +26,14 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 /**
@@ -46,15 +47,15 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
-  private Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
-      statusExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> spanStatusExtractorCustomizer =
+      UnaryOperator.identity();
   private final HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
   @Nullable private final TextMapGetter<REQUEST> headerGetter;
-  private Function<SpanNameExtractor<REQUEST>, SpanNameExtractor<REQUEST>>
-      spanNameExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractorCustomizer =
+      UnaryOperator.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
   private final HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private boolean emitExperimentalHttpServerTelemetry = false;
@@ -64,7 +65,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      TextMapGetter<REQUEST> headerGetter) {
+      @Nullable TextMapGetter<REQUEST> headerGetter) {
     this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
     this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
     this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
@@ -106,10 +107,9 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
-      Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
-          statusExtractor) {
-    this.statusExtractorTransformer = statusExtractor;
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> spanStatusExtractorCustomizer) {
+    this.spanStatusExtractorCustomizer = spanStatusExtractorCustomizer;
     return this;
   }
 
@@ -172,12 +172,14 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
-      Function<SpanNameExtractor<REQUEST>, SpanNameExtractor<REQUEST>>
-          spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractorCustomizer) {
+    this.spanNameExtractorCustomizer = spanNameExtractorCustomizer;
     return this;
   }
 
@@ -199,17 +201,19 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
 
   public InstrumenterBuilder<REQUEST, RESPONSE> instrumenterBuilder() {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
-        spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
+        spanNameExtractorCustomizer.apply(httpSpanNameExtractorBuilder.build());
 
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
             .setSpanStatusExtractor(
-                statusExtractorTransformer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
+                spanStatusExtractorCustomizer.apply(
+                    HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
-            .addOperationMetrics(HttpServerMetrics.get());
+            .addOperationMetrics(HttpServerMetrics.get())
+            .setSchemaUrl(SchemaUrls.V1_37_0);
     if (emitExperimentalHttpServerTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))

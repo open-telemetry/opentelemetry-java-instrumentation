@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
+public class ReactorKafkaInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public ReactorKafkaInstrumentationModule() {
     super("reactor-kafka", "reactor-kafka-1.0");
@@ -26,5 +28,10 @@ public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
         new ReceiverRecordInstrumentation(),
         new DefaultKafkaReceiverInstrumentation(),
         new ConsumerHandlerInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

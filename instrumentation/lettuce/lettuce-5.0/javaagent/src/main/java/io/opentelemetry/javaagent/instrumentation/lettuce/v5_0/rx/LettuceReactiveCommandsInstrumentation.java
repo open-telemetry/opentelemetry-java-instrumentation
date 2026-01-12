@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.reactivestreams.Subscription;
@@ -61,10 +62,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
     // being run until the user subscribes to the Mono publisher
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V, T> void monitorSpan(
-        @Advice.Enter RedisCommand<K, V, T> command,
-        @Advice.Return(readOnly = false) Mono<T> publisher) {
+    public static <K, V, T> Mono<T> monitorSpan(
+        @Advice.Return Mono<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
+      Mono<T> publisher = originalPublisher;
       boolean finishSpanOnClose = !expectsResponse(command);
       LettuceMonoDualConsumer<? super Subscription, T> mdc =
           new LettuceMonoDualConsumer<>(command, finishSpanOnClose);
@@ -73,6 +75,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
       if (!finishSpanOnClose) {
         publisher = publisher.doOnSuccessOrError(mdc);
       }
+      return publisher;
     }
   }
 
@@ -86,10 +89,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
     }
 
     // if there is an exception thrown, then don't make spans
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V, T> void monitorSpan(
-        @Advice.Enter RedisCommand<K, V, T> command,
-        @Advice.Return(readOnly = false) Flux<T> publisher) {
+    public static <K, V, T> Flux<T> monitorSpan(
+        @Advice.Return Flux<T> originalPublisher, @Advice.Enter RedisCommand<K, V, T> command) {
+      Flux<T> publisher = originalPublisher;
 
       boolean expectsResponse = expectsResponse(command);
       LettuceFluxTerminationRunnable handler =
@@ -102,6 +106,7 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         publisher = publisher.doOnEach(handler);
         publisher = publisher.doOnCancel(handler);
       }
+      return publisher;
     }
   }
 }

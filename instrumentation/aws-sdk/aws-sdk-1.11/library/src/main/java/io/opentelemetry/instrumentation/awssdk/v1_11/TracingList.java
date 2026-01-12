@@ -85,7 +85,7 @@ class TracingList extends SdkInternalList<Message> {
   }
 
   private static class CallerClass extends SecurityManager {
-    public static final CallerClass INSTANCE = new CallerClass();
+    static final CallerClass INSTANCE = new CallerClass();
 
     @Override
     public Class<?>[] getClassContext() {

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.tooling.field;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.tooling.muzzle.ClassFileLocatorProvider;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.SyntheticState;

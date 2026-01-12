@@ -21,6 +21,8 @@ tasks.register("generateDocs", JavaExec::class) {
 
 tasks {
   val testG1 by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*G1GcMemoryMetricTest*")
     }
@@ -29,6 +31,8 @@ tasks {
   }
 
   val testPS by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*PsGcMemoryMetricTest*")
     }
@@ -37,6 +41,8 @@ tasks {
   }
 
   val testSerial by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*SerialGcMemoryMetricTest*")
     }
@@ -53,9 +59,7 @@ tasks {
   }
 
   check {
-    dependsOn(testG1)
-    dependsOn(testPS)
-    dependsOn(testSerial)
+    dependsOn(testG1, testPS, testSerial)
   }
 
   compileJava {

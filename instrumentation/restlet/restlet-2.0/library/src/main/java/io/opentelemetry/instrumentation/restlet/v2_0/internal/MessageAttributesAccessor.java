@@ -93,7 +93,7 @@ public final class MessageAttributesAccessor {
     NEW_SERIES = newSeries;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting result of MethodHandle.invoke
   @Nullable
   public static Map<String, Object> getAttributes(Message message) {
     if (GET_ATTRIBUTES == null) {

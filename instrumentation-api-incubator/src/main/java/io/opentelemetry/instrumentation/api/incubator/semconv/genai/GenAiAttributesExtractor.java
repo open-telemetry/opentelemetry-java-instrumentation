@@ -52,7 +52,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
       stringArrayKey("gen_ai.response.finish_reasons");
   private static final AttributeKey<String> GEN_AI_RESPONSE_ID = stringKey("gen_ai.response.id");
   static final AttributeKey<String> GEN_AI_RESPONSE_MODEL = stringKey("gen_ai.response.model");
-  static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
+  static final AttributeKey<String> GEN_AI_PROVIDER_NAME = stringKey("gen_ai.provider.name");
   static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS = longKey("gen_ai.usage.input_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_OUTPUT_TOKENS =
       longKey("gen_ai.usage.output_tokens");
@@ -72,7 +72,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, GEN_AI_OPERATION_NAME, getter.getOperationName(request));
-    internalSet(attributes, GEN_AI_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, GEN_AI_PROVIDER_NAME, getter.getSystem(request));
     internalSet(attributes, GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
     internalSet(attributes, GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
     internalSet(

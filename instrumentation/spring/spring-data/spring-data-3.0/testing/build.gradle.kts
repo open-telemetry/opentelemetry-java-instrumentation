@@ -20,6 +20,9 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
+
+  // latest version of spring data is not yet compatible with spring 7 yet
+  latestDepTestLibrary("org.springframework:spring-test:6.+") // documented limitation
 }
 
 otelJava {
@@ -48,11 +51,12 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

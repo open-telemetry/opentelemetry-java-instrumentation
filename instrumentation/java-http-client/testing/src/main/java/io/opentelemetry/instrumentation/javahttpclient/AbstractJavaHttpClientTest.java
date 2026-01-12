@@ -5,12 +5,22 @@
 
 package io.opentelemetry.instrumentation.javahttpclient;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,7 +29,11 @@ import java.net.http.HttpResponse;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<HttpRequest> {
 
@@ -45,6 +59,12 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
     HttpRequest.Builder requestBuilder =
         HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody());
     headers.forEach(requestBuilder::header);
+    if (client.version() == HttpClient.Version.HTTP_2) {
+      // notify HttpClientTestServer that the request comes from java http client using http/2 so
+      // that the server can work around http/2 tests failing with java.io.IOException: RST_STREAM
+      // received
+      requestBuilder.header("java-http-client-http2", "true");
+    }
     if (uri.toString().contains("/read-timeout")) {
       requestBuilder.timeout(READ_TIMEOUT);
     }
@@ -99,5 +119,77 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
           }
           return attributes;
         });
+  }
+
+  @SuppressWarnings("Interruption") // test calls CompletableFuture.cancel with true
+  @Test
+  void cancelRequest() throws InterruptedException {
+    boolean isJdk11 = "11".equals(System.getProperty("java.specification.version"));
+    String method = "GET";
+    URI uri = resolveAddress("/long-request");
+
+    CompletableFuture<String> future =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              HttpRequest request =
+                  HttpRequest.newBuilder()
+                      .uri(uri)
+                      .method(method, HttpRequest.BodyPublishers.noBody())
+                      .header("delay", String.valueOf(TimeUnit.SECONDS.toMillis(5)))
+                      .build();
+              return client
+                  .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                  .thenApply(HttpResponse::body)
+                  .whenComplete(
+                      (response, throwable) ->
+                          testing.runWithSpan(
+                              "child",
+                              () -> {
+                                if (throwable != null && throwable.getCause() != null) {
+                                  Span.current()
+                                      .setAttribute(
+                                          "throwable", throwable.getCause().getClass().getName());
+                                }
+                              }))
+                  // this stage is only added to trigger the whenComplete stage when this stage gets
+                  // cancelled
+                  .exceptionally(ex -> "cancelled");
+            });
+
+    // sleep a bit to let the request start
+    Thread.sleep(1_000);
+    future.cancel(true);
+    assertThatThrownBy(future::get).isInstanceOf(CancellationException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(
+                            equalTo(UrlAttributes.URL_FULL, uri.toString()),
+                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
+                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, method),
+                            equalTo(
+                                ErrorAttributes.ERROR_TYPE, CancellationException.class.getName())),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))
+                        // jdk 11 does not cancel the request on the server side so the request
+                        // succeeds
+                        .hasStatus(isJdk11 ? StatusData.unset() : StatusData.error()),
+                span ->
+                    span.hasName("child")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("throwable"), CancellationException.class.getName()))));
   }
 }

@@ -20,7 +20,7 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DropwizardMetricsTest {
+class DropwizardMetricsTest {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.dropwizard-metrics-4.0";
 

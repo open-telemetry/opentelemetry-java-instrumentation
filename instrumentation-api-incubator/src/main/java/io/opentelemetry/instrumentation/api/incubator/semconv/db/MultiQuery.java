@@ -8,14 +8,16 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 class MultiQuery {
 
-  private final String mainIdentifier;
-  private final String operation;
+  @Nullable private final String mainIdentifier;
+  @Nullable private final String operation;
   private final Set<String> statements;
 
-  private MultiQuery(String mainIdentifier, String operation, Set<String> statements) {
+  private MultiQuery(
+      @Nullable String mainIdentifier, @Nullable String operation, Set<String> statements) {
     this.mainIdentifier = mainIdentifier;
     this.operation = operation;
     this.statements = statements;
@@ -40,10 +42,12 @@ class MultiQuery {
         uniqueMainIdentifier.getValue(), uniqueOperation.getValue(), uniqueStatements);
   }
 
+  @Nullable
   public String getMainIdentifier() {
     return mainIdentifier;
   }
 
+  @Nullable
   public String getOperation() {
     return operation;
   }
@@ -53,10 +57,10 @@ class MultiQuery {
   }
 
   private static class UniqueValue {
-    private String value;
+    @Nullable private String value;
     private boolean valid = true;
 
-    void set(String value) {
+    void set(@Nullable String value) {
       if (!valid) {
         return;
       }
@@ -67,6 +71,7 @@ class MultiQuery {
       }
     }
 
+    @Nullable
     String getValue() {
       return valid ? value : null;
     }

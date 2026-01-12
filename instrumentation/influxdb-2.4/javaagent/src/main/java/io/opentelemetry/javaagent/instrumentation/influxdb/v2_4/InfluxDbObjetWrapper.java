@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 public final class InfluxDbObjetWrapper {
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we check types before casting
   public static Object wrap(Object object, Context parentContext) {
     if (object instanceof Consumer) {
       return (Consumer<Object>)

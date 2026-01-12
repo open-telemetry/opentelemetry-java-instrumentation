@@ -16,27 +16,13 @@ final class RediscalaAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(RedisCommand<?, ?> redisCommand) {
+  public String getDbSystemName(RedisCommand<?, ?> redisCommand) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(RedisCommand<?, ?> redisCommand) {
-    return null;
   }
 
   @Override
   @Nullable
   public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 

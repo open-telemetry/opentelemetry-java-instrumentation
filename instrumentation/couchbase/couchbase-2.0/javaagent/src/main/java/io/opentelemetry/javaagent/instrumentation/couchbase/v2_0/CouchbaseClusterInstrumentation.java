@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
@@ -43,23 +44,25 @@ public class CouchbaseClusterInstrumentation implements TypeInstrumentation {
   public static class CouchbaseClientAdvice {
 
     @Advice.OnMethodEnter
-    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(CouchbaseCluster.class);
+    public static CallDepth trackCallDepth() {
+      CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void subscribeResult(
+    public static Observable<?> subscribeResult(
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
-        @Advice.Return(readOnly = false) Observable<?> result,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Return Observable<?> result,
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
-        return;
+        return result;
       }
 
       CouchbaseRequestInfo request = CouchbaseRequestInfo.create(null, declaringClass, methodName);
-      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 }

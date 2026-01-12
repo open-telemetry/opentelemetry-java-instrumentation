@@ -6,20 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -68,7 +63,10 @@ class FailedRequestWithUrlMakerTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DefaultPortsArguments.class)
+  @CsvSource({
+    "80, false",
+    "443, true",
+  })
   @SuppressWarnings("MockitoDoSetup")
   void shouldSkipDefaultPorts(int port, boolean isSecure) {
     when(config.baseUrl()).thenReturn("/");
@@ -82,13 +80,5 @@ class FailedRequestWithUrlMakerTest {
 
     assertThat(request.resourceUrl())
         .isEqualTo((isSecure ? "https" : "http") + "://opentelemetry.io/docs");
-  }
-
-  static final class DefaultPortsArguments implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
-      return Stream.of(arguments(80, false), arguments(443, true));
-    }
   }
 }

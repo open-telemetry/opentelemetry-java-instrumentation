@@ -5,19 +5,19 @@
 
 package io.opentelemetry.instrumentation.jaxrs;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionInfixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
   protected static class TestResponse {
@@ -140,17 +139,15 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                     },
                     span -> {
                       span.hasName(controllerName).hasParent(trace.getSpan(0));
+                      List<AttributeAssertion> assertions;
                       if (abortPrematch) {
-                        span.hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CODE_NAMESPACE,
-                                name -> name.endsWith("JaxRsFilterTest$PrematchRequestFilter")),
-                            equalTo(CODE_FUNCTION, "filter"));
+                        assertions =
+                            codeFunctionInfixAssertions(
+                                ".JaxRsFilterTest$PrematchRequestFilter", "filter");
                       } else {
-                        span.hasAttributesSatisfyingExactly(
-                            satisfies(CODE_NAMESPACE, name -> name.contains("Resource$Test")),
-                            equalTo(CODE_FUNCTION, "hello"));
+                        assertions = codeFunctionInfixAssertions(".Resource$Test", "hello");
                       }
+                      span.hasAttributesSatisfyingExactly(assertions);
                     }));
   }
 
@@ -184,7 +181,6 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                satisfies(CODE_NAMESPACE, name -> name.contains("Resource$Test")),
-                                equalTo(CODE_FUNCTION, "nested"))));
+                                codeFunctionInfixAssertions(".Resource$Test", "nested"))));
   }
 }

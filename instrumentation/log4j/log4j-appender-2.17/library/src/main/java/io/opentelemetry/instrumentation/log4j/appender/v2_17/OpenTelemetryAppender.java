@@ -101,6 +101,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
+    @PluginBuilderAttribute private boolean captureEventName;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -156,6 +157,24 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
+     * Sets whether the value of the {@code event.name} attribute is used as the log event name.
+     *
+     * <p>The {@code event.name} attribute is captured via any other mechanism supported by this
+     * appender, such as when {@code captureContextDataAttributes} includes {@code event.name}.
+     *
+     * <p>When {@code captureEventName} is true, then the value of the {@code event.name} attribute
+     * will be used as the log event name, and {@code event.name} attribute will be removed.
+     *
+     * @param captureEventName to enable or disable capturing the {@code event.name} attribute as
+     *     the log event name
+     */
+    @CanIgnoreReturnValue
+    public B setCaptureEventName(boolean captureEventName) {
+      this.captureEventName = captureEventName;
+      return asBuilder();
+    }
+
+    /**
      * Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with
      * an {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used
      * to replay the logs that were emitted prior to setting the OpenTelemetry instance into the
@@ -188,6 +207,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
+          captureEventName,
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
     }
@@ -204,6 +224,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       String captureContextDataAttributes,
+      boolean captureEventName,
       int numLogsCapturedBeforeOtelInstall,
       OpenTelemetry openTelemetry) {
 
@@ -215,7 +236,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
-            splitAndFilterBlanksAndNulls(captureContextDataAttributes));
+            splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+            captureEventName);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
     if (numLogsCapturedBeforeOtelInstall != 0) {
@@ -301,10 +323,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // reconstruct the context from context data
     if (context == Context.root()) {
       ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
-      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
+      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
+      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
       String traceFlags =
-          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
       if (traceId != null && spanId != null && traceFlags != null) {
         context =
             Context.root()

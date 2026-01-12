@@ -15,6 +15,7 @@ val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] =
 tasks {
   withType<JavaCompile>().configureEach {
     with(options) {
+      compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
       errorprone {
         if (disableErrorProne) {
           logger.warn("Errorprone has been disabled. Build may not result in a valid PR build.")
@@ -62,9 +63,7 @@ tasks {
         disable("UnnecessarilyFullyQualified")
 
         // TODO (trask) use animal sniffer
-        disable("Java7ApiChecker")
         disable("Java8ApiChecker")
-        disable("AndroidJdkLibsChecker")
 
         // apparently disabling android doesn't disable this
         disable("StaticOrDefaultInterfaceMethod")
@@ -124,8 +123,9 @@ tasks {
 
         disable("NonFinalStaticField")
 
-        // We get this warning in modules that compile for old java versions
-        disable("StringConcatToTextBlock")
+        // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToClass")
+        disable("AddNullMarkedToPackageInfo")
 
         if (testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
@@ -138,9 +138,11 @@ tasks {
           // Allow underscore in test-type method names
           disable("MemberName")
         }
-        if ((project.path.endsWith(":testing") || name.contains("Test")) && !project.name.equals("custom-checks")) {
+        if ((project.path.endsWith("testing") || name.contains("Test")) && !project.name.equals("custom-checks")) {
           // This check causes too many failures, ignore the ones in tests
           disable("OtelCanIgnoreReturnValueSuggester")
+          disable("OtelInternalJavadoc")
+          disable("SuppressWarningsWithoutExplanation")
         }
       }
     }

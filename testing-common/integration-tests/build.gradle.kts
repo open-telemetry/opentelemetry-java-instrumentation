@@ -29,6 +29,8 @@ dependencies {
 
 tasks {
   val testFieldInjectionDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("context.FieldInjectionDisabledTest")
     }
@@ -37,6 +39,8 @@ tasks {
   }
 
   val testFieldBackedImplementation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("context.FieldBackedImplementationTest")
     }
@@ -54,12 +58,11 @@ tasks {
       excludeTestsMatching("context.FieldInjectionDisabledTest")
       excludeTestsMatching("context.FieldBackedImplementationTest")
     }
-    // this is needed for AgentInstrumentationSpecificationTest
+    // this is needed for AgentInstrumentationTest
     jvmArgs("-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
   }
 
   check {
-    dependsOn(testFieldInjectionDisabled)
-    dependsOn(testFieldBackedImplementation)
+    dependsOn(testFieldInjectionDisabled, testFieldBackedImplementation)
   }
 }

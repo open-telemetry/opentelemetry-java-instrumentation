@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -27,7 +28,6 @@ dependencies {
 
   // Include servlet instrumentation for verifying the tomcat requests
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 
@@ -43,16 +43,29 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }
 
 configurations.testRuntimeClasspath {

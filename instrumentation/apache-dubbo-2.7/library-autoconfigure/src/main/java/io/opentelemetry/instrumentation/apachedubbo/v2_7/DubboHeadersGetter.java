@@ -31,7 +31,7 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
   public Iterable<String> keys(DubboRequest request) {
     RpcInvocation invocation = request.invocation();
     try {

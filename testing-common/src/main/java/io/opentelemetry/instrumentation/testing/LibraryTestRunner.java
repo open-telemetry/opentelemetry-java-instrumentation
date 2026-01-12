@@ -20,6 +20,11 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.baggage.processor.BaggageSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
+import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.util.KeysVerifyingPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
@@ -39,6 +44,8 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +70,9 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
     testLogRecordExporter = InMemoryLogRecordExporter.create();
+    TestSpanExporterComponentProvider.setSpanExporter(testSpanExporter);
+    TestMetricExporterComponentProvider.setMetricExporter(testMetricExporter);
+    TestLogRecordExporterComponentProvider.setLogRecordExporter(testLogRecordExporter);
 
     metricReader =
         PeriodicMetricReader.builder(testMetricExporter)
@@ -92,6 +102,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
             .setPropagators(
                 ContextPropagators.create(
                     TextMapPropagator.composite(
+                        KeysVerifyingPropagator.getInstance(),
                         W3CTraceContextPropagator.getInstance(),
                         W3CBaggagePropagator.getInstance())))
             .buildAndRegisterGlobal();
@@ -116,7 +127,16 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public void afterTestClass() {}
+  public void afterTestClass() throws IOException {
+    // Generates files in a `.telemetry` directory within the instrumentation module with all
+    // captured emitted metadata to be used by the instrumentation-docs Doc generator.
+    if (Boolean.getBoolean("collectMetadata")) {
+      String path = new File("").getAbsolutePath();
+
+      MetaDataCollector.writeTelemetryToFiles(
+          path, metricsByScope, tracesByScope, instrumentationScopes);
+    }
+  }
 
   @Override
   public void clearAllExportedData() {

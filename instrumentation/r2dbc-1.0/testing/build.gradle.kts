@@ -3,12 +3,12 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
 
   implementation(project(":instrumentation-api-incubator"))
-  implementation("org.testcontainers:junit-jupiter")
+  implementation("org.testcontainers:testcontainers-junit-jupiter")
   compileOnly("io.projectreactor:reactor-core:3.4.12")
 
   runtimeOnly("dev.miku:r2dbc-mysql:0.8.2.RELEASE")

@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumente
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class ArmeriaClientTelemetryBuilder {
 
@@ -36,14 +36,15 @@ public final class ArmeriaClientTelemetryBuilder {
     builder = ArmeriaInstrumenterBuilderFactory.getClientBuilder(openTelemetry);
   }
 
-  /** Sets the status extractor for client spans. */
+  /**
+   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
+   * customized one.
+   */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setStatusExtractor(
-      Function<
-              SpanStatusExtractor<ClientRequestContext, RequestLog>,
-              SpanStatusExtractor<ClientRequestContext, RequestLog>>
-          statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+  public ArmeriaClientTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<ClientRequestContext, RequestLog>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 
@@ -101,12 +102,14 @@ public final class ArmeriaClientTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<ClientRequestContext>, SpanNameExtractor<ClientRequestContext>>
-          clientSpanNameExtractor) {
-    builder.setSpanNameExtractor(clientSpanNameExtractor);
+  public ArmeriaClientTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ClientRequestContext>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

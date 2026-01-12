@@ -58,6 +58,7 @@ import org.reactivestreams.Subscriber;
  *
  * <p>Instrumentation can be disabled by calling the {@link TracingAssembly#disable()} method.
  */
+@SuppressWarnings("SuppressWarningsWithoutExplanation") // RxJavaPlugins uses raw types
 public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
@@ -98,6 +99,10 @@ public final class TracingAssembly {
       oldOnParallelAssembly;
 
   @GuardedBy("TracingAssembly.class")
+  @Nullable
+  private static Function<? super Runnable, ? extends Runnable> oldScheduleHandler;
+
+  @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
   public static TracingAssembly create() {
@@ -122,6 +127,8 @@ public final class TracingAssembly {
 
       enableObservable();
 
+      enableWrappedScheduleHandler();
+
       enableCompletable();
 
       enableSingle();
@@ -145,6 +152,8 @@ public final class TracingAssembly {
       }
 
       disableObservable();
+
+      disableWrappedScheduleHandler();
 
       disableCompletable();
 
@@ -222,6 +231,25 @@ public final class TracingAssembly {
   }
 
   @GuardedBy("TracingAssembly.class")
+  private static void enableWrappedScheduleHandler() {
+    oldScheduleHandler = RxJavaPlugins.getScheduleHandler();
+    RxJavaPlugins.setScheduleHandler(
+        runnable -> {
+          Context context = Context.current();
+          Runnable wrappedRunnable =
+              () -> {
+                try (Scope ignored = context.makeCurrent()) {
+                  runnable.run();
+                }
+              };
+          // If there was a previous handler, apply it to our wrapped runnable
+          return oldScheduleHandler != null
+              ? oldScheduleHandler.apply(wrappedRunnable)
+              : wrappedRunnable;
+        });
+  }
+
+  @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableSingle() {
     oldOnSingleSubscribe = RxJavaPlugins.getOnSingleSubscribe();
@@ -274,6 +302,12 @@ public final class TracingAssembly {
   private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void disableWrappedScheduleHandler() {
+    RxJavaPlugins.setScheduleHandler(oldScheduleHandler);
+    oldScheduleHandler = null;
   }
 
   @GuardedBy("TracingAssembly.class")

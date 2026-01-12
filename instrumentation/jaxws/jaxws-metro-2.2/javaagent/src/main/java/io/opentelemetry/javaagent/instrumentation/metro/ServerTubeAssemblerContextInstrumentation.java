@@ -13,6 +13,7 @@ import com.sun.xml.ws.api.pipe.Tube;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,11 +33,11 @@ public class ServerTubeAssemblerContextInstrumentation implements TypeInstrument
   @SuppressWarnings("unused")
   public static class AddTracingAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This ServerTubeAssemblerContext context,
-        @Advice.Return(readOnly = false) Tube tube) {
-      tube = new TracingTube(context.getEndpoint(), tube);
+    public static Tube onExit(
+        @Advice.This ServerTubeAssemblerContext context, @Advice.Return Tube tube) {
+      return new TracingTube(context.getEndpoint(), tube);
     }
   }
 }

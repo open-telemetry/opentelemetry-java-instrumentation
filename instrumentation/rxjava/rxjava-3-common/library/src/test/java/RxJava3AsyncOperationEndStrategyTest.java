@@ -41,7 +41,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 @ExtendWith(MockitoExtension.class)
-public class RxJava3AsyncOperationEndStrategyTest {
+class RxJava3AsyncOperationEndStrategyTest {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
   @Mock Instrumenter<String, String> instrumenter;

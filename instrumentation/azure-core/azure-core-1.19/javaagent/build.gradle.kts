@@ -29,6 +29,7 @@ dependencies {
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
+  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -39,11 +40,8 @@ testing {
     // extracted to the output directory are not available during tests
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("com.azure:azure-core:1.35.0")
-        } else {
-          implementation("com.azure:azure-core:1.19.0")
-        }
+        val version = if (latestDepTest) "1.35.0" else "1.19.0"
+        implementation("com.azure:azure-core:$version")
       }
     }
   }

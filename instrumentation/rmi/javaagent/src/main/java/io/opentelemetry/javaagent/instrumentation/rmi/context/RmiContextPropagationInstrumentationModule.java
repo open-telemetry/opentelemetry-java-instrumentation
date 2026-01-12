@@ -37,4 +37,9 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
     return Collections.singletonMap(
         JavaModule.ofType(Remote.class), Arrays.asList("sun.rmi.server", "sun.rmi.transport"));
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

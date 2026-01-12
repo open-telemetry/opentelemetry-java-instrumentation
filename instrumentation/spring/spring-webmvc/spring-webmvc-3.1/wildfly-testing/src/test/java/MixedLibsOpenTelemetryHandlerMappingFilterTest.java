@@ -13,7 +13,7 @@ import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 
 // Everything except spring-webmvc is in ear/lib, spring-webmvc is in war/WEB-INF/lib
-public class MixedLibsOpenTelemetryHandlerMappingFilterTest
+class MixedLibsOpenTelemetryHandlerMappingFilterTest
     extends AbstractOpenTelemetryHandlerMappingFilterTest {
   @Deployment
   static Archive<?> createDeployment() {

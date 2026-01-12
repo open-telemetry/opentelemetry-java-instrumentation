@@ -15,27 +15,13 @@ final class ElasticsearchTransportAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(ElasticTransportRequest request) {
+  public String getDbSystemName(ElasticTransportRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(ElasticTransportRequest request) {
-    return null;
   }
 
   @Override
   @Nullable
   public String getDbNamespace(ElasticTransportRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(ElasticTransportRequest request) {
     return null;
   }
 

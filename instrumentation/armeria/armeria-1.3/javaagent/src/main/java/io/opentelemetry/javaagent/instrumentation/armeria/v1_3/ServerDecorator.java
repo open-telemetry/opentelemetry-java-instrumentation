@@ -28,7 +28,7 @@ class ServerDecorator extends SimpleDecoratingHttpService {
 
   @Override
   public HttpResponse serve(ServiceRequestContext ctx, HttpRequest req) throws Exception {
-    // If there is no server span fall back to armeria liberary instrumentation. Server span is
+    // If there is no server span fall back to armeria library instrumentation. Server span is
     // usually created by netty instrumentation, it can be missing when netty instrumentation is
     // disabled or when http2 is used (netty instrumentation does not support http2).
     if (!LocalRootSpan.current().getSpanContext().isValid()) {

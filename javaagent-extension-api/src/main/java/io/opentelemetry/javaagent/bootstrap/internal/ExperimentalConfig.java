@@ -7,7 +7,10 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.List;
 
 /**
@@ -17,9 +20,9 @@ import java.util.List;
 public final class ExperimentalConfig {
 
   private static final ExperimentalConfig instance =
-      new ExperimentalConfig(AgentInstrumentationConfig.get());
+      new ExperimentalConfig(GlobalOpenTelemetry.get());
 
-  private final InstrumentationConfig config;
+  private final ExtendedDeclarativeConfigProperties commonConfig;
   private final List<String> messagingHeaders;
 
   /** Returns the global agent configuration. */
@@ -27,29 +30,27 @@ public final class ExperimentalConfig {
     return instance;
   }
 
-  public ExperimentalConfig(InstrumentationConfig config) {
-    this.config = config;
-    messagingHeaders =
-        config.getList("otel.instrumentation.messaging.experimental.capture-headers", emptyList());
+  public ExperimentalConfig(OpenTelemetry openTelemetry) {
+    this.commonConfig = DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    this.messagingHeaders =
+        commonConfig
+            .get("messaging")
+            .getScalarList("capture_headers/development", String.class, emptyList());
   }
 
   public boolean controllerTelemetryEnabled() {
-    return config.getBoolean(
-        "otel.instrumentation.common.experimental.controller-telemetry.enabled", false);
+    return commonConfig.get("controller_telemetry/development").getBoolean("enabled", false);
   }
 
   public boolean viewTelemetryEnabled() {
-    return config.getBoolean(
-        "otel.instrumentation.common.experimental.view-telemetry.enabled", false);
+    return commonConfig.get("view_telemetry/development").getBoolean("enabled", false);
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {
-    return config.getBoolean(
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
-  }
-
-  public boolean indyEnabled() {
-    return config.getBoolean("otel.javaagent.experimental.indy", false);
+    return commonConfig
+        .get("messaging")
+        .get("receive_telemetry/development")
+        .getBoolean("enabled", false);
   }
 
   public List<String> getMessagingHeaders() {

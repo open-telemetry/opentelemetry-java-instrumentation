@@ -134,7 +134,7 @@ class TracingCallFactory implements Call.Factory {
       private final Callback delegate;
       private final Context callingContext;
 
-      public TracingCallback(Callback delegate, Context callingContext) {
+      TracingCallback(Callback delegate, Context callingContext) {
         this.delegate = delegate;
         this.callingContext = callingContext;
       }

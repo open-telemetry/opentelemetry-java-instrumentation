@@ -21,10 +21,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class AwsLambdaTest extends AbstractAwsLambdaTest {
+class AwsLambdaTest extends AbstractAwsLambdaTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected RequestHandler<String, String> handler() {

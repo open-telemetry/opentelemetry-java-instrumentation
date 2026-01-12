@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,6 +35,7 @@ public class AbstractPollingMessageListenerContainerInstrumentation implements T
   public static class ReceiveAndExecuteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
         Context context = JmsReceiveContextHolder.init(Java8BytecodeBridge.currentContext());

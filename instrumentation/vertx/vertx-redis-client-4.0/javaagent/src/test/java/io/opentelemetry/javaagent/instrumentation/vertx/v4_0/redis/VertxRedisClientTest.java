@@ -7,18 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -89,6 +90,12 @@ class VertxRedisClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.vertx-redis-client-4.0",
+          metric -> metric.hasName("db.client.operation.duration"));
+    }
   }
 
   @Test
@@ -220,6 +227,7 @@ class VertxRedisClientTest {
         equalTo(DB_NAMESPACE, "1"),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(PEER_SERVICE, "test-peer-service"),
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };
@@ -231,6 +239,7 @@ class VertxRedisClientTest {
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(PEER_SERVICE, "test-peer-service"),
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };

@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -15,7 +17,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,12 +26,12 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
  */
 public final class NettyClientInstrumenterFactory {
 
-  private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
+  private final DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder;
   private final NettyConnectionInstrumentationFlag connectionTelemetryState;
   private final NettyConnectionInstrumentationFlag sslTelemetryState;
 
   public NettyClientInstrumenterFactory(
-      DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder,
+      DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder,
       NettyConnectionInstrumentationFlag connectionTelemetryState,
       NettyConnectionInstrumentationFlag sslTelemetryState) {
     this.builder = builder;
@@ -36,11 +39,12 @@ public final class NettyClientInstrumenterFactory {
     this.sslTelemetryState = sslTelemetryState;
   }
 
-  public Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
+  public Instrumenter<NettyRequest, HttpResponse> instrumenter() {
     return builder.build();
   }
 
-  public NettyConnectionInstrumenter createConnectionInstrumenter() {
+  public NettyConnectionInstrumenter createConnectionInstrumenter(
+      @Nullable PeerServiceResolver peerServiceResolver) {
     if (connectionTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopConnectionInstrumenter.INSTANCE;
     }
@@ -62,6 +66,11 @@ public final class NettyClientInstrumenterFactory {
       // in case the connection telemetry is emitted only on errors, the CONNECT span is a stand-in
       // for the HTTP client span
       builder.addAttributesExtractor(HttpClientAttributesExtractor.create(getter));
+    }
+
+    if (peerServiceResolver != null) {
+      builder.addAttributesExtractor(
+          HttpClientPeerServiceAttributesExtractor.create(getter, peerServiceResolver));
     }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =

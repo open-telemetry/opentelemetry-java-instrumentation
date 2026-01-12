@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.web.v3_1.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder;
 import java.util.function.Function;
 import org.springframework.http.HttpRequest;
@@ -31,6 +32,7 @@ public class WebTelemetryUtil {
     return builderExtractor;
   }
 
+  @Initializer
   public static void setBuilderExtractor(
       Function<
               SpringWebTelemetryBuilder,

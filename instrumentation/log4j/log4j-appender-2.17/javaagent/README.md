@@ -7,5 +7,6 @@
 | `otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes` | Boolean | `false` | Enable the capture of `MapMessage` attributes.                                                                                                |
 | `otel.instrumentation.log4j-appender.experimental.capture-marker-attribute`       | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                            |
 | `otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes`         | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes.                         |
+| `otel.instrumentation.log4j-appender.experimental.capture-event-name`             | Boolean | `false` | Enable moving the `event.name` attribute (captured by one of the other mechanisms of capturing attributes) to the log event name.             |
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

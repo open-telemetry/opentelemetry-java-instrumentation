@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -31,5 +32,11 @@ if (!latestDepTest) {
     resolutionStrategy {
       force("ch.qos.logback:logback-classic:1.2.3")
     }
+  }
+}
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }

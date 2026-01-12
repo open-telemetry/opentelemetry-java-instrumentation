@@ -155,8 +155,12 @@ class AdviceTransformer {
   private static List<OutputArgument> getWritableArguments(MethodNode source) {
     List<OutputArgument> result = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_ARGUMENT.equals(annotationType) && isWriteable(annotationNode)) {
@@ -166,7 +170,6 @@ class AdviceTransformer {
             }
           }
         }
-        i++;
       }
     }
 
@@ -178,15 +181,18 @@ class AdviceTransformer {
   /** Argument annotated with {@code @Advice.Return(readOnly = false)} or {@code null}. */
   private static OutputArgument getWritableReturnValue(MethodNode source) {
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_RETURN.equals(annotationType) && isWriteable(annotationNode)) {
             return new OutputArgument(i, -1);
           }
         }
-        i++;
       }
     }
 
@@ -199,8 +205,12 @@ class AdviceTransformer {
   private static OutputArgument getEnterArgument(MethodNode source) {
     Type[] argumentTypes = Type.getArgumentTypes(source.desc);
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_ENTER.equals(annotationType)
@@ -208,7 +218,6 @@ class AdviceTransformer {
             return new OutputArgument(i, -1);
           }
         }
-        i++;
       }
     }
 
@@ -221,8 +230,12 @@ class AdviceTransformer {
   private static List<AdviceLocal> getLocals(MethodNode source) {
     List<AdviceLocal> result = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_LOCAL.equals(annotationType)) {
@@ -232,7 +245,6 @@ class AdviceTransformer {
             }
           }
         }
-        i++;
       }
     }
 
@@ -522,7 +534,7 @@ class AdviceTransformer {
             Type[] argumentTypes = ga.getArgumentTypes();
 
             if (isEnterAdvice) {
-              // we have changed the type fo method arguments annotated with @Advice.Local to Object
+              // we have changed the type of method arguments annotated with @Advice.Local to Object
               // here we'll load the argument, cast it to its actual type, and store it back
               for (AdviceLocal adviceLocal : adviceLocals) {
                 ga.loadArg(adviceLocal.adviceIndex);
@@ -836,7 +848,7 @@ class AdviceTransformer {
           @Override
           public void visit(String name, Object value) {
             if ("inline".equals(name)) {
-              value = Boolean.FALSE;
+              value = false;
               hasInline = true;
             } else if ("skipOn".equals(name) && value != void.class) {
               hasSkipOn = true;
@@ -847,7 +859,7 @@ class AdviceTransformer {
           @Override
           public void visitEnd() {
             if (!hasInline) {
-              visit("inline", Boolean.FALSE);
+              visit("inline", false);
             }
             if (context.canChangeReturnType() && hasSkipOn) {
               visit("skipOnIndex", 0);
@@ -875,7 +887,7 @@ class AdviceTransformer {
           @Override
           public void visit(String name, Object value) {
             if ("readOnly".equals(name)) {
-              value = Boolean.TRUE;
+              value = true;
             }
             super.visit(name, value);
           }

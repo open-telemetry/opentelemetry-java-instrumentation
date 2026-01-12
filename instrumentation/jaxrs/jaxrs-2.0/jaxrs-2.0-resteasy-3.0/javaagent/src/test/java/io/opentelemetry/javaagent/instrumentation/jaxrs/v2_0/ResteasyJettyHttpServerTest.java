@@ -27,4 +27,9 @@ class ResteasyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
   protected boolean shouldTestCompletableStageAsync() {
     return false;
   }
+
+  @Override
+  protected boolean testExperimental() {
+    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+  }
 }

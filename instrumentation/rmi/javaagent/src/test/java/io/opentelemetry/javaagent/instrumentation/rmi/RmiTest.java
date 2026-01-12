@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -157,8 +156,7 @@ class RmiTest {
                                                     thrown.getClass().getCanonicalName()),
                                                 equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                                 satisfies(
-                                                    EXCEPTION_STACKTRACE,
-                                                    AbstractAssert::isNotNull)))
+                                                    EXCEPTION_STACKTRACE, val -> val.isNotNull())))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(RPC_SYSTEM, "java_rmi"),
                                     equalTo(RPC_SERVICE, "rmi.app.Greeter"),
@@ -177,8 +175,7 @@ class RmiTest {
                                                     thrown.getClass().getCanonicalName()),
                                                 equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                                 satisfies(
-                                                    EXCEPTION_STACKTRACE,
-                                                    AbstractAssert::isNotNull)))
+                                                    EXCEPTION_STACKTRACE, val -> val.isNotNull())))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(RPC_SYSTEM, "java_rmi"),
                                     equalTo(RPC_SERVICE, "rmi.app.Server"),

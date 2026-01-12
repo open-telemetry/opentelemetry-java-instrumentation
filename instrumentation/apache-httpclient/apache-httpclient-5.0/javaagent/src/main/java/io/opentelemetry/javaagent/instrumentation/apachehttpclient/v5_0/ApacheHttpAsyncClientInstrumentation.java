@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.concurrent.FutureCallback;
@@ -66,11 +68,17 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ClientAdvice {
 
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 0, index = 0),
+      @ToArgument(value = 3, index = 1),
+      @ToArgument(value = 4, index = 2)
+    })
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) AsyncRequestProducer requestProducer,
-        @Advice.Argument(value = 3, readOnly = false) HttpContext httpContext,
-        @Advice.Argument(value = 4, readOnly = false) FutureCallback<?> futureCallback) {
+    public static Object[] methodEnter(
+        @Advice.Argument(0) AsyncRequestProducer requestProducer,
+        @Advice.Argument(3) HttpContext originalHttpContext,
+        @Advice.Argument(4) FutureCallback<?> futureCallback) {
+      HttpContext httpContext = originalHttpContext;
 
       Context parentContext = currentContext();
       if (httpContext == null) {
@@ -79,9 +87,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
-      requestProducer =
-          new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
-      futureCallback = wrappedFutureCallback;
+      return new Object[] {
+        new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback),
+        httpContext,
+        wrappedFutureCallback
+      };
     }
   }
 
@@ -264,6 +274,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     private HttpResponse getResponseFromHttpContext() {
+      if (httpContext instanceof HttpCoreContext) {
+        return ((HttpCoreContext) httpContext).getResponse();
+      }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }

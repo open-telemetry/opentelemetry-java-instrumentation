@@ -34,6 +34,10 @@ kotlin {
   compilerOptions {
     jvmTarget.set(JvmTarget.JVM_1_8)
     @Suppress("deprecation")
-    languageVersion.set(KotlinVersion.KOTLIN_1_6)
+    languageVersion.set(KotlinVersion.KOTLIN_1_8)
   }
+}
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

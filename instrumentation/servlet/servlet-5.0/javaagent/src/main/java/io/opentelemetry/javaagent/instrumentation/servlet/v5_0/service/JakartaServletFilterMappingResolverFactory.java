@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletFilterMappingResolverFactory;
+import io.opentelemetry.instrumentation.servlet.internal.ServletFilterMappingResolverFactory;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.FilterRegistration;
 import jakarta.servlet.ServletContext;

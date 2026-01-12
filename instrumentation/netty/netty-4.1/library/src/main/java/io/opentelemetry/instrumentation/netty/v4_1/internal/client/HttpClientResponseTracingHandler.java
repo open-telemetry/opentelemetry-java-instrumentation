@@ -18,7 +18,7 @@ import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent;
@@ -32,11 +32,11 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
   static final AttributeKey<HttpResponse> HTTP_CLIENT_RESPONSE =
       AttributeKey.valueOf(HttpClientResponseTracingHandler.class, "http-client-response");
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Instrumenter<NettyRequest, HttpResponse> instrumenter;
   private final ProtocolEventHandler protocolEventHandler;
 
   public HttpClientResponseTracingHandler(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      Instrumenter<NettyRequest, HttpResponse> instrumenter,
       ProtocolEventHandler protocolEventHandler) {
     this.instrumenter = instrumenter;
     this.protocolEventHandler = protocolEventHandler;
@@ -57,14 +57,14 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     if (msg instanceof FullHttpResponse) {
       FullHttpResponse response = (FullHttpResponse) msg;
       if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
+        NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
         protocolEventHandler.handle(
             ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
             context,
             request != null ? request.request() : null,
             response);
       } else {
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+        NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
         instrumenter.end(context, request, (HttpResponse) msg, null);
         contextAttr.set(null);
         parentContextAttr.set(null);
@@ -72,7 +72,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     } else if (msg instanceof HttpResponse) {
       HttpResponse response = (HttpResponse) msg;
       if (response.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
+        NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).get();
         protocolEventHandler.handle(
             ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
             context,
@@ -91,7 +91,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
           || !responseTest.status().equals(HttpResponseStatus.SWITCHING_PROTOCOLS)) {
         // Not a FullHttpResponse so this is content that has been received after headers.
         // Finish the span using what we stored in attrs.
-        HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+        NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
         HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndSet(null);
         instrumenter.end(context, request, response, null);
         contextAttr.set(null);

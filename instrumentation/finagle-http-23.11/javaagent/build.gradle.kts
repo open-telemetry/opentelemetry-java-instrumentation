@@ -44,5 +44,14 @@ tasks {
   test {
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
+    systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true,otel.instrumentation.http.server.emit-experimental-telemetry=true")
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

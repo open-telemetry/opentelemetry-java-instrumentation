@@ -11,7 +11,13 @@ muzzle {
   }
 }
 
+otelJava {
+  // groovy does not support 25-ea
+  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+}
+
 dependencies {
+  library("org.apache.groovy:groovy")
   library("com.xuxueli:xxl-job-core:1.9.2") {
     exclude("org.codehaus.groovy", "groovy")
   }

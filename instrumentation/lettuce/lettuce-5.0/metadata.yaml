@@ -1,0 +1,26 @@
+description: >
+  This instrumentation enables database client spans and database client metrics for the Lettuce
+  Redis client.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/redis/lettuce
+configurations:
+  - name: otel.instrumentation.lettuce.connection-telemetry.enabled
+    description: Enables connection telemetry spans for Redis connections.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.lettuce.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `lettuce.command.cancelled` and
+      `lettuce.command.results.count`.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""

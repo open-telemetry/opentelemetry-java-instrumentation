@@ -13,7 +13,15 @@ dependencies {
   testImplementation("org.awaitility:awaitility")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+tasks {
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }

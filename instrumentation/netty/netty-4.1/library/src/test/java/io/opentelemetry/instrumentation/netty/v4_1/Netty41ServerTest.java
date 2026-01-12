@@ -13,7 +13,7 @@ import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpServerC
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Netty41ServerTest extends AbstractNetty41ServerTest {
+class Netty41ServerTest extends AbstractNetty41ServerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();

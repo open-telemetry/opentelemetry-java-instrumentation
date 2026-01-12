@@ -11,10 +11,10 @@ import java.io.Closeable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class PortAllocatorTest {
+class PortAllocatorTest {
 
   @Test
-  public void testSimple() {
+  void testSimple() {
     PortAllocator portAllocator = getPortAllocator((port) -> true);
     int next = PortAllocator.RANGE_MIN + 1;
     for (int i = 0; i < 1000; i++) {
@@ -31,7 +31,7 @@ public class PortAllocatorTest {
   }
 
   @Test
-  public void testEven() {
+  void testEven() {
     PortAllocator portAllocator = getPortAllocator((port) -> port % 2 == 0);
     int next = PortAllocator.RANGE_MIN + 2;
     for (int i = 0; i < 1000; i++) {

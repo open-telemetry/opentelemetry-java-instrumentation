@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,27 +54,46 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeAndEncodeResponseAdvice {
 
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(Method method) {
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, method)) {
+          return null;
+        }
+        Context context =
+            instrumenter().start(parentContext, method).with(GwtSingletons.RPC_CONTEXT_KEY, true);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void end(Method method, @Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, method, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) Method method,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context =
-          instrumenter()
-              .start(Java8BytecodeBridge.currentContext(), method)
-              .with(GwtSingletons.RPC_CONTEXT_KEY, true);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(1) Method method) {
+      return AdviceScope.start(method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(1) Method method,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      scope.close();
-
-      instrumenter().end(context, method, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(method, throwable);
+      }
     }
   }
 
@@ -81,7 +101,7 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
   public static class EncodeResponseForFailureAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(1) Throwable throwable) {
+    public static void onEnter(@Advice.Argument(1) @Nullable Throwable throwable) {
       if (throwable == null) {
         return;
       }

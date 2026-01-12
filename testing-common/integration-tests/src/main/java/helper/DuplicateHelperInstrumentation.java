@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -26,9 +27,10 @@ public class DuplicateHelperInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class TestAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addSuffix(@Advice.Return(readOnly = false) String string) {
-      string = DuplicateHelper.addSuffix(string, " foo");
+    public static String addSuffix(@Advice.Return String string) {
+      return DuplicateHelper.addSuffix(string, " foo");
     }
   }
 }

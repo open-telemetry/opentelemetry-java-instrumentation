@@ -132,15 +132,15 @@ final class MetroServerSpanNameUpdater {
           lookup.unreflect(httpServletRequestClass.getMethod("getPathInfo"));
     }
 
-    public boolean canHandle(Object httpServletRequest) {
+    boolean canHandle(Object httpServletRequest) {
       return httpServletRequestClass.isInstance(httpServletRequest);
     }
 
-    public String getServletPath(Object httpServletRequest) {
+    String getServletPath(Object httpServletRequest) {
       return invokeSafely(getServletPathMethodHandle, httpServletRequest);
     }
 
-    public String getPathInfo(Object httpServletRequest) {
+    String getPathInfo(Object httpServletRequest) {
       return invokeSafely(getPathInfoMethodHandle, httpServletRequest);
     }
 

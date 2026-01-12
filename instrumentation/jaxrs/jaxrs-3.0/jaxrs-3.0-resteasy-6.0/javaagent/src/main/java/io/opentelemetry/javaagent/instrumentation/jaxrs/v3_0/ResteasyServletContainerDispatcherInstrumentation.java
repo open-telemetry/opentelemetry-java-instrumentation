@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,19 +36,17 @@ public class ResteasyServletContainerDispatcherInstrumentation implements TypeIn
   @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.FieldValue("servletMappingPrefix") String servletMappingPrefix,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Scope onEnter(
+        @Advice.FieldValue("servletMappingPrefix") String servletMappingPrefix) {
       Context context =
           JaxrsContextPath.init(Java8BytecodeBridge.currentContext(), servletMappingPrefix);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
