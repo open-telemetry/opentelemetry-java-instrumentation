@@ -382,6 +382,10 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
+    String expectedSpanName =
+        isCallStatement && emitStableDatabaseSemconv() ? "CALL ABS" : spanName;
+
     Connection connection = wrap(conn);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
@@ -390,14 +394,13 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
-    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(expectedSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -528,6 +531,10 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
+    String expectedSpanName =
+        isCallStatement && emitStableDatabaseSemconv() ? "CALL ABS" : spanName;
+
     Connection connection = wrap(conn);
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
@@ -543,14 +550,13 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
-    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(expectedSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -582,6 +588,10 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
+    String expectedSpanName =
+        isCallStatement && emitStableDatabaseSemconv() ? "CALL ABS" : spanName;
+
     Connection connection = wrap(conn);
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
@@ -590,14 +600,13 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
-    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(expectedSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -629,6 +638,10 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
+    String expectedSpanName =
+        isCallStatement && emitStableDatabaseSemconv() ? "CALL ABS" : spanName;
+
     Connection connection = wrap(conn);
     CallableStatement statement = connection.prepareCall(query);
     cleanup.deferCleanup(statement);
@@ -637,14 +650,13 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
-    boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(expectedSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -775,6 +787,8 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    String expectedSpanName = emitStableDatabaseSemconv() ? "CREATE TABLE " + table : spanName;
+
     Connection connection = wrap(conn);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
@@ -789,7 +803,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(expectedSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -882,13 +896,15 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    String expectedSpanName = emitStableDatabaseSemconv() ? "CREATE TABLE " + table : spanName;
+
     Connection connection = wrap(conn);
     testPreparedStatementUpdateImpl(
         system,
         connection,
         username,
         query,
-        spanName,
+        expectedSpanName,
         url,
         table,
         statement -> assertThat(statement.executeUpdate()).isEqualTo(0));
@@ -949,6 +965,8 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    String expectedSpanName = emitStableDatabaseSemconv() ? "CREATE TABLE " + table : spanName;
+
     Connection connection = wrap(conn);
 
     if (Boolean.getBoolean("testLatestDeps")) {
@@ -957,7 +975,7 @@ public abstract class AbstractJdbcInstrumentationTest {
           connection,
           username,
           query,
-          spanName,
+          expectedSpanName,
           url,
           table,
           statement -> assertThat(statement.executeLargeUpdate()).isEqualTo(0));
@@ -1211,7 +1229,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("DB Query")
+                        span.hasName(emitStableDatabaseSemconv() ? "other_sql" : "DB Query")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1280,6 +1298,9 @@ public abstract class AbstractJdbcInstrumentationTest {
       String operation,
       String table)
       throws SQLException {
+    String expectedSpanName =
+        emitStableDatabaseSemconv() && table != null ? operation + " " + table : spanName;
+
     Driver driver = new TestDriver();
     Connection connection = wrap(driver.connect(url, null));
     cleanup.deferCleanup(connection);
@@ -1298,7 +1319,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(expectedSpanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1573,7 +1594,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT jdbcunittest." + tableName
+                                    ? "BATCH INSERT " + tableName
                                     : "jdbcunittest")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
@@ -1684,7 +1705,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("INSERT jdbcunittest." + tableName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT " + tableName
+                                    : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1735,7 +1759,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT jdbcunittest." + tableName
+                                    ? "BATCH INSERT " + tableName
                                     : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
@@ -1807,7 +1831,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("INSERT jdbcunittest." + tableName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT " + tableName
+                                    : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1868,7 +1895,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("INSERT jdbcunittest." + tableName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT " + tableName
+                                    : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
