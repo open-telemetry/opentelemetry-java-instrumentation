@@ -24,7 +24,7 @@ version = "1.0"
 
 val versions = mapOf(
   // this line is managed by .github/scripts/update-sdk-version.sh
-  "opentelemetrySdk" to "1.57.0",
+  "opentelemetrySdk" to "1.58.0",
 
   // these lines are managed by .github/scripts/update-version.sh
   "opentelemetryJavaagent" to "2.24.0-SNAPSHOT",
