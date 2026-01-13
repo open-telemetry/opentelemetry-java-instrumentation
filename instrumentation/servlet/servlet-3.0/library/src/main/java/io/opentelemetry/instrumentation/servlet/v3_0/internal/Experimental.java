@@ -45,10 +45,11 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to add {@code trace_id} as a request attribute.
+   * Sets whether to add {@code trace_id} and {@code span_id} as a request attribute.
    *
    * @param builder the telemetry builder
-   * @param addTraceIdRequestAttribute {@code true} to add trace ID as request attribute
+   * @param addTraceIdRequestAttribute {@code true} to add trace ID and span ID as request
+   *     attributes
    * @see javax.servlet.ServletRequest#setAttribute(String, Object)
    */
   public static void addTraceIdRequestAttribute(
