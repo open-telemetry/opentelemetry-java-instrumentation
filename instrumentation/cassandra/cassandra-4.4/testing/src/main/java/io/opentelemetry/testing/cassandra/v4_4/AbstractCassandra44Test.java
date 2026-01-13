@@ -5,6 +5,7 @@
 
 package io.opentelemetry.testing.cassandra.v4_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -144,7 +145,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "reactive_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT reactive_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT reactive_test.users",
                     "SELECT",
                     "users"))));
   }

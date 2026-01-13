@@ -365,7 +365,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "CALL ABS(-3)",
             "CALL ABS(?)",
-            "CALL " + dbNameLower + ".ABS",
+            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + dbNameLower + ".ABS",
             "h2:mem:",
             null));
   }
@@ -511,7 +511,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             null,
             "CALL ABS(-3)",
             "CALL ABS(?)",
-            "CALL " + dbNameLower + ".ABS",
+            emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + dbNameLower + ".ABS",
             "h2:mem:",
             null));
   }
@@ -671,7 +671,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_H2",
+            emitStableDatabaseSemconv() ? "CREATE TABLE S_H2" : "CREATE TABLE jdbcunittest.S_H2",
             "h2:mem:",
             "S_H2"),
         Arguments.of(
@@ -679,7 +679,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
             "APP",
             "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_DERBY",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_DERBY"
+                : "CREATE TABLE jdbcunittest.S_DERBY",
             "derby:memory:",
             "S_DERBY"),
         Arguments.of(
@@ -695,7 +697,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
             "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_H2_TOMCAT",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_H2_TOMCAT"
+                : "CREATE TABLE jdbcunittest.S_H2_TOMCAT",
             "h2:mem:",
             "S_H2_TOMCAT"),
         Arguments.of(
@@ -703,7 +707,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("derby").getConnection(),
             "APP",
             "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_DERBY_TOMCAT",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_DERBY_TOMCAT"
+                : "CREATE TABLE jdbcunittest.S_DERBY_TOMCAT",
             "derby:memory:",
             "S_DERBY_TOMCAT"),
         Arguments.of(
@@ -719,7 +725,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
             "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_H2_HIKARI",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_H2_HIKARI"
+                : "CREATE TABLE jdbcunittest.S_H2_HIKARI",
             "h2:mem:",
             "S_H2_HIKARI"),
         Arguments.of(
@@ -727,7 +735,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("derby").getConnection(),
             "APP",
             "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_DERBY_HIKARI",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_DERBY_HIKARI"
+                : "CREATE TABLE jdbcunittest.S_DERBY_HIKARI",
             "derby:memory:",
             "S_DERBY_HIKARI"),
         Arguments.of(
@@ -743,7 +753,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
             "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_H2_C3P0",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_H2_C3P0"
+                : "CREATE TABLE jdbcunittest.S_H2_C3P0",
             "h2:mem:",
             "S_H2_C3P0"),
         Arguments.of(
@@ -751,7 +763,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("c3p0").get("derby").getConnection(),
             "APP",
             "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.S_DERBY_C3P0",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE S_DERBY_C3P0"
+                : "CREATE TABLE jdbcunittest.S_DERBY_C3P0",
             "derby:memory:",
             "S_DERBY_C3P0"),
         Arguments.of(
@@ -810,7 +824,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_H2",
+            emitStableDatabaseSemconv() ? "CREATE TABLE PS_H2" : "CREATE TABLE jdbcunittest.PS_H2",
             "h2:mem:",
             "PS_H2"),
         Arguments.of(
@@ -818,7 +832,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
             "APP",
             "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_DERBY",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_DERBY"
+                : "CREATE TABLE jdbcunittest.PS_DERBY",
             "derby:memory:",
             "PS_DERBY"),
         Arguments.of(
@@ -826,7 +842,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
             "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_H2_TOMCAT",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_H2_TOMCAT"
+                : "CREATE TABLE jdbcunittest.PS_H2_TOMCAT",
             "h2:mem:",
             "PS_H2_TOMCAT"),
         Arguments.of(
@@ -834,7 +852,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("derby").getConnection(),
             "APP",
             "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_DERBY_TOMCAT",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_DERBY_TOMCAT"
+                : "CREATE TABLE jdbcunittest.PS_DERBY_TOMCAT",
             "derby:memory:",
             "PS_DERBY_TOMCAT"),
         Arguments.of(
@@ -842,7 +862,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
             "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_H2_HIKARI",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_H2_HIKARI"
+                : "CREATE TABLE jdbcunittest.PS_H2_HIKARI",
             "h2:mem:",
             "PS_H2_HIKARI"),
         Arguments.of(
@@ -850,7 +872,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("derby").getConnection(),
             "APP",
             "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_DERBY_HIKARI",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_DERBY_HIKARI"
+                : "CREATE TABLE jdbcunittest.PS_DERBY_HIKARI",
             "derby:memory:",
             "PS_DERBY_HIKARI"),
         Arguments.of(
@@ -858,7 +882,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
             "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_H2_C3P0",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_H2_C3P0"
+                : "CREATE TABLE jdbcunittest.PS_H2_C3P0",
             "h2:mem:",
             "PS_H2_C3P0"),
         Arguments.of(
@@ -866,7 +892,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("c3p0").get("derby").getConnection(),
             "APP",
             "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_DERBY_C3P0",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_DERBY_C3P0"
+                : "CREATE TABLE jdbcunittest.PS_DERBY_C3P0",
             "derby:memory:",
             "PS_DERBY_C3P0"));
   }
@@ -901,7 +929,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "CREATE TABLE PS_LARGE_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_LARGE_H2",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_LARGE_H2"
+                : "CREATE TABLE jdbcunittest.PS_LARGE_H2",
             "h2:mem:",
             "PS_LARGE_H2"),
         Arguments.of(
@@ -909,7 +939,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
             "CREATE TABLE PS_LARGE_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_LARGE_H2_TOMCAT",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_LARGE_H2_TOMCAT"
+                : "CREATE TABLE jdbcunittest.PS_LARGE_H2_TOMCAT",
             "h2:mem:",
             "PS_LARGE_H2_TOMCAT"),
         Arguments.of(
@@ -917,7 +949,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
             "CREATE TABLE PS_LARGE_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_LARGE_H2_HIKARI",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_LARGE_H2_HIKARI"
+                : "CREATE TABLE jdbcunittest.PS_LARGE_H2_HIKARI",
             "h2:mem:",
             "PS_LARGE_H2_HIKARI"),
         Arguments.of(
@@ -925,7 +959,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
             "APP",
             "CREATE TABLE PS_LARGE_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))",
-            "CREATE TABLE jdbcunittest.PS_LARGE_DERBY",
+            emitStableDatabaseSemconv()
+                ? "CREATE TABLE PS_LARGE_DERBY"
+                : "CREATE TABLE jdbcunittest.PS_LARGE_DERBY",
             "derby:memory:",
             "PS_LARGE_DERBY"),
         Arguments.of(
@@ -1211,7 +1247,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("DB Query")
+                        span.hasName(emitStableDatabaseSemconv() ? "localhost" : "DB Query")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1231,7 +1267,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "jdbc:testdb://localhost?databaseName=test",
             "SELECT * FROM table",
             "SELECT * FROM table",
-            "SELECT test.table",
+            emitStableDatabaseSemconv() ? "SELECT table" : "SELECT test.table",
             "test",
             "SELECT",
             "table"),
@@ -1255,7 +1291,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "jdbc:testdb://localhost?databaseName=test",
             "CREATE TABLE table",
             "CREATE TABLE table",
-            "CREATE TABLE test.table",
+            emitStableDatabaseSemconv() ? "CREATE TABLE table" : "CREATE TABLE test.table",
             "test",
             "CREATE TABLE",
             "table"),
@@ -1573,7 +1609,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT jdbcunittest." + tableName
+                                    ? "BATCH INSERT " + tableName
                                     : "jdbcunittest")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
@@ -1684,7 +1720,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("INSERT jdbcunittest." + tableName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT " + tableName
+                                    : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1735,7 +1774,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT jdbcunittest." + tableName
+                                    ? "BATCH INSERT " + tableName
                                     : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
@@ -1807,7 +1846,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("INSERT jdbcunittest." + tableName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT " + tableName
+                                    : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1868,7 +1910,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("INSERT jdbcunittest." + tableName)
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT " + tableName
+                                    : "INSERT jdbcunittest." + tableName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

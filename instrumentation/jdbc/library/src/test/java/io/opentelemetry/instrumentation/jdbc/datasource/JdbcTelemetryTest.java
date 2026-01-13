@@ -260,7 +260,7 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName(
                             SemconvStability.emitStableDatabaseSemconv()
-                                ? "BATCH INSERT dbname.test"
+                                ? "BATCH INSERT test"
                                 : "dbname")
                         .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_NAME), "dbname"),

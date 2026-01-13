@@ -46,10 +46,11 @@ class MultiQuery {
           statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
     }
 
+    String operationName = uniqueOperationName.getValue();
     return new MultiQuery(
         uniqueCollectionName.getValue(),
         uniqueStoredProcedureName.getValue(),
-        uniqueOperationName.getValue(),
+        operationName == null ? "BATCH" : "BATCH " + operationName,
         uniqueQueryTexts);
   }
 

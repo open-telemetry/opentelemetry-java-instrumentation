@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -37,7 +38,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT database.table", spanName);
+    assertEquals(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database.table", spanName);
   }
 
   @Test
@@ -154,8 +155,7 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertEquals(
-        SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT database.table" : "database",
-        spanName);
+        SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database", spanName);
   }
 
   @Test
@@ -178,7 +178,7 @@ class DbClientSpanNameExtractorTest {
     // then
     assertEquals(
         SemconvStability.emitStableDatabaseSemconv()
-            ? "BATCH INSERT database.table"
+            ? "BATCH INSERT table"
             : "INSERT database.table",
         spanName);
   }
