@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -152,7 +153,10 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.summary : null))));
 
     session.close();
   }
@@ -206,7 +210,10 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.summary : null)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -226,7 +233,8 @@ public abstract class AbstractCassandraTest {
                     "DROP KEYSPACE IF EXISTS sync_test",
                     "DROP",
                     "DROP",
-                    null))),
+                    null,
+                    "DROP"))),
         Arguments.of(
             named(
                 "Create keyspace with replication",
@@ -236,7 +244,8 @@ public abstract class AbstractCassandraTest {
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
                     "CREATE",
                     "CREATE",
-                    null))),
+                    null,
+                    "CREATE"))),
         Arguments.of(
             named(
                 "Create table",
@@ -246,7 +255,8 @@ public abstract class AbstractCassandraTest {
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE sync_test.users",
                     "CREATE TABLE",
-                    "sync_test.users"))),
+                    "sync_test.users",
+                    "CREATE TABLE sync_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -256,7 +266,8 @@ public abstract class AbstractCassandraTest {
                     "INSERT INTO sync_test.users (id, name) values (uuid(), ?)",
                     "INSERT sync_test.users",
                     "INSERT",
-                    "sync_test.users"))),
+                    "sync_test.users",
+                    "INSERT sync_test.users"))),
         Arguments.of(
             named(
                 "Select data",
@@ -266,7 +277,8 @@ public abstract class AbstractCassandraTest {
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
                     emitStableDatabaseSemconv() ? "SELECT users" : "SELECT sync_test.users",
                     "SELECT",
-                    "users"))));
+                    "users",
+                    "SELECT users"))));
   }
 
   private static Stream<Arguments> provideAsyncParameters() {
@@ -280,7 +292,8 @@ public abstract class AbstractCassandraTest {
                     "DROP KEYSPACE IF EXISTS async_test",
                     "DROP",
                     "DROP",
-                    null))),
+                    null,
+                    "DROP"))),
         Arguments.of(
             named(
                 "Create keyspace with replication",
@@ -290,7 +303,8 @@ public abstract class AbstractCassandraTest {
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
                     "CREATE",
                     "CREATE",
-                    null))),
+                    null,
+                    "CREATE"))),
         Arguments.of(
             named(
                 "Create table",
@@ -300,7 +314,8 @@ public abstract class AbstractCassandraTest {
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE async_test.users",
                     "CREATE TABLE",
-                    "async_test.users"))),
+                    "async_test.users",
+                    "CREATE TABLE async_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -310,7 +325,8 @@ public abstract class AbstractCassandraTest {
                     "INSERT INTO async_test.users (id, name) values (uuid(), ?)",
                     "INSERT async_test.users",
                     "INSERT",
-                    "async_test.users"))),
+                    "async_test.users",
+                    "INSERT async_test.users"))),
         Arguments.of(
             named(
                 "Select data",
@@ -320,7 +336,8 @@ public abstract class AbstractCassandraTest {
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
                     emitStableDatabaseSemconv() ? "SELECT users" : "SELECT async_test.users",
                     "SELECT",
-                    "users"))));
+                    "users",
+                    "SELECT users"))));
   }
 
   protected static class Parameter {
@@ -330,6 +347,7 @@ public abstract class AbstractCassandraTest {
     public final String spanName;
     public final String operation;
     public final String table;
+    public final String summary;
 
     public Parameter(
         String keyspace,
@@ -337,13 +355,15 @@ public abstract class AbstractCassandraTest {
         String expectedStatement,
         String spanName,
         String operation,
-        String table) {
+        String table,
+        String summary) {
       this.keyspace = keyspace;
       this.statement = statement;
       this.expectedStatement = expectedStatement;
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;
+      this.summary = summary;
     }
   }
 

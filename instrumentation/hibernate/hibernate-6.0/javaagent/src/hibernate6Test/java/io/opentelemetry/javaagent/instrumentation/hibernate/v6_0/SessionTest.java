@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -261,7 +262,10 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null)),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -824,7 +828,16 @@ class SessionTest extends AbstractHibernateTest {
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
             satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
+            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+            satisfies(
+                DB_QUERY_SUMMARY,
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isInstanceOf(String.class);
+                  } else {
+                    val.isNull();
+                  }
+                }));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -842,6 +855,7 @@ class SessionTest extends AbstractHibernateTest {
                 maybeStable(DB_STATEMENT),
                 stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),
             equalTo(maybeStable(DB_OPERATION), verb),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
+            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null));
   }
 }

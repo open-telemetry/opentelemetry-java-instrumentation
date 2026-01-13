@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -87,7 +88,10 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.summary : null)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -107,7 +111,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "DROP KEYSPACE IF EXISTS reactive_test",
                     "DROP",
                     "DROP",
-                    null))),
+                    null,
+                    "DROP"))),
         Arguments.of(
             named(
                 "Create keyspace with replication",
@@ -117,7 +122,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {?:?, ?:?}",
                     "CREATE",
                     "CREATE",
-                    null))),
+                    null,
+                    "CREATE"))),
         Arguments.of(
             named(
                 "Create table",
@@ -127,7 +133,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "CREATE TABLE reactive_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE reactive_test.users",
                     "CREATE TABLE",
-                    "reactive_test.users"))),
+                    "reactive_test.users",
+                    "CREATE TABLE reactive_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -137,7 +144,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "INSERT INTO reactive_test.users (id, name) values (uuid(), ?)",
                     "INSERT reactive_test.users",
                     "INSERT",
-                    "reactive_test.users"))),
+                    "reactive_test.users",
+                    "INSERT reactive_test.users"))),
         Arguments.of(
             named(
                 "Select data",
@@ -147,7 +155,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
                     emitStableDatabaseSemconv() ? "SELECT users" : "SELECT reactive_test.users",
                     "SELECT",
-                    "users"))));
+                    "users",
+                    "SELECT users"))));
   }
 
   // TODO (trask) this is causing sporadic test failures

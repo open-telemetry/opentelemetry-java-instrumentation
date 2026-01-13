@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -187,6 +188,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.summary : null),
                                 equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
@@ -208,8 +212,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT 3",
                                 "SELECT ?",
-                                "SELECT " + DB,
+                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB,
                                 null,
+                                "SELECT",
                                 "SELECT"))),
                     Arguments.of(
                         named(
@@ -222,7 +227,8 @@ public abstract class AbstractR2dbcStatementTest {
                                     ? "CREATE TABLE person"
                                     : "CREATE TABLE " + DB + ".person",
                                 "person",
-                                "CREATE TABLE"))),
+                                "CREATE TABLE",
+                                "CREATE TABLE person"))),
                     Arguments.of(
                         named(
                             system.system + " Insert",
@@ -234,7 +240,8 @@ public abstract class AbstractR2dbcStatementTest {
                                     ? "INSERT person"
                                     : "INSERT " + DB + ".person",
                                 "person",
-                                "INSERT"))),
+                                "INSERT",
+                                "INSERT person"))),
                     Arguments.of(
                         named(
                             system.system + " Select from Table",
@@ -246,7 +253,8 @@ public abstract class AbstractR2dbcStatementTest {
                                     ? "SELECT person"
                                     : "SELECT " + DB + ".person",
                                 "person",
-                                "SELECT")))));
+                                "SELECT",
+                                "SELECT person")))));
   }
 
   @Test
@@ -292,6 +300,7 @@ public abstract class AbstractR2dbcStatementTest {
     final String spanName;
     final String table;
     final String operation;
+    final String summary;
 
     Parameter(
         String system,
@@ -299,13 +308,15 @@ public abstract class AbstractR2dbcStatementTest {
         String expectedStatement,
         String spanName,
         String table,
-        String operation) {
+        String operation,
+        String summary) {
       this.system = system;
       this.statement = statement;
       this.expectedStatement = expectedStatement;
       this.spanName = spanName;
       this.table = table;
       this.operation = operation;
+      this.summary = summary;
     }
   }
 

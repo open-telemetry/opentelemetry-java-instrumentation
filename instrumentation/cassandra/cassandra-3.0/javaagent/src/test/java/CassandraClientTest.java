@@ -8,6 +8,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -130,7 +131,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.summary : null))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -148,7 +152,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.summary : null))));
     }
 
     session.close();
@@ -203,7 +210,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.summary : null)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -226,7 +236,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.summary : null)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -266,7 +279,8 @@ class CassandraClientTest {
                     "DROP KEYSPACE IF EXISTS sync_test",
                     "DROP",
                     "DROP",
-                    null))),
+                    null,
+                    "DROP"))),
         Arguments.of(
             named(
                 "Create keyspace with replication",
@@ -276,7 +290,8 @@ class CassandraClientTest {
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
                     "CREATE",
                     "CREATE",
-                    null))),
+                    null,
+                    "CREATE"))),
         Arguments.of(
             named(
                 "Create table",
@@ -286,7 +301,8 @@ class CassandraClientTest {
                     "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE sync_test.users",
                     "CREATE TABLE",
-                    "sync_test.users"))),
+                    "sync_test.users",
+                    "CREATE TABLE sync_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -296,7 +312,8 @@ class CassandraClientTest {
                     "INSERT INTO sync_test.users (id, name) values (uuid(), ?)",
                     "INSERT sync_test.users",
                     "INSERT",
-                    "sync_test.users"))),
+                    "sync_test.users",
+                    "INSERT sync_test.users"))),
         Arguments.of(
             named(
                 "Select data",
@@ -306,7 +323,8 @@ class CassandraClientTest {
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
                     emitStableDatabaseSemconv() ? "SELECT users" : "SELECT sync_test.users",
                     "SELECT",
-                    "users"))));
+                    "users",
+                    "SELECT users"))));
   }
 
   private static Stream<Arguments> provideAsyncParameters() {
@@ -320,7 +338,8 @@ class CassandraClientTest {
                     "DROP KEYSPACE IF EXISTS async_test",
                     "DROP",
                     "DROP",
-                    null))),
+                    null,
+                    "DROP"))),
         Arguments.of(
             named(
                 "Create keyspace with replication",
@@ -330,7 +349,8 @@ class CassandraClientTest {
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
                     "CREATE",
                     "CREATE",
-                    null))),
+                    null,
+                    "CREATE"))),
         Arguments.of(
             named(
                 "Create table",
@@ -340,7 +360,8 @@ class CassandraClientTest {
                     "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )",
                     "CREATE TABLE async_test.users",
                     "CREATE TABLE",
-                    "async_test.users"))),
+                    "async_test.users",
+                    "CREATE TABLE async_test.users"))),
         Arguments.of(
             named(
                 "Insert data",
@@ -350,7 +371,8 @@ class CassandraClientTest {
                     "INSERT INTO async_test.users (id, name) values (uuid(), ?)",
                     "INSERT async_test.users",
                     "INSERT",
-                    "async_test.users"))),
+                    "async_test.users",
+                    "INSERT async_test.users"))),
         Arguments.of(
             named(
                 "Select data",
@@ -360,7 +382,8 @@ class CassandraClientTest {
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
                     emitStableDatabaseSemconv() ? "SELECT users" : "SELECT async_test.users",
                     "SELECT",
-                    "users"))));
+                    "users",
+                    "SELECT users"))));
   }
 
   private static class Parameter {
@@ -370,6 +393,7 @@ class CassandraClientTest {
     final String spanName;
     final String operation;
     final String table;
+    final String summary;
 
     Parameter(
         String keyspace,
@@ -377,13 +401,15 @@ class CassandraClientTest {
         String expectedStatement,
         String spanName,
         String operation,
-        String table) {
+        String table,
+        String summary) {
       this.keyspace = keyspace;
       this.statement = statement;
       this.expectedStatement = expectedStatement;
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;
+      this.summary = summary;
     }
   }
 }

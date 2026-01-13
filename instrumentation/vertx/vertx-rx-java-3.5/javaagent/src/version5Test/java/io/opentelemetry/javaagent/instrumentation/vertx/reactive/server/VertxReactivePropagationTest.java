@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.reactive.server.VertxReactiveWebServer.TEST_REQUEST_ID_ATTRIBUTE;
@@ -26,6 +27,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -126,7 +128,10 @@ class VertxReactivePropagationTest {
                                 maybeStable(DB_STATEMENT),
                                 "SELECT id, name, price, weight FROM products"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "products"))));
+                            equalTo(maybeStable(DB_SQL_TABLE), "products"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT products" : null))));
   }
 
   @SuppressWarnings("deprecation") // uses deprecated db semconv
@@ -221,7 +226,10 @@ class VertxReactivePropagationTest {
                                     + requestId
                                     + ", name, price, weight FROM products"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "products")));
+                            equalTo(maybeStable(DB_SQL_TABLE), "products"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT products" : null)));
           });
     }
     testing.waitAndAssertTraces(assertions);

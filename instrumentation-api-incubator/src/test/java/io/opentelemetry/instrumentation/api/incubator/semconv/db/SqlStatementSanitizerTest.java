@@ -42,6 +42,9 @@ class SqlStatementSanitizerTest {
     assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
     assertThat(result.getStoredProcedureName())
         .isEqualToIgnoringCase(expected.getStoredProcedureName());
+    if (expected.getOperationName() != null) {
+      assertThat(result.getQuerySummary()).isNotNull();
+    }
   }
 
   @ParameterizedTest
@@ -75,11 +78,13 @@ class SqlStatementSanitizerTest {
     String query = sb.toString();
 
     String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
-    SqlStatementInfo expected = SqlStatementInfo.create(sanitizedQuery, "SELECT", "table");
 
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
+    assertThat(result.getOperationName()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isEqualTo("table");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
   }
 
   @ParameterizedTest
@@ -92,6 +97,7 @@ class SqlStatementSanitizerTest {
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
     assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
     assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
+    assertThat(result.getQuerySummary()).isNotNull();
   }
 
   @Test
@@ -179,6 +185,24 @@ class SqlStatementSanitizerTest {
         SqlStatementSanitizer.create(true).sanitize(largeStatement).getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
+  }
+
+  @Test
+  void querySummaryIsTruncated() {
+    // Build a query with many tables to exceed 255 character limit
+    StringBuilder sql = new StringBuilder("SELECT * FROM ");
+    for (int i = 0; i < 50; i++) {
+      if (i > 0) {
+        sql.append(", ");
+      }
+      sql.append("very_long_table_name_").append(i);
+    }
+    String result = SqlStatementSanitizer.create(true).sanitize(sql.toString()).getQuerySummary();
+    assertThat(result).isNotNull();
+    assertThat(result)
+        .isEqualTo(
+            "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2 very_long_table_name_3 very_long_table_name_4 very_long_table_name_5 very_long_table_name_6 very_long_table_name_7 very_long_table_name_8 very_long_table_name_9");
+    assertThat(result.length()).isEqualTo(236);
   }
 
   private static Stream<Arguments> sqlArgs() {
@@ -292,12 +316,12 @@ class SqlStatementSanitizerTest {
   }
 
   private static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
-    return sql -> SqlStatementInfo.create(sql, operation, identifier);
+    return sql -> SqlStatementInfo.create(sql, operation, identifier, null);
   }
 
   private static Function<String, SqlStatementInfo> expect(
       String sql, String operation, String identifier) {
-    return ignored -> SqlStatementInfo.create(sql, operation, identifier);
+    return ignored -> SqlStatementInfo.create(sql, operation, identifier, null);
   }
 
   private static Stream<Arguments> simplifyArgs() {

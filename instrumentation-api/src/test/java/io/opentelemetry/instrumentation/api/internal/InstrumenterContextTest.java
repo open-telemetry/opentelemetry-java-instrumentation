@@ -67,7 +67,7 @@ class InstrumenterContextTest {
     // replace cached sanitization result to verify it is used
     sanitizedMap.put(
         testQuery,
-        SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+        SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2", null));
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
