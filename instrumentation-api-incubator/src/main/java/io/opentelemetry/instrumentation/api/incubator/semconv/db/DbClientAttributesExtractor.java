@@ -115,7 +115,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       }
       if (error != null || response != null) {
         internalSet(
-            attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatusCode(response, error));
+            attributes, DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
       }
     }
   }

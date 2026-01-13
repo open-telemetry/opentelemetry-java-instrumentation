@@ -86,7 +86,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
-    Long batchSize = getter.getBatchSize(request);
+    Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
 
     if (SemconvStability.emitOldDatabaseSemconv()) {
@@ -130,7 +130,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
 
-    Map<String, String> queryParameters = getter.getQueryParameters(request);
+    Map<String, String> queryParameters = getter.getDbQueryParameters(request);
     setQueryParameters(attributes, isBatch, queryParameters);
 
     // calling this last so explicit getDbOperationName(), getDbCollectionName(),
