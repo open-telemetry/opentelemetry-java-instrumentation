@@ -263,7 +263,12 @@ final class OpenTelemetryTracing implements Tracing {
           events = null;
         }
 
-        // Apply buffered error - the error will be passed to instrumenter.end() in finish()
+        // Apply buffered error
+        if (error != null) {
+          span.setStatus(StatusCode.ERROR);
+          span.recordException(error);
+          error = null;
+        }
       }
 
       return this;
