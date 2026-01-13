@@ -57,7 +57,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
           Object distribution = model.getAdditionalProperties().get("distribution");
           if (distribution != null) {
             AgentDistributionConfig.set(
-                toProperties(distribution).getStructured("javaagent", empty()));
+                toProperties(distribution).get("javaagent"));
           }
           return model;
         });

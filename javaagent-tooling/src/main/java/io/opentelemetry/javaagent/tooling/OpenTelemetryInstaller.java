@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
@@ -54,7 +52,7 @@ public final class OpenTelemetryInstaller {
       ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
       enabledInstrumentations = enabledInstrumentationsFromConfigProperties(configProperties);
-      AgentDistributionConfig.set(getPropertiesDistributionConfig(configProvider));
+      AgentDistributionConfig.set(configProvider.getInstrumentationConfig("javaagent"));
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
@@ -73,15 +71,6 @@ public final class OpenTelemetryInstaller {
 
     return SdkAutoconfigureAccess.create(
         sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
-  }
-
-  private static DeclarativeConfigProperties getPropertiesDistributionConfig(
-      ConfigProvider configProvider) {
-    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
-    if (instrumentationConfig == null) {
-      instrumentationConfig = empty();
-    }
-    return instrumentationConfig.getStructured("java", empty()).getStructured("javaagent", empty());
   }
 
   // Visible for testing
@@ -122,7 +111,7 @@ public final class OpenTelemetryInstaller {
 
     boolean isDefaultEnabled =
         Objects.requireNonNull(distribution)
-            .getStructured("instrumentation", empty())
+            .get("instrumentation")
             .getBoolean("default_enabled", true);
 
     return new EnabledInstrumentations() {
