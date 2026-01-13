@@ -145,9 +145,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "reactive_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    emitStableDatabaseSemconv()
-                        ? "SELECT users"
-                        : "SELECT reactive_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT reactive_test.users",
                     "SELECT",
                     "users"))));
   }

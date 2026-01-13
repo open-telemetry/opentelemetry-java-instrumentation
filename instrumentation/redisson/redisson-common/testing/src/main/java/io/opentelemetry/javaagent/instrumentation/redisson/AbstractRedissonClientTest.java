@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
@@ -200,7 +201,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),
@@ -234,13 +235,14 @@ public abstract class AbstractRedissonClientTest {
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
         });
+    String batchSpanName = emitStableDatabaseSemconv() ? "redis" : "DB Query";
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("DB Query", "SET", "EXEC"),
+        orderByRootSpanName(batchSpanName, "SET", "EXEC"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName("DB Query")
+                    span.hasName(batchSpanName)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),
