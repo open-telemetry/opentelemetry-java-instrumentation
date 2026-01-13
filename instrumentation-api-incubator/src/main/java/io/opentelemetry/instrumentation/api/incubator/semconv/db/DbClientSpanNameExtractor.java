@@ -24,11 +24,6 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions.
-   *
-   * @see SqlStatementInfo#getOperationName() used to extract {@code <db.operation.name>}.
-   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
-   * @see SqlStatementInfo#getCollectionName() used to extract table name.
-   * @see SqlStatementInfo#getStoredProcedureName() used to extract stored procedure name.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST, ?> getter) {
@@ -40,32 +35,30 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private DbClientSpanNameExtractor() {}
 
   protected String computeSpanName(
-      @Nullable String dbName,
-      @Nullable String operation,
+      @Nullable String namespace,
+      @Nullable String operationName,
       @Nullable String collectionName,
       @Nullable String storedProcedureName) {
-    // Use whichever identifier is available (they're mutually exclusive)
+    if (operationName == null) {
+      return namespace == null ? DEFAULT_SPAN_NAME : namespace;
+    }
+
+    StringBuilder spanName = new StringBuilder(operationName);
     String mainIdentifier = collectionName != null ? collectionName : storedProcedureName;
-
-    if (operation == null) {
-      return dbName == null ? DEFAULT_SPAN_NAME : dbName;
+    if (namespace != null || mainIdentifier != null) {
+      spanName.append(' ');
     }
-
-    StringBuilder name = new StringBuilder(operation);
-    if (dbName != null || mainIdentifier != null) {
-      name.append(' ');
-    }
-    // skip db name if mainIdentifier already has namespace prefixed to it
-    if (dbName != null && (mainIdentifier == null || mainIdentifier.indexOf('.') == -1)) {
-      name.append(dbName);
+    // skip namespace if identifier already has a namespace prefixed to it
+    if (namespace != null && (mainIdentifier == null || mainIdentifier.indexOf('.') == -1)) {
+      spanName.append(namespace);
       if (mainIdentifier != null) {
-        name.append('.');
+        spanName.append('.');
       }
     }
     if (mainIdentifier != null) {
-      name.append(mainIdentifier);
+      spanName.append(mainIdentifier);
     }
-    return name.toString();
+    return spanName.toString();
   }
 
   /**
@@ -94,8 +87,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       @Nullable String operation,
       @Nullable String collectionName,
       @Nullable String storedProcedureName) {
-    // Determine target following fallback order: collection → stored_procedure → namespace →
-    // server.address:server.port
+
     String target = collectionName;
     if (target == null) {
       target = storedProcedureName;
@@ -191,29 +183,23 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       if (rawQueryTexts.size() == 1) {
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
-        String operation = sanitizedStatement.getOperationName();
+        String operationName = sanitizedStatement.getOperationName();
         if (isBatch(request)) {
-          operation = operation != null ? "BATCH " + operation : "BATCH";
+          operationName = "BATCH " + operationName;
         }
         return computeSpanNameStable(
             getter,
             request,
-            operation,
+            operationName,
             sanitizedStatement.getCollectionName(),
             sanitizedStatement.getStoredProcedureName());
       }
 
       MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
-      String operation = multiQuery.getOperationName();
-      if (operation != null) {
-        operation = "BATCH " + operation;
-      } else {
-        operation = "BATCH";
-      }
       return computeSpanNameStable(
           getter,
           request,
-          operation,
+          multiQuery.getOperationName(),
           multiQuery.getCollectionName(),
           multiQuery.getStoredProcedureName());
     }
