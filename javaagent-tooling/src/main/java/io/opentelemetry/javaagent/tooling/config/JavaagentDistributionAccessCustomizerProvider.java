@@ -15,6 +15,7 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionModel;
 import java.util.Collections;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
@@ -52,10 +53,10 @@ public final class JavaagentDistributionAccessCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
-          Object distribution = model.getAdditionalProperties().get("distribution");
+          DistributionModel distribution = model.getDistribution();
           if (distribution != null) {
             AgentDistributionConfig.set(
-                toProperties(distribution).get("javaagent"));
+                toProperties(distribution.getAdditionalProperties()).get("javaagent"));
           }
           return model;
         });

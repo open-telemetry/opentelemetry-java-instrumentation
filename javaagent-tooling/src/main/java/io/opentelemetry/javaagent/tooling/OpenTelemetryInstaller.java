@@ -24,7 +24,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import org.jetbrains.annotations.Nullable;
 
 public final class OpenTelemetryInstaller {
@@ -45,24 +44,27 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    EnabledInstrumentations enabledInstrumentations;
-    if (configProperties != null) {
+    boolean declarativeConfigUsed = configProperties == null;
+
+    if (!declarativeConfigUsed) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
       sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
-      enabledInstrumentations = enabledInstrumentationsFromConfigProperties(configProperties);
       AgentDistributionConfig.set(configProvider.getInstrumentationConfig("javaagent"));
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
       configProperties =
           getDeclarativeConfigBridgedProperties(((ExtendedOpenTelemetry) sdk).getConfigProvider());
-      // distribution node is set by the JavaagentDistributionAccessCustomizerProvider
-      enabledInstrumentations =
-          enabledInstrumentationsFromConfigDistribution(
-              Objects.requireNonNull(AgentDistributionConfig.get()));
     }
+
+    EnabledInstrumentations enabledInstrumentations =
+        declarativeConfigUsed
+            ?
+            // AgentDistributionConfig is set by the JavaagentDistributionAccessCustomizerProvider
+            enabledInstrumentationsFromConfigDistribution(AgentDistributionConfig.get())
+            : enabledInstrumentationsFromConfigProperties(configProperties);
 
     AgentEnabledInstrumentations.set(enabledInstrumentations);
 
@@ -110,9 +112,7 @@ public final class OpenTelemetryInstaller {
     List<String> enabled = enabledModules;
 
     boolean isDefaultEnabled =
-        Objects.requireNonNull(distribution)
-            .get("instrumentation")
-            .getBoolean("default_enabled", true);
+        distribution.get("instrumentation").getBoolean("default_enabled", true);
 
     return new EnabledInstrumentations() {
       @Nullable
