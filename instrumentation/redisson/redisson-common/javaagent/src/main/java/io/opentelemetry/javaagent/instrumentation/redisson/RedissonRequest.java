@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -47,8 +48,52 @@ public abstract class RedissonRequest {
       return ((CommandData<?, ?>) command).getCommand().getName();
     } else if (command instanceof CommandsData) {
       CommandsData commandsData = (CommandsData) command;
-      if (commandsData.getCommands().size() == 1) {
-        return commandsData.getCommands().get(0).getCommand().getName();
+      List<CommandData<?, ?>> commands = commandsData.getCommands();
+      if (commands.isEmpty()) {
+        return null;
+      }
+      if (commands.size() == 1) {
+        return commands.get(0).getCommand().getName();
+      }
+      // For batch operations with multiple commands, return batch operation names only when
+      // stable database semconv is enabled
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        // Check if all operations are the same
+        String firstOperation = commands.get(0).getCommand().getName();
+        boolean allSameOperation =
+            commands.stream().allMatch(cmd -> cmd.getCommand().getName().equals(firstOperation));
+        if (allSameOperation) {
+          return "BATCH " + firstOperation;
+        }
+        // Different operations - return null so span name falls back to db system name
+        // per
+        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md
+        return null;
+      }
+      // Legacy behavior: return null for batch operations
+      return null;
+    }
+    return null;
+  }
+
+  @Nullable
+  public Long getBatchSize() {
+    // Batch size attribute is only part of stable database semconv
+    if (!SemconvStability.emitStableDatabaseSemconv()) {
+      return null;
+    }
+    Object command = getCommand();
+    if (command instanceof CommandsData) {
+      CommandsData commandsData = (CommandsData) command;
+      int size = commandsData.getCommands().size();
+      // Only return batch size if it's actually a batch (2 or more operations)
+      // AND all operations are the same (when operations differ, there's no batch operation name)
+      if (size > 1) {
+        String firstOperation = commandsData.getCommands().get(0).getCommand().getName();
+        boolean allSameOperation =
+            commandsData.getCommands().stream()
+                .allMatch(cmd -> cmd.getCommand().getName().equals(firstOperation));
+        return allSameOperation ? (long) size : null;
       }
     }
     return null;

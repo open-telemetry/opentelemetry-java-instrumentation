@@ -156,4 +156,78 @@ public abstract class AbstractJedisTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
+
+  @Test
+  void multiExecTransaction() throws Exception {
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          try {
+            redis.clients.jedis.Transaction transaction = jedis.multi();
+            // Use reflection to handle different return types across Jedis versions:
+            // Jedis 2.7.2: Transaction.set() returns Response<String>
+            // Jedis 3.0+: Transaction.set() returns String
+            transaction
+                .getClass()
+                .getMethod("set", String.class, String.class)
+                .invoke(transaction, "batch1", "v1");
+            transaction
+                .getClass()
+                .getMethod("set", String.class, String.class)
+                .invoke(transaction, "batch2", "v2");
+            transaction.exec();
+          } catch (Exception e) {
+            throw new AssertionError(e);
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("MULTI")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "MULTI"),
+                            equalTo(maybeStable(DB_OPERATION), "MULTI"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port)),
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port)),
+                span ->
+                    span.hasName("SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port)),
+                span ->
+                    span.hasName("EXEC")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
+                            equalTo(maybeStable(DB_OPERATION), "EXEC"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
 }
