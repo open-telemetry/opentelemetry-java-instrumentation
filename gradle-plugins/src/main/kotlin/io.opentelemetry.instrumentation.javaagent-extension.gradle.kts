@@ -11,6 +11,8 @@ configurations.configureEach {
   }
 }
 
+// Auto-add the required dependencies for muzzle
+// Versions are resolved from BOMs if configured
 dependencies {
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
