@@ -123,7 +123,10 @@ class VertxReactivePropagationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName("SELECT test.products")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT products"
+                                : "SELECT test.products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -222,7 +225,10 @@ class VertxReactivePropagationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
                 span ->
-                    span.hasName("SELECT test.products")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT products"
+                                : "SELECT test.products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(

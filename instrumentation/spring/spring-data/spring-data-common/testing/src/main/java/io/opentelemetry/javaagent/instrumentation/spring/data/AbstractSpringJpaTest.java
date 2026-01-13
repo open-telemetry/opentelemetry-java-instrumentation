@@ -84,7 +84,8 @@ public abstract class AbstractSpringJpaTest<
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(codeFunctionAssertions(repoClassName, "save")),
         span ->
-            span.hasName("INSERT test.JpaCustomer")
+            span.hasName(
+                    emitStableDatabaseSemconv() ? "INSERT JpaCustomer" : "INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
@@ -118,7 +119,8 @@ public abstract class AbstractSpringJpaTest<
                         maybeStable(DB_STATEMENT), val -> val.startsWith("call next value for ")),
                     equalTo(maybeStable(DB_OPERATION), "CALL")),
         span ->
-            span.hasName("INSERT test.JpaCustomer")
+            span.hasName(
+                    emitStableDatabaseSemconv() ? "INSERT JpaCustomer" : "INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
@@ -153,7 +155,10 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(repoClassName, "findAll")),
                 span ->
-                    span.hasName("SELECT test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT JpaCustomer"
+                                : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -190,7 +195,10 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(repoClassName, "save")),
                 span ->
-                    span.hasName("SELECT test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT JpaCustomer"
+                                : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -204,7 +212,10 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")),
                 span ->
-                    span.hasName("UPDATE test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "UPDATE JpaCustomer"
+                                : "UPDATE test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -229,7 +240,10 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(repoClassName, "findByLastName")),
                 span ->
-                    span.hasName("SELECT test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT JpaCustomer"
+                                : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -254,7 +268,10 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(repoClassName, "delete")),
                 span ->
-                    span.hasName("SELECT test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT JpaCustomer"
+                                : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -268,7 +285,10 @@ public abstract class AbstractSpringJpaTest<
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")),
                 span ->
-                    span.hasName("DELETE test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "DELETE JpaCustomer"
+                                : "DELETE test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -301,7 +321,10 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(repoClassName, "findSpecialCustomers")),
                 span ->
-                    span.hasName("SELECT test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT JpaCustomer"
+                                : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -347,7 +370,10 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(repoClassName, "findOneByLastName")),
                 span ->
-                    span.hasName("SELECT test.JpaCustomer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT JpaCustomer"
+                                : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

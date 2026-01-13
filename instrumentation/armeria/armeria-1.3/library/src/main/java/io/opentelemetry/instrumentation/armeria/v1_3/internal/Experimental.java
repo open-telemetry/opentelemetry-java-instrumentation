@@ -28,6 +28,12 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService;
 
+  /**
+   * Sets whether experimental HTTP client telemetry should be emitted.
+   *
+   * @param builder the client telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       ArmeriaClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalClientTelemetry != null) {
@@ -35,6 +41,12 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether experimental HTTP server telemetry should be emitted.
+   *
+   * @param builder the server telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       ArmeriaServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalServerTelemetry != null) {
@@ -42,6 +54,12 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets the {@code peer.service} attribute for the client telemetry.
+   *
+   * @param builder the client telemetry builder
+   * @param peerService the peer service name
+   */
   public static void setClientPeerService(
       ArmeriaClientTelemetryBuilder builder, String peerService) {
     if (setClientPeerService != null) {

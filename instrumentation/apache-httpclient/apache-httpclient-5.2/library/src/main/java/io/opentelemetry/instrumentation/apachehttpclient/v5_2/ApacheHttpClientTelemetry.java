@@ -16,10 +16,7 @@ import org.apache.hc.core5.http.HttpResponse;
 /** Entrypoint for instrumenting Apache HTTP Client. */
 public final class ApacheHttpClientTelemetry {
 
-  /**
-   * Returns a new {@link ApacheHttpClientTelemetry} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ApacheHttpClientTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
@@ -42,13 +39,13 @@ public final class ApacheHttpClientTelemetry {
     this.propagators = propagators;
   }
 
-  /** Returns a new {@link CloseableHttpClient} with tracing configured. */
+  /** Returns an instrumented HTTP client. */
   public CloseableHttpClient createHttpClient() {
     return createHttpClientBuilder().build();
   }
 
   /**
-   * Returns a new {@link CloseableHttpClient} with tracing configured.
+   * Returns an instrumented HTTP client.
    *
    * @deprecated Use {@link #createHttpClient()} instead.
    */
@@ -57,7 +54,7 @@ public final class ApacheHttpClientTelemetry {
     return createHttpClient();
   }
 
-  /** Returns a new {@link HttpClientBuilder} to create a client with tracing configured. */
+  /** Returns a builder for creating an instrumented HTTP client. */
   public HttpClientBuilder createHttpClientBuilder() {
     return HttpClientBuilder.create()
         .addExecInterceptorAfter(
@@ -67,7 +64,7 @@ public final class ApacheHttpClientTelemetry {
   }
 
   /**
-   * Returns a new {@link HttpClientBuilder} to create a client with tracing configured.
+   * Returns a builder for creating an instrumented HTTP client.
    *
    * @deprecated Use {@link #createHttpClientBuilder()} instead.
    */

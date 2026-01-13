@@ -105,7 +105,8 @@ class ProcedureCallTest {
                                 AttributeKey.stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("CALL test.TEST_PROC")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "CALL TEST_PROC" : "CALL test.TEST_PROC")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
