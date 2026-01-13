@@ -39,7 +39,9 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-    assertThat(result.getMainIdentifier()).isEqualToIgnoringCase(expected.getMainIdentifier());
+    assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
+    assertThat(result.getStoredProcedureName())
+        .isEqualToIgnoringCase(expected.getStoredProcedureName());
   }
 
   @ParameterizedTest
@@ -88,7 +90,8 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-    assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
+    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+    assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
   }
 
   @Test

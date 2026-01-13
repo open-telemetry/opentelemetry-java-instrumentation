@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -59,8 +60,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
 
-  private static final String SQL_CALL = "CALL";
-
   private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
@@ -100,9 +99,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             DB_STATEMENT,
             statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
         internalSet(attributes, DB_OPERATION, operationName);
-        if (!SQL_CALL.equals(operationName)) {
-          internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
-        }
+        internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getCollectionName());
       }
     }
 
@@ -120,9 +117,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
         internalSet(
             attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
-        if (!SQL_CALL.equals(operationName)) {
-          internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
-        }
+        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getCollectionName());
+        internalSet(
+            attributes, DB_STORED_PROCEDURE_NAME, sanitizedStatement.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
@@ -133,12 +130,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
                 ? "BATCH " + multiQuery.getOperationName()
                 : "BATCH";
         internalSet(attributes, DB_OPERATION_NAME, operationName);
-
-        if (multiQuery.getMainIdentifier() != null
-            && (multiQuery.getOperationName() == null
-                || !SQL_CALL.equals(multiQuery.getOperationName()))) {
-          internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getMainIdentifier());
-        }
+        internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getCollectionName());
+        internalSet(attributes, DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
       }
     }
 
