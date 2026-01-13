@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.config;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 
 /**
@@ -18,17 +17,15 @@ import io.opentelemetry.instrumentation.api.internal.Initializer;
  * at any time.
  */
 public class AgentDistributionConfig {
-  static ExtendedDeclarativeConfigProperties distributionConfig =
-      new ExtendedDeclarativeConfigProperties(empty());
+  static DeclarativeConfigProperties distributionConfig = empty();
 
-  public static ExtendedDeclarativeConfigProperties get() {
+  public static DeclarativeConfigProperties get() {
     return distributionConfig;
   }
 
   @Initializer
   public static void set(DeclarativeConfigProperties distributionConfig) {
-    AgentDistributionConfig.distributionConfig =
-        new ExtendedDeclarativeConfigProperties(distributionConfig);
+    AgentDistributionConfig.distributionConfig = distributionConfig;
   }
 
   private AgentDistributionConfig() {}

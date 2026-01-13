@@ -47,14 +47,12 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    ConfigProvider configProvider;
     EnabledInstrumentations enabledInstrumentations;
     if (configProperties != null) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
-      sdk =
-          new ExtendedOpenTelemetrySdkWrapper(
-              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+      ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
+      sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
       enabledInstrumentations = enabledInstrumentationsFromConfigProperties(configProperties);
       AgentDistributionConfig.set(getPropertiesDistributionConfig(configProvider));
     } else {
