@@ -787,7 +787,6 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    String expectedSpanName = emitStableDatabaseSemconv() ? "CREATE TABLE " + table : spanName;
 
     Connection connection = wrap(conn);
     Statement statement = connection.createStatement();
@@ -803,7 +802,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName(expectedSpanName)
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "CREATE TABLE " + table : spanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -1669,8 +1669,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     maybeStable(DB_STATEMENT),
                                     emitStableDatabaseSemconv()
                                         ? "INSERT INTO "
-                                            + tableName1
-                                            + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
+                                        + tableName1
+                                        + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
                                         : null),
                                 equalTo(
                                     maybeStable(DB_OPERATION),

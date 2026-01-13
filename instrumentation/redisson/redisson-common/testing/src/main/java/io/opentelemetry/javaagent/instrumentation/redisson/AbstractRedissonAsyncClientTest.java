@@ -141,7 +141,8 @@ public abstract class AbstractRedissonAsyncClientTest {
               return future.whenComplete(
                   (res, throwable) -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
+                    testing.runWithSpan("callback", () -> {
+                    });
                   });
             });
     result.toCompletableFuture().get(30, TimeUnit.SECONDS);
@@ -215,19 +216,19 @@ public abstract class AbstractRedissonAsyncClientTest {
               return batchResultFuture.whenComplete(
                   (res, throwable) -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
+                    testing.runWithSpan("callback", () -> {
+                    });
                   });
             });
     result.toCompletableFuture().get(30, TimeUnit.SECONDS);
 
-    String batchSpanName = emitStableDatabaseSemconv() ? "redis" : "DB Query";
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "SADD", "callback"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(batchSpanName)
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),
