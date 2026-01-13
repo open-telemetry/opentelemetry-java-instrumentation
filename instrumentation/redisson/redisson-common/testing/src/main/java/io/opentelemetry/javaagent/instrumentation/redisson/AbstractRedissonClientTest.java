@@ -235,14 +235,13 @@ public abstract class AbstractRedissonClientTest {
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
         });
-    String batchSpanName = emitStableDatabaseSemconv() ? "redis" : "DB Query";
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName(batchSpanName, "SET", "EXEC"),
+        orderByRootSpanName("redis", "DB Query", "SET", "EXEC"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName(batchSpanName)
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),

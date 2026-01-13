@@ -1684,8 +1684,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     maybeStable(DB_STATEMENT),
                                     emitStableDatabaseSemconv()
                                         ? "INSERT INTO "
-                                        + tableName1
-                                        + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
+                                            + tableName1
+                                            + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
                                         : null),
                                 equalTo(
                                     maybeStable(DB_OPERATION),
