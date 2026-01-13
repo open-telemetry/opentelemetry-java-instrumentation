@@ -43,8 +43,9 @@ public class JmxMetricInsightInstaller implements AgentListener {
       config.getScalarList("config", String.class, emptyList()).stream()
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
-      config
-          .getScalarList("target_system", String.class, emptyList())
+
+      config.get("target")
+          .getScalarList("system", String.class, emptyList())
           .forEach(target -> addClasspathRules(target, jmx));
 
       jmx.build().start();

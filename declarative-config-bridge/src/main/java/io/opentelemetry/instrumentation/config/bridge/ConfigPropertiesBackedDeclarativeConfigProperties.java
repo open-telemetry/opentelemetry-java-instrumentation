@@ -94,7 +94,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // jmx properties don't have an "instrumentation" segment
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
-    SPECIAL_MAPPINGS.put("java.jmx.target_system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
   }
 
   private final ConfigProperties configProperties;
