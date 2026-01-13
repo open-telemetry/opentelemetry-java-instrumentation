@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -42,8 +40,6 @@ public final class OpenTelemetryInstaller {
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
-    } else {
-      configProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
     }
 
     setForceFlush(sdk);
