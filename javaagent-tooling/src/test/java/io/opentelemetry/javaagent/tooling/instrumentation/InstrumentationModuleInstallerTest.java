@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.instrumentation;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
