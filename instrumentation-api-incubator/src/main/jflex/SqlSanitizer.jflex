@@ -53,7 +53,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlStatementInfo.create(null, null, null, null);
     }
   }
 
@@ -165,7 +165,7 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier, null);
     }
   }
 
@@ -197,7 +197,7 @@ WHITESPACE           = [ \t\r\n]+
 
     SqlStatementInfo getResult(String fullStatement) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier, null);
       }
       return super.getResult(fullStatement);
     }
@@ -207,7 +207,7 @@ WHITESPACE           = [ \t\r\n]+
     static final Operation INSTANCE = new NoOp();
 
     SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
+      return SqlStatementInfo.create(fullStatement, null, null, null);
     }
   }
 
@@ -329,6 +329,12 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   private class Call extends Operation {
+    private final String operationName;
+
+    Call(String operationName) {
+      this.operationName = operationName.toUpperCase(java.util.Locale.ROOT);
+    }
+
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
       return true;
@@ -337,6 +343,11 @@ WHITESPACE           = [ \t\r\n]+
     boolean handleNext() {
       mainIdentifier = null;
       return true;
+    }
+
+    @Override
+    SqlStatementInfo getResult(String fullStatement) {
+      return SqlStatementInfo.create(fullStatement, operationName, null, mainIdentifier);
     }
   }
 
@@ -402,9 +413,9 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
-  "CALL" {
+  "CALL" | "EXEC" | "EXECUTE" {
           if (!insideComment) {
-            setOperation(new Call());
+            setOperation(new Call(yytext()));
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
