@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -43,6 +42,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -183,7 +183,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                SemconvMessageStabilityUtil.headerAttributeKey(
+                                    "Test-Message-Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
 
@@ -223,7 +224,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                SemconvMessageStabilityUtil.headerAttributeKey(
+                                    "Test-Message-Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
 
@@ -262,7 +264,8 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                SemconvMessageStabilityUtil.headerAttributeKey(
+                                    "Test-Message-Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
                       span.hasName("testSdkSqs process")

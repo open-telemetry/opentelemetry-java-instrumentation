@@ -23,6 +23,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -386,7 +387,7 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
@@ -422,7 +423,7 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     if (isBatch) {
@@ -449,7 +450,7 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
