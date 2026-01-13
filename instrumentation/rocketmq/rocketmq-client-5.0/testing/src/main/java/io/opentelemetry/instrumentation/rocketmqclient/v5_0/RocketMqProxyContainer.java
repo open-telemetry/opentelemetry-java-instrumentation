@@ -49,6 +49,13 @@ public class RocketMqProxyContainer {
 
   void start() {
     container.start();
+    try {
+      // Wait a bit for the broker to fully start
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted sleeping", e);
+    }
   }
 
   void close() {
