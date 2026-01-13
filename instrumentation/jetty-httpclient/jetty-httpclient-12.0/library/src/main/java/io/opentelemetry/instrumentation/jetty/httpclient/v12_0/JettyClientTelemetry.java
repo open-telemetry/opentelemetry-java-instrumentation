@@ -15,16 +15,13 @@ import org.eclipse.jetty.client.Response;
 /** Entrypoint for instrumenting Jetty client. */
 public final class JettyClientTelemetry {
 
-  /** Returns a new {@link JettyClientTelemetry} configured with the given {@link OpenTelemetry}. */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JettyClientTelemetry create(OpenTelemetry openTelemetry) {
     JettyClientTelemetryBuilder builder = builder(openTelemetry);
     return builder.build();
   }
 
-  /**
-   * Returns a new {@link JettyClientTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static JettyClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JettyClientTelemetryBuilder(openTelemetry);
   }
@@ -46,7 +43,7 @@ public final class JettyClientTelemetry {
     return httpClient;
   }
 
-  /** Returns a new {@link HttpClient} with tracing configured. */
+  /** Returns an instrumented HTTP client. */
   public HttpClient newHttpClient() {
     return new TracingHttpClient(instrumenter);
   }
