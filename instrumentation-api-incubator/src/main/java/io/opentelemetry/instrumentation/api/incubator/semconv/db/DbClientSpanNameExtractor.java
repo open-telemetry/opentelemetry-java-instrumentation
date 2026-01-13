@@ -94,7 +94,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       @Nullable String operation,
       @Nullable String collectionName,
       @Nullable String storedProcedureName) {
-    // Determine target following fallback order: collection → stored_procedure → namespace
+    // Determine target following fallback order: collection → stored_procedure → namespace →
+    // server.address:server.port
     String target = collectionName;
     if (target == null) {
       target = storedProcedureName;
@@ -102,9 +103,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     if (target == null) {
       target = getter.getDbNamespace(request);
     }
-
-    // Only use server.address as target fallback when there IS an operation
-    if (target == null && operation != null) {
+    if (target == null) {
       String serverAddress = getter.getServerAddress(request);
       if (serverAddress != null) {
         Integer serverPort = getter.getServerPort(request);
@@ -124,7 +123,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       return operation;
     }
 
-    // No operation - use target alone (if it exists from collection/stored_procedure/namespace)
+    // No operation - use target alone
     if (target != null) {
       return target;
     }
