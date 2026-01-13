@@ -50,6 +50,8 @@ public final class ServletTelemetryBuilder {
         (builder, value) -> builder.addTraceIdRequestAttribute = value);
     Experimental.internalSetCapturedRequestParameters(
         (builder, params) -> builder.servletBuilder.setCaptureRequestParameters(params));
+    Experimental.internalSetCaptureEnduserId(
+        (builder, value) -> builder.servletBuilder.setCaptureEnduserId(value));
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {
