@@ -36,17 +36,12 @@ import ratpack.registry.RegistrySpec;
  */
 public final class RatpackServerTelemetry {
 
-  /**
-   * Returns a new {@link RatpackServerTelemetry} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RatpackServerTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link RatpackServerTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static RatpackServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RatpackServerTelemetryBuilder(openTelemetry);
   }
@@ -72,7 +67,7 @@ public final class RatpackServerTelemetry {
     return OpenTelemetryExecInitializer.INSTANCE;
   }
 
-  /** Configures the {@link RegistrySpec} with OpenTelemetry. */
+  /** Configures the {@link RegistrySpec} to produce telemetry. */
   public void configureRegistry(RegistrySpec registry) {
     registry.add(HandlerDecorator.prepend(serverHandler));
     registry.add(OpenTelemetryExecInterceptor.INSTANCE);
