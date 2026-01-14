@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.ignore;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.javaagent.tooling.config.AgentDistributionConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 
 /**
  * Additional global ignore settings that are used to reduce number of classes we try to apply
