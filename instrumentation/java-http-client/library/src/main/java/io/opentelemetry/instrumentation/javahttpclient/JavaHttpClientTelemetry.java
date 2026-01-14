@@ -41,7 +41,7 @@ public final class JavaHttpClientTelemetry {
    * @param client the HttpClient to wrap
    * @return an instrumented HttpClient
    */
-  public HttpClient createHttpClient(HttpClient client) {
+  public HttpClient instrument(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
   }
 
@@ -50,10 +50,10 @@ public final class JavaHttpClientTelemetry {
    *
    * @param client the HttpClient to wrap
    * @return an instrumented HttpClient
-   * @deprecated Use {@link #createHttpClient(HttpClient)} instead.
+   * @deprecated Use {@link #instrument(HttpClient)} instead.
    */
   @Deprecated
   public HttpClient newHttpClient(HttpClient client) {
-    return createHttpClient(client);
+    return instrument(client);
   }
 }
