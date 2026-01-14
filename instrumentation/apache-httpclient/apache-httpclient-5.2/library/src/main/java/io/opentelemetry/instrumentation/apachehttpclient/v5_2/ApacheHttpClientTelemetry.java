@@ -21,10 +21,7 @@ public final class ApacheHttpClientTelemetry {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link ApacheHttpClientTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static ApacheHttpClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ApacheHttpClientTelemetryBuilder(openTelemetry);
   }
