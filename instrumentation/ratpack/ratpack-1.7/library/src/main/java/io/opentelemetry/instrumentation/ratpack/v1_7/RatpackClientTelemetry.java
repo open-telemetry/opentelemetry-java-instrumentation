@@ -27,17 +27,12 @@ import ratpack.http.client.RequestSpec;
  */
 public final class RatpackClientTelemetry {
 
-  /**
-   * Returns a new {@link RatpackClientTelemetry} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RatpackClientTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link RatpackClientTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static RatpackClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RatpackClientTelemetryBuilder(openTelemetry);
   }
@@ -48,7 +43,7 @@ public final class RatpackClientTelemetry {
     httpClientInstrumenter = new OpenTelemetryHttpClient(clientInstrumenter);
   }
 
-  /** Returns instrumented instance of {@link HttpClient} with OpenTelemetry. */
+  /** Returns an instrumented wrapper for the given {@link HttpClient}. */
   public HttpClient instrument(HttpClient httpClient) throws Exception {
     return httpClientInstrumenter.instrument(httpClient);
   }
