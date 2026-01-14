@@ -89,6 +89,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
         String operationName = sanitizedStatement.getOperationName();
+        if (operationName != null) {
+          operationName = operationName.toUpperCase(java.util.Locale.ROOT);
+        }
         internalSet(
             attributes,
             DB_STATEMENT,

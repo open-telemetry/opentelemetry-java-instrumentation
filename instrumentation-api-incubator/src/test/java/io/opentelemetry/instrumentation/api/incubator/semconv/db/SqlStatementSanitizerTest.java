@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -39,9 +40,14 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-    assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
-    assertThat(result.getStoredProcedureName())
-        .isEqualToIgnoringCase(expected.getStoredProcedureName());
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+      assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
+    } else {
+      assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
+      assertThat(result.getStoredProcedureName())
+          .isEqualToIgnoringCase(expected.getStoredProcedureName());
+    }
   }
 
   @ParameterizedTest
@@ -310,86 +316,86 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT x, y, z FROM \"schema\".\"table\"", expect("SELECT", "\"schema\".\"table\"")),
         Arguments.of(
-            "WITH subquery as (select a from b) SELECT x, y, z FROM table", expect("SELECT", null)),
+            "WITH subquery as (select a from b) SELECT x, y, z FROM table", expect("select", null)),
         Arguments.of("SELECT x, y, (select a from b) as z FROM table", expect("SELECT", null)),
         Arguments.of(
-            "select delete, insert into, merge, update from table", expect("SELECT", "table")),
-        Arguments.of("select col /* from table2 */ from table", expect("SELECT", "table")),
-        Arguments.of("select col from table join anotherTable", expect("SELECT", null)),
-        Arguments.of("select col from (select * from anotherTable)", expect("SELECT", null)),
-        Arguments.of("select col from (select * from anotherTable) alias", expect("SELECT", null)),
-        Arguments.of("select col from table1 union select col from table2", expect("SELECT", null)),
+            "select delete, insert into, merge, update from table", expect("select", "table")),
+        Arguments.of("select col /* from table2 */ from table", expect("select", "table")),
+        Arguments.of("select col from table join anotherTable", expect("select", null)),
+        Arguments.of("select col from (select * from anotherTable)", expect("select", null)),
+        Arguments.of("select col from (select * from anotherTable) alias", expect("select", null)),
+        Arguments.of("select col from table1 union select col from table2", expect("select", null)),
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
-            expect("SELECT", null)),
-        Arguments.of("select col from table1, table2", expect("SELECT", null)),
-        Arguments.of("select col from table1 t1, table2 t2", expect("SELECT", null)),
-        Arguments.of("select col from table1 as t1, table2 as t2", expect("SELECT", null)),
+            expect("select", null)),
+        Arguments.of("select col from table1, table2", expect("select", null)),
+        Arguments.of("select col from table1 t1, table2 t2", expect("select", null)),
+        Arguments.of("select col from table1 as t1, table2 as t2", expect("select", null)),
         Arguments.of(
             "select col from table where col in (1, 2, 3)",
-            expect("select col from table where col in (?)", "SELECT", "table")),
+            expect("select col from table where col in (?)", "select", "table")),
         Arguments.of(
             "select 'a' IN(x, 'b') from table where col in (1) and z IN( '3', '4' )",
-            expect("select ? IN(x, ?) from table where col in (?) and z IN(?)", "SELECT", "table")),
-        Arguments.of("select col from table order by col, col2", expect("SELECT", "table")),
-        Arguments.of("select ąś∂ń© from źćļńĶ order by col, col2", expect("SELECT", "źćļńĶ")),
-        Arguments.of("select 12345678", expect("select ?", "SELECT", null)),
-        Arguments.of("/* update comment */ select * from table1", expect("SELECT", "table1")),
-        Arguments.of("select /*((*/abc from table", expect("SELECT", "table")),
-        Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "table")),
-        Arguments.of("select next value in hibernate_sequence", expect("SELECT", null)),
+            expect("select ? IN(x, ?) from table where col in (?) and z IN(?)", "select", "table")),
+        Arguments.of("select col from table order by col, col2", expect("select", "table")),
+        Arguments.of("select ąś∂ń© from źćļńĶ order by col, col2", expect("select", "źćļńĶ")),
+        Arguments.of("select 12345678", expect("select ?", "select", null)),
+        Arguments.of("/* update comment */ select * from table1", expect("select", "table1")),
+        Arguments.of("select /*((*/abc from table", expect("select", "table")),
+        Arguments.of("SeLeCT * FrOm TAblE", expect("SeLeCT", "TAblE")),
+        Arguments.of("select next value in hibernate_sequence", expect("select", null)),
 
         // hibernate/jpa
         Arguments.of("FROM schema.table", expect("SELECT", "schema.table")),
         Arguments.of("/* update comment */ from table1", expect("SELECT", "table1")),
 
         // Insert
-        Arguments.of(" insert into table where lalala", expect("INSERT", "table")),
-        Arguments.of("insert insert into table where lalala", expect("INSERT", "table")),
-        Arguments.of("insert into db.table where lalala", expect("INSERT", "db.table")),
-        Arguments.of("insert into `db table` where lalala", expect("INSERT", "db table")),
-        Arguments.of("insert into \"db table\" where lalala", expect("INSERT", "db table")),
-        Arguments.of("insert without i-n-t-o", expect("INSERT", null)),
+        Arguments.of(" insert into table where lalala", expect("insert", "table")),
+        Arguments.of("insert insert into table where lalala", expect("insert", "table")),
+        Arguments.of("insert into db.table where lalala", expect("insert", "db.table")),
+        Arguments.of("insert into `db table` where lalala", expect("insert", "db table")),
+        Arguments.of("insert into \"db table\" where lalala", expect("insert", "db table")),
+        Arguments.of("insert without i-n-t-o", expect("insert", null)),
 
         // Delete
-        Arguments.of("delete from table where something something", expect("DELETE", "table")),
+        Arguments.of("delete from table where something something", expect("delete", "table")),
         Arguments.of(
-            "delete from `my table` where something something", expect("DELETE", "my table")),
+            "delete from `my table` where something something", expect("delete", "my table")),
         Arguments.of(
-            "delete from \"my table\" where something something", expect("DELETE", "my table")),
+            "delete from \"my table\" where something something", expect("delete", "my table")),
         Arguments.of(
             "delete from foo where x IN (1,2,3)",
-            expect("delete from foo where x IN (?)", "DELETE", "foo")),
-        Arguments.of("delete from 12345678", expect("delete from ?", "DELETE", null)),
-        Arguments.of("delete   (((", expect("delete (((", "DELETE", null)),
+            expect("delete from foo where x IN (?)", "delete", "foo")),
+        Arguments.of("delete from 12345678", expect("delete from ?", "delete", null)),
+        Arguments.of("delete   (((", expect("delete (((", "delete", null)),
 
         // Update
         Arguments.of(
-            "update table set answer=42", expect("update table set answer=?", "UPDATE", "table")),
+            "update table set answer=42", expect("update table set answer=?", "update", "table")),
         Arguments.of(
             "update `my table` set answer=42",
-            expect("update `my table` set answer=?", "UPDATE", "my table")),
+            expect("update `my table` set answer=?", "update", "my table")),
         Arguments.of(
             "update `my table` set answer=42 where x IN('a', 'b') AND y In ('a',  'b')",
             expect(
-                "update `my table` set answer=? where x IN(?) AND y In (?)", "UPDATE", "my table")),
+                "update `my table` set answer=? where x IN(?) AND y In (?)", "update", "my table")),
         Arguments.of(
             "update \"my table\" set answer=42",
-            expect("update \"my table\" set answer=?", "UPDATE", "my table")),
-        Arguments.of("update /*table", expect("UPDATE", null)),
+            expect("update \"my table\" set answer=?", "update", "my table")),
+        Arguments.of("update /*table", expect("update", null)),
 
         // Call
-        Arguments.of("call test_proc()", expect("CALL", "test_proc")),
-        Arguments.of("call test_proc", expect("CALL", "test_proc")),
-        Arguments.of("call next value in hibernate_sequence", expect("CALL", null)),
-        Arguments.of("call db.test_proc", expect("CALL", "db.test_proc")),
+        Arguments.of("call test_proc()", expect("call", "test_proc")),
+        Arguments.of("call test_proc", expect("call", "test_proc")),
+        Arguments.of("call next value in hibernate_sequence", expect("call", null)),
+        Arguments.of("call db.test_proc", expect("call", "db.test_proc")),
 
         // Merge
-        Arguments.of("merge into table", expect("MERGE", "table")),
-        Arguments.of("merge into `my table`", expect("MERGE", "my table")),
-        Arguments.of("merge into \"my table\"", expect("MERGE", "my table")),
-        Arguments.of("merge table (into is optional in some dbs)", expect("MERGE", "table")),
-        Arguments.of("merge (into )))", expect("MERGE", null)),
+        Arguments.of("merge into table", expect("merge", "table")),
+        Arguments.of("merge into `my table`", expect("merge", "my table")),
+        Arguments.of("merge into \"my table\"", expect("merge", "my table")),
+        Arguments.of("merge table (into is optional in some dbs)", expect("merge", "table")),
+        Arguments.of("merge (into )))", expect("merge", null)),
 
         // Unknown operation
         Arguments.of("and now for something completely different", expect(null, null)),

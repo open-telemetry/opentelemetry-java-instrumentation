@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.Locale;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -34,7 +36,11 @@ final class ClickHouseAttributesGetter
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
-    return request.getSqlStatementInfo().getOperationName();
+    String operationName = request.getSqlStatementInfo().getOperationName();
+    if (operationName != null && SemconvStability.emitOldDatabaseSemconv()) {
+      operationName = operationName.toUpperCase(Locale.ROOT);
+    }
+    return operationName;
   }
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues

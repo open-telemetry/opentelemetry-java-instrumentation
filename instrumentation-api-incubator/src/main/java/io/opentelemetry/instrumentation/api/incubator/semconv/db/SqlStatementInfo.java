@@ -49,13 +49,13 @@ public abstract class SqlStatementInfo {
    */
   @Nullable
   public String getCollectionName() {
-    return SQL_CALL.equals(getOperationName()) ? null : getTarget();
+    return SQL_CALL.equalsIgnoreCase(getOperationName()) ? null : getTarget();
   }
 
   /** Returns the stored procedure name for CALL operations, or null for other operations. */
   @Nullable
   public String getStoredProcedureName() {
-    return SQL_CALL.equals(getOperationName()) ? getTarget() : null;
+    return SQL_CALL.equalsIgnoreCase(getOperationName()) ? getTarget() : null;
   }
 
   /**

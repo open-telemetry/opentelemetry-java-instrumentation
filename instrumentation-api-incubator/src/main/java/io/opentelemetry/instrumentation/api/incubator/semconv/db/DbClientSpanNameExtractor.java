@@ -173,9 +173,13 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
+        String operationName = sanitizedStatement.getOperationName();
+        if (operationName != null) {
+          operationName = operationName.toUpperCase(java.util.Locale.ROOT);
+        }
         return computeSpanName(
             namespace,
-            sanitizedStatement.getOperationName(),
+            operationName,
             sanitizedStatement.getCollectionName(),
             sanitizedStatement.getStoredProcedureName());
       }

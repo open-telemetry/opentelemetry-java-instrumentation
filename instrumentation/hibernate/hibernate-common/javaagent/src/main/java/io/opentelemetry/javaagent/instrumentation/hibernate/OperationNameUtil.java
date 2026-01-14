@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import java.util.Locale;
 import java.util.function.Function;
 
 public final class OperationNameUtil {
@@ -22,6 +24,9 @@ public final class OperationNameUtil {
     SqlStatementInfo info = sanitizer.sanitize(query);
     if (info.getOperationName() != null) {
       operation = info.getOperationName();
+      if (!SemconvStability.emitStableDatabaseSemconv()) {
+        operation = operation.toUpperCase(Locale.ROOT);
+      }
       if (info.getCollectionName() != null) {
         operation += " " + info.getCollectionName();
       } else if (info.getStoredProcedureName() != null) {

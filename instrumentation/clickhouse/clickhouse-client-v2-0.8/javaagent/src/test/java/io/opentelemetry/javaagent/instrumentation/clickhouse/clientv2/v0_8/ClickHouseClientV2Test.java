@@ -118,11 +118,18 @@ class ClickHouseClientV2Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            attributeAssertions("select * from " + tableName, "SELECT"))));
+                            attributeAssertions(
+                                "select * from " + tableName,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
 
     assertDurationMetric(
         testing,
@@ -152,18 +159,31 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("INSERT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "insert " + dbName
+                                : "INSERT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "insert into " + tableName + " values(?)(?)(?)", "INSERT")),
+                                "insert into " + tableName + " values(?)(?)(?)",
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "insert"
+                                    : "INSERT")),
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            attributeAssertions("select * from " + tableName, "SELECT"))));
+                            attributeAssertions(
+                                "select * from " + tableName,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
   }
 
   @Test
@@ -183,11 +203,18 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            attributeAssertions("select * from " + tableName, "SELECT"))));
+                            attributeAssertions(
+                                "select * from " + tableName,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
   }
 
   @Test
@@ -202,7 +229,10 @@ class ClickHouseClientV2Test {
     assertThat(thrown).isInstanceOf(ServerException.class);
 
     List<AttributeAssertion> assertions =
-        new ArrayList<>(attributeAssertions("select * from non_existent_table", "SELECT"));
+        new ArrayList<>(
+            attributeAssertions(
+                "select * from non_existent_table",
+                SemconvStability.emitStableDatabaseSemconv() ? "select" : "SELECT"));
     if (SemconvStability.emitStableDatabaseSemconv()) {
       assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "60"));
       assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.api.ServerException"));
@@ -211,7 +241,10 @@ class ClickHouseClientV2Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
@@ -234,12 +267,18 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "select * from " + tableName + " limit ?", "SELECT"))));
+                                "select * from " + tableName + " limit ?",
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
   }
 
   @Test
@@ -256,12 +295,18 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "select * from " + tableName + " limit ?", "SELECT"))));
+                                "select * from " + tableName + " limit ?",
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
   }
 
   @Test
@@ -283,19 +328,31 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("INSERT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "insert " + dbName
+                                : "INSERT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "insert into " + tableName + " values(?)", "INSERT")),
+                                "insert into " + tableName + " values(?)",
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "insert"
+                                    : "INSERT")),
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "select * from " + tableName + " limit ?", "SELECT"))));
+                                "select * from " + tableName + " limit ?",
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
   }
 
   @Test
@@ -321,13 +378,18 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "select " + dbName
+                                : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
                                 "select * from " + tableName + " where value={param_s: String}",
-                                "SELECT"))));
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "select"
+                                    : "SELECT"))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

@@ -119,11 +119,21 @@ WHITESPACE           = [ \t\r\n]+
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
       this.operation = operation;
+      // Capture the original case of the SQL keyword
+      operation.operationName = yytext();
+    }
+  }
+
+  private void setOperation(Operation operation, String operationName) {
+    if (this.operation == NoOp.INSTANCE) {
+      this.operation = operation;
+      operation.operationName = operationName;
     }
   }
 
   private static abstract class Operation {
     String mainIdentifier = null;
+    String operationName = null;
 
     /** @return true if all statement info is gathered */
     boolean handleFrom() {
@@ -165,7 +175,7 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+      return SqlStatementInfo.create(fullStatement, operationName, mainIdentifier);
     }
   }
 
@@ -197,7 +207,7 @@ WHITESPACE           = [ \t\r\n]+
 
     SqlStatementInfo getResult(String fullStatement) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlStatementInfo.create(fullStatement, operationName + " " + operationTarget, mainIdentifier);
       }
       return super.getResult(fullStatement);
     }
@@ -456,7 +466,7 @@ WHITESPACE           = [ \t\r\n]+
             if (operation == NoOp.INSTANCE) {
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries
-              setOperation(new Select());
+              setOperation(new Select(), "SELECT");
             }
             extractionDone = operation.handleFrom();
           }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static org.junit.jupiter.api.Named.named;
 
@@ -64,7 +65,7 @@ class QueryTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT"));
+                span -> assertClientSpan(span, trace.getSpan(1), "select"));
           }
         });
   }
@@ -88,7 +89,9 @@ class QueryTest extends AbstractHibernateTest {
             named(
                 "Query.executeUpdate",
                 new Parameter(
-                    "UPDATE io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    emitStableDatabaseSemconv()
+                        ? "update io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"
+                        : "UPDATE io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
                     true,
                     sess -> {
                       Query q =
