@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -51,10 +49,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
-
-  // cannot use EarlyInitAgentConfig here
-  private static final boolean REFLECTION_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.javaagent.internal-reflection.enabled", true);
 
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
@@ -625,12 +619,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
           Class<?> clazz = classRef.get();
           if (clazz != null) {
             for (Class<?> interfaceClass : clazz.getInterfaces()) {
-              // virtual field accessors are removed by internal-reflection instrumentation
-              // we do this extra check for tests run with internal-reflection disabled
-              if (!REFLECTION_ENABLED
-                  && VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)) {
-                continue;
-              }
               // using raw type
               result.add(newTypeDescription(interfaceClass));
             }
