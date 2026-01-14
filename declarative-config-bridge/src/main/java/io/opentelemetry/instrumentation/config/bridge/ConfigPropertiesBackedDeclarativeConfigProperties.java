@@ -95,6 +95,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put("java.common.thread_details.enabled", "otel.javaagent.add-thread-details");
   }
 
   private final ConfigProperties configProperties;

@@ -85,6 +85,15 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testThreadDetails() {
+    DeclarativeConfigProperties config = createConfig("otel.javaagent.add-thread-details", "true");
+
+    assertThat(config.get("java").get("common").get("thread_details").getBoolean("enabled"))
+        .isNotNull()
+        .isTrue();
+  }
+
+  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 

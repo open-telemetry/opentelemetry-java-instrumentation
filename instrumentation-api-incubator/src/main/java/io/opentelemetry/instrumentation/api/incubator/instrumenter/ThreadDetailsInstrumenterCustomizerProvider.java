@@ -7,13 +7,11 @@ package io.opentelemetry.instrumentation.api.incubator.instrumenter;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
@@ -23,19 +21,10 @@ public class ThreadDetailsInstrumenterCustomizerProvider implements Instrumenter
   public void customize(InstrumenterCustomizer customizer) {
     OpenTelemetry openTelemetry = customizer.getOpenTelemetry();
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
-      // Declarative config is used.
-      // Otherwise, thread details are configured in
-      // io.opentelemetry.javaagent.tooling.AgentTracerProviderConfigurer.
-
-      DeclarativeConfigProperties instrumentationConfig =
-          ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
-
-      if (instrumentationConfig != null
-          && instrumentationConfig
-              .getStructured("java", empty())
-              .getStructured("common", empty())
-              .getStructured("thread_details", empty())
-              .getBoolean("enabled", false)) {
+      if (((ExtendedOpenTelemetry) openTelemetry)
+          .getInstrumentationConfig("common")
+          .get("thread_details")
+          .getBoolean("enabled", false)) {
         customizer.addAttributesExtractor(new ThreadDetailsAttributesExtractor<>());
       }
     }
