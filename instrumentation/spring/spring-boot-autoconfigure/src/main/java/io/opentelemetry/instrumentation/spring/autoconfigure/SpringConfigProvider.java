@@ -12,7 +12,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Collections;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * Spring flavor of {@link io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider}
@@ -25,12 +24,12 @@ import javax.annotation.Nullable;
  */
 final class SpringConfigProvider implements ConfigProvider {
 
-  @Nullable private final DeclarativeConfigProperties instrumentationConfig;
+  private final DeclarativeConfigProperties instrumentationConfig;
 
   private SpringConfigProvider(
       OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
     DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
-    this.instrumentationConfig = configProperties.getStructured("instrumentation/development");
+    this.instrumentationConfig = configProperties.get("instrumentation/development");
   }
 
   private static DeclarativeConfigProperties toConfigProperties(
@@ -55,7 +54,6 @@ final class SpringConfigProvider implements ConfigProvider {
         model, ComponentLoader.forClassLoader(SpringConfigProvider.class.getClassLoader()));
   }
 
-  @Nullable
   @Override
   public DeclarativeConfigProperties getInstrumentationConfig() {
     return instrumentationConfig;
@@ -63,6 +61,6 @@ final class SpringConfigProvider implements ConfigProvider {
 
   @Override
   public String toString() {
-    return "SpringConfigProvider{" + "instrumentationConfig=" + instrumentationConfig + '}';
+    return "SpringConfigProvider{instrumentationConfig=" + instrumentationConfig + '}';
   }
 }
