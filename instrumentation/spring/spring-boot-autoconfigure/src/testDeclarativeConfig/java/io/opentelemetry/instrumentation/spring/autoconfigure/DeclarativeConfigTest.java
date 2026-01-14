@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import org.junit.jupiter.api.DisplayName;
@@ -63,7 +63,7 @@ class DeclarativeConfigTest {
                 .isNotNull()
                 .satisfies(
                     o -> {
-                      ExtendedDeclarativeConfigProperties config =
+                      DeclarativeConfigProperties config =
                           DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
                       assertThat(config.getString("string_key")).isEqualTo("string_value");
                       assertThat(config.getBoolean("bool_key")).isTrue();
@@ -94,7 +94,7 @@ class DeclarativeConfigTest {
                 .isNotNull()
                 .satisfies(
                     o -> {
-                      ExtendedDeclarativeConfigProperties config =
+                      DeclarativeConfigProperties config =
                           DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
                       assertThat(config.getString("string_key")).isEqualTo("new_value");
                       assertThat(config.getBoolean("bool_key")).isFalse();
@@ -120,7 +120,7 @@ class DeclarativeConfigTest {
                 .isNotNull()
                 .satisfies(
                     o -> {
-                      ExtendedDeclarativeConfigProperties config =
+                      DeclarativeConfigProperties config =
                           DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
                       assertThat(config.getString("string_key")).isEqualTo("string_value");
                       assertThat(config.getString("string_key_with_env")).isEqualTo("string_value");
