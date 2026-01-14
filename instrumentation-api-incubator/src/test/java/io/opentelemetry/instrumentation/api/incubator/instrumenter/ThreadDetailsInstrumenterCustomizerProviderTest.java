@@ -14,8 +14,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationBuilder;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
@@ -82,12 +83,13 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
             new OpenTelemetryConfigurationModel()
                 .withFileFormat("1.0-rc.1")
                 .withInstrumentationDevelopment(
-                    new InstrumentationModel()
+                    new ExperimentalInstrumentationModel()
                         .withJava(
                             new ExperimentalLanguageSpecificInstrumentationModel()
                                 .withAdditionalProperty(
                                     "common",
-                                    singletonMap(
-                                        "thread_details", singletonMap("enabled", enabled))))));
+                                    new ExperimentalLanguageSpecificInstrumentationPropertyModel()
+                                        .withAdditionalProperty(
+                                            "thread_details", singletonMap("enabled", enabled))))));
   }
 }
