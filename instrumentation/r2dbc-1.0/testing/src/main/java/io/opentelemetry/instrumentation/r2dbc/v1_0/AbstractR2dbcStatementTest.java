@@ -218,7 +218,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                "CREATE TABLE " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "CREATE TABLE person"
+                                    : "CREATE TABLE " + DB + ".person",
                                 "person",
                                 "CREATE TABLE"))),
                     Arguments.of(
@@ -228,7 +230,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                "INSERT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT person"
+                                    : "INSERT " + DB + ".person",
                                 "person",
                                 "INSERT"))),
                     Arguments.of(
@@ -238,7 +242,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
-                                "SELECT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT person"
+                                    : "SELECT " + DB + ".person",
                                 "person",
                                 "SELECT")))));
   }
