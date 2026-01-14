@@ -7,15 +7,12 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingOperationTypeIncubatingValues.PROCESS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.awaitility.Awaitility.await;
@@ -175,9 +172,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                           equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                           equalTo(MESSAGING_DESTINATION_NAME, testTopicName),
                           equalTo(MESSAGING_OPERATION, PROCESS),
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          satisfies(THREAD_ID, val -> val.isNotZero()),
-                          satisfies(THREAD_NAME, val -> val.isNotBlank())),
+                          equalTo(MESSAGING_SYSTEM, KAFKA)),
               selectAssertion,
               selectAssertion,
               selectAssertion,
@@ -302,9 +297,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .hasAttributesSatisfyingExactly(
                           equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
                           equalTo(MESSAGING_OPERATION, PROCESS),
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          satisfies(THREAD_ID, val -> val.isNotZero()),
-                          satisfies(THREAD_NAME, val -> val.isNotBlank())),
+                          equalTo(MESSAGING_SYSTEM, KAFKA)),
               selectAssertion,
               selectAssertion,
               selectAssertion,

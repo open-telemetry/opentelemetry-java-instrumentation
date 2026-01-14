@@ -95,7 +95,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
-    SPECIAL_MAPPINGS.put("java.common.thread_details.enabled", "otel.javaagent.add-thread-details");
   }
 
   private final ConfigProperties configProperties;
@@ -133,6 +132,16 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
+    String fullPath = pathWithName(name);
+    if (fullPath.equals("java.common.thread_details.enabled")) {
+      Boolean value = configProperties.getBoolean("otel.javaagent.add-thread-details");
+      if (value != null) {
+        return value;
+      }
+      // Default to true in system properties if not set
+      return true;
+    }
+
     return configProperties.getBoolean(resolvePropertyKey(name));
   }
 
