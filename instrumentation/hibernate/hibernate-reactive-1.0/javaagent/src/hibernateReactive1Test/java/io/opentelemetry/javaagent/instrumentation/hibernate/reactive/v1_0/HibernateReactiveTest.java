@@ -304,7 +304,8 @@ class HibernateReactiveTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.Value")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT tempdb.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

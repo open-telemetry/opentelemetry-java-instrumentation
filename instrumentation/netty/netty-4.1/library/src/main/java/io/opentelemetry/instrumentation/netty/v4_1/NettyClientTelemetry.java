@@ -29,38 +29,35 @@ public final class NettyClientTelemetry {
         new NettyClientHandlerFactory(instrumenter, emitExperimentalHttpClientEvents);
   }
 
-  /** Returns a new {@link NettyClientTelemetry} configured with the given {@link OpenTelemetry}. */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static NettyClientTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link NettyClientTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static NettyClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new NettyClientTelemetryBuilder(openTelemetry);
   }
 
   /**
-   * Returns a new {@link ChannelOutboundHandlerAdapter} that generates telemetry for outgoing HTTP
-   * requests. Must be paired with {@link #createResponseHandler()}.
+   * Returns a handler that instruments outgoing HTTP requests. Must be paired with {@link
+   * #createResponseHandler()}.
    */
   public ChannelOutboundHandlerAdapter createRequestHandler() {
     return handlerFactory.createRequestHandler();
   }
 
   /**
-   * Returns a new {@link ChannelInboundHandlerAdapter} that generates telemetry for incoming HTTP
-   * responses. Must be paired with {@link #createRequestHandler()}.
+   * Returns a handler that instruments incoming HTTP responses. Must be paired with {@link
+   * #createRequestHandler()}.
    */
   public ChannelInboundHandlerAdapter createResponseHandler() {
     return handlerFactory.createResponseHandler();
   }
 
   /**
-   * Returns a new {@link CombinedChannelDuplexHandler} that generates telemetry for outgoing HTTP
-   * requests and incoming responses in a single handler.
+   * Returns a handler that instruments outgoing HTTP requests and incoming responses in a single
+   * handler.
    */
   public CombinedChannelDuplexHandler<
           ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
@@ -69,8 +66,8 @@ public final class NettyClientTelemetry {
   }
 
   /**
-   * Propagate the {@link Context} to the {@link Channel}. This MUST be called before each HTTP
-   * request executed on a {@link Channel}.
+   * Propagates the {@link Context} to the {@link Channel}. Must be called before each HTTP request
+   * on the channel.
    */
   // TODO (trask) rename to setParentContext()?
   public static void setChannelContext(Channel channel, Context context) {

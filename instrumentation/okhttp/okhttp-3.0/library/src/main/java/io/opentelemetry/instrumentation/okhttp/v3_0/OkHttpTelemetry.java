@@ -19,14 +19,12 @@ import okhttp3.Response;
 /** Entrypoint for instrumenting OkHttp clients. */
 public final class OkHttpTelemetry {
 
-  /** Returns a new {@link OkHttpTelemetry} configured with the given {@link OpenTelemetry}. */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static OkHttpTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link OkHttpTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static OkHttpTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new OkHttpTelemetryBuilder(openTelemetry);
   }
@@ -41,14 +39,13 @@ public final class OkHttpTelemetry {
   }
 
   /**
-   * Construct a new OpenTelemetry tracing-enabled {@link okhttp3.Call.Factory} using the provided
-   * {@link OkHttpClient} instance.
+   * Returns an instrumented {@link okhttp3.Call.Factory} wrapping the provided client.
    *
-   * <p>Using this method will result in proper propagation and span parenting, for both {@linkplain
-   * Call#execute() synchronous} and {@linkplain Call#enqueue(Callback) asynchronous} usages.
+   * <p>Supports both {@linkplain Call#execute() synchronous} and {@linkplain Call#enqueue(Callback)
+   * asynchronous} calls with proper context propagation.
    *
-   * @param baseClient An instance of OkHttpClient configured as desired.
-   * @return a {@link Call.Factory} for creating new {@link Call} instances.
+   * @param baseClient the OkHttpClient to wrap
+   * @return an instrumented Call.Factory
    */
   public Call.Factory createCallFactory(OkHttpClient baseClient) {
     OkHttpClient.Builder builder = baseClient.newBuilder();
@@ -61,14 +58,13 @@ public final class OkHttpTelemetry {
   }
 
   /**
-   * Construct a new OpenTelemetry tracing-enabled {@link okhttp3.Call.Factory} using the provided
-   * {@link OkHttpClient} instance.
+   * Returns an instrumented {@link okhttp3.Call.Factory} wrapping the provided client.
    *
-   * <p>Using this method will result in proper propagation and span parenting, for both {@linkplain
-   * Call#execute() synchronous} and {@linkplain Call#enqueue(Callback) asynchronous} usages.
+   * <p>Supports both {@linkplain Call#execute() synchronous} and {@linkplain Call#enqueue(Callback)
+   * asynchronous} calls with proper context propagation.
    *
-   * @param baseClient An instance of OkHttpClient configured as desired.
-   * @return a {@link Call.Factory} for creating new {@link Call} instances.
+   * @param baseClient the OkHttpClient to wrap
+   * @return an instrumented Call.Factory
    * @deprecated Use {@link #createCallFactory(OkHttpClient)} instead.
    */
   @Deprecated

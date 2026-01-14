@@ -124,12 +124,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
-
-        String operationName =
-            multiQuery.getOperationName() != null
-                ? "BATCH " + multiQuery.getOperationName()
-                : "BATCH";
-        internalSet(attributes, DB_OPERATION_NAME, operationName);
+        internalSet(attributes, DB_OPERATION_NAME, multiQuery.getOperationName());
         internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getCollectionName());
         internalSet(attributes, DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
       }

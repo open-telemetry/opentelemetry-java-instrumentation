@@ -142,7 +142,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -249,7 +249,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -280,7 +280,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("INSERT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "INSERT test" : "INSERT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -370,7 +370,8 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT tempdb.test")
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -436,7 +437,8 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT tempdb.test")
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
