@@ -46,6 +46,33 @@ val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeResolved = true
 }
 
+// Configure muzzle-specific configurations to inherit from project's main configurations.
+// This allows dependency versions to be resolved from BOMs applied to compileClasspath/compileOnly.
+afterEvaluate {
+  val baseConfig = configurations.findByName("compileClasspath")
+    ?: configurations.findByName("compileOnly")
+
+  if (baseConfig != null) {
+    configurations.named("muzzleBootstrap").configure {
+      extendsFrom(baseConfig)
+    }
+    configurations.named("muzzleTooling").configure {
+      extendsFrom(baseConfig)
+    }
+  }
+}
+
+dependencies {
+  // Bootstrap dependencies: Required classes for instrumentation that run in the bootstrap classloader
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")
+
+  // Tooling dependencies: Required for muzzle verification and bytecode analysis
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+}
+
 val shadowModule by tasks.registering(ShadowJar::class) {
   from(zipTree(tasks.jar.get().archiveFile))
 
@@ -162,8 +189,8 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
   val taskName = it.removePrefix(":")
   val projectPath = project.path.substring(1)
   // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
-    taskName.contains(":muzzle-Assert")
+  taskName == "muzzle" || taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
+    taskName.contains(":muzzle-Assert") || taskName.endsWith(":muzzle")
 }
 
 if (hasRelevantTask) {

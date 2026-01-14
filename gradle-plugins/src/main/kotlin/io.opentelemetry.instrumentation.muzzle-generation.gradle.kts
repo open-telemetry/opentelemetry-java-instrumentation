@@ -35,6 +35,28 @@ val codegen by configurations.creating {
   isCanBeResolved = true
 }
 
+// Configure codegen configuration to inherit from project's main configurations.
+// This allows dependency versions to be resolved from BOMs applied to compileClasspath/compileOnly.
+afterEvaluate {
+  val baseConfig = configurations.findByName("compileClasspath")
+    ?: configurations.findByName("compileOnly")
+
+  if (baseConfig != null) {
+    configurations.named("codegen").configure {
+      extendsFrom(baseConfig)
+    }
+  }
+}
+
+dependencies {
+  /*
+   * Code generation dependency: Used by the muzzle gradle plugin during code generation.
+   * These classes are inspected and traversed during the muzzle reference collection phase
+   * to generate bytecode safety checks.
+   */
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+}
+
 val sourceSet = sourceSets.main.get()
 val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) }
   ?: codegen)
