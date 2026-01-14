@@ -131,16 +131,19 @@ class DeclarativeConfigTest {
                       assertThat(config.getBoolean("bool_key_with_env")).isTrue();
                       assertThat(config.getBoolean("bool_key_with_env_quoted"))
                           .isTrue(); // quoted "true" works because of coercion
+                      assertThat(config.getString("bool_key_with_env_quoted")).isEqualTo("true");
 
                       assertThat(config.getDouble("double_key")).isEqualTo(3.14);
                       assertThat(config.getDouble("double_key_with_env")).isEqualTo(3.14);
                       assertThat(config.getDouble("double_key_with_env_quoted"))
                           .isEqualTo(3.14); // quoted "3.14" works because of coercion
+                      assertThat(config.getString("double_key_with_env_quoted")).isEqualTo("3.14");
 
                       assertThat(config.getLong("int_key")).isEqualTo(42);
                       assertThat(config.getLong("int_key_with_env")).isEqualTo(42);
                       assertThat(config.getLong("int_key_with_env_quoted"))
                           .isEqualTo(42); // quoted "42" works because of coercion
+                      assertThat(config.getString("int_key_with_env_quoted")).isEqualTo("42");
                     }));
   }
 
