@@ -17,14 +17,12 @@ import javax.servlet.http.HttpServletResponse;
 /** Entrypoint for instrumenting Servlets. */
 public final class ServletTelemetry {
 
-  /** Returns a new {@link ServletTelemetry} configured with the given {@link OpenTelemetry}. */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ServletTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link ServletTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static ServletTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ServletTelemetryBuilder(openTelemetry);
   }
@@ -44,13 +42,13 @@ public final class ServletTelemetry {
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
   }
 
-  /** Returns a new {@link Filter} for producing telemetry. */
+  /** Returns a {@link Filter} that instruments HTTP requests. */
   public Filter createFilter() {
     return new Servlet3TelemetryFilter(instrumenter, addTraceIdRequestAttribute);
   }
 
   /**
-   * Returns a new {@link Filter} for producing telemetry.
+   * Returns a {@link Filter} that instruments HTTP requests.
    *
    * @deprecated Use {@link #createFilter()} instead.
    */

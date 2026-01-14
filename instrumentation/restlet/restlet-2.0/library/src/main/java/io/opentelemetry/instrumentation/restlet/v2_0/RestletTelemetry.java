@@ -14,14 +14,12 @@ import org.restlet.routing.Filter;
 /** Entrypoint for instrumenting Restlet servers. */
 public final class RestletTelemetry {
 
-  /** Returns a new {@link RestletTelemetry} configured with the given {@link OpenTelemetry}. */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static RestletTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link RestletTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static RestletTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new RestletTelemetryBuilder(openTelemetry);
   }
@@ -32,17 +30,13 @@ public final class RestletTelemetry {
     this.serverInstrumenter = serverInstrumenter;
   }
 
-  /**
-   * Returns a new {@link Filter} which can be used to wrap {@link org.restlet.Restlet}
-   * implementations.
-   */
+  /** Returns a {@link Filter} that instruments HTTP requests. */
   public Filter createFilter(String path) {
     return new TracingFilter(serverInstrumenter, path);
   }
 
   /**
-   * Returns a new {@link Filter} which can be used to wrap {@link org.restlet.Restlet}
-   * implementations.
+   * Returns a {@link Filter} that instruments HTTP requests.
    *
    * @deprecated Use {@link #createFilter(String)} instead.
    */

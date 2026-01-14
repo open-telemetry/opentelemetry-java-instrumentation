@@ -63,14 +63,33 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
    */
   Collection<String> getRawQueryTexts(REQUEST request);
 
-  // TODO: make this required to implement
+  /**
+   * @deprecated Use {@link DbClientAttributesGetter#getDbOperationBatchSize(Object)} instead.
+   */
+  @Deprecated
   @Nullable
   default Long getBatchSize(REQUEST request) {
     return null;
   }
 
-  // TODO: make this required to implement
+  @Override
+  @Nullable
+  // TODO remove this override when getBatchSize is removed
+  default Long getDbOperationBatchSize(REQUEST request) {
+    return getBatchSize(request);
+  }
+
+  /**
+   * @deprecated Use {@link DbClientAttributesGetter#getDbQueryParameters(Object)} instead.
+   */
+  @Deprecated
   default Map<String, String> getQueryParameters(REQUEST request) {
     return Collections.emptyMap();
+  }
+
+  @Override
+  // TODO remove this override when getQueryParameters is removed
+  default Map<String, String> getDbQueryParameters(REQUEST request) {
+    return getQueryParameters(request);
   }
 }

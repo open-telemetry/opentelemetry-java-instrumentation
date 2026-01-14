@@ -11358,7 +11358,13 @@ libraries:
       - Java 8+
   rocketmq:
   - name: rocketmq-client-4.8
-    source_path: instrumentation/rocketmq/rocketmq-client/rocketmq-client-4.8
+    display_name: Apache RocketMQ Client - Remoting Protocol
+    description: |
+      This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers using the Remoting Protocol.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://rocketmq.apache.org/
+    source_path: instrumentation/rocketmq/rocketmq-client-4.8
     scope:
       name: io.opentelemetry.rocketmq-client-4.8
     target_versions:
@@ -11366,13 +11372,153 @@ libraries:
       - org.apache.rocketmq:rocketmq-client:[4.0.0,)
       library:
       - org.apache.rocketmq:rocketmq-client:4.8.0
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
+      description: |
+        Enables capturing experimental span attributes `messaging.rocketmq.message.tag`, `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`, `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+    - when: otel.instrumentation.rocketmq-client.experimental-span-attributes=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rocketmq.broker_address
+          type: STRING
+        - name: messaging.rocketmq.message.tag
+          type: STRING
+        - name: messaging.rocketmq.queue_id
+          type: LONG
+        - name: messaging.rocketmq.queue_offset
+          type: LONG
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rocketmq.broker_address
+          type: STRING
+        - name: messaging.rocketmq.message.tag
+          type: STRING
+        - name: messaging.rocketmq.send_result
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: rocketmq-client-5.0
-    source_path: instrumentation/rocketmq/rocketmq-client/rocketmq-client-5.0
+    display_name: Apache RocketMQ Client - gRPC Protocol
+    description: |
+      This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers using the gRPC/Protobuf Protocol.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://rocketmq.apache.org/
+    source_path: instrumentation/rocketmq/rocketmq-client-5.0
     scope:
       name: io.opentelemetry.rocketmq-client-5.0
     target_versions:
       javaagent:
       - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rocketmq.client_group
+          type: STRING
+        - name: messaging.rocketmq.message.delivery_timestamp
+          type: LONG
+        - name: messaging.rocketmq.message.group
+          type: STRING
+        - name: messaging.rocketmq.message.keys
+          type: STRING_ARRAY
+        - name: messaging.rocketmq.message.tag
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rocketmq.message.delivery_timestamp
+          type: LONG
+        - name: messaging.rocketmq.message.group
+          type: STRING
+        - name: messaging.rocketmq.message.keys
+          type: STRING_ARRAY
+        - name: messaging.rocketmq.message.tag
+          type: STRING
+        - name: messaging.rocketmq.message.type
+          type: STRING
+        - name: messaging.system
+          type: STRING
   runtime:
   - name: runtime-telemetry-java17
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java17

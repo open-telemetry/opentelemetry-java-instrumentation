@@ -167,7 +167,7 @@ class DbClientSpanNameExtractorTest {
         .thenReturn(singleton("INSERT INTO table VALUES(?)"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
+      when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(2L);
     }
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);

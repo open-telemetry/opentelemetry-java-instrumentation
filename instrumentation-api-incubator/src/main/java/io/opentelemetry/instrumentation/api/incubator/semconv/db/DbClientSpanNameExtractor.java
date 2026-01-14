@@ -205,7 +205,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     }
 
     private boolean isBatch(REQUEST request) {
-      Long batchSize = getter.getBatchSize(request);
+      Long batchSize = getter.getDbOperationBatchSize(request);
       return batchSize != null && batchSize > 1;
     }
   }
