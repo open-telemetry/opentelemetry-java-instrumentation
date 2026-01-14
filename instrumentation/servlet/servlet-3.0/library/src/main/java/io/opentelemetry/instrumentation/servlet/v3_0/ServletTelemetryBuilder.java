@@ -30,7 +30,7 @@ import java.util.function.UnaryOperator;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/** A builder of {@link ServletTelemetry}. */
+/** Builder for {@link ServletTelemetry}. */
 public final class ServletTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-3.0";
 
@@ -50,6 +50,8 @@ public final class ServletTelemetryBuilder {
         (builder, value) -> builder.addTraceIdRequestAttribute = value);
     Experimental.internalSetCapturedRequestParameters(
         (builder, params) -> builder.servletBuilder.setCaptureRequestParameters(params));
+    Experimental.internalSetCaptureEnduserId(
+        (builder, value) -> builder.servletBuilder.setCaptureEnduserId(value));
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -59,10 +61,7 @@ public final class ServletTelemetryBuilder {
     builder = servletBuilder.getBuilder();
   }
 
-  /**
-   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
-   * customized one.
-   */
+  /** Customizes the {@link SpanStatusExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>>
@@ -78,8 +77,8 @@ public final class ServletTelemetryBuilder {
   }
 
   /**
-   * Adds an extra {@link AttributesExtractor} to invoke to set attributes to instrumented items.
-   * The {@link AttributesExtractor} will be executed after all default extractors.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder addAttributesExtractor(
@@ -91,9 +90,9 @@ public final class ServletTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP server request headers that will be captured as span attributes.
+   * Configures HTTP request headers to capture as span attributes.
    *
-   * @param requestHeaders A list of HTTP header names.
+   * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
@@ -102,9 +101,9 @@ public final class ServletTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP server response headers that will be captured as span attributes.
+   * Configures HTTP response headers to capture as span attributes.
    *
-   * @param responseHeaders A list of HTTP header names.
+   * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
@@ -128,16 +127,15 @@ public final class ServletTelemetryBuilder {
   }
 
   /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   * Configures recognized HTTP request methods.
    *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * <p>By default, recognizes methods from <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
    *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
+   * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
-   * @param knownMethods A set of recognized HTTP request methods.
+   * @param knownMethods HTTP request methods to recognize.
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
@@ -146,10 +144,7 @@ public final class ServletTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
-   * one.
-   */
+  /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractorCustomizer) {
@@ -161,6 +156,7 @@ public final class ServletTelemetryBuilder {
     return this;
   }
 
+  /** Returns a new instance with the configured settings. */
   public ServletTelemetry build() {
     return new ServletTelemetry(
         servletBuilder.build(HttpSpanNameExtractor.create(httpAttributesGetter)),

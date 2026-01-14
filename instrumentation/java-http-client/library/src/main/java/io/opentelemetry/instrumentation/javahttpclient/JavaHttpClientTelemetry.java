@@ -16,13 +16,12 @@ import java.net.http.HttpResponse;
 /** Entrypoint for instrumenting Java HTTP Client. */
 public final class JavaHttpClientTelemetry {
 
-  /**
-   * Returns a new {@link JavaHttpClientTelemetry} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static JavaHttpClientTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static JavaHttpClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new JavaHttpClientTelemetryBuilder(openTelemetry);
   }
@@ -37,22 +36,20 @@ public final class JavaHttpClientTelemetry {
   }
 
   /**
-   * Construct a new OpenTelemetry tracing-enabled {@link HttpClient} using the provided {@link
-   * HttpClient} instance.
+   * Returns an instrumented {@link HttpClient} wrapping the provided client.
    *
-   * @param client An instance of HttpClient configured as desired.
-   * @return a tracing-enabled {@link HttpClient}.
+   * @param client the HttpClient to wrap
+   * @return an instrumented HttpClient
    */
   public HttpClient createHttpClient(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
   }
 
   /**
-   * Construct a new OpenTelemetry tracing-enabled {@link HttpClient} using the provided {@link
-   * HttpClient} instance.
+   * Returns an instrumented {@link HttpClient} wrapping the provided client.
    *
-   * @param client An instance of HttpClient configured as desired.
-   * @return a tracing-enabled {@link HttpClient}.
+   * @param client the HttpClient to wrap
+   * @return an instrumented HttpClient
    * @deprecated Use {@link #createHttpClient(HttpClient)} instead.
    */
   @Deprecated
