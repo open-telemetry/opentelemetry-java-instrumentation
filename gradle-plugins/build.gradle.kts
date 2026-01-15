@@ -82,11 +82,6 @@ gradlePlugin {
       description = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/muzzle.md"
       tags.set(listOf("opentelemetry", "instrumentation", "java"))
     }
-    get("io.opentelemetry.instrumentation.javaagent-extension").apply {
-      displayName = "Javaagent extension plugin"
-      description = "Configures muzzle plugins and dependencies for developing OpenTelemetry Java agent extensions and instrumentations"
-      tags.set(listOf("opentelemetry", "instrumentation", "java", "javaagent", "extension"))
-    }
   }
 }
 
