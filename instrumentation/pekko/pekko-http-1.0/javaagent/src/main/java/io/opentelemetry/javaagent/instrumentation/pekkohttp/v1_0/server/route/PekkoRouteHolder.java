@@ -82,7 +82,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.with(KEY, this);
   }
 
-  private PekkoRouteHolder() {}
+  PekkoRouteHolder() {}
 
   private static class State {
     private final Uri.Path lastUnmatchedPath;
