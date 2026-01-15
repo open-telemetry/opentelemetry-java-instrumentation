@@ -14,13 +14,13 @@ class MultiQuery {
 
   @Nullable private final String collectionName;
   @Nullable private final String storedProcedureName;
-  @Nullable private final String operationName;
+  private final String operationName;
   private final Set<String> queryTexts;
 
   private MultiQuery(
       @Nullable String collectionName,
       @Nullable String storedProcedureName,
-      @Nullable String operationName,
+      String operationName,
       Set<String> queryTexts) {
     this.collectionName = collectionName;
     this.storedProcedureName = storedProcedureName;
@@ -73,7 +73,6 @@ class MultiQuery {
     return collectionName != null ? collectionName : storedProcedureName;
   }
 
-  @Nullable
   public String getOperationName() {
     return operationName;
   }
