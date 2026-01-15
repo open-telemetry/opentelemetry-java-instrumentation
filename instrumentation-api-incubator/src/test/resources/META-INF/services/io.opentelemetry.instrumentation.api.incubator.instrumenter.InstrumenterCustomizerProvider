@@ -1,3 +1,0 @@
-# added in test resources for testing purposes
-# the real implementation is in sdk-autoconfigure-support module
-io.opentelemetry.instrumentation.api.incubator.instrumenter.ThreadDetailsInstrumenterCustomizerProvider
