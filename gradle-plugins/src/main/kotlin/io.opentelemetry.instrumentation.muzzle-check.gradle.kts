@@ -46,22 +46,6 @@ val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeResolved = true
 }
 
-// Configure muzzle-specific configurations to inherit from project's main configurations.
-// This allows dependency versions to be resolved from BOMs applied to compileClasspath/compileOnly.
-afterEvaluate {
-  val baseConfig = configurations.findByName("compileClasspath")
-    ?: configurations.findByName("compileOnly")
-
-  if (baseConfig != null) {
-    configurations.named("muzzleBootstrap").configure {
-      extendsFrom(baseConfig)
-    }
-    configurations.named("muzzleTooling").configure {
-      extendsFrom(baseConfig)
-    }
-  }
-}
-
 dependencies {
   // Bootstrap dependencies: Required classes for instrumentation that run in the bootstrap classloader
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
@@ -189,8 +173,8 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
   val taskName = it.removePrefix(":")
   val projectPath = project.path.substring(1)
   // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == "muzzle" || taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
-    taskName.contains(":muzzle-Assert") || taskName.endsWith(":muzzle")
+  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
+    taskName.contains(":muzzle-Assert")
 }
 
 if (hasRelevantTask) {
