@@ -24,12 +24,18 @@ public final class SemconvStability {
   private static final boolean emitOldCodeSemconv;
   private static final boolean emitStableCodeSemconv;
 
+  private static final boolean emitOldRpcSemconv;
+  private static final boolean emitStableRpcSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
 
     boolean oldCode = true;
     boolean stableCode = false;
+
+    boolean oldRpc = true;
+    boolean stableRpc = false;
 
     String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
@@ -55,6 +61,15 @@ public final class SemconvStability {
         oldCode = true;
         stableCode = true;
       }
+
+      if (values.contains("rpc")) {
+        oldRpc = false;
+        stableRpc = true;
+      }
+      if (values.contains("rpc/dup")) {
+        oldRpc = true;
+        stableRpc = true;
+      }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
@@ -62,6 +77,9 @@ public final class SemconvStability {
 
     emitOldCodeSemconv = oldCode;
     emitStableCodeSemconv = stableCode;
+
+    emitOldRpcSemconv = oldRpc;
+    emitStableRpcSemconv = stableRpc;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -103,6 +121,26 @@ public final class SemconvStability {
 
   public static boolean isEmitStableCodeSemconv() {
     return emitStableCodeSemconv;
+  }
+
+  public static boolean emitOldRpcSemconv() {
+    return emitOldRpcSemconv;
+  }
+
+  public static boolean emitStableRpcSemconv() {
+    return emitStableRpcSemconv;
+  }
+
+  private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
+
+  static {
+    rpcSystemNameMap.put("apache_dubbo", "dubbo");
+    rpcSystemNameMap.put("connect_rpc", "connectrpc");
+  }
+
+  public static String stableRpcSystemName(String oldRpcSystem) {
+    String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
+    return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
   }
 
   private SemconvStability() {}

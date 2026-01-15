@@ -55,6 +55,25 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
     return request.getResponseSize();
   }
 
+  @Override
+  @Nullable
+  public String getFullMethod(GrpcRequest request) {
+    // gRPC already has fully-qualified method name, avoid reconstructing it
+    return request.getMethod().getFullMethodName();
+  }
+
+  @Override
+  @Nullable
+  public String getMethodOriginal(GrpcRequest request) {
+    // Return just the method name (after the slash)
+    String fullMethodName = request.getMethod().getFullMethodName();
+    int slashIndex = fullMethodName.lastIndexOf('/');
+    if (slashIndex == -1) {
+      return null;
+    }
+    return fullMethodName.substring(slashIndex + 1);
+  }
+
   List<String> metadataValue(GrpcRequest request, String key) {
     if (request.getMetadata() == null) {
       return Collections.emptyList();

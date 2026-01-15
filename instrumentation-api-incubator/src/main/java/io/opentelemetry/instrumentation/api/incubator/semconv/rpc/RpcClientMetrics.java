@@ -19,8 +19,10 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -30,24 +32,44 @@ import java.util.logging.Logger;
 public final class RpcClientMetrics implements OperationListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   private static final ContextKey<RpcClientMetrics.State> RPC_CLIENT_REQUEST_METRICS_STATE =
       ContextKey.named("rpc-client-request-metrics-state");
 
   private static final Logger logger = Logger.getLogger(RpcClientMetrics.class.getName());
 
-  private final DoubleHistogram clientDurationHistogram;
+  @Nullable private final DoubleHistogram oldClientDurationHistogram;
+  @Nullable private final DoubleHistogram stableClientDurationHistogram;
   private final LongHistogram clientRequestSize;
   private final LongHistogram clientResponseSize;
 
   private RpcClientMetrics(Meter meter) {
-    DoubleHistogramBuilder durationBuilder =
-        meter
-            .histogramBuilder("rpc.client.duration")
-            .setDescription("The duration of an outbound RPC invocation.")
-            .setUnit("ms");
-    RpcMetricsAdvice.applyClientDurationAdvice(durationBuilder);
-    clientDurationHistogram = durationBuilder.build();
+    // Old metric (milliseconds)
+    if (SemconvStability.emitOldRpcSemconv()) {
+      DoubleHistogramBuilder oldDurationBuilder =
+          meter
+              .histogramBuilder("rpc.client.duration")
+              .setDescription("The duration of an outbound RPC invocation.")
+              .setUnit("ms");
+      RpcMetricsAdvice.applyClientDurationAdvice(oldDurationBuilder);
+      oldClientDurationHistogram = oldDurationBuilder.build();
+    } else {
+      oldClientDurationHistogram = null;
+    }
+
+    // Stable metric (seconds)
+    if (SemconvStability.emitStableRpcSemconv()) {
+      DoubleHistogramBuilder stableDurationBuilder =
+          meter
+              .histogramBuilder("rpc.client.call.duration")
+              .setDescription("The duration of an outbound RPC invocation.")
+              .setUnit("s");
+      RpcMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder);
+      stableClientDurationHistogram = stableDurationBuilder.build();
+    } else {
+      stableClientDurationHistogram = null;
+    }
 
     LongHistogramBuilder requestSizeBuilder =
         meter
@@ -95,8 +117,17 @@ public final class RpcClientMetrics implements OperationListener {
       return;
     }
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    clientDurationHistogram.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_MS, attributes, context);
+    double durationNanos = (endNanos - state.startTimeNanos());
+
+    // Record to old histogram (milliseconds)
+    if (oldClientDurationHistogram != null) {
+      oldClientDurationHistogram.record(durationNanos / NANOS_PER_MS, attributes, context);
+    }
+
+    // Record to stable histogram (seconds)
+    if (stableClientDurationHistogram != null) {
+      stableClientDurationHistogram.record(durationNanos / NANOS_PER_S, attributes, context);
+    }
 
     Long rpcClientRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
     if (rpcClientRequestBodySize != null) {
