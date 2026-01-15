@@ -22,7 +22,6 @@ dependencies {
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   testImplementation("org.junit-pioneer:junit-pioneer")
 
   jmhImplementation(project(":instrumentation-api-incubator"))

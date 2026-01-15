@@ -8,7 +8,6 @@ group = "io.opentelemetry.instrumentation"
 dependencies {
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   api("io.opentelemetry:opentelemetry-sdk-extension-incubator")
-  implementation(project(":instrumentation-api-incubator"))
 
   compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
