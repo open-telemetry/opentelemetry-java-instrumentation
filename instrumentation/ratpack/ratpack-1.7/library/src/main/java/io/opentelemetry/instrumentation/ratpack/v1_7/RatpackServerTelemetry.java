@@ -57,12 +57,12 @@ public final class RatpackServerTelemetry {
     return serverHandler;
   }
 
-  /** Returns instance of {@link ExecInterceptor} to support Ratpack Registry binding. */
+  /** Returns {@link ExecInterceptor} instance to support Ratpack Registry binding. */
   public ExecInterceptor getExecInterceptor() {
     return OpenTelemetryExecInterceptor.INSTANCE;
   }
 
-  /** Returns instance of {@link ExecInitializer} to support Ratpack Registry binding. */
+  /** Returns {@link ExecInitializer} instance to support Ratpack Registry binding. */
   public ExecInitializer getExecInitializer() {
     return OpenTelemetryExecInitializer.INSTANCE;
   }
