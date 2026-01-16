@@ -13,6 +13,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.NetworkAttributes;
+import java.util.Locale;
 import javax.annotation.Nullable;
 
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
@@ -75,6 +77,20 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       if (error != null) {
         internalSet(attributes, ERROR_TYPE, error.getClass().getName());
       }
+      String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
+      String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));
+
+      if (protocolVersion != null) {
+        if (!"http".equals(protocolName)) { // todo check if this is needed
+          internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
+        }
+        internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      }
     }
+  }
+
+  @Nullable
+  private static String lowercaseStr(@Nullable String str) {
+    return str == null ? null : str.toLowerCase(Locale.ROOT);
   }
 }
