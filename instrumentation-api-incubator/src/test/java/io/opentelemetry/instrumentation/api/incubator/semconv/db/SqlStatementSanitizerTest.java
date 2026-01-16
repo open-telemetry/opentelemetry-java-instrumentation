@@ -65,7 +65,8 @@ class SqlStatementSanitizerTest {
         // Oracle CREATE USER statement can contain unquoted password
         // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
         Arguments.of("CREATE USER new_user IDENTIFIED BY Password1", "CREATE USER ?", "CREATE"),
-        Arguments.of("ALTER USER user IDENTIFIED BY Password1 REPLACE Password2", "ALTER USER ?", "ALTER"),
+        Arguments.of(
+            "ALTER USER user IDENTIFIED BY Password1 REPLACE Password2", "ALTER USER ?", "ALTER"),
         // field named "connect" does not trigger sanitization
         Arguments.of("SELECT connect FROM TABLE", "SELECT connect FROM TABLE", "SELECT TABLE"));
   }
@@ -140,7 +141,7 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
-    assertThat(result.getQuerySummary()).isEqualTo("SELECT TABLE");
+    assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT SELECT SELECT");
   }
 
   @Test
@@ -209,14 +210,26 @@ class SqlStatementSanitizerTest {
 
   private static Stream<Arguments> sqlArgs() {
     return Stream.of(
-        Arguments.of("SELECT * FROM TABLE WHERE FIELD=1234", "SELECT * FROM TABLE WHERE FIELD=?", "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = 1234", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD=1234",
+            "SELECT * FROM TABLE WHERE FIELD=?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD>=-1234", "SELECT * FROM TABLE WHERE FIELD>=?", "SELECT TABLE"),
-        Arguments.of("SELECT * FROM TABLE WHERE FIELD<-1234", "SELECT * FROM TABLE WHERE FIELD<?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = 1234",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD <.1234", "SELECT * FROM TABLE WHERE FIELD <?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD>=-1234",
+            "SELECT * FROM TABLE WHERE FIELD>=?",
+            "SELECT TABLE"),
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD<-1234",
+            "SELECT * FROM TABLE WHERE FIELD<?",
+            "SELECT TABLE"),
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD <.1234",
+            "SELECT * FROM TABLE WHERE FIELD <?",
+            "SELECT TABLE"),
         Arguments.of("SELECT 1.2", "SELECT ?", "SELECT"),
         Arguments.of("SELECT -1.2", "SELECT ?", "SELECT"),
         Arguments.of("SELECT -1.2e-9", "SELECT ?", "SELECT"),
@@ -236,7 +249,9 @@ class SqlStatementSanitizerTest {
         Arguments.of("SELECT -- comment", "SELECT -- comment", "SELECT"),
         Arguments.of("SELECT * FROM TABLE123", "SELECT * FROM TABLE123", "SELECT TABLE123"),
         Arguments.of(
-            "SELECT FIELD2 FROM TABLE_123 WHERE X<>7", "SELECT FIELD2 FROM TABLE_123 WHERE X<>?", "SELECT TABLE_123"),
+            "SELECT FIELD2 FROM TABLE_123 WHERE X<>7",
+            "SELECT FIELD2 FROM TABLE_123 WHERE X<>?",
+            "SELECT TABLE_123"),
 
         // Semi-nonsensical almost-numbers to elide or not
         Arguments.of("SELECT --83--...--8e+76e3E-1", "SELECT ?", "SELECT"),
@@ -245,50 +260,74 @@ class SqlStatementSanitizerTest {
         Arguments.of("SELECT 1/2/34", "SELECT ?/?/?", "SELECT"),
 
         // Basic ' strings
-        Arguments.of("SELECT * FROM TABLE WHERE FIELD = ''", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD = ''",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = 'words and spaces'",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = ' an escaped '' quote mark inside'",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = '\\\\'", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = '\\\\'",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = '\"inside doubles\"'",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = '\"$$$$\"'", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = '\"$$$$\"'",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = 'a single \" doublequote inside'",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
 
         // Some databases allow using dollar-quoted strings
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = $$$$", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = $$$$",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = $$words and spaces$$",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = $$quotes '\" inside$$",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = $$\"''\"$$", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = $$\"''\"$$",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = $$\\\\$$", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = $$\\\\$$",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
 
         // PostgreSQL native parameter marker, we want to keep $1 instead of replacing it with ?
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = $1", "SELECT * FROM TABLE WHERE FIELD = $1", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = $1",
+            "SELECT * FROM TABLE WHERE FIELD = $1",
+            "SELECT TABLE"),
 
         // Unicode, including a unicode identifier with a trailing number
         Arguments.of(
-            "SELECT * FROM TABLEओ7 WHERE FIELD = 'ɣ'", "SELECT * FROM TABLEओ7 WHERE FIELD = ?", "SELECT TABLEओ7"),
+            "SELECT * FROM TABLEओ7 WHERE FIELD = 'ɣ'",
+            "SELECT * FROM TABLEओ7 WHERE FIELD = ?",
+            "SELECT TABLEओ7"),
 
         // whitespace normalization
         Arguments.of(
             "SELECT    *    \t\r\nFROM  TABLE WHERE FIELD1 = 12344 AND FIELD2 = 5678",
-            "SELECT * FROM TABLE WHERE FIELD1 = ? AND FIELD2 = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD1 = ? AND FIELD2 = ?",
+            "SELECT TABLE"),
 
         // hibernate/jpa query language
         Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "TABLE"));
@@ -298,23 +337,33 @@ class SqlStatementSanitizerTest {
     return Stream.of(
         // Some databases support/encourage " instead of ' with same escape rules
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"\"", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = \"\"",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = \"words and spaces'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"\\\\\"", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = \"\\\\\"",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"'$$$$'\"", "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"),
+            "SELECT * FROM TABLE WHERE FIELD = \"'$$$$'\"",
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?", "SELECT TABLE"));
+            "SELECT * FROM TABLE WHERE FIELD = ?",
+            "SELECT TABLE"));
   }
 
   private static Function<String, SqlStatementInfo> expect(
@@ -330,38 +379,73 @@ class SqlStatementSanitizerTest {
   private static Stream<Arguments> simplifyArgs() {
     return Stream.of(
         // Select
-        Arguments.of("SELECT x, y, z FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
-        Arguments.of("SELECT x, y, z FROM `schema table`", expect("SELECT", "schema table", "SELECT `schema table`")),
-        Arguments.of("SELECT x, y, z FROM `schema`.`table`", expect("SELECT", "`schema`.`table`", "SELECT `schema`.`table`")),
-        Arguments.of("SELECT x, y, z FROM \"schema table\"", expect("SELECT", "schema table", "SELECT \"schema table\"")),
         Arguments.of(
-            "SELECT x, y, z FROM \"schema\".\"table\"", expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
+            "SELECT x, y, z FROM schema.table",
+            expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
-            "WITH subquery as (select a from b) SELECT x, y, z FROM table", expect("SELECT", null, "SELECT SELECT")),
-        Arguments.of("SELECT x, y, (select a from b) as z FROM table", expect("SELECT", null, "SELECT SELECT")),
+            "SELECT x, y, z FROM `schema table`",
+            expect("SELECT", "schema table", "SELECT `schema table`")),
         Arguments.of(
-            "select delete, insert into, merge, update from table", expect("SELECT", "table", "SELECT DELETE INSERT MERGE UPDATE table")),
-        Arguments.of("select col /* from table2 */ from table", expect("SELECT", "table", "SELECT table")),
-        Arguments.of("select col from table join anotherTable", expect("SELECT", null, "SELECT table")),
-        Arguments.of("select col from (select * from anotherTable)", expect("SELECT", null, "SELECT SELECT")),
-        Arguments.of("select col from (select * from anotherTable) alias", expect("SELECT", null, "SELECT SELECT")),
-        Arguments.of("select col from table1 union select col from table2", expect("SELECT", null, "SELECT table1 SELECT")),
+            "SELECT x, y, z FROM `schema`.`table`",
+            expect("SELECT", "`schema`.`table`", "SELECT `schema`.`table`")),
+        Arguments.of(
+            "SELECT x, y, z FROM \"schema table\"",
+            expect("SELECT", "schema table", "SELECT \"schema table\"")),
+        Arguments.of(
+            "SELECT x, y, z FROM \"schema\".\"table\"",
+            expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
+        Arguments.of(
+            "WITH subquery as (select a from b) SELECT x, y, z FROM table",
+            expect("SELECT", "table", "SELECT b SELECT table")),
+        Arguments.of(
+            "SELECT x, y, (select a from b) as z FROM table",
+            expect("SELECT", "table", "SELECT SELECT b table")),
+        Arguments.of(
+            "select delete, insert into, merge, update from table",
+            expect("SELECT", "table", "SELECT DELETE INSERT MERGE UPDATE table")),
+        Arguments.of(
+            "select col /* from table2 */ from table", expect("SELECT", "table", "SELECT table")),
+        Arguments.of(
+            "select col from table join anotherTable",
+            expect("SELECT", null, "SELECT table anotherTable")),
+        Arguments.of(
+            "select col from (select * from anotherTable)",
+            expect("SELECT", null, "SELECT SELECT anotherTable")),
+        Arguments.of(
+            "select col from (select * from anotherTable) alias",
+            expect("SELECT", null, "SELECT SELECT anotherTable")),
+        Arguments.of(
+            "select col from table1 union select col from table2",
+            expect("SELECT", null, "SELECT table1 SELECT")),
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
-            expect("SELECT", null, "SELECT table SELECT")),
-        Arguments.of("select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
-        Arguments.of("select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),
-        Arguments.of("select col from table1 as t1, table2 as t2", expect("SELECT", null, "SELECT table1 table2")),
+            expect("SELECT", "table", "SELECT table SELECT anotherTable")),
+        Arguments.of(
+            "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
+        Arguments.of(
+            "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),
+        Arguments.of(
+            "select col from table1 as t1, table2 as t2",
+            expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
             "select col from table where col in (1, 2, 3)",
             expect("select col from table where col in (?)", "SELECT", "table", "SELECT table")),
         Arguments.of(
             "select 'a' IN(x, 'b') from table where col in (1) and z IN( '3', '4' )",
-            expect("select ? IN(x, ?) from table where col in (?) and z IN(?)", "SELECT", "table", "SELECT table")),
-        Arguments.of("select col from table order by col, col2", expect("SELECT", "table", "SELECT table")),
-        Arguments.of("select ąś∂ń© from źćļńĶ order by col, col2", expect("SELECT", "źćļńĶ", "SELECT źćļńĶ")),
+            expect(
+                "select ? IN(x, ?) from table where col in (?) and z IN(?)",
+                "SELECT",
+                "table",
+                "SELECT table")),
+        Arguments.of(
+            "select col from table order by col, col2", expect("SELECT", "table", "SELECT table")),
+        Arguments.of(
+            "select ąś∂ń© from źćļńĶ order by col, col2",
+            expect("SELECT", "źćļńĶ", "SELECT źćļńĶ")),
         Arguments.of("select 12345678", expect("select ?", "SELECT", null, "SELECT")),
-        Arguments.of("/* update comment */ select * from table1", expect("SELECT", "table1", "SELECT table1")),
+        Arguments.of(
+            "/* update comment */ select * from table1",
+            expect("SELECT", "table1", "SELECT table1")),
         Arguments.of("select /*((*/abc from table", expect("SELECT", "table", "SELECT table")),
         Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "table", "SELECT TAblE")),
         Arguments.of("select next value in hibernate_sequence", expect("SELECT", null, "SELECT")),
@@ -372,18 +456,29 @@ class SqlStatementSanitizerTest {
 
         // Insert
         Arguments.of(" insert into table where lalala", expect("INSERT", "table", "INSERT table")),
-        Arguments.of("insert insert into table where lalala", expect("INSERT", "table", "INSERT INSERT table")),
-        Arguments.of("insert into db.table where lalala", expect("INSERT", "db.table", "INSERT db.table")),
-        Arguments.of("insert into `db table` where lalala", expect("INSERT", "db table", "INSERT `db table`")),
-        Arguments.of("insert into \"db table\" where lalala", expect("INSERT", "db table", "INSERT \"db table\"")),
+        Arguments.of(
+            "insert insert into table where lalala",
+            expect("INSERT", "table", "INSERT INSERT table")),
+        Arguments.of(
+            "insert into db.table where lalala", expect("INSERT", "db.table", "INSERT db.table")),
+        Arguments.of(
+            "insert into `db table` where lalala",
+            expect("INSERT", "db table", "INSERT `db table`")),
+        Arguments.of(
+            "insert into \"db table\" where lalala",
+            expect("INSERT", "db table", "INSERT \"db table\"")),
         Arguments.of("insert without i-n-t-o", expect("INSERT", null, "INSERT")),
 
         // Delete
-        Arguments.of("delete from table where something something", expect("DELETE", "table", "DELETE table")),
         Arguments.of(
-            "delete from `my table` where something something", expect("DELETE", "my table", "DELETE `my table`")),
+            "delete from table where something something",
+            expect("DELETE", "table", "DELETE table")),
         Arguments.of(
-            "delete from \"my table\" where something something", expect("DELETE", "my table", "DELETE \"my table\"")),
+            "delete from `my table` where something something",
+            expect("DELETE", "my table", "DELETE `my table`")),
+        Arguments.of(
+            "delete from \"my table\" where something something",
+            expect("DELETE", "my table", "DELETE \"my table\"")),
         Arguments.of(
             "delete from foo where x IN (1,2,3)",
             expect("delete from foo where x IN (?)", "DELETE", "foo", "DELETE foo")),
@@ -392,17 +487,22 @@ class SqlStatementSanitizerTest {
 
         // Update
         Arguments.of(
-            "update table set answer=42", expect("update table set answer=?", "UPDATE", "table", "UPDATE table")),
+            "update table set answer=42",
+            expect("update table set answer=?", "UPDATE", "table", "UPDATE table")),
         Arguments.of(
             "update `my table` set answer=42",
             expect("update `my table` set answer=?", "UPDATE", "my table", "UPDATE `my table`")),
         Arguments.of(
             "update `my table` set answer=42 where x IN('a', 'b') AND y In ('a',  'b')",
             expect(
-                "update `my table` set answer=? where x IN(?) AND y In (?)", "UPDATE", "my table", "UPDATE `my table`")),
+                "update `my table` set answer=? where x IN(?) AND y In (?)",
+                "UPDATE",
+                "my table",
+                "UPDATE `my table`")),
         Arguments.of(
             "update \"my table\" set answer=42",
-            expect("update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
+            expect(
+                "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
         // Call
@@ -415,7 +515,8 @@ class SqlStatementSanitizerTest {
         Arguments.of("merge into table", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge into `my table`", expect("MERGE", "my table", "MERGE `my table`")),
         Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE \"my table\"")),
-        Arguments.of("merge table (into is optional in some dbs)", expect("MERGE", "table", "MERGE table")),
+        Arguments.of(
+            "merge table (into is optional in some dbs)", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge (into )))", expect("MERGE", null, "MERGE")),
 
         // Unknown operation
@@ -426,17 +527,25 @@ class SqlStatementSanitizerTest {
 
   private static Stream<Arguments> ddlArgs() {
     return Stream.of(
-        Arguments.of("CREATE TABLE `table`", expect("CREATE TABLE", "table", "CREATE TABLE `table`")),
-        Arguments.of("CREATE TABLE IF NOT EXISTS table", expect("CREATE TABLE", "table", "CREATE TABLE table")),
+        Arguments.of(
+            "CREATE TABLE `table`", expect("CREATE TABLE", "table", "CREATE TABLE `table`")),
+        Arguments.of(
+            "CREATE TABLE IF NOT EXISTS table",
+            expect("CREATE TABLE", "table", "CREATE TABLE table")),
         Arguments.of("DROP TABLE `if`", expect("DROP TABLE", "if", "DROP TABLE `if`")),
         Arguments.of(
             "ALTER TABLE table ADD CONSTRAINT c FOREIGN KEY (foreign_id) REFERENCES ref (id)",
             expect("ALTER TABLE", "table", "ALTER TABLE table")),
-        Arguments.of("CREATE INDEX types_name ON types (name)", expect("CREATE INDEX", null, "CREATE INDEX")),
-        Arguments.of("DROP INDEX types_name ON types (name)", expect("DROP INDEX", null, "DROP INDEX")),
         Arguments.of(
-            "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?", expect("CREATE VIEW", null, "CREATE VIEW SELECT")),
+            "CREATE INDEX types_name ON types (name)",
+            expect("CREATE INDEX", null, "CREATE INDEX")),
         Arguments.of(
-            "CREATE PROCEDURE p AS SELECT * FROM table GO", expect("CREATE PROCEDURE", null, "CREATE PROCEDURE SELECT")));
+            "DROP INDEX types_name ON types (name)", expect("DROP INDEX", null, "DROP INDEX")),
+        Arguments.of(
+            "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
+            expect("CREATE VIEW", null, "CREATE VIEW SELECT")),
+        Arguments.of(
+            "CREATE PROCEDURE p AS SELECT * FROM table GO",
+            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE SELECT")));
   }
 }

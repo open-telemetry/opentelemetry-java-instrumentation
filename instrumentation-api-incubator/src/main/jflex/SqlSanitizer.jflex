@@ -253,6 +253,10 @@ WHITESPACE           = [ \t\r\n]+
     boolean inImplicitJoin = false;
     // Counter for identifiers after each comma in implicit join
     int identifiersAfterComma = 0;
+    // Tracks whether we just encountered a JOIN keyword and expect a table name next
+    boolean expectingJoinTableName = false;
+    // Counter for identifiers after JOIN keyword
+    int identifiersAfterJoin = 0;
 
     boolean handleFrom() {
       if (parenLevel == 0) {
@@ -261,20 +265,40 @@ WHITESPACE           = [ \t\r\n]+
         return false;
       }
 
-      // subquery in WITH or SELECT clause, before main FROM clause; skipping
-      mainIdentifier = null;
-      return true;
+      // subquery - for query summary we continue to capture table names
+      // but we don't update mainIdentifier (preserve the main table from outer query)
+      expectingTableName = true;
+      return false;
     }
 
     boolean handleJoin() {
       // for SELECT statements with joined tables there's no main table
       mainIdentifier = null;
-      return true;
+      // After JOIN keyword, we expect a table name for the query summary
+      expectingJoinTableName = true;
+      identifiersAfterJoin = 0;
+      // Continue processing to capture the joined table name
+      return false;
     }
 
     boolean handleIdentifier() {
       if (identifiersAfterMainFromClause > 0) {
         ++identifiersAfterMainFromClause;
+      }
+
+      // Handle identifiers after JOIN keyword
+      if (expectingJoinTableName) {
+        ++identifiersAfterJoin;
+        // First identifier after JOIN is the table name - add it to summary
+        if (identifiersAfterJoin == 1) {
+          // Use yytext() to preserve quotes in query summary per semantic conventions
+          appendTargetToSummary(yytext());
+        }
+        // After 3 identifiers (table, alias, or "table as alias"), stop expecting JOIN table
+        if (identifiersAfterJoin >= FROM_TABLE_REF_MAX_IDENTIFIERS) {
+          expectingJoinTableName = false;
+        }
+        return false;
       }
 
       // Handle identifiers in implicit join (comma-separated tables)
@@ -292,10 +316,13 @@ WHITESPACE           = [ \t\r\n]+
         return false;
       }
 
-      // SELECT FROM (subquery) case
+      // SELECT FROM (subquery) case - still capture table name for query summary
+      // but don't update mainIdentifier (preserve main table from outer query)
       if (parenLevel != 0) {
-        mainIdentifier = null;
-        return true;
+        // Use yytext() to preserve quotes in query summary per semantic conventions
+        appendTargetToSummary(yytext());
+        expectingTableName = false;
+        return false;
       }
 
       // whenever >1 table is used there is no main table (e.g. unions)
@@ -338,21 +365,40 @@ WHITESPACE           = [ \t\r\n]+
 
   private class Insert extends Operation {
     boolean expectingTableName = false;
+    boolean expectingSelectTableName = false;
+    boolean mainTableSet = false;
 
     boolean handleInto() {
       expectingTableName = true;
       return false;
     }
 
+    boolean handleFrom() {
+      // Handle INSERT INTO ... SELECT FROM case
+      expectingSelectTableName = true;
+      return false;
+    }
+
     boolean handleIdentifier() {
+      if (expectingSelectTableName) {
+        // Capture table name from SELECT part of INSERT INTO ... SELECT
+        appendTargetToSummary(yytext());
+        expectingSelectTableName = false;
+        return false;
+      }
+
       if (!expectingTableName) {
         return false;
       }
 
-      mainIdentifier = readIdentifierName();
-      // Use yytext() to preserve quotes in query summary per semantic conventions
-      appendTargetToSummary(yytext());
-      return true;
+      if (!mainTableSet) {
+        mainIdentifier = readIdentifierName();
+        // Use yytext() to preserve quotes in query summary per semantic conventions
+        appendTargetToSummary(yytext());
+        expectingTableName = false;
+        mainTableSet = true;
+      }
+      return false;
     }
   }
 
