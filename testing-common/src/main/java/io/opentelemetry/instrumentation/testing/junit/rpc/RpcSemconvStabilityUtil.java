@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import org.assertj.core.data.MapEntry;
 
 // until old rpc semconv are dropped in 3.0
 public class RpcSemconvStabilityUtil {
@@ -27,9 +25,6 @@ public class RpcSemconvStabilityUtil {
       AttributeKey.stringKey("rpc.system.name");
   private static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
 
-  private static final Map<AttributeKey<?>, AttributeKey<?>> newToOldMap = buildMap();
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {
     Map<AttributeKey<?>, AttributeKey<?>> map = new HashMap<>();
     map.put(RPC_SYSTEM_NAME, RPC_SYSTEM);
@@ -38,34 +33,6 @@ public class RpcSemconvStabilityUtil {
   }
 
   private RpcSemconvStabilityUtil() {}
-
-  // not testing rpc/dup
-  @SuppressWarnings("unchecked")
-  public static <T> AttributeKey<T> maybeUnstable(AttributeKey<T> key) {
-    if (SemconvStability.emitOldRpcSemconv()) {
-      return (AttributeKey<T>) Objects.requireNonNull(newToOldMap.get(key));
-    }
-    return key;
-  }
-
-  // not testing rpc/dup
-  public static AttributeAssertion maybeUnstableMethod(String serviceName, String methodName) {
-    if (SemconvStability.emitOldRpcSemconv()) {
-      return equalTo(RPC_SERVICE, serviceName);
-    } else {
-      return equalTo(RPC_METHOD, serviceName + "/" + methodName);
-    }
-  }
-
-  // not testing rpc/dup
-  public static MapEntry<AttributeKey<String>, String> maybeUnstableMethodEntry(
-      String serviceName, String methodName) {
-    if (SemconvStability.emitOldRpcSemconv()) {
-      return MapEntry.entry(RPC_SERVICE, serviceName);
-    } else {
-      return MapEntry.entry(RPC_METHOD, serviceName + "/" + methodName);
-    }
-  }
 
   /**
    * Returns RPC method attribute assertions that work for both old and stable semconv. Pass both
@@ -79,7 +46,6 @@ public class RpcSemconvStabilityUtil {
    * @param method The RPC method name (e.g., "Method")
    * @return List of attribute assertions for the method
    */
-  @SuppressWarnings("deprecation") // testing deprecated rpc semconv
   public static List<AttributeAssertion> rpcMethodAssertions(String service, String method) {
     List<AttributeAssertion> assertions = new ArrayList<>();
 
@@ -98,45 +64,11 @@ public class RpcSemconvStabilityUtil {
   }
 
   /**
-   * Returns RPC method attribute assertions for OLD metrics only. Use this for size metrics and old
-   * duration metrics in dup mode.
-   *
-   * @param service The RPC service name (e.g., "my.Service")
-   * @param method The RPC method name (e.g., "Method")
-   * @return List of attribute assertions for the method in old metrics
-   */
-  @SuppressWarnings("deprecation") // testing deprecated rpc semconv
-  public static List<AttributeAssertion> rpcOldMetricMethodAssertions(
-      String service, String method) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(RPC_SERVICE, service));
-    assertions.add(equalTo(RPC_METHOD, method));
-    return assertions;
-  }
-
-  /**
-   * Returns RPC method attribute assertions for STABLE metrics only. Use this for stable duration
-   * metrics in dup mode.
-   *
-   * @param service The RPC service name (e.g., "my.Service")
-   * @param method The RPC method name (e.g., "Method")
-   * @return List of attribute assertions for the method in stable metrics
-   */
-  public static List<AttributeAssertion> rpcStableMetricMethodAssertions(
-      String service, String method) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    // Stable metrics have rpc.method with full format
-    assertions.add(equalTo(RPC_METHOD, service + "/" + method));
-    return assertions;
-  }
-
-  /**
    * Returns RPC system attribute assertion that works for both old and stable semconv.
    *
    * @param systemName The RPC system name (e.g., "grpc", "apache_dubbo")
    * @return Attribute assertion for the system
    */
-  @SuppressWarnings("deprecation") // testing deprecated rpc semconv
   public static AttributeAssertion rpcSystemAssertion(String systemName) {
     if (SemconvStability.emitStableRpcSemconv()) {
       return equalTo(RPC_SYSTEM_NAME, SemconvStability.stableRpcSystemName(systemName));
