@@ -27,30 +27,28 @@ final class RpcMetricsAdvice {
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
 
-  private static final List<AttributeKey<?>> RPC_METRICS_ATTRIBUTE_KEYS = buildAttributeKeysList();
+  private static final List<AttributeKey<?>> RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS =
+      buildAttributeKeysList(false);
+  private static final List<AttributeKey<?>> RPC_METRICS_STABLE_ATTRIBUTE_KEYS =
+      buildAttributeKeysList(true);
 
   @SuppressWarnings("deprecation") // until old rpc semconv are dropped
-  private static List<AttributeKey<?>> buildAttributeKeysList() {
+  private static List<AttributeKey<?>> buildAttributeKeysList(boolean stable) {
     List<AttributeKey<?>> keys = new ArrayList<>();
 
     // Add stable or old RPC system key
-    if (SemconvStability.emitStableRpcSemconv()) {
+    if (stable) {
       keys.add(RpcCommonAttributesExtractor.RPC_SYSTEM_NAME);
     } else {
       keys.add(RpcCommonAttributesExtractor.RPC_SYSTEM);
     }
 
     // Add RPC service (old only)
-    if (SemconvStability.emitOldRpcSemconv()) {
+    if (!stable) {
       keys.add(RpcCommonAttributesExtractor.RPC_SERVICE);
     }
 
-    // Add stable or old RPC method key
-    if (SemconvStability.emitStableRpcSemconv()) {
-      keys.add(RpcCommonAttributesExtractor.RPC_METHOD_STABLE);
-    } else {
-      keys.add(RpcCommonAttributesExtractor.RPC_METHOD);
-    }
+    keys.add(RpcCommonAttributesExtractor.RPC_METHOD);
 
     // Add status code key
     if (SemconvStability.emitStableRpcSemconv()) {
@@ -60,7 +58,7 @@ final class RpcMetricsAdvice {
     }
 
     // Network type only for old semconv
-    if (SemconvStability.emitOldRpcSemconv()) {
+    if (!stable) {
       keys.add(NetworkAttributes.NETWORK_TYPE);
     }
 
@@ -72,40 +70,46 @@ final class RpcMetricsAdvice {
     return keys;
   }
 
-  static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
+  private static List<AttributeKey<?>> getAttributeKeys(boolean stable) {
+    return stable ? RPC_METRICS_STABLE_ATTRIBUTE_KEYS : RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS;
+  }
+
+  static void applyClientDurationAdvice(DoubleHistogramBuilder builder, boolean stable) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
-    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(RPC_METRICS_ATTRIBUTE_KEYS);
+    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(getAttributeKeys(stable));
   }
 
-  static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
+  static void applyServerDurationAdvice(DoubleHistogramBuilder builder, boolean stable) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
-    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(RPC_METRICS_ATTRIBUTE_KEYS);
+    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(getAttributeKeys(stable));
   }
 
-  static void applyClientRequestSizeAdvice(LongHistogramBuilder builder) {
+  static void applyDeprecatedClientRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
     }
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
-    ((ExtendedLongHistogramBuilder) builder).setAttributesAdvice(RPC_METRICS_ATTRIBUTE_KEYS);
+    ((ExtendedLongHistogramBuilder) builder)
+        .setAttributesAdvice(RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS);
   }
 
-  static void applyServerRequestSizeAdvice(LongHistogramBuilder builder) {
+  static void applyDeprecatedServerRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
     }
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
-    ((ExtendedLongHistogramBuilder) builder).setAttributesAdvice(RPC_METRICS_ATTRIBUTE_KEYS);
+    ((ExtendedLongHistogramBuilder) builder)
+        .setAttributesAdvice(RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS);
   }
 
   private RpcMetricsAdvice() {}

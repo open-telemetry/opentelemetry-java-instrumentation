@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,6 +18,13 @@ import java.util.Set;
  * any time.
  */
 public final class SemconvStability {
+
+  // copied from RpcIncubatingAttributes
+  private static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
+
+  // virtual key to avoid clash with stable rpc.method
+  private static final AttributeKey<String> RPC_METHOD_OLD =
+      AttributeKey.stringKey("rpc.method.deprecated");
 
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
@@ -131,6 +139,10 @@ public final class SemconvStability {
     return emitStableRpcSemconv;
   }
 
+  private static boolean emitBothRpcSemconv() {
+    return emitOldRpcSemconv && emitStableRpcSemconv;
+  }
+
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
 
   static {
@@ -141,6 +153,14 @@ public final class SemconvStability {
   public static String stableRpcSystemName(String oldRpcSystem) {
     String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
     return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
+  }
+
+  public static AttributeKey<String> getOldRpcMethodAttributeKey() {
+    if (emitBothRpcSemconv()) {
+      // to avoid clash when both semconv are emitted
+      return RPC_METHOD_OLD;
+    }
+    return RPC_METHOD;
   }
 
   private SemconvStability() {}

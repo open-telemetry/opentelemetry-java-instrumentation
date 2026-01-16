@@ -20,7 +20,6 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
 
   // Stable semconv keys
   static final AttributeKey<String> RPC_SYSTEM_NAME = AttributeKey.stringKey("rpc.system.name");
-  static final AttributeKey<String> RPC_METHOD_STABLE = AttributeKey.stringKey("rpc.method");
   static final AttributeKey<String> RPC_METHOD_ORIGINAL =
       AttributeKey.stringKey("rpc.method_original");
 
@@ -28,7 +27,6 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   @Deprecated // use RPC_SYSTEM_NAME for stable semconv
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
 
-  @Deprecated // use RPC_METHOD_STABLE for stable semconv
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
 
   @Deprecated // removed in stable semconv (merged into rpc.method)
@@ -50,16 +48,17 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
           attributes,
           RPC_SYSTEM_NAME,
           system == null ? null : SemconvStability.stableRpcSystemName(system));
-      internalSet(attributes, RPC_METHOD_STABLE, getter.getFullMethod(request));
+      internalSet(attributes, RPC_METHOD, getter.getFullMethod(request));
       internalSet(attributes, RPC_METHOD_ORIGINAL, getter.getMethodOriginal(request));
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {
       internalSet(attributes, RPC_SYSTEM, system);
       internalSet(attributes, RPC_SERVICE, getter.getService(request));
-      // In dup mode, stable rpc.method takes precedence over old rpc.method
-      // (they use the same key but with different formats)
+      internalSet(
+          attributes, SemconvStability.getOldRpcMethodAttributeKey(), getter.getMethod(request));
       if (!SemconvStability.emitStableRpcSemconv()) {
+        // only set old rpc.method if stable not emitted to avoid duplication
         internalSet(attributes, RPC_METHOD, getter.getMethod(request));
       }
     }
