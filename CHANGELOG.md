@@ -89,7 +89,7 @@
 - Support more of stable database semconv under opt-in flag
   ([#15836](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15836),
    [#15854](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15854))
-- Move `SpanStatusExtractor.extract()` before `OperationListener.onEnd()`
+- Move `SpanStatusExtractor.extract()` before `OperationListener.onEnd()` in `Instrumenter`
   ([#15844](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15844))
 
 ### 🛠️ Bug fixes
