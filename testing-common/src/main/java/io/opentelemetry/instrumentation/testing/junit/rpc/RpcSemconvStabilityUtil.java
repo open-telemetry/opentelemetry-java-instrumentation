@@ -13,9 +13,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // until old rpc semconv are dropped in 3.0
 public class RpcSemconvStabilityUtil {
@@ -24,13 +22,6 @@ public class RpcSemconvStabilityUtil {
   private static final AttributeKey<String> RPC_SYSTEM_NAME =
       AttributeKey.stringKey("rpc.system.name");
   private static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
-
-  private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {
-    Map<AttributeKey<?>, AttributeKey<?>> map = new HashMap<>();
-    map.put(RPC_SYSTEM_NAME, RPC_SYSTEM);
-    // Note: RPC_METHOD and RPC_SERVICE don't map 1:1 due to format change
-    return map;
-  }
 
   private RpcSemconvStabilityUtil() {}
 
