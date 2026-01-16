@@ -16,6 +16,11 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getClientDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getDurationUnit;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getServerDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
@@ -55,6 +60,7 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -1489,6 +1495,31 @@ public abstract class AbstractGrpcTest {
     }
   }
 
+  private static List<AttributeAssertion> buildServerMetricAttributes(
+      String service, String method, long statusCode) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)));
+    attrs.add(rpcSystemAssertion("grpc"));
+    attrs.addAll(rpcMethodAssertions(service, method));
+    attrs.add(equalTo(RPC_GRPC_STATUS_CODE, statusCode));
+    if (SemconvStability.emitOldRpcSemconv()) {
+      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+    }
+    return attrs;
+  }
+
+  private static List<AttributeAssertion> buildClientMetricAttributes(
+      String service, String method, long statusCode, long serverPort) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(equalTo(SERVER_PORT, serverPort));
+    attrs.add(rpcSystemAssertion("grpc"));
+    attrs.addAll(rpcMethodAssertions(service, method));
+    attrs.add(equalTo(RPC_GRPC_STATUS_CODE, statusCode));
+    return attrs;
+  }
+
   static List<AttributeAssertion> addExtraClientAttributes(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(Arrays.asList(assertions));
@@ -1505,29 +1536,25 @@ public abstract class AbstractGrpcTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
+            getServerDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) statusCode.value()),
-                                                equalTo(NETWORK_TYPE, "ipv4"))))));
+                                                buildServerMetricAttributes(
+                                                        "example.Greeter",
+                                                        "SayHello",
+                                                        (long) statusCode.value())
+                                                    .toArray(new AttributeAssertion[0]))))));
 
-    if (hasSizeMetric) {
+    // Size metrics are only in old semconv
+    if (hasSizeMetric && SemconvStability.emitOldRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -1542,16 +1569,11 @@ public abstract class AbstractGrpcTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                                  satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                  equalTo(RPC_METHOD, "SayHello"),
-                                                  equalTo(RPC_SERVICE, "example.Greeter"),
-                                                  equalTo(RPC_SYSTEM, "grpc"),
-                                                  equalTo(
-                                                      RPC_GRPC_STATUS_CODE,
-                                                      (long) statusCode.value()),
-                                                  equalTo(NETWORK_TYPE, "ipv4"))))));
+                                                  buildServerMetricAttributes(
+                                                          "example.Greeter",
+                                                          "SayHello",
+                                                          (long) statusCode.value())
+                                                      .toArray(new AttributeAssertion[0]))))));
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -1566,40 +1588,33 @@ public abstract class AbstractGrpcTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
-                                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                                  satisfies(
-                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                  equalTo(RPC_METHOD, "SayHello"),
-                                                  equalTo(RPC_SERVICE, "example.Greeter"),
-                                                  equalTo(RPC_SYSTEM, "grpc"),
-                                                  equalTo(
-                                                      RPC_GRPC_STATUS_CODE,
-                                                      (long) statusCode.value()),
-                                                  equalTo(NETWORK_TYPE, "ipv4"))))));
+                                                  buildServerMetricAttributes(
+                                                          "example.Greeter",
+                                                          "SayHello",
+                                                          (long) statusCode.value())
+                                                      .toArray(new AttributeAssertion[0]))))));
     }
 
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
+            getClientDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) statusCode.value()))))));
+                                                buildClientMetricAttributes(
+                                                        "example.Greeter",
+                                                        "SayHello",
+                                                        (long) statusCode.value(),
+                                                        server.getPort())
+                                                    .toArray(new AttributeAssertion[0]))))));
 
     testing()
         .waitAndAssertMetrics(
@@ -1615,14 +1630,12 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) statusCode.value()))))));
+                                                buildClientMetricAttributes(
+                                                        "example.Greeter",
+                                                        "SayHello",
+                                                        (long) statusCode.value(),
+                                                        server.getPort())
+                                                    .toArray(new AttributeAssertion[0]))))));
     if (hasSizeMetric) {
       testing()
           .waitAndAssertMetrics(
@@ -1638,14 +1651,12 @@ public abstract class AbstractGrpcTest {
                                       histogram.hasPointsSatisfying(
                                           point ->
                                               point.hasAttributesSatisfying(
-                                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                                  equalTo(SERVER_PORT, server.getPort()),
-                                                  equalTo(RPC_METHOD, "SayHello"),
-                                                  equalTo(RPC_SERVICE, "example.Greeter"),
-                                                  equalTo(RPC_SYSTEM, "grpc"),
-                                                  equalTo(
-                                                      RPC_GRPC_STATUS_CODE,
-                                                      (long) statusCode.value()))))));
+                                                  buildClientMetricAttributes(
+                                                          "example.Greeter",
+                                                          "SayHello",
+                                                          (long) statusCode.value(),
+                                                          server.getPort())
+                                                      .toArray(new AttributeAssertion[0]))))));
     }
   }
 }
