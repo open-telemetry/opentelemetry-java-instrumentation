@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.errorTypeAssertion;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -923,6 +924,10 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                       attrs.addAll(rpcMethodAssertions("S3", "GetObject"));
                       attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
                       attrs.add(equalTo(AWS_S3_BUCKET, "somebucket"));
+                      // error.type is added automatically in stable semconv
+                      attrs.addAll(
+                          errorTypeAssertion(
+                              "software.amazon.awssdk.core.exception.SdkClientException"));
                       span.hasName("S3.GetObject")
                           .hasKind(SpanKind.CLIENT)
                           .hasStatus(StatusData.error())

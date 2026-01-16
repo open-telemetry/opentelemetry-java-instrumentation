@@ -97,4 +97,35 @@ public class RpcSemconvStabilityUtil {
   public static String getDurationUnit() {
     return SemconvStability.emitStableRpcSemconv() ? "s" : "ms";
   }
+
+  /**
+   * Returns an attribute assertion for gRPC status code based on semconv mode. In stable semconv,
+   * rpc.grpc.status_code (Long) is replaced with rpc.response.status_code (String).
+   *
+   * @param statusCode The status code value
+   * @return Attribute assertion for the status code
+   */
+  public static AttributeAssertion grpcStatusCodeAssertion(long statusCode) {
+    if (SemconvStability.emitStableRpcSemconv()) {
+      return equalTo(
+          AttributeKey.stringKey("rpc.response.status_code"), String.valueOf(statusCode));
+    }
+    return equalTo(AttributeKey.longKey("rpc.grpc.status_code"), statusCode);
+  }
+
+  /**
+   * Returns an attribute assertion for error.type if in stable semconv mode. In stable semconv,
+   * error.type is automatically added when a span has an error status. Returns a list containing
+   * the assertion, or an empty list if not in stable mode or no exception.
+   *
+   * @param exceptionClassName The full exception class name (e.g., "java.lang.RuntimeException")
+   * @return List containing error.type assertion if in stable mode, empty list otherwise
+   */
+  public static List<AttributeAssertion> errorTypeAssertion(String exceptionClassName) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (SemconvStability.emitStableRpcSemconv() && exceptionClassName != null) {
+      assertions.add(equalTo(AttributeKey.stringKey("error.type"), exceptionClassName));
+    }
+    return assertions;
+  }
 }

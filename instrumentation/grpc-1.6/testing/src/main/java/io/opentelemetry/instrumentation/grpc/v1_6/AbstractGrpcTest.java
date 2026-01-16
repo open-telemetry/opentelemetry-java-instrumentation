@@ -8,9 +8,11 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.errorTypeAssertion;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getClientDurationMetricName;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getDurationUnit;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getServerDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.grpcStatusCodeAssertion;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -21,10 +23,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -144,75 +142,74 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    }));
 
     assertMetrics(server, Status.Code.OK);
   }
@@ -269,75 +266,74 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -406,75 +402,74 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -515,69 +510,76 @@ public abstract class AbstractGrpcTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isEqualTo(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
-                            .hasStatus(isServerError ? StatusData.error() : StatusData.unset())
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfying(
-                                events -> {
-                                  assertThat(events).isNotEmpty();
-                                  assertThat(events.get(0))
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(status.getCode().value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  if (status.getCause() == null) {
-                                    assertThat(events).hasSize(1);
-                                  } else {
-                                    assertThat(events).hasSize(2);
-                                    span.hasException(status.getCause());
-                                  }
-                                })));
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(status.getCode().value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      // error.type is added automatically in stable semconv when there's an
+                      // exception
+                      if (status.getCause() != null) {
+                        attrs.addAll(errorTypeAssertion(status.getCause().getClass().getName()));
+                      }
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))
+                          .hasStatus(isServerError ? StatusData.error() : StatusData.unset())
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfying(
+                              events -> {
+                                assertThat(events).isNotEmpty();
+                                assertThat(events.get(0))
+                                    .hasName("message")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                if (status.getCause() == null) {
+                                  assertThat(events).hasSize(1);
+                                } else {
+                                  assertThat(events).hasSize(2);
+                                  span.hasException(status.getCause());
+                                }
+                              });
+                    }));
 
     assertMetrics(server, status.getCode());
   }
@@ -616,66 +618,67 @@ public abstract class AbstractGrpcTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        // NB: Exceptions thrown on the server don't appear to be propagated to the
-                        // client, at
-                        // least for the version we test against, so the client gets an UNKNOWN
-                        // status and the server
-                        // doesn't record one at all.
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isEqualTo(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        RPC_GRPC_STATUS_CODE,
-                                        (long) Status.UNKNOWN.getCode().value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.UNKNOWN.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfying(
-                                events -> {
-                                  assertThat(events).hasSize(2);
-                                  assertThat(events.get(0))
+                    span -> {
+                      // NB: Exceptions thrown on the server don't appear to be propagated to the
+                      // client, at
+                      // least for the version we test against, so the client gets an UNKNOWN
+                      // status and the server
+                      // doesn't record one at all.
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.UNKNOWN.getCode().value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  span.hasException(status.asRuntimeException());
-                                })));
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.UNKNOWN.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      // error.type is added automatically in stable semconv
+                      attrs.addAll(errorTypeAssertion("io.grpc.StatusRuntimeException"));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfying(
+                              events -> {
+                                assertThat(events).hasSize(2);
+                                assertThat(events.get(0))
+                                    .hasName("message")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                span.hasException(status.asRuntimeException());
+                              });
+                    }));
 
     assertMetrics(server, Status.Code.UNKNOWN);
   }
@@ -821,75 +824,74 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    }));
   }
 
   @Test
@@ -951,77 +953,79 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayMultipleHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayMultipleHello"),
-                                    equalTo(
-                                        RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfying(
-                                events -> {
-                                  assertThat(events).hasSize(3);
-                                  assertThat(events.get(0))
-                                      .hasName("message")
-                                      .hasAttributesSatisfyingExactly(
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  assertThat(events.get(1))
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayMultipleHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.CANCELLED.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      // error.type is added automatically in stable semconv when client throws
+                      attrs.addAll(errorTypeAssertion("java.lang.IllegalStateException"));
+                      span.hasName("example.Greeter/SayMultipleHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfying(
+                              events -> {
+                                assertThat(events).hasSize(3);
+                                assertThat(events.get(0))
+                                    .hasName("message")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                assertThat(events.get(1))
+                                    .hasName("message")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                span.hasException(thrown);
+                              });
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayMultipleHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.CANCELLED.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/SayMultipleHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  span.hasException(thrown);
-                                }),
-                    span ->
-                        span.hasName("example.Greeter/SayMultipleHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayMultipleHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    }));
   }
 
   @Test
@@ -1078,78 +1082,78 @@ public abstract class AbstractGrpcTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(
-                                "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(
-                                        RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
-                                    equalTo(RPC_METHOD, "ServerReflectionInfo"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName(
-                                "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
-                                equalTo(RPC_METHOD, "ServerReflectionInfo"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(
+                          rpcMethodAssertions(
+                              "grpc.reflection.v1alpha.ServerReflection", "ServerReflectionInfo"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(
+                          rpcMethodAssertions(
+                              "grpc.reflection.v1alpha.ServerReflection", "ServerReflectionInfo"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    }));
   }
 
   @Test
@@ -1190,75 +1194,74 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
-                                event ->
-                                    event
-                                        .hasName("message")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "SayHello"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                              event ->
+                                  event
+                                      .hasName("message")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)));
+                    }));
   }
 
   // Regression test for
@@ -1408,7 +1411,10 @@ public abstract class AbstractGrpcTest {
 
   @Test
   void setCapturedRequestMetadata() throws Exception {
-    String metadataAttributePrefix = "rpc.grpc.request.metadata.";
+    String metadataAttributePrefix =
+        SemconvStability.emitStableRpcSemconv()
+            ? "rpc.request.metadata."
+            : "rpc.grpc.request.metadata.";
     AttributeKey<List<String>> clientAttributeKey =
         AttributeKey.stringArrayKey(metadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> serverAttributeKey =
@@ -1502,7 +1508,7 @@ public abstract class AbstractGrpcTest {
     attrs.add(satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)));
     attrs.add(rpcSystemAssertion("grpc"));
     attrs.addAll(rpcMethodAssertions(service, method));
-    attrs.add(equalTo(RPC_GRPC_STATUS_CODE, statusCode));
+    attrs.add(grpcStatusCodeAssertion(statusCode));
     if (SemconvStability.emitOldRpcSemconv()) {
       attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
     }
@@ -1516,7 +1522,7 @@ public abstract class AbstractGrpcTest {
     attrs.add(equalTo(SERVER_PORT, serverPort));
     attrs.add(rpcSystemAssertion("grpc"));
     attrs.addAll(rpcMethodAssertions(service, method));
-    attrs.add(equalTo(RPC_GRPC_STATUS_CODE, statusCode));
+    attrs.add(grpcStatusCodeAssertion(statusCode));
     return attrs;
   }
 
@@ -1616,27 +1622,30 @@ public abstract class AbstractGrpcTest {
                                                         server.getPort())
                                                     .toArray(new AttributeAssertion[0]))))));
 
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.client.request.size",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("By")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                buildClientMetricAttributes(
-                                                        "example.Greeter",
-                                                        "SayHello",
-                                                        (long) statusCode.value(),
-                                                        server.getPort())
-                                                    .toArray(new AttributeAssertion[0]))))));
-    if (hasSizeMetric) {
+    // Size metrics are only in old semconv
+    if (hasSizeMetric && SemconvStability.emitOldRpcSemconv()) {
+      testing()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.grpc-1.6",
+              "rpc.client.request.size",
+              metrics ->
+                  metrics.anySatisfy(
+                      metric ->
+                          assertThat(metric)
+                              .hasUnit("By")
+                              .hasHistogramSatisfying(
+                                  histogram ->
+                                      histogram.hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributesSatisfying(
+                                                  buildClientMetricAttributes(
+                                                          "example.Greeter",
+                                                          "SayHello",
+                                                          (long) statusCode.value(),
+                                                          server.getPort())
+                                                      .toArray(new AttributeAssertion[0]))))));
+    }
+    if (hasSizeMetric && SemconvStability.emitOldRpcSemconv()) {
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
