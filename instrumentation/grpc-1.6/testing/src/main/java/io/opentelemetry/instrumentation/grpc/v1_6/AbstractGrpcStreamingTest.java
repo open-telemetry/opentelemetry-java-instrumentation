@@ -9,6 +9,9 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getClientDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getDurationUnit;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getServerDurationMetricName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -273,12 +276,12 @@ public abstract class AbstractGrpcStreamingTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
+            getServerDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
@@ -294,12 +297,12 @@ public abstract class AbstractGrpcStreamingTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
+            getClientDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
