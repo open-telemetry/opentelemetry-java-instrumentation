@@ -38,22 +38,17 @@ public final class JavaHttpClientTelemetry {
   /**
    * Returns an instrumented {@link HttpClient} wrapping the provided client.
    *
-   * @param client the HttpClient to wrap
-   * @return an instrumented HttpClient
-   */
-  public HttpClient createHttpClient(HttpClient client) {
-    return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
-  }
-
-  /**
-   * Returns an instrumented {@link HttpClient} wrapping the provided client.
-   *
-   * @param client the HttpClient to wrap
-   * @return an instrumented HttpClient
-   * @deprecated Use {@link #createHttpClient(HttpClient)} instead.
+   * @param client An instance of HttpClient configured as desired.
+   * @return a tracing-enabled {@link HttpClient}.
+   * @deprecated Use {@link #wrap(HttpClient)} instead.
    */
   @Deprecated
   public HttpClient newHttpClient(HttpClient client) {
-    return createHttpClient(client);
+    return wrap(client);
+  }
+
+  /** Returns a new instrumented {@link HttpClient} that wraps the provided client. */
+  public HttpClient wrap(HttpClient client) {
+    return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
   }
 }
