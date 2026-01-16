@@ -62,7 +62,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasNoParent()
                         .hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("UPDATE Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "update Value" : "UPDATE Value")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -125,7 +125,7 @@ class QueryTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -136,7 +136,9 @@ class QueryTest extends AbstractHibernateTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "select" : "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"))));
   }
 
@@ -199,7 +201,7 @@ class QueryTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -210,7 +212,9 @@ class QueryTest extends AbstractHibernateTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "select" : "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("Transaction.commit")

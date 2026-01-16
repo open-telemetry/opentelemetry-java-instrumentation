@@ -88,7 +88,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.sessionSpanName),
+                        "Session." + parameter.methodName + " " + parameter.resource),
                 span ->
                     assertClientSpan(
                         span,
@@ -109,7 +109,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertSessionSpan(
                         span,
                         trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.sessionSpanName),
+                        "Session." + parameter.methodName + " " + parameter.resource),
                 span ->
                     assertClientSpan(
                         span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(2)),
@@ -142,7 +142,7 @@ class EntityManagerTest extends AbstractHibernateTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
                 span ->
                     span.hasName(parameter.spanName)
                         .hasKind(SpanKind.CLIENT)
@@ -298,7 +298,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
   private static class Parameter {
     final String methodName;
-    final String sessionSpanName;
+    final String resource;
     final String spanName;
     final String operationName;
     final boolean attach;
@@ -308,12 +308,12 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     Parameter(
         String methodName,
-        String sessionSpanName,
+        String resource,
         String spanName,
         String operationName,
         Function<EntityManager, Query> queryBuildMethod) {
       this.methodName = methodName;
-      this.sessionSpanName = sessionSpanName;
+      this.resource = resource;
       this.spanName = spanName;
       this.operationName = operationName;
       this.attach = false;
@@ -324,12 +324,12 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     Parameter(
         String methodName,
-        String sessionSpanName,
+        String resource,
         boolean attach,
         boolean flushOnCommit,
         BiConsumer<EntityManager, Value> sessionMethodTest) {
       this.methodName = methodName;
-      this.sessionSpanName = sessionSpanName;
+      this.resource = resource;
       this.spanName = null;
       this.operationName = null;
       this.attach = attach;

@@ -187,7 +187,7 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("CALL test")
+                    span.hasName(emitStableDatabaseSemconv() ? "call test" : "CALL test")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -200,7 +200,9 @@ class SpringJpaTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                            equalTo(maybeStable(DB_OPERATION), "CALL")),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "call" : "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -306,7 +308,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "UPDATE Customer"
+                                ? "update Customer"
                                 : "UPDATE test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
@@ -320,7 +322,9 @@ class SpringJpaTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "update Customer set firstName=?, lastName=? where id=?"),
-                            equalTo(maybeStable(DB_OPERATION), "UPDATE"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "update" : "UPDATE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
     testing.clearData();
 
@@ -339,7 +343,8 @@ class SpringJpaTest {
                         .hasNoParent()
                         .hasAttributes(Attributes.empty()),
                 span ->
-                    span.hasName("SELECT Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "select Customer" : "SELECT Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -434,7 +439,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "DELETE Customer"
+                                ? "delete Customer"
                                 : "DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -445,7 +450,9 @@ class SpringJpaTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
-                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "delete" : "DELETE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
 
           } else {
@@ -517,7 +524,7 @@ class SpringJpaTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "DELETE Customer"
+                                ? "delete Customer"
                                 : "DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -528,7 +535,9 @@ class SpringJpaTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
-                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "delete" : "DELETE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
           }
         });

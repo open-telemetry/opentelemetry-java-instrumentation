@@ -226,7 +226,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(0)),
                 // persist test has an extra query for getting id of inserted element
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -270,7 +270,7 @@ class EntityManagerTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsAttachesState")
-  void testAttachesStateToQuery(Function<EntityManager, Query> queryBuildMethod) {
+  void testAttachesStateToQuery(Function<EntityManager, Query> queryBuildMethod, String spanName) {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -299,7 +299,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
+                    span.hasName(spanName)
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -343,7 +343,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasStatus(StatusData.unset())
                         .hasEvents(emptyList()),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
   }
@@ -352,17 +352,18 @@ class EntityManagerTest extends AbstractHibernateTest {
     return Stream.of(
         Arguments.of(
             named(
-                "createQuery",
-                (Function<EntityManager, Query>) em -> em.createQuery("from Value"))),
+                "createQuery", (Function<EntityManager, Query>) em -> em.createQuery("from Value")),
+            emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value"),
         Arguments.of(
             named(
                 "getNamedQuery",
-                (Function<EntityManager, Query>) em -> em.createNamedQuery("TestNamedQuery"))),
+                (Function<EntityManager, Query>) em -> em.createNamedQuery("TestNamedQuery")),
+            emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value"),
         Arguments.of(
             named(
                 "createSQLQuery",
-                (Function<EntityManager, Query>)
-                    em -> em.createNativeQuery("SELECT * FROM Value"))));
+                (Function<EntityManager, Query>) em -> em.createNativeQuery("SELECT * FROM Value")),
+            emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value"));
   }
 
   private static class Parameter {
