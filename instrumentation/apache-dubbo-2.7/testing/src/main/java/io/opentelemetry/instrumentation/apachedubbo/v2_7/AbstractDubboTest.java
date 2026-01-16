@@ -191,8 +191,7 @@ public abstract class AbstractDubboTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfying(
                                 buildClientSpanAttributes(
-                                        "org.apache.dubbo.rpc.service.GenericService", "$invoke")
-                                    .toArray(new AttributeAssertion[0])),
+                                    "org.apache.dubbo.rpc.service.GenericService", "$invoke")),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -200,9 +199,8 @@ public abstract class AbstractDubboTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
                                 buildServerSpanAttributes(
-                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
-                                        "hello")
-                                    .toArray(new AttributeAssertion[0]))));
+                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
+                                    "hello"))));
 
     testing()
         .waitAndAssertMetrics(
@@ -219,9 +217,8 @@ public abstract class AbstractDubboTest {
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 buildMetricAttributes(
-                                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
-                                                        "hello")
-                                                    .toArray(new AttributeAssertion[0]))))));
+                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
+                                                    "hello"))))));
 
     testing()
         .waitAndAssertMetrics(
@@ -238,9 +235,8 @@ public abstract class AbstractDubboTest {
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 buildClientMetricAttributes(
-                                                        "org.apache.dubbo.rpc.service.GenericService",
-                                                        "$invoke")
-                                                    .toArray(new AttributeAssertion[0]))))));
+                                                    "org.apache.dubbo.rpc.service.GenericService",
+                                                    "$invoke"))))));
   }
 
   @Test
@@ -282,11 +278,11 @@ public abstract class AbstractDubboTest {
     assertThat(response.get()).isEqualTo("hello");
 
     // Build server span attributes with special network.type handling for this test
-    List<AttributeAssertion> serverAttrs2 =
+    List<AttributeAssertion> attributes =
         buildServerSpanAttributes(
             "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService", "hello");
     // this attribute is not filled reliably, it is either null or "ipv4"/"ipv6"
-    serverAttrs2.add(
+    attributes.add(
         satisfies(
             NETWORK_TYPE,
             k ->
@@ -309,16 +305,13 @@ public abstract class AbstractDubboTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfying(
                                 buildClientSpanAttributes(
-                                        "org.apache.dubbo.rpc.service.GenericService",
-                                        "$invokeAsync")
-                                    .toArray(new AttributeAssertion[0])),
+                                    "org.apache.dubbo.rpc.service.GenericService", "$invokeAsync")),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
-                                serverAttrs2.toArray(new AttributeAssertion[0]))));
+                            .hasAttributesSatisfying(attributes)));
 
     testing()
         .waitAndAssertMetrics(
@@ -335,9 +328,8 @@ public abstract class AbstractDubboTest {
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 buildMetricAttributes(
-                                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
-                                                        "hello")
-                                                    .toArray(new AttributeAssertion[0]))))));
+                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
+                                                    "hello"))))));
 
     testing()
         .waitAndAssertMetrics(
@@ -354,9 +346,8 @@ public abstract class AbstractDubboTest {
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 buildClientMetricAttributes(
-                                                        "org.apache.dubbo.rpc.service.GenericService",
-                                                        "$invokeAsync")
-                                                    .toArray(new AttributeAssertion[0]))))));
+                                                    "org.apache.dubbo.rpc.service.GenericService",
+                                                    "$invokeAsync"))))));
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
