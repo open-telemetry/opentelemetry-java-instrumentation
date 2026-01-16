@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -15,7 +14,7 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the {@link RpcClientAttributesExtractor} or {@link
  * RpcServerAttributesExtractor} to obtain the various RPC attributes in a type-generic way.
  */
-public interface RpcAttributesGetter<REQUEST> extends NetworkAttributesGetter<REQUEST, Object> {
+public interface RpcAttributesGetter<REQUEST> {
 
   @Nullable
   String getSystem(REQUEST request);
