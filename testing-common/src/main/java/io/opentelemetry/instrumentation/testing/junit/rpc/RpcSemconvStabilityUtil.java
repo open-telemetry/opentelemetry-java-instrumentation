@@ -27,8 +27,6 @@ public class RpcSemconvStabilityUtil {
   private static final AttributeKey<String> RPC_SYSTEM_NAME =
       AttributeKey.stringKey("rpc.system.name");
   private static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
-  private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
-      AttributeKey.stringKey("rpc.method_original");
 
   private static final Map<AttributeKey<?>, AttributeKey<?>> newToOldMap = buildMap();
 
@@ -36,7 +34,6 @@ public class RpcSemconvStabilityUtil {
   private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {
     Map<AttributeKey<?>, AttributeKey<?>> map = new HashMap<>();
     map.put(RPC_SYSTEM_NAME, RPC_SYSTEM);
-    map.put(RPC_METHOD_ORIGINAL, RpcIncubatingAttributes.RPC_METHOD);
     // Note: RPC_METHOD and RPC_SERVICE don't map 1:1 due to format change
     return map;
   }
@@ -76,9 +73,6 @@ public class RpcSemconvStabilityUtil {
    * service and method parameters, and the helper will return the appropriate assertions based on
    * the semconv mode.
    *
-   * <p>For metric assertions, use {@link #rpcMetricMethodAssertions(String, String)} instead, which
-   * excludes rpc.method_original.
-   *
    * <p>Note: In dup mode, old spans use rpc.method.deprecated to avoid collision with stable
    * rpc.method.
    *
@@ -91,40 +85,6 @@ public class RpcSemconvStabilityUtil {
     List<AttributeAssertion> assertions = new ArrayList<>();
 
     if (SemconvStability.emitStableRpcSemconv()) {
-      // Stable: rpc.method = "my.Service/Method", rpc.method_original = "Method"
-      assertions.add(equalTo(RPC_METHOD, service + "/" + method));
-      assertions.add(equalTo(RPC_METHOD_ORIGINAL, method));
-    }
-
-    if (SemconvStability.emitOldRpcSemconv()) {
-      // Old: rpc.service = "my.Service", rpc.method.deprecated = "Method" (in dup mode)
-      //      or rpc.method = "Method" (in old-only mode)
-      assertions.add(equalTo(RPC_SERVICE, service));
-      assertions.add(equalTo(SemconvStability.getOldRpcMethodAttributeKey(), method));
-    }
-
-    return assertions;
-  }
-
-  /**
-   * Returns RPC method attribute assertions for metrics that work for both old and stable semconv.
-   * This excludes rpc.method_original which is a span attribute but not a metric dimension.
-   *
-   * <p>Note: In dup mode, this returns ALL method-related attributes (stable + old), which may not
-   * match individual metrics. Use {@link #rpcOldMetricMethodAssertions} or {@link
-   * #rpcStableMetricMethodAssertions} for specific metric types in dup mode.
-   *
-   * @param service The RPC service name (e.g., "my.Service")
-   * @param method The RPC method name (e.g., "Method")
-   * @return List of attribute assertions for the method in metrics
-   */
-  @SuppressWarnings("deprecation") // testing deprecated rpc semconv
-  public static List<AttributeAssertion> rpcMetricMethodAssertions(String service, String method) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-
-    if (SemconvStability.emitStableRpcSemconv()) {
-      // Stable: rpc.method = "my.Service/Method"
-      // Note: rpc.method_original is NOT a metric dimension
       assertions.add(equalTo(RPC_METHOD, service + "/" + method));
     }
 

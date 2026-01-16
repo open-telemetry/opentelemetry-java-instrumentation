@@ -54,8 +54,6 @@ class RpcAttributesExtractorTest {
   // Stable semconv keys
   private static final AttributeKey<String> RPC_SYSTEM_NAME =
       AttributeKey.stringKey("rpc.system.name");
-  private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
-      AttributeKey.stringKey("rpc.method_original");
 
   // Old semconv keys (from RpcIncubatingAttributes)
   private static final AttributeKey<String> RPC_SYSTEM =
@@ -83,7 +81,6 @@ class RpcAttributesExtractorTest {
     if (SemconvStability.emitStableRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
       expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
-      expectedEntries.add(entry(RPC_METHOD_ORIGINAL, "Method"));
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {

@@ -310,7 +310,6 @@ class RpcServerMetricsTest {
           RpcCommonAttributesExtractor.RPC_SYSTEM_NAME,
           SemconvStability.stableRpcSystemName(system));
       builder.put(RpcCommonAttributesExtractor.RPC_METHOD, service + "/" + method);
-      builder.put(RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL, method);
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {

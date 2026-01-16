@@ -54,18 +54,4 @@ public interface RpcAttributesGetter<REQUEST> {
     }
     return service + "/" + method;
   }
-
-  /**
-   * Returns the original method name for the {@code rpc.method_original} attribute in stable
-   * semconv.
-   *
-   * <p>The default implementation returns the same value as {@link #getMethod(Object)}.
-   *
-   * @param request the request object
-   * @return the original method name, or null if unavailable
-   */
-  @Nullable
-  default String getMethodOriginal(REQUEST request) {
-    return getMethod(request);
-  }
 }
