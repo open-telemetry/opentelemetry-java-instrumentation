@@ -41,8 +41,8 @@ public final class RpcClientMetrics implements OperationListener {
 
   @Nullable private final DoubleHistogram oldClientDurationHistogram;
   @Nullable private final DoubleHistogram stableClientDurationHistogram;
-  private final LongHistogram deprecatedClientRequestSize;
-  private final LongHistogram deprecatedClientResponseSize;
+  private final LongHistogram oldClientRequestSize;
+  private final LongHistogram oldClientResponseSize;
 
   private RpcClientMetrics(Meter meter) {
     // Old metric (milliseconds)
@@ -78,7 +78,7 @@ public final class RpcClientMetrics implements OperationListener {
             .setDescription("Measures the size of RPC request messages (uncompressed).")
             .ofLongs();
     RpcMetricsAdvice.applyDeprecatedClientRequestSizeAdvice(requestSizeBuilder);
-    deprecatedClientRequestSize = requestSizeBuilder.build();
+    oldClientRequestSize = requestSizeBuilder.build();
 
     LongHistogramBuilder responseSizeBuilder =
         meter
@@ -87,7 +87,7 @@ public final class RpcClientMetrics implements OperationListener {
             .setDescription("Measures the size of RPC response messages (uncompressed).")
             .ofLongs();
     RpcMetricsAdvice.applyDeprecatedClientRequestSizeAdvice(responseSizeBuilder);
-    deprecatedClientResponseSize = responseSizeBuilder.build();
+    oldClientResponseSize = responseSizeBuilder.build();
   }
 
   /**
@@ -121,14 +121,8 @@ public final class RpcClientMetrics implements OperationListener {
 
     // Record to old histogram (milliseconds)
     if (oldClientDurationHistogram != null) {
-      Attributes oldAttributes = attributes;
-      if (SemconvStability.emitStableRpcSemconv()){
-        // need to copy attributes
-        oldAttributes = attributes.toBuilder()
-            .put(RpcCommonAttributesExtractor.RPC_METHOD, attributes.get(RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL))
-            .build();
-      }
-      oldClientDurationHistogram.record(durationNanos / NANOS_PER_MS, attributes, context);
+      oldClientDurationHistogram.record(
+          durationNanos / NANOS_PER_MS, SemconvStability.getOldRpcAttributes(attributes), context);
     }
 
     // Record to stable histogram (seconds)
@@ -139,12 +133,12 @@ public final class RpcClientMetrics implements OperationListener {
     if (SemconvStability.emitOldRpcSemconv()) {
       Long rpcClientRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
       if (rpcClientRequestBodySize != null) {
-        deprecatedClientRequestSize.record(rpcClientRequestBodySize, attributes, context);
+        oldClientRequestSize.record(rpcClientRequestBodySize, attributes, context);
       }
 
       Long rpcClientResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
       if (rpcClientResponseBodySize != null) {
-        deprecatedClientResponseSize.record(rpcClientResponseBodySize, attributes, context);
+        oldClientResponseSize.record(rpcClientResponseBodySize, attributes, context);
       }
     }
   }

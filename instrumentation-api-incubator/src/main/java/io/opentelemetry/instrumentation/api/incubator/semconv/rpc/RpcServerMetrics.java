@@ -41,8 +41,8 @@ public final class RpcServerMetrics implements OperationListener {
 
   @Nullable private final DoubleHistogram oldServerDurationHistogram;
   @Nullable private final DoubleHistogram stableServerDurationHistogram;
-  private final LongHistogram deprecatedServerRequestSize;
-  private final LongHistogram deprecatedServerResponseSize;
+  private final LongHistogram oldServerRequestSize;
+  private final LongHistogram oldServerResponseSize;
 
   private RpcServerMetrics(Meter meter) {
     // Old metric (milliseconds)
@@ -78,7 +78,7 @@ public final class RpcServerMetrics implements OperationListener {
             .setDescription("Measures the size of RPC request messages (uncompressed).")
             .ofLongs();
     RpcMetricsAdvice.applyDeprecatedServerRequestSizeAdvice(requestSizeBuilder);
-    deprecatedServerRequestSize = requestSizeBuilder.build();
+    oldServerRequestSize = requestSizeBuilder.build();
 
     LongHistogramBuilder responseSizeBuilder =
         meter
@@ -87,7 +87,7 @@ public final class RpcServerMetrics implements OperationListener {
             .setDescription("Measures the size of RPC response messages (uncompressed).")
             .ofLongs();
     RpcMetricsAdvice.applyDeprecatedServerRequestSizeAdvice(responseSizeBuilder);
-    deprecatedServerResponseSize = responseSizeBuilder.build();
+    oldServerResponseSize = responseSizeBuilder.build();
   }
 
   /**
@@ -121,7 +121,8 @@ public final class RpcServerMetrics implements OperationListener {
 
     // Record to old histogram (milliseconds)
     if (oldServerDurationHistogram != null) {
-      oldServerDurationHistogram.record(durationNanos / NANOS_PER_MS, attributes, context);
+      oldServerDurationHistogram.record(
+          durationNanos / NANOS_PER_MS, SemconvStability.getOldRpcAttributes(attributes), context);
     }
 
     // Record to stable histogram (seconds)
@@ -132,12 +133,12 @@ public final class RpcServerMetrics implements OperationListener {
     if (SemconvStability.emitOldRpcSemconv()) {
       Long rpcServerRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
       if (rpcServerRequestBodySize != null) {
-        deprecatedServerRequestSize.record(rpcServerRequestBodySize, attributes, context);
+        oldServerRequestSize.record(rpcServerRequestBodySize, attributes, context);
       }
 
       Long rpcServerResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
       if (rpcServerResponseBodySize != null) {
-        deprecatedServerResponseSize.record(rpcServerResponseBodySize, attributes, context);
+        oldServerResponseSize.record(rpcServerResponseBodySize, attributes, context);
       }
     }
   }

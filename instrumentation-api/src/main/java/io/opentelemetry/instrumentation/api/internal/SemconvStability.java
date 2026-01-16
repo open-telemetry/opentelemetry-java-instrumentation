@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.internal;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -164,4 +165,13 @@ public final class SemconvStability {
   }
 
   private SemconvStability() {}
+
+  public static Attributes getOldRpcAttributes(Attributes attributes) {
+    if (emitStableRpcSemconv()) {
+      // need to copy attributes
+      return
+          attributes.toBuilder().put(RPC_METHOD, attributes.get(RPC_METHOD_OLD)).build();
+    }
+    return attributes;
+  }
 }
