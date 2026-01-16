@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.aws;
 
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -18,8 +20,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -93,17 +93,14 @@ class AwsSqsTest {
                   attrs.add(rpcSystemAssertion("aws-api"));
                   attrs.addAll(rpcMethodAssertions("Sqs", "GetQueueUrl"));
                   attrs.add(
-                      equalTo(
-                          HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
+                      equalTo(HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
                   attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                   attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                   attrs.add(equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort));
                   attrs.add(
                       satisfies(
                           URL_FULL,
-                          v ->
-                              v.startsWith(
-                                  "http://localhost:" + AwsSqsTestApplication.sqsPort)));
+                          v -> v.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)));
                   attrs.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                   span.hasName("Sqs.GetQueueUrl")
                       .hasKind(SpanKind.CLIENT)
@@ -115,17 +112,14 @@ class AwsSqsTest {
                   attrs.add(rpcSystemAssertion("aws-api"));
                   attrs.addAll(rpcMethodAssertions("Sqs", "SendMessage"));
                   attrs.add(
-                      equalTo(
-                          HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
+                      equalTo(HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
                   attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                   attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                   attrs.add(equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort));
                   attrs.add(
                       satisfies(
                           URL_FULL,
-                          v ->
-                              v.startsWith(
-                                  "http://localhost:" + AwsSqsTestApplication.sqsPort)));
+                          v -> v.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)));
                   attrs.add(
                       equalTo(
                           MESSAGING_SYSTEM,
@@ -150,17 +144,14 @@ class AwsSqsTest {
                   attrs.add(rpcSystemAssertion("aws-api"));
                   attrs.addAll(rpcMethodAssertions("Sqs", "ReceiveMessage"));
                   attrs.add(
-                      equalTo(
-                          HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
+                      equalTo(HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
                   attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                   attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                   attrs.add(equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort));
                   attrs.add(
                       satisfies(
                           URL_FULL,
-                          v ->
-                              v.startsWith(
-                                  "http://localhost:" + AwsSqsTestApplication.sqsPort)));
+                          v -> v.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)));
                   attrs.add(
                       equalTo(
                           MESSAGING_SYSTEM,
@@ -180,17 +171,14 @@ class AwsSqsTest {
                   attrs.add(rpcSystemAssertion("aws-api"));
                   attrs.addAll(rpcMethodAssertions("Sqs", "DeleteMessageBatch"));
                   attrs.add(
-                      equalTo(
-                          HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
+                      equalTo(HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST));
                   attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                   attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                   attrs.add(equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort));
                   attrs.add(
                       satisfies(
                           URL_FULL,
-                          v ->
-                              v.startsWith(
-                                  "http://localhost:" + AwsSqsTestApplication.sqsPort)));
+                          v -> v.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)));
                   attrs.add(
                       equalTo(
                           AWS_SQS_QUEUE_URL,

@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.s3;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sns;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sqs;
@@ -19,8 +21,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -118,7 +118,8 @@ class S3TracingTest {
                   attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
                   attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "s3ToSqsTestQueue"));
                   attributes.add(equalTo(MESSAGING_OPERATION, "process"));
-                  attributes.add(satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+                  attributes.add(
+                      satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
 
                   span.hasName("s3ToSqsTestQueue process")
                       .hasKind(SpanKind.CONSUMER)
@@ -213,7 +214,8 @@ class S3TracingTest {
                   attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
                   attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "s3ToSnsToSqsTestQueue"));
                   attributes.add(equalTo(MESSAGING_OPERATION, "process"));
-                  attributes.add(satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+                  attributes.add(
+                      satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
 
                   span.hasName("s3ToSnsToSqsTestQueue process")
                       .hasKind(SpanKind.CONSUMER)

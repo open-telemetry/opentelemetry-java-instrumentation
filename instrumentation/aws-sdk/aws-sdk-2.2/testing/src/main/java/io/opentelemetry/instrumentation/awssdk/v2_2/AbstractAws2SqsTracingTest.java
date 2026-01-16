@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -22,8 +24,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -130,7 +130,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                           attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
                           attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                           attrs.add(
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+                              satisfies(
+                                  URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
                           attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                           attrs.add(equalTo(SERVER_PORT, sqsPort));
                           span.hasName("Sqs.ReceiveMessage")
@@ -291,7 +292,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                     attrs.addAll(rpcMethodAssertions("Sqs", "ReceiveMessage"));
                     attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
                     attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
-                    attrs.add(satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+                    attrs.add(
+                        satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
                     attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                     attrs.add(equalTo(SERVER_PORT, sqsPort));
                     attrs.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
@@ -334,14 +336,16 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                               attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
                               attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                               attrs.add(
-                                  satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+                                  satisfies(
+                                      URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
                               attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
                               attrs.add(equalTo(SERVER_PORT, sqsPort));
                               attrs.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
                               attrs.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                               attrs.add(equalTo(MESSAGING_OPERATION, "process"));
                               attrs.add(
-                                  satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+                                  satisfies(
+                                      MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
                               span.hasName("testSdkSqs process")
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(0))

@@ -159,6 +159,8 @@ class AwsSpanAssertions {
                 val.satisfiesAnyOf(
                     v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
 
-    return span.hasName(spanName).hasKind(CLIENT).hasAttributesSatisfyingExactly(attributeAssertions);
+    return span.hasName(spanName)
+        .hasKind(CLIENT)
+        .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 }

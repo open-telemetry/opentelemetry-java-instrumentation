@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -15,8 +17,6 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -179,13 +179,15 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                       attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
                       attrs.add(
                           equalTo(
-                              stringKey("url.full"), "http://127.0.0.1:" + server.httpPort() + "/"));
+                              stringKey("url.full"),
+                              "http://127.0.0.1:" + server.httpPort() + "/"));
                       attrs.add(rpcSystemAssertion("aws-api"));
                       attrs.addAll(rpcMethodAssertions(service, operation));
                       attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
                       attrs.add(equalTo(AWS_REQUEST_ID, requestId));
                       attrs.add(equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
-                      attrs.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")));
+                      attrs.add(
+                          equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")));
                       attrs.add(equalTo(maybeStable(DB_OPERATION), operation));
                       span.hasKind(SpanKind.CLIENT);
                       span.hasNoParent();

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -22,8 +24,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -137,7 +137,8 @@ public abstract class AbstractSqsTracingTest {
                       List<AttributeAssertion> attributes = new ArrayList<>();
                       attributes.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
                       attributes.add(equalTo(stringKey("aws.queue.name"), "testSdkSqs"));
-                      attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                      attributes.add(
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(rpcSystemAssertion("aws-api"));
                       attributes.addAll(rpcMethodAssertions("AmazonSQS", "CreateQueue"));
                       attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -160,7 +161,8 @@ public abstract class AbstractSqsTracingTest {
                           equalTo(
                               AWS_SQS_QUEUE_URL,
                               "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
-                      attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                      attributes.add(
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(rpcSystemAssertion("aws-api"));
                       attributes.addAll(rpcMethodAssertions("AmazonSQS", "SendMessage"));
                       attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -176,8 +178,7 @@ public abstract class AbstractSqsTracingTest {
                       attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                       attributes.add(equalTo(MESSAGING_OPERATION, "publish"));
                       attributes.add(
-                          satisfies(
-                              MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+                          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
 
                       if (testCaptureHeaders) {
@@ -201,7 +202,8 @@ public abstract class AbstractSqsTracingTest {
                           equalTo(
                               AWS_SQS_QUEUE_URL,
                               "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
-                      attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                      attributes.add(
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(rpcSystemAssertion("aws-api"));
                       attributes.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
                       attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -238,7 +240,8 @@ public abstract class AbstractSqsTracingTest {
                           equalTo(
                               AWS_SQS_QUEUE_URL,
                               "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
-                      attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                      attributes.add(
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(rpcSystemAssertion("aws-api"));
                       attributes.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
                       attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -254,8 +257,7 @@ public abstract class AbstractSqsTracingTest {
                       attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                       attributes.add(equalTo(MESSAGING_OPERATION, "process"));
                       attributes.add(
-                          satisfies(
-                              MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+                          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
 
                       if (testCaptureHeaders) {
@@ -303,7 +305,8 @@ public abstract class AbstractSqsTracingTest {
                       List<AttributeAssertion> attributes = new ArrayList<>();
                       attributes.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
                       attributes.add(equalTo(stringKey("aws.queue.name"), "testSdkSqs"));
-                      attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                      attributes.add(
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(rpcSystemAssertion("aws-api"));
                       attributes.addAll(rpcMethodAssertions("AmazonSQS", "CreateQueue"));
                       attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -326,7 +329,8 @@ public abstract class AbstractSqsTracingTest {
                           equalTo(
                               AWS_SQS_QUEUE_URL,
                               "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
-                      attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                      attributes.add(
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(rpcSystemAssertion("aws-api"));
                       attributes.addAll(rpcMethodAssertions("AmazonSQS", "SendMessage"));
                       attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -342,8 +346,7 @@ public abstract class AbstractSqsTracingTest {
                       attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                       attributes.add(equalTo(MESSAGING_OPERATION, "publish"));
                       attributes.add(
-                          satisfies(
-                              MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+                          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
                       attributes.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
                       span.hasName("testSdkSqs publish")
                           .hasKind(SpanKind.PRODUCER)
@@ -367,12 +370,9 @@ public abstract class AbstractSqsTracingTest {
                             attrs.add(
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
-                                    "http://localhost:"
-                                        + sqsPort
-                                        + "/000000000000/testSdkSqs"));
+                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
                             attrs.add(
-                                satisfies(
-                                    AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                             attrs.add(rpcSystemAssertion("aws-api"));
                             attrs.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
                             attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -392,12 +392,9 @@ public abstract class AbstractSqsTracingTest {
                             attrs.add(
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
-                                    "http://localhost:"
-                                        + sqsPort
-                                        + "/000000000000/testSdkSqs"));
+                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
                             attrs.add(
-                                satisfies(
-                                    AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                             attrs.add(rpcSystemAssertion("aws-api"));
                             attrs.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
                             attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -408,14 +405,13 @@ public abstract class AbstractSqsTracingTest {
                             attrs.add(
                                 equalTo(
                                     MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes
-                                        .MessagingSystemIncubatingValues.AWS_SQS));
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS));
                             attrs.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                             attrs.add(equalTo(MESSAGING_OPERATION, "receive"));
                             attrs.add(
                                 equalTo(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_BATCH_MESSAGE_COUNT,
+                                    MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
                                     1));
                             attrs.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
                             span.hasName("testSdkSqs receive")
@@ -429,12 +425,9 @@ public abstract class AbstractSqsTracingTest {
                             attrs.add(
                                 equalTo(
                                     AWS_SQS_QUEUE_URL,
-                                    "http://localhost:"
-                                        + sqsPort
-                                        + "/000000000000/testSdkSqs"));
+                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
                             attrs.add(
-                                satisfies(
-                                    AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                             attrs.add(rpcSystemAssertion("aws-api"));
                             attrs.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
                             attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
@@ -445,14 +438,13 @@ public abstract class AbstractSqsTracingTest {
                             attrs.add(
                                 equalTo(
                                     MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes
-                                        .MessagingSystemIncubatingValues.AWS_SQS));
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS));
                             attrs.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                             attrs.add(equalTo(MESSAGING_OPERATION, "process"));
                             attrs.add(
                                 satisfies(
-                                    MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)));
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
                             attrs.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
                             span.hasName("testSdkSqs process")
                                 .hasKind(SpanKind.CONSUMER)

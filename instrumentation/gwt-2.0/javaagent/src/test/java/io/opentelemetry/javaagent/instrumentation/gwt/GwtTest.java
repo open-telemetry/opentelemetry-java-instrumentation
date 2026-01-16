@@ -157,7 +157,8 @@ class GwtTest {
                 span -> {
                   List<AttributeAssertion> attrs = new ArrayList<>();
                   attrs.add(rpcSystemAssertion("gwt"));
-                  attrs.addAll(rpcMethodAssertions("test.gwt.shared.MessageService", "sendMessage"));
+                  attrs.addAll(
+                      rpcMethodAssertions("test.gwt.shared.MessageService", "sendMessage"));
                   span.hasName("test.gwt.shared.MessageService/sendMessage")
                       .hasKind(SpanKind.SERVER)
                       .hasParent(trace.getSpan(0))
@@ -180,7 +181,8 @@ class GwtTest {
                 span -> {
                   List<AttributeAssertion> attrs = new ArrayList<>();
                   attrs.add(rpcSystemAssertion("gwt"));
-                  attrs.addAll(rpcMethodAssertions("test.gwt.shared.MessageService", "sendMessage"));
+                  attrs.addAll(
+                      rpcMethodAssertions("test.gwt.shared.MessageService", "sendMessage"));
                   span.hasName("test.gwt.shared.MessageService/sendMessage")
                       .hasKind(SpanKind.SERVER)
                       .hasParent(trace.getSpan(0))

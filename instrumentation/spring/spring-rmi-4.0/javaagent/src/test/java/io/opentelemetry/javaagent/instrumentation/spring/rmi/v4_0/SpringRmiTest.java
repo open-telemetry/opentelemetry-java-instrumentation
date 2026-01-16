@@ -248,7 +248,7 @@ class SpringRmiTest {
                                       equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
                                           EXCEPTION_STACKTRACE,
-                                           val -> val.isInstanceOf(String.class))));
+                                          val -> val.isInstanceOf(String.class))));
                 });
           }
 

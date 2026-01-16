@@ -56,8 +56,7 @@ class AwsSpanAssertions {
             SERVER_PORT,
             val ->
                 val.satisfiesAnyOf(
-                    v -> assertThat(v).isNull(),
-                    v -> assertThat(v).isInstanceOf(Number.class))));
+                    v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Number.class))));
 
     return span.hasName("SQS." + rpcMethod)
         .hasKind(SpanKind.CLIENT)
@@ -87,8 +86,7 @@ class AwsSpanAssertions {
             SERVER_PORT,
             val ->
                 val.satisfiesAnyOf(
-                    v -> assertThat(v).isNull(),
-                    v -> assertThat(v).isInstanceOf(Number.class))));
+                    v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Number.class))));
 
     return span.hasName("S3." + rpcMethod)
         .hasKind(SpanKind.CLIENT)
@@ -117,8 +115,7 @@ class AwsSpanAssertions {
             SERVER_PORT,
             val ->
                 val.satisfiesAnyOf(
-                    v -> assertThat(v).isNull(),
-                    v -> assertThat(v).isInstanceOf(Number.class))));
+                    v -> assertThat(v).isNull(), v -> assertThat(v).isInstanceOf(Number.class))));
 
     return span.hasName("SNS." + rpcMethod)
         .hasKind(SpanKind.CLIENT)
