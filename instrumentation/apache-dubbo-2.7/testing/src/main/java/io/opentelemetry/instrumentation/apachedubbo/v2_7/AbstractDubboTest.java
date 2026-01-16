@@ -6,6 +6,11 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getClientDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getDurationUnit;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getServerDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -15,19 +20,19 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -92,6 +97,51 @@ public abstract class AbstractDubboTest {
     return (ReferenceConfig) config;
   }
 
+  private List<AttributeAssertion> buildClientSpanAttributes(String service, String method) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(rpcSystemAssertion("apache_dubbo"));
+    attrs.addAll(rpcMethodAssertions(service, method));
+    if (hasPeerService()) {
+      attrs.add(equalTo(PEER_SERVICE, "test-peer-service"));
+    }
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)));
+    attrs.add(
+        satisfies(
+            NETWORK_PEER_ADDRESS, k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))));
+    attrs.add(
+        satisfies(NETWORK_PEER_PORT, k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))));
+    attrs.add(satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType));
+    return attrs;
+  }
+
+  private static List<AttributeAssertion> buildServerSpanAttributes(String service, String method) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(rpcSystemAssertion("apache_dubbo"));
+    attrs.addAll(rpcMethodAssertions(service, method));
+    attrs.add(satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)));
+    attrs.add(satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)));
+    return attrs;
+  }
+
+  private static List<AttributeAssertion> buildMetricAttributes(String service, String method) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(rpcSystemAssertion("apache_dubbo"));
+    attrs.addAll(rpcMethodAssertions(service, method));
+    return attrs;
+  }
+
+  private static List<AttributeAssertion> buildClientMetricAttributes(
+      String service, String method) {
+    List<AttributeAssertion> attrs = buildMetricAttributes(service, method);
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)));
+    if (SemconvStability.emitOldRpcSemconv()) {
+      attrs.add(satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType));
+    }
+    return attrs;
+  }
+
   @Test
   void testApacheDubboBase() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
@@ -129,6 +179,7 @@ public abstract class AbstractDubboTest {
                     "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response).isEqualTo("hello");
+
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -138,90 +189,58 @@ public abstract class AbstractDubboTest {
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RPC_METHOD, "$invoke"),
-                                equalTo(
-                                    PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NETWORK_PEER_ADDRESS,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
-                                satisfies(
-                                    NETWORK_PEER_PORT,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
-                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
+                            .hasAttributesSatisfying(
+                                buildClientSpanAttributes(
+                                        "org.apache.dubbo.rpc.service.GenericService", "$invoke")
+                                    .toArray(new AttributeAssertion[0])),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(
-                                    RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                equalTo(RPC_METHOD, "hello"),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
+                                buildServerSpanAttributes(
+                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
+                                        "hello")
+                                    .toArray(new AttributeAssertion[0]))));
 
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
-            "rpc.server.duration",
+            getServerDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    RPC_SYSTEM,
-                                                    RpcIncubatingAttributes
-                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(
-                                                    RPC_SERVICE,
-                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                                equalTo(RPC_METHOD, "hello"))))));
+                                                buildMetricAttributes(
+                                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
+                                                        "hello")
+                                                    .toArray(new AttributeAssertion[0]))))));
 
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
-            "rpc.client.duration",
+            getClientDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    RPC_SYSTEM,
-                                                    RpcIncubatingAttributes
-                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(
-                                                    RPC_SERVICE,
-                                                    "org.apache.dubbo.rpc.service.GenericService"),
-                                                equalTo(RPC_METHOD, "$invoke"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                satisfies(
-                                                    NETWORK_TYPE,
-                                                    AbstractDubboTest::assertNetworkType))))));
+                                                buildClientMetricAttributes(
+                                                        "org.apache.dubbo.rpc.service.GenericService",
+                                                        "$invoke")
+                                                    .toArray(new AttributeAssertion[0]))))));
   }
 
   @Test
@@ -262,6 +281,23 @@ public abstract class AbstractDubboTest {
 
     assertThat(response.get()).isEqualTo("hello");
 
+    // Build server span attributes with special network.type handling for this test
+    List<AttributeAssertion> serverAttrs2 =
+        buildServerSpanAttributes(
+            "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService", "hello");
+    // this attribute is not filled reliably, it is either null or "ipv4"/"ipv6"
+    serverAttrs2.add(
+        satisfies(
+            NETWORK_TYPE,
+            k ->
+                assertLatestDeps(
+                    k,
+                    a ->
+                        a.satisfiesAnyOf(
+                            val -> assertThat(val).isNull(),
+                            val -> assertThat(val).isEqualTo("ipv4"),
+                            val -> assertThat(val).isEqualTo("ipv6")))));
+
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -271,102 +307,56 @@ public abstract class AbstractDubboTest {
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invokeAsync")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RPC_METHOD, "$invokeAsync"),
-                                equalTo(
-                                    PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NETWORK_PEER_ADDRESS,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
-                                satisfies(
-                                    NETWORK_PEER_PORT,
-                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
-                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
+                            .hasAttributesSatisfying(
+                                buildClientSpanAttributes(
+                                        "org.apache.dubbo.rpc.service.GenericService",
+                                        "$invokeAsync")
+                                    .toArray(new AttributeAssertion[0])),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(
-                                    RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                equalTo(RPC_METHOD, "hello"),
-                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
-                                // this attribute is not filled reliably, it is either null or
-                                // "ipv4"/"ipv6"
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        assertLatestDeps(
-                                            k,
-                                            a ->
-                                                a.satisfiesAnyOf(
-                                                    val -> assertThat(val).isNull(),
-                                                    val -> assertThat(val).isEqualTo("ipv4"),
-                                                    val -> assertThat(val).isEqualTo("ipv6")))))));
+                                serverAttrs2.toArray(new AttributeAssertion[0]))));
 
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
-            "rpc.server.duration",
+            getServerDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    RPC_SYSTEM,
-                                                    RpcIncubatingAttributes
-                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(
-                                                    RPC_SERVICE,
-                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                                equalTo(RPC_METHOD, "hello"))))));
+                                                buildMetricAttributes(
+                                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
+                                                        "hello")
+                                                    .toArray(new AttributeAssertion[0]))))));
 
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
-            "rpc.client.duration",
+            getClientDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    RPC_SYSTEM,
-                                                    RpcIncubatingAttributes
-                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(
-                                                    RPC_SERVICE,
-                                                    "org.apache.dubbo.rpc.service.GenericService"),
-                                                equalTo(RPC_METHOD, "$invokeAsync"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                satisfies(
-                                                    NETWORK_TYPE,
-                                                    AbstractDubboTest::assertNetworkType))))));
+                                                buildClientMetricAttributes(
+                                                        "org.apache.dubbo.rpc.service.GenericService",
+                                                        "$invokeAsync")
+                                                    .toArray(new AttributeAssertion[0]))))));
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {

@@ -5,14 +5,16 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.maybeUnstable;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.maybeUnstableMethodEntry;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,12 @@ class RpcAttributesExtractorTest {
     testExtractor(RpcClientAttributesExtractor.create(TestGetter.INSTANCE));
   }
 
+  // Stable semconv keys
+  private static final AttributeKey<String> RPC_SYSTEM_NAME =
+      AttributeKey.stringKey("rpc.system.name");
+  private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
+      AttributeKey.stringKey("rpc.method_original");
+
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
@@ -57,16 +65,17 @@ class RpcAttributesExtractorTest {
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, context, request);
+
     assertThat(attributes.build())
         .containsOnly(
-            entry(RpcIncubatingAttributes.RPC_SYSTEM, "test"),
-            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"),
-            entry(RpcIncubatingAttributes.RPC_METHOD, "Method"));
+            entry(maybeUnstable(RPC_SYSTEM_NAME), "test"),
+            maybeUnstableMethodEntry("my.Service", "Method"),
+            entry(maybeUnstable(RPC_METHOD_ORIGINAL), "Method"));
     extractor.onEnd(attributes, context, request, null, null);
     assertThat(attributes.build())
         .containsOnly(
-            entry(RpcIncubatingAttributes.RPC_SYSTEM, "test"),
-            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"),
-            entry(RpcIncubatingAttributes.RPC_METHOD, "Method"));
+            entry(maybeUnstable(RPC_SYSTEM_NAME), "test"),
+            maybeUnstableMethodEntry("my.Service", "Method"),
+            entry(maybeUnstable(RPC_METHOD_ORIGINAL), "Method"));
   }
 }

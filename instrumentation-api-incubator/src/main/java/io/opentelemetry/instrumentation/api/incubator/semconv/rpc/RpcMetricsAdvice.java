@@ -27,8 +27,7 @@ final class RpcMetricsAdvice {
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
 
-  private static final List<AttributeKey<?>> RPC_METRICS_ATTRIBUTE_KEYS =
-      buildAttributeKeysList();
+  private static final List<AttributeKey<?>> RPC_METRICS_ATTRIBUTE_KEYS = buildAttributeKeysList();
 
   @SuppressWarnings("deprecation") // until old rpc semconv are dropped
   private static List<AttributeKey<?>> buildAttributeKeysList() {

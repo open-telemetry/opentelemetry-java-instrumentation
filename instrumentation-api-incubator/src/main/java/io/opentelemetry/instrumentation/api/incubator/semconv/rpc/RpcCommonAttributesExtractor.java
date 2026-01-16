@@ -57,7 +57,11 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldRpcSemconv()) {
       internalSet(attributes, RPC_SYSTEM, system);
       internalSet(attributes, RPC_SERVICE, getter.getService(request));
-      internalSet(attributes, RPC_METHOD, getter.getMethod(request));
+      // In dup mode, stable rpc.method takes precedence over old rpc.method
+      // (they use the same key but with different formats)
+      if (!SemconvStability.emitStableRpcSemconv()) {
+        internalSet(attributes, RPC_METHOD, getter.getMethod(request));
+      }
     }
   }
 
