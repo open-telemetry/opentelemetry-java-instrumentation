@@ -1,0 +1,5 @@
+description: >
+  This instrumentation adds trace context (trace ID, span ID, and trace flags) to the JBoss
+  LogManager MDC, it does not emit any telemetry on its own.
+display_name: JBoss LogManager
+library_link: https://github.com/jboss-logging/jboss-logmanager

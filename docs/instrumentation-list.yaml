@@ -6032,13 +6032,37 @@ libraries:
         attributes: []
   jboss:
   - name: jboss-logmanager-appender-1.1
+    display_name: JBoss LogManager
+    description: |
+      This instrumentation captures JBoss LogManager log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+    library_link: https://github.com/jboss-logging/jboss-logmanager
     source_path: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1
     scope:
       name: io.opentelemetry.jboss-logmanager-appender-1.1
     target_versions:
       javaagent:
       - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
+    configurations:
+    - name: otel.instrumentation.jboss-logmanager.experimental-log-attributes
+      description: |
+        Enables the capture of experimental log attributes, including thread name and thread ID.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
+      description: |
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      type: list
+      default: ''
+    - name: otel.instrumentation.jboss-logmanager.experimental.capture-event-name
+      description: |
+        Enables the capture of the event name from the MDC attribute "event.name" and sets it as the log record's event name.
+      type: boolean
+      default: false
   - name: jboss-logmanager-mdc-1.1
+    display_name: JBoss LogManager
+    description: |
+      This instrumentation adds trace context (trace ID, span ID, and trace flags) to the JBoss LogManager MDC, it does not emit any telemetry on its own.
+    library_link: https://github.com/jboss-logging/jboss-logmanager
     source_path: instrumentation/jboss-logmanager/jboss-logmanager-mdc-1.1
     scope:
       name: io.opentelemetry.jboss-logmanager-mdc-1.1
@@ -8287,13 +8311,42 @@ libraries:
       name: io.opentelemetry.liberty-dispatcher-20.0
   log4j:
   - name: log4j-appender-1.2
+    display_name: Log4j
+    description: |
+      This instrumentation captures Log4j log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+    library_link: https://logging.apache.org/log4j/1.2/
     source_path: instrumentation/log4j/log4j-appender-1.2
     scope:
       name: io.opentelemetry.log4j-appender-1.2
     target_versions:
       javaagent:
       - log4j:log4j:[1.2,)
+    configurations:
+    - name: otel.instrumentation.log4j-appender.experimental-log-attributes
+      description: |
+        Enables the capture of experimental log attributes, including thread name and thread ID.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+      description: |
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      type: list
+      default: ''
+    - name: otel.instrumentation.log4j-appender.experimental.capture-code-attributes
+      description: |
+        Enables the capture of code location attributes, including file path, class name, method name, and line number.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.log4j-appender.experimental.capture-event-name
+      description: |
+        Enables the capture of the event name from the MDC attribute "event.name" and sets it as the log record's event name.
+      type: boolean
+      default: false
   - name: log4j-appender-2.17
+    display_name: Log4j
+    description: |
+      This instrumentation captures Log4j log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+    library_link: https://logging.apache.org/log4j/2.x/
     source_path: instrumentation/log4j/log4j-appender-2.17
     scope:
       name: io.opentelemetry.log4j-appender-2.17
@@ -8302,29 +8355,149 @@ libraries:
       - org.apache.logging.log4j:log4j-core:[2.0,)
       library:
       - org.apache.logging.log4j:log4j-core:2.17.0
+    configurations:
+    - name: otel.instrumentation.log4j-appender.experimental-log-attributes
+      description: |
+        Enables the capture of experimental log attributes, including thread name and thread ID.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.log4j-appender.experimental.capture-code-attributes
+      description: |
+        Enables the capture of code location attributes, including file path, class name, method name, and line number.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
+      description: |
+        Enables the capture of attributes from Log4j MapMessage instances.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
+      description: |
+        Enables the capture of the Log4j marker attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+      description: |
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      type: list
+      default: ''
+    - name: otel.instrumentation.log4j-appender.experimental.capture-event-name
+      description: |
+        Enables the capture of the event name from the MDC attribute "event.name" and sets it as the log record's event name.
+      type: boolean
+      default: false
   - name: log4j-context-data-2.7
+    display_name: Log4j
+    description: |
+      This instrumentation adds trace context (trace ID, span ID, and trace flags) to Log4j's ThreadContext, it does not emit any telemetry on its own.
+    library_link: https://logging.apache.org/log4j/2.x/
     source_path: instrumentation/log4j/log4j-context-data/log4j-context-data-2.7
     scope:
       name: io.opentelemetry.log4j-context-data-2.7
     target_versions:
       javaagent:
       - org.apache.logging.log4j:log4j-core:[2.7,2.17.0)
+    configurations:
+    - name: otel.instrumentation.log4j-context-data.add-baggage
+      description: |
+        Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.logging.trace-id
+      description: |
+        Specifies the key name used to store the trace ID in the logging context.
+      type: string
+      default: trace_id
+    - name: otel.instrumentation.common.logging.span-id
+      description: |
+        Specifies the key name used to store the span ID in the logging context.
+      type: string
+      default: span_id
+    - name: otel.instrumentation.common.logging.trace-flags
+      description: |
+        Specifies the key name used to store the trace flags in the logging context.
+      type: string
+      default: trace_flags
+    - name: otel.instrumentation.common.mdc.resource-attributes
+      description: |
+        Specifies which resource attributes to add to the logging context as a comma-separated list of attribute keys.
+      type: list
+      default: ''
   - name: log4j-context-data-2.17
+    display_name: Log4j
+    description: |
+      This instrumentation adds trace context (trace ID, span ID, and trace flags) to Log4j's ThreadContext, it does not emit any telemetry on its own.
+    library_link: https://logging.apache.org/log4j/2.x/
     source_path: instrumentation/log4j/log4j-context-data/log4j-context-data-2.17
     scope:
       name: io.opentelemetry.log4j-context-data-2.17
     target_versions:
       javaagent:
       - org.apache.logging.log4j:log4j-core:[2.17.0,)
+    configurations:
+    - name: otel.instrumentation.log4j-context-data.add-baggage
+      description: |
+        Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.logging.trace-id
+      description: |
+        Specifies the key name used to store the trace ID in the logging context.
+      type: string
+      default: trace_id
+    - name: otel.instrumentation.common.logging.span-id
+      description: |
+        Specifies the key name used to store the span ID in the logging context.
+      type: string
+      default: span_id
+    - name: otel.instrumentation.common.logging.trace-flags
+      description: |
+        Specifies the key name used to store the trace flags in the logging context.
+      type: string
+      default: trace_flags
+    - name: otel.instrumentation.common.mdc.resource-attributes
+      description: |
+        Specifies which resource attributes to add to the logging context as a comma-separated list of attribute keys.
+      type: list
+      default: ''
   - name: log4j-mdc-1.2
+    display_name: Log4j
+    description: |
+      This instrumentation adds trace context (trace ID, span ID, and trace flags) to the Log4j MDC, it does not emit any telemetry on its own.
+    library_link: https://logging.apache.org/log4j/1.2/
     source_path: instrumentation/log4j/log4j-mdc-1.2
     scope:
       name: io.opentelemetry.log4j-mdc-1.2
     target_versions:
       javaagent:
       - log4j:log4j:[1.2,)
+    configurations:
+    - name: otel.instrumentation.common.logging.trace-id
+      description: |
+        Specifies the key name used to store the trace ID in the logging context.
+      type: string
+      default: trace_id
+    - name: otel.instrumentation.common.logging.span-id
+      description: |
+        Specifies the key name used to store the span ID in the logging context.
+      type: string
+      default: span_id
+    - name: otel.instrumentation.common.logging.trace-flags
+      description: |
+        Specifies the key name used to store the trace flags in the logging context.
+      type: string
+      default: trace_flags
+    - name: otel.instrumentation.common.mdc.resource-attributes
+      description: |
+        Specifies which resource attributes to add to the logging context as a comma-separated list of attribute keys.
+      type: list
+      default: ''
   logback:
   - name: logback-appender-1.0
+    display_name: Logback
+    description: |
+      This instrumentation captures Logback log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+    library_link: https://logback.qos.ch/
     source_path: instrumentation/logback/logback-appender-1.0
     scope:
       name: io.opentelemetry.logback-appender-1.0
@@ -8335,7 +8508,67 @@ libraries:
       - net.logstash.logback:logstash-logback-encoder:3.0
       - org.slf4j:slf4j-api:2.0.0
       - ch.qos.logback:logback-classic:1.3.0
+    configurations:
+    - name: otel.instrumentation.logback-appender.experimental-log-attributes
+      description: |
+        Enables the capture of experimental log attributes, including thread name and thread ID.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-code-attributes
+      description: |
+        Enables the capture of code location attributes, including file path, class name, method name, and line number.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-marker-attribute
+      description: |
+        Enables the capture of the Logback marker attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes
+      description: |
+        Enables the capture of attributes from Logback key-value pairs.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes
+      description: |
+        Enables the capture of attributes from the Logback logger context.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-template
+      description: |
+        Enables the capture of the log message template before parameter substitution.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-arguments
+      description: |
+        Enables the capture of log message arguments as separate attributes.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
+      description: |
+        Enables the capture of attributes from Logstash markers.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
+      description: |
+        Enables the capture of attributes from Logstash structured arguments.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
+      description: |
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+      type: list
+      default: ''
+    - name: otel.instrumentation.logback-appender.experimental.capture-event-name
+      description: |
+        Enables the capture of the event name from the MDC attribute "event.name" and sets it as the log record's event name.
+      type: boolean
+      default: false
   - name: logback-mdc-1.0
+    display_name: Logback
+    description: |
+      This instrumentation adds trace context (trace ID, span ID, and trace flags) to the Logback MDC, it does not emit any telemetry on its own.
+    library_link: https://logback.qos.ch/
     source_path: instrumentation/logback/logback-mdc-1.0
     scope:
       name: io.opentelemetry.logback-mdc-1.0
@@ -8345,6 +8578,32 @@ libraries:
       library:
       - ch.qos.logback:logback-classic:1.0.0
       - org.slf4j:slf4j-api:1.6.4
+    configurations:
+    - name: otel.instrumentation.logback-mdc.add-baggage
+      description: |
+        Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.logging.trace-id
+      description: |
+        Specifies the key name used to store the trace ID in the logging context.
+      type: string
+      default: trace_id
+    - name: otel.instrumentation.common.logging.span-id
+      description: |
+        Specifies the key name used to store the span ID in the logging context.
+      type: string
+      default: span_id
+    - name: otel.instrumentation.common.logging.trace-flags
+      description: |
+        Specifies the key name used to store the trace flags in the logging context.
+      type: string
+      default: trace_flags
+    - name: otel.instrumentation.common.mdc.resource-attributes
+      description: |
+        Specifies which resource attributes to add to the logging context as a comma-separated list of attribute keys.
+      type: list
+      default: ''
   micrometer:
   - name: micrometer-1.5
     disabled_by_default: true
@@ -11559,6 +11818,10 @@ libraries:
       - io.reactivex.rxjava3:rxjava:3.1.1
   scala:
   - name: scala-fork-join-2.8
+    display_name: Scala ForkJoinPool
+    description: |
+      This instrumentation enables context propagation for Scala fork-join tasks, it does not emit any telemetry on its own.
+    library_link: https://www.scala-lang.org/api/2.12.0/scala/concurrent/forkjoin/package$$ForkJoinPool$.html
     source_path: instrumentation/scala-fork-join-2.8
     scope:
       name: io.opentelemetry.scala-fork-join-2.8
