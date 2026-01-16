@@ -121,6 +121,13 @@ public final class RpcClientMetrics implements OperationListener {
 
     // Record to old histogram (milliseconds)
     if (oldClientDurationHistogram != null) {
+      Attributes oldAttributes = attributes;
+      if (SemconvStability.emitStableRpcSemconv()){
+        // need to copy attributes
+        oldAttributes = attributes.toBuilder()
+            .put(RpcCommonAttributesExtractor.RPC_METHOD, attributes.get(RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL))
+            .build();
+      }
       oldClientDurationHistogram.record(durationNanos / NANOS_PER_MS, attributes, context);
     }
 

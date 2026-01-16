@@ -48,7 +48,14 @@ final class RpcMetricsAdvice {
       keys.add(RpcCommonAttributesExtractor.RPC_SERVICE);
     }
 
-    keys.add(RpcCommonAttributesExtractor.RPC_METHOD);
+    // Add RPC method key
+    if (stable) {
+      // Stable uses rpc.method with full format
+      keys.add(RpcCommonAttributesExtractor.RPC_METHOD);
+    } else {
+      // Old uses rpc.method.deprecated in dup mode, or rpc.method in old-only mode
+      keys.add(SemconvStability.getOldRpcMethodAttributeKey());
+    }
 
     // Add status code key
     if (SemconvStability.emitStableRpcSemconv()) {

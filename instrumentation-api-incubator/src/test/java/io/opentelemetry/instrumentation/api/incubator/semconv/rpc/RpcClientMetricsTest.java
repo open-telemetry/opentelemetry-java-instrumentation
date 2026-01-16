@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMetricMethodAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -19,10 +18,11 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
@@ -83,68 +83,96 @@ class RpcClientMetricsTest {
 
     listener.onEnd(context1, responseAttributes1, nanos(250));
 
-    // Build expected attributes for assertions
-    List<AttributeAssertion> expectedAttributes1 = new ArrayList<>();
-    expectedAttributes1.add(rpcSystemAssertion("grpc"));
-    expectedAttributes1.addAll(rpcMetricMethodAssertions("myservice.EchoService", "exampleMethod"));
-    expectedAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
-    expectedAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
-    expectedAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
-    if (SemconvStability.emitOldRpcSemconv()) {
-      expectedAttributes1.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
+    // Calculate expected metric count:
+    // - dup mode: old duration + stable duration + request.size + response.size = 4
+    // - old-only mode: old duration + request.size + response.size = 3
+    // - stable-only mode: stable duration only = 1
+    int expectedMetricCount = 1; // At minimum, we always have one duration metric
+    if (SemconvStability.emitOldRpcSemconv() && SemconvStability.emitStableRpcSemconv()) {
+      expectedMetricCount = 4; // Both durations + both size metrics
+    } else if (SemconvStability.emitOldRpcSemconv()) {
+      expectedMetricCount = 3; // Old duration + both size metrics
     }
-
-    //    double expectedDurationSum = SemconvStability.emitStableRpcSemconv() ? 0.15 : 150.0;
-
-    // In dup mode, both old and stable duration metrics are emitted
-    int expectedMetricCount =
-        SemconvStability.emitOldRpcSemconv() && SemconvStability.emitStableRpcSemconv() ? 4 : 3;
 
     // Collect metrics once (delta reader consumes on each call)
     Collection<MetricData> metrics1 = metricReader.collectAllMetrics();
-    assertThat(metrics1)
-        .hasSize(expectedMetricCount)
-        .anySatisfy(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.client.response.size")
-                    .hasUnit("By")
-                    .hasDescription("Measures the size of RPC response messages (uncompressed).")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(20 /* bytes */)
-                                        .hasAttributesSatisfyingExactly(
-                                            expectedAttributes1.toArray(new AttributeAssertion[0]))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))))
-        .anySatisfy(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.client.request.size")
-                    .hasUnit("By")
-                    .hasDescription("Measures the size of RPC request messages (uncompressed).")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(10 /* bytes */)
-                                        .hasAttributesSatisfyingExactly(
-                                            expectedAttributes1.toArray(new AttributeAssertion[0]))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+    assertThat(metrics1).hasSize(expectedMetricCount);
+
+    // Build expected attributes for OLD metrics (size + old duration)
+    List<AttributeAssertion> oldMetricAttributes1 = new ArrayList<>();
+    if (SemconvStability.emitOldRpcSemconv()) {
+      oldMetricAttributes1.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
+      oldMetricAttributes1.addAll(
+          RpcSemconvStabilityUtil.rpcOldMetricMethodAssertions(
+              "myservice.EchoService", "exampleMethod"));
+      oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
+      oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
+      oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+      oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
+    }
+
+    // Size metrics are only recorded in old semconv mode
+    if (SemconvStability.emitOldRpcSemconv()) {
+      assertThat(metrics1)
+          .anySatisfy(
+              metric ->
+                  assertThat(metric)
+                      .hasName("rpc.client.response.size")
+                      .hasUnit("By")
+                      .hasDescription("Measures the size of RPC response messages (uncompressed).")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point
+                                          .hasSum(20 /* bytes */)
+                                          .hasAttributesSatisfyingExactly(
+                                              oldMetricAttributes1.toArray(
+                                                  new AttributeAssertion[0]))
+                                          .hasExemplarsSatisfying(
+                                              exemplar ->
+                                                  exemplar
+                                                      .hasTraceId(
+                                                          "ff01020304050600ff0a0b0c0d0e0f00")
+                                                      .hasSpanId("090a0b0c0d0e0f00")))))
+          .anySatisfy(
+              metric ->
+                  assertThat(metric)
+                      .hasName("rpc.client.request.size")
+                      .hasUnit("By")
+                      .hasDescription("Measures the size of RPC request messages (uncompressed).")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point
+                                          .hasSum(10 /* bytes */)
+                                          .hasAttributesSatisfyingExactly(
+                                              oldMetricAttributes1.toArray(
+                                                  new AttributeAssertion[0]))
+                                          .hasExemplarsSatisfying(
+                                              exemplar ->
+                                                  exemplar
+                                                      .hasTraceId(
+                                                          "ff01020304050600ff0a0b0c0d0e0f00")
+                                                      .hasSpanId("090a0b0c0d0e0f00")))));
+    }
 
     // Assert stable duration metric if emitting stable semconv
     if (SemconvStability.emitStableRpcSemconv()) {
+      // Build expected attributes for STABLE metrics
+      List<AttributeAssertion> stableMetricAttributes1 = new ArrayList<>();
+      stableMetricAttributes1.add(
+          equalTo(
+              AttributeKey.stringKey("rpc.system.name"),
+              SemconvStability.stableRpcSystemName("grpc")));
+      stableMetricAttributes1.addAll(
+          RpcSemconvStabilityUtil.rpcStableMetricMethodAssertions(
+              "myservice.EchoService", "exampleMethod"));
+      stableMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
+      stableMetricAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
+      stableMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+
       assertThat(metrics1)
           .anySatisfy(
               metric ->
@@ -158,7 +186,7 @@ class RpcClientMetricsTest {
                                       point
                                           .hasSum(0.15)
                                           .hasAttributesSatisfyingExactly(
-                                              expectedAttributes1.toArray(
+                                              stableMetricAttributes1.toArray(
                                                   new AttributeAssertion[0]))
                                           .hasExemplarsSatisfying(
                                               exemplar ->
@@ -183,7 +211,7 @@ class RpcClientMetricsTest {
                                       point
                                           .hasSum(150.0)
                                           .hasAttributesSatisfyingExactly(
-                                              expectedAttributes1.toArray(
+                                              oldMetricAttributes1.toArray(
                                                   new AttributeAssertion[0]))
                                           .hasExemplarsSatisfying(
                                               exemplar ->
@@ -195,15 +223,37 @@ class RpcClientMetricsTest {
 
     listener.onEnd(context2, responseAttributes2, nanos(300));
 
-    List<AttributeAssertion> expectedAttributes2 = new ArrayList<>();
-    expectedAttributes2.add(rpcSystemAssertion("grpc"));
-    expectedAttributes2.addAll(rpcMetricMethodAssertions("myservice.EchoService", "exampleMethod"));
-    expectedAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
-    expectedAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
-
     // Collect metrics once (delta reader consumes on each call)
+    // Note: metrics2 doesn't include size metrics since context2 has no size attributes
+    int expectedMetricCount2 =
+        SemconvStability.emitOldRpcSemconv() && SemconvStability.emitStableRpcSemconv() ? 2 : 1;
     Collection<MetricData> metrics2 = metricReader.collectAllMetrics();
-    assertThat(metrics2).hasSize(expectedMetricCount);
+    assertThat(metrics2).hasSize(expectedMetricCount2);
+
+    // Build expected attributes for OLD metrics (no server.address or network.type for context2)
+    List<AttributeAssertion> oldMetricAttributes2 = new ArrayList<>();
+    if (SemconvStability.emitOldRpcSemconv()) {
+      oldMetricAttributes2.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
+      oldMetricAttributes2.addAll(
+          RpcSemconvStabilityUtil.rpcOldMetricMethodAssertions(
+              "myservice.EchoService", "exampleMethod"));
+      oldMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
+      oldMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+    }
+
+    // Build expected attributes for STABLE metrics (no server.address for context2)
+    List<AttributeAssertion> stableMetricAttributes2 = new ArrayList<>();
+    if (SemconvStability.emitStableRpcSemconv()) {
+      stableMetricAttributes2.add(
+          equalTo(
+              AttributeKey.stringKey("rpc.system.name"),
+              SemconvStability.stableRpcSystemName("grpc")));
+      stableMetricAttributes2.addAll(
+          RpcSemconvStabilityUtil.rpcStableMetricMethodAssertions(
+              "myservice.EchoService", "exampleMethod"));
+      stableMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
+      stableMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+    }
 
     // Assert stable duration metric if emitting stable semconv
     if (SemconvStability.emitStableRpcSemconv()) {
@@ -220,7 +270,7 @@ class RpcClientMetricsTest {
                                       point
                                           .hasSum(0.15)
                                           .hasAttributesSatisfyingExactly(
-                                              expectedAttributes2.toArray(
+                                              stableMetricAttributes2.toArray(
                                                   new AttributeAssertion[0])))));
     }
 
@@ -239,7 +289,7 @@ class RpcClientMetricsTest {
                                       point
                                           .hasSum(150.0)
                                           .hasAttributesSatisfyingExactly(
-                                              expectedAttributes2.toArray(
+                                              oldMetricAttributes2.toArray(
                                                   new AttributeAssertion[0])))));
     }
   }
