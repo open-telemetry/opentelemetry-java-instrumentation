@@ -18,7 +18,6 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -98,17 +97,18 @@ class RpcClientMetricsTest {
     Collection<MetricData> metrics1 = metricReader.collectAllMetrics();
     assertThat(metrics1).hasSize(expectedMetricCount);
 
-    // Build expected attributes for OLD metrics (size + old duration)
+    // Build expected attributes for OLD metrics (size + old duration) - alphabetically sorted
     List<AttributeAssertion> oldMetricAttributes1 = new ArrayList<>();
     if (SemconvStability.emitOldRpcSemconv()) {
-      oldMetricAttributes1.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
-      oldMetricAttributes1.addAll(
-          RpcSemconvStabilityUtil.rpcOldMetricMethodAssertions(
-              "myservice.EchoService", "exampleMethod"));
-      oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
-      oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
       oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
       oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
+      oldMetricAttributes1.add(
+          equalTo(SemconvStability.getOldRpcMethodAttributeKey(), "exampleMethod"));
+      oldMetricAttributes1.add(
+          equalTo(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService"));
+      oldMetricAttributes1.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
+      oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
+      oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
     }
 
     // Size metrics are only recorded in old semconv mode
@@ -160,18 +160,17 @@ class RpcClientMetricsTest {
 
     // Assert stable duration metric if emitting stable semconv
     if (SemconvStability.emitStableRpcSemconv()) {
-      // Build expected attributes for STABLE metrics
+      // Build expected attributes for STABLE metrics - alphabetically sorted
       List<AttributeAssertion> stableMetricAttributes1 = new ArrayList<>();
+      stableMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+      stableMetricAttributes1.add(
+          equalTo(RpcIncubatingAttributes.RPC_METHOD, "myservice.EchoService/exampleMethod"));
       stableMetricAttributes1.add(
           equalTo(
               AttributeKey.stringKey("rpc.system.name"),
               SemconvStability.stableRpcSystemName("grpc")));
-      stableMetricAttributes1.addAll(
-          RpcSemconvStabilityUtil.rpcStableMetricMethodAssertions(
-              "myservice.EchoService", "exampleMethod"));
       stableMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
       stableMetricAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
-      stableMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
 
       assertThat(metrics1)
           .anySatisfy(
@@ -230,29 +229,31 @@ class RpcClientMetricsTest {
     Collection<MetricData> metrics2 = metricReader.collectAllMetrics();
     assertThat(metrics2).hasSize(expectedMetricCount2);
 
-    // Build expected attributes for OLD metrics (no server.address or network.type for context2)
+    // Build expected attributes for OLD metrics (no server.address or network.type for context2) -
+    // alphabetically sorted
     List<AttributeAssertion> oldMetricAttributes2 = new ArrayList<>();
     if (SemconvStability.emitOldRpcSemconv()) {
-      oldMetricAttributes2.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
-      oldMetricAttributes2.addAll(
-          RpcSemconvStabilityUtil.rpcOldMetricMethodAssertions(
-              "myservice.EchoService", "exampleMethod"));
-      oldMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
       oldMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+      oldMetricAttributes2.add(
+          equalTo(SemconvStability.getOldRpcMethodAttributeKey(), "exampleMethod"));
+      oldMetricAttributes2.add(
+          equalTo(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService"));
+      oldMetricAttributes2.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
+      oldMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
     }
 
-    // Build expected attributes for STABLE metrics (no server.address for context2)
+    // Build expected attributes for STABLE metrics (no server.address for context2) -
+    // alphabetically sorted
     List<AttributeAssertion> stableMetricAttributes2 = new ArrayList<>();
     if (SemconvStability.emitStableRpcSemconv()) {
+      stableMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+      stableMetricAttributes2.add(
+          equalTo(RpcIncubatingAttributes.RPC_METHOD, "myservice.EchoService/exampleMethod"));
       stableMetricAttributes2.add(
           equalTo(
               AttributeKey.stringKey("rpc.system.name"),
               SemconvStability.stableRpcSystemName("grpc")));
-      stableMetricAttributes2.addAll(
-          RpcSemconvStabilityUtil.rpcStableMetricMethodAssertions(
-              "myservice.EchoService", "exampleMethod"));
       stableMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
-      stableMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
     }
 
     // Assert stable duration metric if emitting stable semconv
