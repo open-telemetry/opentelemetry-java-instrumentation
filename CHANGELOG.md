@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.24.0 (2026-01-16)
+
 ### ⚠️ Breaking Changes
 
 - Remove support for previously deprecated property
