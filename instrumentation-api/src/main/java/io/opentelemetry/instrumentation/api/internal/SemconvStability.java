@@ -169,8 +169,7 @@ public final class SemconvStability {
   public static Attributes getOldRpcAttributes(Attributes attributes) {
     if (emitStableRpcSemconv()) {
       // need to copy attributes
-      return
-          attributes.toBuilder().put(RPC_METHOD, attributes.get(RPC_METHOD_OLD)).build();
+      return attributes.toBuilder().put(RPC_METHOD, attributes.get(RPC_METHOD_OLD)).build();
     }
     return attributes;
   }

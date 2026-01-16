@@ -12,12 +12,12 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.assertj.core.data.MapEntry;
 
 // until old rpc semconv are dropped in 3.0
@@ -26,8 +26,7 @@ public class RpcSemconvStabilityUtil {
   // Stable semconv keys - need to reference from the extractors since they're not public in semconv
   private static final AttributeKey<String> RPC_SYSTEM_NAME =
       AttributeKey.stringKey("rpc.system.name");
-  private static final AttributeKey<String> RPC_METHOD =
-      AttributeKey.stringKey("rpc.method");
+  private static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
   private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
       AttributeKey.stringKey("rpc.method_original");
 
