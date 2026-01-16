@@ -18,17 +18,16 @@ import javax.annotation.Nullable;
 abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
+
   // Stable semconv keys
   static final AttributeKey<String> RPC_SYSTEM_NAME = AttributeKey.stringKey("rpc.system.name");
 
-  // copied from RpcIncubatingAttributes
-  @Deprecated // use RPC_SYSTEM_NAME for stable semconv
-  static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
-
-  static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
-
-  @Deprecated // removed in stable semconv (merged into rpc.method)
+  // removed in stable semconv (merged into rpc.method)
   static final AttributeKey<String> RPC_SERVICE = AttributeKey.stringKey("rpc.service");
+
+  // use RPC_SYSTEM_NAME for stable semconv
+  static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
 
   private final RpcAttributesGetter<REQUEST> getter;
 
@@ -36,7 +35,6 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     this.getter = getter;
   }
 
-  @SuppressWarnings("deprecation") // until old rpc semconv are dropped
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String system = getter.getSystem(request);
