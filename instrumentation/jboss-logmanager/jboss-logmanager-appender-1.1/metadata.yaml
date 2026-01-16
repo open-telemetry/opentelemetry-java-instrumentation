@@ -1,8 +1,9 @@
+display_name: JBoss Log Manager
 description: >
-  This instrumentation captures JBoss LogManager log events and forwards them to the OpenTelemetry
-  Logs API, it does not emit any telemetry on its own.
-display_name: JBoss LogManager
+  This instrumentation bridges JBoss LogManager log events to OpenTelemetry logs.
 library_link: https://github.com/jboss-logging/jboss-logmanager
+features:
+  - LOGGING_BRIDGE
 configurations:
   - name: otel.instrumentation.jboss-logmanager.experimental-log-attributes
     description: >

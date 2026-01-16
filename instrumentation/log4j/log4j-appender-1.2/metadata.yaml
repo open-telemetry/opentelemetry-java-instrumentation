@@ -1,8 +1,9 @@
 description: >
-  This instrumentation captures Log4j log events and forwards them to the OpenTelemetry Logs API,
-  it does not emit any telemetry on its own.
+  This instrumentation bridges Log4j log events to OpenTelemetry logs.
 display_name: Log4j
 library_link: https://logging.apache.org/log4j/1.2/
+features:
+  - LOGGING_BRIDGE
 configurations:
   - name: otel.instrumentation.log4j-appender.experimental-log-attributes
     description: >

@@ -1,8 +1,9 @@
 description: >
-  This instrumentation captures Logback log events and forwards them to the OpenTelemetry Logs
-  API, it does not emit any telemetry on its own.
+  This instrumentation bridges Logback log events to OpenTelemetry logs.
 display_name: Logback
 library_link: https://logback.qos.ch/
+features:
+  - LOGGING_BRIDGE
 configurations:
   - name: otel.instrumentation.logback-appender.experimental-log-attributes
     description: >

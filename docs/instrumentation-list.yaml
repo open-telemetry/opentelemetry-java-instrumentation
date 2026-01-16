@@ -6032,10 +6032,12 @@ libraries:
         attributes: []
   jboss:
   - name: jboss-logmanager-appender-1.1
-    display_name: JBoss LogManager
+    display_name: JBoss Log Manager
     description: |
-      This instrumentation captures JBoss LogManager log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+      This instrumentation bridges JBoss LogManager log events to OpenTelemetry logs.
     library_link: https://github.com/jboss-logging/jboss-logmanager
+    features:
+    - LOGGING_BRIDGE
     source_path: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1
     scope:
       name: io.opentelemetry.jboss-logmanager-appender-1.1
@@ -6059,7 +6061,7 @@ libraries:
       type: boolean
       default: false
   - name: jboss-logmanager-mdc-1.1
-    display_name: JBoss LogManager
+    display_name: JBoss Log Manager
     description: |
       This instrumentation adds trace context (trace ID, span ID, and trace flags) to the JBoss LogManager MDC, it does not emit any telemetry on its own.
     library_link: https://github.com/jboss-logging/jboss-logmanager
@@ -8313,8 +8315,10 @@ libraries:
   - name: log4j-appender-1.2
     display_name: Log4j
     description: |
-      This instrumentation captures Log4j log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+      This instrumentation bridges Log4j log events to OpenTelemetry logs.
     library_link: https://logging.apache.org/log4j/1.2/
+    features:
+    - LOGGING_BRIDGE
     source_path: instrumentation/log4j/log4j-appender-1.2
     scope:
       name: io.opentelemetry.log4j-appender-1.2
@@ -8345,8 +8349,10 @@ libraries:
   - name: log4j-appender-2.17
     display_name: Log4j
     description: |
-      This instrumentation captures Log4j log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+      This instrumentation bridges Log4j log events to OpenTelemetry logs.
     library_link: https://logging.apache.org/log4j/2.x/
+    features:
+    - LOGGING_BRIDGE
     source_path: instrumentation/log4j/log4j-appender-2.17
     scope:
       name: io.opentelemetry.log4j-appender-2.17
@@ -8496,8 +8502,10 @@ libraries:
   - name: logback-appender-1.0
     display_name: Logback
     description: |
-      This instrumentation captures Logback log events and forwards them to the OpenTelemetry Logs API, it does not emit any telemetry on its own.
+      This instrumentation bridges Logback log events to OpenTelemetry logs.
     library_link: https://logback.qos.ch/
+    features:
+    - LOGGING_BRIDGE
     source_path: instrumentation/logback/logback-appender-1.0
     scope:
       name: io.opentelemetry.logback-appender-1.0
