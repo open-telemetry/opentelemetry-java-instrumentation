@@ -159,9 +159,9 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,database")
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,database")
   }
 
   check {

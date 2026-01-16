@@ -24,6 +24,17 @@ tasks {
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
   }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
 
 if (!(findProperty("testLatestDeps") as Boolean)) {
