@@ -24,6 +24,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 val jflexSourceDir = layout.projectDirectory.dir("src/main/jflex")

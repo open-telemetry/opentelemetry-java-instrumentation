@@ -1,0 +1,315 @@
+[
+    {
+        "name": "numeric_literal_integers",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 12, -12, +12"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?, ?, ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "numeric_literal_with_decimal_point",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 12.34, -12.34, +12.34, .01, -.01"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?, ?, ?, ?, ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "numeric_literal_exponential",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 12.34e56, -12.34e56, +12.34e56"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?, ?, ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "numeric_literal_negative_exponential",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 12.34e-56, -12.34e-56, +12.34e-56"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?, ?, ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "arithmetic_on_numeric_literals",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 99+100"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ??"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "hex_literal",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 0xDEADBEEF, 0XdeadBEEF"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?, ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "string_literal",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 'hello'"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "string_literal_escaped_single_quote",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 'My name''s not important'"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "string_with_embedded_newline",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT 'My name is \n not important'"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT ?"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "numbers_in_identifiers",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT c3po, r2d2 FROM covid19 WHERE n1h1=1234"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT c3po, r2d2 FROM covid19 WHERE n1h1=?"
+            ],
+            "db.query.summary": "SELECT covid19"
+        }
+    },
+    {
+        "name": "periods_in_identifiers",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT a FROM dbo.Table JOIN dbo.AnotherTable"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT a FROM dbo.Table JOIN dbo.AnotherTable"
+            ],
+            "db.query.summary": "SELECT dbo.Table dbo.AnotherTable"
+        }
+    },
+    {
+        "name": "insert_into",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "INSERT INTO X VALUES(1, 23456, 123.456, 99+100)"
+        },
+        "expected": {
+            "db.query.text": [
+                "INSERT INTO X VALUES(?, ?, ?, ??)"
+            ],
+            "db.query.summary": "INSERT X"
+        }
+    },
+    {
+        "name": "uuid",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT { guid '01234567-89ab-cdef-0123-456789abcdef' }"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT { guid ? }"
+            ],
+            "db.query.summary": "SELECT"
+        }
+    },
+    {
+        "name": "in_clause",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT * FROM table WHERE value IN (123, 456, 'abc')"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT * FROM table WHERE value IN (?)",
+                "SELECT * FROM table WHERE value IN (?, ?, ?)"
+            ],
+            "db.query.summary": "SELECT table"
+        }
+    },
+    {
+        "name": "comments",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT column -- end of line comment\nFROM /* block \n comment */ table"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT column \nFROM  table"
+            ],
+            "db.query.summary": "SELECT table"
+        }
+    },
+    {
+        "name": "insert_into_select",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "INSERT INTO shipping_details\n(order_id,\naddress)\nSELECT order_id,\naddress\nFROM   orders\nWHERE  order_id = 1"
+        },
+        "expected": {
+            "db.query.text": [
+                "INSERT INTO shipping_details\n(order_id,\naddress)\nSELECT order_id,\naddress\nFROM   orders\nWHERE  order_id = ?"
+            ],
+            "db.query.summary": "INSERT shipping_details SELECT orders"
+        }
+    },
+    {
+        "name": "select_nested_query",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT order_date\nFROM   (SELECT *\nFROM   orders o\nJOIN customers c\nON o.customer_id = c.customer_id)"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT order_date\nFROM   (SELECT *\nFROM   orders o\nJOIN customers c\nON o.customer_id = c.customer_id)"
+            ],
+            "db.query.summary": "SELECT SELECT orders customers"
+        }
+    },
+    {
+        "name": "select_nested_query_case_preserved",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELEcT order_date\nFROM   (sELECT *\nFROM   orders o\nJOIN customers c\nON o.customer_id = c.customer_id)"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELEcT order_date\nFROM   (sELECT *\nFROM   orders o\nJOIN customers c\nON o.customer_id = c.customer_id)"
+            ],
+            "db.query.summary": "SELEcT sELECT orders customers"
+        }
+    },
+    {
+        "name": "case_preserved",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELEcT order_date\nFROM ORders"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELEcT order_date\nFROM ORders"
+            ],
+            "db.query.summary": "SELEcT ORders"
+        }
+    },
+    {
+        "name": "cross_join",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT * FROM Orders o CROSS JOIN OrderDetails od"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT * FROM Orders o CROSS JOIN OrderDetails od"
+            ],
+            "db.query.summary": "SELECT Orders OrderDetails"
+        }
+    },
+    {
+        "name": "cross_join_comma_separated_syntax",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "SELECT * FROM Orders o, OrderDetails od"
+        },
+        "expected": {
+            "db.query.text": [
+                "SELECT * FROM Orders o, OrderDetails od"
+            ],
+            "db.query.summary": "SELECT Orders OrderDetails"
+        }
+    },
+    {
+        "name": "create_table",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "CREATE  TABLE MyTable (\n    ID NOT NULL IDENTITY(1,1) PRIMARY KEY\n)"
+        },
+        "expected": {
+            "db.query.text": [
+                "CREATE  TABLE MyTable (\n    ID NOT NULL IDENTITY(?,?) PRIMARY KEY\n)"
+            ],
+            "db.query.summary": "CREATE TABLE MyTable"
+        }
+    },
+    {
+        "name": "alter_table",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "ALTER  TABLE MyTable ADD Name varchar(255)"
+        },
+        "expected": {
+            "db.query.text": [
+                "ALTER  TABLE MyTable ADD Name varchar(?)"
+            ],
+            "db.query.summary": "ALTER TABLE MyTable"
+        }
+    },
+    {
+        "name": "drop_table",
+        "input": {
+            "db.system.name": "other_sql",
+            "query": "DROP  TABLE MyTable"
+        },
+        "expected": {
+            "db.query.text": [
+                "DROP  TABLE MyTable"
+            ],
+            "db.query.summary": "DROP TABLE MyTable"
+        }
+    }
+]
