@@ -19,14 +19,13 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
@@ -34,6 +33,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -94,32 +96,35 @@ class S3TracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> s3(span, bucketName, "PutObject", "PUT", 200),
-                span ->
-                    span.hasName("s3ToSqsTestQueue process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                            equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                            satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
-                            equalTo(RPC_METHOD, "ReceiveMessage"),
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_SERVICE, "AmazonSQS"),
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(URL_FULL, val -> val.startsWith("http://")),
-                            satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            satisfies(
-                                SERVER_PORT,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(Number.class))),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_DESTINATION_NAME, "s3ToSqsTestQueue"),
-                            equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))),
+                span -> {
+                  List<AttributeAssertion> attributes = new ArrayList<>();
+                  attributes.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+                  attributes.add(equalTo(AWS_SQS_QUEUE_URL, queueUrl));
+                  attributes.add(satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)));
+                  attributes.add(rpcSystemAssertion("aws-api"));
+                  attributes.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
+                  attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+                  attributes.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+                  attributes.add(satisfies(URL_FULL, val -> val.startsWith("http://")));
+                  attributes.add(satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)));
+                  attributes.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+                  attributes.add(
+                      satisfies(
+                          SERVER_PORT,
+                          val ->
+                              val.satisfiesAnyOf(
+                                  v -> assertThat(v).isNull(),
+                                  v -> assertThat(v).isInstanceOf(Number.class))));
+                  attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+                  attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "s3ToSqsTestQueue"));
+                  attributes.add(equalTo(MESSAGING_OPERATION, "process"));
+                  attributes.add(satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+
+                  span.hasName("s3ToSqsTestQueue process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(attributes);
+                },
                 span ->
                     span.hasName("process child")
                         .hasParent(trace.getSpan(1))
@@ -186,32 +191,35 @@ class S3TracingTest {
             trace.hasSpansSatisfyingExactly(span -> s3(span, bucketName, "PutObject", "PUT", 200)),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("s3ToSnsToSqsTestQueue process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                            equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                            satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
-                            equalTo(RPC_METHOD, "ReceiveMessage"),
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_SERVICE, "AmazonSQS"),
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(URL_FULL, val -> val.startsWith("http://")),
-                            satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            satisfies(
-                                SERVER_PORT,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(Number.class))),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_DESTINATION_NAME, "s3ToSnsToSqsTestQueue"),
-                            equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))),
+                span -> {
+                  List<AttributeAssertion> attributes = new ArrayList<>();
+                  attributes.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+                  attributes.add(equalTo(AWS_SQS_QUEUE_URL, queueUrl));
+                  attributes.add(satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)));
+                  attributes.add(rpcSystemAssertion("aws-api"));
+                  attributes.addAll(rpcMethodAssertions("AmazonSQS", "ReceiveMessage"));
+                  attributes.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+                  attributes.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+                  attributes.add(satisfies(URL_FULL, val -> val.startsWith("http://")));
+                  attributes.add(satisfies(SERVER_ADDRESS, v -> v.isInstanceOf(String.class)));
+                  attributes.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+                  attributes.add(
+                      satisfies(
+                          SERVER_PORT,
+                          val ->
+                              val.satisfiesAnyOf(
+                                  v -> assertThat(v).isNull(),
+                                  v -> assertThat(v).isInstanceOf(Number.class))));
+                  attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+                  attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "s3ToSnsToSqsTestQueue"));
+                  attributes.add(equalTo(MESSAGING_OPERATION, "process"));
+                  attributes.add(satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+
+                  span.hasName("s3ToSnsToSqsTestQueue process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(attributes);
+                },
                 span ->
                     span.hasName("process child")
                         .hasParent(trace.getSpan(0))

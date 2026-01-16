@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -19,9 +21,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -216,11 +215,10 @@ class Aws0ClientTest {
                               equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                               equalTo(SERVER_PORT, server.httpPort()),
                               equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                              equalTo(RPC_SYSTEM, "aws-api"),
-                              satisfies(RPC_SERVICE, v -> v.contains(service)),
-                              equalTo(RPC_METHOD, operation),
+                              rpcSystemAssertion("aws-api"),
                               equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
+                  attributes.addAll(rpcMethodAssertions(service, operation));
                   additionalAttributes.forEach((k, v) -> attributes.add(equalTo(stringKey(k), v)));
 
                   span.hasName(service + "." + operation)
@@ -252,23 +250,30 @@ class Aws0ClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("S3.GetObject")
-                        .hasKind(CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasException(caught)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_FULL, "http://localhost:" + UNUSABLE_PORT),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, 61),
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_SERVICE, "Amazon S3"),
-                            equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                            equalTo(AWS_S3_BUCKET, "someBucket"),
-                            equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));
+                span -> {
+                  List<AttributeAssertion> attributes =
+                      new ArrayList<>(
+                          asList(
+                              equalTo(URL_FULL, "http://localhost:" + UNUSABLE_PORT),
+                              equalTo(HTTP_REQUEST_METHOD, "GET"),
+                              equalTo(SERVER_ADDRESS, "localhost"),
+                              equalTo(SERVER_PORT, 61),
+                              rpcSystemAssertion("aws-api"),
+                              equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+
+                  attributes.addAll(rpcMethodAssertions("Amazon S3", "GetObject"));
+                  attributes.addAll(
+                      asList(
+                          equalTo(AWS_S3_BUCKET, "someBucket"),
+                          equalTo(ERROR_TYPE, AmazonClientException.class.getName())));
+
+                  span.hasName("S3.GetObject")
+                      .hasKind(CLIENT)
+                      .hasStatus(StatusData.error())
+                      .hasException(caught)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(attributes);
+                }));
   }
 
   @Test
@@ -290,22 +295,29 @@ class Aws0ClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("S3.GetObject")
-                        .hasKind(CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasException(caught)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_FULL, "https://s3.amazonaws.com"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_SERVICE, "Amazon S3"),
-                            equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                            equalTo(AWS_S3_BUCKET, "someBucket"),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+                span -> {
+                  List<AttributeAssertion> attributes =
+                      new ArrayList<>(
+                          asList(
+                              equalTo(URL_FULL, "https://s3.amazonaws.com"),
+                              equalTo(HTTP_REQUEST_METHOD, "GET"),
+                              equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
+                              rpcSystemAssertion("aws-api"),
+                              equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+
+                  attributes.addAll(rpcMethodAssertions("Amazon S3", "GetObject"));
+                  attributes.addAll(
+                      asList(
+                          equalTo(AWS_S3_BUCKET, "someBucket"),
+                          equalTo(ERROR_TYPE, IllegalStateException.class.getName())));
+
+                  span.hasName("S3.GetObject")
+                      .hasKind(CLIENT)
+                      .hasStatus(StatusData.error())
+                      .hasException(caught)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(attributes);
+                }));
   }
 
   @Test
@@ -328,23 +340,30 @@ class Aws0ClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("S3.GetObject")
-                        .hasKind(CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasException(caught)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_FULL, server.httpUri().toString()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_PORT, server.httpPort()),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_SERVICE, "Amazon S3"),
-                            equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                            equalTo(AWS_S3_BUCKET, "someBucket"),
-                            equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));
+                span -> {
+                  List<AttributeAssertion> attributes =
+                      new ArrayList<>(
+                          asList(
+                              equalTo(URL_FULL, server.httpUri().toString()),
+                              equalTo(HTTP_REQUEST_METHOD, "GET"),
+                              equalTo(SERVER_PORT, server.httpPort()),
+                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                              rpcSystemAssertion("aws-api"),
+                              equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+
+                  attributes.addAll(rpcMethodAssertions("Amazon S3", "GetObject"));
+                  attributes.addAll(
+                      asList(
+                          equalTo(AWS_S3_BUCKET, "someBucket"),
+                          equalTo(ERROR_TYPE, AmazonClientException.class.getName())));
+
+                  span.hasName("S3.GetObject")
+                      .hasKind(CLIENT)
+                      .hasStatus(StatusData.error())
+                      .hasException(caught)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(attributes);
+                }));
   }
 
   @Test

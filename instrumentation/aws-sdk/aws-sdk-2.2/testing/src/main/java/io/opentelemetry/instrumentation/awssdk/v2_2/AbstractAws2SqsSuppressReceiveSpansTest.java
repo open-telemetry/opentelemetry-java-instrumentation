@@ -17,17 +17,17 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.net.URISyntaxException;
@@ -68,26 +68,28 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasNoParent(),
-                  span ->
-                      span.hasName("Sqs.ReceiveMessage")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasTotalRecordedLinks(0)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                              satisfies(
-                                  AWS_REQUEST_ID,
-                                  val ->
-                                      val.matches(
-                                          "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
-                              equalTo(RPC_SYSTEM, "aws-api"),
-                              equalTo(RPC_SERVICE, "Sqs"),
-                              equalTo(RPC_METHOD, "ReceiveMessage"),
-                              equalTo(HTTP_REQUEST_METHOD, "POST"),
-                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, sqsPort))));
+                  span -> {
+                    List<AttributeAssertion> attrs = new ArrayList<>();
+                    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+                    attrs.add(equalTo(AWS_SQS_QUEUE_URL, queueUrl));
+                    attrs.add(
+                        satisfies(
+                            AWS_REQUEST_ID,
+                            val ->
+                                val.matches(
+                                    "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")));
+                    attrs.add(rpcSystemAssertion("aws-api"));
+                    attrs.addAll(rpcMethodAssertions("Sqs", "ReceiveMessage"));
+                    attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+                    attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+                    attrs.add(satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+                    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                    attrs.add(equalTo(SERVER_PORT, sqsPort));
+                    span.hasName("Sqs.ReceiveMessage")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(attrs);
+                  }));
     }
 
     getTesting().waitAndAssertTraces(traceAsserts);
@@ -135,27 +137,28 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
       traceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("testSdkSqs process")
-                          .hasKind(SpanKind.CONSUMER)
-                          // TODO: This is not good, and can also happen if producer is not
-                          // instrumented
-                          .hasNoParent()
-                          .hasTotalRecordedLinks(0)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(RPC_SYSTEM, "aws-api"),
-                              equalTo(RPC_SERVICE, "Sqs"),
-                              equalTo(RPC_METHOD, "ReceiveMessage"),
-                              equalTo(HTTP_REQUEST_METHOD, "POST"),
-                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, sqsPort),
-                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)))));
+                  span -> {
+                    List<AttributeAssertion> attrs = new ArrayList<>();
+                    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+                    attrs.add(rpcSystemAssertion("aws-api"));
+                    attrs.addAll(rpcMethodAssertions("Sqs", "ReceiveMessage"));
+                    attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+                    attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+                    attrs.add(satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+                    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                    attrs.add(equalTo(SERVER_PORT, sqsPort));
+                    attrs.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+                    attrs.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
+                    attrs.add(equalTo(MESSAGING_OPERATION, "process"));
+                    attrs.add(satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+                    span.hasName("testSdkSqs process")
+                        .hasKind(SpanKind.CONSUMER)
+                        // TODO: This is not good, and can also happen if producer is not
+                        // instrumented
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(attrs);
+                  }));
     }
     getTesting().waitAndAssertTraces(traceAsserts);
   }

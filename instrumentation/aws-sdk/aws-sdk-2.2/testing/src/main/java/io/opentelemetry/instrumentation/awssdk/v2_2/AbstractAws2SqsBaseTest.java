@@ -17,22 +17,24 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.pekko.http.scaladsl.Http;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -203,74 +205,76 @@ public abstract class AbstractAws2SqsBaseTest {
   }
 
   static SpanDataAssert createQueueSpan(SpanDataAssert span) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attrs.add(equalTo(stringKey("aws.queue.name"), "testSdkSqs"));
+    attrs.add(
+        satisfies(
+            AWS_REQUEST_ID,
+            val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")));
+    attrs.add(rpcSystemAssertion("aws-api"));
+    attrs.addAll(rpcMethodAssertions("Sqs", "CreateQueue"));
+    attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    attrs.add(satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(equalTo(SERVER_PORT, sqsPort));
     return span.hasName("Sqs.CreateQueue")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-            satisfies(
-                AWS_REQUEST_ID,
-                val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, "CreateQueue"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
-            equalTo(SERVER_ADDRESS, "localhost"),
-            equalTo(SERVER_PORT, sqsPort));
+        .hasAttributesSatisfyingExactly(attrs);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   static SpanDataAssert processSpan(SpanDataAssert span, SpanData parent) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attrs.add(rpcSystemAssertion("aws-api"));
+    attrs.addAll(rpcMethodAssertions("Sqs", "ReceiveMessage"));
+    attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    attrs.add(satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(equalTo(SERVER_PORT, sqsPort));
+    attrs.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+    attrs.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
+    attrs.add(equalTo(MESSAGING_OPERATION, "process"));
+    attrs.add(satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
     return span.hasName("testSdkSqs process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
         .hasTotalRecordedLinks(0)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, "ReceiveMessage"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
-            equalTo(SERVER_ADDRESS, "localhost"),
-            equalTo(SERVER_PORT, sqsPort),
-            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-            equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, "process"),
-            satisfies(MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
+        .hasAttributesSatisfyingExactly(attrs);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   static SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rcpMethod) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attrs.add(equalTo(AWS_SQS_QUEUE_URL, queueUrl));
+    attrs.add(
+        satisfies(
+            AWS_REQUEST_ID,
+            val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")));
+    attrs.add(rpcSystemAssertion("aws-api"));
+    attrs.addAll(rpcMethodAssertions("Sqs", rcpMethod));
+    attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    attrs.add(satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)));
+    attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+    attrs.add(equalTo(SERVER_PORT, sqsPort));
+    attrs.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+    attrs.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
+    attrs.add(equalTo(MESSAGING_OPERATION, "publish"));
+    attrs.add(
+        satisfies(
+            MESSAGING_MESSAGE_ID,
+            val ->
+                val.satisfiesAnyOf(
+                    v -> assertThat(v).isInstanceOf(String.class), v -> assertThat(v).isNull())));
     return span.hasName("testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-            satisfies(
-                AWS_REQUEST_ID,
-                val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, rcpMethod),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
-            equalTo(SERVER_ADDRESS, "localhost"),
-            equalTo(SERVER_PORT, sqsPort),
-            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-            equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, "publish"),
-            satisfies(
-                MESSAGING_MESSAGE_ID,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isInstanceOf(String.class),
-                        v -> assertThat(v).isNull())));
+        .hasAttributesSatisfyingExactly(attrs);
   }
 }

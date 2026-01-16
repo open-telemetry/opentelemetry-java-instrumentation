@@ -29,11 +29,10 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_COUNT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -257,44 +256,41 @@ public abstract class AbstractAws2ClientCoreTest {
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static void assertListTablesRequest(SpanDataAssert span) {
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(SERVER_ADDRESS, "127.0.0.1"));
+    attrs.add(equalTo(SERVER_PORT, server.httpPort()));
+    attrs.add(equalTo(URL_FULL, server.httpUri() + "/"));
+    attrs.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    attrs.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    attrs.add(rpcSystemAssertion("aws-api"));
+    attrs.addAll(rpcMethodAssertions("DynamoDb", "ListTables"));
+    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attrs.add(equalTo(AWS_REQUEST_ID, "UNKNOWN"));
+    attrs.add(equalTo(AWS_DYNAMODB_TABLE_COUNT, 1));
+    attrs.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")));
+    attrs.add(equalTo(maybeStable(DB_OPERATION), "ListTables"));
     span.hasName("DynamoDb.ListTables")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-            equalTo(SERVER_PORT, server.httpPort()),
-            equalTo(URL_FULL, server.httpUri() + "/"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, "ListTables"),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(AWS_DYNAMODB_TABLE_COUNT, 1),
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
-            equalTo(maybeStable(DB_OPERATION), "ListTables"));
+        .hasAttributesSatisfyingExactly(attrs);
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private static void assertDynamoDbRequest(
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                equalTo(SERVER_PORT, server.httpPort()),
-                equalTo(URL_FULL, server.httpUri() + "/"),
-                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                equalTo(RPC_SYSTEM, "aws-api"),
-                equalTo(RPC_SERVICE, "DynamoDb"),
-                equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-                equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
-                equalTo(maybeStable(DB_OPERATION), operation)));
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(SERVER_ADDRESS, "127.0.0.1"));
+    assertions.add(equalTo(SERVER_PORT, server.httpPort()));
+    assertions.add(equalTo(URL_FULL, server.httpUri() + "/"));
+    assertions.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    assertions.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    assertions.add(rpcSystemAssertion("aws-api"));
+    assertions.addAll(rpcMethodAssertions("DynamoDb", operation));
+    assertions.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    assertions.add(equalTo(AWS_REQUEST_ID, "UNKNOWN"));
+    assertions.add(equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
+    assertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")));
+    assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
     assertions.addAll(extraAttributes);
     span.hasName("DynamoDb." + operation)
         .hasKind(SpanKind.CLIENT)

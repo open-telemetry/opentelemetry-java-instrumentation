@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -15,9 +17,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -36,6 +35,7 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -111,6 +111,17 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
     Throwable caught = catchThrowable(() -> client.getObject("someBucket", "someKey"));
     assertThat(caught).isInstanceOf(SdkClientException.class);
 
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(URL_FULL, "http://127.0.0.1:" + UNUSABLE_PORT));
+    attrs.add(equalTo(HTTP_REQUEST_METHOD, "GET"));
+    attrs.add(equalTo(SERVER_ADDRESS, "127.0.0.1"));
+    attrs.add(equalTo(SERVER_PORT, 61));
+    attrs.add(rpcSystemAssertion("aws-api"));
+    attrs.addAll(rpcMethodAssertions("Amazon S3", "GetObject"));
+    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attrs.add(equalTo(AWS_S3_BUCKET, "someBucket"));
+    attrs.add(equalTo(ERROR_TYPE, SdkClientException.class.getName()));
+
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -121,17 +132,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                             .hasStatus(StatusData.error())
                             .hasException(caught)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, "http://127.0.0.1:" + UNUSABLE_PORT),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, 61),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+                            .hasAttributesSatisfyingExactly(attrs)));
   }
 
   @Test
@@ -154,6 +155,17 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
     assertThat(caught).isInstanceOf(AmazonClientException.class);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
+    List<AttributeAssertion> attrs = new ArrayList<>();
+    attrs.add(equalTo(URL_FULL, server.httpUri().toString()));
+    attrs.add(equalTo(HTTP_REQUEST_METHOD, "GET"));
+    attrs.add(equalTo(SERVER_PORT, server.httpPort()));
+    attrs.add(equalTo(SERVER_ADDRESS, "127.0.0.1"));
+    attrs.add(rpcSystemAssertion("aws-api"));
+    attrs.addAll(rpcMethodAssertions("Amazon S3", "GetObject"));
+    attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attrs.add(equalTo(AWS_S3_BUCKET, "someBucket"));
+    attrs.add(equalTo(ERROR_TYPE, SdkClientException.class.getName()));
+
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -166,16 +178,6 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                             .hasException(
                                 new SdkClientException(
                                     "Unable to execute HTTP request: Request did not complete before the request timeout configuration."))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, server.httpUri().toString()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+                            .hasAttributesSatisfyingExactly(attrs)));
   }
 }

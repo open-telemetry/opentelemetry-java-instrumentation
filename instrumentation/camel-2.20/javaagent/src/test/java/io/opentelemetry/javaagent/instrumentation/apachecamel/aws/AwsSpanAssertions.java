@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.aws;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -23,9 +25,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -93,9 +92,8 @@ class AwsSpanAssertions {
                             v -> assertThat(v).isNull(),
                             v -> assertThat(v).isInstanceOf(Number.class))),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(RPC_SYSTEM, "aws-api"),
-                satisfies(RPC_METHOD, stringAssert -> stringAssert.isEqualTo(rpcMethod)),
-                equalTo(RPC_SERVICE, "AmazonSQS")));
+                rpcSystemAssertion("aws-api")));
+    attributeAssertions.addAll(rpcMethodAssertions("AmazonSQS", rpcMethod));
 
     if (spanName.endsWith("receive")
         || spanName.endsWith("process")
@@ -120,46 +118,47 @@ class AwsSpanAssertions {
   }
 
   static SpanDataAssert s3(SpanDataAssert span, String spanName, String bucketName, String method) {
-    return span.hasName(spanName)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(stringKey("aws.bucket.name"), bucketName),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_METHOD, spanName.substring(3)),
-            equalTo(RPC_SERVICE, "Amazon S3"),
-            equalTo(HTTP_REQUEST_METHOD, method),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),
-            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-            satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
-            satisfies(
-                SERVER_PORT,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+    attributeAssertions.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attributeAssertions.add(equalTo(stringKey("aws.bucket.name"), bucketName));
+    attributeAssertions.add(rpcSystemAssertion("aws-api"));
+    attributeAssertions.addAll(rpcMethodAssertions("Amazon S3", spanName.substring(3)));
+    attributeAssertions.add(equalTo(HTTP_REQUEST_METHOD, method));
+    attributeAssertions.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    attributeAssertions.add(satisfies(URL_FULL, val -> val.isInstanceOf(String.class)));
+    attributeAssertions.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+    attributeAssertions.add(satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)));
+    attributeAssertions.add(
+        satisfies(
+            SERVER_PORT,
+            val ->
+                val.satisfiesAnyOf(
+                    v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+
+    return span.hasName(spanName).hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
   static SpanDataAssert sns(
       SpanDataAssert span, String spanName, String topicArn, String destinationName) {
-    return span.hasName(spanName)
-        .hasKind(CLIENT)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
-            equalTo(AWS_SNS_TOPIC_ARN, topicArn),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_METHOD, spanName.substring(4)),
-            equalTo(RPC_SERVICE, "AmazonSNS"),
-            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),
-            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-            satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)),
-            satisfies(
-                SERVER_PORT,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+    attributeAssertions.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+    attributeAssertions.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+    attributeAssertions.add(equalTo(AWS_SNS_TOPIC_ARN, topicArn));
+    attributeAssertions.add(rpcSystemAssertion("aws-api"));
+    attributeAssertions.addAll(rpcMethodAssertions("AmazonSNS", spanName.substring(4)));
+    attributeAssertions.add(equalTo(MESSAGING_DESTINATION_NAME, destinationName));
+    attributeAssertions.add(equalTo(HTTP_REQUEST_METHOD, "POST"));
+    attributeAssertions.add(equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
+    attributeAssertions.add(satisfies(URL_FULL, val -> val.isInstanceOf(String.class)));
+    attributeAssertions.add(equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
+    attributeAssertions.add(satisfies(SERVER_ADDRESS, val -> val.isInstanceOf(String.class)));
+    attributeAssertions.add(
+        satisfies(
+            SERVER_PORT,
+            val ->
+                val.satisfiesAnyOf(
+                    v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
+
+    return span.hasName(spanName).hasKind(CLIENT).hasAttributesSatisfyingExactly(attributeAssertions);
   }
 }

@@ -7,15 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -33,7 +32,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractS3ClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
@@ -119,22 +120,24 @@ class S3ClientTest extends AbstractS3ClientTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.HeadBucket")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(caught)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, "https://s3.amazonaws.com"),
-                                equalTo(HTTP_REQUEST_METHOD, "HEAD"),
-                                equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "HeadBucket"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+                    span -> {
+                      List<AttributeAssertion> attributes = new ArrayList<>();
+                      attributes.add(equalTo(URL_FULL, "https://s3.amazonaws.com"));
+                      attributes.add(equalTo(HTTP_REQUEST_METHOD, "HEAD"));
+                      attributes.add(equalTo(SERVER_ADDRESS, "s3.amazonaws.com"));
+                      attributes.add(rpcSystemAssertion("aws-api"));
+                      attributes.addAll(rpcMethodAssertions("Amazon S3", "HeadBucket"));
+                      attributes.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+                      attributes.add(equalTo(AWS_S3_BUCKET, "someBucket"));
+                      attributes.add(equalTo(ERROR_TYPE, IllegalStateException.class.getName()));
+
+                      span.hasName("S3.HeadBucket")
+                          .hasKind(CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasException(caught)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attributes);
+                    }));
   }
 
   @Test

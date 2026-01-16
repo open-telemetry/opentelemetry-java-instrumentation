@@ -22,14 +22,13 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SN
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -318,11 +317,10 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 equalTo(SERVER_PORT, server.httpPort()),
                 equalTo(HTTP_REQUEST_METHOD, method),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                equalTo(RPC_SYSTEM, "aws-api"),
-                equalTo(RPC_SERVICE, service),
-                equalTo(RPC_METHOD, operation),
+                rpcSystemAssertion("aws-api"),
                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                 equalTo(AWS_REQUEST_ID, requestId)));
+    attributes.addAll(rpcMethodAssertions(service, operation));
 
     if (service.equals("S3")) {
       attributes.addAll(
@@ -891,45 +889,47 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(thrown)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
-                                // hostname with the bucket name in case the bucket name is a valid
-                                // DNS label, even in the case that we are using an endpoint
-                                // override. Previously the sdk was only doing that if endpoint had
-                                // "s3" as label in the FQDN. Our test assert both cases so that we
-                                // don't need to know what version is being tested.
-                                satisfies(
-                                    SERVER_ADDRESS,
-                                    v -> v.matches("somebucket.localhost|localhost")),
-                                satisfies(
-                                    URL_FULL,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "http://somebucket.localhost:"
-                                                            + server.httpPort()
-                                                            + "/somekey"),
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "http://localhost:"
-                                                            + server.httpPort()
-                                                            + "/somebucket/somekey"))),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "somebucket"))));
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
+                      // hostname with the bucket name in case the bucket name is a valid
+                      // DNS label, even in the case that we are using an endpoint
+                      // override. Previously the sdk was only doing that if endpoint had
+                      // "s3" as label in the FQDN. Our test assert both cases so that we
+                      // don't need to know what version is being tested.
+                      attrs.add(
+                          satisfies(
+                              SERVER_ADDRESS, v -> v.matches("somebucket.localhost|localhost")));
+                      attrs.add(
+                          satisfies(
+                              URL_FULL,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v ->
+                                          assertThat(v)
+                                              .isEqualTo(
+                                                  "http://somebucket.localhost:"
+                                                      + server.httpPort()
+                                                      + "/somekey"),
+                                      v ->
+                                          assertThat(v)
+                                              .isEqualTo(
+                                                  "http://localhost:"
+                                                      + server.httpPort()
+                                                      + "/somebucket/somekey"))));
+                      attrs.add(equalTo(SERVER_PORT, server.httpPort()));
+                      attrs.add(equalTo(HTTP_REQUEST_METHOD, "GET"));
+                      attrs.add(rpcSystemAssertion("aws-api"));
+                      attrs.addAll(rpcMethodAssertions("S3", "GetObject"));
+                      attrs.add(equalTo(stringKey("aws.agent"), "java-aws-sdk"));
+                      attrs.add(equalTo(AWS_S3_BUCKET, "somebucket"));
+                      span.hasName("S3.GetObject")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasException(thrown)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]));
+                    }));
   }
 
   // regression test for
