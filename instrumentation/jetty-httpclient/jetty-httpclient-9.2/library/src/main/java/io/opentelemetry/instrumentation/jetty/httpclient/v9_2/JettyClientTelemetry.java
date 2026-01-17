@@ -27,11 +27,9 @@ public final class JettyClientTelemetry {
     return new JettyClientTelemetryBuilder(openTelemetry);
   }
 
-  private final HttpClient httpClient;
   private final Instrumenter<Request, Response> instrumenter;
 
-  JettyClientTelemetry(HttpClient httpClient, Instrumenter<Request, Response> instrumenter) {
-    this.httpClient = httpClient;
+  JettyClientTelemetry(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
