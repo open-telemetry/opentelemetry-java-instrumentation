@@ -35,10 +35,11 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.couchbase.core.CouchbaseTemplate;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final List<AutoCloseable> cleanup = new ArrayList<>();
   private static CouchbaseTemplate couchbaseTemplate;

@@ -31,15 +31,16 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension protected static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private ConfigurableApplicationContext applicationContext;
-  private TestRepository repository;
+  protected TestRepository repository;
 
   @BeforeAll
   void setUp() {
@@ -72,7 +73,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
     repository = applicationContext.getBean(TestRepository.class);
   }
 
-  private void cleanUpTest() {
+  protected void cleanUpTest() {
     testing.clearData();
     repository.deleteAll();
     testing.waitForTraces(2);
