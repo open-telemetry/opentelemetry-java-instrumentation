@@ -103,7 +103,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (isBatch) {
         internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
       }
-      boolean shouldSanitize = statementSanitizationEnabled && getter.isQuerySanitizationNeeded(request);
+      boolean shouldSanitize =
+          statementSanitizationEnabled && getter.isQuerySanitizationNeeded(request);
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
