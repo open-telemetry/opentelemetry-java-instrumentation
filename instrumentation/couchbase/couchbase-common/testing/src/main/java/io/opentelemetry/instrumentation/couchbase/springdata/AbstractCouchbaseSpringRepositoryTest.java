@@ -103,7 +103,10 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketCouchbase.name()))));
+                            equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
+                            satisfies(
+                                maybeStable(DB_STATEMENT),
+                                s -> s.startsWith("ViewQuery(testDocument/all)")))));
   }
 
   @Test
@@ -237,6 +240,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_NAME), bucketCouchbase.name()))));
+                            equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
+                            satisfies(
+                                maybeStable(DB_STATEMENT),
+                                s -> s.startsWith("ViewQuery(testDocument/all)")))));
   }
 }
