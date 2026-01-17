@@ -100,6 +100,7 @@ public abstract class AbstractCassandraTest {
         getInstrumentationName(),
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,

@@ -125,6 +125,7 @@ class JdbcTelemetryTest {
         "io.opentelemetry.jdbc",
         DB_NAMESPACE,
         DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         ERROR_TYPE,

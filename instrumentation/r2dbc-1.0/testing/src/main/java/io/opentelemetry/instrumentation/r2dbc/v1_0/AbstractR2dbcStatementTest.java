@@ -288,6 +288,7 @@ public abstract class AbstractR2dbcStatementTest {
         DB_SYSTEM_NAME,
         DB_NAMESPACE,
         DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         SERVER_ADDRESS,
         SERVER_PORT);
   }

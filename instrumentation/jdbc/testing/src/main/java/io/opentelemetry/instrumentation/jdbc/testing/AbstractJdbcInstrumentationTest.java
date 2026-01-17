@@ -429,10 +429,16 @@ public abstract class AbstractJdbcInstrumentationTest {
           DB_SYSTEM_NAME,
           DB_COLLECTION_NAME,
           DB_NAMESPACE,
-          DB_OPERATION_NAME);
+          DB_OPERATION_NAME,
+          DB_QUERY_SUMMARY);
     } else {
       assertDurationMetric(
-          testing(), "io.opentelemetry.jdbc", DB_SYSTEM_NAME, DB_OPERATION_NAME, DB_NAMESPACE);
+          testing(),
+          "io.opentelemetry.jdbc",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_NAMESPACE,
+          DB_QUERY_SUMMARY);
     }
   }
 
