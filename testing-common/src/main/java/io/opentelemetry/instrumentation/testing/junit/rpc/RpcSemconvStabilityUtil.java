@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.rpc;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
@@ -46,6 +47,20 @@ public class RpcSemconvStabilityUtil {
 
     if (SemconvStability.emitOldRpcSemconv()) {
       assertions.add(equalTo(RPC_SERVICE, service));
+    }
+
+    return assertions;
+  }
+
+  public static List<AttributeAssertion> rpcMethodContainsAssertions(
+      String service, String method) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+
+    if (SemconvStability.emitStableRpcSemconv()) {
+      assertions.add(satisfies(RPC_METHOD, v -> v.contains(service + "/" + method)));
+    } else {
+      assertions.add(equalTo(RPC_METHOD, method));
+      assertions.add(satisfies(RPC_SERVICE, v -> v.contains(service)));
     }
 
     return assertions;

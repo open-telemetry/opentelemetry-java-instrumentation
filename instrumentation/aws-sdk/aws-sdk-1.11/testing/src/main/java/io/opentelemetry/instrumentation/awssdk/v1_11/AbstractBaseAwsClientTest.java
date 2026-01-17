@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodContainsAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -18,8 +18,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +27,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
@@ -105,19 +102,7 @@ public abstract class AbstractBaseAwsClientTest {
                                   rpcSystemAssertion("aws-api"),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
-                      // For old/incubating semconv, use satisfies with contains for rpc.service
-                      // since tests pass short names like "DynamoDBv2" but AWS SDK returns
-                      // "AmazonDynamoDBv2"
-                      if (SemconvStability.emitOldRpcSemconv()) {
-                        attributes.add(satisfies(RPC_SERVICE, v -> v.contains(service)));
-                        attributes.add(equalTo(RPC_METHOD, operation));
-                      }
-
-                      // For stable semconv, use rpcMethodAssertions directly (no partial matching
-                      // needed)
-                      if (SemconvStability.emitStableRpcSemconv()) {
-                        attributes.addAll(rpcMethodAssertions(service, operation));
-                      }
+                      attributes.addAll(rpcMethodContainsAssertions(service, operation));
 
                       if (hasRequestId()) {
                         attributes.add(
