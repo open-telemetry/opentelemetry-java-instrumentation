@@ -25,9 +25,7 @@ public class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRe
     if (SemconvStability.emitStableDatabaseSemconv()) {
       String querySummary = couchbaseRequest.querySummary();
       if (querySummary != null) {
-        // Extract just the operation part (first word) from the query summary
-        int spaceIndex = querySummary.indexOf(' ');
-        return spaceIndex > 0 ? querySummary.substring(0, spaceIndex) : querySummary;
+        return querySummary;
       }
     }
     
