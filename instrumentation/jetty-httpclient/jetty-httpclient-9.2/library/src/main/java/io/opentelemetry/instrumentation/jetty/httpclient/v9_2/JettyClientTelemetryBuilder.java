@@ -38,28 +38,6 @@ public final class JettyClientTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link JettyClientTelemetry#newHttpClient(HttpClientTransport,
-   *     SslContextFactory)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setHttpClientTransport(
-      HttpClientTransport httpClientTransport) {
-    this.httpClientTransport = httpClientTransport;
-    return this;
-  }
-
-  /**
-   * @deprecated Use {@link JettyClientTelemetry#newHttpClient(SslContextFactory)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setSslContextFactory(SslContextFactory sslContextFactory) {
-    this.sslContextFactory = sslContextFactory;
-    return this;
-  }
-
-  /**
    * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
    * after all default extractors.
    */

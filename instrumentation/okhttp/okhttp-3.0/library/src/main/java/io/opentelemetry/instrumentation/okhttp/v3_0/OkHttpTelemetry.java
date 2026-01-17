@@ -56,19 +56,4 @@ public final class OkHttpTelemetry {
     OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);
   }
-
-  /**
-   * Returns an instrumented {@link okhttp3.Call.Factory} wrapping the provided client.
-   *
-   * <p>Supports both {@linkplain Call#execute() synchronous} and {@linkplain Call#enqueue(Callback)
-   * asynchronous} calls with proper context propagation.
-   *
-   * @param baseClient the OkHttpClient to wrap
-   * @return an instrumented Call.Factory
-   * @deprecated Use {@link #createCallFactory(OkHttpClient)} instead.
-   */
-  @Deprecated
-  public Call.Factory newCallFactory(OkHttpClient baseClient) {
-    return createCallFactory(baseClient);
-  }
 }
