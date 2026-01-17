@@ -166,7 +166,7 @@ class ClickHouseClientV1Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "insert into " + tableName + " values(?)(?)(?))",
+                                "insert into " + tableName + " values(?)(?)(?)"),
                                 "INSERT",
                                 "INSERT " + tableName)),
                 span ->
@@ -323,7 +323,7 @@ class ClickHouseClientV1Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions(
-                                "insert into " + tableName + " values(?)(?)(?))",
+                                "insert into " + tableName + " values(?)(?)(?)"),
                                 "INSERT",
                                 "INSERT " + tableName)),
                 span ->
