@@ -23,6 +23,7 @@ import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.view.DefaultView;
 import com.couchbase.client.java.view.DesignDocument;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -121,6 +122,11 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
 
@@ -150,6 +156,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
@@ -188,6 +204,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get")
@@ -204,6 +230,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
@@ -240,6 +276,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.upsert")
@@ -256,6 +302,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
@@ -294,6 +350,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.remove")
@@ -310,6 +376,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull())),
                 span ->
@@ -329,6 +405,11 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
