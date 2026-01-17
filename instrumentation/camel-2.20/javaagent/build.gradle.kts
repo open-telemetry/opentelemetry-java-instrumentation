@@ -97,19 +97,12 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testStableSemconvRpc by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,rpc")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,rpc")
   }
 
   check {
-    dependsOn(testStableSemconv, testStableSemconvRpc, testExperimental)
+    dependsOn(testStableSemconv, testExperimental)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {
