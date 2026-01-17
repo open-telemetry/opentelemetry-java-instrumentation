@@ -28,6 +28,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryResult;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -151,6 +152,16 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get")
@@ -167,6 +178,16 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
@@ -213,6 +234,11 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }

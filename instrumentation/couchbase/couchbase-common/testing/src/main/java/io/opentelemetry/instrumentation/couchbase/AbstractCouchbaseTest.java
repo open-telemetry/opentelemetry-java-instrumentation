@@ -94,6 +94,14 @@ public abstract class AbstractCouchbaseTest {
     return false;
   }
 
+  /**
+   * Override to return true in subclasses where experimental attributes are enabled (when
+   * otel.instrumentation.couchbase.experimental-span-attributes=true).
+   */
+  protected boolean includesExperimentalAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  }
+
   @FunctionalInterface
   public interface EnvBuilder {
     DefaultCouchbaseEnvironment.Builder apply(

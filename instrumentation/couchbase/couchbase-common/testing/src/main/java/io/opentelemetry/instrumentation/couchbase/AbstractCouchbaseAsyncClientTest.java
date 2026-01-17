@@ -27,6 +27,7 @@ import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQuery;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -195,6 +196,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
 
@@ -255,6 +266,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
                                     : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get")
@@ -271,6 +292,16 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.local.address"),
+                                includesExperimentalAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
@@ -327,6 +358,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()),
+                            satisfies(
+                                AttributeKey.stringKey("couchbase.operation_id"),
+                                includesExperimentalAttributes()
                                     ? val -> val.isNotNull()
                                     : val -> val.isNull()))));
   }
