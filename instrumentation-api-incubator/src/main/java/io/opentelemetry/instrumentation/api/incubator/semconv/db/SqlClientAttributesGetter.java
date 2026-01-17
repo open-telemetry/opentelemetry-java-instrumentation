@@ -94,15 +94,15 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns whether the query is parameterized. Prepared statements are always considered
-   * parameterized even if no parameters are bound. By using a parameterized query the user is
-   * giving a strong signal that any sensitive data will be passed as parameter values, and so the
-   * query does not need to be sanitized. See <a
+   * Returns whether query sanitization is needed. Prepared statements are always considered
+   * parameterized and do not need sanitization. By using a parameterized query (e.g., prepared
+   * statement) the user is giving a strong signal that any sensitive data will be passed as
+   * parameter values, and so the query does not need to be sanitized. See <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
    * of db.query.text</a>.
    */
   // TODO: make this required to implement
-  default boolean isParameterizedQuery(REQUEST request) {
-    return false;
+  default boolean isQuerySanitizationNeeded(REQUEST request) {
+    return true;
   }
 }

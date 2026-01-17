@@ -12,13 +12,13 @@ import com.google.auto.value.AutoValue;
 public abstract class CassandraRequest {
 
   public static CassandraRequest create(
-      Session session, String queryText, boolean parameterizedQuery) {
-    return new AutoValue_CassandraRequest(session, queryText, parameterizedQuery);
+      Session session, String queryText, boolean sanitizationNeeded) {
+    return new AutoValue_CassandraRequest(session, queryText, sanitizationNeeded);
   }
 
   public abstract Session getSession();
 
   public abstract String getQueryText();
 
-  public abstract boolean isParameterizedQuery();
+  public abstract boolean isQuerySanitizationNeeded();
 }

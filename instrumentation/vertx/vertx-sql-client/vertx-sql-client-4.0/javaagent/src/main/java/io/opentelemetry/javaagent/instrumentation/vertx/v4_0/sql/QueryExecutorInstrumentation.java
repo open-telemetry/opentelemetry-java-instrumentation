@@ -104,7 +104,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(
-                sql, QueryExecutorUtil.getConnectOptions(queryExecutor), preparedStatement);
+                sql, QueryExecutorUtil.getConnectOptions(queryExecutor), !preparedStatement);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth, null, null, null);

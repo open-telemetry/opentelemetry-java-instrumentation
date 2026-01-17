@@ -35,7 +35,7 @@ public final class DbExecution {
   private final Integer port;
   private final String connectionString;
   private final String rawQueryText;
-  private final boolean parameterizedQuery;
+  private final boolean sanitizationNeeded;
 
   private Context context;
 
@@ -74,9 +74,9 @@ public final class DbExecution {
                 query ->
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
             .collect(Collectors.joining(";\n"));
-    this.parameterizedQuery =
+    this.sanitizationNeeded =
         queryInfo.getQueries().stream()
-            .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
+            .allMatch(queryInfo1 -> queryInfo1.getBindingsList().isEmpty());
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
@@ -108,8 +108,8 @@ public final class DbExecution {
     return rawQueryText;
   }
 
-  public boolean isParameterizedQuery() {
-    return parameterizedQuery;
+  public boolean isQuerySanitizationNeeded() {
+    return sanitizationNeeded;
   }
 
   public Context getContext() {

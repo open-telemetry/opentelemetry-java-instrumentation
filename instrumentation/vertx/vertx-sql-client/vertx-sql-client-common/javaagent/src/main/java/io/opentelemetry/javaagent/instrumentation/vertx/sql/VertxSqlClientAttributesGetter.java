@@ -71,8 +71,8 @@ enum VertxSqlClientAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(VertxSqlClientRequest request) {
-    return request.isParameterizedQuery();
+  public boolean isQuerySanitizationNeeded(VertxSqlClientRequest request) {
+    return request.isQuerySanitizationNeeded();
   }
 
   private static List<Function<Exception, String>> createResponseStatusExtractors() {

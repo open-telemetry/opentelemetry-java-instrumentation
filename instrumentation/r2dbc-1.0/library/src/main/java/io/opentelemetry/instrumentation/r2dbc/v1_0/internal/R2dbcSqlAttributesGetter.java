@@ -71,7 +71,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   }
 
   @Override
-  public boolean isParameterizedQuery(DbExecution request) {
-    return request.isParameterizedQuery();
+  public boolean isQuerySanitizationNeeded(DbExecution request) {
+    return request.isQuerySanitizationNeeded();
   }
 }

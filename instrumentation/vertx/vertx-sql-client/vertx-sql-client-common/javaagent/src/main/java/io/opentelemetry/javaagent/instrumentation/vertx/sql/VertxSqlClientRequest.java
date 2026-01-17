@@ -10,13 +10,13 @@ import io.vertx.sqlclient.SqlConnectOptions;
 public final class VertxSqlClientRequest {
   private final String queryText;
   private final SqlConnectOptions sqlConnectOptions;
-  private final boolean parameterizedQuery;
+  private final boolean sanitizationNeeded;
 
   public VertxSqlClientRequest(
-      String queryText, SqlConnectOptions sqlConnectOptions, boolean parameterizedQuery) {
+      String queryText, SqlConnectOptions sqlConnectOptions, boolean sanitizationNeeded) {
     this.queryText = queryText;
     this.sqlConnectOptions = sqlConnectOptions;
-    this.parameterizedQuery = parameterizedQuery;
+    this.sanitizationNeeded = sanitizationNeeded;
   }
 
   public String getQueryText() {
@@ -39,7 +39,7 @@ public final class VertxSqlClientRequest {
     return sqlConnectOptions != null ? sqlConnectOptions.getPort() : null;
   }
 
-  public boolean isParameterizedQuery() {
-    return parameterizedQuery;
+  public boolean isQuerySanitizationNeeded() {
+    return sanitizationNeeded;
   }
 }

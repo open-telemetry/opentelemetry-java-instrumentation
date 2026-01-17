@@ -55,7 +55,7 @@ final class CassandraSqlAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(CassandraRequest request) {
-    return request.isParameterizedQuery();
+  public boolean isQuerySanitizationNeeded(CassandraRequest request) {
+    return request.isQuerySanitizationNeeded();
   }
 }

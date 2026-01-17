@@ -72,8 +72,8 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public boolean isParameterizedQuery(DbRequest request) {
-    return request.isParameterizedQuery();
+  public boolean isQuerySanitizationNeeded(DbRequest request) {
+    return request.isQuerySanitizationNeeded();
   }
 
   @Nullable
