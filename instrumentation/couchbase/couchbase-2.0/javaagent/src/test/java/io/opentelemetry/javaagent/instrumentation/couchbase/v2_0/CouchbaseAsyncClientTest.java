@@ -16,5 +16,4 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseAsyncClientTest {
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
-
 }

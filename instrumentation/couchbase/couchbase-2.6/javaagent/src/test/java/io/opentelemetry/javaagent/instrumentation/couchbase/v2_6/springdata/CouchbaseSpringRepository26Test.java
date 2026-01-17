@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.springdata;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -36,6 +35,11 @@ class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryT
   protected DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return Couchbase26Util.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
+  }
+
+  @Override
+  protected boolean includesNetworkAttributes() {
+    return true;
   }
 
   @Override

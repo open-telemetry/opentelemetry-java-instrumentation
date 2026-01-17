@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.couchbase;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -83,7 +86,16 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "ClusterManager.hasBucket"))));
+                            equalTo(maybeStable(DB_OPERATION), "ClusterManager.hasBucket"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 
   @ParameterizedTest
@@ -130,7 +142,14 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert")),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
                 span ->
                     span.hasName("Bucket.get")
                         .hasKind(SpanKind.CLIENT)
@@ -138,7 +157,16 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketSettings.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"))));
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 
   @Test
@@ -175,6 +203,15 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             satisfies(
-                                maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")))));
+                                maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 }

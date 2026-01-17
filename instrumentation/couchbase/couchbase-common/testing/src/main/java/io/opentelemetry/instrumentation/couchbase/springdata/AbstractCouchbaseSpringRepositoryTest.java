@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.couchbase.springdata;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -39,7 +42,8 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension protected static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  protected static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private ConfigurableApplicationContext applicationContext;
   protected TestRepository repository;
@@ -108,7 +112,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
-                                s -> s.startsWith("ViewQuery(testDocument/all)")))));
+                                s -> s.startsWith("ViewQuery(testDocument/all)")),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 
   @Test
@@ -129,7 +142,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"))));
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 
   @Test
@@ -157,7 +179,14 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert")),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
                 span ->
                     span.hasName("Bucket.get")
                         .hasKind(SpanKind.CLIENT)
@@ -165,7 +194,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"))));
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 
   @Test
@@ -191,7 +229,14 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert")),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
                 span ->
                     span.hasName("Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
@@ -199,7 +244,16 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"))));
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 
   @Test
@@ -227,7 +281,14 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert")),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
                 span ->
                     span.hasName("Bucket.remove")
                         .hasKind(SpanKind.CLIENT)
@@ -235,7 +296,14 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "Bucket.remove")),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.remove"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
                 span ->
                     span.hasName(bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
@@ -245,6 +313,15 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
-                                s -> s.startsWith("ViewQuery(testDocument/all)")))));
+                                s -> s.startsWith("ViewQuery(testDocument/all)")),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> {}))));
   }
 }

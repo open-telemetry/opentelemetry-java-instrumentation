@@ -89,6 +89,11 @@ public abstract class AbstractCouchbaseTest {
     return envBuilder(this::envBuilder, bucketSettings);
   }
 
+  /** Override to return true in subclasses that include network attributes (e.g., 2.6+). */
+  protected boolean includesNetworkAttributes() {
+    return false;
+  }
+
   @FunctionalInterface
   public interface EnvBuilder {
     DefaultCouchbaseEnvironment.Builder apply(

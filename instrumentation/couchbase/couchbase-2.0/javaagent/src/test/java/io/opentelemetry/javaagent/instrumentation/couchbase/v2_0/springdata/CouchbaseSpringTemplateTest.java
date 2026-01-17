@@ -17,5 +17,4 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseSpringTemplateTest {
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
   }
-
 }
