@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -118,12 +118,17 @@ public abstract class AbstractCouchbaseTest {
 
   protected SpanDataAssert assertCouchbaseSpan(
       SpanDataAssert span, String operation, String bucketName) {
-    return assertCouchbaseSpan(span, operation, operation, bucketName, null);
+    return assertCouchbaseSpan(span, operation, operation, bucketName, null, null);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertCouchbaseSpan(
-      SpanDataAssert span, String spanName, String operation, String bucketName, String statement) {
+      SpanDataAssert span,
+      String spanName,
+      String operation,
+      String bucketName,
+      String statement,
+      String querySummary) {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
@@ -136,9 +141,8 @@ public abstract class AbstractCouchbaseTest {
     }
     if (statement != null) {
       assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
-      if (emitStableDatabaseSemconv() && statement.startsWith("SELECT")) {
-        assertions.add(satisfies(DB_QUERY_SUMMARY, s -> assertThat(s).startsWith("SELECT")));
-      }
+      assertions.add(
+          equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? querySummary : null));
     }
 
     if (statement != null) {

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -23,10 +22,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.DbAttributes;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -121,27 +118,27 @@ class InfluxDbClientTest {
                     span.hasName("CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions(null, "CREATE DATABASE", dbName))),
+                            attributeAssertions(null, "CREATE DATABASE", dbName, null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", dbName))),
+                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", dbName, null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT", dbName))),
+                            attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT", dbName, "SELECT cpu"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions(null, "DROP DATABASE", dbName))));
+                            attributeAssertions(null, "DROP DATABASE", dbName, null))));
   }
 
   @Test
@@ -159,7 +156,8 @@ class InfluxDbClientTest {
                             attributeAssertions(
                                 "SELECT * FROM cpu_load where test1 = ?",
                                 "SELECT",
-                                databaseName))));
+                                databaseName,
+                                "SELECT cpu_load"))));
 
     assertDurationMetric(
         testing,
@@ -192,7 +190,8 @@ class InfluxDbClientTest {
                             attributeAssertions(
                                 "SELECT * FROM cpu_load where time >= ? AND time <= ?",
                                 "SELECT",
-                                databaseName))));
+                                databaseName,
+                                "SELECT cpu_load"))));
   }
 
   @Test
@@ -211,7 +210,7 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
+                                "SELECT * FROM cpu_load", "SELECT", databaseName, "SELECT cpu_load"))));
   }
 
   @Test
@@ -245,7 +244,8 @@ class InfluxDbClientTest {
                             attributeAssertions(
                                 "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?",
                                 "SELECT",
-                                databaseName)),
+                                databaseName,
+                                "SELECT h2o_feet")),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -279,7 +279,7 @@ class InfluxDbClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                "SELECT MEAN(water_level) FROM;", "SELECT", databaseName)),
+                                "SELECT MEAN(water_level) FROM;", "SELECT", databaseName, null)),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -298,7 +298,7 @@ class InfluxDbClientTest {
                     span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions(null, "WRITE", databaseName))));
+                            attributeAssertions(null, "WRITE", databaseName, null))));
   }
 
   @Test
@@ -316,7 +316,7 @@ class InfluxDbClientTest {
                     span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions(null, "WRITE", databaseName))));
+                            attributeAssertions(null, "WRITE", databaseName, null))));
   }
 
   @Test
@@ -334,11 +334,11 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("WRITE")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", null))));
+                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", null, null))));
   }
 
   private static List<AttributeAssertion> attributeAssertions(
-      String statement, String operation, String databaseName) {
+      String statement, String operation, String databaseName, String querySummary) {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(
         asList(
@@ -347,15 +347,7 @@ class InfluxDbClientTest {
             equalTo(SERVER_ADDRESS, host),
             equalTo(SERVER_PORT, port),
             equalTo(maybeStable(DB_OPERATION), operation),
-            satisfies(
-                DB_QUERY_SUMMARY,
-                s -> {
-                  if (emitStableDatabaseSemconv() && operation.equals("SELECT")) {
-                    assertThat(s).startsWith("SELECT");
-                  } else {
-                    assertThat(s).isNull();
-                  }
-                })));
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? querySummary : null)));
     if (statement != null) {
       result.add(equalTo(maybeStable(DB_STATEMENT), statement));
     }

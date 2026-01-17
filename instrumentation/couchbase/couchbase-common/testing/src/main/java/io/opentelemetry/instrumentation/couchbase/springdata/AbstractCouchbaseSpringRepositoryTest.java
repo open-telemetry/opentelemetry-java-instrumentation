@@ -96,7 +96,8 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             bucketCouchbase.name(),
                             null,
                             bucketCouchbase.name(),
-                            "ViewQuery(testDocument/all)")
+                            "ViewQuery(testDocument/all)",
+                            null)
                         .hasNoParent()));
   }
 
@@ -196,7 +197,8 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                             bucketCouchbase.name(),
                             null,
                             bucketCouchbase.name(),
-                            "ViewQuery(testDocument/all)")
+                            "ViewQuery(testDocument/all)",
+                            null)
                         .hasParent(trace.getSpan(0))));
   }
 }

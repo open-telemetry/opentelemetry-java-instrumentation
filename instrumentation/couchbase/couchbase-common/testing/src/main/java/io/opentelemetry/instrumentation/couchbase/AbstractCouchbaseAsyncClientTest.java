@@ -251,6 +251,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             "SELECT " + bucketCouchbase.name(),
                             "SELECT",
                             bucketCouchbase.name(),
+                            "SELECT mockrow",
                             "SELECT mockrow")
                         .hasParent(trace.getSpan(1))));
   }
