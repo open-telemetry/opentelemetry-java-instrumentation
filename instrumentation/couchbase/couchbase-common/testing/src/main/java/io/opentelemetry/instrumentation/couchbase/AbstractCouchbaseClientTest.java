@@ -211,7 +211,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
-                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT mockrow" : null),
+                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 public class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRequestInfo> {
   private final SpanNameExtractor<CouchbaseRequestInfo> dbSpanNameExtractor;
@@ -19,6 +20,17 @@ public class CouchbaseSpanNameExtractor implements SpanNameExtractor<CouchbaseRe
     if (couchbaseRequest.isMethodCall()) {
       return couchbaseRequest.operation();
     }
+    
+    // In stable semconv mode, use query summary for span name if available
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      String querySummary = couchbaseRequest.querySummary();
+      if (querySummary != null) {
+        // Extract just the operation part (first word) from the query summary
+        int spaceIndex = querySummary.indexOf(' ');
+        return spaceIndex > 0 ? querySummary.substring(0, spaceIndex) : querySummary;
+      }
+    }
+    
     return dbSpanNameExtractor.extract(couchbaseRequest);
   }
 }
