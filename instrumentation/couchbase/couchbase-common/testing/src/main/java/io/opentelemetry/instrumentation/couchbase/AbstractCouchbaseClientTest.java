@@ -12,6 +12,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -154,7 +158,9 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                 span ->
                     assertCouchbaseSpan(
                             span,
-                            "SELECT " + bucketCouchbase.name(),
+                            emitStableDatabaseSemconv()
+                                ? "SELECT"
+                                : "SELECT " + bucketCouchbase.name(),
                             "SELECT",
                             bucketCouchbase.name(),
                             "SELECT mockrow")

@@ -8,8 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -37,6 +39,9 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.DbAttributes;
+
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.time.Instant;
@@ -338,6 +343,15 @@ class ClickHouseClientV2Test {
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
         equalTo(maybeStable(DB_STATEMENT), statement),
-        equalTo(maybeStable(DB_OPERATION), operation));
+        equalTo(maybeStable(DB_OPERATION), operation),
+        satisfies(
+            DB_QUERY_SUMMARY,
+            s -> {
+              if (emitStableDatabaseSemconv() && operation.equals("SELECT")) {
+                assertThat(s).startsWith("SELECT");
+              } else {
+                assertThat(s).isNull();
+              }
+            }));
   }
 }

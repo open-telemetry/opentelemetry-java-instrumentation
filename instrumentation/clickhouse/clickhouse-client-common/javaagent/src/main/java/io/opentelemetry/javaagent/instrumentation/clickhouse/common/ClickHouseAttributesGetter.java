@@ -31,6 +31,15 @@ final class ClickHouseAttributesGetter
 
   @Nullable
   @Override
+  public String getDbQuerySummary(ClickHouseDbRequest request) {
+    if (request.getSqlStatementInfo() == null) {
+      return null;
+    }
+    return request.getSqlStatementInfo().getQuerySummary();
+  }
+
+  @Nullable
+  @Override
   public String getDbOperationName(ClickHouseDbRequest request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
       // Under stable semconv, operation name should not be extracted from query text

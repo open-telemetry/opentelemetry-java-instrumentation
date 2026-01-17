@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.couchbase;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -134,6 +136,9 @@ public abstract class AbstractCouchbaseTest {
     }
     if (statement != null) {
       assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
+      if (emitStableDatabaseSemconv() && statement.startsWith("SELECT")) {
+        assertions.add(satisfies(DB_QUERY_SUMMARY, s -> assertThat(s).startsWith("SELECT")));
+      }
     }
 
     if (statement != null) {

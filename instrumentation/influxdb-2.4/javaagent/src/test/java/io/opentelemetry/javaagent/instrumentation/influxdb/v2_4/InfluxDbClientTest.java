@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -21,8 +23,12 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.DbAttributes;
+
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
@@ -340,7 +346,16 @@ class InfluxDbClientTest {
             equalTo(maybeStable(DB_NAME), databaseName),
             equalTo(SERVER_ADDRESS, host),
             equalTo(SERVER_PORT, port),
-            equalTo(maybeStable(DB_OPERATION), operation)));
+            equalTo(maybeStable(DB_OPERATION), operation),
+            satisfies(
+                DB_QUERY_SUMMARY,
+                s -> {
+                  if (emitStableDatabaseSemconv() && operation.equals("SELECT")) {
+                    assertThat(s).startsWith("SELECT");
+                  } else {
+                    assertThat(s).isNull();
+                  }
+                })));
     if (statement != null) {
       result.add(equalTo(maybeStable(DB_STATEMENT), statement));
     }

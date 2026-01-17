@@ -139,6 +139,10 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       String namespace = getter.getDbNamespace(request);
       String operationName = getter.getDbOperationName(request);
       if (SemconvStability.emitStableDatabaseSemconv()) {
+        String querySummary = getter.getDbQuerySummary(request);
+        if (querySummary != null) {
+          return querySummary;
+        }
         return computeSpanNameStable(getter, request, operationName, null, null);
       }
       return computeSpanName(namespace, operationName, null, null);

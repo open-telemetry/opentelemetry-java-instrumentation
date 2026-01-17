@@ -41,7 +41,7 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
@@ -50,7 +50,11 @@ public abstract class CouchbaseRequestInfo {
     String operationName =
         SemconvStability.emitStableDatabaseSemconv() ? null : statement.getOperationName();
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getQueryText(), operationName, false);
+        bucket,
+        statement.getQueryText(),
+        statement.getQuerySummary(),
+        operationName,
+        false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -73,6 +77,9 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable
   public abstract String statement();
+
+  @Nullable
+  public abstract String querySummary();
 
   @Nullable
   public abstract String operation();
