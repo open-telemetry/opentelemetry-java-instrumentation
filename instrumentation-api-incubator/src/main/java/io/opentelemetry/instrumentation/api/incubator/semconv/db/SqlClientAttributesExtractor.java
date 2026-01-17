@@ -9,12 +9,14 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
@@ -108,22 +110,40 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
-        String operationName = sanitizedStatement.getOperationName();
         internalSet(
             attributes,
             DB_QUERY_TEXT,
             shouldSanitize ? sanitizedStatement.getQueryText() : rawQueryText);
-        internalSet(
-            attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
-        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getCollectionName());
+        if (getter instanceof ExtractQuerySummaryMarker) {
+          // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text
+          // DB_OPERATION_NAME and DB_COLLECTION_NAME are NOT set here under stable semconv
+          // They can still be set via explicit getDbOperationName()/getDbCollectionName() in
+          // DbClientAttributesExtractor.onStartCommon() below
+          String querySummary = sanitizedStatement.getQuerySummary();
+          internalSet(
+              attributes,
+              DB_QUERY_SUMMARY,
+              isBatch && querySummary != null ? "BATCH " + querySummary : querySummary);
+        } else {
+          String operationName = sanitizedStatement.getOperationName();
+          internalSet(
+              attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
+          internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getCollectionName());
+        }
         internalSet(
             attributes, DB_STORED_PROCEDURE_NAME, sanitizedStatement.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), shouldSanitize);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
-        internalSet(attributes, DB_OPERATION_NAME, multiQuery.getOperationName());
-        internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getCollectionName());
+        if (getter instanceof ExtractQuerySummaryMarker) {
+          // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text
+          // DB_OPERATION_NAME and DB_COLLECTION_NAME are NOT set here under stable semconv
+          internalSet(attributes, DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
+        } else {
+          internalSet(attributes, DB_OPERATION_NAME, multiQuery.getOperationName());
+          internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getCollectionName());
+        }
         internalSet(attributes, DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
       }
     }
