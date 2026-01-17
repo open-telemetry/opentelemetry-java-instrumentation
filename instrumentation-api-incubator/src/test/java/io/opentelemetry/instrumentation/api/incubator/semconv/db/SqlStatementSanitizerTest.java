@@ -94,28 +94,6 @@ class SqlStatementSanitizerTest {
   }
 
   @Test
-  void storedProcedureNamePreservesCase() {
-    SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
-    // Test lowercase preserved
-    assertCallStatement(sanitizer, "CALL test_proc()", "test_proc");
-    // Test uppercase preserved
-    assertCallStatement(sanitizer, "CALL TEST_PROC()", "TEST_PROC");
-    // Test mixed case preserved
-    assertCallStatement(sanitizer, "CALL Test_Proc()", "Test_Proc");
-    // Test with schema - both schema and proc name case preserved
-    assertCallStatement(sanitizer, "CALL mySchema.MyProc()", "mySchema.MyProc");
-    // Test with uppercase schema
-    assertCallStatement(sanitizer, "CALL SCHEMA.PROC_NAME()", "SCHEMA.PROC_NAME");
-  }
-
-  private static void assertCallStatement(
-      SqlStatementSanitizer sanitizer, String sql, String expectedProcedureName) {
-    SqlStatementInfo result = sanitizer.sanitize(sql);
-    assertThat(result.getOperationName()).isEqualTo("CALL");
-    assertThat(result.getStoredProcedureName()).isEqualTo(expectedProcedureName);
-  }
-
-  @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
     SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
@@ -399,7 +377,7 @@ class SqlStatementSanitizerTest {
             expect("update \"my table\" set answer=?", "UPDATE", "my table")),
         Arguments.of("update /*table", expect("UPDATE", null)),
 
-        // Call - test case preservation for stored procedure names
+        // Call
         Arguments.of("call test_proc()", expect("CALL", "test_proc")),
         Arguments.of("call test_proc", expect("CALL", "test_proc")),
         Arguments.of("CALL TEST_PROC()", expect("CALL", "TEST_PROC")),
