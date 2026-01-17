@@ -96,19 +96,14 @@ class SqlStatementSanitizerTest {
   @Test
   void storedProcedureNamePreservesCase() {
     SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
-    
     // Test lowercase preserved
     assertCallStatement(sanitizer, "CALL test_proc()", "test_proc");
-    
     // Test uppercase preserved
     assertCallStatement(sanitizer, "CALL TEST_PROC()", "TEST_PROC");
-    
     // Test mixed case preserved
     assertCallStatement(sanitizer, "CALL Test_Proc()", "Test_Proc");
-    
     // Test with schema - both schema and proc name case preserved
     assertCallStatement(sanitizer, "CALL mySchema.MyProc()", "mySchema.MyProc");
-    
     // Test with uppercase schema
     assertCallStatement(sanitizer, "CALL SCHEMA.PROC_NAME()", "SCHEMA.PROC_NAME");
   }
