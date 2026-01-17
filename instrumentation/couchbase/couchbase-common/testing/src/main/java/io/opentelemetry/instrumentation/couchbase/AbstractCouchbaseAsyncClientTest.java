@@ -7,7 +7,10 @@ package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,8 +121,12 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    assertCouchbaseSpan(span, "ClusterManager.hasBucket")
-                        .hasParent(trace.getSpan(0))));
+                    span.hasName("ClusterManager.hasBucket")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_OPERATION), "ClusterManager.hasBucket"))));
   }
 
   @ParameterizedTest
@@ -157,8 +164,13 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.upsert", bucketSettings.name())
-                        .hasParent(trace.getSpan(1))));
+                    span.hasName("Bucket.upsert")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"))));
   }
 
   @ParameterizedTest
@@ -203,11 +215,21 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.upsert", bucketSettings.name())
-                        .hasParent(trace.getSpan(1)),
+                    span.hasName("Bucket.upsert")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert")),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.get", bucketSettings.name())
-                        .hasParent(trace.getSpan(2))));
+                    span.hasName("Bucket.get")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), bucketSettings.name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"))));
   }
 
   @Test
@@ -246,12 +268,14 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    assertCouchbaseSpan(
-                            span,
-                            "SELECT " + bucketCouchbase.name(),
-                            "SELECT",
-                            bucketCouchbase.name(),
-                            "SELECT mockrow")
-                        .hasParent(trace.getSpan(1))));
+                    span.hasName("SELECT " + bucketCouchbase.name())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            satisfies(
+                                maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")))));
   }
 }

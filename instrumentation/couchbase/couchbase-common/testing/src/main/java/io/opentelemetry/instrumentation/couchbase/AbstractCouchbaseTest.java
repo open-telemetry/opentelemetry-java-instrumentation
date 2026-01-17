@@ -5,16 +5,6 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
-import static java.util.Collections.emptyList;
-
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
@@ -24,13 +14,8 @@ import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -108,68 +93,5 @@ public abstract class AbstractCouchbaseTest {
   public interface EnvBuilder {
     DefaultCouchbaseEnvironment.Builder apply(
         BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort);
-  }
-
-  protected SpanDataAssert assertCouchbaseSpan(SpanDataAssert span, String operation) {
-    return assertCouchbaseSpan(span, operation, null);
-  }
-
-  protected SpanDataAssert assertCouchbaseSpan(
-      SpanDataAssert span, String operation, String bucketName) {
-    return assertCouchbaseSpan(span, operation, operation, bucketName, null);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  protected SpanDataAssert assertCouchbaseSpan(
-      SpanDataAssert span, String spanName, String operation, String bucketName, String statement) {
-    span.hasName(spanName).hasKind(SpanKind.CLIENT);
-
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), COUCHBASE));
-    if (operation != null) {
-      assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
-    }
-    if (bucketName != null) {
-      assertions.add(equalTo(maybeStable(DB_NAME), bucketName));
-    }
-    if (statement != null) {
-      assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
-    }
-
-    if (statement != null) {
-      if (statement.startsWith("SELECT")) {
-        // N1QL queries get operation_id but NOT local.address experimental attribute
-        assertions.addAll(couchbaseN1qlAttributes());
-      } else {
-        // ViewQuery operations get local.address but NOT operation_id experimental attribute
-        assertions.addAll(couchbaseQueryAttributes());
-      }
-    } else if (operation != null && operation.startsWith("ClusterManager.")) {
-      // ClusterManager operations have no experimental attributes
-      assertions.addAll(couchbaseClusterManagerAttributes());
-    } else {
-      // KV operations (get, upsert, etc.) get both experimental attributes
-      assertions.addAll(couchbaseAttributes());
-    }
-
-    span.hasAttributesSatisfyingExactly(assertions);
-
-    return span;
-  }
-
-  protected List<AttributeAssertion> couchbaseAttributes() {
-    return emptyList();
-  }
-
-  protected List<AttributeAssertion> couchbaseQueryAttributes() {
-    return emptyList();
-  }
-
-  protected List<AttributeAssertion> couchbaseClusterManagerAttributes() {
-    return emptyList();
-  }
-
-  protected List<AttributeAssertion> couchbaseN1qlAttributes() {
-    return emptyList();
   }
 }
