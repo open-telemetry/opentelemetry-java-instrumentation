@@ -5,6 +5,16 @@
 
 package io.opentelemetry.instrumentation.couchbase.springdata;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -29,10 +39,11 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.couchbase.core.CouchbaseTemplate;
 
+@SuppressWarnings("deprecation")
 public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final List<AutoCloseable> cleanup = new ArrayList<>();
   private static CouchbaseTemplate couchbaseTemplate;
@@ -102,11 +113,39 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.upsert", template.getCouchbaseBucket().name())
-                        .hasParent(trace.getSpan(0)),
+                    span.hasName("Bucket.upsert")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), template.getCouchbaseBucket().name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.get", template.getCouchbaseBucket().name())
-                        .hasParent(trace.getSpan(0))));
+                    span.hasName("Bucket.get")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), template.getCouchbaseBucket().name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -125,11 +164,39 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.upsert", template.getCouchbaseBucket().name())
-                        .hasParent(trace.getSpan(0)),
+                    span.hasName("Bucket.upsert")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), template.getCouchbaseBucket().name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.upsert"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.remove", template.getCouchbaseBucket().name())
-                        .hasParent(trace.getSpan(0))));
+                    span.hasName("Bucket.remove")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), template.getCouchbaseBucket().name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.remove"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
 
     testing.clearData();
 
@@ -140,7 +207,21 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    assertCouchbaseSpan(span, "Bucket.get", template.getCouchbaseBucket().name())
-                        .hasNoParent()));
+                    span.hasName("Bucket.get")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
+                            equalTo(maybeStable(DB_NAME), template.getCouchbaseBucket().name()),
+                            equalTo(maybeStable(DB_OPERATION), "Bucket.get"),
+                            equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                includesNetworkAttributes() ? "127.0.0.1" : null),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull()))));
   }
 }

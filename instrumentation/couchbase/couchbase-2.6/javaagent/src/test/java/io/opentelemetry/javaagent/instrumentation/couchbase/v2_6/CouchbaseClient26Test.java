@@ -17,10 +17,9 @@ import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseClientTest;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
 
   @Override
@@ -30,23 +29,8 @@ class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
   }
 
   @Override
-  protected List<AttributeAssertion> couchbaseAttributes() {
-    return Couchbase26Util.couchbaseAttributes();
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseQueryAttributes() {
-    return Couchbase26Util.couchbaseQueryAttributes();
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseClusterManagerAttributes() {
-    return Couchbase26Util.couchbaseClusterManagerAttributes();
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseN1qlAttributes() {
-    return Couchbase26Util.couchbaseN1qlAttributes();
+  protected boolean includesNetworkAttributes() {
+    return true;
   }
 
   @Test
