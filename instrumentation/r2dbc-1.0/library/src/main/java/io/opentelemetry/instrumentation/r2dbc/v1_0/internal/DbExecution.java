@@ -76,7 +76,7 @@ public final class DbExecution {
             .collect(Collectors.joining(";\n"));
     this.sanitizationNeeded =
         queryInfo.getQueries().stream()
-            .anyMatch(queryInfo1 -> queryInfo1.getBindingsList().isEmpty());
+            .allMatch(queryInfo1 -> queryInfo1.getBindingsList().isEmpty());
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
