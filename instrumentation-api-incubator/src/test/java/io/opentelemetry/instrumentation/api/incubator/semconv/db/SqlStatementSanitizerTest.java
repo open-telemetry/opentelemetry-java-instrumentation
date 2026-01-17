@@ -95,6 +95,36 @@ class SqlStatementSanitizerTest {
   }
 
   @Test
+  void storedProcedureNamePreservesCase() {
+    SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
+    
+    // Test lowercase preserved
+    SqlStatementInfo lowercase = sanitizer.sanitize("CALL test_proc()");
+    assertThat(lowercase.getOperationName()).isEqualTo("CALL");
+    assertThat(lowercase.getStoredProcedureName()).isEqualTo("test_proc");
+    
+    // Test uppercase preserved
+    SqlStatementInfo uppercase = sanitizer.sanitize("CALL TEST_PROC()");
+    assertThat(uppercase.getOperationName()).isEqualTo("CALL");
+    assertThat(uppercase.getStoredProcedureName()).isEqualTo("TEST_PROC");
+    
+    // Test mixed case preserved
+    SqlStatementInfo mixedCase = sanitizer.sanitize("CALL Test_Proc()");
+    assertThat(mixedCase.getOperationName()).isEqualTo("CALL");
+    assertThat(mixedCase.getStoredProcedureName()).isEqualTo("Test_Proc");
+    
+    // Test with schema - both schema and proc name case preserved
+    SqlStatementInfo withSchema = sanitizer.sanitize("CALL mySchema.MyProc()");
+    assertThat(withSchema.getOperationName()).isEqualTo("CALL");
+    assertThat(withSchema.getStoredProcedureName()).isEqualTo("mySchema.MyProc");
+    
+    // Test with uppercase schema
+    SqlStatementInfo upperSchema = sanitizer.sanitize("CALL SCHEMA.PROC_NAME()");
+    assertThat(upperSchema.getOperationName()).isEqualTo("CALL");
+    assertThat(upperSchema.getStoredProcedureName()).isEqualTo("SCHEMA.PROC_NAME");
+  }
+
+  @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
     SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
@@ -378,11 +408,16 @@ class SqlStatementSanitizerTest {
             expect("update \"my table\" set answer=?", "UPDATE", "my table")),
         Arguments.of("update /*table", expect("UPDATE", null)),
 
-        // Call
+        // Call - test case preservation for stored procedure names
         Arguments.of("call test_proc()", expect("CALL", "test_proc")),
         Arguments.of("call test_proc", expect("CALL", "test_proc")),
+        Arguments.of("CALL TEST_PROC()", expect("CALL", "TEST_PROC")),
+        Arguments.of("Call Test_Proc()", expect("CALL", "Test_Proc")),
+        Arguments.of("call MyStoredProc()", expect("CALL", "MyStoredProc")),
         Arguments.of("call next value in hibernate_sequence", expect("CALL", null)),
         Arguments.of("call db.test_proc", expect("CALL", "db.test_proc")),
+        Arguments.of("call mySchema.MyProc", expect("CALL", "mySchema.MyProc")),
+        Arguments.of("CALL SCHEMA.PROC_NAME()", expect("CALL", "SCHEMA.PROC_NAME")),
 
         // Merge
         Arguments.of("merge into table", expect("MERGE", "table")),
