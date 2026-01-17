@@ -69,4 +69,9 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   public Integer getServerPort(DbExecution request) {
     return request.getPort();
   }
+
+  @Override
+  public boolean isParameterizedQuery(DbExecution request) {
+    return request.isParameterizedQuery();
+  }
 }

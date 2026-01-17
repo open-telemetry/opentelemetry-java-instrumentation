@@ -71,6 +71,11 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return request.getPreparedStatementParameters();
   }
 
+  @Override
+  public boolean isParameterizedQuery(DbRequest request) {
+    return request.isParameterizedQuery();
+  }
+
   @Nullable
   @Override
   public String getServerAddress(DbRequest request) {
