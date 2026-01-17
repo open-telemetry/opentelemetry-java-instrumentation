@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -311,15 +313,19 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    span.hasName("SELECT " + bucketCouchbase.name())
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT"
+                                : "SELECT " + bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
+                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT mockrow" : null),
                             equalTo(NETWORK_TYPE, includesNetworkAttributes() ? "ipv4" : null),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
