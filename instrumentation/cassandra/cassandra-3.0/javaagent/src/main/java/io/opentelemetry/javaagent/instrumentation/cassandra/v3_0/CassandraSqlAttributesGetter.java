@@ -40,4 +40,9 @@ final class CassandraSqlAttributesGetter
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
   }
+
+  @Override
+  public boolean isParameterizedQuery(CassandraRequest request) {
+    return request.isParameterizedQuery();
+  }
 }

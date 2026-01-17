@@ -70,6 +70,11 @@ enum VertxSqlClientAttributesGetter
     return null;
   }
 
+  @Override
+  public boolean isParameterizedQuery(VertxSqlClientRequest request) {
+    return request.isParameterizedQuery();
+  }
+
   private static List<Function<Exception, String>> createResponseStatusExtractors() {
     return Arrays.asList(
         responseStatusExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState"),

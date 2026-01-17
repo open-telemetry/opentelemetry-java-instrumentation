@@ -384,7 +384,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
-    DbRequest request = DbRequest.create(dbInfo, sql);
+    DbRequest request = DbRequest.create(dbInfo, sql, false);
     return wrapCall(request, callable);
   }
 
@@ -409,7 +409,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, Collections.emptyMap());
+    DbRequest request =
+        DbRequest.create(dbInfo, batchCommands, batchSize, Collections.emptyMap(), false);
     return wrapCall(request, callable);
   }
 }
