@@ -98,29 +98,26 @@ class SqlStatementSanitizerTest {
     SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
     
     // Test lowercase preserved
-    SqlStatementInfo lowercase = sanitizer.sanitize("CALL test_proc()");
-    assertThat(lowercase.getOperationName()).isEqualTo("CALL");
-    assertThat(lowercase.getStoredProcedureName()).isEqualTo("test_proc");
+    assertCallStatement(sanitizer, "CALL test_proc()", "test_proc");
     
     // Test uppercase preserved
-    SqlStatementInfo uppercase = sanitizer.sanitize("CALL TEST_PROC()");
-    assertThat(uppercase.getOperationName()).isEqualTo("CALL");
-    assertThat(uppercase.getStoredProcedureName()).isEqualTo("TEST_PROC");
+    assertCallStatement(sanitizer, "CALL TEST_PROC()", "TEST_PROC");
     
     // Test mixed case preserved
-    SqlStatementInfo mixedCase = sanitizer.sanitize("CALL Test_Proc()");
-    assertThat(mixedCase.getOperationName()).isEqualTo("CALL");
-    assertThat(mixedCase.getStoredProcedureName()).isEqualTo("Test_Proc");
+    assertCallStatement(sanitizer, "CALL Test_Proc()", "Test_Proc");
     
     // Test with schema - both schema and proc name case preserved
-    SqlStatementInfo withSchema = sanitizer.sanitize("CALL mySchema.MyProc()");
-    assertThat(withSchema.getOperationName()).isEqualTo("CALL");
-    assertThat(withSchema.getStoredProcedureName()).isEqualTo("mySchema.MyProc");
+    assertCallStatement(sanitizer, "CALL mySchema.MyProc()", "mySchema.MyProc");
     
     // Test with uppercase schema
-    SqlStatementInfo upperSchema = sanitizer.sanitize("CALL SCHEMA.PROC_NAME()");
-    assertThat(upperSchema.getOperationName()).isEqualTo("CALL");
-    assertThat(upperSchema.getStoredProcedureName()).isEqualTo("SCHEMA.PROC_NAME");
+    assertCallStatement(sanitizer, "CALL SCHEMA.PROC_NAME()", "SCHEMA.PROC_NAME");
+  }
+
+  private static void assertCallStatement(
+      SqlStatementSanitizer sanitizer, String sql, String expectedProcedureName) {
+    SqlStatementInfo result = sanitizer.sanitize(sql);
+    assertThat(result.getOperationName()).isEqualTo("CALL");
+    assertThat(result.getStoredProcedureName()).isEqualTo(expectedProcedureName);
   }
 
   @Test
