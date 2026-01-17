@@ -50,11 +50,7 @@ public abstract class CouchbaseRequestInfo {
     String operationName =
         SemconvStability.emitStableDatabaseSemconv() ? null : statement.getOperationName();
     return new AutoValue_CouchbaseRequestInfo(
-        bucket,
-        statement.getQueryText(),
-        statement.getQuerySummary(),
-        operationName,
-        false);
+        bucket, statement.getQueryText(), statement.getQuerySummary(), operationName, false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {

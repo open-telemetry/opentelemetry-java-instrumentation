@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -24,8 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,7 +130,8 @@ class InfluxDbClientTest {
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT", dbName, "SELECT cpu"))),
+                            attributeAssertions(
+                                "SELECT * FROM cpu GROUP BY *", "SELECT", dbName, "SELECT cpu"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -210,7 +210,10 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
-                                "SELECT * FROM cpu_load", "SELECT", databaseName, "SELECT cpu_load"))));
+                                "SELECT * FROM cpu_load",
+                                "SELECT",
+                                databaseName,
+                                "SELECT cpu_load"))));
   }
 
   @Test

@@ -133,7 +133,8 @@ public abstract class AbstractCouchbaseTest {
 
     List<AttributeAssertion> assertions = new ArrayList<>();
     assertions.add(equalTo(maybeStable(DB_SYSTEM), COUCHBASE));
-    if (operation != null) {
+    // operation name isn't extracted from statement in stable semconv mode
+    if (operation != null && (statement == null || !emitStableDatabaseSemconv())) {
       assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
     }
     if (bucketName != null) {
@@ -141,8 +142,7 @@ public abstract class AbstractCouchbaseTest {
     }
     if (statement != null) {
       assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
-      assertions.add(
-          equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? querySummary : null));
+      assertions.add(equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? querySummary : null));
     }
 
     if (statement != null) {
