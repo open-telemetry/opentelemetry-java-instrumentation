@@ -21,7 +21,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -206,6 +205,14 @@ class ClickHouseClientV2Test {
 
     assertThat(thrown).isInstanceOf(ServerException.class);
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            attributeAssertions(
+                "select * from non_existent_table", "SELECT", "SELECT non_existent_table"));
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "60"));
+      assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.api.ServerException"));
+    }
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -214,19 +221,7 @@ class ClickHouseClientV2Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            attributeAssertions(
-                                "select * from non_existent_table",
-                                "SELECT",
-                                "SELECT non_existent_table"),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "60" : null),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "com.clickhouse.client.api.ServerException"
-                                    : null))));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
