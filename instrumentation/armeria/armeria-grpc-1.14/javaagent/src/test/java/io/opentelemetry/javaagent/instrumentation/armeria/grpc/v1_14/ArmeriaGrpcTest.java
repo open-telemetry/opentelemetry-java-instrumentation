@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.grpcStatusCodeAssertion;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.client.grpc.GrpcClients;
@@ -64,7 +64,7 @@ class ArmeriaGrpcTest {
     List<AttributeAssertion> attrs = new ArrayList<>();
     attrs.add(rpcSystemAssertion("grpc"));
     attrs.addAll(rpcMethodAssertions(service, method));
-    attrs.add(equalTo(RPC_GRPC_STATUS_CODE, statusCode));
+    attrs.add(grpcStatusCodeAssertion(statusCode));
     attrs.add(equalTo(SERVER_ADDRESS, serverAddress));
     attrs.add(equalTo(SERVER_PORT, serverPort));
     return attrs;
