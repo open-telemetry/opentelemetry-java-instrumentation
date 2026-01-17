@@ -40,15 +40,12 @@ public class RpcSemconvStabilityUtil {
   public static List<AttributeAssertion> rpcMethodAssertions(String service, String method) {
     List<AttributeAssertion> assertions = new ArrayList<>();
 
-    if (SemconvStability.emitStableRpcSemconv()) {
-      assertions.add(equalTo(RPC_METHOD, service + "/" + method));
-    }
+    assertions.add(
+        equalTo(
+            RPC_METHOD, SemconvStability.emitStableRpcSemconv() ? service + "/" + method : method));
 
     if (SemconvStability.emitOldRpcSemconv()) {
-      // Old: rpc.service = "my.Service", rpc.method.deprecated = "Method" (in dup mode)
-      //      or rpc.method = "Method" (in old-only mode)
       assertions.add(equalTo(RPC_SERVICE, service));
-      assertions.add(equalTo(SemconvStability.getOldRpcMethodAttributeKey(), method));
     }
 
     return assertions;

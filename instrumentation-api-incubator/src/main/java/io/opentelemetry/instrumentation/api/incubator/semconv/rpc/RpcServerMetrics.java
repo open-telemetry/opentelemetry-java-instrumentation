@@ -122,7 +122,9 @@ public final class RpcServerMetrics implements OperationListener {
     // Record to old histogram (milliseconds)
     if (oldServerDurationHistogram != null) {
       oldServerDurationHistogram.record(
-          durationNanos / NANOS_PER_MS, SemconvStability.getOldRpcAttributes(attributes), context);
+          durationNanos / NANOS_PER_MS,
+          SemconvStability.getOldRpcMetricAttributes(attributes),
+          context);
     }
 
     // Record to stable histogram (seconds)

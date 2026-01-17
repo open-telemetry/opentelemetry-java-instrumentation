@@ -52,10 +52,6 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, RPC_SERVICE, getter.getService(request));
       internalSet(
           attributes, SemconvStability.getOldRpcMethodAttributeKey(), getter.getMethod(request));
-      if (!SemconvStability.emitStableRpcSemconv()) {
-        // only set old rpc.method if stable not emitted to avoid duplication
-        internalSet(attributes, RPC_METHOD, getter.getMethod(request));
-      }
     }
   }
 

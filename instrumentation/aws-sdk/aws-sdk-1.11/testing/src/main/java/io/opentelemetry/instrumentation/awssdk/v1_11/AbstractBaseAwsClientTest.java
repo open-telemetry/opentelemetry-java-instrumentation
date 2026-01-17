@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,7 +70,6 @@ public abstract class AbstractBaseAwsClientTest {
     server.stop();
   }
 
-  @SuppressWarnings("deprecation") // uses deprecated semconv
   public void assertRequestWithMockedResponse(
       Object response,
       Object client,
@@ -110,8 +110,7 @@ public abstract class AbstractBaseAwsClientTest {
                       // "AmazonDynamoDBv2"
                       if (SemconvStability.emitOldRpcSemconv()) {
                         attributes.add(satisfies(RPC_SERVICE, v -> v.contains(service)));
-                        attributes.add(
-                            equalTo(SemconvStability.getOldRpcMethodAttributeKey(), operation));
+                        attributes.add(equalTo(RPC_METHOD, operation));
                       }
 
                       // For stable semconv, use rpcMethodAssertions directly (no partial matching
