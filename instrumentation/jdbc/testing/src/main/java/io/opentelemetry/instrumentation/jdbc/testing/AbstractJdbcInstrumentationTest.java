@@ -12,10 +12,8 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -409,8 +407,13 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                                 equalTo(
-                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : (isCallStatement ? "CALL" : "SELECT")),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME,
                                     isCallStatement && emitStableDatabaseSemconv() ? "ABS" : null),
@@ -422,24 +425,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                                             : (table != null ? "SELECT " + table : "SELECT"))
                                         : null))));
 
-    if (table != null) {
-      assertDurationMetric(
-          testing(),
-          "io.opentelemetry.jdbc",
-          DB_SYSTEM_NAME,
-          DB_COLLECTION_NAME,
-          DB_NAMESPACE,
-          DB_OPERATION_NAME,
-          DB_QUERY_SUMMARY);
-    } else {
-      assertDurationMetric(
-          testing(),
-          "io.opentelemetry.jdbc",
-          DB_SYSTEM_NAME,
-          DB_OPERATION_NAME,
-          DB_NAMESPACE,
-          DB_QUERY_SUMMARY);
-    }
+    // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text
+    // DB_OPERATION_NAME and DB_COLLECTION_NAME are not included in metrics under stable semconv
+    assertDurationMetric(
+        testing(), "io.opentelemetry.jdbc", DB_SYSTEM_NAME, DB_NAMESPACE, DB_QUERY_SUMMARY);
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {
@@ -581,8 +570,13 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                                 equalTo(
-                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : (isCallStatement ? "CALL" : "SELECT")),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME,
                                     isCallStatement && emitStableDatabaseSemconv() ? "ABS" : null),
@@ -633,8 +627,13 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                                 equalTo(
-                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : (isCallStatement ? "CALL" : "SELECT")),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME,
                                     isCallStatement && emitStableDatabaseSemconv() ? "ABS" : null),
@@ -685,8 +684,13 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                                 equalTo(
-                                    maybeStable(DB_OPERATION), isCallStatement ? "CALL" : "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : (isCallStatement ? "CALL" : "SELECT")),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_STORED_PROCEDURE_NAME,
                                     isCallStatement && emitStableDatabaseSemconv() ? "ABS" : null),
@@ -848,8 +852,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), query),
-                                equalTo(maybeStable(DB_OPERATION), "CREATE TABLE"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "CREATE TABLE"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv()
@@ -1079,8 +1087,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), query),
-                                equalTo(maybeStable(DB_OPERATION), "CREATE TABLE"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "CREATE TABLE"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv()
@@ -1197,8 +1209,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "SELECT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv()
@@ -1396,8 +1412,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), operation),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : operation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -1458,8 +1478,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 emitStableDatabaseSemconv()
                                     ? "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
                                     : "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "INFORMATION_SCHEMA.SYSTEM_USERS"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : "INFORMATION_SCHEMA.SYSTEM_USERS"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv()
@@ -1535,8 +1561,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
                                 equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM table"),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), "table"),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "SELECT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : "table"),
                                 equalTo(
                                     PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -1693,12 +1723,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv()
                                         ? "INSERT INTO " + tableName + " VALUES(?)"
                                         : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? "BATCH INSERT" : null),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? tableName : null),
+                                equalTo(maybeStable(DB_OPERATION), null),
+                                equalTo(maybeStable(DB_SQL_TABLE), null),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
                                     emitStableDatabaseSemconv() ? 2L : null),
@@ -1758,9 +1784,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                             + tableName1
                                             + " VALUES(?); INSERT INTO multi_batch_test_2 VALUES(?)"
                                         : null),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? "BATCH INSERT" : null),
+                                equalTo(maybeStable(DB_OPERATION), null),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
                                     emitStableDatabaseSemconv() ? 2L : null),
@@ -1809,8 +1833,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
                                     "INSERT INTO " + tableName + " VALUES(?)"),
-                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), tableName),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "INSERT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : tableName),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? "INSERT " + tableName : null))));
@@ -1866,8 +1894,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     "INSERT INTO " + tableName + " VALUES(?)"),
                                 equalTo(
                                     maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? "BATCH INSERT" : "INSERT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), tableName),
+                                    emitStableDatabaseSemconv() ? null : "INSERT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : tableName),
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
                                     emitStableDatabaseSemconv() ? 2L : null),
@@ -1943,8 +1973,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
                                     "INSERT INTO " + tableName + " VALUES(?)"),
-                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), tableName),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "INSERT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : tableName),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? "INSERT " + tableName : null)),
@@ -1955,6 +1989,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                                 equalTo(maybeStable(DB_NAME), dbNameLower),
+                                // COMMIT is not extracted from db.query.text - it's an explicit
+                                // transaction operation
                                 equalTo(maybeStable(DB_OPERATION), "COMMIT"),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
@@ -2010,8 +2046,12 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
                                     "INSERT INTO " + tableName + " VALUES(?)"),
-                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), tableName),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "INSERT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : tableName),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? "INSERT " + tableName : null)),
@@ -2022,6 +2062,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                                 equalTo(maybeStable(DB_NAME), dbNameLower),
+                                // ROLLBACK is not extracted from db.query.text - it's an explicit
+                                // transaction operation
                                 equalTo(maybeStable(DB_OPERATION), "ROLLBACK"),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(

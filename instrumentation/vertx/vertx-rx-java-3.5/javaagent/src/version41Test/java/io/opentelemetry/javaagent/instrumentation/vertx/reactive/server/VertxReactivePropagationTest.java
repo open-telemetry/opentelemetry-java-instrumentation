@@ -140,8 +140,12 @@ class VertxReactivePropagationTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SELECT id, name, price, weight FROM products"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "products"))));
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "products"))));
   }
 
   @SuppressWarnings("deprecation") // uses deprecated db semconv
@@ -244,8 +248,12 @@ class VertxReactivePropagationTest {
                                 "SELECT id AS request"
                                     + requestId
                                     + ", name, price, weight FROM products"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "products"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "products"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT products" : null)));

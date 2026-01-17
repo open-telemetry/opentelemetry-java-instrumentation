@@ -118,7 +118,9 @@ class ProcedureCallTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
-                            equalTo(maybeStable(DB_OPERATION), "CALL"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "CALL"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "CALL TEST_PROC" : null)),

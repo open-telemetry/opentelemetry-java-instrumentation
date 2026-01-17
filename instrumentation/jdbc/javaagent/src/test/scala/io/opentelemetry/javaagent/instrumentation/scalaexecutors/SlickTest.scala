@@ -106,7 +106,10 @@ class SlickTest {
                       if (emitStableDatabaseSemconv()) "SELECT 3"
                       else "SELECT ?"
                     ),
-                    equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                    equalTo(
+                      maybeStable(DB_OPERATION),
+                      if (emitStableDatabaseSemconv()) null else "SELECT"
+                    ),
                     equalTo(
                       DB_QUERY_SUMMARY,
                       if (emitStableDatabaseSemconv()) "SELECT" else null

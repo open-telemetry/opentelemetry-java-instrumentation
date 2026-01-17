@@ -125,8 +125,17 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
                                 val -> {
@@ -165,8 +174,17 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
                                 val -> {
@@ -258,8 +276,17 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
                                 val -> {
@@ -291,8 +318,17 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
                                 val -> {
@@ -349,8 +385,17 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
                                 val -> {

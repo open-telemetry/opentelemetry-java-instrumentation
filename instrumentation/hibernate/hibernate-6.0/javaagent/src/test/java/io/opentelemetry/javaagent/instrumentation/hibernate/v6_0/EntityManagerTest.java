@@ -157,8 +157,12 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "SELECT Value" : null)),
@@ -332,8 +336,16 @@ class EntityManagerTest extends AbstractHibernateTest {
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-            satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+            satisfies(
+                maybeStable(DB_OPERATION),
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isNull();
+                  } else {
+                    val.isInstanceOf(String.class);
+                  }
+                }),
+            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"),
             satisfies(
                 DB_QUERY_SUMMARY,
                 val -> {
@@ -356,8 +368,16 @@ class EntityManagerTest extends AbstractHibernateTest {
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-            satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+            satisfies(
+                maybeStable(DB_OPERATION),
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isNull();
+                  } else {
+                    val.isInstanceOf(String.class);
+                  }
+                }),
+            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"),
             satisfies(
                 DB_QUERY_SUMMARY,
                 val -> {

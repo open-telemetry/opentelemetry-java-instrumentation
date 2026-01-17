@@ -303,8 +303,12 @@ public abstract class AbstractHibernateReactiveTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(stringKey("peer.service"), "test-peer-service")),

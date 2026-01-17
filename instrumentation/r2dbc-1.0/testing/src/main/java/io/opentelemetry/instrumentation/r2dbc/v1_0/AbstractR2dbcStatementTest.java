@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -186,8 +185,12 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                                equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : parameter.operation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : parameter.table),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? parameter.summary : null),
@@ -282,12 +285,13 @@ public abstract class AbstractR2dbcStatementTest {
                     .concatWith(Mono.from(connection.close()).cast(String.class)))
         .blockLast(Duration.ofMinutes(1));
 
+    // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text
+    // DB_OPERATION_NAME is not included in metrics under stable semconv
     assertDurationMetric(
         getTesting(),
         "io.opentelemetry.r2dbc-1.0",
         DB_SYSTEM_NAME,
         DB_NAMESPACE,
-        DB_OPERATION_NAME,
         DB_QUERY_SUMMARY,
         SERVER_ADDRESS,
         SERVER_PORT);

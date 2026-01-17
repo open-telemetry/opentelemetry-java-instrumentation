@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -68,11 +67,12 @@ class JdbcTelemetryTest {
                                 : "SELECT dbname")
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
 
+    // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text
+    // DB_OPERATION_NAME is not included in metrics under stable semconv
     assertDurationMetric(
         testing,
         "io.opentelemetry.jdbc",
         DB_NAMESPACE,
-        DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
@@ -109,7 +109,8 @@ class JdbcTelemetryTest {
                                 : "SELECT dbname")
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, "postgresql"),
-                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            // Per semconv spec: db.operation.name SHOULD NOT be extracted from
+                            // db.query.text
                             equalTo(DB_NAMESPACE, "dbname"),
                             equalTo(DB_QUERY_TEXT, "SELECT ?;"),
                             equalTo(DB_RESPONSE_STATUS_CODE, "42"),
@@ -120,11 +121,12 @@ class JdbcTelemetryTest {
                             equalTo(SERVER_PORT, 5432),
                             equalTo(ERROR_TYPE, "java.sql.SQLException"))));
 
+    // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text
+    // DB_OPERATION_NAME is not included in metrics under stable semconv
     assertDurationMetric(
         testing,
         "io.opentelemetry.jdbc",
         DB_NAMESPACE,
-        DB_OPERATION_NAME,
         DB_QUERY_SUMMARY,
         DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
@@ -283,14 +285,11 @@ class JdbcTelemetryTest {
                                 : "dbname")
                         .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_NAME), "dbname"),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT"
-                                    : null),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                SemconvStability.emitStableDatabaseSemconv() ? "test" : null),
+                            // Per semconv spec: db.operation.name SHOULD NOT be extracted from
+                            // db.query.text. Under stable semconv, DB_OPERATION_NAME and
+                            // DB_COLLECTION_NAME are null
+                            equalTo(maybeStable(DB_OPERATION), null),
+                            equalTo(maybeStable(DB_SQL_TABLE), null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 SemconvStability.emitStableDatabaseSemconv()

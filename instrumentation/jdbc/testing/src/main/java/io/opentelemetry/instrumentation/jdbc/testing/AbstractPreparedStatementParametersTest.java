@@ -629,8 +629,12 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "SELECT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     DbIncubatingAttributes.DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? spanName : null),
