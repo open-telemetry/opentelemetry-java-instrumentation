@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -32,6 +33,7 @@ import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -44,6 +46,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -64,6 +67,9 @@ class ClickHouseClientV1Test {
   private static String host;
   private static ClickHouseNode server;
   private static ClickHouseClient client;
+
+  private static final AttributeKey<String> queryIdKey =
+      AttributeKey.stringKey("clickhouse.query_id");
 
   @BeforeAll
   static void setup() throws ClickHouseException {
@@ -182,6 +188,11 @@ class ClickHouseClientV1Test {
           response.close();
         });
 
+    List<AttributeAssertion> attributeAssertions =
+        Stream.concat(
+                attributeAssertions("select * from " + tableName, "SELECT").stream(),
+                Stream.of(equalTo(queryIdKey, "test_query_id")))
+            .collect(toList());
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -190,8 +201,7 @@ class ClickHouseClientV1Test {
                     span.hasName("SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            attributeAssertions("select * from " + tableName, "SELECT"))));
+                        .hasAttributesSatisfyingExactly(attributeAssertions)));
   }
 
   @Test

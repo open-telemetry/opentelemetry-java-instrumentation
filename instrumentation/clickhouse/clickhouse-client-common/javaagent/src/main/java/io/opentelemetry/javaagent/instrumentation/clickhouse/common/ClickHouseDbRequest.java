@@ -18,8 +18,12 @@ public abstract class ClickHouseDbRequest {
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static ClickHouseDbRequest create(
-      @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sanitizer.sanitize(sql));
+      @Nullable String host,
+      @Nullable Integer port,
+      @Nullable String dbName,
+      @Nullable String queryId,
+      String sql) {
+    return new AutoValue_ClickHouseDbRequest(host, port, dbName, queryId, sanitizer.sanitize(sql));
   }
 
   @Nullable
@@ -30,6 +34,9 @@ public abstract class ClickHouseDbRequest {
 
   @Nullable
   public abstract String getDbName();
+
+  @Nullable
+  public abstract String getQueryId();
 
   public abstract SqlStatementInfo getSqlStatementInfo();
 }
