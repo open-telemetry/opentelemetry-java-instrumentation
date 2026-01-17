@@ -130,13 +130,13 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
 
     assertDurationMetric(
         testing,
@@ -181,13 +181,13 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + tableName + " values(?)(?)(?)"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "INSERT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "INSERT " + tableName
-                                    : null)),
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
                             SemconvStability.emitStableDatabaseSemconv()
@@ -202,13 +202,13 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
   @Test
@@ -241,13 +241,13 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
   @Test
@@ -279,13 +279,13 @@ class ClickHouseClientV2Test {
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT non_existent_table"
                                     : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(
                                 DB_RESPONSE_STATUS_CODE,
                                 SemconvStability.emitStableDatabaseSemconv() ? "60" : null),
@@ -327,13 +327,13 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + tableName + " limit ?"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
   @Test
@@ -365,13 +365,13 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + tableName + " limit ?"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
   @Test
@@ -408,13 +408,13 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_STATEMENT),
                                 "insert into " + tableName + " values(?)"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "INSERT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "INSERT " + tableName
-                                    : null)),
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
                             SemconvStability.emitStableDatabaseSemconv()
@@ -431,13 +431,13 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + tableName + " limit ?"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 
   @Test
@@ -478,12 +478,12 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_STATEMENT),
                                 "select * from " + tableName + " where value={param_s: String}"),
                             equalTo(
-                                maybeStable(DB_OPERATION),
-                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
                                     ? "SELECT " + tableName
-                                    : null))));
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"))));
   }
 }
