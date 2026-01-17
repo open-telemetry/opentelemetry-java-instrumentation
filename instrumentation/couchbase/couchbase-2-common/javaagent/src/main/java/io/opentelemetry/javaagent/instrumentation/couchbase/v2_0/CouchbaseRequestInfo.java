@@ -11,6 +11,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,14 +41,16 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
     SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
 
+    String operationName =
+        SemconvStability.emitStableDatabaseSemconv() ? null : statement.getOperationName();
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getQueryText(), statement.getOperationName(), false);
+        bucket, statement.getQueryText(), statement.getQuerySummary(), operationName, false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -70,6 +73,9 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable
   public abstract String statement();
+
+  @Nullable
+  public abstract String querySummary();
 
   @Nullable
   public abstract String operation();

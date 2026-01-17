@@ -34,6 +34,12 @@ final class CouchbaseAttributesGetter
 
   @Override
   @Nullable
+  public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
+    return couchbaseRequest.querySummary();
+  }
+
+  @Override
+  @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }
