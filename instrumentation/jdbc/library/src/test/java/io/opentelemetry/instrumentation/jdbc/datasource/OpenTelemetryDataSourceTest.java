@@ -49,24 +49,25 @@ class OpenTelemetryDataSourceTest {
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
-    List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFunctionAssertions(TestDataSource.class, "getConnection");
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), "postgresql"));
-    assertions.add(equalTo(maybeStable(DB_NAME), "dbname"));
-    assertions.add(
-        equalTo(
-            DB_CONNECTION_STRING,
-            emitStableDatabaseSemconv() ? null : "postgresql://127.0.0.1:5432"));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span ->
-                    span.hasName("TestDataSource.getConnection")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertions)));
+                span -> {
+                  List<AttributeAssertion> assertions =
+                      SemconvCodeStabilityUtil.codeFunctionAssertions(
+                          TestDataSource.class, "getConnection");
+                  assertions.add(equalTo(maybeStable(DB_SYSTEM), "postgresql"));
+                  assertions.add(equalTo(maybeStable(DB_NAME), "dbname"));
+                  assertions.add(
+                      equalTo(
+                          DB_CONNECTION_STRING,
+                          emitStableDatabaseSemconv() ? null : "postgresql://127.0.0.1:5432"));
+                  span.hasName("TestDataSource.getConnection")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(assertions);
+                }));
 
     assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
