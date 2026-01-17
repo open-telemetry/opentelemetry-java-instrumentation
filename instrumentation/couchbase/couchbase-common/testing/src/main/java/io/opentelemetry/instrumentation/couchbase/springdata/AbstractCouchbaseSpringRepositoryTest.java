@@ -121,7 +121,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -151,7 +151,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -186,7 +186,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get")
                         .hasKind(SpanKind.CLIENT)
@@ -203,7 +205,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -236,7 +238,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
@@ -253,7 +257,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -288,7 +292,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.remove")
                         .hasKind(SpanKind.CLIENT)
@@ -303,7 +309,9 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName(bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
@@ -322,6 +330,6 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 }

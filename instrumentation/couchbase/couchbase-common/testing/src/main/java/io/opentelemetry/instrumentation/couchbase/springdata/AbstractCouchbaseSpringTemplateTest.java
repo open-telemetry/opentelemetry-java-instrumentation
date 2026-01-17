@@ -126,7 +126,9 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get")
                         .hasKind(SpanKind.CLIENT)
@@ -143,7 +145,7 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -175,7 +177,9 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.remove")
                         .hasKind(SpanKind.CLIENT)
@@ -192,7 +196,7 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
 
     testing.clearData();
 
@@ -218,6 +222,6 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 }

@@ -95,7 +95,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @ParameterizedTest
@@ -149,7 +149,9 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 includesNetworkAttributes() ? "127.0.0.1" : null),
                             satisfies(
                                 NETWORK_PEER_PORT,
-                                includesNetworkAttributes() ? val -> val.isNotNull() : val -> {})),
+                                includesNetworkAttributes()
+                                    ? val -> val.isNotNull()
+                                    : val -> val.isNull())),
                 span ->
                     span.hasName("Bucket.get")
                         .hasKind(SpanKind.CLIENT)
@@ -166,7 +168,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 
   @Test
@@ -212,6 +214,6 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                                 NETWORK_PEER_PORT,
                                 includesNetworkAttributes()
                                     ? val -> val.isNotNull()
-                                    : val -> {}))));
+                                    : val -> val.isNull()))));
   }
 }
