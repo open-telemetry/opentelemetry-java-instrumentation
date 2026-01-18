@@ -6,15 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.geode;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
-
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
@@ -31,8 +27,15 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbQueryText(GeodeRequest request) {
-    // sanitized statement is cached
-    return sanitizer.sanitize(request.getQuery()).getQueryText();
+    SqlStatementInfo sqlStatementInfo = request.getSqlStatementInfo();
+    return sqlStatementInfo != null ? sqlStatementInfo.getQueryText() : null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbQuerySummary(GeodeRequest request) {
+    SqlStatementInfo sqlStatementInfo = request.getSqlStatementInfo();
+    return sqlStatementInfo != null ? sqlStatementInfo.getQuerySummary() : null;
   }
 
   @Override
