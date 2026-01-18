@@ -6,9 +6,11 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -188,15 +190,23 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + bucketCouchbase.name())
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT mockrow"
+                                : "SELECT " + bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT mockrow" : null),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),

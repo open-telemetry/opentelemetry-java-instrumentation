@@ -40,14 +40,14 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true, null);
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
     SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
 
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getQueryText(), statement.getOperationName(), false);
+        bucket, statement.getQueryText(), statement.getOperationName(), false, statement);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -75,6 +75,9 @@ public abstract class CouchbaseRequestInfo {
   public abstract String operation();
 
   public abstract boolean isMethodCall();
+
+  @Nullable
+  public abstract SqlStatementInfo getSqlStatementInfo();
 
   @Nullable
   public String getLocalAddress() {

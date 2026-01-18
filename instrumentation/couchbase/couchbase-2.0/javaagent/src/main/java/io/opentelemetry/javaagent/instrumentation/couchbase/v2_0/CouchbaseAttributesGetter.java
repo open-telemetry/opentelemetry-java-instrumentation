@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -29,13 +30,31 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
+    SqlStatementInfo sqlStatementInfo = couchbaseRequest.getSqlStatementInfo();
+    if (sqlStatementInfo != null) {
+      return sqlStatementInfo.getQueryText();
+    }
     return couchbaseRequest.statement();
   }
 
   @Override
   @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
+    SqlStatementInfo sqlStatementInfo = couchbaseRequest.getSqlStatementInfo();
+    if (sqlStatementInfo != null) {
+      return sqlStatementInfo.getOperationName();
+    }
     return couchbaseRequest.operation();
+  }
+
+  @Override
+  @Nullable
+  public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
+    SqlStatementInfo sqlStatementInfo = couchbaseRequest.getSqlStatementInfo();
+    if (sqlStatementInfo != null) {
+      return sqlStatementInfo.getQuerySummary();
+    }
+    return null;
   }
 
   @Override
