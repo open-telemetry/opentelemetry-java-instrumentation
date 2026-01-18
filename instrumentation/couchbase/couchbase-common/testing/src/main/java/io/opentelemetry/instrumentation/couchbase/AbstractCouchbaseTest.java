@@ -91,6 +91,12 @@ public abstract class AbstractCouchbaseTest {
     return envBuilder(this::envBuilder, bucketSettings);
   }
 
+  @FunctionalInterface
+  public interface EnvBuilder {
+    DefaultCouchbaseEnvironment.Builder apply(
+        BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort);
+  }
+
   /** Override to return true in subclasses that include network attributes (e.g., 2.6+). */
   protected boolean includesNetworkAttributes() {
     return false;
@@ -118,11 +124,5 @@ public abstract class AbstractCouchbaseTest {
 
   protected StringAssertConsumer experimentalAttribute() {
     return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
-  }
-
-  @FunctionalInterface
-  public interface EnvBuilder {
-    DefaultCouchbaseEnvironment.Builder apply(
-        BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort);
   }
 }
