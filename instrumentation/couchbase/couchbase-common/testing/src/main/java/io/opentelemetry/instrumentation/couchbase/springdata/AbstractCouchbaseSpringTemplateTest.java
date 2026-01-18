@@ -44,7 +44,7 @@ import org.springframework.data.couchbase.core.CouchbaseTemplate;
 public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final List<AutoCloseable> cleanup = new ArrayList<>();
   private static CouchbaseTemplate couchbaseTemplate;

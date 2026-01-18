@@ -49,7 +49,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
-  protected static final int TIMEOUT_SECONDS = 10;
+  private static final int TIMEOUT_SECONDS = 10;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -94,10 +94,6 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
       return clusterMemcache;
     }
     throw new IllegalArgumentException("unknown setting " + bucketSettings.name());
-  }
-
-  protected CouchbaseAsyncCluster getCluster(BucketSettings bucketSettings, boolean ignored) {
-    return getCluster(bucketSettings);
   }
 
   @ParameterizedTest

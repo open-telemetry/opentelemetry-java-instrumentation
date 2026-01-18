@@ -41,13 +41,12 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension
-  protected static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private ConfigurableApplicationContext applicationContext;
-  protected TestRepository repository;
+  private TestRepository repository;
 
   @BeforeAll
   void setUp() {
@@ -80,7 +79,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
     repository = applicationContext.getBean(TestRepository.class);
   }
 
-  protected void cleanUpTest() {
+  private void cleanUpTest() {
     testing.clearData();
     repository.deleteAll();
     testing.waitForTraces(2);
