@@ -164,8 +164,8 @@ class PutGetTest {
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span -> {
                   if (query != null) {
-                    // Query operations in stable semconv should have query summary
-                    String expectedQuerySummary = emitStableDatabaseSemconv() ? "SELECT test-region" : null;
+                    String expectedQuerySummary =
+                        emitStableDatabaseSemconv() ? "SELECT test-region" : null;
                     span.hasName(verb.concat(" test-region"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
