@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.couchbase.springdata.TestDocument;
 import io.opentelemetry.instrumentation.couchbase.springdata.TestRepository;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.Couchbase26Util;
 
-@SuppressWarnings("deprecation")
 class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryTest {
 
   @Override

@@ -10,7 +10,6 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSpringTemplateTest;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.Couchbase26Util;
 
-@SuppressWarnings("deprecation")
 class CouchbaseSpringTemplate26Test extends AbstractCouchbaseSpringTemplateTest {
 
   @Override

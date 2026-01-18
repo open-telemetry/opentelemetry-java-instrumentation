@@ -19,7 +19,6 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseClientTest;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
 
   @Override

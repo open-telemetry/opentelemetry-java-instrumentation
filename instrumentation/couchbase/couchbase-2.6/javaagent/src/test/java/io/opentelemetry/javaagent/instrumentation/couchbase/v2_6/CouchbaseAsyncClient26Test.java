@@ -9,7 +9,6 @@ import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseAsyncClientTest;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseAsyncClient26Test extends AbstractCouchbaseAsyncClientTest {
 
   @Override
