@@ -16,6 +16,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -25,6 +28,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.geode.cache.Region;
 
 public class GeodeRegionInstrumentation implements TypeInstrumentation {
+
+  private static final SqlStatementSanitizer sanitizer =
+      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
     return hasClassesNamed("org.apache.geode.cache.Region");
@@ -76,7 +83,8 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     public static AdviceScope start(
         Region<?, ?> region, String methodName, @Nullable String query) {
       Context parentContext = Context.current();
-      GeodeRequest request = GeodeRequest.create(region, methodName, query);
+      SqlStatementInfo sqlStatementInfo = query != null ? sanitizer.sanitize(query) : null;
+      GeodeRequest request = GeodeRequest.create(region, methodName, sqlStatementInfo);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
