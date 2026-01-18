@@ -40,14 +40,13 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
+    SqlStatementInfo statementInfo = SqlStatementInfo.create(null, operation, null);
+    return new AutoValue_CouchbaseRequestInfo(bucket, statementInfo, true);
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
-
-    return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getQueryText(), statement.getOperationName(), false);
+    SqlStatementInfo statementInfo = CouchbaseQuerySanitizer.sanitize(query);
+    return new AutoValue_CouchbaseRequestInfo(bucket, statementInfo, false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -69,10 +68,24 @@ public abstract class CouchbaseRequestInfo {
   public abstract String bucket();
 
   @Nullable
-  public abstract String statement();
+  abstract SqlStatementInfo sqlStatementInfo();
 
   @Nullable
-  public abstract String operation();
+  public SqlStatementInfo getSqlStatementInfo() {
+    return sqlStatementInfo();
+  }
+
+  @Nullable
+  public String statement() {
+    SqlStatementInfo info = sqlStatementInfo();
+    return info != null ? info.getQueryText() : null;
+  }
+
+  @Nullable
+  public String operation() {
+    SqlStatementInfo info = sqlStatementInfo();
+    return info != null ? info.getOperationName() : null;
+  }
 
   public abstract boolean isMethodCall();
 

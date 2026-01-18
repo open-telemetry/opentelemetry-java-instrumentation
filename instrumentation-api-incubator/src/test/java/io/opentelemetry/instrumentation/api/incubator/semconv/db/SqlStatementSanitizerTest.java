@@ -412,4 +412,27 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "CREATE PROCEDURE p AS SELECT * FROM table GO", expect("CREATE PROCEDURE", null)));
   }
+
+  @Test
+  void testGetQuerySummary() {
+    // Test with collection name
+    SqlStatementInfo selectInfo = SqlStatementInfo.create("SELECT * FROM users", "SELECT", "users");
+    assertThat(selectInfo.getQuerySummary()).isEqualTo("SELECT users");
+
+    SqlStatementInfo insertInfo = SqlStatementInfo.create("INSERT INTO orders", "INSERT", "orders");
+    assertThat(insertInfo.getQuerySummary()).isEqualTo("INSERT orders");
+
+    // Test with stored procedure (CALL operation)
+    SqlStatementInfo callInfo =
+        SqlStatementInfo.create("CALL my_procedure", "CALL", "my_procedure");
+    assertThat(callInfo.getQuerySummary()).isEqualTo("CALL my_procedure");
+
+    // Test with operation only (no target)
+    SqlStatementInfo opOnlyInfo = SqlStatementInfo.create("SELECT", "SELECT", null);
+    assertThat(opOnlyInfo.getQuerySummary()).isEqualTo("SELECT");
+
+    // Test with null operation
+    SqlStatementInfo nullOpInfo = SqlStatementInfo.create("UNKNOWN", null, "table");
+    assertThat(nullOpInfo.getQuerySummary()).isNull();
+  }
 }

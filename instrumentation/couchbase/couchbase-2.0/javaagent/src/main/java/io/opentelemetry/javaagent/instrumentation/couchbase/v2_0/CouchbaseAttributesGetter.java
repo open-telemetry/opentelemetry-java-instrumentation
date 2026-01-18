@@ -1,11 +1,7 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -29,13 +25,22 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.statement();
+    SqlStatementInfo info = couchbaseRequest.getSqlStatementInfo();
+    return info != null ? info.getQueryText() : null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
+    SqlStatementInfo info = couchbaseRequest.getSqlStatementInfo();
+    return info != null ? info.getQuerySummary() : null;
   }
 
   @Override
   @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.operation();
+    SqlStatementInfo info = couchbaseRequest.getSqlStatementInfo();
+    return info != null ? info.getOperationName() : null;
   }
 
   @Override

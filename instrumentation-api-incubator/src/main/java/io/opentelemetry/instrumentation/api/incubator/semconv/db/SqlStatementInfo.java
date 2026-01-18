@@ -67,6 +67,27 @@ public abstract class SqlStatementInfo {
     return getCollectionName() != null ? getCollectionName() : getStoredProcedureName();
   }
 
+  /**
+   * Returns a query summary in the format "OPERATION collection" (e.g., "SELECT users", "INSERT
+   * orders"). Returns null if operation name is not available.
+   */
+  @Nullable
+  public String getQuerySummary() {
+    String operation = getOperationName();
+    if (operation == null) {
+      return null;
+    }
+    String collection = getCollectionName();
+    String procedure = getStoredProcedureName();
+    if (collection != null) {
+      return operation + " " + collection;
+    } else if (procedure != null) {
+      return operation + " " + procedure;
+    } else {
+      return operation;
+    }
+  }
+
   @Nullable
   abstract String getTarget();
 }
