@@ -162,7 +162,15 @@ class PutGetTest {
                             equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
-                span ->
+                span -> {
+                  if (query == null) {
+                    span.hasName(verb.concat(" test-region"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "geode"),
+                            equalTo(maybeStable(DB_NAME), "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), verb));
+                  } else {
                     span.hasName(verb.concat(" test-region"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -170,7 +178,9 @@ class PutGetTest {
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), verb),
                             equalTo(maybeStable(DB_STATEMENT), query),
-                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT test" : null))));
+                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT test" : null));
+                  }
+                }));
   }
 
   static class Card implements DataSerializable {
