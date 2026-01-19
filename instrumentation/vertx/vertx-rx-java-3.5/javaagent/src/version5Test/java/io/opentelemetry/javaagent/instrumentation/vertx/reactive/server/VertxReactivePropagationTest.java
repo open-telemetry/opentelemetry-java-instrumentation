@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.reactive.server.VertxReactiveWebServer.TEST_REQUEST_ID_ATTRIBUTE;
@@ -119,10 +118,7 @@ class VertxReactivePropagationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SELECT products"
-                                : "SELECT test.products")
+                    span.hasName("SELECT products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -215,10 +211,7 @@ class VertxReactivePropagationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SELECT products"
-                                : "SELECT test.products")
+                    span.hasName("SELECT products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
