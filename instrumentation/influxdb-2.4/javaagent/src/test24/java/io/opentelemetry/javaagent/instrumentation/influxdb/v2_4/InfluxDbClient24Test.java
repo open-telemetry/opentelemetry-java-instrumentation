@@ -124,17 +124,20 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                        emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu GROUP BY *"),
-                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT cpu" : null))),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu" : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -158,17 +161,23 @@ class InfluxDbClient24Test {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                        emitStableDatabaseSemconv() ? "SELECT cpu_load" : "SELECT " + databaseName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SELECT * FROM cpu_load where test1 = ?"),
-                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
   }
 }
