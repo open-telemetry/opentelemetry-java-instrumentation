@@ -26,14 +26,14 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbOperationName(InfluxDbRequest request) {
+    // Only set db.operation.name under old semconv
+    if (!SemconvStability.emitOldDatabaseSemconv()) {
+      return null;
+    }
     if (request.getOperation() != null) {
       return request.getOperation();
     }
-    // Only extract operation name from query text under old semconv
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      return request.getSqlStatementInfo().getOperationName();
-    }
-    return null;
+    return request.getSqlStatementInfo().getOperationName();
   }
 
   @Override
