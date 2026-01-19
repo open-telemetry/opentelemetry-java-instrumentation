@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.javaagent.instrumentation.vertx.reactive.server.VertxReactiveWebServer.TEST_REQUEST_ID_ATTRIBUTE;
@@ -25,9 +26,13 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -118,10 +123,19 @@ class VertxReactivePropagationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName("SELECT products")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT products"
+                                : "SELECT test.products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SELECT id, name, price, weight FROM products"),
@@ -211,10 +225,19 @@ class VertxReactivePropagationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
                 span ->
-                    span.hasName("SELECT products")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT products"
+                                : "SELECT test.products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SELECT id AS request"

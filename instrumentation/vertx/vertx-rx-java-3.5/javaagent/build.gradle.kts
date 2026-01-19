@@ -76,6 +76,25 @@ tasks {
   named("compileVersion5TestJava", JavaCompile::class).configure {
     options.release.set(11)
   }
+
+  val version35TestStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.named("version35Test").get().output.classesDirs
+    classpath = sourceSets.named("version35Test").get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val version41TestStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.named("version41Test").get().output.classesDirs
+    classpath = sourceSets.named("version41Test").get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val version5TestStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.named("version5Test").get().output.classesDirs
+    classpath = sourceSets.named("version5Test").get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   val testJavaVersion =
     gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
       ?: JavaVersion.current()
@@ -83,9 +102,17 @@ tasks {
     named("version5Test", Test::class).configure {
       enabled = false
     }
+    version5TestStableSemconv.configure {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(
+      testing.suites,
+      version35TestStableSemconv,
+      version41TestStableSemconv,
+      version5TestStableSemconv
+    )
   }
 }
