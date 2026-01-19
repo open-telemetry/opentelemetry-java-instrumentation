@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -150,15 +152,32 @@ class InfluxDbClient24Test {
   private static List<AttributeAssertion> attributeAssertions(
       String statement, String operation, String databaseName) {
     List<AttributeAssertion> result = new ArrayList<>();
+
+    // Explicit operations (CREATE DATABASE, DROP DATABASE, WRITE) are always present
+    // Parsed operations (SELECT with statement) are only present in old semconv mode
+    boolean isExplicitOperation = statement == null;
+    String operationValue =
+        isExplicitOperation ? operation : (emitStableDatabaseSemconv() ? null : operation);
+
     result.addAll(
         asList(
             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
             equalTo(maybeStable(DB_NAME), databaseName),
             equalTo(SERVER_ADDRESS, host),
             equalTo(SERVER_PORT, port),
-            equalTo(maybeStable(DB_OPERATION), operation)));
+            equalTo(maybeStable(DB_OPERATION), operationValue)));
     if (statement != null) {
       result.add(equalTo(maybeStable(DB_STATEMENT), statement));
+      // Extract table name from statement for query summary
+      String querySummary = null;
+      if (emitStableDatabaseSemconv()) {
+        if (statement.contains("FROM cpu GROUP BY")) {
+          querySummary = "SELECT cpu";
+        } else if (statement.contains("FROM cpu_load")) {
+          querySummary = "SELECT cpu_load";
+        }
+      }
+      result.add(equalTo(DB_QUERY_SUMMARY, querySummary));
     }
     return result;
   }
