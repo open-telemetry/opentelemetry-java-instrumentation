@@ -177,7 +177,7 @@ class PutGetTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test-region"
+                                ? "SELECT test"
                                 : "query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -187,7 +187,7 @@ class PutGetTest {
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test-region" : null))));
+                                emitStableDatabaseSemconv() ? "SELECT test" : null))));
   }
 
   @ParameterizedTest
@@ -223,7 +223,7 @@ class PutGetTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test-region"
+                                ? "SELECT test"
                                 : "existsValue test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -233,7 +233,7 @@ class PutGetTest {
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test-region" : null))));
+                                emitStableDatabaseSemconv() ? "SELECT test" : null))));
   }
 
   @Test
@@ -270,7 +270,7 @@ class PutGetTest {
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT test-region"
+                                ? "SELECT test"
                                 : "query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
@@ -282,7 +282,7 @@ class PutGetTest {
                                 "SELECT * FROM /test-region p WHERE p.expDate = ?"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test-region" : null))));
+                                emitStableDatabaseSemconv() ? "SELECT test" : null))));
   }
 
   static class Card implements DataSerializable {
