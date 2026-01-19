@@ -140,10 +140,6 @@ public final class SemconvStability {
     return emitStableRpcSemconv;
   }
 
-  private static boolean emitBothRpcSemconv() {
-    return emitOldRpcSemconv && emitStableRpcSemconv;
-  }
-
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
 
   static {
@@ -157,7 +153,7 @@ public final class SemconvStability {
   }
 
   public static AttributeKey<String> getOldRpcMethodAttributeKey() {
-    if (emitBothRpcSemconv()) {
+    if (emitStableRpcSemconv()) {
       // to avoid clash when both semconv are emitted
       return RPC_METHOD_OLD;
     }

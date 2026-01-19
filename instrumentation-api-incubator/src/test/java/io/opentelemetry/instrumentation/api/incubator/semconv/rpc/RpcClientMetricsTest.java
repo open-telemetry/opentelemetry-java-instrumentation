@@ -302,7 +302,7 @@ class RpcClientMetricsTest {
     if (SemconvStability.emitOldRpcSemconv()) {
       builder.put(RPC_SYSTEM, system);
       builder.put(RPC_SERVICE, service);
-      builder.put(RPC_METHOD, method);
+      builder.put(SemconvStability.getOldRpcMethodAttributeKey(), method);
     }
 
     // stable semconv wins for rpc.method
