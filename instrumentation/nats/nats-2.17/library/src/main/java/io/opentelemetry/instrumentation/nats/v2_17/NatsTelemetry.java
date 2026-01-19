@@ -80,29 +80,6 @@ public final class NatsTelemetry {
     return wrap(connectionFactory.create(configure(builder)));
   }
 
-  /**
-   * Returns a {@link Connection} with telemetry instrumentation.
-   *
-   * @deprecated Use {@link #createConnection(Options, ConnectionFactory)} instead.
-   */
-  @Deprecated
-  public Connection newConnection(Options options, ConnectionFactory<Options> connectionFactory)
-      throws IOException, InterruptedException {
-    return createConnection(options, connectionFactory);
-  }
-
-  /**
-   * Returns a {@link Connection} with telemetry instrumentation.
-   *
-   * @deprecated Use {@link #createConnection(Options.Builder, ConnectionFactory)} instead.
-   */
-  @Deprecated
-  public Connection newConnection(
-      Options.Builder builder, ConnectionFactory<Options.Builder> connectionFactory)
-      throws IOException, InterruptedException {
-    return createConnection(builder, connectionFactory);
-  }
-
   public interface ConnectionFactory<T> {
     Connection create(T options) throws IOException, InterruptedException;
   }
