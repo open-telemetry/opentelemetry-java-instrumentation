@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension.ignore;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 
 /**
