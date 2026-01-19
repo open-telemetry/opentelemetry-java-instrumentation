@@ -36,7 +36,9 @@ public final class ApacheHttpClientRequest {
     return delegate;
   }
 
-  /** @deprecated use {@link #getRequest()} instead. */
+  /**
+   * @deprecated use {@link #getRequest()} instead.
+   */
   @Deprecated
   public HttpRequest getDelegate() {
     return getRequest();

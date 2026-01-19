@@ -46,7 +46,9 @@ public final class ApacheHttpClientRequest {
     return delegate;
   }
 
-  /** @deprecated use {@link #getRequest()} instead. */
+  /**
+   * @deprecated use {@link #getRequest()} instead.
+   */
   @Deprecated
   public HttpRequest getDelegate() {
     return getRequest();
@@ -94,7 +96,9 @@ public final class ApacheHttpClientRequest {
   }
 
   // TODO: make this package protected
-  /** @deprecated for internal use only. */
+  /**
+   * @deprecated for internal use only.
+   */
   @Deprecated
   @Nullable
   public String getServerAddress() {
@@ -102,7 +106,9 @@ public final class ApacheHttpClientRequest {
   }
 
   // TODO: make this package protected
-  /** @deprecated for internal use only. */
+  /**
+   * @deprecated for internal use only.
+   */
   @Deprecated
   @Nullable
   public Integer getServerPort() {
@@ -138,7 +144,9 @@ public final class ApacheHttpClientRequest {
   }
 
   // TODO: make this package protected
-  /** @deprecated for internal use only. */
+  /**
+   * @deprecated for internal use only.
+   */
   @Deprecated
   @Nullable
   public InetSocketAddress getNetworkPeerAddress() {
