@@ -50,9 +50,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
-  val testSuites = testing.suites.withType(JvmTestSuite::class)
-
-  val stableSemconvSuites = testSuites.map { suite ->
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
     register<Test>("${suite.name}StableSemconv") {
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
