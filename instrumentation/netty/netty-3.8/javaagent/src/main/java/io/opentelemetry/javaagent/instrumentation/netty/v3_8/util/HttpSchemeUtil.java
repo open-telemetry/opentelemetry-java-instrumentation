@@ -30,7 +30,7 @@ public final class HttpSchemeUtil {
 
   private static boolean isHttps(NettyRequest requestAndChannel) {
     return sslHandlerClass != null
-        && requestAndChannel.getChannel().getPipeline().get(sslHandlerClass) != null;
+        && requestAndChannel.channel().getPipeline().get(sslHandlerClass) != null;
   }
 
   private HttpSchemeUtil() {}

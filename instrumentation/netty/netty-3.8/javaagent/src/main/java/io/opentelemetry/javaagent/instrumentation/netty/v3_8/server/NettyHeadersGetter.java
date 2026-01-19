@@ -15,17 +15,17 @@ enum NettyHeadersGetter implements TextMapGetter<NettyRequest> {
 
   @Override
   public Iterable<String> keys(NettyRequest requestAndChannel) {
-    return requestAndChannel.getRequest().headers().names();
+    return requestAndChannel.request().headers().names();
   }
 
   @Nullable
   @Override
   public String get(@Nullable NettyRequest requestAndChannel, String s) {
-    return requestAndChannel.getRequest().headers().get(s);
+    return requestAndChannel.request().headers().get(s);
   }
 
   @Override
   public Iterator<String> getAll(@Nullable NettyRequest carrier, String key) {
-    return carrier.getRequest().headers().getAll(key).iterator();
+    return carrier.request().headers().getAll(key).iterator();
   }
 }

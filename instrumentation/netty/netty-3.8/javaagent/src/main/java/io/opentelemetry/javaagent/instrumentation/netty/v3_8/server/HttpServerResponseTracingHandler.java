@@ -34,7 +34,7 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     }
 
     Context context = requestAndContext.context();
-    NettyRequest request = requestAndContext.getRequest();
+    NettyRequest request = requestAndContext.request();
     HttpResponse response = (HttpResponse) msg.getMessage();
     customizeResponse(context, response);
 
