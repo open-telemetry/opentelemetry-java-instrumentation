@@ -20,31 +20,15 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
 
-  @Nullable
   @Override
   public String getDbSystemName(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
-  @Deprecated
-  @Nullable
-  @Override
-  public String getUser(DbRequest request) {
-    return request.getDbInfo().getUser();
-  }
-
-  @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getConnectionString(DbRequest request) {
-    return request.getDbInfo().getShortUrl();
   }
 
   @Override
