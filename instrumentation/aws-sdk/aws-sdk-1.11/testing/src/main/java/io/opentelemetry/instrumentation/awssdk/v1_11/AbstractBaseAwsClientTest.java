@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodContainsAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -102,7 +102,9 @@ public abstract class AbstractBaseAwsClientTest {
                                   rpcSystemAssertion("aws-api"),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
-                      attributes.addAll(rpcMethodContainsAssertions(service, operation));
+                      attributes.addAll(
+                          rpcMethodAssertions(
+                              service, operation, (a, expected) -> a.contains(expected)));
 
                       if (hasRequestId()) {
                         attributes.add(

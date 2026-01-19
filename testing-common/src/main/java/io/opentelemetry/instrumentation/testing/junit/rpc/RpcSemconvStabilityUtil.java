@@ -15,6 +15,8 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
+import org.assertj.core.api.AbstractStringAssert;
 
 // until old rpc semconv are dropped in 3.0
 public class RpcSemconvStabilityUtil {
@@ -39,28 +41,21 @@ public class RpcSemconvStabilityUtil {
    * @return List of attribute assertions for the method
    */
   public static List<AttributeAssertion> rpcMethodAssertions(String service, String method) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-
-    assertions.add(
-        equalTo(
-            RPC_METHOD, SemconvStability.emitStableRpcSemconv() ? service + "/" + method : method));
-
-    if (SemconvStability.emitOldRpcSemconv()) {
-      assertions.add(equalTo(RPC_SERVICE, service));
-    }
-
-    return assertions;
+    return rpcMethodAssertions(service, method, (a, expected) -> a.isEqualTo(expected));
   }
 
-  public static List<AttributeAssertion> rpcMethodContainsAssertions(
-      String service, String method) {
+  public static List<AttributeAssertion> rpcMethodAssertions(
+      String service,
+      String method,
+      BiConsumer<AbstractStringAssert<?>, String> serviceNameAssertion) {
     List<AttributeAssertion> assertions = new ArrayList<>();
 
     if (SemconvStability.emitStableRpcSemconv()) {
-      assertions.add(satisfies(RPC_METHOD, v -> v.contains(service + "/" + method)));
+      assertions.add(
+          satisfies(RPC_METHOD, a -> serviceNameAssertion.accept(a, service + "/" + method)));
     } else {
       assertions.add(equalTo(RPC_METHOD, method));
-      assertions.add(satisfies(RPC_SERVICE, v -> v.contains(service)));
+      assertions.add(satisfies(RPC_SERVICE, a -> serviceNameAssertion.accept(a, service)));
     }
 
     return assertions;
