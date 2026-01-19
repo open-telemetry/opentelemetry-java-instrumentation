@@ -14,6 +14,6 @@ enum HttpRequestHeadersSetter implements TextMapSetter<NettyRequest> {
 
   @Override
   public void set(@Nullable NettyRequest carrier, String key, String value) {
-    carrier.request().headers().set(key, value);
+    carrier.getRequest().headers().set(key, value);
   }
 }

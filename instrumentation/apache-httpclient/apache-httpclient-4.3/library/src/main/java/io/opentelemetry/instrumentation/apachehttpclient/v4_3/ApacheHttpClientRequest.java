@@ -42,8 +42,14 @@ public final class ApacheHttpClientRequest {
   }
 
   /** Returns the actual {@link HttpRequest} being executed by the client. */
-  public HttpRequest getDelegate() {
+  public HttpRequest getRequest() {
     return delegate;
+  }
+
+  /** @deprecated use {@link #getRequest()} instead. */
+  @Deprecated
+  public HttpRequest getDelegate() {
+    return getRequest();
   }
 
   List<String> getHeader(String name) {
@@ -87,11 +93,17 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
+  // TODO: make this package protected
+  /** @deprecated for internal use only. */
+  @Deprecated
   @Nullable
   public String getServerAddress() {
     return uri == null ? null : uri.getHost();
   }
 
+  // TODO: make this package protected
+  /** @deprecated for internal use only. */
+  @Deprecated
   @Nullable
   public Integer getServerPort() {
     return uri == null ? null : uri.getPort();
@@ -125,6 +137,9 @@ public final class ApacheHttpClientRequest {
     }
   }
 
+  // TODO: make this package protected
+  /** @deprecated for internal use only. */
+  @Deprecated
   @Nullable
   public InetSocketAddress getNetworkPeerAddress() {
     if (target == null) {

@@ -32,8 +32,14 @@ public final class ApacheHttpClientRequest {
   }
 
   /** Returns the actual {@link HttpRequest} being executed by the client. */
-  public HttpRequest getDelegate() {
+  public HttpRequest getRequest() {
     return delegate;
+  }
+
+  /** @deprecated use {@link #getRequest()} instead. */
+  @Deprecated
+  public HttpRequest getDelegate() {
+    return getRequest();
   }
 
   String getMethod() {

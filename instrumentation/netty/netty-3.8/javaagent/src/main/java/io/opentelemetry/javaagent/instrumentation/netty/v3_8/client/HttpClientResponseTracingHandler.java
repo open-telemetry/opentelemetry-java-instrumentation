@@ -34,7 +34,7 @@ public class HttpClientResponseTracingHandler extends SimpleChannelUpstreamHandl
       instrumenter()
           .end(
               requestAndContexts.context(),
-              requestAndContexts.request(),
+              requestAndContexts.getRequest(),
               (HttpResponse) msg.getMessage(),
               NettyErrorHolder.getOrDefault(requestAndContexts.context(), null));
       requestContextsField.set(ctx.getChannel(), null);

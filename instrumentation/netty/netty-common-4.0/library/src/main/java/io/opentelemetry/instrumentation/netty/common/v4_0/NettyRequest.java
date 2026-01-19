@@ -21,10 +21,22 @@ public abstract class NettyRequest {
   }
 
   /** Returns the {@link HttpRequest}. */
-  public abstract HttpRequest request();
+  public abstract HttpRequest getRequest();
+
+  /** @deprecated use {@link #getRequest()} instead. */
+  @Deprecated
+  public HttpRequest request() {
+    return getRequest();
+  }
 
   /** Returns the {@link Channel}. */
-  public abstract Channel channel();
+  public abstract Channel getChannel();
+
+  /** @deprecated use {@link #getChannel()} instead. */
+  @Deprecated
+  public Channel channel() {
+    return getChannel();
+  }
 
   /**
    * Return the {@link Channel#remoteAddress()} present when this {@link NettyRequest} was created.
@@ -34,5 +46,12 @@ public abstract class NettyRequest {
    * issues.
    */
   @Nullable
-  public abstract SocketAddress remoteAddress();
+  public abstract SocketAddress getRemoteAddress();
+
+  /** @deprecated use {@link #getRemoteAddress()} instead. */
+  @Deprecated
+  @Nullable
+  public SocketAddress remoteAddress() {
+    return getRemoteAddress();
+  }
 }
