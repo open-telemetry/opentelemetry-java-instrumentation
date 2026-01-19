@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -107,7 +109,9 @@ class InfluxDbClient24Test {
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "CREATE DATABASE"))),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "CREATE DATABASE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -118,19 +122,21 @@ class InfluxDbClient24Test {
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "WRITE"))),
+                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "WRITE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(
+                        emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu GROUP BY *"))),
+                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu GROUP BY *"),
+                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT cpu" : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -141,7 +147,9 @@ class InfluxDbClient24Test {
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "DROP DATABASE"))));
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "DROP DATABASE"))));
   }
 
   @Test
@@ -153,16 +161,18 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                        emitStableDatabaseSemconv() ? "SELECT cpu_load" : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "SELECT * FROM cpu_load where test1 = ?"))));
+                                "SELECT * FROM cpu_load where test1 = ?"),
+                            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
   }
 }
