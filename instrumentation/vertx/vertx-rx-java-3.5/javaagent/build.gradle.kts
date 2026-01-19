@@ -77,22 +77,15 @@ tasks {
     options.release.set(11)
   }
 
-  val version35TestStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.named("version35Test").get().output.classesDirs
-    classpath = sourceSets.named("version35Test").get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
+  val testSuites = testing.suites.withType(JvmTestSuite::class)
 
-  val version41TestStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.named("version41Test").get().output.classesDirs
-    classpath = sourceSets.named("version41Test").get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
+  val stableSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
 
-  val version5TestStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.named("version5Test").get().output.classesDirs
-    classpath = sourceSets.named("version5Test").get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    }
   }
 
   val testJavaVersion =
@@ -102,17 +95,12 @@ tasks {
     named("version5Test", Test::class).configure {
       enabled = false
     }
-    version5TestStableSemconv.configure {
+    named("version5TestStableSemconv", Test::class).configure {
       enabled = false
     }
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      version35TestStableSemconv,
-      version41TestStableSemconv,
-      version5TestStableSemconv
-    )
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }
