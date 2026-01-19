@@ -26,21 +26,10 @@ public final class JettyClientTelemetry {
     return new JettyClientTelemetryBuilder(openTelemetry);
   }
 
-  private final HttpClient httpClient;
   private final Instrumenter<Request, Response> instrumenter;
 
-  JettyClientTelemetry(HttpClient httpClient, Instrumenter<Request, Response> instrumenter) {
-    this.httpClient = httpClient;
+  JettyClientTelemetry(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;
-  }
-
-  /**
-   * @deprecated Use {@link #newHttpClient()} or {@link #newHttpClient(HttpClientTransport)}
-   *     instead.
-   */
-  @Deprecated
-  public HttpClient getHttpClient() {
-    return httpClient;
   }
 
   /** Returns an instrumented HTTP client. */

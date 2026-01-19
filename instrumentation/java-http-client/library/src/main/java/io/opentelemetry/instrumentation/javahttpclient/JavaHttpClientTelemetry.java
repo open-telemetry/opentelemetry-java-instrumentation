@@ -35,18 +35,6 @@ public final class JavaHttpClientTelemetry {
     this.headersSetter = headersSetter;
   }
 
-  /**
-   * Returns an instrumented {@link HttpClient} wrapping the provided client.
-   *
-   * @param client An instance of HttpClient configured as desired.
-   * @return a tracing-enabled {@link HttpClient}.
-   * @deprecated Use {@link #wrap(HttpClient)} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient(HttpClient client) {
-    return wrap(client);
-  }
-
   /** Returns a new instrumented {@link HttpClient} that wraps the provided client. */
   public HttpClient wrap(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
