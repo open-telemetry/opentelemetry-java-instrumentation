@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Servlet3Accessor;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.UnaryOperator;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

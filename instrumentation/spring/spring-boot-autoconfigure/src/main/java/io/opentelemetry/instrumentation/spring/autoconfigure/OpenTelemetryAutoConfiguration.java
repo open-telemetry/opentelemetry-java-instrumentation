@@ -42,8 +42,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTe
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,6 +131,12 @@ public class OpenTelemetryAutoConfiguration {
         ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(otelProperties);
         return new SpringOpenTelemetrySdk(openTelemetry, configProvider);
       }
+
+      @Bean
+      public ConfigProperties otelProperties(
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+        return requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
+      }
     }
 
     @Configuration
@@ -154,6 +158,15 @@ public class OpenTelemetryAutoConfiguration {
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         return sdk;
+      }
+
+      @Bean
+      public ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
+        return new DeclarativeConfigPropertiesBridgeBuilder()
+            .buildFromInstrumentationConfig(
+                ((ExtendedOpenTelemetry) openTelemetry)
+                    .getConfigProvider()
+                    .getInstrumentationConfig());
       }
 
       @Bean
