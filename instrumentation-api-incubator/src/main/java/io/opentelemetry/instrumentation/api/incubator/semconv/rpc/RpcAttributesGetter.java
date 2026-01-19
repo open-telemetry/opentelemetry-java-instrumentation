@@ -34,4 +34,24 @@ public interface RpcAttributesGetter<REQUEST> {
   default Long getResponseSize(REQUEST request) {
     return null;
   }
+
+  /**
+   * Returns the fully-qualified RPC method name for stable semconv.
+   *
+   * <p>The default implementation concatenates service + "/" + method. Framework implementations
+   * can override for efficiency if they already have the fully-qualified name available.
+   *
+   * @param request the request object
+   * @return the fully-qualified RPC method name (e.g., "my.Service/Method"), or null if service or
+   *     method is unavailable
+   */
+  @Nullable
+  default String getFullMethod(REQUEST request) {
+    String service = getService(request);
+    String method = getMethod(request);
+    if (service == null || method == null) {
+      return null;
+    }
+    return service + "/" + method;
+  }
 }
