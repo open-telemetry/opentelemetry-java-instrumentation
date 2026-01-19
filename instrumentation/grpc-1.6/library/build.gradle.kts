@@ -16,25 +16,24 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
+fun Test.configureTestTask() {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
+  // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
+  jvmArgs("-Djava.net.preferIPv4Stack=true")
+}
+
 tasks {
   test {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
-    // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-    jvmArgs("-Djava.net.preferIPv4Stack=true")
+    configureTestTask()
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
-    // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-    jvmArgs("-Djava.net.preferIPv4Stack=true")
-
+    configureTestTask()
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
   }
 
