@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.DataInput;
@@ -160,14 +162,34 @@ class PutGetTest {
                             equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
-                span ->
+                span -> {
+                  if (query != null && SemconvStability.emitStableDatabaseSemconv()) {
+                    // In stable semconv mode with query summary, span name uses query summary
+                    span.hasName("SELECT test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "geode"),
+                            equalTo(DB_NAMESPACE, "test-region"),
+                            equalTo(DB_OPERATION_NAME, verb),
+                            equalTo(DB_STATEMENT, query),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT test"));
+                  } else if (query != null) {
+                    span.hasName(verb.concat(" test-region"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, "geode"),
+                            equalTo(DB_NAME, "test-region"),
+                            equalTo(DB_OPERATION, verb),
+                            equalTo(DB_STATEMENT, query));
+                  } else {
                     span.hasName(verb.concat(" test-region"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), verb),
-                            equalTo(maybeStable(DB_STATEMENT), query))));
+                            equalTo(maybeStable(DB_OPERATION), verb));
+                  }
+                }));
   }
 
   static class Card implements DataSerializable {
