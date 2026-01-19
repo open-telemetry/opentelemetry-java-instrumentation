@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -24,7 +27,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -102,11 +104,9 @@ class RpcClientMetricsTest {
     if (SemconvStability.emitOldRpcSemconv()) {
       oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
       oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
-      oldMetricAttributes1.add(
-          equalTo(SemconvStability.getOldRpcMethodAttributeKey(), "exampleMethod"));
-      oldMetricAttributes1.add(
-          equalTo(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService"));
-      oldMetricAttributes1.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
+      oldMetricAttributes1.add(equalTo(RPC_METHOD, "exampleMethod"));
+      oldMetricAttributes1.add(equalTo(RPC_SERVICE, "myservice.EchoService"));
+      oldMetricAttributes1.add(equalTo(RPC_SYSTEM, "grpc"));
       oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
       oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
     }
@@ -163,8 +163,7 @@ class RpcClientMetricsTest {
       // Build expected attributes for STABLE metrics - alphabetically sorted
       List<AttributeAssertion> stableMetricAttributes1 = new ArrayList<>();
       stableMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
-      stableMetricAttributes1.add(
-          equalTo(RpcIncubatingAttributes.RPC_METHOD, "myservice.EchoService/exampleMethod"));
+      stableMetricAttributes1.add(equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"));
       stableMetricAttributes1.add(
           equalTo(
               AttributeKey.stringKey("rpc.system.name"),
@@ -234,11 +233,9 @@ class RpcClientMetricsTest {
     List<AttributeAssertion> oldMetricAttributes2 = new ArrayList<>();
     if (SemconvStability.emitOldRpcSemconv()) {
       oldMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
-      oldMetricAttributes2.add(
-          equalTo(SemconvStability.getOldRpcMethodAttributeKey(), "exampleMethod"));
-      oldMetricAttributes2.add(
-          equalTo(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService"));
-      oldMetricAttributes2.add(equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"));
+      oldMetricAttributes2.add(equalTo(RPC_METHOD, "exampleMethod"));
+      oldMetricAttributes2.add(equalTo(RPC_SERVICE, "myservice.EchoService"));
+      oldMetricAttributes2.add(equalTo(RPC_SYSTEM, "grpc"));
       oldMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
     }
 
@@ -247,8 +244,7 @@ class RpcClientMetricsTest {
     List<AttributeAssertion> stableMetricAttributes2 = new ArrayList<>();
     if (SemconvStability.emitStableRpcSemconv()) {
       stableMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
-      stableMetricAttributes2.add(
-          equalTo(RpcIncubatingAttributes.RPC_METHOD, "myservice.EchoService/exampleMethod"));
+      stableMetricAttributes2.add(equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"));
       stableMetricAttributes2.add(
           equalTo(
               AttributeKey.stringKey("rpc.system.name"),
@@ -303,17 +299,18 @@ class RpcClientMetricsTest {
       String system, String service, String method, boolean withSize) {
     AttributesBuilder builder = Attributes.builder();
 
+    if (SemconvStability.emitOldRpcSemconv()) {
+      builder.put(RPC_SYSTEM, system);
+      builder.put(RPC_SERVICE, service);
+      builder.put(RPC_METHOD, method);
+    }
+
+    // stable semconv wins for rpc.method
     if (SemconvStability.emitStableRpcSemconv()) {
       builder.put(
           RpcCommonAttributesExtractor.RPC_SYSTEM_NAME,
           SemconvStability.stableRpcSystemName(system));
-      builder.put(RpcIncubatingAttributes.RPC_METHOD, service + "/" + method);
-    }
-
-    if (SemconvStability.emitOldRpcSemconv()) {
-      builder.put(RpcIncubatingAttributes.RPC_SYSTEM, system);
-      builder.put(RpcIncubatingAttributes.RPC_SERVICE, service);
-      builder.put(SemconvStability.getOldRpcMethodAttributeKey(), method);
+      builder.put(RPC_METHOD, service + "/" + method);
     }
 
     if (withSize) {
