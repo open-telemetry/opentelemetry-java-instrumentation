@@ -135,12 +135,18 @@ public final class RpcServerMetrics implements OperationListener {
     if (SemconvStability.emitOldRpcSemconv()) {
       Long rpcServerRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
       if (rpcServerRequestBodySize != null) {
-        oldServerRequestSize.record(rpcServerRequestBodySize, attributes, context);
+        oldServerRequestSize.record(
+            rpcServerRequestBodySize,
+            SemconvStability.getOldRpcMetricAttributes(attributes),
+            context);
       }
 
       Long rpcServerResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
       if (rpcServerResponseBodySize != null) {
-        oldServerResponseSize.record(rpcServerResponseBodySize, attributes, context);
+        oldServerResponseSize.record(
+            rpcServerResponseBodySize,
+            SemconvStability.getOldRpcMetricAttributes(attributes),
+            context);
       }
     }
   }
