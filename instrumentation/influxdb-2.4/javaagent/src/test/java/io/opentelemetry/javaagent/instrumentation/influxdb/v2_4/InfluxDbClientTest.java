@@ -134,7 +134,7 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
@@ -170,7 +170,10 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
@@ -212,7 +215,10 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
@@ -242,7 +248,10 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "influxdb"),
@@ -282,7 +291,10 @@ class InfluxDbClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT h2o_feet SELECT h2o_feet"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -329,7 +341,7 @@ class InfluxDbClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

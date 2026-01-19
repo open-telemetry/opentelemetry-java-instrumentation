@@ -117,7 +117,7 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT", dbName))),
@@ -139,7 +139,10 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
                             attributeAssertions(
