@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-public class ThreadDetailsAttributesExtractor<RESPONSE, REQUEST>
+public class ThreadDetailsAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
   // attributes are not stable yet
   private static final AttributeKey<Long> THREAD_ID = longKey("thread.id");
