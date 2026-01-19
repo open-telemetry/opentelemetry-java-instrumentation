@@ -88,12 +88,12 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getServerAddress() {
+  String getServerAddress() {
     return uri == null ? null : uri.getHost();
   }
 
   @Nullable
-  public Integer getServerPort() {
+  Integer getServerPort() {
     return uri == null ? null : uri.getPort();
   }
 
@@ -126,7 +126,7 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public InetSocketAddress getNetworkPeerAddress() {
+  InetSocketAddress getNetworkPeerAddress() {
     if (target == null) {
       return null;
     }
