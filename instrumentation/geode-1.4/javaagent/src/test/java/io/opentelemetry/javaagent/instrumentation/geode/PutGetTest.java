@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -173,13 +175,19 @@ class PutGetTest {
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
-                    span.hasName("query test-region")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "query"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"))));
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT test-region" : null))));
   }
 
   @ParameterizedTest
@@ -213,13 +221,19 @@ class PutGetTest {
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
-                    span.hasName("existsValue test-region")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "existsValue test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "existsValue"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"))));
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT test-region" : null))));
   }
 
   @Test
@@ -254,7 +268,10 @@ class PutGetTest {
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
-                    span.hasName("query test-region")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "geode"),
@@ -262,7 +279,10 @@ class PutGetTest {
                             equalTo(maybeStable(DB_OPERATION), "query"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "SELECT * FROM /test-region p WHERE p.expDate = ?"))));
+                                "SELECT * FROM /test-region p WHERE p.expDate = ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT test-region" : null))));
   }
 
   static class Card implements DataSerializable {
