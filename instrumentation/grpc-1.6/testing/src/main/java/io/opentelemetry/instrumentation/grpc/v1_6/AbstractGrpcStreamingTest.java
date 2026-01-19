@@ -239,8 +239,7 @@ public abstract class AbstractGrpcStreamingTest {
                       span.hasName("example.Greeter/Conversation")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .satisfies(
                               spanData ->
                                   assertThat(spanData.getEvents())
@@ -271,7 +270,7 @@ public abstract class AbstractGrpcStreamingTest {
                       span.hasName("example.Greeter/Conversation")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .satisfies(
                               spanData ->
                                   assertThat(spanData.getEvents())
@@ -298,8 +297,7 @@ public abstract class AbstractGrpcStreamingTest {
                                                   "example.Greeter", "Conversation"));
                                           attrs.add(
                                               grpcStatusCodeAssertion(Status.Code.OK.value()));
-                                          point.hasAttributesSatisfying(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfying(attrs);
                                         }))));
     testing()
         .waitAndAssertMetrics(
@@ -323,8 +321,7 @@ public abstract class AbstractGrpcStreamingTest {
                                                   "example.Greeter", "Conversation"));
                                           attrs.add(
                                               grpcStatusCodeAssertion(Status.Code.OK.value()));
-                                          point.hasAttributesSatisfying(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfying(attrs);
                                         }))));
   }
 

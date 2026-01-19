@@ -933,7 +933,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                           .hasStatus(StatusData.error())
                           .hasException(thrown)
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfyingExactly(attrs);
                     }));
   }
 

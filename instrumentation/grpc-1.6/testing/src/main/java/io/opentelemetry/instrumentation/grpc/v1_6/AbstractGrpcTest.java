@@ -65,7 +65,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -158,8 +157,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -194,7 +192,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -282,8 +280,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -318,7 +315,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -418,8 +415,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -454,7 +450,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -527,8 +523,7 @@ public abstract class AbstractGrpcTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -562,7 +557,7 @@ public abstract class AbstractGrpcTest {
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(0))
                           .hasStatus(isServerError ? StatusData.error() : StatusData.unset())
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfying(
                               events -> {
                                 assertThat(events).isNotEmpty();
@@ -640,8 +635,7 @@ public abstract class AbstractGrpcTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -666,7 +660,7 @@ public abstract class AbstractGrpcTest {
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(0))
                           .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfying(
                               events -> {
                                 assertThat(events).hasSize(2);
@@ -840,8 +834,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -876,7 +869,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -972,8 +965,7 @@ public abstract class AbstractGrpcTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfying(
                               events -> {
                                 assertThat(events).hasSize(3);
@@ -1010,7 +1002,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayMultipleHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -1100,8 +1092,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -1138,7 +1129,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -1210,8 +1201,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraClientAttributes(attrs.toArray(new AttributeAssertion[0])))
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -1246,7 +1236,7 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]))
+                          .hasAttributesSatisfyingExactly(attrs)
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
@@ -1526,15 +1516,13 @@ public abstract class AbstractGrpcTest {
     return attrs;
   }
 
-  static List<AttributeAssertion> addExtraClientAttributes(AttributeAssertion... assertions) {
-    List<AttributeAssertion> result = new ArrayList<>();
-    result.addAll(Arrays.asList(assertions));
+  static List<AttributeAssertion> addExtraClientAttributes(List<AttributeAssertion> assertions) {
     if (Boolean.getBoolean("testLatestDeps")) {
-      result.add(equalTo(NETWORK_TYPE, "ipv4"));
-      result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-      result.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+      assertions.add(equalTo(NETWORK_TYPE, "ipv4"));
+      assertions.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+      assertions.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
     }
-    return result;
+    return assertions;
   }
 
   private void assertMetrics(Server server, Status.Code statusCode) {
@@ -1554,10 +1542,9 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 buildServerMetricAttributes(
-                                                        "example.Greeter",
-                                                        "SayHello",
-                                                        (long) statusCode.value())
-                                                    .toArray(new AttributeAssertion[0]))))));
+                                                    "example.Greeter",
+                                                    "SayHello",
+                                                    (long) statusCode.value()))))));
 
     // Size metrics are only in old semconv
     if (hasSizeMetric && SemconvStability.emitOldRpcSemconv()) {
@@ -1576,10 +1563,9 @@ public abstract class AbstractGrpcTest {
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   buildServerMetricAttributes(
-                                                          "example.Greeter",
-                                                          "SayHello",
-                                                          (long) statusCode.value())
-                                                      .toArray(new AttributeAssertion[0]))))));
+                                                      "example.Greeter",
+                                                      "SayHello",
+                                                      (long) statusCode.value()))))));
       testing()
           .waitAndAssertMetrics(
               "io.opentelemetry.grpc-1.6",
@@ -1595,10 +1581,9 @@ public abstract class AbstractGrpcTest {
                                           point ->
                                               point.hasAttributesSatisfyingExactly(
                                                   buildServerMetricAttributes(
-                                                          "example.Greeter",
-                                                          "SayHello",
-                                                          (long) statusCode.value())
-                                                      .toArray(new AttributeAssertion[0]))))));
+                                                      "example.Greeter",
+                                                      "SayHello",
+                                                      (long) statusCode.value()))))));
     }
 
     testing()
@@ -1616,11 +1601,10 @@ public abstract class AbstractGrpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 buildClientMetricAttributes(
-                                                        "example.Greeter",
-                                                        "SayHello",
-                                                        (long) statusCode.value(),
-                                                        server.getPort())
-                                                    .toArray(new AttributeAssertion[0]))))));
+                                                    "example.Greeter",
+                                                    "SayHello",
+                                                    (long) statusCode.value(),
+                                                    server.getPort()))))));
 
     // Size metrics are only in old semconv
     if (hasSizeMetric && SemconvStability.emitOldRpcSemconv()) {
@@ -1639,11 +1623,10 @@ public abstract class AbstractGrpcTest {
                                           point ->
                                               point.hasAttributesSatisfying(
                                                   buildClientMetricAttributes(
-                                                          "example.Greeter",
-                                                          "SayHello",
-                                                          (long) statusCode.value(),
-                                                          server.getPort())
-                                                      .toArray(new AttributeAssertion[0]))))));
+                                                      "example.Greeter",
+                                                      "SayHello",
+                                                      (long) statusCode.value(),
+                                                      server.getPort()))))));
     }
     if (hasSizeMetric && SemconvStability.emitOldRpcSemconv()) {
       testing()
@@ -1661,11 +1644,10 @@ public abstract class AbstractGrpcTest {
                                           point ->
                                               point.hasAttributesSatisfying(
                                                   buildClientMetricAttributes(
-                                                          "example.Greeter",
-                                                          "SayHello",
-                                                          (long) statusCode.value(),
-                                                          server.getPort())
-                                                      .toArray(new AttributeAssertion[0]))))));
+                                                      "example.Greeter",
+                                                      "SayHello",
+                                                      (long) statusCode.value(),
+                                                      server.getPort()))))));
     }
   }
 }

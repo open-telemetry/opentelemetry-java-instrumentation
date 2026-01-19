@@ -202,7 +202,7 @@ public abstract class AbstractDubboTraceChainTest {
                       span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfyingExactly(attrs);
                     },
                     span -> {
                       List<AttributeAssertion> attrs = new ArrayList<>();
@@ -217,7 +217,7 @@ public abstract class AbstractDubboTraceChainTest {
                               "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfying(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfying(attrs);
                     },
                     span -> {
                       List<AttributeAssertion> attrs = new ArrayList<>();
@@ -241,7 +241,7 @@ public abstract class AbstractDubboTraceChainTest {
                       span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(2))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfyingExactly(attrs);
                     },
                     span -> {
                       List<AttributeAssertion> attrs = new ArrayList<>();
@@ -256,7 +256,7 @@ public abstract class AbstractDubboTraceChainTest {
                               "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(3))
-                          .hasAttributesSatisfying(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfying(attrs);
                     }));
 
     testing()
@@ -278,8 +278,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               rpcMethodAssertions(
                                                   "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService",
                                                   "hello"));
-                                          point.hasAttributesSatisfyingExactly(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfyingExactly(attrs);
                                         },
                                         point -> {
                                           List<AttributeAssertion> attrs = new ArrayList<>();
@@ -288,8 +287,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               rpcMethodAssertions(
                                                   "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService",
                                                   "hello"));
-                                          point.hasAttributesSatisfyingExactly(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfyingExactly(attrs);
                                         }))));
 
     testing()
@@ -319,8 +317,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               satisfies(
                                                   NETWORK_TYPE,
                                                   AbstractDubboTest::assertNetworkType));
-                                          point.hasAttributesSatisfyingExactly(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfyingExactly(attrs);
                                         },
                                         point -> {
                                           List<AttributeAssertion> attrs = new ArrayList<>();
@@ -337,8 +334,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               satisfies(
                                                   NETWORK_TYPE,
                                                   AbstractDubboTest::assertNetworkType));
-                                          point.hasAttributesSatisfyingExactly(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfyingExactly(attrs);
                                         }))));
   }
 
@@ -413,7 +409,7 @@ public abstract class AbstractDubboTraceChainTest {
                       span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfyingExactly(attrs);
                     },
                     span -> {
                       List<AttributeAssertion> attrs = new ArrayList<>();
@@ -428,7 +424,7 @@ public abstract class AbstractDubboTraceChainTest {
                               "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfying(attrs.toArray(new AttributeAssertion[0]));
+                          .hasAttributesSatisfying(attrs);
                     }));
 
     testing()
@@ -450,8 +446,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               rpcMethodAssertions(
                                                   "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService",
                                                   "hello"));
-                                          point.hasAttributesSatisfyingExactly(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfyingExactly(attrs);
                                         }))));
 
     testing()
@@ -481,8 +476,7 @@ public abstract class AbstractDubboTraceChainTest {
                                               satisfies(
                                                   NETWORK_TYPE,
                                                   AbstractDubboTest::assertNetworkType));
-                                          point.hasAttributesSatisfyingExactly(
-                                              attrs.toArray(new AttributeAssertion[0]));
+                                          point.hasAttributesSatisfyingExactly(attrs);
                                         }))));
   }
 }
