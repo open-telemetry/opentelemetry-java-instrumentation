@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -305,11 +306,8 @@ class RpcClientMetricsTest {
       builder.put(SemconvStability.getOldRpcMethodAttributeKey(), method);
     }
 
-    // stable semconv wins for rpc.method
     if (SemconvStability.emitStableRpcSemconv()) {
-      builder.put(
-          RpcCommonAttributesExtractor.RPC_SYSTEM_NAME,
-          SemconvStability.stableRpcSystemName(system));
+      builder.put(RPC_SYSTEM_NAME, SemconvStability.stableRpcSystemName(system));
       builder.put(RPC_METHOD, service + "/" + method);
     }
 

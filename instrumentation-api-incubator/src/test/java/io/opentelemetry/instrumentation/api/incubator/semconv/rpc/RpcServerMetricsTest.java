@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -107,7 +108,7 @@ class RpcServerMetricsTest {
     if (SemconvStability.emitOldRpcSemconv()) {
       oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
       oldMetricAttributes1.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
-      oldMetricAttributes1.add(equalTo(RPC_METHOD, "exampleMethod"));
+      oldMetricAttributes1.add(equalTo(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod"));
       oldMetricAttributes1.add(equalTo(RPC_SERVICE, "myservice.EchoService"));
       oldMetricAttributes1.add(equalTo(RPC_SYSTEM, "grpc"));
       oldMetricAttributes1.add(equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"));
@@ -237,7 +238,7 @@ class RpcServerMetricsTest {
     List<AttributeAssertion> oldMetricAttributes2 = new ArrayList<>();
     if (SemconvStability.emitOldRpcSemconv()) {
       oldMetricAttributes2.add(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
-      oldMetricAttributes2.add(equalTo(RPC_METHOD, "exampleMethod"));
+      oldMetricAttributes2.add(equalTo(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod"));
       oldMetricAttributes2.add(equalTo(RPC_SERVICE, "myservice.EchoService"));
       oldMetricAttributes2.add(equalTo(RPC_SYSTEM, "grpc"));
       oldMetricAttributes2.add(equalTo(ServerAttributes.SERVER_PORT, 8080));
@@ -310,12 +311,9 @@ class RpcServerMetricsTest {
       builder.put(SemconvStability.getOldRpcMethodAttributeKey(), method);
     }
 
-    // stable semconv wins for rpc.method
     if (SemconvStability.emitStableRpcSemconv()) {
-      builder.put(
-          RpcCommonAttributesExtractor.RPC_SYSTEM_NAME,
-          SemconvStability.stableRpcSystemName(system));
-      builder.put(RpcCommonAttributesExtractor.RPC_METHOD, service + "/" + method);
+      builder.put(RPC_SYSTEM_NAME, SemconvStability.stableRpcSystemName(system));
+      builder.put(RPC_METHOD, service + "/" + method);
     }
 
     if (withSize) {
