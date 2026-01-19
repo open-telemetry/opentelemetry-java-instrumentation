@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.MiddleServiceImpl;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -313,10 +314,12 @@ public abstract class AbstractDubboTraceChainTest {
                                           attrs.add(
                                               satisfies(
                                                   SERVER_PORT, k -> k.isInstanceOf(Long.class)));
-                                          attrs.add(
-                                              satisfies(
-                                                  NETWORK_TYPE,
-                                                  AbstractDubboTest::assertNetworkType));
+                                          if (SemconvStability.emitOldRpcSemconv()) {
+                                            attrs.add(
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    AbstractDubboTest::assertNetworkType));
+                                          }
                                           point.hasAttributesSatisfyingExactly(attrs);
                                         },
                                         point -> {
@@ -330,10 +333,12 @@ public abstract class AbstractDubboTraceChainTest {
                                           attrs.add(
                                               satisfies(
                                                   SERVER_PORT, k -> k.isInstanceOf(Long.class)));
-                                          attrs.add(
-                                              satisfies(
-                                                  NETWORK_TYPE,
-                                                  AbstractDubboTest::assertNetworkType));
+                                          if (SemconvStability.emitOldRpcSemconv()) {
+                                            attrs.add(
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    AbstractDubboTest::assertNetworkType));
+                                          }
                                           point.hasAttributesSatisfyingExactly(attrs);
                                         }))));
   }
@@ -472,10 +477,12 @@ public abstract class AbstractDubboTraceChainTest {
                                           attrs.add(
                                               satisfies(
                                                   SERVER_PORT, k -> k.isInstanceOf(Long.class)));
-                                          attrs.add(
-                                              satisfies(
-                                                  NETWORK_TYPE,
-                                                  AbstractDubboTest::assertNetworkType));
+                                          if (SemconvStability.emitOldRpcSemconv()) {
+                                            attrs.add(
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    AbstractDubboTest::assertNetworkType));
+                                          }
                                           point.hasAttributesSatisfyingExactly(attrs);
                                         }))));
   }
