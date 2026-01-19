@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.netty.v4_1.internal;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.netty.v4_1.NettyRequestAccessor;
 
 /**
  * Adapts user-supplied {@link SpanNameExtractor} that uses v4.1 {@link
@@ -38,6 +39,6 @@ public final class SpanNameExtractorAdapter
   public static SpanNameExtractor<io.opentelemetry.instrumentation.netty.v4_1.NettyRequest> reverse(
       SpanNameExtractor<io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest>
           extractor) {
-    return request -> extractor.extract(request.getDelegate());
+    return request -> extractor.extract(NettyRequestAccessor.getDelegate(request));
   }
 }

@@ -31,14 +31,6 @@ public abstract class NettyRequest {
 
   abstract io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest delegate();
 
-  /**
-   * Returns the underlying common NettyRequest. This method is internal and should only be used by
-   * adapters in the internal package.
-   */
-  public io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest getDelegate() {
-    return delegate();
-  }
-
   /** Returns the {@link HttpRequest}. */
   public HttpRequest request() {
     return delegate().request();
