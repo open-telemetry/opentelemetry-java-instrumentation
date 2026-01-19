@@ -112,21 +112,6 @@ public final class ServletTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP request parameters that will be captured as span attributes.
-   *
-   * @param captureRequestParameters A list of request parameter names.
-   * @deprecated Use {@link Experimental#setCapturedRequestParameters(ServletTelemetryBuilder,
-   *     Collection)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public ServletTelemetryBuilder setCapturedRequestParameters(
-      List<String> captureRequestParameters) {
-    servletBuilder.setCaptureRequestParameters(captureRequestParameters);
-    return this;
-  }
-
-  /**
    * Configures recognized HTTP request methods.
    *
    * <p>By default, recognizes methods from <a

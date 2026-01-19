@@ -125,29 +125,13 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       public OpenTelemetry openTelemetry(
-          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
-          ConfigProperties otelProperties) {
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
         logStart();
         OpenTelemetrySdk openTelemetry = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+        ConfigProperties otelProperties =
+            requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
         ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(otelProperties);
         return new SpringOpenTelemetrySdk(openTelemetry, configProvider);
-      }
-
-      /**
-       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-       *
-       * <p>Not using spring boot properties directly in order to support {@link
-       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
-       * and {@link
-       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
-       *
-       * @deprecated use the Declarative Config API instead.
-       */
-      @Deprecated
-      @Bean
-      public ConfigProperties otelProperties(
-          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-        return requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
       }
     }
 
@@ -170,24 +154,6 @@ public class OpenTelemetryAutoConfiguration {
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         return sdk;
-      }
-
-      /**
-       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-       *
-       * <p>Not using spring boot properties directly, because declarative configuration does not
-       * integrate with spring boot properties.
-       *
-       * @deprecated use the Declarative Config API instead.
-       */
-      @Deprecated
-      @Bean
-      public ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
-        return new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                ((ExtendedOpenTelemetry) openTelemetry)
-                    .getConfigProvider()
-                    .getInstrumentationConfig());
       }
 
       @Bean
