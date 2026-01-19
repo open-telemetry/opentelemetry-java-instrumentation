@@ -22,17 +22,5 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * Configure the passed {@code builder} and define which classes should be ignored when
    * instrumenting.
    */
-  // TODO remove default implementation in next major release when deleting the deprecated method
-  default void configure(IgnoredTypesBuilder builder) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Configure the passed {@code builder} and define which classes should be ignored when
-   * instrumenting.
-   *
-   * @deprecated Use {@link #configure(IgnoredTypesBuilder)} instead.
-   */
-  @Deprecated
-  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {}
+  void configure(IgnoredTypesBuilder builder);
 }

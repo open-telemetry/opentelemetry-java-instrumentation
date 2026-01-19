@@ -101,17 +101,6 @@ public abstract class InstrumentationModule implements Ordered {
   }
 
   /**
-   * Allows instrumentation modules to disable themselves by default, or to additionally disable
-   * themselves on some other condition.
-   *
-   * @deprecated Use {@link #defaultEnabled()} instead.
-   */
-  @Deprecated // will be removed in 3.0.0
-  public boolean defaultEnabled(ConfigProperties config) {
-    return defaultEnabled();
-  }
-
-  /**
    * Instrumentation modules can override this method to specify additional packages (or classes)
    * that should be treated as "library instrumentation" packages. Classes from those packages will
    * be treated by muzzle as instrumentation helper classes: they will be scanned for references and
