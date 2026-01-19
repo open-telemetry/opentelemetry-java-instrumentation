@@ -119,9 +119,7 @@ class InfluxDbClientTest {
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "CREATE DATABASE"))),
+                            equalTo(maybeStable(DB_OPERATION), "CREATE DATABASE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -132,7 +130,7 @@ class InfluxDbClientTest {
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "WRITE"))),
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -157,9 +155,7 @@ class InfluxDbClientTest {
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "DROP DATABASE"))));
+                            equalTo(maybeStable(DB_OPERATION), "DROP DATABASE"))));
   }
 
   @Test
@@ -352,7 +348,7 @@ class InfluxDbClientTest {
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "WRITE"))));
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))));
   }
 
   @Test
@@ -374,7 +370,7 @@ class InfluxDbClientTest {
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "WRITE"))));
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))));
   }
 
   @Test
@@ -397,6 +393,6 @@ class InfluxDbClientTest {
                             equalTo(maybeStable(DB_NAME), null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "WRITE"))));
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))));
   }
 }
