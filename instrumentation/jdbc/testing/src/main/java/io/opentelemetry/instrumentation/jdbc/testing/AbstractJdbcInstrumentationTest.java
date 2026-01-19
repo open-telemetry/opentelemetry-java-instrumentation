@@ -437,7 +437,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "SELECT 3",
-            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
             null),
@@ -446,7 +446,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            emitStableDatabaseSemconv()
+                ? "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+                : "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
@@ -455,7 +457,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
             "SELECT 3",
-            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
             null),
@@ -464,7 +466,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("tomcat").get("derby").getConnection(),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            emitStableDatabaseSemconv()
+                ? "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+                : "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
@@ -473,7 +477,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
             "SELECT 3",
-            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
             null),
@@ -482,7 +486,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("hikari").get("derby").getConnection(),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            emitStableDatabaseSemconv()
+                ? "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+                : "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
@@ -491,7 +497,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
             "SELECT 3",
-            "SELECT ?",
+            emitStableDatabaseSemconv() ? "SELECT 3" : "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
             null),
@@ -500,7 +506,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             cpDatasources.get("c3p0").get("derby").getConnection(),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            emitStableDatabaseSemconv()
+                ? "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+                : "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
@@ -510,7 +518,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "CALL ABS(-3)",
-            "CALL ABS(?)",
+            emitStableDatabaseSemconv() ? "CALL ABS(-3)" : "CALL ABS(?)",
             emitStableDatabaseSemconv() ? "CALL ABS" : "CALL " + dbNameLower + ".ABS",
             "h2:mem:",
             null));
@@ -1052,7 +1060,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             "jdbc:h2:mem:" + dbName,
             null,
             "SELECT 3;",
-            "SELECT ?;",
+            emitStableDatabaseSemconv() ? "SELECT 3;" : "SELECT ?;",
             "SELECT " + dbNameLower,
             "h2:mem:",
             null),
@@ -1063,7 +1071,9 @@ public abstract class AbstractJdbcInstrumentationTest {
             "jdbc:derby:memory:" + dbName + ";create=true",
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            emitStableDatabaseSemconv()
+                ? "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+                : "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
             "SYSIBM.SYSDUMMY1"),
@@ -1398,7 +1408,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+                                    : "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "INFORMATION_SCHEMA.SYSTEM_USERS")));
     for (int i = 0; i < numQueries; i++) {

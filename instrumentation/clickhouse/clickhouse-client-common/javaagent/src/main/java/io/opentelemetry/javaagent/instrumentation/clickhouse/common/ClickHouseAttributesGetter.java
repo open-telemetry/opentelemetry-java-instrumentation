@@ -55,7 +55,7 @@ final class ClickHouseAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
   }
 }

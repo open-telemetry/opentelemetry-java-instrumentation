@@ -53,4 +53,9 @@ final class CassandraSqlAttributesGetter
     SocketAddress address = coordinator.getEndPoint().resolve();
     return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
   }
+
+  @Override
+  public boolean isParameterizedQuery(CassandraRequest request) {
+    return request.isParameterizedQuery();
+  }
 }

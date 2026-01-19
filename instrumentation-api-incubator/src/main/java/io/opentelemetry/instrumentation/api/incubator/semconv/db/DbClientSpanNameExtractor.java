@@ -185,7 +185,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
         String operationName = sanitizedStatement.getOperationName();
         if (isBatch(request)) {
-          operationName = "BATCH " + operationName;
+          operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
         }
         return computeSpanNameStable(
             getter,
@@ -205,7 +205,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     }
 
     private boolean isBatch(REQUEST request) {
-      Long batchSize = getter.getBatchSize(request);
+      Long batchSize = getter.getDbOperationBatchSize(request);
       return batchSize != null && batchSize > 1;
     }
   }

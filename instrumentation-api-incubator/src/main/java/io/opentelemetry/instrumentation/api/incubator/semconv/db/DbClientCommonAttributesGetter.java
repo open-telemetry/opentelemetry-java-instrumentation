@@ -46,7 +46,7 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link DbClientAttributesGetter#getResponseStatusCode} instead.
+   * @deprecated Use {@link DbClientAttributesGetter#getDbResponseStatusCode} instead.
    */
   @Deprecated
   @Nullable
