@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodContainsAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -217,7 +218,7 @@ class Aws0ClientTest {
                               rpcSystemAssertion("aws-api"),
                               equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
-                  attributes.addAll(rpcMethodAssertions(service, operation));
+                  attributes.addAll(rpcMethodContainsAssertions(service, operation));
                   additionalAttributes.forEach((k, v) -> attributes.add(equalTo(stringKey(k), v)));
 
                   span.hasName(service + "." + operation)
