@@ -129,17 +129,6 @@ public class AwsSdkTelemetry {
   }
 
   /**
-   * Returns a new {@link ExecutionInterceptor} that can be used with methods like {@link
-   * ClientOverrideConfiguration.Builder#addExecutionInterceptor(ExecutionInterceptor)}.
-   *
-   * @deprecated Use {@link #createExecutionInterceptor()} instead.
-   */
-  @Deprecated
-  public ExecutionInterceptor newExecutionInterceptor() {
-    return createExecutionInterceptor();
-  }
-
-  /**
    * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient} instance.
    */
   @NoMuzzle
