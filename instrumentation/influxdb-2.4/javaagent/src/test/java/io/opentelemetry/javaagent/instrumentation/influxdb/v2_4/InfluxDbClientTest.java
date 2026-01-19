@@ -186,7 +186,7 @@ class InfluxDbClientTest {
         "io.opentelemetry.influxdb-2.4",
         DB_SYSTEM_NAME,
         DB_NAMESPACE,
-        DB_OPERATION_NAME,
+        emitStableDatabaseSemconv() ? DB_QUERY_SUMMARY : DB_OPERATION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
