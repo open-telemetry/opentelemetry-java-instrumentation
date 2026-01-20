@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
@@ -97,6 +98,17 @@ public abstract class InstrumentationModule implements Ordered {
       throw new ConfigurationException("Unknown instrumentation mode: " + mode);
     }
     return mode.equals("default");
+  }
+
+  /**
+   * Allows instrumentation modules to disable themselves by default, or to additionally disable
+   * themselves on some other condition.
+   *
+   * @deprecated Use {@link #defaultEnabled()} instead.
+   */
+  @Deprecated // will be removed in 3.0.0
+  public boolean defaultEnabled(ConfigProperties config) {
+    return defaultEnabled();
   }
 
   /**

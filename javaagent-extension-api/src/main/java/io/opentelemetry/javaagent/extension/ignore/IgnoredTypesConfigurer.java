@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.ignore;
 
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 
 /**
@@ -21,5 +22,17 @@ public interface IgnoredTypesConfigurer extends Ordered {
    * Configure the passed {@code builder} and define which classes should be ignored when
    * instrumenting.
    */
-  void configure(IgnoredTypesBuilder builder);
+  // TODO remove default implementation in next major release when deleting the deprecated method
+  default void configure(IgnoredTypesBuilder builder) {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Configure the passed {@code builder} and define which classes should be ignored when
+   * instrumenting.
+   *
+   * @deprecated Use {@link #configure(IgnoredTypesBuilder)} instead.
+   */
+  @Deprecated
+  default void configure(IgnoredTypesBuilder builder, ConfigProperties config) {}
 }
