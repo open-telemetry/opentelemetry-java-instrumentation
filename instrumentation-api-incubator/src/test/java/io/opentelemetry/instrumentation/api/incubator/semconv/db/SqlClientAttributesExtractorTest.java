@@ -61,13 +61,13 @@ class SqlClientAttributesExtractorTest {
     }
 
     @Override
-    public Long getBatchSize(Map<String, Object> map) {
+    public Long getDbOperationBatchSize(Map<String, Object> map) {
       return read(map, DB_OPERATION_BATCH_SIZE.getKey(), Long.class);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Map<String, String> getQueryParameters(Map<String, Object> map) {
+    public Map<String, String> getDbQueryParameters(Map<String, Object> map) {
       Map<String, String> parameters =
           (Map<String, String>) read(map, "db.query.parameter", Map.class);
       return parameters != null ? parameters : Collections.emptyMap();

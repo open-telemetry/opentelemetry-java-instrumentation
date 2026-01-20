@@ -53,13 +53,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public Long getBatchSize(DbRequest request) {
+  public Long getDbOperationBatchSize(DbRequest request) {
     return request.getBatchSize();
   }
 
   @Nullable
   @Override
-  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }
@@ -67,8 +67,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public Map<String, String> getQueryParameters(DbRequest request) {
+  public Map<String, String> getDbQueryParameters(DbRequest request) {
     return request.getPreparedStatementParameters();
+  }
+
+  @Override
+  public boolean isParameterizedQuery(DbRequest request) {
+    return request.isParameterizedQuery();
   }
 
   @Nullable

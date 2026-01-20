@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3"
+  id("com.gradle.develocity") version "4.3.1"
 }
 
 dependencyResolutionManagement {
@@ -573,11 +573,11 @@ include(":instrumentation:restlet:restlet-2.0:library")
 include(":instrumentation:restlet:restlet-2.0:testing")
 include(":instrumentation:rmi:bootstrap")
 include(":instrumentation:rmi:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:testing")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
+include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
+include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
+include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")

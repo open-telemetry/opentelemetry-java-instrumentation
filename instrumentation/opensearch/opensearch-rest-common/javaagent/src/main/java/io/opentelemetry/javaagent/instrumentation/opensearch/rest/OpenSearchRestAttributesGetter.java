@@ -40,7 +40,7 @@ final class OpenSearchRestAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatusCode(
+  public String getDbResponseStatusCode(
       @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
     return response != null ? dbResponseStatusCode(response.getStatusCode()) : null;
   }

@@ -1,0 +1,20 @@
+display_name: Apache RocketMQ Client - gRPC Protocol
+description: >
+  This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers
+  using the gRPC/Protobuf Protocol.
+semantic_conventions:
+  - MESSAGING_SPANS
+library_link: https://rocketmq.apache.org/
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: >
+      Enables capturing messaging headers as span attributes. Provide a comma-separated list of
+      header names to capture.
+    type: list
+    default: ''

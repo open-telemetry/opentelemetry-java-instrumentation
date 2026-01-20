@@ -321,40 +321,28 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Update extends Operation {
+  /** Operation that extracts the first identifier as the main identifier. */
+  private class SimpleOperation extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
       return true;
     }
   }
 
-  private class Call extends Operation {
-    boolean handleIdentifier() {
-      mainIdentifier = readIdentifierName();
-      return true;
-    }
+  private class Update extends SimpleOperation {}
 
+  private class Merge extends SimpleOperation {}
+
+  private class Call extends SimpleOperation {
     boolean handleNext() {
       mainIdentifier = null;
       return true;
     }
   }
 
-  private class Merge extends Operation {
-    boolean handleIdentifier() {
-      mainIdentifier = readIdentifierName();
-      return true;
-    }
-  }
-
-  private class Create extends DdlOperation {
-  }
-
-  private class Drop extends DdlOperation {
-  }
-
-  private class Alter extends DdlOperation {
-  }
+  private class Create extends DdlOperation {}
+  private class Drop extends DdlOperation {}
+  private class Alter extends DdlOperation {}
 
   private SqlStatementInfo getResult() {
     if (builder.length() > LIMIT) {
