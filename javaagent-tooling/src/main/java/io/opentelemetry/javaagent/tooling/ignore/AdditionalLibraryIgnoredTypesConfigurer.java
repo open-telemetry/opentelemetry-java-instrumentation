@@ -26,12 +26,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
     // We set this system property when running the agent with unit tests to allow verifying that we
     // don't ignore libraries that we actually attempt to instrument. It means either the list is
     // wrong or a type matcher is.
-    boolean enabled =
-        AgentDistributionConfig.get()
-            .get("testing")
-            .get("additional_library_ignores")
-            .getBoolean("enabled", true);
-    if (enabled) {
+    if (AgentDistributionConfig.get().getTest().getAdditionalLibraryIgnoresConfig().isEnabled()) {
       configureInternal(builder);
     }
   }

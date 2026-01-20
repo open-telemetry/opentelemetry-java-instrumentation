@@ -172,7 +172,7 @@ public abstract class InstrumentationModule implements Ordered {
     private static final boolean indyEnabled;
 
     static {
-      indyEnabled = AgentDistributionConfig.get().getBoolean("indy/development", false);
+      indyEnabled = AgentDistributionConfig.get().isIndyEnabled();
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }

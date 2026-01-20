@@ -5,21 +5,14 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionModel;
-import java.util.Collections;
-import java.util.Map;
-import org.jetbrains.annotations.NotNull;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionPropertyModel;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
@@ -32,23 +25,7 @@ import org.jetbrains.annotations.NotNull;
 public final class JavaagentDistributionAccessCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {
 
-  // the entire configuration is copied from
-  // https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/DeclarativeConfiguration.java#L66-L79
-  // which is not public
-  private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER;
-
-  static {
-    MAPPER =
-        new ObjectMapper()
-            // Create empty object instances for keys which are present but have null values
-            .setDefaultSetterInfo(JsonSetter.Value.forValueNulls(Nulls.AS_EMPTY));
-    // Boxed primitives which are present but have null values should be set to null, rather than
-    // empty instances
-    MAPPER.configOverride(String.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-    MAPPER.configOverride(Integer.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-    MAPPER.configOverride(Double.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-    MAPPER.configOverride(Boolean.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
-  }
+  private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
@@ -56,23 +33,14 @@ public final class JavaagentDistributionAccessCustomizerProvider
         model -> {
           DistributionModel distribution = model.getDistribution();
           if (distribution != null) {
-            AgentDistributionConfig.set(
-                toProperties(distribution.getAdditionalProperties()).get("javaagent"));
+            DistributionPropertyModel javaagent =
+                distribution.getAdditionalProperties().get("javaagent");
+            if (javaagent != null) {
+              AgentDistributionConfig.set(
+                  MAPPER.convertValue(javaagent, AgentDistributionConfig.class));
+            }
           }
           return model;
         });
-  }
-
-  @NotNull
-  private static YamlDeclarativeConfigProperties toProperties(Object distribution) {
-    Map<String, Object> configurationMap =
-        MAPPER.convertValue(distribution, new TypeReference<Map<String, Object>>() {});
-    if (configurationMap == null) {
-      configurationMap = Collections.emptyMap();
-    }
-    return YamlDeclarativeConfigProperties.create(
-        configurationMap,
-        ComponentLoader.forClassLoader(
-            JavaagentDistributionAccessCustomizerProvider.class.getClassLoader()));
   }
 }

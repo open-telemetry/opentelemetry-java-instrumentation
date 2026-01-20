@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
@@ -22,62 +21,47 @@ class DistributionConfigTest {
   }
 
   @Test
-  void testBooleanProperty() {
-    assertThat(AgentDistributionConfig.get().getBoolean("indy/development", false)).isTrue();
+  void testIndyDevelopmentProperty() {
+    assertThat(AgentDistributionConfig.get().isIndyEnabled()).isTrue();
   }
 
   @Test
-  void testScalarListProperty() {
-    assertThat(
-            AgentDistributionConfig.get()
-                .getScalarList("exclude_classes", String.class, emptyList()))
+  void testForceSynchronousAgentListeners() {
+    assertThat(AgentDistributionConfig.get().isForceSynchronousAgentListeners()).isFalse();
+  }
+
+  @Test
+  void testExcludeClasses() {
+    assertThat(AgentDistributionConfig.get().getExcludeClasses())
         .containsExactly("com.example.excluded.Class1", "com.example.excluded.Class2");
   }
 
   @Test
-  void testClassLoadersList() {
-    assertThat(
-            AgentDistributionConfig.get()
-                .getScalarList("exclude_class_loaders", String.class, emptyList()))
+  void testExcludeClassLoaders() {
+    assertThat(AgentDistributionConfig.get().getExcludeClassLoaders())
         .containsExactly("com.example.ExcludedClassLoader");
   }
 
   @Test
-  void testAdditionalLibraryIgnores() {
-    assertThat(
-            AgentDistributionConfig.get()
-                .getScalarList("additional_library_ignores", String.class, emptyList()))
-        .containsExactly("com.example.ignored.Library");
+  void testInstrumentationDefaultEnabledByDefault() {
+    assertThat(AgentDistributionConfig.get().getInstrumentation().isDefaultEnabled()).isTrue();
   }
 
   @Test
-  void testNestedStructuredProperty() {
-    assertThat(
-            AgentDistributionConfig.get()
-                .getStructured("instrumentation")
-                .getBoolean("default_enabled"))
-        .isFalse();
-  }
-
-  @Test
-  void testNestedListProperty() {
-    assertThat(
-            AgentDistributionConfig.get()
-                .getStructured("instrumentation")
-                .getScalarList("enabled", String.class, emptyList()))
+  void testInstrumentationEnabled() {
+    assertThat(AgentDistributionConfig.get().getInstrumentation().getEnabled())
         .containsExactly("tomcat", "spring-webmvc");
   }
 
   @Test
-  void testNonExistentProperty() {
-    assertThat(AgentDistributionConfig.get().getBoolean("non_existent_property", true)).isTrue();
+  void testInstrumentationDisabled() {
+    assertThat(AgentDistributionConfig.get().getInstrumentation().getDisabled()).isEmpty();
   }
 
   @Test
-  void testNonExistentListProperty() {
+  void testAdditionalLibraryIgnoresEnabled() {
     assertThat(
-            AgentDistributionConfig.get()
-                .getScalarList("non_existent_list", String.class, emptyList()))
-        .isEmpty();
+            AgentDistributionConfig.get().getTest().getAdditionalLibraryIgnoresConfig().isEnabled())
+        .isFalse();
   }
 }

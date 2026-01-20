@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
@@ -49,9 +50,10 @@ public final class OpenTelemetryInstaller {
     if (!declarativeConfigUsed) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
-      ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(configProperties);
-      sdk = new ExtendedOpenTelemetrySdkWrapper(sdk, configProvider);
-      AgentDistributionConfig.set(configProvider.getInstrumentationConfig("javaagent"));
+      sdk =
+          new ExtendedOpenTelemetrySdkWrapper(
+              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+      AgentDistributionConfig.set(distributionFromConfigProperties(configProperties));
     } else {
       // Provide a fake ConfigProperties until we have migrated all runtime configuration
       // access to use declarative configuration API
@@ -59,20 +61,51 @@ public final class OpenTelemetryInstaller {
           getDeclarativeConfigBridgedProperties(((ExtendedOpenTelemetry) sdk).getConfigProvider());
     }
 
-    EnabledInstrumentations enabledInstrumentations =
+    // AgentDistributionConfig is set by the JavaagentDistributionAccessCustomizerProvider
+    AgentEnabledInstrumentations.set(
         declarativeConfigUsed
-            ?
-            // AgentDistributionConfig is set by the JavaagentDistributionAccessCustomizerProvider
-            enabledInstrumentationsFromConfigDistribution(AgentDistributionConfig.get())
-            : enabledInstrumentationsFromConfigProperties(configProperties);
-
-    AgentEnabledInstrumentations.set(enabledInstrumentations);
+            ? new DistributionEnabledInstrumentations(
+                AgentDistributionConfig.get().getInstrumentation())
+            : enabledInstrumentationsFromConfigProperties(configProperties));
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
 
     return SdkAutoconfigureAccess.create(
         sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
+  }
+
+  private static AgentDistributionConfig distributionFromConfigProperties(ConfigProperties config) {
+    AgentDistributionConfig agentConfig = AgentDistributionConfig.create();
+
+    agentConfig.setIndyEnabled(config.getBoolean("otel.javaagent.experimental.indy", false));
+
+    agentConfig.setForceSynchronousAgentListeners(
+        config.getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false));
+
+    agentConfig.setExcludeClasses(config.getList("otel.javaagent.exclude-classes", emptyList()));
+
+    agentConfig.setExcludeClassLoaders(
+        config.getList("otel.javaagent.exclude-class-loaders", emptyList()));
+
+    // Populate test configuration
+    agentConfig
+        .getTest()
+        .getAdditionalLibraryIgnoresConfig()
+        .setEnabled(
+            config.getBoolean("otel.javaagent.testing.additional-library-ignores.enabled", true));
+
+    // Populate exclude classes
+    agentConfig
+        .getExcludeClasses()
+        .addAll(config.getList("otel.javaagent.exclude-classes", emptyList()));
+
+    // Populate exclude class loaders
+    agentConfig
+        .getExcludeClassLoaders()
+        .addAll(config.getList("otel.javaagent.exclude-class-loaders", emptyList()));
+
+    return agentConfig;
   }
 
   // Visible for testing
@@ -87,47 +120,6 @@ public final class OpenTelemetryInstaller {
       public Boolean getEnabled(String instrumentationName) {
         return configProperties.getBoolean(
             "otel.instrumentation." + instrumentationName + ".enabled");
-      }
-
-      @Override
-      public boolean isDefaultEnabled() {
-        return isDefaultEnabled;
-      }
-    };
-  }
-
-  private static EnabledInstrumentations enabledInstrumentationsFromConfigDistribution(
-      DeclarativeConfigProperties distribution) {
-    // Should not be parsed for each call
-    List<String> enabledModules = null;
-    List<String> disabledModules = null;
-
-    DeclarativeConfigProperties instrumentation = distribution.getStructured("instrumentation");
-    if (instrumentation != null) {
-      disabledModules = instrumentation.getScalarList("disabled", String.class);
-      enabledModules = instrumentation.getScalarList("enabled", String.class);
-    }
-
-    List<String> disabled = disabledModules;
-    List<String> enabled = enabledModules;
-
-    boolean isDefaultEnabled =
-        distribution.get("instrumentation").getBoolean("default_enabled", true);
-
-    return new EnabledInstrumentations() {
-      @Nullable
-      @Override
-      public Boolean getEnabled(String instrumentationName) {
-        String normalizedName = instrumentationName.replace('-', '_');
-
-        if (disabled != null && disabled.contains(normalizedName)) {
-          return false;
-        }
-
-        if (enabled != null && enabled.contains(normalizedName)) {
-          return true;
-        }
-        return null;
       }
 
       @Override
@@ -161,4 +153,34 @@ public final class OpenTelemetryInstaller {
   }
 
   private OpenTelemetryInstaller() {}
+
+  private static class DistributionEnabledInstrumentations implements EnabledInstrumentations {
+    private final AgentDistributionConfig.Instrumentation instrumentation;
+
+    DistributionEnabledInstrumentations(AgentDistributionConfig.Instrumentation instrumentation) {
+      this.instrumentation = instrumentation;
+    }
+
+    @Nullable
+    @Override
+    public Boolean getEnabled(String instrumentationName) {
+      String normalizedName = instrumentationName.replace('-', '_');
+
+      List<String> disabled = instrumentation.getDisabled();
+      if (disabled != null && disabled.contains(normalizedName)) {
+        return false;
+      }
+
+      List<String> enabled = instrumentation.getEnabled();
+      if (enabled != null && enabled.contains(normalizedName)) {
+        return true;
+      }
+      return null;
+    }
+
+    @Override
+    public boolean isDefaultEnabled() {
+      return instrumentation.isDefaultEnabled();
+    }
+  }
 }

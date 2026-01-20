@@ -224,16 +224,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    String translated = translatedPath.toString();
-
-    // Handle agent prefix: java.javaagent.* → otel.javaagent.*
-    // is only called from OpenTelemetryInstaller
-    if (translated.startsWith("javaagent.")) {
-      return "otel." + translated;
-    }
-
-    // Standard mapping
-    return "otel.instrumentation." + translated;
+    return "otel.instrumentation." + translatedPath;
   }
 
   private String pathWithName(String name) {

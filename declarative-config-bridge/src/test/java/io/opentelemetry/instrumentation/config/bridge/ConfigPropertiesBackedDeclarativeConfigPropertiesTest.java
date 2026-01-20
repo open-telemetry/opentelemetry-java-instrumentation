@@ -76,17 +76,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testAgentPrefix() {
-    DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.indy", "true");
-
-    // only called from OpenTelemetryInstaller
-    assertThat(
-            config.getStructured("java").getStructured("javaagent").getBoolean("indy/development"))
-        .isNotNull()
-        .isTrue();
-  }
-
-  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 

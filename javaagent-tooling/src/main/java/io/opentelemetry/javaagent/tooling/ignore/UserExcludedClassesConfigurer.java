@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.ignore;
 
-import static java.util.Collections.emptyList;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
@@ -18,9 +16,7 @@ public class UserExcludedClassesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
   public void configure(IgnoredTypesBuilder builder) {
-    List<String> excludedClasses =
-        AgentDistributionConfig.get().getScalarList("exclude_classes", String.class, emptyList());
-    configureInternal(builder, excludedClasses);
+    configureInternal(builder, AgentDistributionConfig.get().getExcludeClasses());
   }
 
   // Visible for testing
