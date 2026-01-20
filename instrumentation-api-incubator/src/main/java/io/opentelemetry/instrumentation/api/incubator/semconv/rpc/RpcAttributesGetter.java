@@ -46,12 +46,18 @@ public interface RpcAttributesGetter<REQUEST> {
    *     method is unavailable
    */
   @Nullable
-  default String getFullMethod(REQUEST request) {
-    String service = getService(request);
-    String method = getMethod(request);
-    if (service == null || method == null) {
-      return null;
-    }
-    return service + "/" + method;
+  default String getRpcMethod(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns whether the RPC method is a well-known method.
+   *
+   * <p>This is used to determine whether to set the {@code rpc.method} attribute to the actual
+   * method name, or to set it to {@code "_OTHER"} and store the actual method name in {@code
+   * rpc.method_original}.
+   */
+  default boolean isWellKnownMethod(REQUEST request) {
+    return false;
   }
 }

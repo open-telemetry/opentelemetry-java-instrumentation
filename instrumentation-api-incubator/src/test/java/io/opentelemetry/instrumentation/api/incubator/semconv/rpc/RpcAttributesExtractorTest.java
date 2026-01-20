@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -18,13 +19,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
 
-  enum TestGetter implements RpcAttributesGetter<Map<String, String>> {
-    INSTANCE;
+  private static class TestGetter implements RpcAttributesGetter<Map<String, String>> {
+
+    private final boolean wellKnownMethod;
+
+    private TestGetter(boolean wellKnownMethod) {
+      this.wellKnownMethod = wellKnownMethod;
+    }
 
     @Override
     public String getSystem(Map<String, String> request) {
@@ -40,16 +47,42 @@ class RpcAttributesExtractorTest {
     public String getMethod(Map<String, String> request) {
       return request.get("method");
     }
+
+    @Nullable
+    @Override
+    public String getRpcMethod(Map<String, String> request) {
+      String service = getService(request);
+      String method = getMethod(request);
+      if (service == null || method == null) {
+        return null;
+      }
+      return service + "/" + method;
+    }
+
+    @Override
+    public boolean isWellKnownMethod(Map<String, String> stringStringMap) {
+      return wellKnownMethod;
+    }
   }
 
   @Test
   void server() {
-    testExtractor(RpcServerAttributesExtractor.create(TestGetter.INSTANCE));
+    testExtractor(RpcServerAttributesExtractor.create(new TestGetter(false)), "my.Service/Method");
+  }
+
+  @Test
+  void serverWellKnown() {
+    testExtractor(RpcServerAttributesExtractor.create(new TestGetter(true)), null);
   }
 
   @Test
   void client() {
-    testExtractor(RpcClientAttributesExtractor.create(TestGetter.INSTANCE));
+    testExtractor(RpcClientAttributesExtractor.create(new TestGetter(false)), "my.Service/Method");
+  }
+
+  @Test
+  void clientWellKnown() {
+    testExtractor(RpcClientAttributesExtractor.create(new TestGetter(true)), null);
   }
 
   // Stable semconv keys
@@ -66,7 +99,8 @@ class RpcAttributesExtractorTest {
   private static final AttributeKey<String> RPC_METHOD =
       io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 
-  private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
+  private static void testExtractor(
+      AttributesExtractor<Map<String, String>, Void> extractor, @Nullable String originalMethod) {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");
@@ -81,7 +115,12 @@ class RpcAttributesExtractorTest {
 
     if (SemconvStability.emitStableRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
-      expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
+      if (originalMethod != null) {
+        expectedEntries.add(entry(RPC_METHOD_ORIGINAL, originalMethod));
+        expectedEntries.add(entry(RPC_METHOD, "_OTHER"));
+      } else {
+        expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
+      }
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {

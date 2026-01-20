@@ -29,6 +29,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   // use RPC_SYSTEM_NAME for stable semconv
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
 
+  static final AttributeKey<String> RPC_METHOD_ORIGINAL =
+      AttributeKey.stringKey("rpc.method_original");
+
   private final RpcAttributesGetter<REQUEST> getter;
 
   RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
@@ -44,7 +47,13 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
           attributes,
           RPC_SYSTEM_NAME,
           system == null ? null : SemconvStability.stableRpcSystemName(system));
-      internalSet(attributes, RPC_METHOD, getter.getFullMethod(request));
+      String method = getter.getRpcMethod(request);
+      if (getter.isWellKnownMethod(request)) {
+        internalSet(attributes, RPC_METHOD, method);
+      } else {
+        internalSet(attributes, RPC_METHOD_ORIGINAL, method);
+        internalSet(attributes, RPC_METHOD, "_OTHER");
+      }
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {
