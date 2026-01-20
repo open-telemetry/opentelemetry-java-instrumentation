@@ -208,10 +208,10 @@ class DropwizardMetricsTest {
     // when - name contains single quotes (illegal character)
     metricRegistry.gauge("jvm.memory.pools.CodeHeap-'non-profiled-nmethods'.used", () -> value::get);
 
-    // then - metric should be created with sanitized name (quotes replaced with underscore)
+    // then - metric should be created with sanitized name (quotes stripped)
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "jvm.memory.pools.CodeHeap-_non-profiled-nmethods_.used",
+        "jvm.memory.pools.CodeHeap-non-profiled-nmethods.used",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -230,10 +230,10 @@ class DropwizardMetricsTest {
     counter.inc();
     counter.inc(11);
 
-    // then - metric should be created with sanitized name
+    // then - metric should be created with sanitized name (special chars stripped)
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test_counter_with_special_chars",
+        "testcounterwithspecialchars",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -254,10 +254,10 @@ class DropwizardMetricsTest {
     histogram.update(12);
     histogram.update(30);
 
-    // then - consecutive underscores should be collapsed to single underscore
+    // then - illegal characters should be stripped
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test_histogram_name",
+        "testhistogramname",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -278,10 +278,10 @@ class DropwizardMetricsTest {
     meter.mark();
     meter.mark(11);
 
-    // then - spaces and parentheses replaced with underscore
+    // then - spaces and parentheses stripped
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test_meter_with_spaces_",
+        "testmeterwithspaces",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -290,32 +290,6 @@ class DropwizardMetricsTest {
                             sum ->
                                 sum.isMonotonic()
                                     .hasPointsSatisfying(point -> point.hasValue(12)))));
-  }
-
-  @Test
-  @SuppressWarnings("PreferJavaTimeOverload")
-  void timerWithIllegalCharacters() throws InterruptedException {
-    // given
-    MetricRegistry metricRegistry = new MetricRegistry();
-
-    // when - name starts with digit (illegal)
-    Timer timer = metricRegistry.timer("123.test.timer");
-    timer.update(1, TimeUnit.MILLISECONDS);
-    timer.update(234_000, TimeUnit.NANOSECONDS);
-
-    // then - 'metric_' prefix should be added since name starts with digit
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "metric_123.test.timer",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("ms")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point -> point.hasSum(1.234).hasCount(2)))));
   }
 
   @Test

@@ -56,26 +56,29 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
    * Sanitizes instrument names to comply with OpenTelemetry specification.
    * Instrument names must consist of alphanumeric characters, '_', '.', '-', '/',
    * and must start with a letter.
-   * Invalid characters are replaced with '_', and consecutive underscores are collapsed.
-   * If the name doesn't start with a letter, 'metric_' is prepended.
+   * Invalid characters are stripped from the name.
    *
    * @param name the original metric name from Dropwizard
    * @return the sanitized instrument name
+   * @throws IllegalArgumentException if the name is null, empty, or contains no valid characters
    */
   private static String sanitizeInstrumentName(String name) {
     if (name == null || name.isEmpty()) {
-      return "metric_empty";
+      throw new IllegalArgumentException("Metric name cannot be null or empty");
     }
 
-    // Replace all characters that are not alphanumeric, '_', '.', '-', or '/' with '_'
-    String sanitized = name.replaceAll("[^a-zA-Z0-9._/-]", "_");
+    // Strip all characters that are not alphanumeric, '_', '.', '-', or '/'
+    String sanitized = name.replaceAll("[^a-zA-Z0-9._/-]", "");
 
-    // Collapse consecutive underscores to single underscore
-    sanitized = sanitized.replaceAll("_+", "_");
+    if (sanitized.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Metric name '" + name + "' contains no valid characters");
+    }
 
     // Ensure the name starts with a letter
-    if (!sanitized.isEmpty() && !Character.isLetter(sanitized.charAt(0))) {
-      sanitized = "metric_" + sanitized;
+    if (!Character.isLetter(sanitized.charAt(0))) {
+      throw new IllegalArgumentException(
+          "Metric name '" + name + "' does not start with a letter after sanitization");
     }
 
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
@@ -88,10 +91,9 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   @Override
   public void onGaugeAdded(String name, Gauge<?> gauge) {
-    String sanitizedName = sanitizeInstrumentName(name);
     ObservableDoubleGauge otelGauge =
         otelMeter
-            .gaugeBuilder(sanitizedName)
+            .gaugeBuilder(sanitizeInstrumentName(name))
             .buildWithCallback(
                 measurement -> {
                   Object val = gauge.getValue();
