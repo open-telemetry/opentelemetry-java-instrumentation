@@ -55,13 +55,13 @@ public interface RpcAttributesGetter<REQUEST> {
   }
 
   /**
-   * Returns whether the RPC method is a well-known method.
+   * Returns whether the RPC method is a predefined method at the start of the RPC framework.
    *
    * <p>This is used to determine whether to set the {@code rpc.method} attribute to the actual
    * method name, or to set it to {@code "_OTHER"} and store the actual method name in {@code
    * rpc.method_original}.
    */
-  default boolean isWellKnownMethod(REQUEST request) {
+  default boolean isPredefined(REQUEST request) {
     return false;
   }
 }

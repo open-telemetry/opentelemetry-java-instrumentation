@@ -49,7 +49,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
           RPC_SYSTEM_NAME,
           system == null ? null : SemconvStability.stableRpcSystemName(system));
       String method = getter.getRpcMethod(request);
-      if (getter.isWellKnownMethod(request)) {
+      if (getter.isPredefined(request)) {
         internalSet(attributes, RPC_METHOD, method);
       } else {
         internalSet(attributes, RPC_METHOD_ORIGINAL, method);

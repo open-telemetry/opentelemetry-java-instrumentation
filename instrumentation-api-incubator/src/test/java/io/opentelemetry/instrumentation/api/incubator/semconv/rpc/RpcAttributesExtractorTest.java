@@ -26,10 +26,10 @@ class RpcAttributesExtractorTest {
 
   private static class TestGetter implements RpcAttributesGetter<Map<String, String>> {
 
-    private final boolean wellKnownMethod;
+    private final boolean predefined;
 
-    private TestGetter(boolean wellKnownMethod) {
-      this.wellKnownMethod = wellKnownMethod;
+    private TestGetter(boolean predefined) {
+      this.predefined = predefined;
     }
 
     @Override
@@ -60,8 +60,8 @@ class RpcAttributesExtractorTest {
     }
 
     @Override
-    public boolean isWellKnownMethod(Map<String, String> stringStringMap) {
-      return wellKnownMethod;
+    public boolean isPredefined(Map<String, String> stringStringMap) {
+      return predefined;
     }
   }
 
@@ -71,7 +71,7 @@ class RpcAttributesExtractorTest {
   }
 
   @Test
-  void serverWellKnown() {
+  void serverPredefined() {
     testExtractor(RpcServerAttributesExtractor.create(new TestGetter(true)), null);
   }
 
@@ -81,7 +81,7 @@ class RpcAttributesExtractorTest {
   }
 
   @Test
-  void clientWellKnown() {
+  void clientPredefined() {
     testExtractor(RpcClientAttributesExtractor.create(new TestGetter(true)), null);
   }
 
