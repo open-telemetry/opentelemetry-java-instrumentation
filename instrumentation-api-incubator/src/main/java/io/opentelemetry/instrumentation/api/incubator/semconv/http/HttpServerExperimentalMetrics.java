@@ -102,7 +102,13 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     // request count (otherwise it will split the timeseries)
     activeRequests.add(-1, startAttributes, context);
 
-    Attributes sizeAttributes = startAttributes.toBuilder().putAll(endAttributes).build();
+    Attributes sizeAttributes = startAttributes.toBuilder()
+        .putAll(endAttributes)
+        // Those attributes do not have any meaning on metric because the metric is an aggregation of their
+        // value, so we remove them.
+        .removeIf(attributeKey -> attributeKey.getKey().equals("http.request.body.size"))
+        .removeIf(attributeKey -> attributeKey.getKey().equals("http.response.body.size"))
+        .build();
 
     Long requestBodySize = getHttpRequestBodySize(endAttributes, startAttributes);
     if (requestBodySize != null) {
