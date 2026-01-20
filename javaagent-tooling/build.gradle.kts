@@ -110,6 +110,24 @@ testing {
         implementation("uk.org.webcompere:system-stubs-jupiter")
       }
     }
+
+    val testDistributionConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":javaagent-tooling"))
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs(
+              "-Dotel.experimental.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
+            )
+          }
+        }
+      }
+    }
   }
 }
 
