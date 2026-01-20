@@ -191,6 +191,49 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // to support old database semantic conventions
+  void shouldExtractTableToSpecifiedKey() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.statement", "SELECT * FROM table");
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.<Map<String, Object>, Void>builder(new TestAttributesGetter())
+            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+            .build();
+
+    // when
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, context, request);
+
+    // then
+    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+              entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"),
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "table"));
+    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
+              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
+              entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
+    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "table"));
+    }
+  }
+
+  @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // when
     AttributesExtractor<Map<String, Object>, Void> underTest =
