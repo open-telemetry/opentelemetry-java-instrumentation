@@ -197,4 +197,146 @@ class DropwizardMetricsTest {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "test.timer", AbstractIterableAssert::isEmpty);
   }
+
+  @Test
+  void gaugeWithIllegalCharacters() throws InterruptedException {
+    // given
+    MetricRegistry metricRegistry = new MetricRegistry();
+
+    AtomicLong value = new AtomicLong(42);
+
+    // when - name contains single quotes (illegal character)
+    metricRegistry.gauge("jvm.memory.pools.CodeHeap-'non-profiled-nmethods'.used", () -> value::get);
+
+    // then - metric should be created with sanitized name (quotes replaced with underscore)
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "jvm.memory.pools.CodeHeap-_non-profiled-nmethods_.used",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleGaugeSatisfying(
+                            g -> g.hasPointsSatisfying(point -> point.hasValue(42)))));
+  }
+
+  @Test
+  void counterWithIllegalCharacters() throws InterruptedException {
+    // given
+    MetricRegistry metricRegistry = new MetricRegistry();
+
+    // when - name contains characters that need sanitization
+    Counter counter = metricRegistry.counter("test@counter#with$special%chars");
+    counter.inc();
+    counter.inc(11);
+
+    // then - metric should be created with sanitized name
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "test_counter_with_special_chars",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(point -> point.hasValue(12)))));
+  }
+
+  @Test
+  void histogramWithIllegalCharacters() throws InterruptedException {
+    // given
+    MetricRegistry metricRegistry = new MetricRegistry();
+
+    // when - name with consecutive illegal characters
+    Histogram histogram = metricRegistry.histogram("test!!histogram@@name");
+    histogram.update(12);
+    histogram.update(30);
+
+    // then - consecutive underscores should be collapsed to single underscore
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "test_histogram_name",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(
+                            histogramMetric ->
+                                histogramMetric.hasPointsSatisfying(
+                                    point -> point.hasSum(42).hasCount(2)))));
+  }
+
+  @Test
+  void meterWithIllegalCharacters() throws InterruptedException {
+    // given
+    MetricRegistry metricRegistry = new MetricRegistry();
+
+    // when - name contains spaces and special characters
+    Meter meter = metricRegistry.meter("test meter (with spaces)");
+    meter.mark();
+    meter.mark(11);
+
+    // then - spaces and parentheses replaced with underscore
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "test_meter_with_spaces_",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isMonotonic()
+                                    .hasPointsSatisfying(point -> point.hasValue(12)))));
+  }
+
+  @Test
+  @SuppressWarnings("PreferJavaTimeOverload")
+  void timerWithIllegalCharacters() throws InterruptedException {
+    // given
+    MetricRegistry metricRegistry = new MetricRegistry();
+
+    // when - name starts with digit (illegal)
+    Timer timer = metricRegistry.timer("123.test.timer");
+    timer.update(1, TimeUnit.MILLISECONDS);
+    timer.update(234_000, TimeUnit.NANOSECONDS);
+
+    // then - 'metric_' prefix should be added since name starts with digit
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "metric_123.test.timer",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("ms")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point -> point.hasSum(1.234).hasCount(2)))));
+  }
+
+  @Test
+  void gaugeWithAllowedCharacters() throws InterruptedException {
+    // given
+    MetricRegistry metricRegistry = new MetricRegistry();
+
+    AtomicLong value = new AtomicLong(99);
+
+    // when - name with all allowed characters (alphanumeric, _, ., -, /)
+    metricRegistry.gauge("valid_metric.name-with/allowed-chars123", () -> value::get);
+
+    // then - name should remain unchanged
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "valid_metric.name-with/allowed-chars123",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDoubleGaugeSatisfying(
+                            g -> g.hasPointsSatisfying(point -> point.hasValue(99)))));
+  }
 }
