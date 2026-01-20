@@ -38,6 +38,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     this.getter = getter;
   }
 
+  @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String system = getter.getSystem(request);

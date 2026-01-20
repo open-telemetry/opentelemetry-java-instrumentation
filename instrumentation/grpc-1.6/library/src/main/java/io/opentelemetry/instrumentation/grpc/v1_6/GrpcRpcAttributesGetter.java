@@ -32,6 +32,7 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
     return fullMethodName.substring(0, slashIndex);
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getMethod(GrpcRequest request) {

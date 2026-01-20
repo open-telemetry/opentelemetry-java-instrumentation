@@ -26,10 +26,15 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
     this.getter = getter;
   }
 
+  @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(REQUEST request) {
     if (SemconvStability.emitStableRpcSemconv()) {
-      return getter.getRpcMethod(request);
+      String method = getter.getRpcMethod(request);
+      if (method == null) {
+        return "RPC request";
+      }
+      return method;
     }
 
     String service = getter.getService(request);

@@ -22,6 +22,7 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttribute
     return request.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
   }
 
+  @Deprecated
   @Override
   public String getMethod(ExecutionAttributes request) {
     return request.getAttribute(SdkExecutionAttribute.OPERATION_NAME);

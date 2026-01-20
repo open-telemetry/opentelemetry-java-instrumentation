@@ -21,6 +21,7 @@ public enum ClientAttributesGetter implements RpcAttributesGetter<Method> {
     return method.getDeclaringClass().getName();
   }
 
+  @Deprecated
   @Override
   public String getMethod(Method method) {
     return method.getName();
