@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,21 +21,29 @@ class RpcSpanNameExtractorTest {
   @Mock RpcAttributesGetter<RpcRequest> getter;
 
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.getService(request)).thenReturn("my.Service");
-    when(getter.getMethod(request)).thenReturn("Method");
+    if (SemconvStability.emitStableRpcSemconv()) {
+      when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
+    } else {
+      when(getter.getService(request)).thenReturn("my.Service");
+      when(getter.getMethod(request)).thenReturn("Method");
+    }
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
   void serviceNull() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.getMethod(request)).thenReturn("Method");
+    if (!SemconvStability.emitStableRpcSemconv()) {
+      when(getter.getMethod(request)).thenReturn("Method");
+    }
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
@@ -44,7 +53,9 @@ class RpcSpanNameExtractorTest {
   void methodNull() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.getService(request)).thenReturn("my.Service");
+    if (!SemconvStability.emitStableRpcSemconv()) {
+      when(getter.getService(request)).thenReturn("my.Service");
+    }
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
