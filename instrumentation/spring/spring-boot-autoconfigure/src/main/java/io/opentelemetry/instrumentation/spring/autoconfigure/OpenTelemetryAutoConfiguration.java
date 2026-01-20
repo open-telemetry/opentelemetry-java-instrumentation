@@ -42,6 +42,8 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTe
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,15 +125,25 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       public OpenTelemetry openTelemetry(
-          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk,
+          ConfigProperties otelProperties) {
         logStart();
         OpenTelemetrySdk openTelemetry = autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
-        ConfigProperties otelProperties =
-            requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
         ConfigProvider configProvider = ConfigPropertiesBackedConfigProvider.create(otelProperties);
         return new SpringOpenTelemetrySdk(openTelemetry, configProvider);
       }
 
+      /**
+       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
+       *
+       * <p>Not using spring boot properties directly in order to support {@link
+       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
+       * and {@link
+       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
+       *
+       * @deprecated use the Declarative Config API instead.
+       */
+      @Deprecated
       @Bean
       public ConfigProperties otelProperties(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
@@ -160,6 +172,15 @@ public class OpenTelemetryAutoConfiguration {
         return sdk;
       }
 
+      /**
+       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
+       *
+       * <p>Not using spring boot properties directly, because declarative configuration does not
+       * integrate with spring boot properties.
+       *
+       * @deprecated use the Declarative Config API instead.
+       */
+      @Deprecated
       @Bean
       public ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
         return new DeclarativeConfigPropertiesBridgeBuilder()
