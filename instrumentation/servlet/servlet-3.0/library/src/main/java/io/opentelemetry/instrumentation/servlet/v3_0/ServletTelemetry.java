@@ -46,14 +46,4 @@ public final class ServletTelemetry {
   public Filter createFilter() {
     return new Servlet3TelemetryFilter(instrumenter, addTraceIdRequestAttribute);
   }
-
-  /**
-   * Returns a {@link Filter} that instruments HTTP requests.
-   *
-   * @deprecated Use {@link #createFilter()} instead.
-   */
-  @Deprecated
-  public Filter newFilter() {
-    return createFilter();
-  }
 }
