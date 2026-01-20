@@ -78,7 +78,11 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Ensure the name starts with a letter
     if (!Character.isLetter(sanitized.charAt(0))) {
       throw new IllegalArgumentException(
-          "Metric name '" + name + "' does not start with a letter after sanitization");
+          "Metric name '"
+              + name
+              + "' starts with '"
+              + sanitized.charAt(0)
+              + "' after sanitization but must start with a letter");
     }
 
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
