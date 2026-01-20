@@ -42,6 +42,7 @@ class RpcAttributesExtractorTest {
       return request.get("service");
     }
 
+    @Deprecated
     @Override
     public String getMethod(Map<String, String> request) {
       return request.get("method");

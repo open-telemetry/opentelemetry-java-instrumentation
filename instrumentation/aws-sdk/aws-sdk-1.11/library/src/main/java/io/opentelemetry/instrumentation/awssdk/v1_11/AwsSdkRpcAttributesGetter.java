@@ -37,6 +37,7 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
     return request.getServiceName();
   }
 
+  @Deprecated
   @Override
   public String getMethod(Request<?> request) {
     return OPERATION_NAME.get(request.getOriginalRequest().getClass());

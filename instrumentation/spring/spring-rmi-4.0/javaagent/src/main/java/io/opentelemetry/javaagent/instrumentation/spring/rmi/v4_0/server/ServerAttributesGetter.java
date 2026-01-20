@@ -21,6 +21,7 @@ public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod
     return classAndMethod.declaringClass().getName();
   }
 
+  @Deprecated
   @Override
   public String getMethod(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();
