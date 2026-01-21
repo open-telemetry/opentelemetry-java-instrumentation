@@ -33,21 +33,22 @@ val generateJflex by tasks.registering(JavaExec::class) {
   classpath(jflex)
   mainClass.set("jflex.Main")
 
-  inputs.dir(jflexSourceDir)
-  outputs.dir(jflexOutputDir)
+  val specFile = jflexSourceDir.file("SqlSanitizer.jflex")
+  val outputFile = jflexOutputDir.map { it.file("AutoSqlSanitizer.java") }
 
-  val sourceDir = jflexSourceDir
+  inputs.file(specFile)
+  outputs.file(outputFile)
+
   val outputDirProvider = jflexOutputDir
 
   doFirst {
     val outputDir = outputDirProvider.get().asFile
     outputDir.mkdirs()
-    val specFile = sourceDir.asFile.resolve("SqlSanitizer.jflex")
     args(
       "-d",
       outputDir.absolutePath,
       "--nobak",
-      specFile.absolutePath,
+      specFile.asFile.absolutePath,
     )
   }
 }
@@ -56,21 +57,22 @@ val generateJflexStableSemconv by tasks.registering(JavaExec::class) {
   classpath(jflex)
   mainClass.set("jflex.Main")
 
-  inputs.dir(jflexSourceDir)
-  outputs.dir(jflexOutputDir)
+  val specFile = jflexSourceDir.file("SqlSanitizerStableSemconv.jflex")
+  val outputFile = jflexOutputDir.map { it.file("AutoSqlSanitizerStableSemconv.java") }
 
-  val sourceDir = jflexSourceDir
+  inputs.file(specFile)
+  outputs.file(outputFile)
+
   val outputDirProvider = jflexOutputDir
 
   doFirst {
     val outputDir = outputDirProvider.get().asFile
     outputDir.mkdirs()
-    val specFile = sourceDir.asFile.resolve("SqlSanitizerStableSemconv.jflex")
     args(
       "-d",
       outputDir.absolutePath,
       "--nobak",
-      specFile.absolutePath,
+      specFile.asFile.absolutePath,
     )
   }
 }
@@ -83,6 +85,8 @@ sourceSets {
 
 tasks.compileJava {
   dependsOn(generateJflex, generateJflexStableSemconv)
+  // Ensure compileJava re-runs when JFlex-generated files change
+  inputs.files(generateJflex, generateJflexStableSemconv)
 }
 
 tasks {

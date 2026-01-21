@@ -67,6 +67,7 @@ WHITESPACE           = [ \t\r\n]+
   private String storedProcedureName = null;
 
   private boolean insideComment = false;
+  private int parenLevel = 0;
   private Operation operation = NoOp.INSTANCE;
   private SqlDialect dialect;
 
@@ -142,9 +143,22 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingJoinTableName = false;
     int identifiersAfterJoin = 0;
     boolean afterSetOperator = false;
+    boolean inJoinSubquery = false;
+    // Track if we may have a subquery after FROM (when open paren follows FROM)
+    boolean expectingSubqueryOrTable = false;
 
     void handleFrom() {
+      // If we're in a join subquery, this FROM belongs to the subquery
+      if (inJoinSubquery) {
+        expectingTableName = true;
+        inJoinSubquery = false;
+        return;
+      }
       expectingTableName = true;
+      // If we're at paren level 0, we might see a subquery next
+      if (parenLevel == 0) {
+        expectingSubqueryOrTable = true;
+      }
     }
 
     void handleJoin() {
@@ -182,6 +196,7 @@ WHITESPACE           = [ \t\r\n]+
 
       appendTargetToSummary();
       expectingTableName = false;
+      expectingSubqueryOrTable = false;
       identifiersAfterFromClause = 1;
     }
 
@@ -200,18 +215,25 @@ WHITESPACE           = [ \t\r\n]+
         // This is a SELECT after UNION/INTERSECT/EXCEPT/MINUS
         afterSetOperator = false;
       }
+      // If we're expecting a join table name and see SELECT, it's a subquery in JOIN
+      if (expectingJoinTableName) {
+        inJoinSubquery = true;
+        expectingJoinTableName = false;
+      }
       appendOperationToSummary("SELECT");
-      // Reset state for the new SELECT
+      // Reset state for the new SELECT (subquery)
       expectingTableName = false;
+      expectingSubqueryOrTable = false;
       identifiersAfterFromClause = 0;
       inImplicitJoin = false;
       identifiersAfterComma = 0;
-      expectingJoinTableName = false;
       identifiersAfterJoin = 0;
     }
 
     void handleOpenParen() {
-      if (expectingTableName) {
+      // If we're expecting a table/subquery and see open paren, a subquery may follow
+      if (expectingTableName && expectingSubqueryOrTable) {
+        // Don't capture table name yet - wait to see if it's a subquery
         expectingTableName = false;
       }
     }
@@ -219,6 +241,7 @@ WHITESPACE           = [ \t\r\n]+
     void resetForSetOperator() {
       afterSetOperator = true;
       expectingTableName = false;
+      expectingSubqueryOrTable = false;
       identifiersAfterFromClause = 0;
       inImplicitJoin = false;
       identifiersAfterComma = 0;
@@ -475,12 +498,16 @@ WHITESPACE           = [ \t\r\n]+
 
   {OPEN_PAREN}  {
           if (!insideComment) {
+            parenLevel++;
             operation.handleOpenParen();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   {CLOSE_PAREN} {
+          if (!insideComment) {
+            parenLevel--;
+          }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }

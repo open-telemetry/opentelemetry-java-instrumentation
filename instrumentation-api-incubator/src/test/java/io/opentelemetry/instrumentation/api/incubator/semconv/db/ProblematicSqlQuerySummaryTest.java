@@ -149,7 +149,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("complexSubqueriesArgs")
-  @Disabled("P1: Complex nested subqueries not fully captured")
   void complexSubqueries(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -198,7 +197,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("complexJoinsArgs")
-  @Disabled("P1: Complex JOINs may not capture all tables correctly")
   void complexJoins(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
