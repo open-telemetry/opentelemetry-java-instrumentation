@@ -64,38 +64,12 @@ class MultiQuery {
     return storedProcedureName;
   }
 
-  /**
-   * @deprecated Use {@link #getCollectionName()} or {@link #getStoredProcedureName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getMainIdentifier() {
-    return collectionName != null ? collectionName : storedProcedureName;
-  }
-
   public String getOperationName() {
     return operationName;
   }
 
-  /**
-   * @deprecated Use {@link #getOperationName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getOperation() {
-    return getOperationName();
-  }
-
   public Set<String> getQueryTexts() {
     return queryTexts;
-  }
-
-  /**
-   * @deprecated Use {@link #getQueryTexts()} instead.
-   */
-  @Deprecated
-  public Set<String> getStatements() {
-    return getQueryTexts();
   }
 
   private static class UniqueValue {

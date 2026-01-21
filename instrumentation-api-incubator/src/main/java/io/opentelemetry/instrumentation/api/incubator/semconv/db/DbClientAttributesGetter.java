@@ -22,25 +22,13 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-@SuppressWarnings("deprecation") // until DbClientCommonAttributesGetter is removed
 public interface DbClientAttributesGetter<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE>,
-        NetworkAttributesGetter<REQUEST, RESPONSE>,
-        ServerAttributesGetter<REQUEST> {
-
-  /**
-   * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getStatement(REQUEST request) {
-    return null;
-  }
+    extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST> {
 
   // TODO: make this required to implement
   @Nullable
   default String getDbQueryText(REQUEST request) {
-    return getStatement(request);
+    return null;
   }
 
   // TODO: make this required to implement
@@ -49,39 +37,44 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
+  // TODO: make this required to implement
+  @Nullable
+  default String getDbOperationName(REQUEST request) {
+    return null;
+  }
+
+  // TODO: make this required to implement
+  String getDbSystemName(REQUEST request);
+
+  @Nullable
+  String getDbNamespace(REQUEST request);
+
   /**
-   * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
+   * Returns the database user name. This is only used for old semantic conventions.
+   *
+   * @deprecated There is no replacement at this time.
    */
   @Deprecated
   @Nullable
-  default String getOperation(REQUEST request) {
+  default String getUser(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the database connection string. This is only used for old semantic conventions.
+   *
+   * @deprecated There is no replacement at this time.
+   */
+  @Deprecated
+  @Nullable
+  default String getConnectionString(REQUEST request) {
     return null;
   }
 
   // TODO: make this required to implement
   @Nullable
-  default String getDbOperationName(REQUEST request) {
-    return getOperation(request);
-  }
-
-  // TODO: make this required to implement
-  default String getDbSystemName(REQUEST request) {
-    return getDbSystem(request);
-  }
-
-  /**
-   * @deprecated Use {@link #getDbResponseStatusCode(RESPONSE, Throwable)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
-    return getResponseStatus(response, error);
-  }
-
-  // TODO: make this required to implement
-  @Nullable
   default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
-    return getResponseStatusCode(response, error);
+    return null;
   }
 
   // TODO: make this required to implement
