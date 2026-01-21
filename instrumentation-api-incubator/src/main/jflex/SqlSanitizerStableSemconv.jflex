@@ -99,6 +99,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleFrom() {}
     void handleInto() {}
     void handleJoin() {}
+    void handleApply() {}
     void handleIdentifier() {}
     void handleComma() {}
     void handleOpenParen() {}
@@ -304,6 +305,9 @@ WHITESPACE           = [ \t\r\n]+
     boolean inJoinSubquery = false;
     // Track if we may have a subquery after FROM (when open paren follows FROM)
     boolean expectingSubqueryOrTable = false;
+    // Track if we're expecting a table name after APPLY
+    boolean expectingApplyTableName = false;
+    int identifiersAfterApply = 0;
 
     void handleFrom() {
       // If we're in a join subquery, this FROM belongs to the subquery
@@ -324,9 +328,27 @@ WHITESPACE           = [ \t\r\n]+
       identifiersAfterJoin = 0;
     }
 
+    void handleApply() {
+      // SQL Server CROSS APPLY / OUTER APPLY - expect table name or table-valued function
+      expectingApplyTableName = true;
+      identifiersAfterApply = 0;
+    }
+
     void handleIdentifier() {
       if (identifiersAfterFromClause > 0) {
         ++identifiersAfterFromClause;
+      }
+
+      // Handle APPLY table (table-valued function)
+      if (expectingApplyTableName) {
+        ++identifiersAfterApply;
+        if (identifiersAfterApply == 1) {
+          appendTargetToSummary();
+        }
+        if (identifiersAfterApply >= FROM_TABLE_REF_MAX_IDENTIFIERS) {
+          expectingApplyTableName = false;
+        }
+        return;
       }
 
       if (expectingJoinTableName) {
@@ -386,6 +408,8 @@ WHITESPACE           = [ \t\r\n]+
       inImplicitJoin = false;
       identifiersAfterComma = 0;
       identifiersAfterJoin = 0;
+      expectingApplyTableName = false;
+      identifiersAfterApply = 0;
     }
 
     void handleOpenParen() {
@@ -405,6 +429,8 @@ WHITESPACE           = [ \t\r\n]+
       identifiersAfterComma = 0;
       expectingJoinTableName = false;
       identifiersAfterJoin = 0;
+      expectingApplyTableName = false;
+      identifiersAfterApply = 0;
     }
   }
 
@@ -644,6 +670,14 @@ WHITESPACE           = [ \t\r\n]+
   "JOIN" {
           if (!insideComment) {
             operation.handleJoin();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "APPLY" {
+          // SQL Server CROSS APPLY / OUTER APPLY - treat like JOIN
+          if (!insideComment) {
+            operation.handleApply();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

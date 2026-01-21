@@ -334,7 +334,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("tableFunctionsArgs")
-  @Disabled("P2: Table-valued functions")
   void tableFunctions(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
