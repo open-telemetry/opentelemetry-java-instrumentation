@@ -42,7 +42,7 @@ public final class ContextPropagationDebug {
     if (enabled != null) {
       return Boolean.parseBoolean(enabled);
     }
-    return ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false);
+    return DebugUtil.isAgentDebugEnabled();
   }
 
   // context to which debug locations were added

@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +32,7 @@ public final class SemconvStability {
     boolean oldCode = true;
     boolean stableCode = false;
 
-    String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
+    String value = getString("otel.semconv-stability.opt-in");
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
 
@@ -62,6 +63,18 @@ public final class SemconvStability {
 
     emitOldCodeSemconv = oldCode;
     emitStableCodeSemconv = stableCode;
+  }
+
+  static String getString(String propertyName) {
+    String value = System.getProperty(propertyName);
+    if (value != null) {
+      return value;
+    }
+    return System.getenv(toEnvVarName(propertyName));
+  }
+
+  private static String toEnvVarName(String propertyName) {
+    return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }
 
   public static boolean emitOldDatabaseSemconv() {
