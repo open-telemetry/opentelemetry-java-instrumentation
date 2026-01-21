@@ -75,7 +75,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
           eventHandler.handle(
               ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
               serverContext.context(),
-              serverContext.request().request(),
+              serverContext.request().getRequest(),
               response);
         } else {
           // Headers and body all sent together, we have the response information in the msg.
@@ -111,7 +111,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
           eventHandler.handle(
               ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
               serverContext.context(),
-              serverContext.request().request(),
+              serverContext.request().getRequest(),
               response);
         } else {
           // Headers before body has been sent, store them to use when finishing the span.
