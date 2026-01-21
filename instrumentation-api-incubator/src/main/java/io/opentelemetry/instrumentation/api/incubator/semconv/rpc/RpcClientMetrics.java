@@ -63,7 +63,7 @@ public final class RpcClientMetrics implements OperationListener {
       DoubleHistogramBuilder stableDurationBuilder =
           meter
               .histogramBuilder("rpc.client.call.duration")
-              .setDescription("The duration of an outbound RPC invocation.")
+              .setDescription("Measures the duration of outbound remote procedure calls (RPC).")
               .setUnit("s");
       RpcMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder, true);
       stableClientDurationHistogram = stableDurationBuilder.build();
