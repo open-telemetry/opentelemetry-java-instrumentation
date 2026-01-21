@@ -329,6 +329,9 @@ WHITESPACE           = [ \t\r\n]+
     // Track if we're expecting a table name after APPLY
     boolean expectingApplyTableName = false;
     int identifiersAfterApply = 0;
+    // Track the paren level when we captured the first table from FROM clause
+    // Only capture additional identifiers (for implicit joins) at this same level
+    int fromClauseParenLevel = -1;
 
     void handleFrom() {
       // If we're in a join subquery, this FROM belongs to the subquery
@@ -356,7 +359,8 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleIdentifier() {
-      if (identifiersAfterFromClause > 0) {
+      // Only increment identifiersAfterFromClause if we're at the same paren level as FROM clause
+      if (identifiersAfterFromClause > 0 && parenLevel == fromClauseParenLevel) {
         ++identifiersAfterFromClause;
       }
 
@@ -399,11 +403,14 @@ WHITESPACE           = [ \t\r\n]+
       expectingTableName = false;
       expectingSubqueryOrTable = false;
       identifiersAfterFromClause = 1;
+      fromClauseParenLevel = parenLevel;
     }
 
     void handleComma() {
+      // Only treat comma as table separator if we're at the same paren level as FROM clause
       if (identifiersAfterFromClause > 0
-          && identifiersAfterFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
+          && identifiersAfterFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS
+          && parenLevel == fromClauseParenLevel) {
         inImplicitJoin = true;
         identifiersAfterComma = 0;
       } else if (inImplicitJoin) {
@@ -452,6 +459,7 @@ WHITESPACE           = [ \t\r\n]+
       identifiersAfterJoin = 0;
       expectingApplyTableName = false;
       identifiersAfterApply = 0;
+      fromClauseParenLevel = -1;
     }
   }
 
