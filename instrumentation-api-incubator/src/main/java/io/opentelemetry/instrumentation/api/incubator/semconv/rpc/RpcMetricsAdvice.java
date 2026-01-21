@@ -37,11 +37,10 @@ final class RpcMetricsAdvice {
     List<AttributeKey<?>> keys = new ArrayList<>();
 
     // Add stable or old RPC system key
-    if (stable) {
-      keys.add(RpcCommonAttributesExtractor.RPC_SYSTEM_NAME);
-    } else {
-      keys.add(RpcCommonAttributesExtractor.RPC_SYSTEM);
-    }
+    keys.add(
+        stable
+            ? RpcCommonAttributesExtractor.RPC_SYSTEM_NAME
+            : RpcCommonAttributesExtractor.RPC_SYSTEM);
 
     // Add RPC service (old only)
     if (!stable) {
