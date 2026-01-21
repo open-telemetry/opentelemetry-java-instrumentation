@@ -34,14 +34,4 @@ public final class RestletTelemetry {
   public Filter createFilter(String path) {
     return new TracingFilter(serverInstrumenter, path);
   }
-
-  /**
-   * Returns a {@link Filter} that instruments HTTP requests.
-   *
-   * @deprecated Use {@link #createFilter(String)} instead.
-   */
-  @Deprecated
-  public Filter newFilter(String path) {
-    return createFilter(path);
-  }
 }
