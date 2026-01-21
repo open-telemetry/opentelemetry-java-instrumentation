@@ -452,6 +452,8 @@ WHITESPACE           = [ \t\r\n]+
 <YYINITIAL> {
 
   "SELECT" {
+          // SELECT is intentionally allowed as a nested operation (e.g., INSERT...SELECT,
+          // CREATE TABLE...AS SELECT). Other DML operations are only allowed as top-level.
           if (!insideComment) {
             setOperation(new Select());
             appendOperationToSummary("SELECT");
@@ -460,7 +462,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "INSERT" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Insert());
             appendOperationToSummary("INSERT");
           }
@@ -468,7 +471,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "DELETE" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Delete());
             appendOperationToSummary("DELETE");
           }
@@ -476,7 +480,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "UPDATE" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Update());
             appendOperationToSummary("UPDATE");
           }
@@ -484,7 +489,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "CALL" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Call());
             appendOperationToSummary("CALL");
           }
@@ -492,7 +498,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "MERGE" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Merge());
             appendOperationToSummary("MERGE");
           }
@@ -500,7 +507,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "CREATE" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Create());
             appendOperationToSummary("CREATE");
           }
@@ -508,7 +516,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "DROP" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Drop());
             appendOperationToSummary("DROP");
           }
@@ -516,7 +525,8 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "ALTER" {
-          if (!insideComment) {
+          // Only allow as top-level operation
+          if (!insideComment && operation == NoOp.INSTANCE) {
             setOperation(new Alter());
             appendOperationToSummary("ALTER");
           }

@@ -60,7 +60,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("alterTableDropColumnArgs")
-  @Disabled("P0: ALTER TABLE with DROP COLUMN incorrectly extracts DROP as operation")
   void alterTableDropColumn(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -250,7 +249,7 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("databaseSpecificSyntaxArgs")
-  @Disabled("P1: Database-specific syntax with embedded keywords")
+  @Disabled("P1: MERGE does not capture USING source table yet")
   void databaseSpecificSyntax(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);

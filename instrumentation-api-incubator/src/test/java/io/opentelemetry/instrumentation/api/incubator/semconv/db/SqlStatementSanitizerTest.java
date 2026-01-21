@@ -401,8 +401,8 @@ class SqlStatementSanitizerTest {
             "SELECT x, y, (select a from b) as z FROM table",
             expect("SELECT", "table", "SELECT SELECT b table")),
         Arguments.of(
-            "select delete, insert into, merge, update from table",
-            expect("SELECT", "table", "SELECT DELETE INSERT MERGE UPDATE table")),
+            "select delete, insert into, merge, update from table", // invalid SQL
+            expect("SELECT", "table", "SELECT table")),
         Arguments.of(
             "select col /* from table2 */ from table", expect("SELECT", "table", "SELECT table")),
         Arguments.of(
@@ -457,8 +457,8 @@ class SqlStatementSanitizerTest {
         // Insert
         Arguments.of(" insert into table where lalala", expect("INSERT", "table", "INSERT table")),
         Arguments.of(
-            "insert insert into table where lalala",
-            expect("INSERT", "table", "INSERT INSERT table")),
+            "insert insert into table where lalala", // invalid SQL
+            expect("INSERT", "table", "INSERT table")),
         Arguments.of(
             "insert into db.table where lalala", expect("INSERT", "db.table", "INSERT db.table")),
         Arguments.of(
