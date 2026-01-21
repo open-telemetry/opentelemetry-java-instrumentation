@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -51,6 +54,11 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class ProblematicSqlQuerySummaryTest {
 
+  @BeforeEach
+  void requireStableSemconv() {
+    assumeTrue(SemconvStability.emitStableDatabaseSemconv());
+  }
+
   // Helper method for test cases
   private static SqlStatementInfo sanitize(String sql) {
     return SqlStatementSanitizer.create(true).sanitize(sql);
@@ -88,9 +96,9 @@ class ProblematicSqlQuerySummaryTest {
   private static Stream<Arguments> quotedKeywordsAsIdentifiersArgs() {
     return Stream.of(
         // PostgreSQL double-quoted identifiers
+        Arguments.of("SELECT \"select\", \"from\", \"where\" FROM user_data", "SELECT user_data"),
         Arguments.of(
-            "SELECT \"select\", \"from\", \"where\" FROM user_data", "SELECT user_data"),
-        Arguments.of("INSERT INTO \"insert\" (\"update\", \"delete\") VALUES (?, ?)", "INSERT \"insert\""),
+            "INSERT INTO \"insert\" (\"update\", \"delete\") VALUES (?, ?)", "INSERT \"insert\""),
         Arguments.of("SELECT t.\"drop\" FROM \"alter\" AS t", "SELECT \"alter\""),
         // MySQL backtick identifiers
         Arguments.of(
@@ -260,8 +268,7 @@ class ProblematicSqlQuerySummaryTest {
             "INSERT INTO users (id, name) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET name = ?",
             "INSERT users"),
         // Oracle SELECT FOR UPDATE
-        Arguments.of(
-            "SELECT * FROM accounts WHERE balance > ? FOR UPDATE", "SELECT accounts"),
+        Arguments.of("SELECT * FROM accounts WHERE balance > ? FOR UPDATE", "SELECT accounts"),
         // SQL Server MERGE (only target table modified)
         Arguments.of(
             "MERGE INTO target t USING source s ON t.id = s.id WHEN MATCHED THEN UPDATE SET"
@@ -274,16 +281,14 @@ class ProblematicSqlQuerySummaryTest {
             "UPDATE t1"),
         // MySQL multi-table DELETE (only target table modified)
         Arguments.of(
-            "DELETE t1 FROM t1 JOIN t2 ON t1.id = t2.t1_id WHERE t2.status = ?",
-            "DELETE t1"),
+            "DELETE t1 FROM t1 JOIN t2 ON t1.id = t2.t1_id WHERE t2.status = ?", "DELETE t1"),
         // PostgreSQL UPDATE with FROM clause (only target table modified)
         Arguments.of(
             "UPDATE t1 SET col = t2.col FROM t2 WHERE t1.id = t2.t1_id AND t2.status = ?",
             "UPDATE t1"),
         // PostgreSQL DELETE with USING clause (only target table modified)
         Arguments.of(
-            "DELETE FROM t1 USING t2 WHERE t1.id = t2.t1_id AND t2.status = ?",
-            "DELETE t1"));
+            "DELETE FROM t1 USING t2 WHERE t1.id = t2.t1_id AND t2.status = ?", "DELETE t1"));
   }
 
   // ===== P2 - MEDIUM PRIORITY =====
@@ -341,8 +346,7 @@ class ProblematicSqlQuerySummaryTest {
 
   private static Stream<Arguments> tableFunctionsArgs() {
     return Stream.of(
-        Arguments.of(
-            "SELECT * FROM get_user_orders(?) WHERE status = ?", "SELECT get_user_orders"),
+        Arguments.of("SELECT * FROM get_user_orders(?) WHERE status = ?", "SELECT get_user_orders"),
         Arguments.of(
             "SELECT * FROM users u CROSS APPLY get_orders(u.id) o", "SELECT users get_orders"));
   }
@@ -377,13 +381,9 @@ class ProblematicSqlQuerySummaryTest {
         // INSERT with VALUES - most common use (should capture INSERT, not VALUES)
         Arguments.of("INSERT INTO users (id, name) VALUES (?, ?), (?, ?)", "INSERT users"),
         // CTE with VALUES as data source - VALUES inside CTE is not captured (CTE name is used)
-        Arguments.of(
-            "WITH data AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM data",
-            "SELECT data"),
+        Arguments.of("WITH data AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM data", "SELECT data"),
         // UNION with VALUES - VALUES after UNION not captured (rare edge case)
-        Arguments.of(
-            "SELECT name FROM users UNION VALUES ('System'), ('Admin')",
-            "SELECT users"));
+        Arguments.of("SELECT name FROM users UNION VALUES ('System'), ('Admin')", "SELECT users"));
   }
 
   @ParameterizedTest
@@ -396,8 +396,7 @@ class ProblematicSqlQuerySummaryTest {
   private static Stream<Arguments> caseSensitivityArgs() {
     return Stream.of(
         Arguments.of("SeLeCt * FrOm users WhErE active = ?", "SELECT users"),
-        Arguments.of(
-            "SELECT * FROM \"MyTable\" WHERE \"MyColumn\" = ?", "SELECT \"MyTable\""));
+        Arguments.of("SELECT * FROM \"MyTable\" WHERE \"MyColumn\" = ?", "SELECT \"MyTable\""));
   }
 
   /**

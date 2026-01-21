@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -22,7 +24,11 @@ class SqlStatementSanitizerTest {
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
-    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    } else {
+      assertThat(result.getQuerySummary()).isNull();
+    }
   }
 
   @ParameterizedTest
@@ -31,7 +37,11 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo result =
         SqlStatementSanitizer.create(true).sanitize(original, SqlDialect.COUCHBASE);
     assertThat(result.getQueryText()).isEqualTo(expected);
-    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    } else {
+      assertThat(result.getQuerySummary()).isNull();
+    }
   }
 
   @ParameterizedTest
@@ -40,11 +50,21 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
     SqlStatementInfo expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
-    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-    assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
+    if (emitStableDatabaseSemconv()) {
+      // Under stable semconv, operationName and collectionName are not populated
+      assertThat(result.getOperationName()).isNull();
+      assertThat(result.getCollectionName()).isNull();
+      // querySummary IS populated under stable semconv
+      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
+    } else {
+      // Under old semconv, querySummary is not populated
+      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+      assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
+      assertThat(result.getQuerySummary()).isNull();
+    }
+    // storedProcedureName is populated in both modes
     assertThat(result.getStoredProcedureName())
         .isEqualToIgnoringCase(expected.getStoredProcedureName());
-    assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
   }
 
   @ParameterizedTest
@@ -52,7 +72,11 @@ class SqlStatementSanitizerTest {
   void sanitizeSensitive(String original, String expected, String expectedQuerySummary) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
-    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    } else {
+      assertThat(result.getQuerySummary()).isNull();
+    }
   }
 
   private static Stream<Arguments> sensitiveArgs() {
@@ -84,9 +108,17 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
     assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
-    assertThat(result.getOperationName()).isEqualTo("SELECT");
-    assertThat(result.getCollectionName()).isEqualTo("table");
-    assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
+    if (emitStableDatabaseSemconv()) {
+      // Under stable semconv, operationName and collectionName are not populated
+      assertThat(result.getOperationName()).isNull();
+      assertThat(result.getCollectionName()).isNull();
+      assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
+    } else {
+      // Under old semconv, querySummary is not populated
+      assertThat(result.getOperationName()).isEqualTo("SELECT");
+      assertThat(result.getCollectionName()).isEqualTo("table");
+      assertThat(result.getQuerySummary()).isNull();
+    }
   }
 
   @ParameterizedTest
@@ -96,10 +128,18 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(actual);
     SqlStatementInfo expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
-    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+    if (emitStableDatabaseSemconv()) {
+      // Under stable semconv, operationName and collectionName are not populated
+      assertThat(result.getOperationName()).isNull();
+      assertThat(result.getCollectionName()).isNull();
+      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
+    } else {
+      // Under old semconv, querySummary is not populated
+      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+      assertThat(result.getQuerySummary()).isNull();
+    }
     assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
-    assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
   }
 
   @Test
@@ -141,7 +181,11 @@ class SqlStatementSanitizerTest {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
-    assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT SELECT SELECT");
+    if (emitStableDatabaseSemconv()) {
+      assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT TABLE SELECT TABLE");
+    } else {
+      assertThat(result.getQuerySummary()).isNull();
+    }
   }
 
   @Test
@@ -192,6 +236,7 @@ class SqlStatementSanitizerTest {
 
   @Test
   void querySummaryIsTruncated() {
+    assumeTrue(emitStableDatabaseSemconv());
     // Build a query with many tables to exceed 255 character limit
     StringBuilder sql = new StringBuilder("SELECT * FROM ");
     for (int i = 0; i < 50; i++) {
@@ -206,6 +251,16 @@ class SqlStatementSanitizerTest {
         .isEqualTo(
             "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2 very_long_table_name_3 very_long_table_name_4 very_long_table_name_5 very_long_table_name_6 very_long_table_name_7 very_long_table_name_8 very_long_table_name_9");
     assertThat(result.length()).isEqualTo(236);
+  }
+
+  @Test
+  void sequenceOperationDoesNotCaptureStoredProcedureName() {
+    assumeTrue(emitStableDatabaseSemconv());
+    SqlStatementInfo result =
+        SqlStatementSanitizer.create(true).sanitize("call next value for hibernate_sequence");
+    assertThat(result.getQuerySummary()).isEqualTo("CALL hibernate_sequence");
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
   }
 
   private static Stream<Arguments> sqlArgs() {
@@ -367,13 +422,27 @@ class SqlStatementSanitizerTest {
   }
 
   private static Function<String, SqlStatementInfo> expect(
-      String operation, String identifier, String querySummary) {
-    return sql -> SqlStatementInfo.create(sql, operation, identifier, querySummary);
+      String operation, String collectionName, String querySummary) {
+    return sql ->
+        emitStableDatabaseSemconv()
+            ? SqlStatementInfo.createStableSemconv(sql, null, querySummary)
+            : SqlStatementInfo.create(sql, operation, collectionName);
   }
 
   private static Function<String, SqlStatementInfo> expect(
-      String sql, String operation, String identifier, String querySummary) {
-    return ignored -> SqlStatementInfo.create(sql, operation, identifier, querySummary);
+      String sql, String operation, String collectionName, String querySummary) {
+    return ignored ->
+        emitStableDatabaseSemconv()
+            ? SqlStatementInfo.createStableSemconv(sql, null, querySummary)
+            : SqlStatementInfo.create(sql, operation, collectionName);
+  }
+
+  private static Function<String, SqlStatementInfo> expectStoredProcedure(
+      String operation, String storedProcedureName, String querySummary) {
+    return sql ->
+        emitStableDatabaseSemconv()
+            ? SqlStatementInfo.createStableSemconv(sql, storedProcedureName, querySummary)
+            : SqlStatementInfo.create(sql, operation, storedProcedureName);
   }
 
   private static Stream<Arguments> simplifyArgs() {
@@ -396,10 +465,10 @@ class SqlStatementSanitizerTest {
             expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
         Arguments.of(
             "WITH subquery as (select a from b) SELECT x, y, z FROM table",
-            expect("SELECT", "table", "SELECT b SELECT table")),
+            expect("SELECT", null, "SELECT b SELECT table")),
         Arguments.of(
             "SELECT x, y, (select a from b) as z FROM table",
-            expect("SELECT", "table", "SELECT SELECT b table")),
+            expect("SELECT", null, "SELECT SELECT b table")),
         Arguments.of(
             "select delete, insert into, merge, update from table", // invalid SQL
             expect("SELECT", "table", "SELECT table")),
@@ -416,10 +485,11 @@ class SqlStatementSanitizerTest {
             expect("SELECT", null, "SELECT SELECT anotherTable")),
         Arguments.of(
             "select col from table1 union select col from table2",
-            expect("SELECT", null, "SELECT table1 SELECT")),
+            expect("SELECT", null, "SELECT table1 SELECT table2")),
+        // Query with subquery in WHERE - old semconv returns null for collectionName
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
-            expect("SELECT", "table", "SELECT table SELECT anotherTable")),
+            expect("SELECT", null, "SELECT table SELECT anotherTable")),
         Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
@@ -505,11 +575,18 @@ class SqlStatementSanitizerTest {
                 "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
-        // Call
-        Arguments.of("call test_proc()", expect("CALL", "test_proc", "CALL test_proc")),
-        Arguments.of("call test_proc", expect("CALL", "test_proc", "CALL test_proc")),
-        Arguments.of("call next value in hibernate_sequence", expect("CALL", null, "CALL")),
-        Arguments.of("call db.test_proc", expect("CALL", "db.test_proc", "CALL db.test_proc")),
+        // Call - stable semconv returns CALL + procedure name for querySummary
+        Arguments.of(
+            "call test_proc()", expectStoredProcedure("CALL", "test_proc", "CALL test_proc")),
+        Arguments.of(
+            "call test_proc", expectStoredProcedure("CALL", "test_proc", "CALL test_proc")),
+        // "call next value for sequence" is a sequence operation, not a stored proc call
+        Arguments.of(
+            "call next value for hibernate_sequence",
+            expect("CALL", null, "CALL hibernate_sequence")),
+        Arguments.of(
+            "call db.test_proc",
+            expectStoredProcedure("CALL", "db.test_proc", "CALL db.test_proc")),
 
         // Merge
         Arguments.of("merge into table", expect("MERGE", "table", "MERGE table")),
@@ -540,12 +617,13 @@ class SqlStatementSanitizerTest {
             "CREATE INDEX types_name ON types (name)",
             expect("CREATE INDEX", null, "CREATE INDEX types_name")),
         Arguments.of(
-            "DROP INDEX types_name ON types (name)", expect("DROP INDEX", null, "DROP INDEX types_name")),
+            "DROP INDEX types_name ON types (name)",
+            expect("DROP INDEX", null, "DROP INDEX types_name")),
         Arguments.of(
             "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
-            expect("CREATE VIEW", null, "CREATE VIEW SELECT")),
+            expect("CREATE VIEW", null, "CREATE VIEW tmp SELECT table")),
         Arguments.of(
             "CREATE PROCEDURE p AS SELECT * FROM table GO",
-            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE SELECT")));
+            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p SELECT table")));
   }
 }

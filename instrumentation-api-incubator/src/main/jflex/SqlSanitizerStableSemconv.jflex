@@ -53,7 +53,7 @@ WHITESPACE           = [ \t\r\n]+
       }
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
-      return SqlStatementInfo.create(null, null, null, null);
+      return SqlStatementInfo.createStableSemconv(null, null, null);
     }
   }
 
@@ -567,7 +567,7 @@ WHITESPACE           = [ \t\r\n]+
     if (querySummary != null && querySummary.endsWith(";")) {
       querySummary = querySummary.substring(0, querySummary.length() - 1);
     }
-    return SqlStatementInfo.create(normalizedStatement, null, storedProcedureName, querySummary);
+    return SqlStatementInfo.createStableSemconv(normalizedStatement, storedProcedureName, querySummary);
   }
 
 %}

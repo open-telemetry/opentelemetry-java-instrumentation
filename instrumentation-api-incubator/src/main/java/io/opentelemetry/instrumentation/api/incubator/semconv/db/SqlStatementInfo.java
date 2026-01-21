@@ -14,26 +14,32 @@ public abstract class SqlStatementInfo {
   private static final String SQL_CALL = "CALL";
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
-  /**
-   * Creates a SqlStatementInfo with all fields.
-   */
-  public static SqlStatementInfo create(
+  /** Creates a SqlStatementInfo for stable semconv (uses querySummary). */
+  public static SqlStatementInfo createStableSemconv(
       @Nullable String queryText,
-      @Nullable String operationName,
-      @Nullable String target,
+      @Nullable String storedProcedureName,
       @Nullable String querySummary) {
     String truncatedQuerySummary = truncateQuerySummary(querySummary);
-    return new AutoValue_SqlStatementInfo(queryText, operationName, target, truncatedQuerySummary);
+    // In stable semconv: operationName and collectionName are always null
+    return new AutoValue_SqlStatementInfo(
+        queryText, null, null, storedProcedureName, truncatedQuerySummary);
   }
 
   /**
-   * Creates a SqlStatementInfo without query summary (for old semconv).
+   * Creates a SqlStatementInfo for old semconv (no querySummary). Package-private for backward
+   * compatibility with old jflex-generated sanitizer.
    */
   static SqlStatementInfo create(
-      @Nullable String queryText,
-      @Nullable String operationName,
-      @Nullable String target) {
-    return new AutoValue_SqlStatementInfo(queryText, operationName, target, null);
+      @Nullable String queryText, @Nullable String operationName, @Nullable String target) {
+    // AutoValue constructor: (queryText, operationName, collectionName, storedProcedureName,
+    // querySummary)
+    // For old semconv: derive collectionName and storedProcedureName from target based on operation
+    String collectionName =
+        SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName) ? null : target;
+    String storedProcedureName =
+        SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName) ? target : null;
+    return new AutoValue_SqlStatementInfo(
+        queryText, operationName, collectionName, storedProcedureName, null);
   }
 
   @Nullable
@@ -62,18 +68,11 @@ public abstract class SqlStatementInfo {
    * @see #getStoredProcedureName()
    */
   @Nullable
-  public String getCollectionName() {
-    return SQL_CALL.equals(getOperationName()) ? null : getTarget();
-  }
+  public abstract String getCollectionName();
 
   /** Returns the stored procedure name for CALL operations, or null for other operations. */
   @Nullable
-  public String getStoredProcedureName() {
-    return SQL_CALL.equals(getOperationName()) ? getTarget() : null;
-  }
-
-  @Nullable
-  abstract String getTarget();
+  public abstract String getStoredProcedureName();
 
   /**
    * Returns a low cardinality summary of the database query suitable for use as a span name or
