@@ -77,7 +77,7 @@ public final class RpcServerMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Measures the size of RPC request messages (uncompressed).")
             .ofLongs();
-    RpcMetricsAdvice.applyDeprecatedServerRequestSizeAdvice(requestSizeBuilder);
+    RpcMetricsAdvice.applyOldServerRequestSizeAdvice(requestSizeBuilder);
     oldServerRequestSize = requestSizeBuilder.build();
 
     LongHistogramBuilder responseSizeBuilder =
@@ -86,7 +86,7 @@ public final class RpcServerMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Measures the size of RPC response messages (uncompressed).")
             .ofLongs();
-    RpcMetricsAdvice.applyDeprecatedServerRequestSizeAdvice(responseSizeBuilder);
+    RpcMetricsAdvice.applyOldServerRequestSizeAdvice(responseSizeBuilder);
     oldServerResponseSize = responseSizeBuilder.build();
   }
 

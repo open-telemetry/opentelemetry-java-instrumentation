@@ -27,7 +27,7 @@ final class RpcMetricsAdvice {
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
 
-  private static final List<AttributeKey<?>> RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS =
+  private static final List<AttributeKey<?>> RPC_METRICS_OLD_ATTRIBUTE_KEYS =
       buildAttributeKeysList(false);
   private static final List<AttributeKey<?>> RPC_METRICS_STABLE_ATTRIBUTE_KEYS =
       buildAttributeKeysList(true);
@@ -71,7 +71,7 @@ final class RpcMetricsAdvice {
   }
 
   private static List<AttributeKey<?>> getAttributeKeys(boolean stable) {
-    return stable ? RPC_METRICS_STABLE_ATTRIBUTE_KEYS : RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS;
+    return stable ? RPC_METRICS_STABLE_ATTRIBUTE_KEYS : RPC_METRICS_OLD_ATTRIBUTE_KEYS;
   }
 
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder, boolean stable) {
@@ -92,24 +92,22 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(getAttributeKeys(stable));
   }
 
-  static void applyDeprecatedClientRequestSizeAdvice(LongHistogramBuilder builder) {
+  static void applyOldClientRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
     }
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
-    ((ExtendedLongHistogramBuilder) builder)
-        .setAttributesAdvice(RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS);
+    ((ExtendedLongHistogramBuilder) builder).setAttributesAdvice(RPC_METRICS_OLD_ATTRIBUTE_KEYS);
   }
 
-  static void applyDeprecatedServerRequestSizeAdvice(LongHistogramBuilder builder) {
+  static void applyOldServerRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
     }
     // the list of recommended metrics attributes is from
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md
-    ((ExtendedLongHistogramBuilder) builder)
-        .setAttributesAdvice(RPC_METRICS_DEPRECATED_ATTRIBUTE_KEYS);
+    ((ExtendedLongHistogramBuilder) builder).setAttributesAdvice(RPC_METRICS_OLD_ATTRIBUTE_KEYS);
   }
 
   private RpcMetricsAdvice() {}
