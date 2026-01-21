@@ -392,6 +392,43 @@ class ProblematicSqlQuerySummaryTest {
             "SELECT * FROM \"MyTable\" WHERE \"MyColumn\" = ?", "SELECT \"MyTable\""));
   }
 
+  /**
+   * Multi-statement queries documentation test.
+   *
+   * <p>This test documents the behavior for multi-statement queries (multiple SQL statements
+   * separated by semicolons in a single string). The implementation captures a summary for each
+   * statement, separated by semicolons in the output.
+   *
+   * <p>For example:
+   *
+   * <ul>
+   *   <li>{@code SELECT * FROM a; SELECT * FROM b} → {@code SELECT a; SELECT b}
+   *   <li>{@code INSERT INTO log VALUES (?); UPDATE counter SET val = ?} → {@code INSERT log;
+   *       UPDATE counter}
+   * </ul>
+   */
+  @ParameterizedTest
+  @MethodSource("multiStatementArgs")
+  void multiStatementQueries(String sql, String expectedSummary) {
+    SqlStatementInfo result = sanitize(sql);
+    // This test documents actual behavior - all operations are captured
+    assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
+  }
+
+  private static Stream<Arguments> multiStatementArgs() {
+    return Stream.of(
+        // Multiple SELECT statements - each statement separated by ;
+        Arguments.of("SELECT * FROM a; SELECT * FROM b", "SELECT a; SELECT b"),
+        // Mixed operations - each statement gets its own summary
+        Arguments.of(
+            "DELETE FROM temp; INSERT INTO archive SELECT * FROM temp",
+            "DELETE temp; INSERT archive SELECT temp"),
+        // Three statements - each operation captured with its tables
+        Arguments.of(
+            "INSERT INTO log VALUES (?); UPDATE counter SET val = val + ?; SELECT * FROM status",
+            "INSERT log; UPDATE counter; SELECT status"));
+  }
+
   // ===== ADDITIONAL EDGE CASES =====
 
   @ParameterizedTest

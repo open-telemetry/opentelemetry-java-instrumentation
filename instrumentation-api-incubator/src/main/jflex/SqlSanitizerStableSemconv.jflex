@@ -542,6 +542,10 @@ WHITESPACE           = [ \t\r\n]+
     String fullStatement = builder.toString();
     String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
     String querySummary = querySummaryBuilder.length() > 0 ? querySummaryBuilder.toString() : null;
+    // Remove trailing semicolon if present (no statement after last ;)
+    if (querySummary != null && querySummary.endsWith(";")) {
+      querySummary = querySummary.substring(0, querySummary.length() - 1);
+    }
     return SqlStatementInfo.create(normalizedStatement, null, storedProcedureName, querySummary);
   }
 
@@ -813,6 +817,19 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
+  ";" {
+          if (!insideComment) {
+            // Statement separator - reset operation for next statement
+            // Only append separator if we have content and more might follow
+            if (querySummaryBuilder.length() > 0) {
+              querySummaryBuilder.append(';');
+            }
+            operation = NoOp.INSTANCE;
+            parenLevel = 0;
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   {WHITESPACE} {
           builder.append(' ');
           if (isOverLimit()) return YYEOF;
