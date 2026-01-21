@@ -22,6 +22,7 @@ dependencies {
     exclude("org.codehaus.groovy", "groovy")
   }
   implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
+  bootstrap(project(":instrumentation:xxl-job:xxl-job-common:bootstrap"))
 
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))

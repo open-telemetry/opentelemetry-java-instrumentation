@@ -33,6 +33,7 @@ public class XxlJobInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new JobThreadInstrumentation(),
         new ScriptJobHandlerInstrumentation(),
         new SimpleJobHandlerInstrumentation(),
         new GlueJobHandlerInstrumentation());
