@@ -5,13 +5,21 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import okhttp3.Call;
 import okhttp3.Connection;
@@ -27,7 +35,7 @@ import okhttp3.Response;
  */
 public final class NetworkTimingEventListener extends EventListener {
 
-  // Raw timestamp attribute keys
+  // Timing attribute keys
   private static final AttributeKey<Long> CALL_START = AttributeKey.longKey("http.call.start_time");
   private static final AttributeKey<Long> DNS_START = AttributeKey.longKey("http.dns.start_time");
   private static final AttributeKey<Long> DNS_END = AttributeKey.longKey("http.dns.end_time");
@@ -57,45 +65,151 @@ public final class NetworkTimingEventListener extends EventListener {
       AttributeKey.longKey("http.response.body.end_time");
   private static final AttributeKey<Long> CALL_END = AttributeKey.longKey("http.call.end_time");
 
-  // Singleton instance of stateless NetworkTimingEventListener
-  private static final NetworkTimingEventListener INSTANCE = new NetworkTimingEventListener();
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
+  private static final AttributeKey<String> TRACE_ID = AttributeKey.stringKey("trace_id");
+  private static final AttributeKey<String> SPAN_ID = AttributeKey.stringKey("span_id");
 
-  private NetworkTimingEventListener() {}
+  private final Logger eventLogger;
+  private final Map<Call, LogRecordBuilder> callToLogBuilder = new ConcurrentHashMap<>();
+  private static final Map<Call, Context> callToContext = new ConcurrentHashMap<>();
+  // Temporary storage for timing attributes before context is available
+  private final Map<Call, Map<AttributeKey<?>, Object>> deferredLogAttributes =
+      new ConcurrentHashMap<>();
+
+  private NetworkTimingEventListener(Logger eventLogger) {
+    this.eventLogger = eventLogger;
+  }
+
+  /**
+   * Saves the context for a call. Should be called by {@link TracingInterceptor} when context
+   * storage is enabled.
+   *
+   * @param call the HTTP call
+   * @param context the OpenTelemetry context to associate with the call
+   */
+  public static void saveContext(Call call, Context context) {
+    callToContext.put(call, context);
+  }
+
+  /**
+   * Removes the stored context for a call to prevent memory leaks.
+   *
+   * @param call the HTTP call
+   */
+  private static void removeContext(Call call) {
+    callToContext.remove(call);
+  }
+
+  /**
+   * Adds an attribute to either the LogRecordBuilder (if context available) or
+   * deferredLogAttributes.
+   *
+   * @param call the HTTP call
+   * @param key the attribute key
+   * @param value the attribute value
+   */
+  private <T> void addAttribute(Call call, AttributeKey<T> key, T value) {
+    // Check if context is available
+    Context storedContext = callToContext.get(call);
+
+    if (storedContext != null && callToLogBuilder.get(call) == null) {
+      // Context is now available, create the builder and dump deferred attributes
+      createBuilderWithDeferredAttributes(call, storedContext);
+    }
+
+    LogRecordBuilder builder = callToLogBuilder.get(call);
+    if (builder != null) {
+      // Builder exists, add directly
+      builder.setAttribute(key, value);
+    } else {
+      // No builder yet, store in deferred attributes
+      deferredLogAttributes.computeIfAbsent(call, k -> new ConcurrentHashMap<>()).put(key, value);
+    }
+  }
+
+  /**
+   * Creates a LogRecordBuilder with context and dumps all deferred attributes into it.
+   *
+   * @param call the HTTP call
+   * @param context the OpenTelemetry context
+   */
+  private void createBuilderWithDeferredAttributes(Call call, Context context) {
+    LogRecordBuilder builder =
+        eventLogger
+            .logRecordBuilder()
+            // Sets the event.name attribute instead of using the top-level EventName field
+            // because this log record aggregates network timing data rather than representing
+            // a single event.
+            .setAttribute(EVENT_NAME, "okhttp3.network.timing")
+            .setSeverity(Severity.INFO);
+
+    // Add trace/span context
+    Span span = Span.fromContext(context);
+    if (span.getSpanContext().isValid()) {
+      String traceId = span.getSpanContext().getTraceId();
+      String spanId = span.getSpanContext().getSpanId();
+
+      // API support for adding top-level TraceId and SpanId fields is not available yet in {@link
+      // LogRecordBuilder},
+      // so these are currently added as attributes instead.
+      builder.setAttribute(TRACE_ID, traceId);
+      builder.setAttribute(SPAN_ID, spanId);
+    }
+
+    // Dump all deferred attributes into the builder
+    Map<AttributeKey<?>, Object> deferred = deferredLogAttributes.remove(call);
+    if (deferred != null) {
+      for (Map.Entry<AttributeKey<?>, Object> entry : deferred.entrySet()) {
+        // Safe cast: setAttribute accepts Object type and type safety was enforced at attribute
+        // creation
+        @SuppressWarnings("unchecked")
+        AttributeKey<Object> key = (AttributeKey<Object>) entry.getKey();
+        builder.setAttribute(key, entry.getValue());
+      }
+    }
+
+    callToLogBuilder.put(call, builder);
+  }
+
+  /** Returns the current timestamp in nanoseconds. */
+  private static long currentTimestampNanos() {
+    return System.nanoTime();
+  }
 
   @Override
   public void callStart(Call call) {
-    Span.current().setAttribute(CALL_START, System.currentTimeMillis());
+    addAttribute(call, CALL_START, currentTimestampNanos());
   }
 
   @Override
   public void dnsStart(Call call, String domainName) {
-    Span.current().setAttribute(DNS_START, System.currentTimeMillis());
+    addAttribute(call, DNS_START, currentTimestampNanos());
   }
 
   @Override
   public void dnsEnd(Call call, String domainName, List<InetAddress> inetAddressList) {
-    Span.current().setAttribute(DNS_END, System.currentTimeMillis());
+    addAttribute(call, DNS_END, currentTimestampNanos());
   }
 
   @Override
   public void connectStart(Call call, InetSocketAddress inetSocketAddress, Proxy proxy) {
-    Span.current().setAttribute(CONNECT_START, System.currentTimeMillis());
+    addAttribute(call, CONNECT_START, currentTimestampNanos());
   }
 
   @Override
   public void secureConnectStart(Call call) {
-    Span.current().setAttribute(SECURE_CONNECT_START, System.currentTimeMillis());
+    addAttribute(call, SECURE_CONNECT_START, currentTimestampNanos());
   }
 
   @Override
   public void secureConnectEnd(Call call, @Nullable Handshake handshake) {
-    Span.current().setAttribute(SECURE_CONNECT_END, System.currentTimeMillis());
+    addAttribute(call, SECURE_CONNECT_END, currentTimestampNanos());
   }
 
   @Override
   public void connectEnd(
       Call call, InetSocketAddress inetSocketAddress, Proxy proxy, @Nullable Protocol protocol) {
-    Span.current().setAttribute(CONNECT_END, System.currentTimeMillis());
+    addAttribute(call, CONNECT_END, currentTimestampNanos());
   }
 
   @Override
@@ -114,55 +228,73 @@ public final class NetworkTimingEventListener extends EventListener {
 
   @Override
   public void requestHeadersStart(Call call) {
-    Span.current().setAttribute(REQUEST_HEADERS_START, System.currentTimeMillis());
+    addAttribute(call, REQUEST_HEADERS_START, currentTimestampNanos());
   }
 
   @Override
   public void requestHeadersEnd(Call call, Request request) {
-    Span.current().setAttribute(REQUEST_HEADERS_END, System.currentTimeMillis());
+    addAttribute(call, REQUEST_HEADERS_END, currentTimestampNanos());
   }
 
   @Override
   public void requestBodyStart(Call call) {
-    Span.current().setAttribute(REQUEST_BODY_START, System.currentTimeMillis());
+    addAttribute(call, REQUEST_BODY_START, currentTimestampNanos());
   }
 
   @Override
   public void requestBodyEnd(Call call, long byteCount) {
-    Span.current().setAttribute(REQUEST_BODY_END, System.currentTimeMillis());
+    addAttribute(call, REQUEST_BODY_END, currentTimestampNanos());
   }
 
   @Override
   public void responseHeadersStart(Call call) {
-    Span.current().setAttribute(RESPONSE_HEADERS_START, System.currentTimeMillis());
+    addAttribute(call, RESPONSE_HEADERS_START, currentTimestampNanos());
   }
 
   @Override
   public void responseHeadersEnd(Call call, Response response) {
-    Span.current().setAttribute(RESPONSE_HEADERS_END, System.currentTimeMillis());
+    addAttribute(call, RESPONSE_HEADERS_END, currentTimestampNanos());
   }
 
   @Override
   public void responseBodyStart(Call call) {
-    Span.current().setAttribute(RESPONSE_BODY_START, System.currentTimeMillis());
+    addAttribute(call, RESPONSE_BODY_START, currentTimestampNanos());
   }
 
   @Override
   public void responseBodyEnd(Call call, long byteCount) {
-    Span.current().setAttribute(RESPONSE_BODY_END, System.currentTimeMillis());
+    addAttribute(call, RESPONSE_BODY_END, currentTimestampNanos());
   }
 
   @Override
   public void callEnd(Call call) {
-    Span.current().setAttribute(CALL_END, System.currentTimeMillis());
+    addAttribute(call, CALL_END, currentTimestampNanos());
+    emitLogAndCleanup(call);
+  }
+
+  @Override
+  public void callFailed(Call call, IOException ioe) {
+    addAttribute(call, CALL_END, currentTimestampNanos());
+    emitLogAndCleanup(call);
+  }
+
+  private void emitLogAndCleanup(Call call) {
+    LogRecordBuilder builder = callToLogBuilder.remove(call);
+    if (builder != null) {
+      builder.setTimestamp(Instant.now());
+      builder.emit();
+    }
+
+    // Clean up deferred attributes and context to prevent memory leaks
+    deferredLogAttributes.remove(call);
+    removeContext(call);
   }
 
   /**
-   * Factory for creating NetworkTimingEventListener instances. A singleton instance is returned as
-   * the listener is stateless and thread-safe.
+   * Factory for creating NetworkTimingEventListener instance.
    *
-   * <p>NetworkTimingEventListener captures raw network timing timestamps and adds them as
-   * attributes to the current OpenTelemetry span.
+   * <p>NetworkTimingEventListener captures network timing events and emits them as a single log
+   * record with all timing attributes when the call completes.
    *
    * <p>Works with both synchronous and asynchronous OkHttp calls when used with proper context
    * propagation.
@@ -171,9 +303,16 @@ public final class NetworkTimingEventListener extends EventListener {
    * at any time.
    */
   public static final class Factory implements EventListener.Factory {
+    private final NetworkTimingEventListener sharedListener;
+
+    public Factory(OpenTelemetry openTelemetry) {
+      Logger eventLogger = openTelemetry.getLogsBridge().get("io.opentelemetry.okhttp-3.0");
+      this.sharedListener = new NetworkTimingEventListener(eventLogger);
+    }
+
     @Override
     public EventListener create(Call call) {
-      return INSTANCE;
+      return sharedListener;
     }
   }
 }

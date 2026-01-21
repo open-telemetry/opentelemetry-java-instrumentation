@@ -34,11 +34,15 @@ public final class OkHttpTelemetry {
 
   private final Instrumenter<Interceptor.Chain, Response> instrumenter;
   private final ContextPropagators propagators;
+  private final OpenTelemetry openTelemetry;
 
   OkHttpTelemetry(
-      Instrumenter<Interceptor.Chain, Response> instrumenter, ContextPropagators propagators) {
+      Instrumenter<Interceptor.Chain, Response> instrumenter,
+      ContextPropagators propagators,
+      OpenTelemetry openTelemetry) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -64,7 +68,7 @@ public final class OkHttpTelemetry {
   /**
    * Construct a new OpenTelemetry tracing-enabled {@link okhttp3.Call.Factory} using the provided
    * {@link OkHttpClient} instance, with a NetworkTimingEventListener added to capture timing
-   * attributes.
+   * attributes as a log record.
    *
    * <p>Using this method will result in proper propagation and span parenting, for both {@linkplain
    * Call#execute() synchronous} and {@linkplain Call#enqueue(Callback) asynchronous} usages.
@@ -77,9 +81,12 @@ public final class OkHttpTelemetry {
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());
     builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter));
-    builder.networkInterceptors().add(0, new TracingInterceptor(instrumenter, propagators));
-    // Add NetworkTimingEventListener to capture timing attributes
-    builder.eventListenerFactory(new NetworkTimingEventListener.Factory());
+    // Pass true to TracingInterceptor to store context for NetworkTimingEventListener
+    builder.networkInterceptors().add(0, new TracingInterceptor(instrumenter, propagators, true));
+    // Add NetworkTimingEventListener to capture timing events as log record
+    NetworkTimingEventListener.Factory networkTimingFactory =
+        new NetworkTimingEventListener.Factory(openTelemetry);
+    builder.eventListenerFactory(networkTimingFactory);
     OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);
   }

@@ -1218,4 +1218,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   protected final URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
   }
+
+  protected final URI resolveHttpsAddress(String path) {
+    return URI.create("https://localhost:" + server.httpsPort() + path);
+  }
 }

@@ -22,11 +22,20 @@ public final class TracingInterceptor implements Interceptor {
 
   private final Instrumenter<Chain, Response> instrumenter;
   private final ContextPropagators propagators;
+  private final boolean storeContextForEventListener;
 
   public TracingInterceptor(
       Instrumenter<Chain, Response> instrumenter, ContextPropagators propagators) {
+    this(instrumenter, propagators, false);
+  }
+
+  public TracingInterceptor(
+      Instrumenter<Chain, Response> instrumenter,
+      ContextPropagators propagators,
+      boolean storeContextForEventListener) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
+    this.storeContextForEventListener = storeContextForEventListener;
   }
 
   @Override
@@ -40,6 +49,10 @@ public final class TracingInterceptor implements Interceptor {
 
     Context context = instrumenter.start(parentContext, chain);
     request = injectContextToRequest(request, context);
+
+    if (storeContextForEventListener) {
+      NetworkTimingEventListener.saveContext(chain.call(), context);
+    }
 
     Response response;
     try (Scope ignored = context.makeCurrent()) {

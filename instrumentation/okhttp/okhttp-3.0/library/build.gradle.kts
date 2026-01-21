@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-  library("com.squareup.okhttp3:okhttp:3.11.0")
-
+  compileOnly("com.squareup.okhttp3:okhttp:3.11.0")
+  testLibrary("com.squareup.okhttp3:okhttp:3.0.0")
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }
 
@@ -23,6 +23,19 @@ testing {
         } else {
           implementation("com.squareup.okhttp3:okhttp:3.11.0")
         }
+        implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+      }
+    }
+
+    val networkListenerTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        if (testLatestDeps) {
+          implementation("com.squareup.okhttp3:okhttp:latest.release")
+        } else {
+          implementation("com.squareup.okhttp3:okhttp:3.11.0")
+        }
+        implementation("org.awaitility:awaitility:4.2.0")
         implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
       }
     }
