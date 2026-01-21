@@ -36,6 +36,7 @@ QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
 BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+BRACKET_QUOTED_STR   = "[" [^\]]* "]"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
@@ -140,6 +141,7 @@ WHITESPACE           = [ \t\r\n]+
     int identifiersAfterComma = 0;
     boolean expectingJoinTableName = false;
     int identifiersAfterJoin = 0;
+    boolean afterSetOperator = false;
 
     void handleFrom() {
       expectingTableName = true;
@@ -194,13 +196,34 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleSelect() {
+      if (afterSetOperator) {
+        // This is a SELECT after UNION/INTERSECT/EXCEPT/MINUS
+        afterSetOperator = false;
+      }
       appendOperationToSummary("SELECT");
+      // Reset state for the new SELECT
+      expectingTableName = false;
+      identifiersAfterFromClause = 0;
+      inImplicitJoin = false;
+      identifiersAfterComma = 0;
+      expectingJoinTableName = false;
+      identifiersAfterJoin = 0;
     }
 
     void handleOpenParen() {
       if (expectingTableName) {
         expectingTableName = false;
       }
+    }
+
+    void resetForSetOperator() {
+      afterSetOperator = true;
+      expectingTableName = false;
+      identifiersAfterFromClause = 0;
+      inImplicitJoin = false;
+      identifiersAfterComma = 0;
+      expectingJoinTableName = false;
+      identifiersAfterJoin = 0;
     }
   }
 
@@ -364,6 +387,14 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "UNION" | "INTERSECT" | "EXCEPT" | "MINUS" {
+          if (!insideComment && operation instanceof Select) {
+            // Reset Select state to capture next SELECT operation's table
+            ((Select) operation).resetForSetOperator();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "CONNECT" {
           appendCurrentFragment();
           if (!insideComment && operation == NoOp.INSTANCE) {
@@ -487,7 +518,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
-  {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
+  {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
           if (!insideComment) {
             operation.handleIdentifier();
           }

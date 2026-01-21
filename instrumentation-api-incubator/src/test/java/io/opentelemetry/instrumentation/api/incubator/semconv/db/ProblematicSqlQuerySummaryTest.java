@@ -80,7 +80,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("quotedKeywordsAsIdentifiersArgs")
-  @Disabled("P0: Quoted keywords are not correctly treated as identifiers")
   void quotedKeywordsAsIdentifiers(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -223,7 +222,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("unionOperationsArgs")
-  @Disabled("P1: UNION operations should capture all SELECT operations and tables")
   void unionOperations(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -248,7 +246,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("databaseSpecificSyntaxArgs")
-  @Disabled("P1: MERGE does not capture USING source table yet")
   void databaseSpecificSyntax(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -265,15 +262,31 @@ class ProblematicSqlQuerySummaryTest {
         Arguments.of(
             "INSERT INTO users (id, name) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET name = ?",
             "INSERT users"),
-        // SQL Server MERGE
+        // Oracle SELECT FOR UPDATE
+        Arguments.of(
+            "SELECT * FROM accounts WHERE balance > ? FOR UPDATE", "SELECT accounts"),
+        // SQL Server MERGE (only target table modified)
         Arguments.of(
             "MERGE INTO target t USING source s ON t.id = s.id WHEN MATCHED THEN UPDATE SET"
                 + " t.name = s.name WHEN NOT MATCHED THEN INSERT (id, name) VALUES (s.id,"
                 + " s.name)",
-            "MERGE target source"),
-        // Oracle SELECT FOR UPDATE
+            "MERGE target"),
+        // MySQL multi-table UPDATE (only target table modified)
         Arguments.of(
-            "SELECT * FROM accounts WHERE balance > ? FOR UPDATE", "SELECT accounts"));
+            "UPDATE t1 JOIN t2 ON t1.id = t2.t1_id SET t1.col = t2.col WHERE t2.status = ?",
+            "UPDATE t1"),
+        // MySQL multi-table DELETE (only target table modified)
+        Arguments.of(
+            "DELETE t1 FROM t1 JOIN t2 ON t1.id = t2.t1_id WHERE t2.status = ?",
+            "DELETE t1"),
+        // PostgreSQL UPDATE with FROM clause (only target table modified)
+        Arguments.of(
+            "UPDATE t1 SET col = t2.col FROM t2 WHERE t1.id = t2.t1_id AND t2.status = ?",
+            "UPDATE t1"),
+        // PostgreSQL DELETE with USING clause (only target table modified)
+        Arguments.of(
+            "DELETE FROM t1 USING t2 WHERE t1.id = t2.t1_id AND t2.status = ?",
+            "DELETE t1"));
   }
 
   // ===== P2 - MEDIUM PRIORITY =====
