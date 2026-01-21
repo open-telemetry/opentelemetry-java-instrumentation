@@ -97,6 +97,10 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
     if (sanitized.length() > 255) {
+      logger.log(
+          Level.WARNING,
+          "Dropwizard metric name ''{0}'' exceeds 255 character limit, truncating to ''{1}''",
+          new Object[] {name, sanitized.substring(0, 255)});
       sanitized = sanitized.substring(0, 255);
     }
 
