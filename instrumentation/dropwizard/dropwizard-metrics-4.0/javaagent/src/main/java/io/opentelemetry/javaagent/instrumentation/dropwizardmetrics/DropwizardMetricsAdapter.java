@@ -21,10 +21,12 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9._/-]");
 
   private static final VirtualField<Counter, LongUpDownCounter> otelUpDownCounterField =
       VirtualField.find(Counter.class, LongUpDownCounter.class);
@@ -55,32 +57,26 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
   /**
    * Sanitizes instrument names to comply with OpenTelemetry specification. Instrument names must
    * consist of alphanumeric characters, '_', '.', '-', '/', and must start with a letter. Invalid
-   * characters are stripped from the name.
+   * characters are stripped from the name. Returns empty string if the name is invalid.
    *
    * @param name the original metric name from Dropwizard
-   * @return the sanitized instrument name
-   * @throws IllegalArgumentException if the name is null, empty, or contains no valid characters
+   * @return the sanitized instrument name, or empty string if invalid
    */
   private static String sanitizeInstrumentName(String name) {
     if (name == null || name.isEmpty()) {
-      throw new IllegalArgumentException("Metric name cannot be null or empty");
+      return "";
     }
 
     // Strip all characters that are not alphanumeric, '_', '.', '-', or '/'
-    String sanitized = name.replaceAll("[^a-zA-Z0-9._/-]", "");
+    String sanitized = INVALID_CHARACTERS.matcher(name).replaceAll("");
 
     if (sanitized.isEmpty()) {
-      throw new IllegalArgumentException("Metric name '" + name + "' contains no valid characters");
+      return "";
     }
 
     // Ensure the name starts with a letter
     if (!Character.isLetter(sanitized.charAt(0))) {
-      throw new IllegalArgumentException(
-          "Metric name '"
-              + name
-              + "' starts with '"
-              + sanitized.charAt(0)
-              + "' after sanitization but must start with a letter");
+      return "";
     }
 
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
