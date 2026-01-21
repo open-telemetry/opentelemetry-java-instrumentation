@@ -31,10 +31,14 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
   public String extract(REQUEST request) {
     if (SemconvStability.emitStableRpcSemconv()) {
       String method = getter.getRpcMethod(request);
-      if (method == null) {
-        return "RPC request";
+      if (method != null) {
+        return method;
       }
-      return method;
+      String system = getter.getSystem(request);
+      if (system != null) {
+        return system;
+      }
+      return "RPC request";
     }
 
     String service = getter.getService(request);
