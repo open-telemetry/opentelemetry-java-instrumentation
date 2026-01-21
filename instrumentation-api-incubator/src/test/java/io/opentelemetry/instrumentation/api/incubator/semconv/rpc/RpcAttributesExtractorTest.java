@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
 
-  private static class TestGetter implements RpcAttributesGetter<Map<String, String>> {
+  private static class TestGetter implements RpcAttributesGetter<Map<String, String>, Void> {
 
     private final boolean predefined;
 

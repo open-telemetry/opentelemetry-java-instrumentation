@@ -32,9 +32,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> RPC_METHOD_ORIGINAL =
       AttributeKey.stringKey("rpc.method_original");
 
-  private final RpcAttributesGetter<REQUEST> getter;
+  private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
 
-  RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 
@@ -72,8 +72,13 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (SemconvStability.emitStableRpcSemconv() && error != null) {
-      internalSet(attributes, ERROR_TYPE, error.getClass().getName());
+    if (SemconvStability.emitStableRpcSemconv()) {
+      String errorType = getter.getErrorType(request, response, error);
+      // fall back to exception class name & _OTHER
+      if (errorType == null && error != null) {
+        errorType = error.getClass().getName();
+      }
+      internalSet(attributes, ERROR_TYPE, errorType);
     }
   }
 }

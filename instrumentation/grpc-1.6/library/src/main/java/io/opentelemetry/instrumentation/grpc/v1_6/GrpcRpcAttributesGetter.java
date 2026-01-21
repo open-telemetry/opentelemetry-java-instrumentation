@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
+enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Void> {
   INSTANCE;
 
   @Override
