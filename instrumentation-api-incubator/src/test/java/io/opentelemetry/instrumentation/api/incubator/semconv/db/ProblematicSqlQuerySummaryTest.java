@@ -473,15 +473,15 @@ class ProblematicSqlQuerySummaryTest {
         Arguments.of(
             "SELECT name, (SELECT COUNT(*) FROM orders WHERE customer_id = c.id) as order_count"
                 + " FROM customers c",
-            "SELECT customers SELECT orders"),
+            "SELECT SELECT orders customers"),
         Arguments.of(
             "SELECT e.name, (SELECT AVG(salary) FROM employees WHERE department_id ="
                 + " e.department_id) as avg_dept_salary FROM employees e",
-            "SELECT employees SELECT employees"),
+            "SELECT SELECT employees employees"),
         Arguments.of(
             "SELECT p.name, (SELECT MAX(price) FROM products), (SELECT MIN(price) FROM products)"
                 + " FROM products p",
-            "SELECT products SELECT products SELECT products"));
+            "SELECT SELECT products SELECT products products"));
   }
 
   @ParameterizedTest
@@ -628,7 +628,7 @@ class ProblematicSqlQuerySummaryTest {
         Arguments.of("SELECT CAST(price AS DECIMAL(10,2)) FROM products", "SELECT products"),
         Arguments.of(
             "SELECT CAST((SELECT MAX(amount) FROM orders) AS INTEGER) FROM dual",
-            "SELECT dual SELECT orders"),
+            "SELECT SELECT orders dual"),
         Arguments.of(
             "SELECT name, CAST(created_at AS DATE) FROM users WHERE CAST(status AS INTEGER) = ?",
             "SELECT users"));
@@ -649,11 +649,11 @@ class ProblematicSqlQuerySummaryTest {
         Arguments.of(
             "SELECT CASE WHEN price > (SELECT AVG(price) FROM products) THEN 'High' ELSE 'Low'"
                 + " END FROM products",
-            "SELECT products SELECT products"),
+            "SELECT SELECT products products"),
         Arguments.of(
             "SELECT CASE type WHEN 'A' THEN (SELECT COUNT(*) FROM type_a) WHEN 'B' THEN (SELECT"
                 + " COUNT(*) FROM type_b) ELSE 0 END FROM items",
-            "SELECT items SELECT type_a SELECT type_b"));
+            "SELECT SELECT type_a SELECT type_b items"));
   }
 
   @ParameterizedTest

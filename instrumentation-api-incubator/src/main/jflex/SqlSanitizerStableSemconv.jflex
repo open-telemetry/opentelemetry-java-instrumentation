@@ -332,6 +332,11 @@ WHITESPACE           = [ \t\r\n]+
     // Track the paren level when we captured the first table from FROM clause
     // Only capture additional identifiers (for implicit joins) at this same level
     int fromClauseParenLevel = -1;
+    // Track if we just saw AS keyword and are expecting potential column alias list
+    boolean sawAsKeyword = false;
+    // Track if we're inside a column alias list (after derived table AS alias (...))
+    boolean inColumnAliasList = false;
+    int columnAliasListParenLevel = -1;
 
     void handleFrom() {
       // If we're in a join subquery, this FROM belongs to the subquery
@@ -348,17 +353,33 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleJoin() {
+      sawAsKeyword = false;
       expectingJoinTableName = true;
       identifiersAfterJoin = 0;
     }
 
     void handleApply() {
+      sawAsKeyword = false;
       // SQL Server CROSS APPLY / OUTER APPLY - expect table name or table-valued function
       expectingApplyTableName = true;
       identifiersAfterApply = 0;
     }
 
+    void handleAs() {
+      // Mark that we saw AS - next identifier is alias, then open paren might be column alias list
+      sawAsKeyword = true;
+    }
+
     void handleIdentifier() {
+      // Don't capture identifiers if we're inside a column alias list
+      if (inColumnAliasList) {
+        return;
+      }
+
+      // If we saw AS, this identifier is the table/subquery alias - keep sawAsKeyword true
+      // so we can detect the column alias list paren that might follow
+      // (sawAsKeyword will be reset when we see open paren or something else)
+
       // Only increment identifiersAfterFromClause if we're at the same paren level as FROM clause
       if (identifiersAfterFromClause > 0 && parenLevel == fromClauseParenLevel) {
         ++identifiersAfterFromClause;
@@ -407,6 +428,14 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleComma() {
+      // Don't process commas if we're inside a column alias list
+      if (inColumnAliasList) {
+        return;
+      }
+
+      // Reset sawAsKeyword - comma indicates we're not entering a column alias list
+      sawAsKeyword = false;
+
       // Only treat comma as table separator if we're at the same paren level as FROM clause
       if (identifiersAfterFromClause > 0
           && identifiersAfterFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS
@@ -441,10 +470,27 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleOpenParen() {
+      // If we just saw AS keyword and an open paren, this is a column alias list
+      if (sawAsKeyword) {
+        inColumnAliasList = true;
+        columnAliasListParenLevel = parenLevel;
+        sawAsKeyword = false;
+        return;
+      }
+
       // If we're expecting a table/subquery and see open paren, a subquery may follow
       if (expectingTableName && expectingSubqueryOrTable) {
         // Don't capture table name yet - wait to see if it's a subquery
         expectingTableName = false;
+      }
+    }
+
+    void handleCloseParen() {
+      // If we're closing the column alias list paren, exit that state
+      // Note: parenLevel has already been decremented when this is called
+      if (inColumnAliasList && parenLevel < columnAliasListParenLevel) {
+        inColumnAliasList = false;
+        columnAliasListParenLevel = -1;
       }
     }
 
@@ -460,6 +506,9 @@ WHITESPACE           = [ \t\r\n]+
       expectingApplyTableName = false;
       identifiersAfterApply = 0;
       fromClauseParenLevel = -1;
+      sawAsKeyword = false;
+      inColumnAliasList = false;
+      columnAliasListParenLevel = -1;
     }
   }
 
@@ -723,8 +772,10 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "AS" {
-          if (!insideComment && operation instanceof WithCte) {
-            operation.handleAs();
+          if (!insideComment) {
+            if (operation instanceof WithCte || operation instanceof Select) {
+              operation.handleAs();
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
