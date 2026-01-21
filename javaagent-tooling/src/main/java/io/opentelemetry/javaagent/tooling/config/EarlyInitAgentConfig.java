@@ -55,7 +55,7 @@ public final class EarlyInitAgentConfig {
   }
 
   @Nullable
-  private String getString(String propertyName) {
+  public String getString(String propertyName) {
     String value = ConfigPropertiesUtil.getString(propertyName);
     if (value != null) {
       return value;
