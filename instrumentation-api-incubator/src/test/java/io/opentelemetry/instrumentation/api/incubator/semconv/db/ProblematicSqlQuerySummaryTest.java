@@ -365,7 +365,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("valuesClauseArgs")
-  @Disabled("P3: Standalone VALUES clause")
   void valuesClause(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -373,9 +372,18 @@ class ProblematicSqlQuerySummaryTest {
 
   private static Stream<Arguments> valuesClauseArgs() {
     return Stream.of(
+        // Standalone VALUES - PostgreSQL table value constructor
         Arguments.of("VALUES (1, 'test'), (2, 'test2')", "VALUES"),
+        // INSERT with VALUES - most common use (should capture INSERT, not VALUES)
+        Arguments.of("INSERT INTO users (id, name) VALUES (?, ?), (?, ?)", "INSERT users"),
+        // CTE with VALUES as data source - VALUES inside CTE is not captured (CTE name is used)
         Arguments.of(
-            "INSERT INTO users (id, name) VALUES (?, ?), (?, ?)", "INSERT users"));
+            "WITH data AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM data",
+            "SELECT data"),
+        // UNION with VALUES - VALUES after UNION not captured (rare edge case)
+        Arguments.of(
+            "SELECT name FROM users UNION VALUES ('System'), ('Admin')",
+            "SELECT users"));
   }
 
   @ParameterizedTest

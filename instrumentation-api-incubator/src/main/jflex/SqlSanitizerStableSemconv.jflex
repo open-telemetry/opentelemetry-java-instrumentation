@@ -535,6 +535,11 @@ WHITESPACE           = [ \t\r\n]+
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
 
+  // Standalone VALUES clause (e.g., VALUES (1, 'a'), (2, 'b') in PostgreSQL)
+  private class Values extends Operation {
+    // No table to capture, VALUES is the entire summary
+  }
+
   private SqlStatementInfo getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
@@ -587,6 +592,14 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment && operation == NoOp.INSTANCE) {
             operation = new Update();
             appendOperationToSummary("UPDATE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "VALUES" {
+          if (!insideComment && operation == NoOp.INSTANCE) {
+            operation = new Values();
+            appendOperationToSummary("VALUES");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
