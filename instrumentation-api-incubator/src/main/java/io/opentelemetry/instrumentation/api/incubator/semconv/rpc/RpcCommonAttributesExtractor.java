@@ -72,10 +72,8 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (SemconvStability.emitStableRpcSemconv()) {
-      if (error != null) {
-        internalSet(attributes, ERROR_TYPE, error.getClass().getName());
-      }
+    if (SemconvStability.emitStableRpcSemconv() && error != null) {
+      internalSet(attributes, ERROR_TYPE, error.getClass().getName());
     }
   }
 }
