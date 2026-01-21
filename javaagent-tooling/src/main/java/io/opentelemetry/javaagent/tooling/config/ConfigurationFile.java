@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.bootstrap.ConfigPropertiesUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

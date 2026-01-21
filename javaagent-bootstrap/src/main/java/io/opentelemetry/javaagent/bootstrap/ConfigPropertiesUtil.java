@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.internal;
+package io.opentelemetry.javaagent.bootstrap;
 
 import java.util.Locale;
 import javax.annotation.Nullable;
@@ -17,9 +17,6 @@ public final class ConfigPropertiesUtil {
   /**
    * Returns the boolean value of the given property name from system properties and environment
    * variables.
-   *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
    */
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
     String value = getString(propertyName);
@@ -29,9 +26,6 @@ public final class ConfigPropertiesUtil {
   /**
    * Returns the string value of the given property name from system properties and environment
    * variables.
-   *
-   * <p>It's recommended to use {@link io.opentelemetry.api.incubator.config.ConfigProvider} instead
-   * to support Declarative Config.
    */
   @Nullable
   public static String getString(String propertyName) {

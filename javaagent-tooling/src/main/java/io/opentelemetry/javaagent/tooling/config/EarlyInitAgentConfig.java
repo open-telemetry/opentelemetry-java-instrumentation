@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.bootstrap.ConfigPropertiesUtil;
 import java.util.Map;
 import javax.annotation.Nullable;
 
