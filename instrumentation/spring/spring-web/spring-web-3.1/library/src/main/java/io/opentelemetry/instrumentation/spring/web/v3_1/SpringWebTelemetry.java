@@ -41,18 +41,4 @@ public final class SpringWebTelemetry {
   public ClientHttpRequestInterceptor createInterceptor() {
     return new RestTemplateInterceptor(instrumenter);
   }
-
-  /**
-   * Returns an interceptor for instrumenting {@link RestTemplate} requests.
-   *
-   * <pre>{@code
-   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).createInterceptor());
-   * }</pre>
-   *
-   * @deprecated Use {@link #createInterceptor()} instead.
-   */
-  @Deprecated
-  public ClientHttpRequestInterceptor newInterceptor() {
-    return createInterceptor();
-  }
 }
