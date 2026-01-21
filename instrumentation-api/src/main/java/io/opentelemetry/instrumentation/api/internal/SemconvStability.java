@@ -163,8 +163,6 @@ public final class SemconvStability {
     return RPC_METHOD;
   }
 
-  private SemconvStability() {}
-
   public static Attributes getOldRpcMetricAttributes(Attributes attributes) {
     if (emitStableRpcSemconv()) {
       // need to copy attributes
@@ -172,4 +170,6 @@ public final class SemconvStability {
     }
     return attributes;
   }
+
+  private SemconvStability() {}
 }
