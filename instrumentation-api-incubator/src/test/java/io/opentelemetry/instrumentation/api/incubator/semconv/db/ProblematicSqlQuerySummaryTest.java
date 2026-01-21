@@ -170,7 +170,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("cteArgs")
-  @Disabled("P1: CTEs (WITH clauses) not properly handled")
   void commonTableExpressions(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);

@@ -102,8 +102,10 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {}
     void handleComma() {}
     void handleOpenParen() {}
+    void handleCloseParen() {}
     void handleSelect() {}
     void handleNext() {}
+    void handleAs() {}
     void handleOperationTarget(String target) {}
     boolean expectingOperationTarget() { return false; }
   }
@@ -132,6 +134,162 @@ WHITESPACE           = [ \t\r\n]+
 
     void handleSelect() {
       appendOperationToSummary("SELECT");
+    }
+  }
+
+  private class WithCte extends Operation {
+    // Tracks whether we're inside a CTE definition (between AS ( and the matching ))
+    boolean inCteDefinition = false;
+    // The paren level when we entered the CTE definition
+    int cteDefinitionStartParenLevel = 0;
+    // Tracks whether we saw AS and are expecting the open paren
+    boolean expectingCteOpenParen = false;
+    // Tracks whether we're expecting a CTE name (right after WITH or comma)
+    boolean expectingCteName = true;
+    // Tracks whether we've transitioned to the main query
+    boolean inMainQuery = false;
+    // Select-like state for handling FROM clause inside CTE or main query
+    boolean expectingTableName = false;
+    int identifiersAfterFromClause = 0;
+    boolean inImplicitJoin = false;
+    int identifiersAfterComma = 0;
+    boolean expectingJoinTableName = false;
+    int identifiersAfterJoin = 0;
+    boolean inJoinSubquery = false;
+    // Track CTE names to avoid capturing recursive references
+    java.util.Set<String> cteNames = new java.util.HashSet<>();
+    // Current CTE name being defined
+    String currentCteName = null;
+
+    void handleAs() {
+      if (!inCteDefinition && !inMainQuery) {
+        expectingCteOpenParen = true;
+      }
+    }
+
+    void handleOpenParen() {
+      if (expectingCteOpenParen) {
+        // Entering CTE definition
+        inCteDefinition = true;
+        cteDefinitionStartParenLevel = parenLevel;
+        expectingCteOpenParen = false;
+        expectingCteName = false;
+        // Add the current CTE name to our set of known CTEs
+        if (currentCteName != null) {
+          cteNames.add(currentCteName.toLowerCase(java.util.Locale.ROOT));
+          currentCteName = null;
+        }
+      }
+    }
+
+    void handleCloseParen() {
+      if (inCteDefinition && parenLevel < cteDefinitionStartParenLevel) {
+        // Exiting CTE definition
+        inCteDefinition = false;
+        // After closing a CTE, we might see comma (more CTEs) or the main query
+        expectingCteName = true;
+        resetSelectState();
+      }
+    }
+
+    void handleComma() {
+      if (!inCteDefinition && !inMainQuery) {
+        // Comma between CTEs - expect another CTE name
+        expectingCteName = true;
+      } else if (inCteDefinition || inMainQuery) {
+        // Handle comma in FROM clause (implicit join)
+        if (identifiersAfterFromClause > 0
+            && identifiersAfterFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
+          inImplicitJoin = true;
+          identifiersAfterComma = 0;
+        } else if (inImplicitJoin) {
+          identifiersAfterComma = 0;
+        }
+      }
+    }
+
+    void handleSelect() {
+      if (!inCteDefinition && !inMainQuery) {
+        // This is the main query's SELECT
+        inMainQuery = true;
+      }
+      // Append SELECT for every SELECT we encounter (CTEs or main query)
+      appendOperationToSummary("SELECT");
+      resetSelectState();
+    }
+
+    void handleFrom() {
+      expectingTableName = true;
+    }
+
+    void handleJoin() {
+      expectingJoinTableName = true;
+      identifiersAfterJoin = 0;
+    }
+
+    private boolean isCteName(String identifier) {
+      return cteNames.contains(identifier.toLowerCase(java.util.Locale.ROOT));
+    }
+
+    void handleIdentifier() {
+      String identifier = yytext();
+      
+      if (expectingCteName && !inCteDefinition && !inMainQuery) {
+        // This is a CTE name being defined, remember it but don't add to summary
+        currentCteName = identifier;
+        expectingCteName = false;
+        return;
+      }
+
+      // Handle JOIN table
+      if (expectingJoinTableName) {
+        ++identifiersAfterJoin;
+        if (identifiersAfterJoin == 1) {
+          // Only capture if it's not a recursive CTE reference inside a CTE definition
+          if (!inCteDefinition || !isCteName(identifier)) {
+            appendTargetToSummary();
+          }
+        }
+        if (identifiersAfterJoin >= FROM_TABLE_REF_MAX_IDENTIFIERS) {
+          expectingJoinTableName = false;
+        }
+        return;
+      }
+
+      // Handle implicit join (comma-separated tables)
+      if (inImplicitJoin) {
+        ++identifiersAfterComma;
+        if (identifiersAfterComma == 1) {
+          appendTargetToSummary();
+        }
+        return;
+      }
+
+      // Handle table after FROM
+      if (expectingTableName) {
+        if (identifiersAfterFromClause > 0) {
+          ++identifiersAfterFromClause;
+        }
+        appendTargetToSummary();
+        expectingTableName = false;
+        identifiersAfterFromClause = 1;
+        return;
+      }
+
+      // Track identifiers after first table (for alias detection)
+      if (identifiersAfterFromClause > 0) {
+        ++identifiersAfterFromClause;
+      }
+    }
+
+    private void resetSelectState() {
+      expectingTableName = false;
+      identifiersAfterFromClause = 0;
+      inImplicitJoin = false;
+      identifiersAfterComma = 0;
+      expectingJoinTableName = false;
+      identifiersAfterJoin = 0;
+      inJoinSubquery = false;
     }
   }
 
@@ -410,6 +568,26 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "WITH" {
+          if (!insideComment && operation == NoOp.INSTANCE) {
+            operation = new WithCte();
+            // Don't append WITH to summary - we'll append SELECT when we see it
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "RECURSIVE" {
+          // Just skip - modifier for WITH, don't need special handling
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "AS" {
+          if (!insideComment && operation instanceof WithCte) {
+            operation.handleAs();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "UNION" | "INTERSECT" | "EXCEPT" | "MINUS" {
           if (!insideComment && operation instanceof Select) {
             // Reset Select state to capture next SELECT operation's table
@@ -507,6 +685,7 @@ WHITESPACE           = [ \t\r\n]+
   {CLOSE_PAREN} {
           if (!insideComment) {
             parenLevel--;
+            operation.handleCloseParen();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
