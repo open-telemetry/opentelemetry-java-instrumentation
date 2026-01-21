@@ -118,6 +118,10 @@ WHITESPACE           = [ \t\r\n]+
   private abstract class DdlOperation extends Operation {
     boolean expectingOperationTarget = true;
     boolean identifierCaptured = false;
+    // For CREATE VIEW, track the embedded SELECT state
+    boolean inEmbeddedSelect = false;
+    boolean expectingTableName = false;
+    int identifiersAfterFromClause = 0;
 
     boolean expectingOperationTarget() { return expectingOperationTarget; }
 
@@ -130,11 +134,28 @@ WHITESPACE           = [ \t\r\n]+
       if (!expectingOperationTarget && !identifierCaptured) {
         appendTargetToSummary();
         identifierCaptured = true;
+      } else if (inEmbeddedSelect && expectingTableName) {
+        // Capture table name in embedded SELECT (e.g., CREATE VIEW ... AS SELECT ... FROM table)
+        appendTargetToSummary();
+        expectingTableName = false;
+        identifiersAfterFromClause = 1;
+      } else if (inEmbeddedSelect && identifiersAfterFromClause > 0) {
+        // Track identifiers for alias detection
+        ++identifiersAfterFromClause;
       }
     }
 
     void handleSelect() {
       appendOperationToSummary("SELECT");
+      inEmbeddedSelect = true;
+      expectingTableName = false;
+      identifiersAfterFromClause = 0;
+    }
+
+    void handleFrom() {
+      if (inEmbeddedSelect) {
+        expectingTableName = true;
+      }
     }
   }
 
@@ -612,6 +633,12 @@ WHITESPACE           = [ \t\r\n]+
             appendOperationToSummary("ALTER");
           }
           appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "WITH" {WHITESPACE} "CHECK" {WHITESPACE} "OPTION" {
+          // View clause modifier - should not trigger CTE handling
+          // Replace whitespace with single spaces for consistency
+          builder.append("WITH CHECK OPTION");
           if (isOverLimit()) return YYEOF;
       }
   "WITH" {

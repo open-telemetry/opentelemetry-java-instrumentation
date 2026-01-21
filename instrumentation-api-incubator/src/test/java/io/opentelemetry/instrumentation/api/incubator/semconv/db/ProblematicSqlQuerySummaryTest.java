@@ -349,7 +349,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("viewsWithClausesArgs")
-  @Disabled("P2: CREATE VIEW with WITH CHECK OPTION")
   void viewsWithClauses(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
