@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.client;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
 
-enum RmiClientAttributesGetter implements RpcAttributesGetter<Method> {
+enum RmiClientAttributesGetter implements RpcAttributesGetter<Method, Void> {
   INSTANCE;
 
   @Override

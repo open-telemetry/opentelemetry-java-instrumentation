@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the {@link RpcClientAttributesExtractor} or {@link
  * RpcServerAttributesExtractor} to obtain the various RPC attributes in a type-generic way.
  */
-public interface RpcAttributesGetter<REQUEST> {
+public interface RpcAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   String getSystem(REQUEST request);
@@ -48,6 +48,25 @@ public interface RpcAttributesGetter<REQUEST> {
    */
   @Nullable
   default String getRpcMethod(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>This method should return {@code null} if there was no error.
+   *
+   * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
+   * will be used as error type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   *
+   * <p>Examples: {@code OK}, {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
+   */
+  @Nullable
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
 

@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RpcSpanNameExtractorTest {
 
-  @Mock RpcAttributesGetter<RpcRequest> getter;
+  @Mock RpcAttributesGetter<RpcRequest, Object> getter;
 
   @Test
   @SuppressWarnings("deprecation") // testing deprecated method
