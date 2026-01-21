@@ -57,10 +57,13 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
   /**
    * Sanitizes instrument names to comply with OpenTelemetry specification. Instrument names must
    * consist of alphanumeric characters, '_', '.', '-', '/', and must start with a letter. Invalid
-   * characters are stripped from the name. Returns empty string if the name is invalid.
+   * characters are stripped from the name. If the name is invalid (null, empty, contains no valid
+   * characters, or doesn't start with a letter), returns empty string which causes the SDK to
+   * return a noop instrument.
    *
    * @param name the original metric name from Dropwizard
-   * @return the sanitized instrument name, or empty string if invalid
+   * @return the sanitized instrument name, or empty string if invalid (causing SDK to return noop
+   *     instrument)
    */
   private static String sanitizeInstrumentName(String name) {
     if (name == null || name.isEmpty()) {
