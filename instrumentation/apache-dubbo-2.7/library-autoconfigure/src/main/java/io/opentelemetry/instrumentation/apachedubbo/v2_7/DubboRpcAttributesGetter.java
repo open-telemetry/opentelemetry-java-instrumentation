@@ -6,8 +6,9 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
+import org.apache.dubbo.rpc.Result;
 
-enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Void> {
+enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Result> {
   INSTANCE;
 
   @Override

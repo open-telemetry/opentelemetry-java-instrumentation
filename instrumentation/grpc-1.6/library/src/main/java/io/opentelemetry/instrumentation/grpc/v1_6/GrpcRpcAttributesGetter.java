@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
+import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Void> {
+enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status> {
   INSTANCE;
 
   @Override
