@@ -41,7 +41,7 @@ public final class NatsTelemetry {
    * Returns a {@link Connection} with telemetry instrumentation.
    *
    * <p>This method should be used together with {@link #configure(Options.Builder)}. Consider using
-   * {@link #newConnection(Options.Builder, ConnectionFactory)} or {@link #newConnection(Options,
+   * {@link #createConnection(Options.Builder, ConnectionFactory)} or {@link #createConnection(Options,
    * ConnectionFactory)} instead.
    */
   public Connection wrap(Connection connection) {
@@ -53,7 +53,7 @@ public final class NatsTelemetry {
    * Returns a {@link Options.Builder} configured with telemetry instrumentation.
    *
    * <p>This method should be used together with {@link #wrap(Connection)}. Consider using {@link
-   * #newConnection(Options.Builder, ConnectionFactory)} or {@link #newConnection(Options,
+   * #createConnection(Options.Builder, ConnectionFactory)} or {@link #createConnection(Options,
    * ConnectionFactory)} instead.
    */
   public Options.Builder configure(Options.Builder options) {
