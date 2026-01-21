@@ -16,10 +16,10 @@ sed -Ei "s/(opentelemetryJavaagentAlpha *: )\"[^\"]*\"/\1\"$alpha_version\"/" ex
 
 sed -Ei "s/(classpath \"io.opentelemetry.instrumentation:gradle-plugins:)[^\"]*\"/\1$alpha_version\"/" examples/distro/build.gradle
 
-sed -Ei "s/(opentelemetryJavaagent *: )\"[^\"]*\"/\1\"$version\"/" examples/extension/build.gradle
-sed -Ei "s/(opentelemetryJavaagentAlpha *: )\"[^\"]*\"/\1\"$alpha_version\"/" examples/extension/build.gradle
+sed -Ei "s/(\"opentelemetryJavaagent\" to )\"[^\"]*\"/\1\"$version\"/" examples/extension/build.gradle.kts
+sed -Ei "s/(\"opentelemetryJavaagentAlpha\" to )\"[^\"]*\"/\1\"$alpha_version\"/" examples/extension/build.gradle.kts
 
-sed -Ei "s/(io.opentelemetry.instrumentation.muzzle-generation\" version )\"[^\"]*\"/\1\"$alpha_version\"/" examples/extension/build.gradle
-sed -Ei "s/(io.opentelemetry.instrumentation.muzzle-check\" version )\"[^\"]*\"/\1\"$alpha_version\"/" examples/extension/build.gradle
+sed -Ei "s/(io.opentelemetry.instrumentation.muzzle-generation\" version )\"[^\"]*\"/\1\"$alpha_version\"/" examples/extension/build.gradle.kts
+sed -Ei "s/(io.opentelemetry.instrumentation.muzzle-check\" version )\"[^\"]*\"/\1\"$alpha_version\"/" examples/extension/build.gradle.kts
 
 sed -Ei "1 s/(Comparing source compatibility of [a-z-]+)-[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?.jar/\1-$version.jar/" docs/apidiffs/current_vs_latest/*.txt
