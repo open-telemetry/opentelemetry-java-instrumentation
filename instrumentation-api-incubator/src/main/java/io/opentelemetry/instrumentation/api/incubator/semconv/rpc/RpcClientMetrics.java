@@ -117,7 +117,7 @@ public final class RpcClientMetrics implements OperationListener {
       return;
     }
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    double durationNanos = (endNanos - state.startTimeNanos());
+    double durationNanos = endNanos - state.startTimeNanos();
 
     // Record to old histogram (milliseconds)
     if (oldClientDurationHistogram != null) {
