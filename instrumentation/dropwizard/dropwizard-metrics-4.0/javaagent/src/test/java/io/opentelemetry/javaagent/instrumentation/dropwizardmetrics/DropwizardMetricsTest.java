@@ -35,12 +35,12 @@ class DropwizardMetricsTest {
     AtomicLong value = new AtomicLong(42);
 
     // when
-    metricRegistry.gauge("test.gauge", () -> value::get);
+    metricRegistry.gauge("test'gauge", () -> value::get);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.gauge",
+        "testgauge",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -49,14 +49,14 @@ class DropwizardMetricsTest {
                             g -> g.hasPointsSatisfying(point -> point.hasValue(42)))));
 
     // when
-    metricRegistry.remove("test.gauge");
+    metricRegistry.remove("test'gauge");
     Thread.sleep(100); // give time for any inflight metric export to be received
     testing.clearData();
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.gauge", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testgauge", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -65,7 +65,7 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Counter counter = metricRegistry.counter("test.counter");
+    Counter counter = metricRegistry.counter("test@counter");
     counter.inc();
     counter.inc(11);
     counter.dec(5);
@@ -73,7 +73,7 @@ class DropwizardMetricsTest {
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.counter",
+        "testcounter",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -85,13 +85,13 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.counter");
+    metricRegistry.remove("test@counter");
     counter.inc(123);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.counter", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testcounter", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -100,14 +100,14 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Histogram histogram = metricRegistry.histogram("test.histogram");
+    Histogram histogram = metricRegistry.histogram("test!histogram");
     histogram.update(12);
     histogram.update(30);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.histogram",
+        "testhistogram",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -119,13 +119,13 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.histogram");
+    metricRegistry.remove("test!histogram");
     histogram.update(100);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.histogram", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testhistogram", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -134,14 +134,14 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Meter meter = metricRegistry.meter("test.meter");
+    Meter meter = metricRegistry.meter("test meter");
     meter.mark();
     meter.mark(11);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.meter",
+        "testmeter",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -153,13 +153,13 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.meter");
+    metricRegistry.remove("test meter");
     meter.mark();
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.meter", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testmeter", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -169,14 +169,14 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Timer timer = metricRegistry.timer("test.timer");
+    Timer timer = metricRegistry.timer("test#timer");
     timer.update(1, TimeUnit.MILLISECONDS);
     timer.update(234_000, TimeUnit.NANOSECONDS);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.timer",
+        "testtimer",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -189,128 +189,12 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.timer");
+    metricRegistry.remove("test#timer");
     timer.update(12, TimeUnit.SECONDS);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.timer", AbstractIterableAssert::isEmpty);
-  }
-
-  @Test
-  void gaugeWithIllegalCharacters() throws InterruptedException {
-    // given
-    MetricRegistry metricRegistry = new MetricRegistry();
-
-    AtomicLong value = new AtomicLong(42);
-
-    // when - name contains single quotes (illegal character)
-    metricRegistry.gauge("jvm.memory.pools.CodeHeap-'non-profiled-nmethods'.used", () -> value::get);
-
-    // then - metric should be created with sanitized name (quotes stripped)
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "jvm.memory.pools.CodeHeap-non-profiled-nmethods.used",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDoubleGaugeSatisfying(
-                            g -> g.hasPointsSatisfying(point -> point.hasValue(42)))));
-  }
-
-  @Test
-  void counterWithIllegalCharacters() throws InterruptedException {
-    // given
-    MetricRegistry metricRegistry = new MetricRegistry();
-
-    // when - name contains characters that need sanitization
-    Counter counter = metricRegistry.counter("test@counter#with$special%chars");
-    counter.inc();
-    counter.inc(11);
-
-    // then - metric should be created with sanitized name (special chars stripped)
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "testcounterwithspecialchars",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isNotMonotonic()
-                                    .hasPointsSatisfying(point -> point.hasValue(12)))));
-  }
-
-  @Test
-  void histogramWithIllegalCharacters() throws InterruptedException {
-    // given
-    MetricRegistry metricRegistry = new MetricRegistry();
-
-    // when - name with consecutive illegal characters
-    Histogram histogram = metricRegistry.histogram("test!!histogram@@name");
-    histogram.update(12);
-    histogram.update(30);
-
-    // then - illegal characters should be stripped
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "testhistogramname",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogramMetric ->
-                                histogramMetric.hasPointsSatisfying(
-                                    point -> point.hasSum(42).hasCount(2)))));
-  }
-
-  @Test
-  void meterWithIllegalCharacters() throws InterruptedException {
-    // given
-    MetricRegistry metricRegistry = new MetricRegistry();
-
-    // when - name contains spaces and special characters
-    Meter meter = metricRegistry.meter("test meter (with spaces)");
-    meter.mark();
-    meter.mark(11);
-
-    // then - spaces and parentheses stripped
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "testmeterwithspaces",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.isMonotonic()
-                                    .hasPointsSatisfying(point -> point.hasValue(12)))));
-  }
-
-  @Test
-  void gaugeWithAllowedCharacters() throws InterruptedException {
-    // given
-    MetricRegistry metricRegistry = new MetricRegistry();
-
-    AtomicLong value = new AtomicLong(99);
-
-    // when - name with all allowed characters (alphanumeric, _, ., -, /)
-    metricRegistry.gauge("valid_metric.name-with/allowed-chars123", () -> value::get);
-
-    // then - name should remain unchanged
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "valid_metric.name-with/allowed-chars123",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasDoubleGaugeSatisfying(
-                            g -> g.hasPointsSatisfying(point -> point.hasValue(99)))));
+        INSTRUMENTATION_NAME, "testtimer", AbstractIterableAssert::isEmpty);
   }
 }

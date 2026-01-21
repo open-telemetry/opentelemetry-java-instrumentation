@@ -53,10 +53,9 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
   }
 
   /**
-   * Sanitizes instrument names to comply with OpenTelemetry specification.
-   * Instrument names must consist of alphanumeric characters, '_', '.', '-', '/',
-   * and must start with a letter.
-   * Invalid characters are stripped from the name.
+   * Sanitizes instrument names to comply with OpenTelemetry specification. Instrument names must
+   * consist of alphanumeric characters, '_', '.', '-', '/', and must start with a letter. Invalid
+   * characters are stripped from the name.
    *
    * @param name the original metric name from Dropwizard
    * @return the sanitized instrument name
@@ -71,8 +70,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     String sanitized = name.replaceAll("[^a-zA-Z0-9._/-]", "");
 
     if (sanitized.isEmpty()) {
-      throw new IllegalArgumentException(
-          "Metric name '" + name + "' contains no valid characters");
+      throw new IllegalArgumentException("Metric name '" + name + "' contains no valid characters");
     }
 
     // Ensure the name starts with a letter
