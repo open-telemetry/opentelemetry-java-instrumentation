@@ -92,14 +92,7 @@ class HttpClientExperimentalMetricsTest {
                                 point ->
                                     point
                                         .hasSum(100 /* bytes */)
-                                        // those span attributes must be discarded by attribute
-                                        // advice
-                                        .hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes)
-                                                    .doesNotContainKey("http.request.body.size")
-                                                    .doesNotContainKey("http.response.body.size"))
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
@@ -125,7 +118,7 @@ class HttpClientExperimentalMetricsTest {
                                 point ->
                                     point
                                         .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
