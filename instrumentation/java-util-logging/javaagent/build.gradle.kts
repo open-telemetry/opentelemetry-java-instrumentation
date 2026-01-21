@@ -9,8 +9,6 @@ dependencies {
 
   // ensure no cross interference
   testInstrumentation(project(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent"))
-
-  testImplementation("org.awaitility:awaitility")
 }
 
 tasks {
