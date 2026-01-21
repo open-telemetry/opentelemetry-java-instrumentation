@@ -290,7 +290,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("storedProceduresWithKeywordsArgs")
-  @Disabled("P2: Stored procedure names containing keywords")
   void storedProceduresWithKeywords(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -305,7 +304,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("windowFunctionsArgs")
-  @Disabled("P2: Window functions with PARTITION keyword")
   void windowFunctions(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -321,7 +319,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("escapedQuotesArgs")
-  @Disabled("P2: Escaped quotes in identifiers")
   void escapedQuotesInIdentifiers(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);

@@ -35,7 +35,7 @@ HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
-BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+BACKTICK_QUOTED_STR  = "`" ("``" | [^`])* "`"
 BRACKET_QUOTED_STR   = "[" [^\]]* "]"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
@@ -470,6 +470,18 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
+  private class Execute extends Operation {
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        storedProcedureName = yytext();
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
   private class Update extends SimpleOperation {}
   private class Merge extends SimpleOperation {}
   private class Create extends DdlOperation {}
@@ -532,6 +544,14 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment && operation == NoOp.INSTANCE) {
             operation = new Call();
             appendOperationToSummary("CALL");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "EXECUTE" | "EXEC" {
+          if (!insideComment && operation == NoOp.INSTANCE) {
+            operation = new Execute();
+            appendOperationToSummary("EXECUTE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
