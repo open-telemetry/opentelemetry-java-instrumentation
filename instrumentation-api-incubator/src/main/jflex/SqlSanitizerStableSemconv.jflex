@@ -477,15 +477,25 @@ WHITESPACE           = [ \t\r\n]+
 
   private class Delete extends Operation {
     boolean expectingTableName = false;
+    boolean identifierCaptured = false;
 
     void handleFrom() {
       expectingTableName = true;
+    }
+
+    void handleSelect() {
+      // Once we've captured the DELETE table, any SELECT is a subquery
+      if (identifierCaptured) {
+        operation = new Select();
+        appendOperationToSummary("SELECT");
+      }
     }
 
     void handleIdentifier() {
       if (expectingTableName) {
         appendTargetToSummary();
         expectingTableName = false;
+        identifierCaptured = true;
       }
     }
   }
@@ -545,7 +555,24 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Update extends SimpleOperation {}
+  private class Update extends Operation {
+    boolean identifierCaptured = false;
+
+    void handleSelect() {
+      // Once we've captured the UPDATE table, any SELECT is a subquery
+      if (identifierCaptured) {
+        operation = new Select();
+        appendOperationToSummary("SELECT");
+      }
+    }
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
   private class Merge extends SimpleOperation {}
   private class Create extends DdlOperation {}
   private class Drop extends DdlOperation {}
