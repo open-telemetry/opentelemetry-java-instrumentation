@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -58,6 +59,13 @@ class RpcAttributesExtractorTest {
         return null;
       }
       return service + "/" + method;
+    }
+
+    @Nullable
+    @Override
+    public String getErrorType(
+        Map<String, String> request, @Nullable Void response, @Nullable Throwable error) {
+      return request.get("errorType");
     }
 
     @Override
@@ -138,5 +146,64 @@ class RpcAttributesExtractorTest {
 
     extractor.onEnd(attributes, context, request, null, null);
     assertThat(attributes.build()).containsOnly(expectedArray);
+  }
+
+  @Test
+  void shouldExtractErrorType_getter() {
+    Map<String, String> request = new HashMap<>();
+    request.put("service", "my.Service");
+    request.put("method", "Method");
+    request.put("errorType", "CANCELLED");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        RpcServerAttributesExtractor.create(new TestGetter(false));
+
+    Context context = Context.root();
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, context, request);
+    extractor.onEnd(attributes, context, request, null, null);
+
+    if (SemconvStability.emitStableRpcSemconv()) {
+      assertThat(attributes.build()).containsEntry(ERROR_TYPE, "CANCELLED");
+    }
+  }
+
+  @Test
+  void shouldExtractErrorType_exceptionClassName() {
+    Map<String, String> request = new HashMap<>();
+    request.put("service", "my.Service");
+    request.put("method", "Method");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        RpcServerAttributesExtractor.create(new TestGetter(false));
+
+    Context context = Context.root();
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, context, request);
+    extractor.onEnd(attributes, context, request, null, new IllegalArgumentException());
+
+    if (SemconvStability.emitStableRpcSemconv()) {
+      assertThat(attributes.build())
+          .containsEntry(ERROR_TYPE, "java.lang.IllegalArgumentException");
+    }
+  }
+
+  @Test
+  void shouldNotExtractErrorType_noError() {
+    Map<String, String> request = new HashMap<>();
+    request.put("service", "my.Service");
+    request.put("method", "Method");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        RpcServerAttributesExtractor.create(new TestGetter(false));
+
+    Context context = Context.root();
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, context, request);
+    extractor.onEnd(attributes, context, request, null, null);
+
+    if (SemconvStability.emitStableRpcSemconv()) {
+      assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
+    }
   }
 }
