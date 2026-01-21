@@ -126,7 +126,6 @@ class ProblematicSqlQuerySummaryTest {
 
   @ParameterizedTest
   @MethodSource("insertSelectArgs")
-  @Disabled("P0: INSERT...SELECT should capture both operations and tables")
   void insertSelect(String sql, String expectedSummary) {
     SqlStatementInfo result = sanitize(sql);
     assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
@@ -446,9 +445,9 @@ class ProblematicSqlQuerySummaryTest {
         // DDL operations
         Arguments.of("CREATE TABLE users (id INT)", "CREATE TABLE users"),
         Arguments.of("DROP TABLE users", "DROP TABLE users"),
-        // INDEX operations don't capture the index name (only "INDEX" keyword)
-        Arguments.of("CREATE INDEX idx_name ON users(name)", "CREATE INDEX"),
-        Arguments.of("DROP INDEX idx_name", "DROP INDEX"),
+        // INDEX operations capture the index name
+        Arguments.of("CREATE INDEX idx_name ON users(name)", "CREATE INDEX idx_name"),
+        Arguments.of("DROP INDEX idx_name", "DROP INDEX idx_name"),
         // Comments should be ignored (but currently only block comments work correctly)
         // Arguments.of("SELECT * FROM users -- comment", "SELECT users"), // Line comments broken
         Arguments.of("SELECT * FROM users /* comment */", "SELECT users"));

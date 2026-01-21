@@ -14,6 +14,9 @@ public abstract class SqlStatementInfo {
   private static final String SQL_CALL = "CALL";
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
+  /**
+   * Creates a SqlStatementInfo with all fields.
+   */
   public static SqlStatementInfo create(
       @Nullable String queryText,
       @Nullable String operationName,
@@ -21,6 +24,16 @@ public abstract class SqlStatementInfo {
       @Nullable String querySummary) {
     String truncatedQuerySummary = truncateQuerySummary(querySummary);
     return new AutoValue_SqlStatementInfo(queryText, operationName, target, truncatedQuerySummary);
+  }
+
+  /**
+   * Creates a SqlStatementInfo without query summary (for old semconv).
+   */
+  static SqlStatementInfo create(
+      @Nullable String queryText,
+      @Nullable String operationName,
+      @Nullable String target) {
+    return new AutoValue_SqlStatementInfo(queryText, operationName, target, null);
   }
 
   @Nullable

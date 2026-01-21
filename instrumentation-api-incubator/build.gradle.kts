@@ -52,6 +52,29 @@ val generateJflex by tasks.registering(JavaExec::class) {
   }
 }
 
+val generateJflexStableSemconv by tasks.registering(JavaExec::class) {
+  classpath(jflex)
+  mainClass.set("jflex.Main")
+
+  inputs.dir(jflexSourceDir)
+  outputs.dir(jflexOutputDir)
+
+  val sourceDir = jflexSourceDir
+  val outputDirProvider = jflexOutputDir
+
+  doFirst {
+    val outputDir = outputDirProvider.get().asFile
+    outputDir.mkdirs()
+    val specFile = sourceDir.asFile.resolve("SqlSanitizerStableSemconv.jflex")
+    args(
+      "-d",
+      outputDir.absolutePath,
+      "--nobak",
+      specFile.absolutePath,
+    )
+  }
+}
+
 sourceSets {
   main {
     java.srcDir(jflexOutputDir)
@@ -59,13 +82,14 @@ sourceSets {
 }
 
 tasks.compileJava {
-  dependsOn(generateJflex)
+  dependsOn(generateJflex, generateJflexStableSemconv)
 }
 
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
     exclude("**/AutoSqlSanitizer.java")
+    exclude("**/AutoSqlSanitizerStableSemconv.java")
   }
 
   // Work around https://github.com/jflex-de/jflex/issues/762
@@ -76,7 +100,7 @@ tasks {
   }
 
   sourcesJar {
-    dependsOn(generateJflex)
+    dependsOn(generateJflex, generateJflexStableSemconv)
     // Avoid configuration cache issue by not capturing task reference
     from("src/main/jflex") {
       include("**/*.java")

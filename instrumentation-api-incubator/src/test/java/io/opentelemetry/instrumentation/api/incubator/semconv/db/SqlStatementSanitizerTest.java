@@ -538,9 +538,9 @@ class SqlStatementSanitizerTest {
             expect("ALTER TABLE", "table", "ALTER TABLE table")),
         Arguments.of(
             "CREATE INDEX types_name ON types (name)",
-            expect("CREATE INDEX", null, "CREATE INDEX")),
+            expect("CREATE INDEX", null, "CREATE INDEX types_name")),
         Arguments.of(
-            "DROP INDEX types_name ON types (name)", expect("DROP INDEX", null, "DROP INDEX")),
+            "DROP INDEX types_name ON types (name)", expect("DROP INDEX", null, "DROP INDEX types_name")),
         Arguments.of(
             "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
             expect("CREATE VIEW", null, "CREATE VIEW SELECT")),
