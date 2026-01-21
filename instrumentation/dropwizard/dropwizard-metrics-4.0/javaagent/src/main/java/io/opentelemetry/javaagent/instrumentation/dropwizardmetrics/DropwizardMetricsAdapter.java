@@ -21,9 +21,13 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public final class DropwizardMetricsAdapter implements MetricRegistryListener {
+
+  private static final Logger logger = Logger.getLogger(DropwizardMetricsAdapter.class.getName());
 
   private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
   private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9._/-]");
@@ -57,29 +61,38 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
   /**
    * Sanitizes instrument names to comply with OpenTelemetry specification. Instrument names must
    * consist of alphanumeric characters, '_', '.', '-', '/', and must start with a letter. Invalid
-   * characters are stripped from the name. If the name is invalid (null, empty, contains no valid
-   * characters, or doesn't start with a letter), returns empty string which causes the SDK to
-   * return a noop instrument.
+   * characters are stripped from the name. Logs a warning if the name is changed or if the name is
+   * invalid and cannot be sanitized.
    *
    * @param name the original metric name from Dropwizard
-   * @return the sanitized instrument name, or empty string if invalid (causing SDK to return noop
-   *     instrument)
+   * @return the sanitized instrument name, or null if invalid (causing instrument creation to be
+   *     skipped)
    */
   private static String sanitizeInstrumentName(String name) {
     if (name == null || name.isEmpty()) {
-      return "";
+      logger.log(
+          Level.WARNING, "Dropwizard metric name is null or empty, skipping instrument creation");
+      return null;
     }
 
     // Strip all characters that are not alphanumeric, '_', '.', '-', or '/'
     String sanitized = INVALID_CHARACTERS.matcher(name).replaceAll("");
 
     if (sanitized.isEmpty()) {
-      return "";
+      logger.log(
+          Level.WARNING,
+          "Dropwizard metric name ''{0}'' contains no valid characters after sanitization, skipping instrument creation",
+          name);
+      return null;
     }
 
     // Ensure the name starts with a letter
     if (!Character.isLetter(sanitized.charAt(0))) {
-      return "";
+      logger.log(
+          Level.WARNING,
+          "Dropwizard metric name ''{0}'' does not start with a letter after sanitization, skipping instrument creation",
+          name);
+      return null;
     }
 
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
@@ -87,14 +100,26 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
       sanitized = sanitized.substring(0, 255);
     }
 
+    // Log if sanitization changed the name
+    if (!sanitized.equals(name)) {
+      logger.log(
+          Level.WARNING,
+          "Dropwizard metric name ''{0}'' has been sanitized to ''{1}''",
+          new Object[] {name, sanitized});
+    }
+
     return sanitized;
   }
 
   @Override
   public void onGaugeAdded(String name, Gauge<?> gauge) {
+    String sanitizedName = sanitizeInstrumentName(name);
+    if (sanitizedName == null) {
+      return;
+    }
     ObservableDoubleGauge otelGauge =
         otelMeter
-            .gaugeBuilder(sanitizeInstrumentName(name))
+            .gaugeBuilder(sanitizedName)
             .buildWithCallback(
                 measurement -> {
                   Object val = gauge.getValue();
@@ -115,10 +140,14 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   @Override
   public void onCounterAdded(String name, Counter dropwizardCounter) {
+    String sanitizedName = sanitizeInstrumentName(name);
+    if (sanitizedName == null) {
+      return;
+    }
     dropwizardCounters.put(name, dropwizardCounter);
     LongUpDownCounter otelCounter =
         otelUpDownCounters.computeIfAbsent(
-            name, n -> otelMeter.upDownCounterBuilder(sanitizeInstrumentName(n)).build());
+            name, n -> otelMeter.upDownCounterBuilder(sanitizedName).build());
     otelUpDownCounterField.set(dropwizardCounter, otelCounter);
   }
 
@@ -140,10 +169,14 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   @Override
   public void onHistogramAdded(String name, Histogram dropwizardHistogram) {
+    String sanitizedName = sanitizeInstrumentName(name);
+    if (sanitizedName == null) {
+      return;
+    }
     dropwizardHistograms.put(name, dropwizardHistogram);
     LongHistogram otelHistogram =
         otelHistograms.computeIfAbsent(
-            name, n -> otelMeter.histogramBuilder(sanitizeInstrumentName(n)).ofLongs().build());
+            name, n -> otelMeter.histogramBuilder(sanitizedName).ofLongs().build());
     otelHistogramField.set(dropwizardHistogram, otelHistogram);
   }
 
@@ -165,10 +198,13 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   @Override
   public void onMeterAdded(String name, Meter dropwizardMeter) {
+    String sanitizedName = sanitizeInstrumentName(name);
+    if (sanitizedName == null) {
+      return;
+    }
     dropwizardMeters.put(name, dropwizardMeter);
     LongCounter otelCounter =
-        otelCounters.computeIfAbsent(
-            name, n -> otelMeter.counterBuilder(sanitizeInstrumentName(n)).build());
+        otelCounters.computeIfAbsent(name, n -> otelMeter.counterBuilder(sanitizedName).build());
     otelCounterField.set(dropwizardMeter, otelCounter);
   }
 
@@ -190,10 +226,14 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   @Override
   public void onTimerAdded(String name, Timer dropwizardTimer) {
+    String sanitizedName = sanitizeInstrumentName(name);
+    if (sanitizedName == null) {
+      return;
+    }
     dropwizardTimers.put(name, dropwizardTimer);
     DoubleHistogram otelHistogram =
         otelDoubleHistograms.computeIfAbsent(
-            name, n -> otelMeter.histogramBuilder(sanitizeInstrumentName(n)).setUnit("ms").build());
+            name, n -> otelMeter.histogramBuilder(sanitizedName).setUnit("ms").build());
     otelDoubleHistogramField.set(dropwizardTimer, otelHistogram);
   }
 
