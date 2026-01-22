@@ -488,6 +488,9 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "select col from table join anotherTable",
             expect("SELECT", null, "SELECT table anotherTable")),
+        Arguments.of(
+            "SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id JOIN t3 ON t2.x = t3.x",
+            expect("SELECT", null, "SELECT t1 t2 t3")),
         // TODO: subquery table capture will be added in a later commit
         Arguments.of(
             "select col from (select * from anotherTable)",

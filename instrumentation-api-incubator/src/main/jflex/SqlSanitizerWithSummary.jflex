@@ -111,6 +111,9 @@ WHITESPACE           = [ \t\r\n]+
     void handleComma() {}
     void handleNext() {}
     void handleOperationTarget(String target) {}
+    void handleOpenParen() {}
+    void handleCloseParen() {}
+    void handleSelect() {}
     boolean expectingOperationTarget() {
       return false;
     }
@@ -150,6 +153,9 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingTableName = false;
     boolean mainTableSetAlready = false;
     int identifiersAfterMainFromClause = 0;
+    boolean expectingJoinTableName = false;
+    int identifiersAfterJoin = 0;
+    boolean inJoinSubquery = false;
 
     void handleFrom() {
       if (parenLevel == 0) {
@@ -161,12 +167,45 @@ WHITESPACE           = [ \t\r\n]+
     void handleJoin() {
       // After JOIN, expect a table name
       expectingTableName = true;
+      expectingJoinTableName = true;
+      identifiersAfterJoin = 0;
       identifiersAfterMainFromClause = 0;
+    }
+
+    void handleOpenParen() {
+      // If we just saw JOIN and now see '(', we're entering a JOIN subquery
+      if (expectingJoinTableName && identifiersAfterJoin == 0) {
+        inJoinSubquery = true;
+      }
+    }
+
+    void handleCloseParen() {
+      // Exiting a JOIN subquery
+      if (inJoinSubquery) {
+        inJoinSubquery = false;
+        expectingJoinTableName = false;
+      }
+    }
+
+    void handleSelect() {
+      // SELECT inside a JOIN subquery
     }
 
     void handleIdentifier() {
       if (identifiersAfterMainFromClause > 0) {
         ++identifiersAfterMainFromClause;
+      }
+
+      if (expectingJoinTableName) {
+        ++identifiersAfterJoin;
+        // Skip if we're inside a JOIN subquery (don't capture table names until subquery closes)
+        if (!inJoinSubquery && parenLevel == 0) {
+          appendTargetToSummary();
+          expectingJoinTableName = false;
+          expectingTableName = false;
+          identifiersAfterJoin = 0;
+          return;
+        }
       }
 
       if (!expectingTableName) {
@@ -302,6 +341,9 @@ WHITESPACE           = [ \t\r\n]+
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
               appendOperationToSummary("SELECT");
+            }
+            if (operation != null) {
+              operation.handleSelect();
             }
           }
           appendCurrentFragment();
@@ -465,6 +507,9 @@ WHITESPACE           = [ \t\r\n]+
   {OPEN_PAREN}  {
           if (!insideComment) {
             parenLevel += 1;
+            if (operation != null) {
+              operation.handleOpenParen();
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -472,6 +517,9 @@ WHITESPACE           = [ \t\r\n]+
   {CLOSE_PAREN} {
           if (!insideComment) {
             parenLevel -= 1;
+            if (operation != null) {
+              operation.handleCloseParen();
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
