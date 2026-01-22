@@ -17,7 +17,6 @@ otelJava {
 }
 
 dependencies {
-  library("org.apache.groovy:groovy")
   library("com.xuxueli:xxl-job-core:2.1.2") {
     exclude("org.codehaus.groovy", "groovy")
   }
@@ -26,6 +25,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
+  testImplementation("org.apache.groovy:groovy")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
   latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") { // see xxl-job-2.3.0 module
     exclude("org.codehaus.groovy", "groovy")

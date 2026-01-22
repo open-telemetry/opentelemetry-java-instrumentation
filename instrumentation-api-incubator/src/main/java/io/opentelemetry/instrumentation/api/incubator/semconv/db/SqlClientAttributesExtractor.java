@@ -21,9 +21,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
-import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -42,8 +40,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
-      AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -86,7 +82,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
-    Long batchSize = getter.getBatchSize(request);
+    Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
 
     if (SemconvStability.emitOldDatabaseSemconv()) {
@@ -107,6 +103,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (isBatch) {
         internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
       }
+      boolean parameterizedQuery = getter.isParameterizedQuery(request);
+      boolean shouldSanitize = statementSanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
@@ -114,7 +112,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         internalSet(
             attributes,
             DB_QUERY_TEXT,
-            statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
+            shouldSanitize ? sanitizedStatement.getQueryText() : rawQueryText);
         internalSet(
             attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
         internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getCollectionName());
@@ -122,7 +120,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             attributes, DB_STORED_PROCEDURE_NAME, sanitizedStatement.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
-            MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
+            MultiQuery.analyze(getter.getRawQueryTexts(request), shouldSanitize);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         internalSet(attributes, DB_OPERATION_NAME, multiQuery.getOperationName());
         internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getCollectionName());
@@ -130,25 +128,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
 
-    Map<String, String> queryParameters = getter.getQueryParameters(request);
-    setQueryParameters(attributes, isBatch, queryParameters);
-
     // calling this last so explicit getDbOperationName(), getDbCollectionName(),
     // getDbQueryText(), and getDbQuerySummary() implementations can override
     // the parsed values from above
-    DbClientAttributesExtractor.onStartCommon(attributes, getter, request);
+    DbClientAttributesExtractor.onStartCommon(attributes, getter, request, captureQueryParameters);
     serverAttributesExtractor.onStart(attributes, parentContext, request);
-  }
-
-  private void setQueryParameters(
-      AttributesBuilder attributes, boolean isBatch, Map<String, String> queryParameters) {
-    if (captureQueryParameters && !isBatch && queryParameters != null) {
-      for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
-        String key = entry.getKey();
-        String value = entry.getValue();
-        internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
-      }
-    }
   }
 
   // String.join is not available on android

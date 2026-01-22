@@ -21,26 +21,8 @@ public abstract class SqlStatementInfo {
   @Nullable
   public abstract String getQueryText();
 
-  /**
-   * @deprecated Use {@link #getQueryText()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getFullStatement() {
-    return getQueryText();
-  }
-
   @Nullable
   public abstract String getOperationName();
-
-  /**
-   * @deprecated Use {@link #getOperationName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getOperation() {
-    return getOperationName();
-  }
 
   /**
    * Returns the table/collection name, or null for CALL operations.
@@ -56,15 +38,6 @@ public abstract class SqlStatementInfo {
   @Nullable
   public String getStoredProcedureName() {
     return SQL_CALL.equals(getOperationName()) ? getTarget() : null;
-  }
-
-  /**
-   * @deprecated Use {@link #getCollectionName()} or {@link #getStoredProcedureName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getMainIdentifier() {
-    return getCollectionName() != null ? getCollectionName() : getStoredProcedureName();
   }
 
   @Nullable

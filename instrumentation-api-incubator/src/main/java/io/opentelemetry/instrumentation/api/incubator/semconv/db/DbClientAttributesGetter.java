@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
+import java.util.Collections;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -20,26 +22,11 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-@SuppressWarnings("deprecation") // until DbClientCommonAttributesGetter is removed
 public interface DbClientAttributesGetter<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE>,
-        NetworkAttributesGetter<REQUEST, RESPONSE>,
-        ServerAttributesGetter<REQUEST> {
+    extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST> {
 
-  /**
-   * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
-   */
-  @Deprecated
   @Nullable
-  default String getStatement(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
-  default String getDbQueryText(REQUEST request) {
-    return getStatement(request);
-  }
+  String getDbQueryText(REQUEST request);
 
   // TODO: make this required to implement
   @Nullable
@@ -47,29 +34,51 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
+  @Nullable
+  String getDbOperationName(REQUEST request);
+
+  // TODO: make this required to implement
+  String getDbSystemName(REQUEST request);
+
+  @Nullable
+  String getDbNamespace(REQUEST request);
+
   /**
-   * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
+   * Returns the database user name. This is only used for old semantic conventions.
+   *
+   * @deprecated There is no replacement at this time.
    */
   @Deprecated
   @Nullable
-  default String getOperation(REQUEST request) {
+  default String getUser(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns the database connection string. This is only used for old semantic conventions.
+   *
+   * @deprecated There is no replacement at this time.
+   */
+  @Deprecated
+  @Nullable
+  default String getConnectionString(REQUEST request) {
     return null;
   }
 
   // TODO: make this required to implement
   @Nullable
-  default String getDbOperationName(REQUEST request) {
-    return getOperation(request);
-  }
-
-  // TODO: make this required to implement
-  default String getDbSystemName(REQUEST request) {
-    return getDbSystem(request);
+  default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
   }
 
   // TODO: make this required to implement
   @Nullable
-  default String getResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
-    return getResponseStatus(response, error);
+  default Long getDbOperationBatchSize(REQUEST request) {
+    return null;
+  }
+
+  // TODO: make this required to implement
+  default Map<String, String> getDbQueryParameters(REQUEST request) {
+    return Collections.emptyMap();
   }
 }

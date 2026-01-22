@@ -136,11 +136,16 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String namespace = getter.getDbNamespace(request);
-      String operationName = getter.getDbOperationName(request);
       if (SemconvStability.emitStableDatabaseSemconv()) {
+        String querySummary = getter.getDbQuerySummary(request);
+        if (querySummary != null) {
+          return querySummary;
+        }
+        String operationName = getter.getDbOperationName(request);
         return computeSpanNameStable(getter, request, operationName, null, null);
       }
+      String namespace = getter.getDbNamespace(request);
+      String operationName = getter.getDbOperationName(request);
       return computeSpanName(namespace, operationName, null, null);
     }
   }
@@ -185,7 +190,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
         String operationName = sanitizedStatement.getOperationName();
         if (isBatch(request)) {
-          operationName = "BATCH " + operationName;
+          operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
         }
         return computeSpanNameStable(
             getter,
@@ -205,7 +210,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     }
 
     private boolean isBatch(REQUEST request) {
-      Long batchSize = getter.getBatchSize(request);
+      Long batchSize = getter.getDbOperationBatchSize(request);
       return batchSize != null && batchSize > 1;
     }
   }

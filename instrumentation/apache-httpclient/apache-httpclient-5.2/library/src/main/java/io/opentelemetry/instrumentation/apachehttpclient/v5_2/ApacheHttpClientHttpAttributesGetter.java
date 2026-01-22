@@ -52,7 +52,7 @@ enum ApacheHttpClientHttpAttributesGetter
   }
 
   private static List<String> getHeader(ApacheHttpClientRequest messageHeaders, String name) {
-    return headersToList(messageHeaders.getDelegate().getHeaders(name));
+    return headersToList(messageHeaders.getRequest().getHeaders(name));
   }
 
   // minimize memory overhead by not using streams
@@ -95,17 +95,17 @@ enum ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
-    return request.getDelegate().getAuthority().getHostName();
+    return request.getRequest().getAuthority().getHostName();
   }
 
   @Override
   public Integer getServerPort(ApacheHttpClientRequest request) {
-    return request.getDelegate().getAuthority().getPort();
+    return request.getRequest().getAuthority().getPort();
   }
 
   private static ProtocolVersion getVersion(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    ProtocolVersion protocolVersion = request.getDelegate().getVersion();
+    ProtocolVersion protocolVersion = request.getRequest().getVersion();
     if (protocolVersion == null && response != null) {
       protocolVersion = response.getVersion();
     }

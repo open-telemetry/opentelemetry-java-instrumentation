@@ -14,13 +14,13 @@ class MultiQuery {
 
   @Nullable private final String collectionName;
   @Nullable private final String storedProcedureName;
-  @Nullable private final String operationName;
+  private final String operationName;
   private final Set<String> queryTexts;
 
   private MultiQuery(
       @Nullable String collectionName,
       @Nullable String storedProcedureName,
-      @Nullable String operationName,
+      String operationName,
       Set<String> queryTexts) {
     this.collectionName = collectionName;
     this.storedProcedureName = storedProcedureName;
@@ -64,39 +64,12 @@ class MultiQuery {
     return storedProcedureName;
   }
 
-  /**
-   * @deprecated Use {@link #getCollectionName()} or {@link #getStoredProcedureName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getMainIdentifier() {
-    return collectionName != null ? collectionName : storedProcedureName;
-  }
-
-  @Nullable
   public String getOperationName() {
     return operationName;
   }
 
-  /**
-   * @deprecated Use {@link #getOperationName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getOperation() {
-    return getOperationName();
-  }
-
   public Set<String> getQueryTexts() {
     return queryTexts;
-  }
-
-  /**
-   * @deprecated Use {@link #getQueryTexts()} instead.
-   */
-  @Deprecated
-  public Set<String> getStatements() {
-    return getQueryTexts();
   }
 
   private static class UniqueValue {

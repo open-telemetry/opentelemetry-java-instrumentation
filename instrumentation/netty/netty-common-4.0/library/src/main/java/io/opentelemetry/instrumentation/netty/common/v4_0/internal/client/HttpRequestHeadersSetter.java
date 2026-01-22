@@ -13,6 +13,6 @@ enum HttpRequestHeadersSetter implements TextMapSetter<NettyRequest> {
 
   @Override
   public void set(NettyRequest requestAndChannel, String key, String value) {
-    requestAndChannel.request().headers().set(key, value);
+    requestAndChannel.getRequest().headers().set(key, value);
   }
 }
