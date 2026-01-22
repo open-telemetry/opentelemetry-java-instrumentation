@@ -43,9 +43,16 @@ public class AgentClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
+  @Nullable private static final String AGENT_INITIALIZER_JAR = initializerJar();
+
   @Nullable
-  private static final String AGENT_INITIALIZER_JAR =
-      ConfigPropertiesUtil.getString("otel.javaagent.experimental.initializer.jar");
+  private static String initializerJar() {
+    String value = System.getProperty("otel.javaagent.experimental.initializer.jar");
+    if (value != null) {
+      return value;
+    }
+    return System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR");
+  }
 
   private static final String META_INF = "META-INF/";
   private static final String META_INF_VERSIONS = META_INF + "versions/";

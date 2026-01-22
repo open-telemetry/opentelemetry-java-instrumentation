@@ -83,17 +83,22 @@ public final class AgentInitializer {
   }
 
   private static boolean isSecurityManagerSupportEnabled() {
-    return getBoolean("otel.javaagent.experimental.security-manager-support.enabled", false);
+    return getBoolean();
   }
 
-  private static boolean getBoolean(String property, boolean defaultValue) {
+  private static boolean getBoolean() {
     // this call deliberately uses anonymous class instead of lambda because using lambdas too
     // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     return doPrivileged(
         new PrivilegedAction<Boolean>() {
           @Override
           public Boolean run() {
-            return ConfigPropertiesUtil.getBoolean(property, defaultValue);
+            String value =
+                System.getProperty("otel.javaagent.experimental.security-manager-support.enabled");
+            if (value == null) {
+              value = System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED");
+            }
+            return Boolean.parseBoolean(value);
           }
         });
   }
