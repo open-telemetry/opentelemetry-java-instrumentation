@@ -8,8 +8,6 @@ dependencies {
 
   implementation(project(":instrumentation:lettuce:lettuce-common:library"))
 
-  compileOnly("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
-
   testImplementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
 }

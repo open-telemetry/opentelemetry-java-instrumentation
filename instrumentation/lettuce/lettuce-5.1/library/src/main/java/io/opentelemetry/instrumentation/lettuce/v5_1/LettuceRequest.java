@@ -12,10 +12,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * Represents a Lettuce Redis command request, containing all information needed for
- * instrumentation.
- */
 final class LettuceRequest {
 
   private final RedisCommandSanitizer sanitizer;
