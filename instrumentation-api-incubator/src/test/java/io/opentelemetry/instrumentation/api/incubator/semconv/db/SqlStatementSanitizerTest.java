@@ -610,7 +610,16 @@ class SqlStatementSanitizerTest {
         // Unknown operation
         Arguments.of("and now for something completely different", expect(null, null, null)),
         Arguments.of("", expect(null, null, null)),
-        Arguments.of(null, expect(null, null, null)));
+        Arguments.of(null, expect(null, null, null)),
+
+        // Embedded SELECT in DML operations
+        Arguments.of(
+            "INSERT INTO t1 SELECT * FROM t2", expect("INSERT", "t1", "INSERT t1 SELECT t2")),
+        Arguments.of(
+            "DELETE FROM t1 WHERE x IN (SELECT y FROM t2)",
+            expect("DELETE", "t1", "DELETE t1 SELECT t2")),
+        Arguments.of(
+            "UPDATE t1 SET x = (SELECT y FROM t2)", expect("UPDATE", "t1", "UPDATE t1 SELECT t2")));
   }
 
   private static Stream<Arguments> ddlArgs() {
@@ -630,13 +639,11 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "DROP INDEX types_name ON types (name)",
             expect("DROP INDEX", null, "DROP INDEX types_name")),
-        // TODO: embedded SELECT in DDL will be captured in a later commit
         Arguments.of(
             "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
-            expect("CREATE VIEW", null, "CREATE VIEW tmp")),
-        // TODO: embedded SELECT in DDL will be captured in a later commit
+            expect("CREATE VIEW", null, "CREATE VIEW tmp SELECT table")),
         Arguments.of(
             "CREATE PROCEDURE p AS SELECT * FROM table GO",
-            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p")));
+            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p SELECT table")));
   }
 }

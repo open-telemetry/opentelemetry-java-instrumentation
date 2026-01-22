@@ -123,6 +123,9 @@ WHITESPACE           = [ \t\r\n]+
     private String operationTarget = "";
     private boolean expectingOperationTarget = true;
     private boolean identifierCaptured = false;
+    private boolean inEmbeddedSelect = false;
+    private boolean expectingTableName = false;
+    private int selectParenLevel = -1;
 
     boolean expectingOperationTarget() {
       return expectingOperationTarget;
@@ -135,9 +138,24 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleIdentifier() {
-      if (!identifierCaptured) {
+      if (!identifierCaptured && !inEmbeddedSelect) {
         appendTargetToSummary();
         identifierCaptured = true;
+      } else if (inEmbeddedSelect && expectingTableName && parenLevel == selectParenLevel) {
+        appendTargetToSummary();
+        expectingTableName = false;
+      }
+    }
+
+    void handleSelect() {
+      inEmbeddedSelect = true;
+      selectParenLevel = parenLevel;
+      appendOperationToSummary("SELECT");
+    }
+
+    void handleFrom() {
+      if (inEmbeddedSelect) {
+        expectingTableName = true;
       }
     }
   }
@@ -254,38 +272,74 @@ WHITESPACE           = [ \t\r\n]+
   private class Insert extends Operation {
     boolean expectingTableName = false;
     boolean tableCaptured = false;
+    boolean inEmbeddedSelect = false;
+    boolean expectingSelectTableName = false;
+    int selectParenLevel = -1;
 
     void handleInto() {
       expectingTableName = true;
     }
 
     void handleIdentifier() {
-      if (!expectingTableName || tableCaptured) {
+      if (expectingTableName && !tableCaptured) {
+        appendTargetToSummary();
+        tableCaptured = true;
+        expectingTableName = false;
         return;
       }
 
-      appendTargetToSummary();
-      tableCaptured = true;
-      expectingTableName = false;
+      if (inEmbeddedSelect && expectingSelectTableName && parenLevel == selectParenLevel) {
+        appendTargetToSummary();
+        expectingSelectTableName = false;
+      }
+    }
+
+    void handleSelect() {
+      inEmbeddedSelect = true;
+      selectParenLevel = parenLevel;
+      appendOperationToSummary("SELECT");
+    }
+
+    void handleFrom() {
+      if (inEmbeddedSelect) {
+        expectingSelectTableName = true;
+      }
     }
   }
 
   private class Delete extends Operation {
     boolean expectingTableName = false;
     boolean tableCaptured = false;
+    boolean inEmbeddedSelect = false;
+    boolean expectingSelectTableName = false;
+    int selectParenLevel = -1;
 
     void handleFrom() {
-      expectingTableName = true;
+      if (!inEmbeddedSelect) {
+        expectingTableName = true;
+      } else {
+        expectingSelectTableName = true;
+      }
     }
 
     void handleIdentifier() {
-      if (!expectingTableName || tableCaptured) {
+      if (expectingTableName && !tableCaptured) {
+        appendTargetToSummary();
+        tableCaptured = true;
+        expectingTableName = false;
         return;
       }
 
-      appendTargetToSummary();
-      tableCaptured = true;
-      expectingTableName = false;
+      if (inEmbeddedSelect && expectingSelectTableName && parenLevel == selectParenLevel) {
+        appendTargetToSummary();
+        expectingSelectTableName = false;
+      }
+    }
+
+    void handleSelect() {
+      inEmbeddedSelect = true;
+      selectParenLevel = parenLevel;
+      appendOperationToSummary("SELECT");
     }
   }
 
@@ -301,7 +355,37 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Update extends SimpleOperation {}
+  private class Update extends Operation {
+    boolean identifierCaptured = false;
+    boolean inEmbeddedSelect = false;
+    boolean expectingSelectTableName = false;
+    int selectParenLevel = -1;
+
+    void handleIdentifier() {
+      if (!identifierCaptured && !inEmbeddedSelect) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+        return;
+      }
+
+      if (inEmbeddedSelect && expectingSelectTableName && parenLevel == selectParenLevel) {
+        appendTargetToSummary();
+        expectingSelectTableName = false;
+      }
+    }
+
+    void handleSelect() {
+      inEmbeddedSelect = true;
+      selectParenLevel = parenLevel;
+      appendOperationToSummary("SELECT");
+    }
+
+    void handleFrom() {
+      if (inEmbeddedSelect) {
+        expectingSelectTableName = true;
+      }
+    }
+  }
 
   private class Merge extends SimpleOperation {}
 
