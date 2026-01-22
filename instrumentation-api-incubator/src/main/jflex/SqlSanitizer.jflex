@@ -338,6 +338,12 @@ WHITESPACE           = [ \t\r\n]+
       mainIdentifier = null;
       return true;
     }
+
+    @Override
+    SqlStatementInfo getResult(String fullStatement) {
+      // For CALL operations, the identifier is a stored procedure name, not a collection name
+      return SqlStatementInfo.createStoredProcedure(fullStatement, "CALL", mainIdentifier);
+    }
   }
 
   private class Create extends DdlOperation {}

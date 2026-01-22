@@ -11,11 +11,16 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class SqlStatementInfo {
 
-  private static final String SQL_CALL = "CALL";
-
   public static SqlStatementInfo create(
-      @Nullable String queryText, @Nullable String operationName, @Nullable String target) {
-    return new AutoValue_SqlStatementInfo(queryText, operationName, target);
+      @Nullable String queryText, @Nullable String operationName, @Nullable String collectionName) {
+    return new AutoValue_SqlStatementInfo(queryText, operationName, collectionName, null);
+  }
+
+  public static SqlStatementInfo createStoredProcedure(
+      @Nullable String queryText,
+      @Nullable String operationName,
+      @Nullable String storedProcedureName) {
+    return new AutoValue_SqlStatementInfo(queryText, operationName, null, storedProcedureName);
   }
 
   @Nullable
@@ -24,22 +29,11 @@ public abstract class SqlStatementInfo {
   @Nullable
   public abstract String getOperationName();
 
-  /**
-   * Returns the table/collection name, or null for CALL operations.
-   *
-   * @see #getStoredProcedureName()
-   */
+  /** Returns the table/collection name, or null for stored procedure operations. */
   @Nullable
-  public String getCollectionName() {
-    return SQL_CALL.equals(getOperationName()) ? null : getTarget();
-  }
+  public abstract String getCollectionName();
 
-  /** Returns the stored procedure name for CALL operations, or null for other operations. */
+  /** Returns the stored procedure name, or null for other operations. */
   @Nullable
-  public String getStoredProcedureName() {
-    return SQL_CALL.equals(getOperationName()) ? getTarget() : null;
-  }
-
-  @Nullable
-  abstract String getTarget();
+  public abstract String getStoredProcedureName();
 }

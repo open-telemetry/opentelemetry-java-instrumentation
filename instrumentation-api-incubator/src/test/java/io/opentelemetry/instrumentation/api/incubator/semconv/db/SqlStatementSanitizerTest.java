@@ -75,11 +75,12 @@ class SqlStatementSanitizerTest {
     String query = sb.toString();
 
     String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
-    SqlStatementInfo expected = SqlStatementInfo.create(sanitizedQuery, "SELECT", "table");
 
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
+    assertThat(result.getOperationName()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isEqualTo("table");
   }
 
   @ParameterizedTest
@@ -291,13 +292,19 @@ class SqlStatementSanitizerTest {
             "SELECT * FROM TABLE WHERE FIELD = ?"));
   }
 
-  private static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
-    return sql -> SqlStatementInfo.create(sql, operation, identifier);
+  private static Function<String, SqlStatementInfo> expect(
+      String operationName, String collectionName) {
+    return sql -> SqlStatementInfo.create(sql, operationName, collectionName);
   }
 
   private static Function<String, SqlStatementInfo> expect(
-      String sql, String operation, String identifier) {
-    return ignored -> SqlStatementInfo.create(sql, operation, identifier);
+      String sql, String operationName, String collectionName) {
+    return ignored -> SqlStatementInfo.create(sql, operationName, collectionName);
+  }
+
+  private static Function<String, SqlStatementInfo> expectStoredProcedure(
+      String operationName, String storedProcedureName) {
+    return sql -> SqlStatementInfo.createStoredProcedure(sql, operationName, storedProcedureName);
   }
 
   private static Stream<Arguments> simplifyArgs() {
@@ -379,10 +386,10 @@ class SqlStatementSanitizerTest {
         Arguments.of("update /*table", expect("UPDATE", null)),
 
         // Call
-        Arguments.of("call test_proc()", expect("CALL", "test_proc")),
-        Arguments.of("call test_proc", expect("CALL", "test_proc")),
-        Arguments.of("call next value in hibernate_sequence", expect("CALL", null)),
-        Arguments.of("call db.test_proc", expect("CALL", "db.test_proc")),
+        Arguments.of("call test_proc()", expectStoredProcedure("CALL", "test_proc")),
+        Arguments.of("call test_proc", expectStoredProcedure("CALL", "test_proc")),
+        Arguments.of("call next value in hibernate_sequence", expectStoredProcedure("CALL", null)),
+        Arguments.of("call db.test_proc", expectStoredProcedure("CALL", "db.test_proc")),
 
         // Merge
         Arguments.of("merge into table", expect("MERGE", "table")),
