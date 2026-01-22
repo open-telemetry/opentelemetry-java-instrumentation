@@ -47,14 +47,4 @@ public final class GraphQLTelemetry {
   public Instrumentation createInstrumentation() {
     return new OpenTelemetryInstrumentation(helper);
   }
-
-  /**
-   * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
-   *
-   * @deprecated Use {@link #createInstrumentation()} instead.
-   */
-  @Deprecated
-  public Instrumentation newInstrumentation() {
-    return createInstrumentation();
-  }
 }

@@ -51,14 +51,4 @@ public final class GraphQLTelemetry {
     return new OpenTelemetryInstrumentation(
         helper, dataFetcherInstrumenter, createSpansForTrivialDataFetcher);
   }
-
-  /**
-   * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
-   *
-   * @deprecated Use {@link #createInstrumentation()} instead.
-   */
-  @Deprecated
-  public Instrumentation newInstrumentation() {
-    return createInstrumentation();
-  }
 }
