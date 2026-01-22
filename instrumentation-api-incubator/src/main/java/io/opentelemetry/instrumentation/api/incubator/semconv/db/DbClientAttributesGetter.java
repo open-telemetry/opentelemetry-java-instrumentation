@@ -25,11 +25,8 @@ import javax.annotation.Nullable;
 public interface DbClientAttributesGetter<REQUEST, RESPONSE>
     extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST> {
 
-  // TODO: make this required to implement
   @Nullable
-  default String getDbQueryText(REQUEST request) {
-    return null;
-  }
+  String getDbQueryText(REQUEST request);
 
   // TODO: make this required to implement
   @Nullable
@@ -37,11 +34,8 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
-  // TODO: make this required to implement
   @Nullable
-  default String getDbOperationName(REQUEST request) {
-    return null;
-  }
+  String getDbOperationName(REQUEST request);
 
   // TODO: make this required to implement
   String getDbSystemName(REQUEST request);
