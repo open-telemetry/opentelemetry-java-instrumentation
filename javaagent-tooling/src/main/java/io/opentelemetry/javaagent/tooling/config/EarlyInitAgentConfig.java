@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.javaagent.bootstrap.ConfigPropertiesUtil;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -14,6 +14,8 @@ import javax.annotation.Nullable;
  * io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties}) is initialized.
  */
 public final class EarlyInitAgentConfig {
+
+  static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
 
   private static final EarlyInitAgentConfig INSTANCE =
       new EarlyInitAgentConfig(ConfigurationFile.getProperties());
@@ -26,6 +28,42 @@ public final class EarlyInitAgentConfig {
 
   private EarlyInitAgentConfig(Map<String, String> configFileContents) {
     this.configFileContents = configFileContents;
+  }
+
+  /**
+   * Returns the configuration file path set via system property or environment variable.
+   *
+   * <p>We cannot use {@link #get()}, because that would lead to infinite recursion.
+   */
+  @Nullable
+  static String getConfigurationFile() {
+    return getStringProperty(CONFIGURATION_FILE_PROPERTY);
+  }
+
+  /**
+   * Returns the boolean value of the given property name from system properties and environment
+   * variables.
+   */
+  static boolean getBooleanProperty(String propertyName, boolean defaultValue) {
+    String value = getStringProperty(propertyName);
+    return value == null ? defaultValue : Boolean.parseBoolean(value);
+  }
+
+  /**
+   * Returns the string value of the given property name from system properties and environment
+   * variables.
+   */
+  @Nullable
+  static String getStringProperty(String propertyName) {
+    String value = System.getProperty(propertyName);
+    if (value != null) {
+      return value;
+    }
+    return System.getenv(toEnvVarName(propertyName));
+  }
+
+  private static String toEnvVarName(String propertyName) {
+    return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }
 
   @Nullable
@@ -56,7 +94,7 @@ public final class EarlyInitAgentConfig {
 
   @Nullable
   private String getString(String propertyName) {
-    String value = ConfigPropertiesUtil.getString(propertyName);
+    String value = getStringProperty(propertyName);
     if (value != null) {
       return value;
     }
@@ -67,12 +105,12 @@ public final class EarlyInitAgentConfig {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
-    return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
+    return getBooleanProperty(propertyName, configFileValue);
   }
 
   private int getInt(String propertyName, int defaultValue) {
     try {
-      String value = ConfigPropertiesUtil.getString(propertyName);
+      String value = getStringProperty(propertyName);
       if (value != null) {
         return Integer.parseInt(value);
       }
