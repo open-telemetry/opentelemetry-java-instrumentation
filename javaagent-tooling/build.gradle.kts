@@ -63,7 +63,6 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("com.google.guava:guava")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {
