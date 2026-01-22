@@ -8,15 +8,11 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
-import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
-import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
@@ -54,11 +50,6 @@ public final class OpenTelemetryInstaller {
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
       AgentDistributionConfig.set(distributionFromConfigProperties(configProperties));
-    } else {
-      // Provide a fake ConfigProperties until we have migrated all runtime configuration
-      // access to use declarative configuration API
-      configProperties =
-          getDeclarativeConfigBridgedProperties(((ExtendedOpenTelemetry) sdk).getConfigProvider());
     }
 
     // AgentDistributionConfig is set by the JavaagentDistributionAccessCustomizerProvider
@@ -127,18 +118,6 @@ public final class OpenTelemetryInstaller {
         return isDefaultEnabled;
       }
     };
-  }
-
-  // Visible for testing
-  static ConfigProperties getDeclarativeConfigBridgedProperties(ConfigProvider configProvider) {
-    return new DeclarativeConfigPropertiesBridgeBuilder()
-        .addMapping("otel.javaagent", "agent")
-        // these properties are used to initialize the SDK before the configuration file
-        // is loaded for consistency, we pass them to the bridge, so that they can be read
-        // later with the same value from the {@link DeclarativeConfigPropertiesBridge}
-        .addOverride("otel.javaagent.debug", EarlyInitAgentConfig.get().isDebug())
-        .addOverride("otel.javaagent.logging", EarlyInitAgentConfig.get().getLogging())
-        .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
   }
 
   private static void setForceFlush(OpenTelemetrySdk sdk) {
