@@ -6,11 +6,8 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -54,14 +51,9 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class ProblematicSqlQuerySummaryTest {
 
-  @BeforeEach
-  void requireStableSemconv() {
-    assumeTrue(SemconvStability.emitStableDatabaseSemconv());
-  }
-
   // Helper method for test cases
   private static SqlStatementInfo sanitize(String sql) {
-    return SqlStatementSanitizer.create(true).sanitize(sql);
+    return SqlStatementSanitizer.create(true).sanitizeWithSummary(sql);
   }
 
   // ===== P0 - CRITICAL ISSUES =====

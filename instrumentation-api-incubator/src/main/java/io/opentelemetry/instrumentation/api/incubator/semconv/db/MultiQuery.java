@@ -33,13 +33,28 @@ class MultiQuery {
 
   static MultiQuery analyze(
       Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
+    return analyzeImpl(rawQueryTexts, statementSanitizationEnabled, false);
+  }
+
+  static MultiQuery analyzeWithSummary(
+      Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
+    return analyzeImpl(rawQueryTexts, statementSanitizationEnabled, true);
+  }
+
+  private static MultiQuery analyzeImpl(
+      Collection<String> rawQueryTexts,
+      boolean statementSanitizationEnabled,
+      boolean stableSemconv) {
     UniqueValue uniqueCollectionName = new UniqueValue();
     UniqueValue uniqueStoredProcedureName = new UniqueValue();
     UniqueValue uniqueOperationName = new UniqueValue();
     UniqueValue uniqueQuerySummary = new UniqueValue();
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
-      SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
+      SqlStatementInfo sanitizedStatement =
+          stableSemconv
+              ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
+              : SqlStatementSanitizerUtil.sanitize(rawQueryText);
       String collectionName = sanitizedStatement.getCollectionName();
       uniqueCollectionName.set(collectionName);
       String storedProcedureName = sanitizedStatement.getStoredProcedureName();

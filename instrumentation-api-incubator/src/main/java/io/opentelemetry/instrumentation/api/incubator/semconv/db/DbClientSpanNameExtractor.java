@@ -187,15 +187,17 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       }
 
       if (rawQueryTexts.size() == 1) {
-        SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        String rawQueryText = rawQueryTexts.iterator().next();
         boolean batch = isBatch(request);
         if (getter instanceof ExtractQuerySummaryMarker) {
+          SqlStatementInfo sanitizedStatement =
+              SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText);
           String querySummary = sanitizedStatement.getQuerySummary();
           if (querySummary != null) {
             return batch ? "BATCH " + querySummary : querySummary;
           }
         }
+        SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
         String operationName = sanitizedStatement.getOperationName();
         if (batch) {
           operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
@@ -208,13 +210,14 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             sanitizedStatement.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
       if (getter instanceof ExtractQuerySummaryMarker) {
+        MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, false);
         String querySummary = multiQuery.getQuerySummary();
         if (querySummary != null) {
           return querySummary;
         }
       }
+      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
       return computeSpanNameStable(
           getter,
           request,

@@ -15,7 +15,7 @@ public abstract class SqlStatementInfo {
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
   /** Creates a SqlStatementInfo for stable semconv (uses querySummary). */
-  public static SqlStatementInfo createStableSemconv(
+  public static SqlStatementInfo createWithSummary(
       @Nullable String queryText,
       @Nullable String storedProcedureName,
       @Nullable String querySummary) {

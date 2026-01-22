@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
@@ -22,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
-  @Mock SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
+  @Mock SqlClientAttributesGetterWithMarker<DbRequest, Void> sqlAttributesGetter;
 
   @Test
   void shouldExtractFullSpanName() {
@@ -205,4 +206,8 @@ class DbClientSpanNameExtractorTest {
   }
 
   static class DbRequest {}
+
+  // Interface combining SqlClientAttributesGetter with ExtractQuerySummaryMarker for mocking
+  interface SqlClientAttributesGetterWithMarker<REQUEST, RESPONSE>
+      extends SqlClientAttributesGetter<REQUEST, RESPONSE>, ExtractQuerySummaryMarker {}
 }

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 %%
 
 %final
-%class AutoSqlSanitizerStableSemconv
+%class AutoSqlSanitizerWithSummary
 %apiprivate
 %int
 %buffer 2048
@@ -42,7 +42,7 @@ WHITESPACE           = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
-    AutoSqlSanitizerStableSemconv sanitizer = new AutoSqlSanitizerStableSemconv(new java.io.StringReader(statement));
+    AutoSqlSanitizerWithSummary sanitizer = new AutoSqlSanitizerWithSummary(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
       while (!sanitizer.yyatEOF()) {
@@ -53,7 +53,7 @@ WHITESPACE           = [ \t\r\n]+
       }
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
-      return SqlStatementInfo.createStableSemconv(null, null, null);
+      return SqlStatementInfo.createWithSummary(null, null, null);
     }
   }
 
@@ -651,7 +651,7 @@ WHITESPACE           = [ \t\r\n]+
     if (querySummary != null && querySummary.endsWith(";")) {
       querySummary = querySummary.substring(0, querySummary.length() - 1);
     }
-    return SqlStatementInfo.createStableSemconv(normalizedStatement, storedProcedureName, querySummary);
+    return SqlStatementInfo.createWithSummary(normalizedStatement, storedProcedureName, querySummary);
   }
 
 %}

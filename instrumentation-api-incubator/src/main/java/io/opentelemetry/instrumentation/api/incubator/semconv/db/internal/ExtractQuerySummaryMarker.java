@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-
 /**
  * Marker interface to indicate that `db.query.summary` should be extracted from `db.query.text`.
  *
@@ -16,5 +14,4 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public interface ExtractQuerySummaryMarker<REQUEST, RESPONSE>
-    extends SqlClientAttributesGetter<REQUEST, RESPONSE> {}
+public interface ExtractQuerySummaryMarker {}

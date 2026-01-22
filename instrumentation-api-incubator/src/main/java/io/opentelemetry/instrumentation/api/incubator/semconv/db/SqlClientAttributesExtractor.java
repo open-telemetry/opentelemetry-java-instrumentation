@@ -109,7 +109,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean shouldSanitize = statementSanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
+        SqlStatementInfo sanitizedStatement =
+            getter instanceof ExtractQuerySummaryMarker
+                ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
+                : SqlStatementSanitizerUtil.sanitize(rawQueryText);
         internalSet(
             attributes,
             DB_QUERY_TEXT,
@@ -134,7 +137,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             attributes, DB_STORED_PROCEDURE_NAME, sanitizedStatement.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
-            MultiQuery.analyze(getter.getRawQueryTexts(request), shouldSanitize);
+            getter instanceof ExtractQuerySummaryMarker
+                ? MultiQuery.analyzeWithSummary(getter.getRawQueryTexts(request), shouldSanitize)
+                : MultiQuery.analyze(getter.getRawQueryTexts(request), shouldSanitize);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         if (getter instanceof ExtractQuerySummaryMarker) {
           // Per semconv spec: db.operation.name SHOULD NOT be extracted from db.query.text

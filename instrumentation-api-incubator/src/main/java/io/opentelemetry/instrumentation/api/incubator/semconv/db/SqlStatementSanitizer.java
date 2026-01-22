@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import javax.annotation.Nullable;
@@ -21,6 +20,8 @@ public final class SqlStatementSanitizer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
+      Cache.bounded(1000);
+  private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCacheWithSummary =
       Cache.bounded(1000);
   private static final int LARGE_STATEMENT_THRESHOLD = 10 * 1024;
 
@@ -40,7 +41,7 @@ public final class SqlStatementSanitizer {
 
   public SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
     if (!statementSanitizationEnabled || statement == null) {
-      return SqlStatementInfo.createStableSemconv(statement, null, null);
+      return SqlStatementInfo.create(statement, null, null);
     }
     // sanitization result will not be cached for statements larger than the threshold to avoid
     // cache growing too large
@@ -54,10 +55,32 @@ public final class SqlStatementSanitizer {
 
   private static SqlStatementInfo sanitizeImpl(String statement, SqlDialect dialect) {
     supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      return AutoSqlSanitizerStableSemconv.sanitize(statement, dialect);
-    }
     return AutoSqlSanitizer.sanitize(statement, dialect);
+  }
+
+  /** Sanitize and extract query summary. */
+  SqlStatementInfo sanitizeWithSummary(@Nullable String statement) {
+    return sanitizeWithSummary(statement, SqlDialect.DEFAULT);
+  }
+
+  /** Sanitize and extract query summary. */
+  SqlStatementInfo sanitizeWithSummary(@Nullable String statement, SqlDialect dialect) {
+    if (!statementSanitizationEnabled || statement == null) {
+      return SqlStatementInfo.createWithSummary(statement, null, null);
+    }
+    // sanitization result will not be cached for statements larger than the threshold to avoid
+    // cache growing too large
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
+    if (statement.length() > LARGE_STATEMENT_THRESHOLD) {
+      return sanitizeWithSummaryImpl(statement, dialect);
+    }
+    return sqlToStatementInfoCacheWithSummary.computeIfAbsent(
+        CacheKey.create(statement, dialect), k -> sanitizeWithSummaryImpl(statement, dialect));
+  }
+
+  private static SqlStatementInfo sanitizeWithSummaryImpl(String statement, SqlDialect dialect) {
+    supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
+    return AutoSqlSanitizerWithSummary.sanitize(statement, dialect);
   }
 
   // visible for tests
