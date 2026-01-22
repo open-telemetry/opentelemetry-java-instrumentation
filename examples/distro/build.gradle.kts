@@ -61,28 +61,26 @@ subprojects {
     }
   }
 
-  plugins.withType<JavaPlugin> {
-    dependencies {
-      add("implementation", platform("io.opentelemetry:opentelemetry-bom:${versions["opentelemetrySdk"]}"))
+  dependencies {
+    implementation(platform("io.opentelemetry:opentelemetry-bom:${versions.getValue("opentelemetrySdk")}"))
 
-      // these serve as a test of the instrumentation boms
-      add("implementation", platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions["opentelemetryJavaagent"]}"))
-      add("implementation", platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions["opentelemetryJavaagentAlpha"]}"))
+    // these serve as a test of the instrumentation boms
+    implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.getValue("opentelemetryJavaagent")}"))
+    implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.getValue("opentelemetryJavaagentAlpha")}"))
 
-      add("testImplementation", "org.mockito:mockito-core:5.21.0")
+    testImplementation("org.mockito:mockito-core:5.21.0")
 
-      add("testImplementation", enforcedPlatform("org.junit:junit-bom:5.14.2"))
-      add("testImplementation", "org.junit.jupiter:junit-jupiter-api")
-      add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine")
-      add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
-    }
+    testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   }
 
-  tasks.named<Test>("test") {
+  tasks.test {
     useJUnitPlatform()
   }
 
-  tasks.named<JavaCompile>("compileJava") {
+  tasks.compileJava {
     options.release.set(8)
   }
 }
