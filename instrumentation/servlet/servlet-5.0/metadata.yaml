@@ -1,0 +1,21 @@
+display_name: Servlet
+description: This instrumentation enables HTTP server spans and metrics for Jakarta Servlet API.
+library_link: https://jakarta.ee/specifications/servlet/
+semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS
+features:
+  - HTTP_ROUTE
+configurations:
+  - name: otel.instrumentation.servlet.experimental-span-attributes
+    description: Enables capturing the experimental `servlet.timeout` span attribute.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.servlet.capture-request-parameters
+    description: List of request parameter names to capture as span attributes.
+    type: list
+    default: ""
+  - name: otel.instrumentation.servlet.add-trace-id-request-attribute
+    description: Adds the trace ID as a request attribute for downstream servlet access.
+    type: boolean
+    default: true
