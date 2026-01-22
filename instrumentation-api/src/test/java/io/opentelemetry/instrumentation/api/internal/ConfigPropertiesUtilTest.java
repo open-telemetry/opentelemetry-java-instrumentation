@@ -12,26 +12,23 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 @SuppressWarnings("deprecation") // using deprecated config property
-class DeprecatedLibraryConfigPropertiesUtilTest {
+class ConfigPropertiesUtilTest {
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "false")
   @SetSystemProperty(key = "test.property.boolean", value = "true")
   @Test
   void getBoolean_systemProperty() {
-    assertThat(DeprecatedLibraryConfigPropertiesUtil.getBoolean("test.property.boolean", false))
-        .isTrue();
+    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isTrue();
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "true")
   @Test
   void getBoolean_environmentVariable() {
-    assertThat(DeprecatedLibraryConfigPropertiesUtil.getBoolean("test.property.boolean", false))
-        .isTrue();
+    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isTrue();
   }
 
   @Test
   void getBoolean_none() {
-    assertThat(DeprecatedLibraryConfigPropertiesUtil.getBoolean("test.property.boolean", false))
-        .isFalse();
+    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isFalse();
   }
 }

@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class DeprecatedLibraryConfigPropertiesUtil {
+public final class ConfigPropertiesUtil {
 
   /**
    * Returns the boolean value of the given property name from system properties and environment
@@ -102,5 +102,5 @@ public final class DeprecatedLibraryConfigPropertiesUtil {
     return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }
 
-  private DeprecatedLibraryConfigPropertiesUtil() {}
+  private ConfigPropertiesUtil() {}
 }
