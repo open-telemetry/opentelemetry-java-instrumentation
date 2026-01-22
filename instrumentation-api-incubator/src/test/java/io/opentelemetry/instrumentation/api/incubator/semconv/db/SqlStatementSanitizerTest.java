@@ -471,14 +471,12 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT x, y, z FROM \"schema\".\"table\"",
             expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
-        // TODO: subquery table capture will be added in a later commit
         Arguments.of(
             "WITH subquery as (select a from b) SELECT x, y, z FROM table",
-            expect("SELECT", null, "SELECT SELECT table")),
-        // TODO: subquery table capture will be added in a later commit
+            expect("SELECT", null, "SELECT b SELECT table")),
         Arguments.of(
             "SELECT x, y, (select a from b) as z FROM table",
-            expect("SELECT", null, "SELECT SELECT table")),
+            expect("SELECT", null, "SELECT SELECT b table")),
         // TODO: invalid SQL - may be refined in later commits
         Arguments.of(
             "select delete, insert into, merge, update from table", // invalid SQL
@@ -491,22 +489,18 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id JOIN t3 ON t2.x = t3.x",
             expect("SELECT", null, "SELECT t1 t2 t3")),
-        // TODO: subquery table capture will be added in a later commit
         Arguments.of(
             "select col from (select * from anotherTable)",
-            expect("SELECT", null, "SELECT SELECT")),
-        // TODO: subquery alias handling will be added in a later commit
+            expect("SELECT", null, "SELECT SELECT anotherTable")),
         Arguments.of(
             "select col from (select * from anotherTable) alias",
-            expect("SELECT", null, "SELECT SELECT alias")),
+            expect("SELECT", null, "SELECT SELECT anotherTable")),
         Arguments.of(
             "select col from table1 union select col from table2",
             expect("SELECT", null, "SELECT table1 SELECT table2")),
-        // Query with subquery in WHERE - old semconv returns null for collectionName
-        // TODO: subquery table capture will be added in a later commit
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
-            expect("SELECT", null, "SELECT table SELECT")),
+            expect("SELECT", null, "SELECT table SELECT anotherTable")),
         Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(

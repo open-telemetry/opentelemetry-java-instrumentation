@@ -156,12 +156,16 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingJoinTableName = false;
     int identifiersAfterJoin = 0;
     boolean inJoinSubquery = false;
+    boolean inImplicitJoin = false;
+    int identifiersAfterComma = 0;
+    int fromClauseParenLevel = -1;
 
     void handleFrom() {
-      if (parenLevel == 0) {
-        // main query FROM clause
-        expectingTableName = true;
-      }
+      // Track the paren level where this FROM clause started
+      // This helps us correctly identify implicit joins (commas) at the right level
+      fromClauseParenLevel = parenLevel;
+      // Set expectingTableName to capture tables at this paren level
+      expectingTableName = true;
     }
 
     void handleJoin() {
@@ -184,6 +188,11 @@ WHITESPACE           = [ \t\r\n]+
       if (inJoinSubquery) {
         inJoinSubquery = false;
         expectingJoinTableName = false;
+      }
+      // Reset FROM clause tracking if we're exiting BELOW the level where it started
+      if (fromClauseParenLevel >= 0 && parenLevel < fromClauseParenLevel) {
+        fromClauseParenLevel = -1;
+        expectingTableName = false;
       }
     }
 
@@ -212,8 +221,9 @@ WHITESPACE           = [ \t\r\n]+
         return;
       }
 
-      // SELECT FROM (subquery) case - skip subquery aliases
-      if (parenLevel != 0) {
+      // Skip identifiers if we're not at the FROM clause's paren level
+      // This allows capturing tables from nested FROM clauses while skipping aliases
+      if (fromClauseParenLevel >= 0 && parenLevel != fromClauseParenLevel) {
         return;
       }
 
@@ -228,11 +238,15 @@ WHITESPACE           = [ \t\r\n]+
       // comma was encountered in the FROM clause, i.e. implicit join
       // (if less than 3 identifiers have appeared before first comma then it means that it's a table list;
       // any other list that can appear later needs at least 4 idents)
-      if (identifiersAfterMainFromClause > 0
+      // Only treat comma as table separator if we're at the same paren level as the FROM clause
+      if (fromClauseParenLevel >= 0 && parenLevel == fromClauseParenLevel
+          && identifiersAfterMainFromClause > 0
           && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
         // Expect next table name after comma in FROM clause
+        inImplicitJoin = true;
         expectingTableName = true;
         identifiersAfterMainFromClause = 0;
+        identifiersAfterComma = 0;
       }
     }
   }
