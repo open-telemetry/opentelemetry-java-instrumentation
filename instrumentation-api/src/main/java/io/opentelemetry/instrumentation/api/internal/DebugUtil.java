@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public class DebugUtil {
+final class DebugUtil {
 
   static boolean isAgentDebugEnabled() {
-    return Boolean.parseBoolean(SemconvStability.getString("otel.javaagent.debug"));
+    String value = System.getProperty("otel.javaagent.debug");
+    if (value == null) {
+      value = System.getenv("OTEL_JAVAAGENT_DEBUG");
+    }
+    return Boolean.parseBoolean(value);
   }
 
   private DebugUtil() {}
