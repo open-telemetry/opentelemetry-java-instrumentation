@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 
 /**

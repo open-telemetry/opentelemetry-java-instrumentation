@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.config;
+package io.opentelemetry.javaagent.bootstrap.internal;
 
 import javax.annotation.Nullable;
 

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EnabledInstrumentations;
 import javax.annotation.Nullable;
 
 /**

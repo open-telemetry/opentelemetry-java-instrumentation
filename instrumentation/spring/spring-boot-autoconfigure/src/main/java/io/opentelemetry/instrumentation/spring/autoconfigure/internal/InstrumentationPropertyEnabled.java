@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import java.util.Map;
 import java.util.Objects;
 import org.springframework.context.annotation.Condition;

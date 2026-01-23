@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.incubator.config.EnabledInstrumentations;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.core.env.ConfigurableEnvironment;
