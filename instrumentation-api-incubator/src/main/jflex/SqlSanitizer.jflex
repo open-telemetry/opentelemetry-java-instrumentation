@@ -34,7 +34,7 @@ HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
-BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+BACKTICK_QUOTED_STR  = "`" ("``" | [^`])* "`"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
@@ -80,7 +80,10 @@ WHITESPACE           = [ \t\r\n]+
     // removed from "schema"."table")
     if (identifierName.startsWith(quote) && identifierName.endsWith(quote)) {
       String s = identifierName.substring(1, identifierName.length() - 1);
-      if (!s.contains(quote)) {
+      // Check if the string contains the quote character, but ignore escaped quotes (doubled quotes)
+      String doubleQuote = quote + quote;
+      String withoutEscapedQuotes = s.replace(doubleQuote, "");
+      if (!withoutEscapedQuotes.contains(quote)) {
         return s;
       }
     }

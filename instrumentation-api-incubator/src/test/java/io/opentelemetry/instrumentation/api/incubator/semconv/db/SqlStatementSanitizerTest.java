@@ -683,7 +683,18 @@ class SqlStatementSanitizerTest {
                 "SELECT [column] FROM [table] WHERE [field] = ?",
                 "SELECT",
                 "table",
-                "SELECT [table]")));
+                "SELECT [table]")),
+
+        // MySQL escaped backticks
+        Arguments.of(
+            "SELECT * FROM `my``table`", expect("SELECT", "my``table", "SELECT `my``table`")),
+        Arguments.of(
+            "SELECT * FROM `table` WHERE `col``name` = 1",
+            expect(
+                "SELECT * FROM `table` WHERE `col``name` = ?",
+                "SELECT",
+                "table",
+                "SELECT `table`")));
   }
 
   private static Stream<Arguments> ddlArgs() {
