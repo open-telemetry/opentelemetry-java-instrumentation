@@ -76,7 +76,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
       if (future != null) {
         OperationCompletionListener listener =
             OperationCompletionListener.create(
-                currentContext(), client.getConnection(), methodName);
+                currentContext(), client.getConnection(), methodName, future);
         if (listener != null) {
           future.addListener(listener);
         }
@@ -106,7 +106,8 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
       if (future != null) {
         GetCompletionListener listener =
-            GetCompletionListener.create(currentContext(), client.getConnection(), methodName);
+            GetCompletionListener.create(
+                currentContext(), client.getConnection(), methodName, future);
         if (listener != null) {
           future.addListener(listener);
         }
