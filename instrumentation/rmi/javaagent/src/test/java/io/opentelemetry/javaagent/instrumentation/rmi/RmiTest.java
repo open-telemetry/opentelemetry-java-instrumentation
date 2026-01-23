@@ -76,6 +76,7 @@ class RmiTest {
                 span ->
                     span.hasName("rmi.app.Greeter/hello")
                         .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Greeter"),
