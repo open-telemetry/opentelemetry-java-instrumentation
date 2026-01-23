@@ -29,7 +29,7 @@ public abstract class SqlStatementInfo {
    * Creates a SqlStatementInfo for old semconv (no querySummary). Package-private for backward
    * compatibility with old jflex-generated sanitizer.
    */
-  static SqlStatementInfo create(
+  public static SqlStatementInfo create(
       @Nullable String queryText, @Nullable String operationName, @Nullable String target) {
     // AutoValue constructor: (queryText, operationName, collectionName, storedProcedureName,
     // querySummary)
