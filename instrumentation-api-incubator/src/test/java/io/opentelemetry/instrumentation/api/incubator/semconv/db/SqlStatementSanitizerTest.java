@@ -453,6 +453,14 @@ class SqlStatementSanitizerTest {
             : SqlStatementInfo.create(sql, operation, storedProcedureName);
   }
 
+  private static Function<String, SqlStatementInfo> expectStoredProcedure(
+      String sql, String operation, String storedProcedureName, String querySummary) {
+    return ignored ->
+        emitStableDatabaseSemconv()
+            ? SqlStatementInfo.createWithSummary(sql, storedProcedureName, querySummary)
+            : SqlStatementInfo.create(sql, operation, storedProcedureName);
+  }
+
   private static Stream<Arguments> simplifyArgs() {
     return Stream.of(
         // Select
@@ -646,7 +654,23 @@ class SqlStatementSanitizerTest {
         // Standalone VALUES clause
         Arguments.of("VALUES (1)", expect("VALUES (?)", null, null, "VALUES")),
         Arguments.of(
-            "VALUES (1, 'a'), (2, 'b')", expect("VALUES (?, ?), (?, ?)", null, null, "VALUES")));
+            "VALUES (1, 'a'), (2, 'b')", expect("VALUES (?, ?), (?, ?)", null, null, "VALUES")),
+
+        // EXECUTE/EXEC stored procedure calls
+        Arguments.of(
+            "EXEC my_procedure",
+            emitStableDatabaseSemconv()
+                ? expectStoredProcedure("EXEC", "my_procedure", "EXEC my_procedure")
+                : expect("EXEC my_procedure", null, null, null)),
+        Arguments.of(
+            "EXECUTE db.my_procedure @param=1",
+            emitStableDatabaseSemconv()
+                ? expectStoredProcedure(
+                    "EXECUTE db.my_procedure @param=?",
+                    "EXECUTE",
+                    "db.my_procedure",
+                    "EXECUTE db.my_procedure")
+                : expect("EXECUTE db.my_procedure @param=?", null, null, null)));
   }
 
   private static Stream<Arguments> ddlArgs() {

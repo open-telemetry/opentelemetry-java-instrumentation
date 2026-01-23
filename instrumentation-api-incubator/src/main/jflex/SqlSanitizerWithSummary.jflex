@@ -475,6 +475,17 @@ WHITESPACE           = [ \t\r\n]+
   /** VALUES operation - no table to capture. */
   private class Values extends Operation {}
 
+  /** EXECUTE/EXEC operation for stored procedures. */
+  private class Execute extends SimpleOperation {
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+        storedProcedureName = yytext();
+      }
+    }
+  }
+
   private class Create extends DdlOperation {}
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
@@ -586,6 +597,14 @@ WHITESPACE           = [ \t\r\n]+
               setOperation(new Values());
               appendOperationToSummary("VALUES");
             }
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "EXECUTE" | "EXEC" {
+          if (!insideComment) {
+            setOperation(new Execute());
+            appendOperationToSummary(yytext());
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
