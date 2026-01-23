@@ -32,7 +32,10 @@ public class Java8RuntimeMetricsProvider implements RuntimeMetricsProvider {
   public AutoCloseable start(
       OpenTelemetry openTelemetry, EnabledInstrumentations enabledInstrumentations) {
     logger.debug("Use runtime metrics instrumentation for Java 8");
-    return RuntimeMetricsConfigUtil.configure(
-        RuntimeMetrics.builder(openTelemetry), openTelemetry, enabledInstrumentations);
+
+    return enabledInstrumentations.isEnabled("runtime-telemetry")
+        ? RuntimeMetricsConfigUtil.configure(RuntimeMetrics.builder(openTelemetry), openTelemetry)
+            .build()
+        : null;
   }
 }

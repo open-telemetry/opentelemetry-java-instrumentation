@@ -19,16 +19,12 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    if (Double.parseDouble(System.getProperty("java.specification.version")) >= 17) {
-      return;
-    }
-
-    RuntimeMetrics runtimeMetrics =
-        RuntimeMetricsConfigUtil.configure(
-            RuntimeMetrics.builder(GlobalOpenTelemetry.get()),
-            GlobalOpenTelemetry.get(),
-            AgentEnabledInstrumentations.get());
-    if (runtimeMetrics != null) {
+    if (Double.parseDouble(System.getProperty("java.specification.version")) < 17
+        && AgentEnabledInstrumentations.get().isEnabled("runtime-telemetry")) {
+      RuntimeMetrics runtimeMetrics =
+          RuntimeMetricsConfigUtil.configure(
+                  RuntimeMetrics.builder(GlobalOpenTelemetry.get()), GlobalOpenTelemetry.get())
+              .build();
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(runtimeMetrics::close, "OpenTelemetry RuntimeMetricsShutdownHook"));
