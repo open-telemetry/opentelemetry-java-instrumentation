@@ -83,10 +83,6 @@ public final class AgentInitializer {
   }
 
   private static boolean isSecurityManagerSupportEnabled() {
-    return getBoolean();
-  }
-
-  private static boolean getBoolean() {
     // this call deliberately uses anonymous class instead of lambda because using lambdas too
     // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     return doPrivileged(

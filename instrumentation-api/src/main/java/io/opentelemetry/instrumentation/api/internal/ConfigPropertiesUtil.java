@@ -45,6 +45,26 @@ public final class ConfigPropertiesUtil {
   }
 
   /**
+   * Returns the int value of the given property name from system properties and environment
+   * variables.
+   *
+   * @deprecated allows library configuration via system properties and environment variables, which
+   *     will be removed in 3.0.
+   */
+  @Deprecated
+  public static int getInt(String propertyName, int defaultValue) {
+    String strValue = getString(propertyName);
+    if (strValue == null) {
+      return defaultValue;
+    }
+    try {
+      return Integer.parseInt(strValue);
+    } catch (NumberFormatException ignored) {
+      return defaultValue;
+    }
+  }
+
+  /**
    * Returns the string value of the given property name from system properties and environment
    * variables.
    *
