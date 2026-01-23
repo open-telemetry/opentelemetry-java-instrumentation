@@ -507,6 +507,10 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT * FROM (VALUES (1,2), (3,4)) AS t(a, b)",
             expect("SELECT * FROM (VALUES (?,?), (?,?)) AS t(a, b)", "SELECT", null, "SELECT")),
+        Arguments.of("SELECT * FROM t1 CROSS APPLY t2", expect("SELECT", "t1", "SELECT t1 t2")),
+        Arguments.of(
+            "SELECT * FROM t1 OUTER APPLY (SELECT * FROM t2 WHERE t2.id = t1.id)",
+            expect("SELECT", null, "SELECT t1 SELECT t2")),
         Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(

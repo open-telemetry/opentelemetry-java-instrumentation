@@ -205,6 +205,16 @@ WHITESPACE           = [ \t\r\n]+
       sawAsKeyword = false;
     }
 
+    void handleApply() {
+      // APPLY is similar to JOIN in SQL Server
+      expectingTableName = true;
+      expectingJoinTableName = true;
+      identifiersAfterJoin = 0;
+      identifiersAfterMainFromClause = 0;
+      expectingSubqueryOrTable = true;
+      sawAsKeyword = false;
+    }
+
     void handleAs() {
       // Mark that we saw AS - next identifier is alias, then open paren might be column alias list
       sawAsKeyword = true;
@@ -601,6 +611,13 @@ WHITESPACE           = [ \t\r\n]+
   "JOIN" {
           if (!insideComment && operation != null) {
             operation.handleJoin();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "APPLY" {
+          if (!insideComment && operation instanceof Select) {
+            ((Select) operation).handleApply();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
