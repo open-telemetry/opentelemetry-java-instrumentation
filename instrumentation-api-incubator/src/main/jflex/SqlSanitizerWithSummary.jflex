@@ -472,6 +472,9 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
+  /** VALUES operation - no table to capture. */
+  private class Values extends Operation {}
+
   private class Create extends DdlOperation {}
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
@@ -571,6 +574,18 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment) {
             setOperation(new Alter());
             appendOperationToSummary("ALTER");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "VALUES" {
+          if (!insideComment) {
+            // Only set VALUES as the operation if no operation is already set
+            // (VALUES can appear inside INSERT statements or SELECT FROM clauses)
+            if (operation == null) {
+              setOperation(new Values());
+              appendOperationToSummary("VALUES");
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

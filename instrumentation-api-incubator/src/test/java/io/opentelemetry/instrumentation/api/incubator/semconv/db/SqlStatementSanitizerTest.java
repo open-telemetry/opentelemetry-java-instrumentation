@@ -641,7 +641,12 @@ class SqlStatementSanitizerTest {
                 "SELECT * FROM t1; INSERT INTO t2 VALUES (?)",
                 "SELECT",
                 "t1",
-                "SELECT t1; INSERT t2")));
+                "SELECT t1; INSERT t2")),
+
+        // Standalone VALUES clause
+        Arguments.of("VALUES (1)", expect("VALUES (?)", null, null, "VALUES")),
+        Arguments.of(
+            "VALUES (1, 'a'), (2, 'b')", expect("VALUES (?, ?), (?, ?)", null, null, "VALUES")));
   }
 
   private static Stream<Arguments> ddlArgs() {
