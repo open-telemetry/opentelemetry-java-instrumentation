@@ -177,13 +177,15 @@ WHITESPACE           = [ \t\r\n]+
     boolean inImplicitJoin = false;
     int identifiersAfterComma = 0;
     int fromClauseParenLevel = -1;
+    boolean expectingSubqueryOrTable = false;
 
     void handleFrom() {
-      // Track the paren level where this FROM clause started
-      // This helps us correctly identify implicit joins (commas) at the right level
-      fromClauseParenLevel = parenLevel;
-      // Set expectingTableName to capture tables at this paren level
+      // Set expectingTableName to capture tables
       expectingTableName = true;
+      expectingSubqueryOrTable = true;
+      // Update fromClauseParenLevel for this FROM clause
+      // This allows nested SELECTs to track their own FROM clause level
+      fromClauseParenLevel = parenLevel;
     }
 
     void handleJoin() {
@@ -192,12 +194,14 @@ WHITESPACE           = [ \t\r\n]+
       expectingJoinTableName = true;
       identifiersAfterJoin = 0;
       identifiersAfterMainFromClause = 0;
+      expectingSubqueryOrTable = true;
     }
 
     void handleOpenParen() {
-      // If we just saw JOIN and now see '(', we're entering a JOIN subquery
-      if (expectingJoinTableName && identifiersAfterJoin == 0) {
+      // If we just saw JOIN/FROM and now see '(', we're entering a subquery
+      if ((expectingJoinTableName || expectingSubqueryOrTable) && identifiersAfterJoin == 0) {
         inJoinSubquery = true;
+        expectingSubqueryOrTable = false;
       }
     }
 
@@ -225,12 +229,14 @@ WHITESPACE           = [ \t\r\n]+
 
       if (expectingJoinTableName) {
         ++identifiersAfterJoin;
+        // Capture first identifier after JOIN (the table name)
         // Skip if we're inside a JOIN subquery (don't capture table names until subquery closes)
-        if (!inJoinSubquery && parenLevel == 0) {
+        if (!inJoinSubquery && identifiersAfterJoin == 1) {
           appendTargetToSummary();
           expectingJoinTableName = false;
           expectingTableName = false;
           identifiersAfterJoin = 0;
+          expectingSubqueryOrTable = false;
           return;
         }
       }
@@ -248,6 +254,7 @@ WHITESPACE           = [ \t\r\n]+
       appendTargetToSummary();
       mainTableSetAlready = true;
       expectingTableName = false;
+      expectingSubqueryOrTable = false;
       // start counting identifiers after encountering main from clause
       identifiersAfterMainFromClause = 1;
     }
