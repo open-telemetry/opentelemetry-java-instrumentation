@@ -24,7 +24,7 @@ CLOSE_PAREN          = ")"
 OPEN_COMMENT         = "/*"
 CLOSE_COMMENT        = "*/"
 UNQUOTED_IDENTIFIER  = ([:letter:] | "_") ([:letter:] | [0-9] | "_")*
-IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR}
+IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR}
 // We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
 // and BACKTICK_QUOTED_STR are handled separately. Depending on the context they appear in they will
 // either be recorded as the identifier or replaced with ?.
@@ -35,6 +35,7 @@ QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
 BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+BRACKET_QUOTED_STR   = "[" [^\]]* "]"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
@@ -775,7 +776,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
-  {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
+  {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
         if (!insideComment && operation != null) {
           operation.handleIdentifier();
         }

@@ -670,7 +670,20 @@ class SqlStatementSanitizerTest {
                     "EXECUTE",
                     "db.my_procedure",
                     "EXECUTE db.my_procedure")
-                : expect("EXECUTE db.my_procedure @param=?", null, null, null)));
+                : expect("EXECUTE db.my_procedure @param=?", null, null, null)),
+
+        // SQL Server bracket-quoted identifiers
+        Arguments.of("SELECT * FROM [my table]", expect("SELECT", "my", "SELECT [my table]")),
+        Arguments.of(
+            "SELECT * FROM [schema].[table]",
+            expect("SELECT", "schema", "SELECT [schema].[table]")),
+        Arguments.of(
+            "SELECT [column] FROM [table] WHERE [field] = 1",
+            expect(
+                "SELECT [column] FROM [table] WHERE [field] = ?",
+                "SELECT",
+                "table",
+                "SELECT [table]")));
   }
 
   private static Stream<Arguments> ddlArgs() {
