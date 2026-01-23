@@ -465,7 +465,9 @@ WHITESPACE           = [ \t\r\n]+
       if (!identifierCaptured) {
         appendTargetToSummary();
         identifierCaptured = true;
-        // Only set storedProcedureName if this is a real procedure call (not "call next value for sequence")
+        // Only set storedProcedureName if this is a real procedure call (not "call next value for sequence").
+        // Hibernate uses "call next value for sequence" on HSQLDB and H2 to get sequence values,
+        // while most other databases use SELECT for this.
         if (!sawNextKeyword) {
           storedProcedureName = yytext();
         }
