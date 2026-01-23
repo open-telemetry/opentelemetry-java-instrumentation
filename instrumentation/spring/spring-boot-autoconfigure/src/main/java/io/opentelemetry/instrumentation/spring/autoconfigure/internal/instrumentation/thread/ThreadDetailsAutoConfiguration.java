@@ -5,26 +5,17 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.thread.internal.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnBean(OpenTelemetry.class)
-@Conditional({OtelEnabled.class, ThreadDetailsAutoConfiguration.ThreadDetailsEnabled.class})
+@ConditionalOnEnabledInstrumentation(module = "common.thread-details", enabledByDefault = false)
 @Configuration
 public class ThreadDetailsAutoConfiguration {
 
@@ -36,17 +27,5 @@ public class ThreadDetailsAutoConfiguration {
               builder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
               return builder;
             });
-  }
-
-  static class ThreadDetailsEnabled implements Condition {
-    @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-      Environment environment = context.getEnvironment();
-      String key =
-          EarlyConfig.isDeclarativeConfig(environment)
-              ? "otel.instrumentation/development.java.common.thread_details.enabled"
-              : "otel.instrumentation.common.thread-details.enabled";
-      return environment.getProperty(key, Boolean.class, false);
-    }
   }
 }
