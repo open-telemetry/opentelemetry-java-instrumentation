@@ -636,6 +636,17 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  ";" {
+          if (!insideComment) {
+            // Append semicolon to summary to separate statements
+            querySummaryBuilder.append(';');
+            // Reset operation state for next statement
+            operation = null;
+            parenLevel = 0;
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "IF" | "NOT" | "EXISTS" {
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

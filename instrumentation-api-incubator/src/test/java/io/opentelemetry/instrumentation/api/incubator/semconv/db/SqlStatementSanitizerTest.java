@@ -629,7 +629,19 @@ class SqlStatementSanitizerTest {
             "DELETE FROM t1 WHERE x IN (SELECT y FROM t2)",
             expect("DELETE", "t1", "DELETE t1 SELECT t2")),
         Arguments.of(
-            "UPDATE t1 SET x = (SELECT y FROM t2)", expect("UPDATE", "t1", "UPDATE t1 SELECT t2")));
+            "UPDATE t1 SET x = (SELECT y FROM t2)", expect("UPDATE", "t1", "UPDATE t1 SELECT t2")),
+
+        // Multi-statement SQL with semicolons
+        Arguments.of(
+            "SELECT * FROM t1; SELECT * FROM t2",
+            expect("SELECT * FROM t1; SELECT * FROM t2", "SELECT", null, "SELECT t1; SELECT t2")),
+        Arguments.of(
+            "SELECT * FROM t1; INSERT INTO t2 VALUES (1)",
+            expect(
+                "SELECT * FROM t1; INSERT INTO t2 VALUES (?)",
+                "SELECT",
+                "t1",
+                "SELECT t1; INSERT t2")));
   }
 
   private static Stream<Arguments> ddlArgs() {
