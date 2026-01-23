@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -25,6 +26,7 @@ public final class RuntimeMetricsConfigUtil {
         .getBoolean("enable_all", false);
   }
 
+  @CanIgnoreReturnValue
   public static RuntimeMetricsBuilder configure(
       RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties config =

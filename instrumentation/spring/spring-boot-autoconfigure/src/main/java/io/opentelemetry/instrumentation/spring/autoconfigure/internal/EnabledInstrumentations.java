@@ -7,7 +7,12 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import javax.annotation.Nullable;
 
-/** Provides information about which instrumentations are enabled. */
+/**
+ * Provides information about which instrumentations are enabled.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 public interface EnabledInstrumentations {
   /**
    * Returns whether the given instrumentation is enabled.
