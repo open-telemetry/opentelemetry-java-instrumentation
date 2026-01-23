@@ -110,6 +110,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {}
     void handleComma() {}
     void handleNext() {}
+    void handleAs() {}
     void handleOperationTarget(String target) {}
     void handleOpenParen() {}
     void handleCloseParen() {}
@@ -178,6 +179,11 @@ WHITESPACE           = [ \t\r\n]+
     int identifiersAfterComma = 0;
     int fromClauseParenLevel = -1;
     boolean expectingSubqueryOrTable = false;
+    // Track if we just saw AS keyword and are expecting potential column alias list
+    boolean sawAsKeyword = false;
+    // Track if we're inside a column alias list (after derived table AS alias(...))
+    boolean inColumnAliasList = false;
+    int columnAliasListParenLevel = -1;
 
     void handleFrom() {
       // Set expectingTableName to capture tables
@@ -186,6 +192,7 @@ WHITESPACE           = [ \t\r\n]+
       // Update fromClauseParenLevel for this FROM clause
       // This allows nested SELECTs to track their own FROM clause level
       fromClauseParenLevel = parenLevel;
+      sawAsKeyword = false;
     }
 
     void handleJoin() {
@@ -195,9 +202,23 @@ WHITESPACE           = [ \t\r\n]+
       identifiersAfterJoin = 0;
       identifiersAfterMainFromClause = 0;
       expectingSubqueryOrTable = true;
+      sawAsKeyword = false;
+    }
+
+    void handleAs() {
+      // Mark that we saw AS - next identifier is alias, then open paren might be column alias list
+      sawAsKeyword = true;
     }
 
     void handleOpenParen() {
+      // If we just saw AS keyword and an open paren, this is a column alias list
+      if (sawAsKeyword) {
+        inColumnAliasList = true;
+        columnAliasListParenLevel = parenLevel;
+        sawAsKeyword = false;
+        return;
+      }
+
       // If we just saw JOIN/FROM and now see '(', we're entering a subquery
       if ((expectingJoinTableName || expectingSubqueryOrTable) && identifiersAfterJoin == 0) {
         inJoinSubquery = true;
@@ -206,6 +227,13 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleCloseParen() {
+      // If we're closing the column alias list paren, exit that state
+      // Note: parenLevel has already been decremented when this is called
+      if (inColumnAliasList && parenLevel < columnAliasListParenLevel) {
+        inColumnAliasList = false;
+        columnAliasListParenLevel = -1;
+      }
+
       // Exiting a JOIN subquery
       if (inJoinSubquery) {
         inJoinSubquery = false;
@@ -223,6 +251,17 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleIdentifier() {
+      // Don't capture identifiers if we're inside a column alias list
+      if (inColumnAliasList) {
+        return;
+      }
+
+      // If we saw AS, this identifier is the table/subquery alias - keep sawAsKeyword true
+      // so we can detect the column alias list paren that might follow
+      if (sawAsKeyword) {
+        return;
+      }
+
       if (identifiersAfterMainFromClause > 0) {
         ++identifiersAfterMainFromClause;
       }
@@ -260,6 +299,14 @@ WHITESPACE           = [ \t\r\n]+
     }
 
     void handleComma() {
+      // Don't process commas if we're inside a column alias list
+      if (inColumnAliasList) {
+        return;
+      }
+
+      // Reset sawAsKeyword - comma indicates we're not entering a column alias list
+      sawAsKeyword = false;
+
       // comma was encountered in the FROM clause, i.e. implicit join
       // (if less than 3 identifiers have appeared before first comma then it means that it's a table list;
       // any other list that can appear later needs at least 4 idents)
@@ -561,6 +608,13 @@ WHITESPACE           = [ \t\r\n]+
   "NEXT" {
           if (!insideComment && operation != null) {
             operation.handleNext();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "AS" {
+          if (!insideComment && operation != null) {
+            operation.handleAs();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

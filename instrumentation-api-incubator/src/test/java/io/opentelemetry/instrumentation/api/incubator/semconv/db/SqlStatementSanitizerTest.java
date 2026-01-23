@@ -505,6 +505,9 @@ class SqlStatementSanitizerTest {
             "SELECT * FROM (SELECT * FROM inner1 JOIN inner2 ON inner1.id = inner2.id) AS sub",
             expect("SELECT", null, "SELECT SELECT inner1 inner2")),
         Arguments.of(
+            "SELECT * FROM (VALUES (1,2), (3,4)) AS t(a, b)",
+            expect("SELECT * FROM (VALUES (?,?), (?,?)) AS t(a, b)", "SELECT", null, "SELECT")),
+        Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
             "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),
