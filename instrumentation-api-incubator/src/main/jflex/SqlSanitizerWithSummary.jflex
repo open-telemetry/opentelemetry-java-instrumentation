@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 %unicode
 %ignorecase
 
+%state DOLLAR_STRING
+
 COMMA                = ","
 OPEN_PAREN           = "("
 CLOSE_PAREN          = ")"
@@ -35,6 +37,7 @@ HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
+DOLLAR_TAG_START     = "$" {UNQUOTED_IDENTIFIER} "$"
 BACKTICK_QUOTED_STR  = "`" ("``" | [^`])* "`"
 BRACKET_QUOTED_STR   = "[" [^\]]* "]"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
@@ -69,6 +72,7 @@ WHITESPACE           = [ \t\r\n]+
   private final StringBuilder builder = new StringBuilder();
   private final StringBuilder querySummaryBuilder = new StringBuilder();
   private String storedProcedureName = null;
+  private String dollarTag = null;
 
   private void appendCurrentFragment() {
     builder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
@@ -800,6 +804,12 @@ WHITESPACE           = [ \t\r\n]+
         if (isOverLimit()) return YYEOF;
     }
 
+  {DOLLAR_TAG_START} {
+          // Start of a tagged dollar-quoted string like $tag$...$tag$
+          dollarTag = yytext();
+          yybegin(DOLLAR_STRING);
+      }
+
   {WHITESPACE} {
           builder.append(' ');
           if (isOverLimit()) return YYEOF;
@@ -807,5 +817,32 @@ WHITESPACE           = [ \t\r\n]+
   [^] {
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
+      }
+}
+
+<DOLLAR_STRING> {
+  {DOLLAR_TAG_START} {
+          // Check if this is the closing tag
+          if (yytext().equals(dollarTag)) {
+            builder.append('?');
+            dollarTag = null;
+            yybegin(YYINITIAL);
+            if (isOverLimit()) return YYEOF;
+          }
+          // else: different tag, continue consuming
+      }
+
+  "$" {
+          // Single dollar sign, not part of a tag - continue consuming
+      }
+
+  [^$]+ {
+          // Consume non-dollar characters
+      }
+
+  <<EOF>> {
+          // Unterminated dollar-quoted string - output what we have as ?
+          builder.append('?');
+          return YYEOF;
       }
 }
