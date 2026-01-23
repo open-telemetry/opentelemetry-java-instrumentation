@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 %%
 
 %final
-%class AutoSqlSanitizer
+%class AutoSqlSanitizerWithSummary
 %apiprivate
 %int
 %buffer 2048
@@ -40,7 +40,7 @@ WHITESPACE           = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
-    AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
+    AutoSqlSanitizerWithSummary sanitizer = new AutoSqlSanitizerWithSummary(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
       while (!sanitizer.yyatEOF()) {
@@ -53,7 +53,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlStatementInfo.createWithSummary(null, null, null);
     }
   }
 
@@ -65,6 +65,8 @@ WHITESPACE           = [ \t\r\n]+
   private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
+  private final StringBuilder querySummaryBuilder = new StringBuilder();
+  private String storedProcedureName = null;
 
   private void appendCurrentFragment() {
     builder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
@@ -74,140 +76,66 @@ WHITESPACE           = [ \t\r\n]+
     return builder.length() > LIMIT;
   }
 
-  private String removeQuotes(String identifierName, String quote) {
-    // remove quotes from the start and end of the identifier ("table" is transformed to table), if
-    // identifier contains quote anywhere else besides start and end leave it as is (quotes are not
-    // removed from "schema"."table")
-    if (identifierName.startsWith(quote) && identifierName.endsWith(quote)) {
-      String s = identifierName.substring(1, identifierName.length() - 1);
-      if (!s.contains(quote)) {
-        return s;
-      }
+  /** Appends an operation name (SELECT, INSERT, etc.) to the query summary. */
+  private void appendOperationToSummary(String operationName) {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
     }
-    return identifierName;
+    querySummaryBuilder.append(operationName);
   }
 
-  /** @return text matched by current token without enclosing double quotes or backticks */
-  private String readIdentifierName() {
-    String identifierName = yytext();
-    if (identifierName != null) {
-      String result = removeQuotes(identifierName, "\"");
-      if (!result.equals(identifierName)) {
-        return result;
-      }
-      result = removeQuotes(identifierName, "`");
-      if (!result.equals(identifierName)) {
-        return result;
-      }
+  /** Appends a target (table name, procedure name, etc.) to the query summary using current token text. */
+  private void appendTargetToSummary() {
+    if (querySummaryBuilder.length() > 0) {
+      querySummaryBuilder.append(' ');
     }
-    return identifierName;
+    querySummaryBuilder.append(yytext());
   }
-
-  // you can reference a table in the FROM clause in one of the following ways:
-  //   table
-  //   table t
-  //   table as t
-  // in other words, you need max 3 identifiers to reference a table
-  private static final int FROM_TABLE_REF_MAX_IDENTIFIERS = 3;
 
   private int parenLevel = 0;
   private boolean insideComment = false;
-  private Operation operation = NoOp.INSTANCE;
-  private boolean extractionDone = false;
+  private Operation operation = null;
   private SqlDialect dialect;
 
   private void setOperation(Operation operation) {
-    if (this.operation == NoOp.INSTANCE) {
+    if (this.operation == null) {
       this.operation = operation;
     }
   }
 
-  private static abstract class Operation {
-    String mainIdentifier = null;
-
-    /** @return true if all statement info is gathered */
-    boolean handleFrom() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleInto() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleJoin() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleIdentifier() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleComma() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleNext() {
-      return false;
-    }
-
-    /** @return true if all statement info is gathered */
-    boolean handleOperationTarget(String target) {
-      return false;
-    }
-
+  private abstract class Operation {
+    void handleFrom() {}
+    void handleInto() {}
+    void handleJoin() {}
+    void handleIdentifier() {}
+    void handleComma() {}
+    void handleNext() {}
+    void handleOperationTarget(String target) {}
     boolean expectingOperationTarget() {
       return false;
-    }
-
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
   }
 
   private abstract class DdlOperation extends Operation {
     private String operationTarget = "";
     private boolean expectingOperationTarget = true;
+    private boolean identifierCaptured = false;
 
     boolean expectingOperationTarget() {
       return expectingOperationTarget;
     }
 
-    boolean handleOperationTarget(String target) {
+    void handleOperationTarget(String target) {
       operationTarget = target;
       expectingOperationTarget = false;
-      return false;
+      appendOperationToSummary(operationTarget);
     }
 
-    boolean shouldHandleIdentifier() {
-      // Return true only if the provided value corresponds to a table, as it will be used to set the attribute `db.sql.table`.
-      return "TABLE".equals(operationTarget);
-    }
-
-    boolean handleIdentifier() {
-      if (shouldHandleIdentifier()) {
-        mainIdentifier = readIdentifierName();
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
       }
-      return true;
-    }
-
-    SqlStatementInfo getResult(String fullStatement) {
-      if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
-      }
-      return super.getResult(fullStatement);
-    }
-  }
-
-  private static class NoOp extends Operation {
-    static final Operation INSTANCE = new NoOp();
-
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
     }
   }
 
@@ -223,109 +151,100 @@ WHITESPACE           = [ \t\r\n]+
     boolean mainTableSetAlready = false;
     int identifiersAfterMainFromClause = 0;
 
-    boolean handleFrom() {
+    void handleFrom() {
       if (parenLevel == 0) {
         // main query FROM clause
         expectingTableName = true;
-        return false;
       }
-
-      // subquery in WITH or SELECT clause, before main FROM clause; skipping
-      mainIdentifier = null;
-      return true;
     }
 
-    boolean handleJoin() {
-      // for SELECT statements with joined tables there's no main table
-      mainIdentifier = null;
-      return true;
+    void handleJoin() {
+      // After JOIN, expect a table name
+      expectingTableName = true;
+      identifiersAfterMainFromClause = 0;
     }
 
-    boolean handleIdentifier() {
+    void handleIdentifier() {
       if (identifiersAfterMainFromClause > 0) {
         ++identifiersAfterMainFromClause;
       }
 
       if (!expectingTableName) {
-        return false;
+        return;
       }
 
-      // SELECT FROM (subquery) case
+      // SELECT FROM (subquery) case - skip subquery aliases
       if (parenLevel != 0) {
-        mainIdentifier = null;
-        return true;
+        return;
       }
 
-      // whenever >1 table is used there is no main table (e.g. unions)
-      if (mainTableSetAlready) {
-        mainIdentifier = null;
-        return true;
-      }
-
-      mainIdentifier = readIdentifierName();
+      appendTargetToSummary();
       mainTableSetAlready = true;
       expectingTableName = false;
       // start counting identifiers after encountering main from clause
       identifiersAfterMainFromClause = 1;
-
-      // continue scanning the query, there may be more than one table (e.g. joins)
-      return false;
     }
 
-    boolean handleComma() {
+    void handleComma() {
       // comma was encountered in the FROM clause, i.e. implicit join
       // (if less than 3 identifiers have appeared before first comma then it means that it's a table list;
       // any other list that can appear later needs at least 4 idents)
       if (identifiersAfterMainFromClause > 0
           && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
-        mainIdentifier = null;
-        return true;
+        // Expect next table name after comma in FROM clause
+        expectingTableName = true;
+        identifiersAfterMainFromClause = 0;
       }
-      return false;
     }
   }
 
   private class Insert extends Operation {
     boolean expectingTableName = false;
+    boolean tableCaptured = false;
 
-    boolean handleInto() {
+    void handleInto() {
       expectingTableName = true;
-      return false;
     }
 
-    boolean handleIdentifier() {
-      if (!expectingTableName) {
-        return false;
+    void handleIdentifier() {
+      if (!expectingTableName || tableCaptured) {
+        return;
       }
 
-      mainIdentifier = readIdentifierName();
-      return true;
+      appendTargetToSummary();
+      tableCaptured = true;
+      expectingTableName = false;
     }
   }
 
   private class Delete extends Operation {
     boolean expectingTableName = false;
+    boolean tableCaptured = false;
 
-    boolean handleFrom() {
+    void handleFrom() {
       expectingTableName = true;
-      return false;
     }
 
-    boolean handleIdentifier() {
-      if (!expectingTableName) {
-        return false;
+    void handleIdentifier() {
+      if (!expectingTableName || tableCaptured) {
+        return;
       }
 
-      mainIdentifier = readIdentifierName();
-      return true;
+      appendTargetToSummary();
+      tableCaptured = true;
+      expectingTableName = false;
     }
   }
 
-  /** Operation that extracts the first identifier as the main identifier. */
+  /** Operation that extracts the first identifier as the target. */
   private class SimpleOperation extends Operation {
-    boolean handleIdentifier() {
-      mainIdentifier = readIdentifierName();
-      return true;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
     }
   }
 
@@ -334,9 +253,21 @@ WHITESPACE           = [ \t\r\n]+
   private class Merge extends SimpleOperation {}
 
   private class Call extends SimpleOperation {
-    boolean handleNext() {
-      mainIdentifier = null;
-      return true;
+    private boolean sawNextKeyword = false;
+
+    void handleNext() {
+      sawNextKeyword = true;
+    }
+
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+        // Only set storedProcedureName if this is a real procedure call (not "call next value for sequence")
+        if (!sawNextKeyword) {
+          storedProcedureName = yytext();
+        }
+      }
     }
   }
 
@@ -353,7 +284,8 @@ WHITESPACE           = [ \t\r\n]+
     // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality
     String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
 
-    return operation.getResult(normalizedStatement);
+    String summary = querySummaryBuilder.length() > 0 ? querySummaryBuilder.toString() : null;
+    return SqlStatementInfo.createWithSummary(normalizedStatement, storedProcedureName, summary);
   }
 
 %}
@@ -364,7 +296,13 @@ WHITESPACE           = [ \t\r\n]+
 
   "SELECT" {
           if (!insideComment) {
-            setOperation(new Select());
+            if (operation == null) {
+              setOperation(new Select());
+              appendOperationToSummary("SELECT");
+            } else if (operation instanceof Select) {
+              // nested SELECT (subquery) - append SELECT to summary
+              appendOperationToSummary("SELECT");
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -372,6 +310,7 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (!insideComment) {
             setOperation(new Insert());
+            appendOperationToSummary("INSERT");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -379,6 +318,7 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (!insideComment) {
             setOperation(new Delete());
+            appendOperationToSummary("DELETE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -386,6 +326,7 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (!insideComment) {
             setOperation(new Update());
+            appendOperationToSummary("UPDATE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -393,6 +334,7 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (!insideComment) {
             setOperation(new Call());
+            appendOperationToSummary("CALL");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -400,6 +342,7 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (!insideComment) {
             setOperation(new Merge());
+            appendOperationToSummary("MERGE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -407,6 +350,7 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (!insideComment) {
             setOperation(new Create());
+            appendOperationToSummary("CREATE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -414,6 +358,7 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (!insideComment) {
             setOperation(new Drop());
+            appendOperationToSummary("DROP");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -421,6 +366,7 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (!insideComment) {
             setOperation(new Alter());
+            appendOperationToSummary("ALTER");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -431,7 +377,7 @@ WHITESPACE           = [ \t\r\n]+
           // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
           // we check that operation is not set to avoid triggering sanitization when a field named
           // connect is used or CONNECT BY clause is used in a SELECT statement
-          if (!insideComment && operation == NoOp.INSTANCE) {
+          if (!insideComment && operation == null) {
             // CONNECT statement could contain an unquoted password. We are not going to try
             // figuring out whether that is the case or not, just sanitize the whole statement.
             builder.append(" ?");
@@ -440,34 +386,34 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
-          if (!insideComment && !extractionDone) {
-            if (operation == NoOp.INSTANCE) {
+          if (!insideComment) {
+            if (operation == null) {
               // hql/jpql queries may skip SELECT and start with FROM clause
-              // treat such queries as SELECT queries
+              // treat such queries as SELECT queries (but don't add SELECT to summary)
               setOperation(new Select());
             }
-            extractionDone = operation.handleFrom();
+            operation.handleFrom();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "INTO" {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleInto();
+          if (!insideComment && operation != null) {
+            operation.handleInto();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "JOIN" {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleJoin();
+          if (!insideComment && operation != null) {
+            operation.handleJoin();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "NEXT" {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleNext();
+          if (!insideComment && operation != null) {
+            operation.handleNext();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -477,11 +423,11 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
-          if (!insideComment && !extractionDone) {
+          if (!insideComment && operation != null) {
             if (operation.expectingOperationTarget()) {
-              extractionDone = operation.handleOperationTarget(yytext());
+              operation.handleOperationTarget(yytext());
             } else {
-              extractionDone = operation.handleIdentifier();
+              operation.handleIdentifier();
             }
           }
           appendCurrentFragment();
@@ -502,15 +448,15 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {COMMA} {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleComma();
+          if (!insideComment && operation != null) {
+            operation.handleComma();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleIdentifier();
+          if (!insideComment && operation != null) {
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -552,8 +498,8 @@ WHITESPACE           = [ \t\r\n]+
           if (dialect == SqlDialect.COUCHBASE) {
             builder.append('?');
           } else {
-            if (!insideComment && !extractionDone) {
-              extractionDone = operation.handleIdentifier();
+            if (!insideComment && operation != null) {
+              operation.handleIdentifier();
             }
             appendCurrentFragment();
           }
@@ -561,8 +507,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
-        if (!insideComment && !extractionDone) {
-          extractionDone = operation.handleIdentifier();
+        if (!insideComment && operation != null) {
+          operation.handleIdentifier();
         }
         appendCurrentFragment();
         if (isOverLimit()) return YYEOF;
