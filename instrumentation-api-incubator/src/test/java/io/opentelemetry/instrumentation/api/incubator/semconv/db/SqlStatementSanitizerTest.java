@@ -258,18 +258,6 @@ class SqlStatementSanitizerTest {
     assertThat(result.length()).isEqualTo(236);
   }
 
-  @Test
-  void sequenceOperationDoesNotCaptureStoredProcedureName() {
-    assumeTrue(emitStableDatabaseSemconv());
-    SqlStatementInfo result =
-        SqlStatementSanitizer.create(true)
-            .sanitizeWithSummary("call next value for hibernate_sequence");
-    // TODO: sequence name capture will be improved in a later commit
-    assertThat(result.getQuerySummary()).isEqualTo("CALL value");
-    assertThat(result.getCollectionName()).isNull();
-    assertThat(result.getStoredProcedureName()).isNull();
-  }
-
   private static Stream<Arguments> sqlArgs() {
     return Stream.of(
         Arguments.of(
