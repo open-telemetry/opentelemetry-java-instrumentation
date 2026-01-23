@@ -72,7 +72,7 @@ public final class OpenTelemetryDriver implements Driver {
             .getBoolean("enabled");
     if (enabled == null) {
       enabled =
-          ConfigPropertiesUtil.getBoolean(
+          io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
               "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled");
     }
     if (enabled == null) {
@@ -84,7 +84,7 @@ public final class OpenTelemetryDriver implements Driver {
     }
     if (enabled == null) {
       enabled =
-          ConfigPropertiesUtil.getBoolean(
+          io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
               "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     }
     if (enabled == null) {

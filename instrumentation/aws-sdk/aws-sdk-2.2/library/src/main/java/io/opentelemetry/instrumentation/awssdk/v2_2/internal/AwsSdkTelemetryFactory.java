@@ -83,12 +83,12 @@ public final class AwsSdkTelemetryFactory {
 
   @SuppressWarnings("deprecation") // using deprecated config property
   private List<String> legacyListValue(String key) {
-    return useLegacyLibraryConfig ? ConfigPropertiesUtil.getList(key, emptyList()) : emptyList();
+    return useLegacyLibraryConfig ? io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getList(key, emptyList()) : emptyList();
   }
 
   @SuppressWarnings("deprecation") // using deprecated config property
   private boolean legacyBooleanValue(String key) {
-    return useLegacyLibraryConfig && ConfigPropertiesUtil.getBoolean(key, false);
+    return useLegacyLibraryConfig && io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(key, false);
   }
 
   private AwsSdkTelemetryFactory(boolean useLegacyLibraryConfig) {
