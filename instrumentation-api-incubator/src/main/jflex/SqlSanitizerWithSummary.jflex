@@ -23,6 +23,7 @@ OPEN_PAREN           = "("
 CLOSE_PAREN          = ")"
 OPEN_COMMENT         = "/*"
 CLOSE_COMMENT        = "*/"
+LINE_COMMENT         = "--" [^\r\n]*
 UNQUOTED_IDENTIFIER  = ([:letter:] | "_") ([:letter:] | [0-9] | "_")*
 IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR}
 // We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
@@ -763,6 +764,12 @@ WHITESPACE           = [ \t\r\n]+
       }
   {CLOSE_COMMENT} {
           insideComment = false;
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {LINE_COMMENT} {
+          // Line comment - append as-is, don't process keywords or sanitize literals
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
