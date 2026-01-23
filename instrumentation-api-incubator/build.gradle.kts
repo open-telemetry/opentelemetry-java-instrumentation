@@ -76,6 +76,10 @@ tasks {
     }
   }
 
+  test {
+    inputs.dir(jflexOutputDir)
+  }
+
   sourcesJar {
     dependsOn(generateJflex)
     // Avoid configuration cache issue by not capturing task reference
@@ -88,12 +92,14 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+    inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
+    inputs.dir(jflexOutputDir)
   }
 
   check {
