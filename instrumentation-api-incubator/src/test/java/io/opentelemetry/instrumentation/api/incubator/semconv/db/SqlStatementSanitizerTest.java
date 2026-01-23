@@ -69,11 +69,10 @@ class SqlStatementSanitizerTest {
       assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
     } else {
       assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
+      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
       assertThat(result.getQuerySummary()).isNull();
     }
-    assertThat(result.getStoredProcedureName())
-        .isEqualToIgnoringCase(expected.getStoredProcedureName());
+    assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
   }
 
   @ParameterizedTest
@@ -546,7 +545,7 @@ class SqlStatementSanitizerTest {
             "/* update comment */ select * from table1",
             expect("SELECT", "table1", "SELECT table1")),
         Arguments.of("select /*((*/abc from table", expect("SELECT", "table", "SELECT table")),
-        Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "table", "SELECT TAblE")),
+        Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "TAblE", "SELECT TAblE")),
         Arguments.of("select next value in hibernate_sequence", expect("SELECT", null, "SELECT")),
 
         // hibernate/jpa
