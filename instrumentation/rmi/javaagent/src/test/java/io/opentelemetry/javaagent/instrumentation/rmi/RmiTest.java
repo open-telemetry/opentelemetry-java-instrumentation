@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -34,7 +33,7 @@ import rmi.app.Server;
 class RmiTest {
 
   @RegisterExtension
-  public static final AgentInstrumentationExtension testing =
+  private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
   private static Registry serverRegistry;
@@ -69,33 +68,25 @@ class RmiTest {
             });
 
     assertThat(response).contains("Hello you");
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("parent")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid()),
-                        span ->
-                            assertThat(span)
-                                .hasName("rmi.app.Greeter/hello")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasParentSpanId(trace.get(0).getSpanId())
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM, "java_rmi"),
-                                    equalTo(RPC_SERVICE, "rmi.app.Greeter"),
-                                    equalTo(RPC_METHOD, "hello")),
-                        span ->
-                            assertThat(span)
-                                .hasName("rmi.app.Server/hello")
-                                .hasKind(SpanKind.SERVER)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM, "java_rmi"),
-                                    equalTo(RPC_SERVICE, "rmi.app.Server"),
-                                    equalTo(RPC_METHOD, "hello"))));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("rmi.app.Greeter/hello")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "java_rmi"),
+                            equalTo(RPC_SERVICE, "rmi.app.Greeter"),
+                            equalTo(RPC_METHOD, "hello")),
+                span ->
+                    span.hasName("rmi.app.Server/hello")
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "java_rmi"),
+                            equalTo(RPC_SERVICE, "rmi.app.Server"),
+                            equalTo(RPC_METHOD, "hello"))));
   }
 
   @Test
@@ -131,54 +122,42 @@ class RmiTest {
                       client.exceptional();
                     }));
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("parent")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid()),
-                        span ->
-                            assertThat(span)
-                                .hasName("rmi.app.Greeter/exceptional")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasParentSpanId(trace.get(0).getSpanId())
-                                .hasEventsSatisfyingExactly(
-                                    event ->
-                                        event
-                                            .hasName("exception")
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    EXCEPTION_TYPE,
-                                                    thrown.getClass().getCanonicalName()),
-                                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                                satisfies(
-                                                    EXCEPTION_STACKTRACE, val -> val.isNotNull())))
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM, "java_rmi"),
-                                    equalTo(RPC_SERVICE, "rmi.app.Greeter"),
-                                    equalTo(RPC_METHOD, "exceptional")),
-                        span ->
-                            assertThat(span)
-                                .hasName("rmi.app.Server/exceptional")
-                                .hasKind(SpanKind.SERVER)
-                                .hasEventsSatisfyingExactly(
-                                    event ->
-                                        event
-                                            .hasName("exception")
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    EXCEPTION_TYPE,
-                                                    thrown.getClass().getCanonicalName()),
-                                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                                satisfies(
-                                                    EXCEPTION_STACKTRACE, val -> val.isNotNull())))
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM, "java_rmi"),
-                                    equalTo(RPC_SERVICE, "rmi.app.Server"),
-                                    equalTo(RPC_METHOD, "exceptional"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("rmi.app.Greeter/exceptional")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
+                                        equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "java_rmi"),
+                            equalTo(RPC_SERVICE, "rmi.app.Greeter"),
+                            equalTo(RPC_METHOD, "exceptional")),
+                span ->
+                    span.hasName("rmi.app.Server/exceptional")
+                        .hasKind(SpanKind.SERVER)
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
+                                        equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "java_rmi"),
+                            equalTo(RPC_SERVICE, "rmi.app.Server"),
+                            equalTo(RPC_METHOD, "exceptional"))));
   }
 }
