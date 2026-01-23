@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
 import io.opentelemetry.javaagent.bootstrap.internal.EnabledInstrumentations;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -53,10 +52,10 @@ public final class OpenTelemetryInstaller {
     }
 
     // AgentDistributionConfig is set by the JavaagentDistributionAccessCustomizerProvider
-    AgentEnabledInstrumentations.set(
+    AgentDistributionConfig distributionConfig = AgentDistributionConfig.get();
+    distributionConfig.setEnabledInstrumentations(
         declarativeConfigUsed
-            ? new DistributionEnabledInstrumentations(
-                AgentDistributionConfig.get().getInstrumentation())
+            ? new DistributionEnabledInstrumentations(distributionConfig.getInstrumentation())
             : enabledInstrumentationsFromConfigProperties(configProperties));
 
     setForceFlush(sdk);

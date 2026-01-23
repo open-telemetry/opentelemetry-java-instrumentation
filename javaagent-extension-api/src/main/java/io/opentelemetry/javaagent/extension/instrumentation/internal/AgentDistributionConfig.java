@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
+import io.opentelemetry.javaagent.bootstrap.internal.EnabledInstrumentations;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,8 +44,19 @@ public final class AgentDistributionConfig {
   @JsonProperty("instrumentation")
   private final Instrumentation instrumentation = new Instrumentation();
 
+  /**
+   * Enabled instrumentations are set later via {@link
+   * #setEnabledInstrumentations(EnabledInstrumentations)}.
+   */
+  @JsonIgnore private EnabledInstrumentations enabledInstrumentations;
+
   public static AgentDistributionConfig get() {
     return INSTANCE;
+  }
+
+  // Visible for testing
+  public static void resetForTest() {
+    INSTANCE = new AgentDistributionConfig();
   }
 
   /**
@@ -59,6 +72,15 @@ public final class AgentDistributionConfig {
   @Initializer
   public static void set(AgentDistributionConfig distributionConfig) {
     INSTANCE = distributionConfig;
+  }
+
+  public EnabledInstrumentations getEnabledInstrumentations() {
+    return enabledInstrumentations;
+  }
+
+  @Initializer
+  public void setEnabledInstrumentations(EnabledInstrumentations enabledInstrumentations) {
+    this.enabledInstrumentations = enabledInstrumentations;
   }
 
   public Instrumentation getInstrumentation() {

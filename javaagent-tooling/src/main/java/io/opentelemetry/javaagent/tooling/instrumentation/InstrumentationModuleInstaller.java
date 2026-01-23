@@ -11,9 +11,9 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentEnabledInstrumentations;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
@@ -240,7 +240,7 @@ public final class InstrumentationModuleInstaller {
   static boolean isInstrumentationEnabled(
       Iterable<String> instrumentationNames, boolean defaultEnabled) {
     for (String name : instrumentationNames) {
-      Boolean enabled = AgentEnabledInstrumentations.get().getEnabled(name);
+      Boolean enabled = AgentDistributionConfig.get().getEnabledInstrumentations().getEnabled(name);
       if (enabled != null) {
         return enabled;
       }
