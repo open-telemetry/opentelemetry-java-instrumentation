@@ -16,4 +16,16 @@ final class DebugUtil {
   }
 
   private DebugUtil() {}
+
+  static boolean isThreadPropagationDebugEnabled() {
+    String enabled =
+        System.getProperty("otel.javaagent.experimental.thread-propagation-debugger.enabled");
+    if (enabled == null) {
+      enabled = System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_THREAD_PROPAGATION_DEBUGGER_ENABLED");
+    }
+    if (enabled != null) {
+      return Boolean.parseBoolean(enabled);
+    }
+    return isAgentDebugEnabled();
+  }
 }

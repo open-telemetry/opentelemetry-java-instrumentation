@@ -32,17 +32,8 @@ public final class ContextPropagationDebug {
   private static final boolean FAIL_ON_CONTEXT_LEAK;
 
   static {
-    THREAD_PROPAGATION_DEBUGGER = isDebuggerEnabled();
+    THREAD_PROPAGATION_DEBUGGER = DebugUtil.isThreadPropagationDebugEnabled();
     FAIL_ON_CONTEXT_LEAK = Boolean.getBoolean("otel.javaagent.testing.fail-on-context-leak");
-  }
-
-  private static boolean isDebuggerEnabled() {
-    String enabled =
-        System.getProperty("otel.javaagent.testing.thread-propagation-debugger.enabled");
-    if (enabled != null) {
-      return Boolean.parseBoolean(enabled);
-    }
-    return DebugUtil.isAgentDebugEnabled();
   }
 
   // context to which debug locations were added
