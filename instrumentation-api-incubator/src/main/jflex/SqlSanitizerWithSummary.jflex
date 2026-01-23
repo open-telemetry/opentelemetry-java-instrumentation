@@ -503,6 +503,11 @@ WHITESPACE           = [ \t\r\n]+
     String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
 
     String summary = querySummaryBuilder.length() > 0 ? querySummaryBuilder.toString() : null;
+    // Remove trailing semicolon if present (no statement after last ;)
+    if (summary != null && summary.endsWith(";")) {
+      summary = summary.substring(0, summary.length() - 1);
+    }
+
     return SqlStatementInfo.createWithSummary(normalizedStatement, storedProcedureName, summary);
   }
 
@@ -675,8 +680,10 @@ WHITESPACE           = [ \t\r\n]+
       }
   ";" {
           if (!insideComment) {
-            // Append semicolon to summary to separate statements
-            querySummaryBuilder.append(';');
+            // Statement separator - only append separator if we have content
+            if (querySummaryBuilder.length() > 0) {
+              querySummaryBuilder.append(';');
+            }
             // Reset operation state for next statement
             operation = null;
             parenLevel = 0;
