@@ -3,21 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class DistributionConfigTest {
+class AgentDistributionConfigTest {
 
   @BeforeAll
   static void setUp() {
     // Initialize OpenTelemetry SDK to load declarative configuration
-    OpenTelemetryInstaller.installOpenTelemetrySdk(DistributionConfigTest.class.getClassLoader());
+    OpenTelemetryInstaller.installOpenTelemetrySdk(
+        AgentDistributionConfigTest.class.getClassLoader());
   }
 
   @Test

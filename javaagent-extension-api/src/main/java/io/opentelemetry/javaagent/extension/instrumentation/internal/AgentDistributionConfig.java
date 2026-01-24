@@ -142,17 +142,6 @@ public class AgentDistributionConfig {
   }
 
   /**
-   * Returns whether the given instrumentation is explicitly enabled (i.e., not relying on the
-   * default setting).
-   *
-   * @param instrumentationName the name of the instrumentation
-   * @return {@code true} if the instrumentation is explicitly enabled, {@code false} otherwise
-   */
-  public boolean isInstrumentationEnabledExplicitly(String instrumentationName) {
-    return Boolean.TRUE.equals(getInstrumentationEnabled(instrumentationName));
-  }
-
-  /**
    * Returns whether the given instrumentation is enabled, falling back to the default setting if
    * not explicitly configured.
    *
@@ -167,7 +156,8 @@ public class AgentDistributionConfig {
     return isInstrumentationDefaultEnabled();
   }
 
-  public InstrumentationConfig getInstrumentation() {
+  // Visible for testing
+  InstrumentationConfig getInstrumentation() {
     return instrumentation;
   }
 

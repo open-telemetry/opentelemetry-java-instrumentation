@@ -37,7 +37,8 @@ public class Java17RuntimeMetricsProvider implements RuntimeMetricsProvider {
 
     if (RuntimeMetricsConfigUtil.allEnabled(openTelemetry)) {
       builder.enableAllFeatures();
-    } else if (enabledInstrumentations.isEnabledExplicitly("runtime-telemetry-java17")) {
+    } else if (Boolean.TRUE.equals(
+        enabledInstrumentations.getEnabled("runtime-telemetry-java17"))) {
       // default configuration
     } else {
       if (enabledInstrumentations.isEnabled("runtime-telemetry")) {

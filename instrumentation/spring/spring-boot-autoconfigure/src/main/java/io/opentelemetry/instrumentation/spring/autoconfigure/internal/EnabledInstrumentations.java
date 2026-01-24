@@ -32,17 +32,6 @@ public interface EnabledInstrumentations {
   boolean isDefaultEnabled();
 
   /**
-   * Returns whether the given instrumentation is explicitly enabled (i.e., not relying on the
-   * default setting).
-   *
-   * @param instrumentationName the name of the instrumentation
-   * @return {@code true} if the instrumentation is explicitly enabled, {@code false} otherwise
-   */
-  default boolean isEnabledExplicitly(String instrumentationName) {
-    return Boolean.TRUE.equals(getEnabled(instrumentationName));
-  }
-
-  /**
    * Returns whether the given instrumentation is enabled, falling back to the default setting if
    * not explicitly configured.
    *

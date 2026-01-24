@@ -26,7 +26,7 @@ public class Java17RuntimeMetricsInstaller implements AgentListener {
     AgentDistributionConfig config = AgentDistributionConfig.get();
     if (RuntimeMetricsConfigUtil.allEnabled(openTelemetry)) {
       builder.enableAllFeatures();
-    } else if (config.isInstrumentationEnabledExplicitly("runtime-telemetry-java17")) {
+    } else if (Boolean.TRUE.equals(config.getInstrumentationEnabled("runtime-telemetry-java17"))) {
       // default configuration
     } else {
       if (config.isInstrumentationEnabled("runtime-telemetry")) {
