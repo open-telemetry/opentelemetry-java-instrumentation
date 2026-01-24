@@ -95,13 +95,17 @@ WHITESPACE           = [ \t\r\n]+
 
   private int parenLevel = 0;
   private boolean insideComment = false;
-  private Operation operation = null;
+  // using special "none" Operation instead of null to avoid null checking it everywhere
+  private final Operation none = new Operation() {};
+  private Operation operation = none;
   private SqlDialect dialect;
 
+  private boolean shouldStartNewOperation() {
+    return !insideComment && operation == none;
+  }
+
   private void setOperation(Operation operation) {
-    if (this.operation == null) {
-      this.operation = operation;
-    }
+    this.operation = operation;
   }
 
   private abstract class Operation {
@@ -514,22 +518,20 @@ WHITESPACE           = [ \t\r\n]+
 
   "SELECT" {
           if (!insideComment) {
-            if (operation == null) {
+            if (operation == none) {
               setOperation(new Select());
               appendOperationToSummary("SELECT");
             } else if (operation instanceof Select) {
               // nested SELECT (subquery) - append SELECT to summary
               appendOperationToSummary("SELECT");
             }
-            if (operation != null) {
-              operation.handleSelect();
-            }
+            operation.handleSelect();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "INSERT" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Insert());
             appendOperationToSummary("INSERT");
           }
@@ -537,7 +539,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "DELETE" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Delete());
             appendOperationToSummary("DELETE");
           }
@@ -545,7 +547,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "UPDATE" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Update());
             appendOperationToSummary("UPDATE");
           }
@@ -553,7 +555,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "CALL" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Call());
             appendOperationToSummary("CALL");
           }
@@ -561,7 +563,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "MERGE" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Merge());
             appendOperationToSummary("MERGE");
           }
@@ -569,7 +571,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "CREATE" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Create());
             appendOperationToSummary("CREATE");
           }
@@ -577,7 +579,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "DROP" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Drop());
             appendOperationToSummary("DROP");
           }
@@ -585,7 +587,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "ALTER" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Alter());
             appendOperationToSummary("ALTER");
           }
@@ -593,19 +595,15 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "VALUES" {
-          if (!insideComment) {
-            // Only set VALUES as the operation if no operation is already set
-            // (VALUES can appear inside INSERT statements or SELECT FROM clauses)
-            if (operation == null) {
-              setOperation(new Values());
-              appendOperationToSummary("VALUES");
-            }
+          if (shouldStartNewOperation()) {
+            setOperation(new Values());
+            appendOperationToSummary("VALUES");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "EXECUTE" | "EXEC" {
-          if (!insideComment) {
+          if (shouldStartNewOperation()) {
             setOperation(new Execute());
             appendOperationToSummary(yytext());
           }
@@ -618,7 +616,7 @@ WHITESPACE           = [ \t\r\n]+
           // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
           // we check that operation is not set to avoid triggering sanitization when a field named
           // connect is used or CONNECT BY clause is used in a SELECT statement
-          if (!insideComment && operation == null) {
+          if (!insideComment && operation == none) {
             // CONNECT statement could contain an unquoted password. We are not going to try
             // figuring out whether that is the case or not, just sanitize the whole statement.
             builder.append(" ?");
@@ -628,7 +626,7 @@ WHITESPACE           = [ \t\r\n]+
       }
   "FROM" {
           if (!insideComment) {
-            if (operation == null) {
+            if (operation == none) {
               // hql/jpql queries may skip SELECT and start with FROM clause
               // treat such queries as SELECT queries (but don't add SELECT to summary)
               setOperation(new Select());
@@ -639,14 +637,14 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "INTO" {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             operation.handleInto();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "JOIN" {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             operation.handleJoin();
           }
           appendCurrentFragment();
@@ -660,14 +658,14 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "NEXT" {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             operation.handleNext();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "AS" {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             operation.handleAs();
           }
           appendCurrentFragment();
@@ -678,7 +676,7 @@ WHITESPACE           = [ \t\r\n]+
             // Append semicolon to summary to separate statements
             querySummaryBuilder.append(';');
             // Reset operation state for next statement
-            operation = null;
+            operation = none;
             parenLevel = 0;
           }
           appendCurrentFragment();
@@ -689,7 +687,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             if (operation.expectingOperationTarget()) {
               operation.handleOperationTarget(yytext());
             } else {
@@ -714,14 +712,14 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {COMMA} {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             operation.handleComma();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
-          if (!insideComment && operation != null) {
+          if (!insideComment) {
             operation.handleIdentifier();
           }
           appendCurrentFragment();
@@ -731,9 +729,7 @@ WHITESPACE           = [ \t\r\n]+
   {OPEN_PAREN}  {
           if (!insideComment) {
             parenLevel += 1;
-            if (operation != null) {
-              operation.handleOpenParen();
-            }
+            operation.handleOpenParen();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -741,9 +737,7 @@ WHITESPACE           = [ \t\r\n]+
   {CLOSE_PAREN} {
           if (!insideComment) {
             parenLevel -= 1;
-            if (operation != null) {
-              operation.handleCloseParen();
-            }
+            operation.handleCloseParen();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -770,7 +764,7 @@ WHITESPACE           = [ \t\r\n]+
           if (dialect == SqlDialect.COUCHBASE) {
             builder.append('?');
           } else {
-            if (!insideComment && operation != null) {
+            if (!insideComment) {
               operation.handleIdentifier();
             }
             appendCurrentFragment();
@@ -779,7 +773,7 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
-        if (!insideComment && operation != null) {
+        if (!insideComment) {
           operation.handleIdentifier();
         }
         appendCurrentFragment();

@@ -472,10 +472,9 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT x, y, (select a from b) as z FROM table",
             expect("SELECT", null, "SELECT SELECT b table")),
-        // TODO: invalid SQL - may be refined in later commits
         Arguments.of(
             "select delete, insert into, merge, update from table", // invalid SQL
-            expect("SELECT", "table", "SELECT DELETE INSERT MERGE UPDATE table")),
+            expect("SELECT", "table", "SELECT table")),
         Arguments.of(
             "select col /* from table2 */ from table", expect("SELECT", "table", "SELECT table")),
         Arguments.of(
@@ -542,10 +541,9 @@ class SqlStatementSanitizerTest {
 
         // Insert
         Arguments.of(" insert into table where lalala", expect("INSERT", "table", "INSERT table")),
-        // TODO: invalid SQL - may be refined in later commits
         Arguments.of(
             "insert insert into table where lalala", // invalid SQL
-            expect("INSERT", "table", "INSERT INSERT table")),
+            expect("INSERT", "table", "INSERT table")),
         Arguments.of(
             "insert into db.table where lalala", expect("INSERT", "db.table", "INSERT db.table")),
         Arguments.of(
@@ -709,6 +707,17 @@ class SqlStatementSanitizerTest {
             expect("CREATE VIEW", null, "CREATE VIEW tmp SELECT table")),
         Arguments.of(
             "CREATE PROCEDURE p AS SELECT * FROM table GO",
-            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p SELECT table")));
+            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p SELECT table")),
+        // ALTER TABLE with DROP/ADD clauses
+        Arguments.of(
+            "ALTER TABLE t2 DROP COLUMN c, DROP COLUMN d",
+            expect("ALTER TABLE", "t2", "ALTER TABLE t2")),
+        Arguments.of(
+            "ALTER TABLE users ADD COLUMN email VARCHAR(255), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
+            expect(
+                "ALTER TABLE users ADD COLUMN email VARCHAR(?), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
+                "ALTER TABLE",
+                "users",
+                "ALTER TABLE users")));
   }
 }
