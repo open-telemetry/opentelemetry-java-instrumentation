@@ -57,11 +57,4 @@ class DistributionConfigTest {
   void testInstrumentationDisabled() {
     assertThat(AgentDistributionConfig.get().getInstrumentation().getDisabled()).isEmpty();
   }
-
-  @Test
-  void testAdditionalLibraryIgnoresEnabled() {
-    assertThat(
-            AgentDistributionConfig.get().getTest().getAdditionalLibraryIgnoresConfig().isEnabled())
-        .isFalse();
-  }
 }

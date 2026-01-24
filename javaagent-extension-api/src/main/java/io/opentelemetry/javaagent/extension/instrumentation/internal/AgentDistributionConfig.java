@@ -38,9 +38,6 @@ public final class AgentDistributionConfig {
   @JsonProperty("exclude_class_loaders")
   private List<String> excludeClassLoaders = new ArrayList<>();
 
-  @JsonProperty("testing")
-  private final Test test = new Test();
-
   @JsonProperty("instrumentation")
   private final Instrumentation instrumentation = new Instrumentation();
 
@@ -117,41 +114,6 @@ public final class AgentDistributionConfig {
 
   public void setExcludeClassLoaders(List<String> excludeClassLoaders) {
     this.excludeClassLoaders = excludeClassLoaders;
-  }
-
-  public Test getTest() {
-    return test;
-  }
-
-  /**
-   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
-   * any time.
-   */
-  public static class Test {
-    @JsonProperty("additional_library_ignores")
-    private final AdditionalLibraryIgnores additionalLibraryIgnores =
-        new AdditionalLibraryIgnores();
-
-    public AdditionalLibraryIgnores getAdditionalLibraryIgnoresConfig() {
-      return additionalLibraryIgnores;
-    }
-  }
-
-  /**
-   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
-   * any time.
-   */
-  public static class AdditionalLibraryIgnores {
-    @JsonProperty("enabled")
-    private boolean enabled = true;
-
-    public boolean isEnabled() {
-      return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
-    }
   }
 
   /**

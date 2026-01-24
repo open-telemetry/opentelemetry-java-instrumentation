@@ -78,13 +78,6 @@ public final class OpenTelemetryInstaller {
     agentConfig.setExcludeClassLoaders(
         config.getList("otel.javaagent.exclude-class-loaders", emptyList()));
 
-    // Populate test configuration
-    agentConfig
-        .getTest()
-        .getAdditionalLibraryIgnoresConfig()
-        .setEnabled(
-            config.getBoolean("otel.javaagent.testing.additional-library-ignores.enabled", true));
-
     // Populate exclude classes
     agentConfig
         .getExcludeClasses()

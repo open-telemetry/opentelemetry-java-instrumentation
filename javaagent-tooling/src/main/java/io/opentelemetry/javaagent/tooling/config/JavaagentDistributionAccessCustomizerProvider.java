@@ -16,16 +16,13 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Distri
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
- * ConfigProvider} API (yet).
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
+ * ConfigProvider} API.
  */
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public final class JavaagentDistributionAccessCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {
 
-  private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {

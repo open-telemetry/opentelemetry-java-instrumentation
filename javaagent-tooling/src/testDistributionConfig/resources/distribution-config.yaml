@@ -13,6 +13,3 @@ distribution:
       enabled:
         - tomcat
         - spring-webmvc
-    testing:
-      additional_library_ignores:
-        enabled: false
