@@ -682,6 +682,14 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "UNION" | "INTERSECT" | "EXCEPT" | "MINUS" {
+          if (!insideComment) {
+            // Reset operation so next SELECT starts fresh
+            operation = none;
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "IF" | "NOT" | "EXISTS" {
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

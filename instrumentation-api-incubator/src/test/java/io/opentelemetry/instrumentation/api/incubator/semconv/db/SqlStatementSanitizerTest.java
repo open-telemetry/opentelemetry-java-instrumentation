@@ -492,6 +492,10 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "select col from table1 union select col from table2",
             expect("SELECT", null, "SELECT table1 SELECT table2")),
+        // UNION/INTERSECT/EXCEPT/MINUS with multiple set operations
+        Arguments.of(
+            "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT id, name FROM vendors",
+            expect("SELECT", null, "SELECT employees SELECT contractors SELECT vendors")),
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
             expect("SELECT", null, "SELECT table SELECT anotherTable")),
