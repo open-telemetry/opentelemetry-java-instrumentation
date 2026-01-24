@@ -33,6 +33,6 @@ public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
                     InstrumentationConfigUtil.isStatementSanitizationEnabled(
                         openTelemetry, "mongo"))
                 .build()
-                .newCommandListener());
+                .createCommandListener());
   }
 }

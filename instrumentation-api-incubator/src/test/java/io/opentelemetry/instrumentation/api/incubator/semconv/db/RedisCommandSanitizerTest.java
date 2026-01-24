@@ -104,7 +104,6 @@ class RedisCommandSanitizerTest {
     "SUBSCRIBE",
     "UNSUBSCRIBE",
     // Server
-    "ACL",
     "BGREWRITEAOF",
     "BGSAVE",
     "COMMAND",
@@ -203,6 +202,27 @@ class RedisCommandSanitizerTest {
     String result =
         RedisCommandSanitizer.create(true).sanitize("NEWAUTH", list("password", "secret"));
     assertThat(result).isEqualTo("NEWAUTH ? ?");
+  }
+
+  @Test
+  void shouldSanitizeAclSetuserPassword() {
+    // ACL SETUSER can contain passwords (prefixed with '>') or hashes (prefixed with '#')
+    // Command: ACL SETUSER alice on >MySecretPass ~user:alice:* +@read +@write
+    String result =
+        RedisCommandSanitizer.create(true)
+            .sanitize(
+                "ACL",
+                list(
+                    "SETUSER",
+                    "alice",
+                    "on",
+                    ">MySecretPass",
+                    "~user:alice:*",
+                    "+@read",
+                    "+@write"));
+
+    // Only subcommand is kept, all other args are masked to protect sensitive data
+    assertThat(result).isEqualTo("ACL SETUSER ? ? ? ? ? ?");
   }
 
   static Stream<Arguments> sanitizeArgs() {

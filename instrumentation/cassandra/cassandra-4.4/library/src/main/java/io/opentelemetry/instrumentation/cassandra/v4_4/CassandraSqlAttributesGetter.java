@@ -56,4 +56,9 @@ final class CassandraSqlAttributesGetter
     }
     return null;
   }
+
+  @Override
+  public boolean isParameterizedQuery(CassandraRequest request) {
+    return request.isParameterizedQuery();
+  }
 }

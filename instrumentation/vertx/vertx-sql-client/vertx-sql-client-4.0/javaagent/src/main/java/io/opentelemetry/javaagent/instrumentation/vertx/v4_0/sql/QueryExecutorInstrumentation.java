@@ -84,6 +84,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         // PreparedStatement, use the first argument that is either of these. PromiseInternal is
         // always at the end of the argument list.
         String sql = null;
+        boolean preparedStatement = false;
         PromiseInternal<?> promiseInternal = null;
         for (Object argument : arguments) {
           if (sql == null) {
@@ -91,6 +92,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
               sql = (String) argument;
             } else if (argument instanceof PreparedStatement) {
               sql = ((PreparedStatement) argument).sql();
+              preparedStatement = true;
             }
           } else if (argument instanceof PromiseInternal) {
             promiseInternal = (PromiseInternal<?>) argument;
@@ -101,7 +103,8 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(sql, QueryExecutorUtil.getConnectOptions(queryExecutor));
+            new VertxSqlClientRequest(
+                sql, QueryExecutorUtil.getConnectOptions(queryExecutor), preparedStatement);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth, null, null, null);

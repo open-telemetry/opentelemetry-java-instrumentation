@@ -17,10 +17,12 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -260,10 +262,16 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName(
                             SemconvStability.emitStableDatabaseSemconv()
-                                ? "BATCH INSERT dbname.test"
+                                ? "BATCH INSERT test"
                                 : "dbname")
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "postgresql"),
                             equalTo(maybeStable(DB_NAME), "dbname"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? null
+                                    : "postgresql://127.0.0.1:5432"),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 SemconvStability.emitStableDatabaseSemconv()
@@ -279,6 +287,8 @@ class JdbcTelemetryTest {
                                     : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
-                                SemconvStability.emitStableDatabaseSemconv() ? 2L : null))));
+                                SemconvStability.emitStableDatabaseSemconv() ? 2L : null),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, 5432))));
   }
 }

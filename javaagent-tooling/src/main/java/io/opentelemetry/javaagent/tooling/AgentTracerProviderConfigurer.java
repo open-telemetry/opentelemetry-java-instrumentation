@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.thread.internal.AddThreadDetailsSpanProcessor;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -32,9 +31,6 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   @CanIgnoreReturnValue
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
-    if (!config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
-      return sdkTracerProviderBuilder;
-    }
 
     // Register additional thread details logging span processor
     if (config.getBoolean(ADD_THREAD_DETAILS, true)) {
@@ -48,7 +44,7 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
 
   private static void maybeEnableLoggingExporter(
       SdkTracerProviderBuilder builder, ConfigProperties config) {
-    if (AgentConfig.isDebugModeEnabled(config)) {
+    if (EarlyInitAgentConfig.get().isDebug()) {
       // don't install another instance if the user has already explicitly requested it.
       if (loggingExporterIsNotAlreadyConfigured(config)) {
         builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));

@@ -21,6 +21,6 @@ class GlobalInterceptorWithProducerSpanSpringConfig {
     return SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
         .setProducerSpanEnabled(true)
         .build()
-        .newChannelInterceptor();
+        .createChannelInterceptor();
   }
 }

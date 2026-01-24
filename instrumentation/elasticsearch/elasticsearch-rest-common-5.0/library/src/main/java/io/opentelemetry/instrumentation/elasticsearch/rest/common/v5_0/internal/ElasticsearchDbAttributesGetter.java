@@ -82,7 +82,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
     return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
   }
 }

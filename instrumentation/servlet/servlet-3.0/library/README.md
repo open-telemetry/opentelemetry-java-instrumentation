@@ -46,5 +46,5 @@ OpenTelemetry openTelemetry = ...;
 ServletTelemetry telemetry = ServletTelemetry.create(openTelemetry);
 
 // Create telemetry producing servlet filter
-Filter filter = telemetry.newFilter();
+Filter filter = telemetry.createFilter();
 ```

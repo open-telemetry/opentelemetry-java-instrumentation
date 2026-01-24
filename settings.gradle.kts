@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "0.11.3"
+    id("org.graalvm.buildtools.native") version "0.11.4"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.6"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3"
+  id("com.gradle.develocity") version "4.3.1"
 }
 
 dependencyResolutionManagement {
@@ -151,6 +151,8 @@ include(":smoke-tests:images:servlet")
 include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
+include(":smoke-tests:extensions:testapp")
+include(":smoke-tests:extensions:extension")
 
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
@@ -571,11 +573,11 @@ include(":instrumentation:restlet:restlet-2.0:library")
 include(":instrumentation:restlet:restlet-2.0:testing")
 include(":instrumentation:rmi:bootstrap")
 include(":instrumentation:rmi:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:testing")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent")
-include(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing")
+include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
+include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
+include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client-5.0:testing")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:javaagent")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library")
 include(":instrumentation:runtime-telemetry:runtime-telemetry-java8:testing")

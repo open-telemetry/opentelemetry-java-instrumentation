@@ -74,7 +74,8 @@ class ReactiveSpringDataTest {
                             SemconvCodeStabilityUtil.codeFunctionAssertions(
                                 CustomerRepository.class, "findAll")),
                 span ->
-                    span.hasName("SELECT db.CUSTOMER")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SELECT CUSTOMER" : "SELECT db.CUSTOMER")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         // assert that this span ends before its parent span

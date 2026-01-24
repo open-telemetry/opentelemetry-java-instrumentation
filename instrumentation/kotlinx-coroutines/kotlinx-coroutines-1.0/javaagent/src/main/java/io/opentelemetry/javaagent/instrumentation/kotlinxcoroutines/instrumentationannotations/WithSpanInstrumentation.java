@@ -18,12 +18,12 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
 import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.SpanAttributeUtil.Parameter;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.util.Arrays;
 import java.util.List;
 import kotlin.coroutines.Continuation;
@@ -58,8 +58,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   private static final boolean CHECK_CLASS =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "kotlinx_coroutines")
-          .getBoolean(
-              "check_class", ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false));
+          .getBoolean("check_class", EarlyInitAgentConfig.get().isDebug());
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   // this matcher matches all methods that should be excluded from transformation

@@ -70,21 +70,6 @@ public final class ElasticsearchRest7TelemetryBuilder {
   }
 
   /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(Function)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public ElasticsearchRest7TelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<ElasticsearchRestRequest>,
-              ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
-          spanNameExtractorCustomizer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
