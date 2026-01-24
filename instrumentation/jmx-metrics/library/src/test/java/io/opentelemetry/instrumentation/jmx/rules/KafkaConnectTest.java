@@ -6,54 +6,58 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import javax.management.Attribute;
-import javax.management.AttributeList;
-import javax.management.AttributeNotFoundException;
-import javax.management.DynamicMBean;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanException;
-import javax.management.MBeanInfo;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import javax.management.Notification;
-import javax.management.NotificationBroadcasterSupport;
-import javax.management.ObjectName;
-import javax.management.ReflectionException;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.Transferable;
 
-class KafkaConnectTest {
+class KafkaConnectTest extends TargetSystemTest {
+  private static final String APACHE_KAFKA_IMAGE = "apache/kafka:3.8.0";
+  private static final int KAFKA_PORT = 9092;
+  private static final int KAFKA_CONTROLLER_PORT = 9093;
+  private static final int CONNECT_PORT = 8083;
+  private static final String KAFKA_ALIAS = "kafka";
+  private static final String CONNECT_ALIAS = "kafka-connect";
+  private static final String KAFKA_SERVER_PROPERTIES_PATH =
+      "/opt/kafka/config/kraft/server.properties";
+  private static final String CONNECT_PROPERTIES_PATH =
+      "/opt/kafka/config/connect-distributed.properties";
+  private static final String SOURCE_CONNECTOR = "file-source";
+  private static final String SINK_CONNECTOR = "file-sink";
+  private static final String SOURCE_FILE_PATH = "/tmp/source.txt";
+  private static final String SINK_FILE_PATH = "/tmp/sink.txt";
+  private static final String TOPIC = "connect-test-topic";
+  private static final String DLQ_TOPIC = "connect-dead-letter";
+  private static final Set<String> OPTIONAL_APACHE_METRICS = new HashSet<>();
 
-  @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  private static MBeanServer mbeanServer;
-
-  @Test
-  void kafkaConnectConfigParsesAndBuilds() throws Exception {
-    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config = loadKafkaConnectConfig();
-    assertThat(config.getRules()).isNotEmpty();
-
-    // ensure all metric definitions build without throwing
-    for (io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule rule : config.getRules()) {
-      assertThatCode(rule::buildMetricDef).doesNotThrowAnyException();
-    }
+  static {
+    // Apache Kafka Connect 3.8 file connectors do not expose these metrics.
+    Collections.addAll(
+        OPTIONAL_APACHE_METRICS,
+        "kafka.connect.sink.record.lag.max",
+        "kafka.connect.task.offset.commit.avg.time",
+        "kafka.connect.task.offset.commit.max.time",
+        "kafka.connect.source.transaction.size.avg",
+        "kafka.connect.source.transaction.size.max",
+        "kafka.connect.source.transaction.size.min");
   }
 
   @Test
@@ -125,169 +129,68 @@ class KafkaConnectTest {
   }
 
   @Test
-  void metricsAreReportedAcrossVariants() throws Exception {
-    String confluentConnector = "confluent-connector";
-    String confluentTaskId = "0";
-    String apacheConnector = "apache-connector";
-    String apacheTaskId = "1";
-    String errorConnector = "error-connector";
-    String errorTaskId = "1";
-    String errorNegativeTaskId = "2";
+  void metricsAreReportedFromKafkaConnectContainer() throws Exception {
+    List<String> yamlFiles = Collections.singletonList("kafka-connect.yaml");
 
-    registerMBean(
-        connectWorkerMetricsBean(),
-        mapOf(
-            "connector-count",
-            1L,
-            "task-count",
-            2L,
-            "connector-startup-failure-total",
-            1L,
-            "connector-startup-success-total",
-            3L,
-            "task-startup-failure-total",
-            2L,
-            "task-startup-success-total",
-            4L));
+    yamlFiles.forEach(this::validateYamlSyntax);
 
-    registerMBean(connectorMetricsBean(confluentConnector), mapOf("status", "RUNNING"));
+    List<String> jvmArgs = new ArrayList<>();
+    jvmArgs.add(javaAgentJvmArgument());
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    registerMBean(
-        connectorTaskMetricsBean(confluentConnector, confluentTaskId),
-        mapOf(
-            "status",
-            "DESTROYED",
-            "offset-commit-avg-time-ms",
-            1500L,
-            "offset-commit-max-time-ms",
-            2500L));
+    Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
+    Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
 
-    registerMBean(
-        connectWorkerRebalanceMetricsBean(),
-        mapOf(
-            "connect-protocol",
-            "eager",
-            "rebalance-avg-time-ms",
-            1500L,
-            "rebalance-max-time-ms",
-            2500L,
-            "time-since-last-rebalance-ms",
-            3000L,
-            "rebalancing",
-            "true"));
+    String kafkaCommand =
+        "/opt/kafka/bin/kafka-storage.sh format -t $(/opt/kafka/bin/kafka-storage.sh random-uuid) -c "
+            + KAFKA_SERVER_PROPERTIES_PATH
+            + " && /opt/kafka/bin/kafka-server-start.sh "
+            + KAFKA_SERVER_PROPERTIES_PATH;
 
-    registerMBean(
-        connectWorkerMetricsBeanForConnector(apacheConnector),
-        mapOf(
-            "connector-running-task-count", 2L,
-            "connector-failed-task-count", 1L,
-            "connector-paused-task-count", 1L));
+    GenericContainer<?> kafka =
+        new GenericContainer<>(APACHE_KAFKA_IMAGE)
+            .withNetworkAliases(KAFKA_ALIAS)
+            .withCopyToContainer(
+                Transferable.of(kafkaServerProperties()), KAFKA_SERVER_PROPERTIES_PATH)
+            .withExposedPorts(KAFKA_PORT)
+            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
+            .withCommand("-c", kafkaCommand)
+            .withStartupTimeout(Duration.ofMinutes(3))
+            .waitingFor(Wait.forListeningPort());
 
-    registerMBean(
-        sourceTaskMetricsBean(apacheConnector, apacheTaskId),
-        mapOf("poll-batch-avg-time-ms", 500L, "transaction-size-max", 6L));
+    GenericContainer<?> kafkaConnect =
+        new GenericContainer<>(APACHE_KAFKA_IMAGE)
+            .withNetworkAliases(CONNECT_ALIAS)
+            .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
+            .withCopyToContainer(
+                Transferable.of(connectWorkerProperties()), CONNECT_PROPERTIES_PATH)
+            .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
+            .withExposedPorts(CONNECT_PORT)
+            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
+            .withCommand("-c", "/opt/kafka/bin/connect-distributed.sh " + CONNECT_PROPERTIES_PATH)
+            .withStartupTimeout(Duration.ofMinutes(5))
+            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics))
+            .waitingFor(
+                Wait.forHttp("/connectors")
+                    .forPort(CONNECT_PORT)
+                    .withStartupTimeout(Duration.ofMinutes(5)));
 
-    registerMBean(
-        sinkTaskMetricsBean(apacheConnector, apacheTaskId),
-        mapOf("put-batch-avg-time-ms", 1200L, "sink-record-lag-max", 11L));
+    copyAgentToTarget(kafkaConnect);
+    copyYamlFilesToTarget(kafkaConnect, yamlFiles);
 
-    registerMBean(
-        taskErrorMetricsBean(errorConnector, errorTaskId),
-        mapOf(
-            "deadletterqueue-produce-failures",
-            2L,
-            "last-error-timestamp",
-            2000L,
-            "total-errors-logged",
-            3L));
+    startTarget(kafkaConnect, Collections.singletonList(kafka));
 
-    registerMBean(
-        taskErrorMetricsBean(errorConnector, errorNegativeTaskId),
-        mapOf("last-error-timestamp", -1L));
+    String connectUrl = connectUrl(kafkaConnect);
+    createConnector(connectUrl, sourceConnectorConfig());
+    createConnector(connectUrl, sinkConnectorConfig());
 
-    startKafkaConnectTelemetry();
+    awaitConnectorRunning(connectUrl, SOURCE_CONNECTOR);
+    awaitConnectorRunning(connectUrl, SINK_CONNECTOR);
 
-    assertLongSum("kafka.connect.worker.connector.count", Attributes.empty(), 1);
-    assertLongSum("kafka.connect.worker.task.count", Attributes.empty(), 2);
-    assertLongSum(
-        "kafka.connect.worker.connector.startup", connectorStartupResultAttributes("failure"), 1);
-    assertLongSum(
-        "kafka.connect.worker.connector.startup", connectorStartupResultAttributes("success"), 3);
-    assertLongSum("kafka.connect.worker.task.startup", taskStartupResultAttributes("failure"), 2);
-    assertLongSum("kafka.connect.worker.task.startup", taskStartupResultAttributes("success"), 4);
+    kafkaConnect.execInContainer("sh", "-c", "printf 'fourth\\n' >> " + SOURCE_FILE_PATH);
 
-    assertLongSum(
-        "kafka.connect.connector.status",
-        connectorStatusAttributes(confluentConnector, "running"),
-        1);
-    assertLongSum(
-        "kafka.connect.task.status",
-        taskStatusAttributes(confluentConnector, confluentTaskId, "destroyed"),
-        1);
-
-    Attributes confluentTaskAttributes = taskAttributes(confluentConnector, confluentTaskId);
-    assertDoubleGauge("kafka.connect.task.offset.commit.avg.time", confluentTaskAttributes, 1.5d);
-    assertDoubleGauge("kafka.connect.task.offset.commit.max.time", confluentTaskAttributes, 2.5d);
-
-    assertLongSum(
-        "kafka.connect.worker.rebalance.protocol",
-        Attributes.of(
-            io.opentelemetry.api.common.AttributeKey.stringKey("kafka.connect.protocol.state"),
-            "eager"),
-        1);
-    assertDoubleGauge("kafka.connect.worker.rebalance.avg.time", Attributes.empty(), 1.5d);
-    assertDoubleGauge("kafka.connect.worker.rebalance.max.time", Attributes.empty(), 2.5d);
-    assertDoubleGauge("kafka.connect.worker.rebalance.since_last", Attributes.empty(), 3.0d);
-    assertLongSum(
-        "kafka.connect.worker.rebalance.active", rebalanceStateAttributes("rebalancing"), 1);
-
-    assertLongSum(
-        "kafka.connect.worker.connector.task.count",
-        connectorTaskStateAttributes(apacheConnector, "running"),
-        2);
-    assertLongSum(
-        "kafka.connect.worker.connector.task.count",
-        connectorTaskStateAttributes(apacheConnector, "failed"),
-        1);
-    assertLongSum(
-        "kafka.connect.worker.connector.task.count",
-        connectorTaskStateAttributes(apacheConnector, "paused"),
-        1);
-
-    Attributes apacheTaskAttributes = taskAttributes(apacheConnector, apacheTaskId);
-    assertDoubleGauge("kafka.connect.source.poll.batch.avg.time", apacheTaskAttributes, 0.5d);
-    assertDoubleGauge("kafka.connect.sink.put.batch.avg.time", apacheTaskAttributes, 1.2d);
-    assertLongGauge("kafka.connect.source.transaction.size.max", apacheTaskAttributes, 6);
-    assertLongGauge("kafka.connect.sink.record.lag.max", apacheTaskAttributes, 11);
-
-    Attributes task1Attributes = taskAttributes(errorConnector, errorTaskId);
-    Attributes task2Attributes = taskAttributes(errorConnector, errorNegativeTaskId);
-    assertLongSum("kafka.connect.task.error.deadletterqueue.produce.failures", task1Attributes, 2);
-    assertLongSum("kafka.connect.task.error.total.errors.logged", task1Attributes, 3);
-    assertDoubleGauge("kafka.connect.task.error.last.error.timestamp", task1Attributes, 2.0d);
-    assertNoDoubleGaugePoint("kafka.connect.task.error.last.error.timestamp", task2Attributes);
-  }
-
-  @BeforeAll
-  static void setUp() {
-    mbeanServer = MBeanServerFactory.createMBeanServer("kafka.connect");
-  }
-
-  @AfterEach
-  void cleanUp() throws Exception {
-    for (ObjectName name : mbeanServer.queryNames(new ObjectName("kafka.connect:*"), null)) {
-      try {
-        mbeanServer.unregisterMBean(name);
-      } catch (InstanceNotFoundException | MBeanRegistrationException ignored) {
-        // best effort cleanup for flaky tests
-      }
-    }
-    testing.clearData();
-  }
-
-  @AfterAll
-  static void tearDown() {
-    MBeanServerFactory.releaseMBeanServer(mbeanServer);
+    awaitMetricRegistrations(expectedCreatedMetrics, registeredMetrics);
+    verifyMetrics(createKafkaConnectMetricsVerifier());
   }
 
   private io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig loadKafkaConnectConfig()
@@ -299,17 +202,110 @@ class KafkaConnectTest {
     }
   }
 
-  private static void startKafkaConnectTelemetry() throws Exception {
-    try (InputStream input =
-        KafkaConnectTest.class
-            .getClassLoader()
-            .getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
-      assertThat(input).isNotNull();
-      JmxTelemetry.builder(testing.getOpenTelemetry())
-          .addRules(input)
-          .build()
-          .start(() -> Collections.singletonList(mbeanServer));
+  private Set<String> loadKafkaConnectMetricNames(boolean includeOptional) throws Exception {
+    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config = loadKafkaConnectConfig();
+    Set<String> metricNames = new TreeSet<>();
+    for (io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule rule : config.getRules()) {
+      String prefix = rule.getPrefix();
+      for (Map.Entry<String, io.opentelemetry.instrumentation.jmx.internal.yaml.Metric> entry :
+          rule.getMapping().entrySet()) {
+        io.opentelemetry.instrumentation.jmx.internal.yaml.Metric metric = entry.getValue();
+        String baseName =
+            metric == null || metric.getMetric() == null ? entry.getKey() : metric.getMetric();
+        metricNames.add(prefix == null ? baseName : prefix + baseName);
+      }
     }
+    if (!includeOptional) {
+      metricNames.removeAll(OPTIONAL_APACHE_METRICS);
+    }
+    return metricNames;
+  }
+
+  private static void awaitMetricRegistrations(
+      Set<String> expectedMetrics, Set<String> registeredMetrics) {
+    await()
+        .atMost(Duration.ofMinutes(2))
+        .pollInterval(Duration.ofSeconds(1))
+        .untilAsserted(() -> assertThat(registeredMetrics).containsAll(expectedMetrics));
+  }
+
+  private static void recordMetricRegistrations(OutputFrame frame, Set<String> registeredMetrics) {
+    if (frame == null) {
+      return;
+    }
+    String payload = frame.getUtf8String();
+    if (payload == null || payload.isEmpty()) {
+      return;
+    }
+    String[] lines = payload.split("\\r?\\n");
+    for (String line : lines) {
+      int markerIndex = line.indexOf("MetricRegistrar - Created");
+      if (markerIndex < 0) {
+        continue;
+      }
+      int forIndex = line.indexOf(" for ", markerIndex);
+      if (forIndex < 0) {
+        continue;
+      }
+      String metricName = line.substring(forIndex + 5).trim();
+      if (!metricName.isEmpty()) {
+        registeredMetrics.add(metricName);
+      }
+    }
+  }
+
+  private static String kafkaServerProperties() {
+    return String.join(
+        "\n",
+        "process.roles=broker,controller",
+        "node.id=1",
+        "controller.quorum.voters=1@" + KAFKA_ALIAS + ":" + KAFKA_CONTROLLER_PORT,
+        "listeners=PLAINTEXT://0.0.0.0:"
+            + KAFKA_PORT
+            + ",CONTROLLER://0.0.0.0:"
+            + KAFKA_CONTROLLER_PORT,
+        "listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT",
+        "inter.broker.listener.name=PLAINTEXT",
+        "controller.listener.names=CONTROLLER",
+        "advertised.listeners=PLAINTEXT://" + KAFKA_ALIAS + ":" + KAFKA_PORT,
+        "log.dirs=/tmp/kraft-combined-logs",
+        "num.partitions=1",
+        "offsets.topic.replication.factor=1",
+        "transaction.state.log.replication.factor=1",
+        "transaction.state.log.min.isr=1",
+        "group.initial.rebalance.delay.ms=0",
+        "auto.create.topics.enable=true");
+  }
+
+  private static String connectWorkerProperties() {
+    return String.join(
+        "\n",
+        "bootstrap.servers=" + KAFKA_ALIAS + ":" + KAFKA_PORT,
+        "group.id=connect-cluster",
+        "key.converter=org.apache.kafka.connect.storage.StringConverter",
+        "value.converter=org.apache.kafka.connect.storage.StringConverter",
+        "key.converter.schemas.enable=false",
+        "value.converter.schemas.enable=false",
+        "offset.storage.topic=connect-offsets",
+        "config.storage.topic=connect-configs",
+        "status.storage.topic=connect-status",
+        "offset.storage.replication.factor=1",
+        "config.storage.replication.factor=1",
+        "status.storage.replication.factor=1",
+        "plugin.path=/opt/kafka/libs",
+        "rest.host.name=0.0.0.0",
+        "rest.advertised.host.name=" + CONNECT_ALIAS,
+        "listeners=http://0.0.0.0:" + CONNECT_PORT);
+  }
+
+  private MetricsVerifier createKafkaConnectMetricsVerifier() throws Exception {
+    Set<String> metricNames = loadKafkaConnectMetricNames(false);
+
+    MetricsVerifier verifier = MetricsVerifier.create().disableStrictMode();
+    for (String metricName : metricNames) {
+      verifier.add(metricName, metric -> {});
+    }
+    return verifier;
   }
 
   private static io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule getRuleForBean(
@@ -330,267 +326,135 @@ class KafkaConnectTest {
     return metric;
   }
 
-  private static Map<String, Object> mapOf(Object... kvPairs) {
-    Map<String, Object> map = new HashMap<>();
-    for (int i = 0; i < kvPairs.length; i += 2) {
-      map.put((String) kvPairs[i], kvPairs[i + 1]);
-    }
-    return map;
+  private static String connectUrl(GenericContainer<?> container) {
+    return "http://" + container.getHost() + ":" + container.getMappedPort(CONNECT_PORT);
   }
 
-  private static void registerMBean(String objectName, Map<String, Object> attributes)
+  private static void createConnector(String connectUrl, String connectorConfigJson)
       throws Exception {
-    mbeanServer.registerMBean(new MapBackedDynamicMBean(attributes), new ObjectName(objectName));
+    HttpResponseData response =
+        sendRequest("POST", connectUrl + "/connectors", connectorConfigJson);
+    assertThat(response.statusCode).isIn(200, 201, 409);
   }
 
-  private static String connectWorkerMetricsBean() {
-    return "kafka.connect:type=connect-worker-metrics";
+  private static void awaitConnectorRunning(String connectUrl, String connectorName) {
+    await()
+        .atMost(Duration.ofMinutes(2))
+        .pollInterval(Duration.ofSeconds(1))
+        .untilAsserted(
+            () -> {
+              HttpResponseData response =
+                  sendRequest("GET", connectUrl + "/connectors/" + connectorName + "/status", null);
+              assertThat(response.statusCode).isEqualTo(200);
+              assertThat(response.body).contains("\"state\":\"RUNNING\"");
+            });
   }
 
-  private static String connectWorkerMetricsBeanForConnector(String connector) {
-    return "kafka.connect:type=connect-worker-metrics,connector=" + connector;
-  }
-
-  private static String connectWorkerRebalanceMetricsBean() {
-    return "kafka.connect:type=connect-worker-rebalance-metrics";
-  }
-
-  private static String connectorMetricsBean(String connector) {
-    return "kafka.connect:type=connector-metrics,connector=" + connector;
-  }
-
-  private static String connectorTaskMetricsBean(String connector, String taskId) {
-    return "kafka.connect:type=connector-task-metrics,connector=" + connector + ",task=" + taskId;
-  }
-
-  private static String sourceTaskMetricsBean(String connector, String taskId) {
-    return "kafka.connect:type=source-task-metrics,connector=" + connector + ",task=" + taskId;
-  }
-
-  private static String sinkTaskMetricsBean(String connector, String taskId) {
-    return "kafka.connect:type=sink-task-metrics,connector=" + connector + ",task=" + taskId;
-  }
-
-  private static String taskErrorMetricsBean(String connector, String taskId) {
-    return "kafka.connect:type=task-error-metrics,connector=" + connector + ",task=" + taskId;
-  }
-
-  private static Attributes connectorStatusAttributes(String connector, String state) {
-    return Attributes.builder()
-        .put("kafka.connect.connector", connector)
-        .put("kafka.connect.connector.state", state)
-        .build();
-  }
-
-  private static Attributes taskStatusAttributes(String connector, String taskId, String state) {
-    return Attributes.builder()
-        .put("kafka.connect.connector", connector)
-        .put("kafka.connect.task.id", taskId)
-        .put("kafka.connect.task.state", state)
-        .build();
-  }
-
-  private static Attributes taskAttributes(String connector, String taskId) {
-    return Attributes.builder()
-        .put("kafka.connect.connector", connector)
-        .put("kafka.connect.task.id", taskId)
-        .build();
-  }
-
-  private static Attributes connectorTaskStateAttributes(String connector, String state) {
-    return Attributes.builder()
-        .put("kafka.connect.connector", connector)
-        .put("kafka.connect.worker.connector.task.state", state)
-        .build();
-  }
-
-  private static Attributes connectorStartupResultAttributes(String result) {
-    return Attributes.builder()
-        .put("kafka.connect.worker.connector.startup.result", result)
-        .build();
-  }
-
-  private static Attributes taskStartupResultAttributes(String result) {
-    return Attributes.builder().put("kafka.connect.worker.task.startup.result", result).build();
-  }
-
-  private static Attributes rebalanceStateAttributes(String state) {
-    return Attributes.builder().put("kafka.connect.worker.rebalance.state", state).build();
-  }
-
-  private static void assertLongSum(String metricName, Attributes attributes, long expectedValue) {
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.jmx",
-        metricName,
-        metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  boolean matched =
-                      metric.getLongSumData().getPoints().stream()
-                          .anyMatch(
-                              pointData ->
-                                  attributesMatch(pointData.getAttributes(), attributes)
-                                      && pointData.getValue() == expectedValue);
-                  assertThat(matched)
-                      .as(
-                          "Expected %s to have a point with attributes %s and value %s",
-                          metricName, attributes, expectedValue)
-                      .isTrue();
-                }));
-  }
-
-  private static void assertLongGauge(String metricName, Attributes attributes, long expected) {
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.jmx",
-        metricName,
-        metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  boolean matched =
-                      metric.getLongGaugeData().getPoints().stream()
-                          .anyMatch(
-                              pointData ->
-                                  attributesMatch(pointData.getAttributes(), attributes)
-                                      && pointData.getValue() == expected);
-                  assertThat(matched)
-                      .as(
-                          "Expected %s to have a point with attributes %s and value %s",
-                          metricName, attributes, expected)
-                      .isTrue();
-                }));
-  }
-
-  private static void assertDoubleGauge(String metricName, Attributes attributes, double expected) {
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.jmx",
-        metricName,
-        metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  boolean matched =
-                      metric.getDoubleGaugeData().getPoints().stream()
-                          .anyMatch(
-                              pointData ->
-                                  attributesMatch(pointData.getAttributes(), attributes)
-                                      && Math.abs(pointData.getValue() - expected) < 1e-6);
-                  assertThat(matched)
-                      .as(
-                          "Expected %s to have a point with attributes %s and value %s",
-                          metricName, attributes, expected)
-                      .isTrue();
-                }));
-  }
-
-  private static void assertNoDoubleGaugePoint(String metricName, Attributes attributes) {
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.jmx",
-        metricName,
-        metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  boolean matched =
-                      metric.getDoubleGaugeData().getPoints().stream()
-                          .anyMatch(
-                              pointData -> attributesMatch(pointData.getAttributes(), attributes));
-                  assertThat(matched)
-                      .as("Expected %s to have no point with attributes %s", metricName, attributes)
-                      .isFalse();
-                }));
-  }
-
-  private static boolean attributesMatch(Attributes actual, Attributes expected) {
-    for (Map.Entry<io.opentelemetry.api.common.AttributeKey<?>, Object> entry :
-        expected.asMap().entrySet()) {
-      Object actualValue = actual.get(entry.getKey());
-      if (!entry.getValue().equals(actualValue)) {
-        return false;
+  private static HttpResponseData sendRequest(String method, String url, String body)
+      throws IOException {
+    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+    connection.setRequestMethod(method);
+    connection.setConnectTimeout((int) Duration.ofSeconds(15).toMillis());
+    connection.setReadTimeout((int) Duration.ofSeconds(30).toMillis());
+    connection.setDoInput(true);
+    if (body != null) {
+      connection.setDoOutput(true);
+      connection.setRequestProperty("Content-Type", "application/json");
+      byte[] bytes = body.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+      connection.setRequestProperty("Content-Length", Integer.toString(bytes.length));
+      try (OutputStream output = connection.getOutputStream()) {
+        output.write(bytes);
       }
     }
-    return true;
+    int statusCode = connection.getResponseCode();
+    String responseBody = readResponse(connection);
+    connection.disconnect();
+    return new HttpResponseData(statusCode, responseBody);
   }
 
-  /**
-   * Minimal DynamicMBean implementation backed by a simple attribute map. This keeps the functional
-   * Kafka Connect coverage self contained in the test file.
-   */
-  static class MapBackedDynamicMBean extends NotificationBroadcasterSupport
-      implements DynamicMBean {
-
-    private final Map<String, Object> attributes;
-    private long sequenceNumber = 1;
-
-    MapBackedDynamicMBean(Map<String, Object> attributes) {
-      this.attributes = new HashMap<>(attributes);
+  private static String readResponse(HttpURLConnection connection) throws IOException {
+    InputStream stream =
+        connection.getResponseCode() >= 400
+            ? connection.getErrorStream()
+            : connection.getInputStream();
+    if (stream == null) {
+      return "";
     }
-
-    @Override
-    public Object getAttribute(String attribute)
-        throws AttributeNotFoundException, MBeanException, ReflectionException {
-      if (!attributes.containsKey(attribute)) {
-        throw new AttributeNotFoundException(attribute);
+    try {
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+      byte[] buffer = new byte[1024];
+      int read;
+      while ((read = stream.read(buffer)) != -1) {
+        output.write(buffer, 0, read);
       }
-      return attributes.get(attribute);
-    }
-
-    @Override
-    public void setAttribute(Attribute attribute) {
-      attributes.put(attribute.getName(), attribute.getValue());
-      Notification n =
-          new Notification(
-              "jmx.attribute.changed",
-              this,
-              sequenceNumber++,
-              System.currentTimeMillis(),
-              attribute.getName());
-      sendNotification(n);
-    }
-
-    @Override
-    public AttributeList getAttributes(String[] attributes) {
-      AttributeList list = new AttributeList();
-      for (String attr : attributes) {
-        Object value = this.attributes.get(attr);
-        if (value != null) {
-          list.add(new Attribute(attr, value));
-        }
+      return output.toString(java.nio.charset.StandardCharsets.UTF_8.name());
+    } finally {
+      try {
+        stream.close();
+      } catch (IOException ignored) {
+        // best effort cleanup
       }
-      return list;
     }
+  }
 
-    @Override
-    public AttributeList setAttributes(AttributeList attributes) {
-      AttributeList updated = new AttributeList();
-      for (Object attribute : attributes) {
-        if (attribute instanceof Attribute) {
-          Attribute attr = (Attribute) attribute;
-          setAttribute(attr);
-          updated.add(attr);
-        }
-      }
-      return updated;
-    }
+  private static class HttpResponseData {
+    private final int statusCode;
+    private final String body;
 
-    @Override
-    public Object invoke(String actionName, Object[] params, String[] signature)
-        throws MBeanException, ReflectionException {
-      return null;
+    private HttpResponseData(int statusCode, String body) {
+      this.statusCode = statusCode;
+      this.body = body;
     }
+  }
 
-    @Override
-    public MBeanInfo getMBeanInfo() {
-      List<javax.management.MBeanAttributeInfo> infos = new ArrayList<>();
-      attributes.forEach(
-          (name, value) ->
-              infos.add(
-                  new javax.management.MBeanAttributeInfo(
-                      name, value.getClass().getName(), name + " attribute", true, true, false)));
-      return new MBeanInfo(
-          this.getClass().getName(),
-          "Map backed test MBean",
-          infos.toArray(new javax.management.MBeanAttributeInfo[0]),
-          null,
-          null,
-          null);
-    }
+  private static String sourceConnectorConfig() {
+    return "{"
+        + "\"name\":\""
+        + SOURCE_CONNECTOR
+        + "\","
+        + "\"config\":{"
+        + "\"connector.class\":\"org.apache.kafka.connect.file.FileStreamSourceConnector\","
+        + "\"tasks.max\":\"1\","
+        + "\"topic\":\""
+        + TOPIC
+        + "\","
+        + "\"file\":\""
+        + SOURCE_FILE_PATH
+        + "\","
+        + "\"errors.tolerance\":\"all\","
+        + "\"errors.log.enable\":\"true\","
+        + "\"errors.deadletterqueue.topic.name\":\""
+        + DLQ_TOPIC
+        + "\","
+        + "\"errors.deadletterqueue.topic.replication.factor\":\"1\""
+        + "}"
+        + "}";
+  }
+
+  private static String sinkConnectorConfig() {
+    return "{"
+        + "\"name\":\""
+        + SINK_CONNECTOR
+        + "\","
+        + "\"config\":{"
+        + "\"connector.class\":\"org.apache.kafka.connect.file.FileStreamSinkConnector\","
+        + "\"tasks.max\":\"1\","
+        + "\"topics\":\""
+        + TOPIC
+        + "\","
+        + "\"file\":\""
+        + SINK_FILE_PATH
+        + "\","
+        + "\"errors.tolerance\":\"all\","
+        + "\"errors.log.enable\":\"true\","
+        + "\"errors.deadletterqueue.topic.name\":\""
+        + DLQ_TOPIC
+        + "\","
+        + "\"errors.deadletterqueue.topic.replication.factor\":\"1\","
+        + "\"transforms\":\"extract\","
+        + "\"transforms.extract.type\":\"org.apache.kafka.connect.transforms.ExtractField$Value\","
+        + "\"transforms.extract.field\":\"missing\""
+        + "}"
+        + "}";
   }
 }

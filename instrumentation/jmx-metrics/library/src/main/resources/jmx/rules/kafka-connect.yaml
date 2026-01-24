@@ -139,14 +139,6 @@ rules:
             rebalancing: ["true", "TRUE"]
             idle: ["false", "FALSE"]
             unknown: "*"
-      # kafka.connect.worker.rebalance.since_last
-      time-since-last-rebalance-ms:
-        metric: since_last
-        type: gauge
-        sourceUnit: ms
-        unit: s
-        desc: The time in milliseconds since this worker completed the most recent rebalance.
-
   - bean: kafka.connect:type=connector-metrics,connector=*
     prefix: kafka.connect.connector.
     metricAttribute:
@@ -206,18 +198,6 @@ rules:
         sourceUnit: ms
         unit: s
         desc: The maximum time in milliseconds taken by this task to commit offsets.
-      # kafka.connect.task.offset.commit.success.percentage
-      offset-commit-success-percentage:
-        metric: offset.commit.success.percentage
-        type: gauge
-        unit: *unit_one
-        desc: The average percentage of this task's offset commit attempts that succeeded.
-      # kafka.connect.task.pause.ratio
-      pause-ratio:
-        metric: pause.ratio
-        type: gauge
-        unit: *unit_one
-        desc: The fraction of time this task has spent in the pause state.
       # kafka.connect.task.running.ratio
       running-ratio:
         metric: running.ratio
@@ -246,12 +226,6 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.sink.offset.commit.completion.rate
-      offset-commit-completion-rate:
-        metric: offset.commit.completion.rate
-        type: gauge
-        unit: "{commit}/s"
-        desc: The average per-second number of offset commit completions that were completed successfully.
       # kafka.connect.sink.offset.commit.completion.total
       offset-commit-completion-total:
         metric: offset.commit.completion.total
@@ -264,12 +238,6 @@ rules:
         type: updowncounter
         unit: "{sequence}"
         desc: The current sequence number for offset commits.
-      # kafka.connect.sink.offset.commit.skip.rate
-      offset-commit-skip-rate:
-        metric: offset.commit.skip.rate
-        type: gauge
-        unit: "{commit}/s"
-        desc: The average per-second number of offset commit completions that were received too late and skipped/ignored.
       # kafka.connect.sink.offset.commit.skip.total
       offset-commit-skip-total:
         metric: offset.commit.skip.total
@@ -302,42 +270,18 @@ rules:
         type: updowncounter
         unit: *unit_record
         desc: The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.
-      # kafka.connect.sink.record.active.count.avg
-      sink-record-active-count-avg:
-        metric: record.active.count.avg
-        type: gauge
-        unit: *unit_record
-        desc: The average number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.
-      # kafka.connect.sink.record.active.count.max
-      sink-record-active-count-max:
-        metric: record.active.count.max
-        type: gauge
-        unit: *unit_record
-        desc: The maximum number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.
       # kafka.connect.sink.record.lag.max
       sink-record-lag-max:
         metric: record.lag.max
         type: gauge
         unit: *unit_record
         desc: The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions.
-      # kafka.connect.sink.record.read.rate
-      sink-record-read-rate:
-        metric: record.read.rate
-        type: gauge
-        unit: &unit_record_per_s "{record}/s"
-        desc: The average per-second number of records read from Kafka for this task belonging to the named sink connector in this worker. This is before transformations are applied.
       # kafka.connect.sink.record.read.total
       sink-record-read-total:
         metric: record.read.total
         type: counter
         unit: *unit_record
         desc: The total number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.
-      # kafka.connect.sink.record.send.rate
-      sink-record-send-rate:
-        metric: record.send.rate
-        type: gauge
-        unit: *unit_record_per_s
-        desc: The average per-second number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker. This is after transformations are applied and excludes any records filtered out by the transformations.
       # kafka.connect.sink.record.send.total
       sink-record-send-total:
         metric: record.send.total
@@ -371,36 +315,12 @@ rules:
         type: updowncounter
         unit: *unit_record
         desc: The number of records that have been produced by this task but not yet completely written to Kafka.
-      # kafka.connect.source.record.active.count.avg
-      source-record-active-count-avg:
-        metric: record.active.count.avg
-        type: gauge
-        unit: *unit_record
-        desc: The average number of records that have been produced by this task but not yet completely written to Kafka.
-      # kafka.connect.source.record.active.count.max
-      source-record-active-count-max:
-        metric: record.active.count.max
-        type: gauge
-        unit: *unit_record
-        desc: The maximum number of records that have been produced by this task but not yet completely written to Kafka.
-      # kafka.connect.source.record.poll.rate
-      source-record-poll-rate:
-        metric: record.poll.rate
-        type: gauge
-        unit: *unit_record_per_s
-        desc: The average per-second number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
       # kafka.connect.source.record.poll.total
       source-record-poll-total:
         metric: record.poll.total
         type: counter
         unit: *unit_record
         desc: The total number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
-      # kafka.connect.source.record.write.rate
-      source-record-write-rate:
-        metric: record.write.rate
-        type: gauge
-        unit: *unit_record_per_s
-        desc: The average per-second number of records written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations.
       # kafka.connect.source.record.write.total
       source-record-write-total:
         metric: record.write.total

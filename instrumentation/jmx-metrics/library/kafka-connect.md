@@ -43,7 +43,6 @@ State values: destroyed, failed, paused, restarting, running, unassigned.
 | kafka.connect.worker.rebalance.avg.time        | Gauge         | s           |                                      | The average time in milliseconds spent by this worker to rebalance.             |
 | kafka.connect.worker.rebalance.max.time        | Gauge         | s           |                                      | The maximum time in milliseconds spent by this worker to rebalance.             |
 | kafka.connect.worker.rebalance.active          | UpDownCounter | 1           | kafka.connect.worker.rebalance.state | Whether this worker is currently rebalancing.                                   |
-| kafka.connect.worker.rebalance.since_last      | Gauge         | s           |                                      | The time in milliseconds since this worker completed the most recent rebalance. |
 
 ## Connector metrics
 
@@ -66,8 +65,6 @@ All metrics include `kafka.connect.connector` and `kafka.connect.task.id`. Attri
 | kafka.connect.task.offset.commit.avg.time           | Gauge         | s        |                                                   | The average time in milliseconds taken by this task to commit offsets.                                             |
 | kafka.connect.task.offset.commit.failure.percentage | Gauge         | 1        |                                                   | The average percentage of this task's offset commit attempts that failed.                                          |
 | kafka.connect.task.offset.commit.max.time           | Gauge         | s        |                                                   | The maximum time in milliseconds taken by this task to commit offsets.                                             |
-| kafka.connect.task.offset.commit.success.percentage | Gauge         | 1        |                                                   | The average percentage of this task's offset commit attempts that succeeded.                                       |
-| kafka.connect.task.pause.ratio                      | Gauge         | 1        |                                                   | The fraction of time this task has spent in the pause state.                                                       |
 | kafka.connect.task.running.ratio                    | Gauge         | 1        |                                                   | The fraction of time this task has spent in the running state.                                                     |
 | kafka.connect.task.status                           | UpDownCounter | 1        | kafka.connect.task.state                          | The status of the connector task; supports running, paused, failed, restarting, unassigned, destroyed, or unknown. |
 
@@ -77,21 +74,15 @@ Attributes: `kafka.connect.connector`, `kafka.connect.task.id`.
 
 | Metric Name                                       | Type          | Unit        | Attributes | Description                                                                                                                          |
 |---------------------------------------------------|---------------|-------------|------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| kafka.connect.sink.offset.commit.completion.rate  | Gauge         | {commit}/s  |            | The average per-second number of offset commit completions that were completed successfully.                                         |
 | kafka.connect.sink.offset.commit.completion.total | Counter       | {commit}    |            | The total number of offset commit completions that were completed successfully.                                                      |
 | kafka.connect.sink.offset.commit.seq              | UpDownCounter | {sequence}  |            | The current sequence number for offset commits.                                                                                      |
-| kafka.connect.sink.offset.commit.skip.rate        | Gauge         | {commit}/s  |            | The average per-second number of offset commit completions that were received too late and skipped/ignored.                          |
 | kafka.connect.sink.offset.commit.skip.total       | Counter       | {commit}    |            | The total number of offset commit completions that were received too late and skipped/ignored.                                       |
 | kafka.connect.sink.partition.count                | UpDownCounter | {partition} |            | The number of topic partitions assigned to this task.                                                                                |
 | kafka.connect.sink.put.batch.avg.time             | Gauge         | s           |            | The average time taken by this task to put a batch of sinks records.                                                                 |
 | kafka.connect.sink.put.batch.max.time             | Gauge         | s           |            | The maximum time taken by this task to put a batch of sinks records.                                                                 |
 | kafka.connect.sink.record.active.count            | UpDownCounter | {record}    |            | The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.         |
-| kafka.connect.sink.record.active.count.avg        | Gauge         | {record}    |            | The average number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task. |
-| kafka.connect.sink.record.active.count.max        | Gauge         | {record}    |            | The maximum number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task. |
 | kafka.connect.sink.record.lag.max                 | Gauge         | {record}    |            | The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions.         |
-| kafka.connect.sink.record.read.rate               | Gauge         | {record}/s  |            | The average per-second number of records read from Kafka for this task before transformations are applied.                           |
 | kafka.connect.sink.record.read.total              | Counter       | {record}    |            | The total number of records read from Kafka by this task since it was last restarted.                                                |
-| kafka.connect.sink.record.send.rate               | Gauge         | {record}/s  |            | The average per-second number of records output from the transformations and sent/put to this task.                                  |
 | kafka.connect.sink.record.send.total              | Counter       | {record}    |            | The total number of records output from the transformations and sent/put to this task since it was last restarted.                   |
 
 ## Source task metrics
@@ -103,11 +94,7 @@ Attributes: `kafka.connect.connector`, `kafka.connect.task.id`.
 | kafka.connect.source.poll.batch.avg.time     | Gauge         | s          |            | The average time in milliseconds taken by this task to poll for a batch of source records.                  |
 | kafka.connect.source.poll.batch.max.time     | Gauge         | s          |            | The maximum time in milliseconds taken by this task to poll for a batch of source records.                  |
 | kafka.connect.source.record.active.count     | UpDownCounter | {record}   |            | The number of records that have been produced by this task but not yet completely written to Kafka.         |
-| kafka.connect.source.record.active.count.avg | Gauge         | {record}   |            | The average number of records that have been produced by this task but not yet completely written to Kafka. |
-| kafka.connect.source.record.active.count.max | Gauge         | {record}   |            | The maximum number of records that have been produced by this task but not yet completely written to Kafka. |
-| kafka.connect.source.record.poll.rate        | Gauge         | {record}/s |            | The average per-second number of records produced/polled (before transformation) by this task.              |
 | kafka.connect.source.record.poll.total       | Counter       | {record}   |            | The total number of records produced/polled (before transformation) by this task.                           |
-| kafka.connect.source.record.write.rate       | Gauge         | {record}/s |            | The average per-second number of records written to Kafka for this task.                                    |
 | kafka.connect.source.record.write.total      | Counter       | {record}   |            | The number of records output written to Kafka for this task.                                                |
 | kafka.connect.source.transaction.size.avg    | Gauge         | {record}   |            | The average number of records in the transactions the task has committed so far.                            |
 | kafka.connect.source.transaction.size.max    | Gauge         | {record}   |            | The number of records in the largest transaction the task has committed so far.                             |
