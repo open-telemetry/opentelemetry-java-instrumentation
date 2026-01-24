@@ -19,8 +19,7 @@ public abstract class InfluxDbRequest {
 
   public static InfluxDbRequest create(
       String host, int port, String dbName, String operation, String sql) {
-    return new AutoValue_InfluxDbRequest(
-        host, port, dbName, operation, sanitizer.sanitizeWithSummary(sql));
+    return new AutoValue_InfluxDbRequest(host, port, dbName, operation, sanitizer.sanitize(sql));
   }
 
   public abstract String getHost();
