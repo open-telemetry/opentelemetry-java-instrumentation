@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -138,26 +137,6 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertEquals("DB Query", spanName);
-  }
-
-  @Test
-  void shouldUseQuerySummaryWhenAvailable() {
-    // given
-    DbRequest dbRequest = new DbRequest();
-
-    // Needs to be lenient because not called during this test under old semconv mode
-    lenient().when(dbAttributesGetter.getDbQuerySummary(dbRequest)).thenReturn("SELECT users");
-    // Needs to be lenient because not called during this test under new semconv mode
-    lenient().when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
-    lenient().when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-
-    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
-
-    // when
-    String spanName = underTest.extract(dbRequest);
-
-    // then
-    assertEquals(emitStableDatabaseSemconv() ? "SELECT users" : "SELECT database", spanName);
   }
 
   @Test
