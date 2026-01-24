@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
@@ -184,15 +183,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       if (rawQueryTexts.size() == 1) {
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
-        boolean batch = isBatch(request);
-        if (getter instanceof ExtractQuerySummaryMarker) {
-          String querySummary = sanitizedStatement.getQuerySummary();
-          if (querySummary != null) {
-            return batch ? "BATCH " + querySummary : querySummary;
-          }
-        }
         String operationName = sanitizedStatement.getOperationName();
-        if (batch) {
+        if (isBatch(request)) {
           operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
         }
         return computeSpanNameStable(
@@ -204,12 +196,6 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       }
 
       MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
-      if (getter instanceof ExtractQuerySummaryMarker) {
-        String querySummary = multiQuery.getQuerySummary();
-        if (querySummary != null) {
-          return querySummary;
-        }
-      }
       return computeSpanNameStable(
           getter,
           request,

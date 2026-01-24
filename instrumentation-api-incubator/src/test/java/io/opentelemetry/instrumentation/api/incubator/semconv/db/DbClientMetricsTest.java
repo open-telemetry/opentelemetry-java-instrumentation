@@ -47,7 +47,6 @@ class DbClientMetricsTest {
             .put(DbAttributes.DB_COLLECTION_NAME, "table")
             .put(DbAttributes.DB_NAMESPACE, "potatoes")
             .put(DbAttributes.DB_OPERATION_NAME, "SELECT")
-            .put(DbAttributes.DB_QUERY_SUMMARY, "SELECT table")
             .put(ServerAttributes.SERVER_ADDRESS, "localhost")
             .put(ServerAttributes.SERVER_PORT, 1234)
             .build();
@@ -94,7 +93,6 @@ class DbClientMetricsTest {
                                             equalTo(DbAttributes.DB_NAMESPACE, "potatoes"),
                                             equalTo(DbAttributes.DB_OPERATION_NAME, "SELECT"),
                                             equalTo(DbAttributes.DB_COLLECTION_NAME, "table"),
-                                            equalTo(DbAttributes.DB_QUERY_SUMMARY, "SELECT table"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                             equalTo(ServerAttributes.SERVER_PORT, 1234),
                                             equalTo(DbAttributes.DB_RESPONSE_STATUS_CODE, "200"),
