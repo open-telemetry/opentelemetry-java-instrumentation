@@ -28,8 +28,7 @@ public abstract class GeodeRequest {
       String querySummary = buildQuerySummary(query, region.getName());
       // Recreate with summary
       sqlStatementInfo =
-          SqlStatementInfo.createWithSummary(
-              sanitized.getQueryText(), null, querySummary);
+          SqlStatementInfo.createWithSummary(sanitized.getQueryText(), null, querySummary);
     }
     return new AutoValue_GeodeRequest(region, operation, sqlStatementInfo);
   }
