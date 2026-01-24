@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
-import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.TreeSet;
 import java.util.stream.Stream;
@@ -39,12 +38,11 @@ class InstrumentationModuleInstallerTest {
     ConfigProperties config = mock(ConfigProperties.class);
     when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
+    when(config.getBoolean("otel.instrumentation.common.default-enabled", true))
+        .thenReturn(defaultEnabled);
 
     AgentDistributionConfig distributionConfig =
-        AgentDistributionConfig.builder()
-            .enabledInstrumentations(
-                OpenTelemetryInstaller.enabledInstrumentationsFromConfigProperties(config))
-            .build();
+        AgentDistributionConfig.builder().configProperties(config).build();
     AgentDistributionConfig.set(distributionConfig);
 
     assertThat(

@@ -89,7 +89,7 @@ public abstract class InstrumentationModule implements Ordered {
    * themselves on some other condition.
    */
   public boolean defaultEnabled() {
-    return AgentDistributionConfig.get().getEnabledInstrumentations().isDefaultEnabled();
+    return AgentDistributionConfig.get().isInstrumentationDefaultEnabled();
   }
 
   /**

@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
-import io.opentelemetry.javaagent.bootstrap.internal.EnabledInstrumentations;
-import javax.annotation.Nullable;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Javaagent distribution-specific configuration.
@@ -42,7 +42,11 @@ public final class AgentDistributionConfig {
   @JsonProperty("instrumentation")
   private final Instrumentation instrumentation = new Instrumentation();
 
-  @JsonIgnore private EnabledInstrumentations enabledInstrumentations;
+  /**
+   * ConfigProperties is set for the config properties path, and null for declarative config path
+   * where we compute directly from instrumentation.
+   */
+  @JsonIgnore private ConfigProperties configProperties;
 
   public static AgentDistributionConfig get() {
     return INSTANCE;
@@ -78,12 +82,73 @@ public final class AgentDistributionConfig {
     INSTANCE = distributionConfig;
   }
 
-  public EnabledInstrumentations getEnabledInstrumentations() {
-    if (enabledInstrumentations == null) {
-      // Compute lazily from instrumentation for declarative config case
-      enabledInstrumentations = new LazyEnabledInstrumentations(instrumentation);
+  /**
+   * Returns whether the given instrumentation is enabled.
+   *
+   * @param instrumentationName the name of the instrumentation
+   * @return {@code Boolean.TRUE} if the instrumentation is enabled, {@code Boolean.FALSE} if it is
+   *     disabled, or {@code null} if the default setting should be used
+   */
+  @Nullable
+  public Boolean getInstrumentationEnabled(String instrumentationName) {
+    if (configProperties != null) {
+      // Config properties path
+      return configProperties.getBoolean(
+          "otel.instrumentation." + instrumentationName + ".enabled");
+    } else {
+      // Declarative config path - compute from instrumentation
+      String normalizedName = instrumentationName.replace('-', '_');
+
+      List<String> disabled = instrumentation.getDisabled();
+      if (disabled != null && disabled.contains(normalizedName)) {
+        return false;
+      }
+
+      List<String> enabled = instrumentation.getEnabled();
+      if (enabled != null && enabled.contains(normalizedName)) {
+        return true;
+      }
+      return null;
     }
-    return enabledInstrumentations;
+  }
+
+  /**
+   * Returns whether instrumentations are enabled by default.
+   *
+   * @return {@code true} if instrumentations are enabled by default, {@code false} otherwise
+   */
+  public boolean isInstrumentationDefaultEnabled() {
+    if (configProperties != null) {
+      return configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
+    } else {
+      return instrumentation.isDefaultEnabled();
+    }
+  }
+
+  /**
+   * Returns whether the given instrumentation is explicitly enabled (i.e., not relying on the
+   * default setting).
+   *
+   * @param instrumentationName the name of the instrumentation
+   * @return {@code true} if the instrumentation is explicitly enabled, {@code false} otherwise
+   */
+  public boolean isInstrumentationEnabledExplicitly(String instrumentationName) {
+    return Boolean.TRUE.equals(getInstrumentationEnabled(instrumentationName));
+  }
+
+  /**
+   * Returns whether the given instrumentation is enabled, falling back to the default setting if
+   * not explicitly configured.
+   *
+   * @param instrumentationName the name of the instrumentation
+   * @return {@code true} if the instrumentation is enabled, {@code false} otherwise
+   */
+  public boolean isInstrumentationEnabled(String instrumentationName) {
+    Boolean enabled = getInstrumentationEnabled(instrumentationName);
+    if (enabled != null) {
+      return enabled;
+    }
+    return isInstrumentationDefaultEnabled();
   }
 
   public Instrumentation getInstrumentation() {
@@ -153,36 +218,6 @@ public final class AgentDistributionConfig {
     }
   }
 
-  private static class LazyEnabledInstrumentations implements EnabledInstrumentations {
-    private final Instrumentation instrumentation;
-
-    LazyEnabledInstrumentations(Instrumentation instrumentation) {
-      this.instrumentation = instrumentation;
-    }
-
-    @Nullable
-    @Override
-    public Boolean getEnabled(String instrumentationName) {
-      String normalizedName = instrumentationName.replace('-', '_');
-
-      List<String> disabled = instrumentation.getDisabled();
-      if (disabled != null && disabled.contains(normalizedName)) {
-        return false;
-      }
-
-      List<String> enabled = instrumentation.getEnabled();
-      if (enabled != null && enabled.contains(normalizedName)) {
-        return true;
-      }
-      return null;
-    }
-
-    @Override
-    public boolean isDefaultEnabled() {
-      return instrumentation.isDefaultEnabled();
-    }
-  }
-
   /**
    * Builder for constructing AgentDistributionConfig immutably.
    *
@@ -194,7 +229,7 @@ public final class AgentDistributionConfig {
     private boolean forceSynchronousAgentListeners = false;
     private final List<String> excludeClasses = new ArrayList<>();
     private final List<String> excludeClassLoaders = new ArrayList<>();
-    private EnabledInstrumentations enabledInstrumentations;
+    private ConfigProperties configProperties;
 
     private Builder() {}
 
@@ -218,8 +253,8 @@ public final class AgentDistributionConfig {
       return this;
     }
 
-    public Builder enabledInstrumentations(EnabledInstrumentations enabledInstrumentations) {
-      this.enabledInstrumentations = enabledInstrumentations;
+    public Builder configProperties(ConfigProperties configProperties) {
+      this.configProperties = configProperties;
       return this;
     }
 
@@ -229,7 +264,7 @@ public final class AgentDistributionConfig {
       config.forceSynchronousAgentListeners = this.forceSynchronousAgentListeners;
       config.excludeClasses.addAll(this.excludeClasses);
       config.excludeClassLoaders.addAll(this.excludeClassLoaders);
-      config.enabledInstrumentations = this.enabledInstrumentations;
+      config.configProperties = this.configProperties;
       return config;
     }
   }

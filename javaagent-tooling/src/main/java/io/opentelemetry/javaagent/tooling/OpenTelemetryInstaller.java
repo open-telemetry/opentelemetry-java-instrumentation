@@ -19,7 +19,6 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Arrays;
-import org.jetbrains.annotations.Nullable;
 
 public final class OpenTelemetryInstaller {
 
@@ -63,38 +62,17 @@ public final class OpenTelemetryInstaller {
   }
 
   private static AgentDistributionConfig distributionFromConfigProperties(
-      ConfigProperties config, EnabledInstrumentations enabledInstrumentations) {
+      ConfigProperties config) {
     return AgentDistributionConfig.builder()
         .indyEnabled(config.getBoolean("otel.javaagent.experimental.indy", false))
         .forceSynchronousAgentListeners(
             config.getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false))
         .excludeClasses(config.getList("otel.javaagent.exclude-classes", emptyList()))
         .excludeClassLoaders(config.getList("otel.javaagent.exclude-class-loaders", emptyList()))
-        .enabledInstrumentations(enabledInstrumentations)
+        .configProperties(config)
         .build();
   }
 
-
-  // Visible for testing
-  public static EnabledInstrumentations enabledInstrumentationsFromConfigProperties(
-      ConfigProperties configProperties) {
-    boolean isDefaultEnabled =
-        configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
-
-    return new EnabledInstrumentations() {
-      @Nullable
-      @Override
-      public Boolean getEnabled(String instrumentationName) {
-        return configProperties.getBoolean(
-            "otel.instrumentation." + instrumentationName + ".enabled");
-      }
-
-      @Override
-      public boolean isDefaultEnabled() {
-        return isDefaultEnabled;
-      }
-    };
-  }
 
   private static void setForceFlush(OpenTelemetrySdk sdk) {
     OpenTelemetrySdkAccess.internalSetForceFlush(
