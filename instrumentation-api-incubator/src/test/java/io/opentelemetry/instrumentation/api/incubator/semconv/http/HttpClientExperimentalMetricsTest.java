@@ -92,7 +92,7 @@ class HttpClientExperimentalMetricsTest {
                                 point ->
                                     point
                                         .hasSum(100 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
@@ -118,7 +118,7 @@ class HttpClientExperimentalMetricsTest {
                                 point ->
                                     point
                                         .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),

@@ -69,16 +69,6 @@ public final class KafkaInstrumenterFactory {
     return this;
   }
 
-  /**
-   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
-   */
-  @CanIgnoreReturnValue
-  @Deprecated
-  public KafkaInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
-  }
-
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter() {
     return createProducerInstrumenter(Collections.emptyList());
   }
