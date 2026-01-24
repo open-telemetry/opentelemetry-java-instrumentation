@@ -46,8 +46,19 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveSpansDisabled, testStableSemconv)
   }
 }
 

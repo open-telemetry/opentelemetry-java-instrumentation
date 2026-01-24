@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -16,9 +18,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -100,10 +99,12 @@ public abstract class AbstractBaseAwsClientTest {
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                                   equalTo(SERVER_PORT, server.httpPort()),
                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  satisfies(RPC_SERVICE, v -> v.contains(service)),
-                                  equalTo(RPC_METHOD, operation),
+                                  rpcSystemAssertion("aws-api"),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+
+                      attributes.addAll(
+                          rpcMethodAssertions(
+                              service, operation, (a, expected) -> a.contains(expected)));
 
                       if (hasRequestId()) {
                         attributes.add(

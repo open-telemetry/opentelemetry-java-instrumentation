@@ -34,9 +34,22 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+
+  withType<Test>().configureEach {
+    jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 }
 
 configurations.testRuntimeClasspath {

@@ -32,6 +32,19 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+
 if (findProperty("denyUnsafe") as Boolean) {
   // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
   tasks.withType<Test>().configureEach {

@@ -203,9 +203,9 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,database")
 
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,database")
   }
 
   test {

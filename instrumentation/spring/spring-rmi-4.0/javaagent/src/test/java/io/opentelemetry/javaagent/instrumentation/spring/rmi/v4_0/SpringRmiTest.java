@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -20,6 +19,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.rmi.RemoteException;
@@ -155,24 +155,26 @@ class SpringRmiTest {
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
           assertions.add(span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent());
           assertions.add(
-              span ->
-                  span.hasName("springrmi.app.SpringRmiGreeter/hello")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfying(
-                          equalTo(RPC_SYSTEM, "spring_rmi"),
-                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                          equalTo(RPC_METHOD, "hello")));
+              span -> {
+                List<AttributeAssertion> attrs = new ArrayList<>();
+                attrs.add(rpcSystemAssertion("spring_rmi"));
+                attrs.addAll(rpcMethodAssertions("springrmi.app.SpringRmiGreeter", "hello"));
+                span.hasName("springrmi.app.SpringRmiGreeter/hello")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfying(attrs);
+              });
           if (testSource == TestSource.RMI) {
             assertions.add(
-                span ->
-                    span.hasName(testSource.remoteClassName + "/hello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
-                            equalTo(RPC_SYSTEM, testSource.serverSystem),
-                            equalTo(RPC_SERVICE, testSource.remoteClassName),
-                            equalTo(RPC_METHOD, "hello")));
+                span -> {
+                  List<AttributeAssertion> attrs = new ArrayList<>();
+                  attrs.add(rpcSystemAssertion(testSource.serverSystem));
+                  attrs.addAll(rpcMethodAssertions(testSource.remoteClassName, "hello"));
+                  span.hasName(testSource.remoteClassName + "/hello")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfying(attrs);
+                });
           }
 
           trace.hasSpansSatisfyingExactly(assertions);
@@ -206,11 +208,37 @@ class SpringRmiTest {
                                           EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class)))));
           assertions.add(
-              span ->
-                  span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
-                      .hasKind(SpanKind.CLIENT)
+              span -> {
+                List<AttributeAssertion> attrs = new ArrayList<>();
+                attrs.add(rpcSystemAssertion("spring_rmi"));
+                attrs.addAll(rpcMethodAssertions("springrmi.app.SpringRmiGreeter", "exceptional"));
+                span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfying(attrs)
+                    .hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfying(
+                                    equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                    equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        val -> val.isInstanceOf(String.class))));
+              });
+          if (testSource == TestSource.RMI) {
+            assertions.add(
+                span -> {
+                  List<AttributeAssertion> attrs = new ArrayList<>();
+                  attrs.add(rpcSystemAssertion(testSource.serverSystem));
+                  attrs.addAll(rpcMethodAssertions(testSource.remoteClassName, "exceptional"));
+                  span.hasName(testSource.remoteClassName + "/exceptional")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(1))
                       .hasStatus(StatusData.error())
-                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfying(attrs)
                       .hasEventsSatisfyingExactly(
                           event ->
                               event
@@ -220,33 +248,8 @@ class SpringRmiTest {
                                       equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
                                           EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfying(
-                          equalTo(RPC_SYSTEM, "spring_rmi"),
-                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                          equalTo(RPC_METHOD, "exceptional")));
-          if (testSource == TestSource.RMI) {
-            assertions.add(
-                span ->
-                    span.hasName(testSource.remoteClassName + "/exceptional")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfying(
-                                        equalTo(
-                                            EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfying(
-                            equalTo(RPC_SYSTEM, testSource.serverSystem),
-                            equalTo(RPC_SERVICE, testSource.remoteClassName),
-                            equalTo(RPC_METHOD, "exceptional")));
+                                          val -> val.isInstanceOf(String.class))));
+                });
           }
 
           trace.hasSpansSatisfyingExactly(assertions);

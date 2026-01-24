@@ -115,6 +115,22 @@ tasks {
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
+
+    dependsOn(sourceSets["testapp"].output)
+    dependsOn(copyTestWebapp)
+
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
 
 tasks.withType<Test>().configureEach {

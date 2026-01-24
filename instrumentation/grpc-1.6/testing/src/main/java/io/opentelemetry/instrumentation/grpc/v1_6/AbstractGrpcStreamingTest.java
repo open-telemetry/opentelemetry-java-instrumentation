@@ -9,6 +9,12 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getClientDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getDurationUnit;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.getServerDurationMetricName;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.grpcStatusCodeAssertion;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcMethodAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.RpcSemconvStabilityUtil.rpcSystemAssertion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -17,10 +23,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -36,6 +38,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.ArrayList;
@@ -220,99 +223,106 @@ public abstract class AbstractGrpcStreamingTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("example.Greeter/Conversation")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                addExtraClientAttributes(
-                                    experimentalSatisfies(
-                                        GRPC_RECEIVED_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    experimentalSatisfies(
-                                        GRPC_SENT_MESSAGE_COUNT,
-                                        v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, "grpc"),
-                                    equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "Conversation"),
-                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
-                            .satisfies(
-                                spanData ->
-                                    assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(toArray(clientEvents))),
-                    span ->
-                        span.hasName("example.Greeter/Conversation")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, "grpc"),
-                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "Conversation"),
-                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(NETWORK_TYPE, "ipv4"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                experimentalSatisfies(
-                                    GRPC_RECEIVED_MESSAGE_COUNT,
-                                    v -> assertThat(v).isGreaterThan(0)),
-                                experimentalSatisfies(
-                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
-                            .satisfies(
-                                spanData ->
-                                    assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(toArray(serverEvents)))));
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "Conversation"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, (long) server.getPort()));
+                      span.hasName("example.Greeter/Conversation")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(addExtraClientAttributes(attrs))
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getEvents())
+                                      .satisfiesExactlyInAnyOrder(toArray(clientEvents)));
+                    },
+                    span -> {
+                      List<AttributeAssertion> attrs = new ArrayList<>();
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(rpcSystemAssertion("grpc"));
+                      attrs.addAll(rpcMethodAssertions("example.Greeter", "Conversation"));
+                      attrs.add(grpcStatusCodeAssertion(Status.Code.OK.value()));
+                      attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                      attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                      attrs.add(equalTo(NETWORK_TYPE, "ipv4"));
+                      attrs.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(
+                          experimentalSatisfies(
+                              GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)));
+                      attrs.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+                      span.hasName("example.Greeter/Conversation")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(attrs)
+                          .satisfies(
+                              spanData ->
+                                  assertThat(spanData.getEvents())
+                                      .satisfiesExactlyInAnyOrder(toArray(serverEvents)));
+                    }));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
+            getServerDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "Conversation"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
+                                        point -> {
+                                          List<AttributeAssertion> attrs = new ArrayList<>();
+                                          attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                                          attrs.add(rpcSystemAssertion("grpc"));
+                                          attrs.addAll(
+                                              rpcMethodAssertions(
+                                                  "example.Greeter", "Conversation"));
+                                          attrs.add(
+                                              grpcStatusCodeAssertion(Status.Code.OK.value()));
+                                          point.hasAttributesSatisfying(attrs);
+                                        }))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
+            getClientDurationMetricName(),
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasUnit("ms")
+                            .hasUnit(getDurationUnit())
                             .hasHistogramSatisfying(
                                 histogram ->
                                     histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "Conversation"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
+                                        point -> {
+                                          List<AttributeAssertion> attrs = new ArrayList<>();
+                                          attrs.add(equalTo(SERVER_ADDRESS, "localhost"));
+                                          attrs.add(equalTo(SERVER_PORT, server.getPort()));
+                                          attrs.add(rpcSystemAssertion("grpc"));
+                                          attrs.addAll(
+                                              rpcMethodAssertions(
+                                                  "example.Greeter", "Conversation"));
+                                          attrs.add(
+                                              grpcStatusCodeAssertion(Status.Code.OK.value()));
+                                          point.hasAttributesSatisfying(attrs);
+                                        }))));
   }
 
   @Test
