@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest;
 
 enum HttpRequestHeadersSetter implements TextMapSetter<NettyRequest> {
   INSTANCE;

@@ -16,11 +16,11 @@ import javax.annotation.Nullable;
 public abstract class NettyRequest {
 
   static NettyRequest create(
-      io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest delegate) {
+      io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest delegate) {
     return new AutoValue_NettyRequest(delegate);
   }
 
-  abstract io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest delegate();
+  abstract io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest delegate();
 
   /** Returns the HTTP request. */
   public HttpRequest getRequest() {

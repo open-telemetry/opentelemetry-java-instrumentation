@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.server;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;

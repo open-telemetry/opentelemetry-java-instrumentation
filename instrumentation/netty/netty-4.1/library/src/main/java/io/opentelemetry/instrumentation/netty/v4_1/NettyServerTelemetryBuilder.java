@@ -23,7 +23,7 @@ import java.util.function.UnaryOperator;
 public final class NettyServerTelemetryBuilder {
 
   private final DefaultHttpServerInstrumenterBuilder<
-          io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest, HttpResponse>
+          io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest, HttpResponse>
       builder;
 
   private boolean emitExperimentalHttpServerEvents = false;

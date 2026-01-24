@@ -20,7 +20,8 @@ final class SpanNameExtractorAdapter {
   private SpanNameExtractorAdapter() {}
 
   static UnaryOperator<
-          SpanNameExtractor<io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest>>
+          SpanNameExtractor<
+              io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest>>
       adapt(UnaryOperator<SpanNameExtractor<NettyRequest>> customizer) {
     return original -> {
       // Wrap the original extractor to expose the v4_1 NettyRequest type

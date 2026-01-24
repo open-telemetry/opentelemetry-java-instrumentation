@@ -10,8 +10,8 @@ import static io.opentelemetry.instrumentation.netty.common.v4_0.internal.HttpSc
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.ChannelUtil;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;

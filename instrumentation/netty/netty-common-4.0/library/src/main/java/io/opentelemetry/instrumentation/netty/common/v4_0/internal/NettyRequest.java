@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.netty.common.v4_0;
+package io.opentelemetry.instrumentation.netty.common.v4_0.internal;
 
 import com.google.auto.value.AutoValue;
 import io.netty.channel.Channel;
@@ -11,7 +11,12 @@ import io.netty.handler.codec.http.HttpRequest;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-/** A tuple of an {@link HttpRequest} and a {@link Channel}. */
+/**
+ * A tuple of an {@link HttpRequest} and a {@link Channel}.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
 @AutoValue
 public abstract class NettyRequest {
 

@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  */
 final class AttributesExtractorAdapter
     implements AttributesExtractor<
-        io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest, HttpResponse> {
+        io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest, HttpResponse> {
 
   private final AttributesExtractor<NettyRequest, HttpResponse> delegate;
 
@@ -32,7 +32,7 @@ final class AttributesExtractorAdapter
   public void onStart(
       AttributesBuilder attributes,
       Context parentContext,
-      io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest request) {
+      io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest request) {
     delegate.onStart(attributes, parentContext, NettyRequest.create(request));
   }
 
@@ -40,7 +40,7 @@ final class AttributesExtractorAdapter
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest request,
+      io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest request,
       @Nullable HttpResponse response,
       @Nullable Throwable error) {
     delegate.onEnd(attributes, context, NettyRequest.create(request), response, error);

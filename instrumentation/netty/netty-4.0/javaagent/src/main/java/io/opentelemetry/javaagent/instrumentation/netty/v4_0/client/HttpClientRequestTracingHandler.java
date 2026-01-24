@@ -15,7 +15,7 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {

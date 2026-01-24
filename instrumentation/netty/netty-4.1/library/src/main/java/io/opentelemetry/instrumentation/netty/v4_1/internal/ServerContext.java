@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest;
 
 /**
  * A tuple of an {@link Context} and a {@link NettyRequest}.
