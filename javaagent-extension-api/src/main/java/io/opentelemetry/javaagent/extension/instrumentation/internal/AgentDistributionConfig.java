@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -19,34 +18,28 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class AgentDistributionConfig {
+public class AgentDistributionConfig {
   @SuppressWarnings("ConstantField") // needs to be mutable for @Initializer
   private static AgentDistributionConfig INSTANCE = new AgentDistributionConfig();
 
   @JsonProperty("indy/development")
-  private boolean indyEnabled = false;
+  protected boolean indyEnabled = false;
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
   // too much javaagent users can file a bug, force sync execution by setting this property to true
   // and continue using the javaagent
   @JsonProperty("force_synchronous_agent_listeners/development")
-  private boolean forceSynchronousAgentListeners = false;
+  protected boolean forceSynchronousAgentListeners = false;
 
   @JsonProperty("exclude_classes")
-  private List<String> excludeClasses = new ArrayList<>();
+  protected List<String> excludeClasses = new ArrayList<>();
 
   @JsonProperty("exclude_class_loaders")
-  private List<String> excludeClassLoaders = new ArrayList<>();
+  protected List<String> excludeClassLoaders = new ArrayList<>();
 
   @JsonProperty("instrumentation")
-  private final Instrumentation instrumentation = new Instrumentation();
-
-  /**
-   * ConfigProperties is set for the config properties path, and null for declarative config path
-   * where we compute directly from instrumentation.
-   */
-  @JsonIgnore private ConfigProperties configProperties;
+  private final InstrumentationConfig instrumentation = new InstrumentationConfig();
 
   public static AgentDistributionConfig get() {
     return INSTANCE;
@@ -68,13 +61,23 @@ public final class AgentDistributionConfig {
   }
 
   /**
-   * Creates a new builder for constructing AgentDistributionConfig.
+   * Creates a new instance from ConfigProperties.
    *
    * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
    * at any time.
    */
-  public static Builder builder() {
-    return new Builder();
+  public static AgentDistributionConfig fromConfigProperties(
+      ConfigProperties configProperties,
+      boolean indyEnabled,
+      boolean forceSynchronousAgentListeners,
+      List<String> excludeClasses,
+      List<String> excludeClassLoaders) {
+    return new ConfigPropertiesAgentDistributionConfig(
+        configProperties,
+        indyEnabled,
+        forceSynchronousAgentListeners,
+        excludeClasses,
+        excludeClassLoaders);
   }
 
   @Initializer
@@ -91,25 +94,18 @@ public final class AgentDistributionConfig {
    */
   @Nullable
   public Boolean getInstrumentationEnabled(String instrumentationName) {
-    if (configProperties != null) {
-      // Config properties path
-      return configProperties.getBoolean(
-          "otel.instrumentation." + instrumentationName + ".enabled");
-    } else {
-      // Declarative config path - compute from instrumentation
-      String normalizedName = instrumentationName.replace('-', '_');
+    String normalizedName = instrumentationName.replace('-', '_');
 
-      List<String> disabled = instrumentation.getDisabled();
-      if (disabled != null && disabled.contains(normalizedName)) {
-        return false;
-      }
-
-      List<String> enabled = instrumentation.getEnabled();
-      if (enabled != null && enabled.contains(normalizedName)) {
-        return true;
-      }
-      return null;
+    List<String> disabled = instrumentation.getDisabled();
+    if (disabled != null && disabled.contains(normalizedName)) {
+      return false;
     }
+
+    List<String> enabled = instrumentation.getEnabled();
+    if (enabled != null && enabled.contains(normalizedName)) {
+      return true;
+    }
+    return null;
   }
 
   /**
@@ -118,11 +114,7 @@ public final class AgentDistributionConfig {
    * @return {@code true} if instrumentations are enabled by default, {@code false} otherwise
    */
   public boolean isInstrumentationDefaultEnabled() {
-    if (configProperties != null) {
-      return configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
-    } else {
-      return instrumentation.isDefaultEnabled();
-    }
+    return instrumentation.isDefaultEnabled();
   }
 
   /**
@@ -151,7 +143,7 @@ public final class AgentDistributionConfig {
     return isInstrumentationDefaultEnabled();
   }
 
-  public Instrumentation getInstrumentation() {
+  public InstrumentationConfig getInstrumentation() {
     return instrumentation;
   }
 
@@ -191,7 +183,7 @@ public final class AgentDistributionConfig {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  public static class Instrumentation {
+  public static class InstrumentationConfig {
     @JsonProperty("default_enabled")
     private boolean defaultEnabled = true;
 
@@ -219,53 +211,36 @@ public final class AgentDistributionConfig {
   }
 
   /**
-   * Builder for constructing AgentDistributionConfig immutably.
-   *
-   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
    */
-  public static class Builder {
-    private boolean indyEnabled = false;
-    private boolean forceSynchronousAgentListeners = false;
-    private final List<String> excludeClasses = new ArrayList<>();
-    private final List<String> excludeClassLoaders = new ArrayList<>();
-    private ConfigProperties configProperties;
+  private static final class ConfigPropertiesAgentDistributionConfig
+      extends AgentDistributionConfig {
+    private final ConfigProperties configProperties;
 
-    private Builder() {}
-
-    public Builder indyEnabled(boolean indyEnabled) {
-      this.indyEnabled = indyEnabled;
-      return this;
-    }
-
-    public Builder forceSynchronousAgentListeners(boolean forceSynchronousAgentListeners) {
-      this.forceSynchronousAgentListeners = forceSynchronousAgentListeners;
-      return this;
-    }
-
-    public Builder excludeClasses(List<String> excludeClasses) {
-      this.excludeClasses.addAll(excludeClasses);
-      return this;
-    }
-
-    public Builder excludeClassLoaders(List<String> excludeClassLoaders) {
-      this.excludeClassLoaders.addAll(excludeClassLoaders);
-      return this;
-    }
-
-    public Builder configProperties(ConfigProperties configProperties) {
+    ConfigPropertiesAgentDistributionConfig(
+        ConfigProperties configProperties,
+        boolean indyEnabled,
+        boolean forceSynchronousAgentListeners,
+        List<String> excludeClasses,
+        List<String> excludeClassLoaders) {
       this.configProperties = configProperties;
-      return this;
+      this.indyEnabled = indyEnabled;
+      this.forceSynchronousAgentListeners = forceSynchronousAgentListeners;
+      this.excludeClasses.addAll(excludeClasses);
+      this.excludeClassLoaders.addAll(excludeClassLoaders);
     }
 
-    public AgentDistributionConfig build() {
-      AgentDistributionConfig config = new AgentDistributionConfig();
-      config.indyEnabled = this.indyEnabled;
-      config.forceSynchronousAgentListeners = this.forceSynchronousAgentListeners;
-      config.excludeClasses.addAll(this.excludeClasses);
-      config.excludeClassLoaders.addAll(this.excludeClassLoaders);
-      config.configProperties = this.configProperties;
-      return config;
+    @Override
+    @Nullable
+    public Boolean getInstrumentationEnabled(String instrumentationName) {
+      return configProperties.getBoolean(
+          "otel.instrumentation." + instrumentationName + ".enabled");
+    }
+
+    @Override
+    public boolean isInstrumentationDefaultEnabled() {
+      return configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
     }
   }
 

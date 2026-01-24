@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.bootstrap.internal.EnabledInstrumentations;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -46,13 +45,17 @@ public final class OpenTelemetryInstaller {
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
-      EnabledInstrumentations enabledInstrumentations =
-          enabledInstrumentationsFromConfigProperties(configProperties);
       AgentDistributionConfig.set(
-          distributionFromConfigProperties(configProperties, enabledInstrumentations));
+          AgentDistributionConfig.fromConfigProperties(
+              configProperties,
+              configProperties.getBoolean("otel.javaagent.experimental.indy", false),
+              configProperties.getBoolean(
+                  "otel.javaagent.experimental.force-synchronous-agent-listeners", false),
+              configProperties.getList("otel.javaagent.exclude-classes", emptyList()),
+              configProperties.getList("otel.javaagent.exclude-class-loaders", emptyList())));
     }
     // else: AgentDistributionConfig is set by JavaagentDistributionAccessCustomizerProvider
-    // and EnabledInstrumentations is computed lazily from the Instrumentation config
+    // and instrumentation enabled checks are computed from the InstrumentationConfig
 
     setForceFlush(sdk);
     GlobalOpenTelemetry.set(sdk);
@@ -60,19 +63,6 @@ public final class OpenTelemetryInstaller {
     return SdkAutoconfigureAccess.create(
         sdk, SdkAutoconfigureAccess.getResource(autoConfiguredSdk), configProperties);
   }
-
-  private static AgentDistributionConfig distributionFromConfigProperties(
-      ConfigProperties config) {
-    return AgentDistributionConfig.builder()
-        .indyEnabled(config.getBoolean("otel.javaagent.experimental.indy", false))
-        .forceSynchronousAgentListeners(
-            config.getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false))
-        .excludeClasses(config.getList("otel.javaagent.exclude-classes", emptyList()))
-        .excludeClassLoaders(config.getList("otel.javaagent.exclude-class-loaders", emptyList()))
-        .configProperties(config)
-        .build();
-  }
-
 
   private static void setForceFlush(OpenTelemetrySdk sdk) {
     OpenTelemetrySdkAccess.internalSetForceFlush(

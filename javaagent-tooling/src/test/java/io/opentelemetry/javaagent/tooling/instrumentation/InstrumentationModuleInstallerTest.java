@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,9 +41,16 @@ class InstrumentationModuleInstallerTest {
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
     when(config.getBoolean("otel.instrumentation.common.default-enabled", true))
         .thenReturn(defaultEnabled);
+    when(config.getBoolean("otel.javaagent.experimental.indy", false)).thenReturn(false);
+    when(config.getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false))
+        .thenReturn(false);
+    when(config.getList("otel.javaagent.exclude-classes", emptyList())).thenReturn(emptyList());
+    when(config.getList("otel.javaagent.exclude-class-loaders", emptyList()))
+        .thenReturn(emptyList());
 
     AgentDistributionConfig distributionConfig =
-        AgentDistributionConfig.builder().configProperties(config).build();
+        AgentDistributionConfig.fromConfigProperties(
+            config, false, false, emptyList(), emptyList());
     AgentDistributionConfig.set(distributionConfig);
 
     assertThat(

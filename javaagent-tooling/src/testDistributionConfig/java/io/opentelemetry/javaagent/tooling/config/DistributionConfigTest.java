@@ -44,7 +44,7 @@ class DistributionConfigTest {
 
   @Test
   void testInstrumentationDefaultEnabledByDefault() {
-    assertThat(AgentDistributionConfig.get().getInstrumentation().isDefaultEnabled()).isTrue();
+    assertThat(AgentDistributionConfig.get().isInstrumentationDefaultEnabled()).isTrue();
   }
 
   @Test

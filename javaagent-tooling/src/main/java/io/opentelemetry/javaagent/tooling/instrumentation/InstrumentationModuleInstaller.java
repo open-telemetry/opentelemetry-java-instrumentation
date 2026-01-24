@@ -240,7 +240,7 @@ public final class InstrumentationModuleInstaller {
   static boolean isInstrumentationEnabled(
       Iterable<String> instrumentationNames, boolean defaultEnabled) {
     for (String name : instrumentationNames) {
-      Boolean enabled = AgentDistributionConfig.get().getEnabledInstrumentations().getEnabled(name);
+      Boolean enabled = AgentDistributionConfig.get().getInstrumentationEnabled(name);
       if (enabled != null) {
         return enabled;
       }
