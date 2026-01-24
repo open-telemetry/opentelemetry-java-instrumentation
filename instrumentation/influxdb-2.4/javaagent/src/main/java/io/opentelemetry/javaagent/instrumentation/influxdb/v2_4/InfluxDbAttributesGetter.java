@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
 final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxDbRequest, Void> {
@@ -23,11 +22,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     if (request.getOperation() != null) {
       return request.getOperation();
     }
-    // Only extract operation name from query text under old semconv
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      return request.getSqlStatementInfo().getOperationName();
-    }
-    return null;
+    return request.getSqlStatementInfo().getOperationName();
   }
 
   @Override
