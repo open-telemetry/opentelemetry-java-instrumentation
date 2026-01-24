@@ -54,33 +54,11 @@ public final class GrpcTelemetry {
   }
 
   /**
-   * Returns a new {@link ClientInterceptor} for use with methods like {@link
-   * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
-   *
-   * @deprecated Use {@link #createClientInterceptor()} instead.
-   */
-  @Deprecated
-  public ClientInterceptor newClientInterceptor() {
-    return createClientInterceptor();
-  }
-
-  /**
    * Returns a new {@link ServerInterceptor} for use with methods like {@link
    * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
    */
   public ServerInterceptor createServerInterceptor() {
     return new TracingServerInterceptor(
         serverInstrumenter, captureExperimentalSpanAttributes, emitMessageEvents);
-  }
-
-  /**
-   * Returns a new {@link ServerInterceptor} for use with methods like {@link
-   * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
-   *
-   * @deprecated Use {@link #createServerInterceptor()} instead.
-   */
-  @Deprecated
-  public ServerInterceptor newServerInterceptor() {
-    return createServerInterceptor();
   }
 }

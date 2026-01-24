@@ -33,7 +33,6 @@ final class LettuceDbAttributesGetter
     return null;
   }
 
-  @Deprecated
   @Override
   public String getDbQueryText(RedisCommand<?, ?, ?> request) {
     String command = LettuceInstrumentationUtil.getCommandName(request);

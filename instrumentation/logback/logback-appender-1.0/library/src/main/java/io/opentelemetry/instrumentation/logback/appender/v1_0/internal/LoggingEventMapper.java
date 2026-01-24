@@ -746,16 +746,6 @@ public final class LoggingEventMapper {
       return this;
     }
 
-    /**
-     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-     *     deprecated and will be removed in a future release.
-     */
-    @Deprecated
-    @CanIgnoreReturnValue
-    public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-      return setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
-    }
-
     @CanIgnoreReturnValue
     public Builder setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
       this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;

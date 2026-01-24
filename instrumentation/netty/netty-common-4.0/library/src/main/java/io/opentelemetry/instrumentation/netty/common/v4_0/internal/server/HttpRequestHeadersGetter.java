@@ -21,18 +21,18 @@ public enum HttpRequestHeadersGetter implements TextMapGetter<NettyRequest> {
 
   @Override
   public Iterable<String> keys(NettyRequest carrier) {
-    return carrier.request().headers().names();
+    return carrier.getRequest().headers().names();
   }
 
   @Nullable
   @Override
   public String get(@Nullable NettyRequest carrier, String key) {
-    return carrier.request().headers().get(key);
+    return carrier.getRequest().headers().get(key);
   }
 
   @Override
   public Iterator<String> getAll(@Nullable NettyRequest carrier, String key) {
-    List<String> list = carrier.request().headers().getAll(key);
+    List<String> list = carrier.getRequest().headers().getAll(key);
     return list != null ? list.iterator() : Collections.emptyIterator();
   }
 }

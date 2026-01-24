@@ -46,16 +46,6 @@ public final class JmsInstrumenterFactory {
     return this;
   }
 
-  /**
-   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
-   */
-  @CanIgnoreReturnValue
-  @Deprecated
-  public JmsInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
-  }
-
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PUBLISH;

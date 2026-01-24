@@ -50,33 +50,14 @@ public class EarlyConfig {
     }
   }
 
-  public static String translatePropertyName(Environment environment, String name) {
-    if (isDeclarativeConfig(environment)) {
-      if (name.startsWith("otel.instrumentation.")) {
-        return toSnakeCase(
-            String.format(
-                "otel.instrumentation/development.java.%s",
-                name.substring("otel.instrumentation.".length())));
-      }
-
-      throw new IllegalStateException(
-          "No mapping found for property name: " + name + ". Please report this bug.");
-    } else {
-      return name;
-    }
-  }
-
-  private static String toSnakeCase(String string) {
-    return string.replace('-', '_');
-  }
-
   public static boolean isInstrumentationEnabled(
       Environment environment, String name, boolean defaultValue) {
     String property =
         getPropertyName(
             environment,
             String.format("otel.instrumentation.%s.enabled", name),
-            String.format("otel.instrumentation/development.java.%s.enabled", toSnakeCase(name)));
+            String.format(
+                "otel.instrumentation/development.java.%s.enabled", name.replace('-', '_')));
     Boolean explicit = environment.getProperty(property, Boolean.class);
     if (explicit != null) {
       return explicit;
