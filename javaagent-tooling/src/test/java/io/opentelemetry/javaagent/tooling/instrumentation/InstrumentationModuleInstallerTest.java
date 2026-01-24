@@ -40,9 +40,11 @@ class InstrumentationModuleInstallerTest {
     when(config.getBoolean("otel.instrumentation.first.enabled")).thenReturn(firstEnabled);
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
 
-    AgentDistributionConfig distributionConfig = AgentDistributionConfig.create();
-    distributionConfig.setEnabledInstrumentations(
-        OpenTelemetryInstaller.enabledInstrumentationsFromConfigProperties(config));
+    AgentDistributionConfig distributionConfig =
+        AgentDistributionConfig.builder()
+            .enabledInstrumentations(
+                OpenTelemetryInstaller.enabledInstrumentationsFromConfigProperties(config))
+            .build();
     AgentDistributionConfig.set(distributionConfig);
 
     assertThat(

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.javaagent.bootstrap.internal.EnabledInstrumentations;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,10 +42,6 @@ public final class AgentDistributionConfig {
   @JsonProperty("instrumentation")
   private final Instrumentation instrumentation = new Instrumentation();
 
-  /**
-   * Enabled instrumentations are set later via {@link
-   * #setEnabledInstrumentations(EnabledInstrumentations)}.
-   */
   @JsonIgnore private EnabledInstrumentations enabledInstrumentations;
 
   public static AgentDistributionConfig get() {
@@ -66,18 +63,27 @@ public final class AgentDistributionConfig {
     return new AgentDistributionConfig();
   }
 
+  /**
+   * Creates a new builder for constructing AgentDistributionConfig.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
+  public static Builder builder() {
+    return new Builder();
+  }
+
   @Initializer
   public static void set(AgentDistributionConfig distributionConfig) {
     INSTANCE = distributionConfig;
   }
 
   public EnabledInstrumentations getEnabledInstrumentations() {
+    if (enabledInstrumentations == null) {
+      // Compute lazily from instrumentation for declarative config case
+      enabledInstrumentations = new LazyEnabledInstrumentations(instrumentation);
+    }
     return enabledInstrumentations;
-  }
-
-  @Initializer
-  public void setEnabledInstrumentations(EnabledInstrumentations enabledInstrumentations) {
-    this.enabledInstrumentations = enabledInstrumentations;
   }
 
   public Instrumentation getInstrumentation() {
@@ -144,6 +150,87 @@ public final class AgentDistributionConfig {
 
     public void setDefaultEnabled(boolean defaultEnabled) {
       this.defaultEnabled = defaultEnabled;
+    }
+  }
+
+  private static class LazyEnabledInstrumentations implements EnabledInstrumentations {
+    private final Instrumentation instrumentation;
+
+    LazyEnabledInstrumentations(Instrumentation instrumentation) {
+      this.instrumentation = instrumentation;
+    }
+
+    @Nullable
+    @Override
+    public Boolean getEnabled(String instrumentationName) {
+      String normalizedName = instrumentationName.replace('-', '_');
+
+      List<String> disabled = instrumentation.getDisabled();
+      if (disabled != null && disabled.contains(normalizedName)) {
+        return false;
+      }
+
+      List<String> enabled = instrumentation.getEnabled();
+      if (enabled != null && enabled.contains(normalizedName)) {
+        return true;
+      }
+      return null;
+    }
+
+    @Override
+    public boolean isDefaultEnabled() {
+      return instrumentation.isDefaultEnabled();
+    }
+  }
+
+  /**
+   * Builder for constructing AgentDistributionConfig immutably.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
+  public static class Builder {
+    private boolean indyEnabled = false;
+    private boolean forceSynchronousAgentListeners = false;
+    private final List<String> excludeClasses = new ArrayList<>();
+    private final List<String> excludeClassLoaders = new ArrayList<>();
+    private EnabledInstrumentations enabledInstrumentations;
+
+    private Builder() {}
+
+    public Builder indyEnabled(boolean indyEnabled) {
+      this.indyEnabled = indyEnabled;
+      return this;
+    }
+
+    public Builder forceSynchronousAgentListeners(boolean forceSynchronousAgentListeners) {
+      this.forceSynchronousAgentListeners = forceSynchronousAgentListeners;
+      return this;
+    }
+
+    public Builder excludeClasses(List<String> excludeClasses) {
+      this.excludeClasses.addAll(excludeClasses);
+      return this;
+    }
+
+    public Builder excludeClassLoaders(List<String> excludeClassLoaders) {
+      this.excludeClassLoaders.addAll(excludeClassLoaders);
+      return this;
+    }
+
+    public Builder enabledInstrumentations(EnabledInstrumentations enabledInstrumentations) {
+      this.enabledInstrumentations = enabledInstrumentations;
+      return this;
+    }
+
+    public AgentDistributionConfig build() {
+      AgentDistributionConfig config = new AgentDistributionConfig();
+      config.indyEnabled = this.indyEnabled;
+      config.forceSynchronousAgentListeners = this.forceSynchronousAgentListeners;
+      config.excludeClasses.addAll(this.excludeClasses);
+      config.excludeClassLoaders.addAll(this.excludeClassLoaders);
+      config.enabledInstrumentations = this.enabledInstrumentations;
+      return config;
     }
   }
 
