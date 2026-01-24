@@ -15,8 +15,6 @@ import javax.annotation.Nullable;
  */
 public final class EarlyInitAgentConfig {
 
-  static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
-
   private static final EarlyInitAgentConfig INSTANCE =
       new EarlyInitAgentConfig(ConfigurationFile.getProperties());
 
@@ -28,38 +26,6 @@ public final class EarlyInitAgentConfig {
 
   private EarlyInitAgentConfig(Map<String, String> configFileContents) {
     this.configFileContents = configFileContents;
-  }
-
-  /**
-   * Returns the configuration file path set via system property or environment variable.
-   *
-   * <p>We cannot use {@link #get()}, because that would lead to infinite recursion.
-   */
-  @Nullable
-  static String getConfigurationFile() {
-    return getStringProperty(CONFIGURATION_FILE_PROPERTY);
-  }
-
-  /**
-   * Returns the boolean value of the given property name from system properties and environment
-   * variables.
-   */
-  static boolean getBooleanProperty(String propertyName, boolean defaultValue) {
-    String value = getStringProperty(propertyName);
-    return value == null ? defaultValue : Boolean.parseBoolean(value);
-  }
-
-  /**
-   * Returns the string value of the given property name from system properties and environment
-   * variables.
-   */
-  @Nullable
-  static String getStringProperty(String propertyName) {
-    String value = System.getProperty(propertyName);
-    if (value != null) {
-      return value;
-    }
-    return System.getenv(toEnvVarName(propertyName));
   }
 
   private static String toEnvVarName(String propertyName) {
@@ -92,31 +58,30 @@ public final class EarlyInitAgentConfig {
     return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
   }
 
+  // visible for testing
   @Nullable
-  private String getString(String propertyName) {
-    String value = getStringProperty(propertyName);
-    if (value != null) {
-      return value;
+  String getString(String propertyName) {
+    String value = System.getProperty(propertyName);
+    if (value == null) {
+      value = System.getenv(toEnvVarName(propertyName));
     }
-    return configFileContents.get(propertyName);
+    if (value == null) {
+      value = configFileContents.get(propertyName);
+    }
+    return value;
   }
 
-  private boolean getBoolean(String propertyName, boolean defaultValue) {
-    String configFileValueStr = configFileContents.get(propertyName);
-    boolean configFileValue =
-        configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
-    return getBooleanProperty(propertyName, configFileValue);
+  // visible for testing
+  boolean getBoolean(String propertyName, boolean defaultValue) {
+    String value = getString(propertyName);
+    return value != null ? Boolean.parseBoolean(value) : defaultValue;
   }
 
   private int getInt(String propertyName, int defaultValue) {
     try {
-      String value = getStringProperty(propertyName);
+      String value = getString(propertyName);
       if (value != null) {
         return Integer.parseInt(value);
-      }
-      String configFileValueStr = configFileContents.get(propertyName);
-      if (configFileValueStr != null) {
-        return Integer.parseInt(configFileValueStr);
       }
       return defaultValue;
     } catch (NumberFormatException ignored) {

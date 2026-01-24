@@ -16,35 +16,35 @@ class EarlyInitAgentConfigTest {
   @SetSystemProperty(key = "test.property.string", value = "sys")
   @Test
   void getString_systemProperty() {
-    assertThat(EarlyInitAgentConfig.getStringProperty("test.property.string")).isEqualTo("sys");
+    assertThat(EarlyInitAgentConfig.get().getString("test.property.string")).isEqualTo("sys");
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_STRING", value = "env")
   @Test
   void getString_environmentVariable() {
-    assertThat(EarlyInitAgentConfig.getStringProperty("test.property.string")).isEqualTo("env");
+    assertThat(EarlyInitAgentConfig.get().getString("test.property.string")).isEqualTo("env");
   }
 
   @Test
   void getString_none() {
-    assertThat(EarlyInitAgentConfig.getStringProperty("test.property.string")).isNull();
+    assertThat(EarlyInitAgentConfig.get().getString("test.property.string")).isNull();
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "false")
   @SetSystemProperty(key = "test.property.boolean", value = "true")
   @Test
   void getBoolean_systemProperty() {
-    assertThat(EarlyInitAgentConfig.getBooleanProperty("test.property.boolean", false)).isTrue();
+    assertThat(EarlyInitAgentConfig.get().getBoolean("test.property.boolean", false)).isTrue();
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "true")
   @Test
   void getBoolean_environmentVariable() {
-    assertThat(EarlyInitAgentConfig.getBooleanProperty("test.property.boolean", false)).isTrue();
+    assertThat(EarlyInitAgentConfig.get().getBoolean("test.property.boolean", false)).isTrue();
   }
 
   @Test
   void getBoolean_none() {
-    assertThat(EarlyInitAgentConfig.getBooleanProperty("test.property.boolean", false)).isFalse();
+    assertThat(EarlyInitAgentConfig.get().getBoolean("test.property.boolean", false)).isFalse();
   }
 }

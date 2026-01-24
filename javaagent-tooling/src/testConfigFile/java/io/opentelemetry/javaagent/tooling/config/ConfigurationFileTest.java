@@ -34,7 +34,7 @@ class ConfigurationFileTest {
   @Test
   void shouldUseEnvVar() throws IOException {
     String path = createFile("config", "property1=val-env");
-    environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", path);
+    environmentVariables.set(ConfigurationFile.CONFIGURATION_FILE_ENV_VAR, path);
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
 
@@ -44,7 +44,7 @@ class ConfigurationFileTest {
   @Test
   void shouldUseSystemProperty() throws IOException {
     String path = createFile("config", "property1=val-sys");
-    systemProperties.set("otel.javaagent.configuration-file", path);
+    systemProperties.set(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, path);
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
 
@@ -55,8 +55,8 @@ class ConfigurationFileTest {
   void shouldUseSystemPropertyOverEnvVar() throws IOException {
     String pathEnv = createFile("configEnv", "property1=val-env");
     String path = createFile("config", "property1=val-sys");
-    systemProperties.set("otel.javaagent.configuration-file", path);
-    environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", pathEnv);
+    systemProperties.set(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, path);
+    environmentVariables.set(ConfigurationFile.CONFIGURATION_FILE_ENV_VAR, pathEnv);
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
 
@@ -65,7 +65,7 @@ class ConfigurationFileTest {
 
   @Test
   void shouldReturnEmptyPropertiesIfFileDoesNotExist() {
-    systemProperties.set("otel.javaagent.configuration-file", "somePath");
+    systemProperties.set(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, "somePath");
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
 
