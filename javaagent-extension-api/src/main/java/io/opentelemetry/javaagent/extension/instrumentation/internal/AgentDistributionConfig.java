@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -23,23 +24,23 @@ public class AgentDistributionConfig {
   private static AgentDistributionConfig INSTANCE = new AgentDistributionConfig();
 
   @JsonProperty("indy/development")
-  protected boolean indyEnabled = false;
+  private final boolean indyEnabled;
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
   // too much javaagent users can file a bug, force sync execution by setting this property to true
   // and continue using the javaagent
   @JsonProperty("force_synchronous_agent_listeners/development")
-  protected boolean forceSynchronousAgentListeners = false;
+  private final boolean forceSynchronousAgentListeners;
 
   @JsonProperty("exclude_classes")
-  protected List<String> excludeClasses = new ArrayList<>();
+  private final List<String> excludeClasses;
 
   @JsonProperty("exclude_class_loaders")
-  protected List<String> excludeClassLoaders = new ArrayList<>();
+  private final List<String> excludeClassLoaders;
 
   @JsonProperty("instrumentation")
-  private final InstrumentationConfig instrumentation = new InstrumentationConfig();
+  private final InstrumentationConfig instrumentation;
 
   public static AgentDistributionConfig get() {
     return INSTANCE;
@@ -83,6 +84,29 @@ public class AgentDistributionConfig {
   @Initializer
   public static void set(AgentDistributionConfig distributionConfig) {
     INSTANCE = distributionConfig;
+  }
+
+  @JsonCreator
+  AgentDistributionConfig(
+      @JsonProperty("indy/development") Boolean indyEnabled,
+      @JsonProperty("force_synchronous_agent_listeners/development")
+          Boolean forceSynchronousAgentListeners,
+      @JsonProperty("exclude_classes") List<String> excludeClasses,
+      @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
+      @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
+    this.indyEnabled = indyEnabled != null ? indyEnabled : false;
+    this.forceSynchronousAgentListeners =
+        forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
+    this.excludeClasses =
+        excludeClasses != null ? new ArrayList<>(excludeClasses) : new ArrayList<>();
+    this.excludeClassLoaders =
+        excludeClassLoaders != null ? new ArrayList<>(excludeClassLoaders) : new ArrayList<>();
+    this.instrumentation = instrumentation != null ? instrumentation : new InstrumentationConfig();
+  }
+
+  // Default constructor for testing
+  AgentDistributionConfig() {
+    this(null, null, null, null, null);
   }
 
   /**
@@ -151,32 +175,16 @@ public class AgentDistributionConfig {
     return indyEnabled;
   }
 
-  public void setIndyEnabled(boolean indyEnabled) {
-    this.indyEnabled = indyEnabled;
-  }
-
   public boolean isForceSynchronousAgentListeners() {
     return forceSynchronousAgentListeners;
-  }
-
-  public void setForceSynchronousAgentListeners(boolean forceSynchronousAgentListeners) {
-    this.forceSynchronousAgentListeners = forceSynchronousAgentListeners;
   }
 
   public List<String> getExcludeClasses() {
     return excludeClasses;
   }
 
-  public void setExcludeClasses(List<String> excludeClasses) {
-    this.excludeClasses = excludeClasses;
-  }
-
   public List<String> getExcludeClassLoaders() {
     return excludeClassLoaders;
-  }
-
-  public void setExcludeClassLoaders(List<String> excludeClassLoaders) {
-    this.excludeClassLoaders = excludeClassLoaders;
   }
 
   /**
@@ -185,13 +193,28 @@ public class AgentDistributionConfig {
    */
   public static class InstrumentationConfig {
     @JsonProperty("default_enabled")
-    private boolean defaultEnabled = true;
+    private final boolean defaultEnabled;
 
     @JsonProperty("disabled")
-    private final List<String> disabled = new ArrayList<>();
+    private final List<String> disabled;
 
     @JsonProperty("enabled")
-    private final List<String> enabled = new ArrayList<>();
+    private final List<String> enabled;
+
+    @JsonCreator
+    InstrumentationConfig(
+        @JsonProperty("default_enabled") Boolean defaultEnabled,
+        @JsonProperty("disabled") List<String> disabled,
+        @JsonProperty("enabled") List<String> enabled) {
+      this.defaultEnabled = defaultEnabled != null ? defaultEnabled : true;
+      this.disabled = disabled != null ? new ArrayList<>(disabled) : new ArrayList<>();
+      this.enabled = enabled != null ? new ArrayList<>(enabled) : new ArrayList<>();
+    }
+
+    // Default constructor
+    InstrumentationConfig() {
+      this(null, null, null);
+    }
 
     public List<String> getDisabled() {
       return disabled;
@@ -203,10 +226,6 @@ public class AgentDistributionConfig {
 
     public boolean isDefaultEnabled() {
       return defaultEnabled;
-    }
-
-    public void setDefaultEnabled(boolean defaultEnabled) {
-      this.defaultEnabled = defaultEnabled;
     }
   }
 
@@ -224,11 +243,8 @@ public class AgentDistributionConfig {
         boolean forceSynchronousAgentListeners,
         List<String> excludeClasses,
         List<String> excludeClassLoaders) {
+      super(indyEnabled, forceSynchronousAgentListeners, excludeClasses, excludeClassLoaders, null);
       this.configProperties = configProperties;
-      this.indyEnabled = indyEnabled;
-      this.forceSynchronousAgentListeners = forceSynchronousAgentListeners;
-      this.excludeClasses.addAll(excludeClasses);
-      this.excludeClassLoaders.addAll(excludeClassLoaders);
     }
 
     @Override
@@ -243,6 +259,4 @@ public class AgentDistributionConfig {
       return configProperties.getBoolean("otel.instrumentation.common.default-enabled", true);
     }
   }
-
-  AgentDistributionConfig() {}
 }
