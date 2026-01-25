@@ -5,6 +5,7 @@
 
 package spring.jpa;
 
+import java.util.Collections;
 import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -35,6 +36,7 @@ public class JpaPersistenceConfig {
     em.setDataSource(dataSource());
     em.setPackagesToScan("spring.jpa");
     em.setJpaVendorAdapter(vendorAdapter);
+    em.setJpaPropertyMap(Collections.singletonMap("hibernate.hbm2ddl.auto", "create"));
     return em;
   }
 

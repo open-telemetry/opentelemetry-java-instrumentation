@@ -48,7 +48,12 @@ public abstract class AbstractSqlCommenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("SELECT dbname").hasParent(trace.getSpan(0))));
+                    span ->
+                        span.hasName(
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "SELECT"
+                                    : "SELECT dbname")
+                            .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -154,7 +159,12 @@ public abstract class AbstractSqlCommenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("SELECT dbname").hasParent(trace.getSpan(0))));
+                    span ->
+                        span.hasName(
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "SELECT"
+                                    : "SELECT dbname")
+                            .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
