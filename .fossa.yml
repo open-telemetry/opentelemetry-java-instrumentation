@@ -1059,6 +1059,9 @@ targets:
       target: ':instrumentation:xxl-job:xxl-job-2.3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:xxl-job:xxl-job-common:bootstrap'
+    - type: gradle
+      path: ./
       target: ':instrumentation:xxl-job:xxl-job-common:javaagent'
     - type: gradle
       path: ./

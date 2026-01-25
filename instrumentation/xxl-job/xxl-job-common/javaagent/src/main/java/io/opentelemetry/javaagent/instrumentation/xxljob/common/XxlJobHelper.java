@@ -5,9 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+
+import com.xxl.job.core.thread.JobThread;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.xxljob.ContextQueue;
+import io.opentelemetry.javaagent.bootstrap.xxljob.ContextQueueHelper;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
@@ -42,7 +48,7 @@ public final class XxlJobHelper {
 
   @Nullable
   public XxlJobScope startSpan(XxlJobProcessRequest request) {
-    Context parentContext = Context.current();
+    Context parentContext = XxlJobHelper.getParentContext(currentContext());
     if (!instrumenter.shouldStart(parentContext, request)) {
       return null;
     }
@@ -60,5 +66,27 @@ public final class XxlJobHelper {
     }
     scope.scope.close();
     instrumenter.end(scope.context, scope.request, null, throwable);
+  }
+
+  private static Context pollContextFromJobThread(JobThread jobThread) {
+    if (jobThread == null) {
+      return null;
+    }
+    VirtualField<JobThread, ContextQueue> virtualField =
+        VirtualField.find(JobThread.class, ContextQueue.class);
+
+    return ContextQueueHelper.pollContext(virtualField, jobThread);
+  }
+
+  public static Context getParentContext(Context fallbackContext) {
+    Thread currentThread = Thread.currentThread();
+    if (currentThread instanceof JobThread) {
+      Context propagatedContext = pollContextFromJobThread((JobThread) currentThread);
+      if (propagatedContext != null) {
+        return propagatedContext;
+      }
+    }
+
+    return fallbackContext;
   }
 }
