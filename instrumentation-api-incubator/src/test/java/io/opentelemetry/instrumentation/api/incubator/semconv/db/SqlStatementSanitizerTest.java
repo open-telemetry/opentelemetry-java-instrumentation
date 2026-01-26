@@ -709,6 +709,9 @@ class SqlStatementSanitizerTest {
                 "SELECT",
                 "users",
                 "SELECT users")),
+        // "--83" is a line comment per SQL standard and on most databases
+        // (except MySQL/MariaDB which requires a space after "--"
+        // in which case )
         Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT")));
   }
 
