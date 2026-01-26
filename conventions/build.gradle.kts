@@ -73,5 +73,5 @@ dependencies {
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.27.6")
+  testImplementation("org.assertj:assertj-core:3.27.7")
 }
