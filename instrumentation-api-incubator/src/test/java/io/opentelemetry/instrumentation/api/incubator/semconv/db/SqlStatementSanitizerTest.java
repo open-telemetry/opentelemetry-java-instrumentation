@@ -684,7 +684,15 @@ class SqlStatementSanitizerTest {
                 "SELECT * FROM `table` WHERE `col``name` = ?",
                 "SELECT",
                 "table",
-                "SELECT `table`")));
+                "SELECT `table`")),
+
+        // Empty and trivial statements should have null query summary
+        Arguments.of(";", expect(";", null, null, null)),
+        Arguments.of(";;", expect(";;", null, null, null)),
+        Arguments.of("   ;   ", expect(" ; ", null, null, null)),
+        Arguments.of("/* comment only */", expect("/* comment only */", null, null, null)),
+        Arguments.of("   ", expect(" ", null, null, null)),
+        Arguments.of("", expect("", null, null, null)));
   }
 
   private static Stream<Arguments> ddlArgs() {
