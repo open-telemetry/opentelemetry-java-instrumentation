@@ -244,6 +244,14 @@ public class TestServlet5 {
 
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(endpoint.getBody());
+              } else if (CAPTURE_BODY.equals(endpoint)) {
+                // read body to trigger body capture
+                ServletInputStream requestBody = req.getInputStream();
+                while (!requestBody.isFinished()) {
+                  requestBody.read();
+                }
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
               } else if (ERROR.equals(endpoint)) {
                 resp.sendError(endpoint.getStatus(), endpoint.getBody());
               } else if (EXCEPTION.equals(endpoint)) {
