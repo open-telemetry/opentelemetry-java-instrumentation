@@ -98,7 +98,8 @@ public final class NettyClientTelemetryBuilder {
   public NettyClientTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorCustomizer) {
     builder.setSpanNameExtractorCustomizer(
-        SpanNameExtractorAdapter.adapt(spanNameExtractorCustomizer));
+        InstrumenterUtil.convertSpanNameExtractor(
+            spanNameExtractorCustomizer, NettyRequest::delegate, NettyRequest::create));
     return this;
   }
 
