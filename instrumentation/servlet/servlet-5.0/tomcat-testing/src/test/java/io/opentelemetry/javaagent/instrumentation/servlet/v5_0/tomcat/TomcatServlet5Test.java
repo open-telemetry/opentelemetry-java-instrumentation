@@ -72,6 +72,7 @@ public abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Co
     super.configure(options);
     options.setContextPath("/tomcat-context");
     options.setTestError(testError());
+    options.setTestRequestBodyCapture(true);
   }
 
   public boolean testError() {

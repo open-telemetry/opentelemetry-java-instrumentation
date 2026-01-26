@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -606,6 +607,36 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")
                         .hasAttribute(
                             AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+  }
+
+  @Test
+  void requestBodyCapture() {
+    assumeTrue(options.testRequestBodyCapture);
+
+    // truncate body size if it exceeds limit
+    //    AttributeUtil.applyAttributeLengthLimit((String)null, 100);
+
+    AttributeKey<String> bodyKey = AttributeKey.stringKey("http.request.body.text");
+
+    String method = "POST";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            HttpMethod.valueOf(method),
+            resolveAddress(CAPTURE_BODY, getProtocolPrefix()),
+            MediaType.PLAIN_TEXT_UTF_8,
+            HttpData.ofUtf8("Test request body"));
+
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_BODY.getBody());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, CAPTURE_BODY, CAPTURE_BODY.status)
+                        .hasAttribute(bodyKey, "Test request body")));
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {

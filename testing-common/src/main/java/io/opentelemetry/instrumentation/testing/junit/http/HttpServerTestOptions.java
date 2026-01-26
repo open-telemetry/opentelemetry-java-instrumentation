@@ -65,6 +65,7 @@ public final class HttpServerTestOptions {
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
+  boolean testRequestBodyCapture;
 
   HttpServerTestOptions() {}
 
@@ -229,6 +230,12 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions useHttp2() {
     return setUseHttp2(true);
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestRequestBodyCapture(boolean testRequestBodyCapture) {
+    this.testRequestBodyCapture = testRequestBodyCapture;
+    return this;
   }
 
   @FunctionalInterface

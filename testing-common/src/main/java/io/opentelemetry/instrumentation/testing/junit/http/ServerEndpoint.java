@@ -32,6 +32,8 @@ public class ServerEndpoint {
   public static final ServerEndpoint CAPTURE_PARAMETERS =
       new ServerEndpoint("CAPTURE_PARAMETERS", "captureParameters", 200, "parameters captured");
 
+  public static final ServerEndpoint CAPTURE_BODY =
+      new ServerEndpoint("CAPTURE_BODY", "captureBody", 200, "response body");
   // TODO: add tests for the following cases:
   public static final ServerEndpoint QUERY_PARAM =
       new ServerEndpoint("QUERY_PARAM", "query?some=query", 200, "some=query");
