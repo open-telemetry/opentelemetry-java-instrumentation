@@ -19,6 +19,7 @@ import com.google.errorprone.matchers.Description;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.util.TreePath;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
@@ -31,7 +32,7 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
 
   private static final long serialVersionUID = 1L;
 
-  private final CanIgnoreReturnValueSuggester delegate;
+  @Nullable private final CanIgnoreReturnValueSuggester delegate;
 
   @Inject
   OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags, WellKnownKeep wellKnownKeep) {
@@ -51,6 +52,9 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
   public Description matchMethod(MethodTree methodTree, VisitorState visitorState) {
     ClassTree containerClass = findContainingClass(visitorState.getPath());
     if (containerClass.getSimpleName().toString().endsWith("Advice")) {
+      return NO_MATCH;
+    }
+    if (delegate == null) {
       return NO_MATCH;
     }
     Description description = delegate.matchMethod(methodTree, visitorState);
