@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import javax.annotation.Nullable;
 
 /**
@@ -19,8 +20,7 @@ import javax.annotation.Nullable;
  * at any time.
  */
 final class AttributesExtractorAdapter
-    implements AttributesExtractor<
-        io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest, HttpResponse> {
+    implements AttributesExtractor<NettyCommonRequest, HttpResponse> {
 
   private final AttributesExtractor<NettyRequest, HttpResponse> delegate;
 
@@ -30,9 +30,7 @@ final class AttributesExtractorAdapter
 
   @Override
   public void onStart(
-      AttributesBuilder attributes,
-      Context parentContext,
-      io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest request) {
+      AttributesBuilder attributes, Context parentContext, NettyCommonRequest request) {
     delegate.onStart(attributes, parentContext, NettyRequest.create(request));
   }
 
@@ -40,7 +38,7 @@ final class AttributesExtractorAdapter
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest request,
+      NettyCommonRequest request,
       @Nullable HttpResponse response,
       @Nullable Throwable error) {
     delegate.onEnd(attributes, context, NettyRequest.create(request), response, error);

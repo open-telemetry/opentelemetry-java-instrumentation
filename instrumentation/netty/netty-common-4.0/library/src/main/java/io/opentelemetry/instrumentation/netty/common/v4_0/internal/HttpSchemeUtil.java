@@ -25,11 +25,11 @@ public final class HttpSchemeUtil {
     }
   }
 
-  public static String getScheme(NettyRequest requestAndChannel) {
+  public static String getScheme(NettyCommonRequest requestAndChannel) {
     return isHttps(requestAndChannel) ? "https" : "http";
   }
 
-  private static boolean isHttps(NettyRequest requestAndChannel) {
+  private static boolean isHttps(NettyCommonRequest requestAndChannel) {
     return sslHandlerClass != null
         && requestAndChannel.getChannel().pipeline().get(sslHandlerClass) != null;
   }

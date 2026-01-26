@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.netty.v4_1;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import java.util.function.UnaryOperator;
 
 /**
@@ -21,7 +22,7 @@ final class SpanNameExtractorAdapter {
 
   static UnaryOperator<
           SpanNameExtractor<
-              io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest>>
+              NettyCommonRequest>>
       adapt(UnaryOperator<SpanNameExtractor<NettyRequest>> customizer) {
     return original -> {
       // Wrap the original extractor to expose the v4_1 NettyRequest type

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import com.google.auto.value.AutoValue;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -15,12 +16,11 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class NettyRequest {
 
-  static NettyRequest create(
-      io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest delegate) {
+  static NettyRequest create(NettyCommonRequest delegate) {
     return new AutoValue_NettyRequest(delegate);
   }
 
-  abstract io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest delegate();
+  abstract NettyCommonRequest delegate();
 
   /** Returns the HTTP request. */
   public HttpRequest getRequest() {

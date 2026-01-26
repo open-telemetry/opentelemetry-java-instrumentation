@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 
 /**
@@ -20,7 +20,7 @@ public class HttpServerTracingHandler
         HttpServerRequestTracingHandler, HttpServerResponseTracingHandler> {
 
   public HttpServerTracingHandler(
-      Instrumenter<NettyRequest, HttpResponse> instrumenter,
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       HttpServerResponseBeforeCommitHandler responseBeforeCommitHandler,
       ProtocolEventHandler protocolEventHandler) {
     super(
