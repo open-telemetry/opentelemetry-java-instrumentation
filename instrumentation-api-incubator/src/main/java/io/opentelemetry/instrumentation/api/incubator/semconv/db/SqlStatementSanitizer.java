@@ -59,12 +59,12 @@ public final class SqlStatementSanitizer {
   }
 
   /** Sanitize and extract query summary. */
-  SqlStatementInfo sanitizeWithSummary(@Nullable String statement) {
+  public SqlStatementInfo sanitizeWithSummary(@Nullable String statement) {
     return sanitizeWithSummary(statement, SqlDialect.DEFAULT);
   }
 
   /** Sanitize and extract query summary. */
-  SqlStatementInfo sanitizeWithSummary(@Nullable String statement, SqlDialect dialect) {
+  public SqlStatementInfo sanitizeWithSummary(@Nullable String statement, SqlDialect dialect) {
     if (!statementSanitizationEnabled || statement == null) {
       return SqlStatementInfo.createWithSummary(statement, null, null);
     }
