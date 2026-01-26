@@ -114,7 +114,7 @@ val DEPENDENCIES = listOf(
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.codehaus.mojo:animal-sniffer-annotations:1.27",
   "org.junit-pioneer:junit-pioneer:1.9.1",
-  "org.objenesis:objenesis:3.4",
+  "org.objenesis:objenesis:3.5",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
