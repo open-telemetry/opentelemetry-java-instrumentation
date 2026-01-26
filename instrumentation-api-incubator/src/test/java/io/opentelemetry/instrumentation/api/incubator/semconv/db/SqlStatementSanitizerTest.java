@@ -712,7 +712,16 @@ class SqlStatementSanitizerTest {
         // "--83" is a line comment per SQL standard and on most databases
         // (except MySQL/MariaDB which requires a space after "--"
         // in which case )
-        Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT")));
+        Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT")),
+
+        // PostgreSQL tagged dollar-quoted strings: $tag$string$tag$
+        // https://neon.com/postgresql/postgresql-plpgsql/dollar-quoted-string-constants
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD = $tag$hello world$tag$",
+            expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")),
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD = $a$nested $b$value$b$ here$a$",
+            expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")));
   }
 
   private static Stream<Arguments> ddlArgs() {
