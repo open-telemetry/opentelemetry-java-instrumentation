@@ -47,4 +47,28 @@ class EarlyInitAgentConfigTest {
   void getBoolean_none() {
     assertThat(EarlyInitAgentConfig.get().getBoolean("test.property.boolean", false)).isFalse();
   }
+
+  @SetEnvironmentVariable(key = "TEST_PROPERTY_INT", value = "456")
+  @SetSystemProperty(key = "test.property.int", value = "123")
+  @Test
+  void getInt_systemProperty() {
+    assertThat(EarlyInitAgentConfig.get().getInt("test.property.int", 0)).isEqualTo(123);
+  }
+
+  @SetEnvironmentVariable(key = "TEST_PROPERTY_INT", value = "456")
+  @Test
+  void getInt_environmentVariable() {
+    assertThat(EarlyInitAgentConfig.get().getInt("test.property.int", 0)).isEqualTo(456);
+  }
+
+  @Test
+  void getInt_none() {
+    assertThat(EarlyInitAgentConfig.get().getInt("test.property.int", 789)).isEqualTo(789);
+  }
+
+  @SetSystemProperty(key = "test.property.int", value = "invalid")
+  @Test
+  void getInt_invalidValue() {
+    assertThat(EarlyInitAgentConfig.get().getInt("test.property.int", 999)).isEqualTo(999);
+  }
 }

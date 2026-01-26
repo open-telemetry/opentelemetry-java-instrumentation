@@ -22,9 +22,6 @@ import javax.annotation.Nullable;
 
 final class ConfigurationFile {
 
-  public static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
-  public static final String CONFIGURATION_FILE_ENV_VAR = "OTEL_JAVAAGENT_CONFIGURATION_FILE";
-
   private static Map<String, String> configFileContents;
 
   // this class is used early, and must not use logging in most of its methods
@@ -47,9 +44,9 @@ final class ConfigurationFile {
   // visible for tests
   static Map<String, String> loadConfigFile() {
     // Reading from system property first and from env after
-    String configurationFilePath = System.getProperty(CONFIGURATION_FILE_PROPERTY);
+    String configurationFilePath = System.getProperty("otel.javaagent.configuration-file");
     if (configurationFilePath == null) {
-      configurationFilePath = System.getenv(CONFIGURATION_FILE_ENV_VAR);
+      configurationFilePath = System.getenv("OTEL_JAVAAGENT_CONFIGURATION_FILE");
     }
     if (configurationFilePath == null) {
       return emptyMap();

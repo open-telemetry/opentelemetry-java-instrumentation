@@ -28,10 +28,6 @@ public final class EarlyInitAgentConfig {
     this.configFileContents = configFileContents;
   }
 
-  private static String toEnvVarName(String propertyName) {
-    return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
-  }
-
   @Nullable
   public String getLogging() {
     return getString("otel.javaagent.logging");
@@ -59,6 +55,7 @@ public final class EarlyInitAgentConfig {
   }
 
   // visible for testing
+
   @Nullable
   String getString(String propertyName) {
     String value = System.getProperty(propertyName);
@@ -72,18 +69,18 @@ public final class EarlyInitAgentConfig {
   }
 
   // visible for testing
+
   boolean getBoolean(String propertyName, boolean defaultValue) {
     String value = getString(propertyName);
     return value != null ? Boolean.parseBoolean(value) : defaultValue;
   }
 
-  private int getInt(String propertyName, int defaultValue) {
+  // visible for testing
+
+  int getInt(String propertyName, int defaultValue) {
     try {
       String value = getString(propertyName);
-      if (value != null) {
-        return Integer.parseInt(value);
-      }
-      return defaultValue;
+      return value != null ? Integer.parseInt(value) : defaultValue;
     } catch (NumberFormatException ignored) {
       return defaultValue;
     }
@@ -91,5 +88,9 @@ public final class EarlyInitAgentConfig {
 
   public void logEarlyConfigErrorsIfAny() {
     ConfigurationFile.logErrorIfAny();
+  }
+
+  private static String toEnvVarName(String propertyName) {
+    return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }
 }
