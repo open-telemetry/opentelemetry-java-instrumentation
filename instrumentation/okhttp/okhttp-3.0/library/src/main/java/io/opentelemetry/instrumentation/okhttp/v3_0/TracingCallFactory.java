@@ -57,34 +57,39 @@ class TracingCallFactory implements Call.Factory {
 
   @Nullable
   static Context getCallingContextForRequest(Request request) {
-    if (!supportsTags) {
-      return contextsByRequest.get(request);
+    if (supportsTags) {
+      return getContextFromRequestTag(request);
     }
-    return readContextFromRequestTag(request);
+    return contextsByRequest.get(request);
   }
 
   @NoMuzzle
-  private static Context readContextFromRequestTag(Request request) {
+  private static Context getContextFromRequestTag(Request request) {
     return request.tag(Context.class);
   }
 
   @Override
   public Call newCall(Request request) {
     Context callingContext = Context.current();
-    Request requestCopy = saveContextFromRequestTag(request.newBuilder(), callingContext).build();
-    if (!supportsTags) {
-      contextsByRequest.set(requestCopy, callingContext);
+    Request requestWithContext = attachContextToRequest(request, callingContext);
+    return new TracingCall(okHttpClient.newCall(requestWithContext), callingContext);
+  }
+
+  private static Request attachContextToRequest(Request request, Context context) {
+    Request.Builder builder = request.newBuilder();
+    if (supportsTags) {
+      setContextToRequestTag(builder, context);
     }
-    return new TracingCall(okHttpClient.newCall(requestCopy), callingContext);
+    Request newRequest = builder.build();
+    if (!supportsTags) {
+      contextsByRequest.set(newRequest, context);
+    }
+    return newRequest;
   }
 
   @NoMuzzle
-  private static Request.Builder saveContextFromRequestTag(
-      Request.Builder builder, Context context) {
-    if (!supportsTags) {
-      return builder;
-    }
-    return builder.tag(Context.class, context);
+  private static void setContextToRequestTag(Request.Builder builder, Context context) {
+    builder.tag(Context.class, context);
   }
 
   static class TracingCall implements Call {
