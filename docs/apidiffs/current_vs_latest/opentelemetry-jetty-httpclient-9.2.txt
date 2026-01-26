@@ -1,0 +1,18 @@
+Comparing source compatibility of opentelemetry-jetty-httpclient-9.2-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) org.eclipse.jetty.client.HttpClient newHttpClient()
+	+++  NEW METHOD: PUBLIC(+) org.eclipse.jetty.client.HttpClient newHttpClient(org.eclipse.jetty.util.ssl.SslContextFactory)
+	+++  NEW METHOD: PUBLIC(+) org.eclipse.jetty.client.HttpClient newHttpClient(org.eclipse.jetty.client.HttpClientTransport, org.eclipse.jetty.util.ssl.SslContextFactory)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<org.eclipse.jetty.client.api.Request,org.eclipse.jetty.client.api.Response>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.jetty.httpclient.v9_2.JettyClientTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<org.eclipse.jetty.client.api.Request>>)

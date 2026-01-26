@@ -1,0 +1,16 @@
+Comparing source compatibility of opentelemetry-java-http-client-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 55.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) java.net.http.HttpClient wrap(java.net.http.HttpClient)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 55.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<? super java.net.http.HttpRequest,? super java.net.http.HttpResponse<? super ?>>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<java.net.http.HttpRequest>>)
