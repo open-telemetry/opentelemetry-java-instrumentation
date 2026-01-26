@@ -9,11 +9,17 @@ import io.nats.client.impl.Headers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-enum NatsRequestMessagingAttributesGetter
+class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
-  INSTANCE;
+
+  private final List<Pattern> temporaryPatterns;
+
+  public NatsRequestMessagingAttributesGetter(List<Pattern> temporaryPatterns) {
+    this.temporaryPatterns = temporaryPatterns;
+  }
 
   @Override
   public String getSystem(NatsRequest request) {
@@ -29,15 +35,13 @@ enum NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
-    if (isTemporaryDestination(request)) {
-      return request.getInboxPrefix();
-    }
-    return null;
+    Pattern pattern = getTemporaryPattern(request);
+    return pattern == null ? null : pattern.pattern();
   }
 
   @Override
   public boolean isTemporaryDestination(NatsRequest request) {
-    return request.getSubject().startsWith(request.getInboxPrefix());
+    return getTemporaryPattern(request) != null;
   }
 
   @Override
@@ -87,5 +91,22 @@ enum NatsRequestMessagingAttributesGetter
     }
     List<String> result = headers.get(name);
     return result == null ? Collections.emptyList() : result;
+  }
+
+  /**
+   * @return the temporary pattern used for this request, or null
+   */
+  private Pattern getTemporaryPattern(NatsRequest request) {
+    if (request.getSubject().startsWith(request.getInboxPrefix())) {
+      return NatsSubjectPattern.compile(request.getInboxPrefix() + "*");
+    }
+
+    for (Pattern pattern : temporaryPatterns) {
+      if (pattern.matcher(request.getSubject()).matches()) {
+        return pattern;
+      }
+    }
+
+    return null;
   }
 }
