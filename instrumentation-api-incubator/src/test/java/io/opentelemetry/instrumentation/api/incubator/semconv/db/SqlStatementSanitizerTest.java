@@ -304,7 +304,6 @@ class SqlStatementSanitizerTest {
             "SELECT TABLE_123"),
 
         // Semi-nonsensical almost-numbers to elide or not
-        Arguments.of("SELECT --83--...--8e+76e3E-1", "SELECT ?", "SELECT"),
         Arguments.of("SELECT DEADBEEF", "SELECT DEADBEEF", "SELECT"),
         Arguments.of("SELECT 123-45-6789", "SELECT ?", "SELECT"),
         Arguments.of("SELECT 1/2/34", "SELECT ?/?/?", "SELECT"),
@@ -692,7 +691,28 @@ class SqlStatementSanitizerTest {
         Arguments.of("   ;   ", expect(" ; ", null, null, null)),
         Arguments.of("/* comment only */", expect("/* comment only */", null, null, null)),
         Arguments.of("   ", expect(" ", null, null, null)),
-        Arguments.of("", expect("", null, null, null)));
+        Arguments.of("", expect("", null, null, null)),
+
+        // Line comments
+        Arguments.of(
+            "-- This query will DELETE old records\nSELECT * FROM users WHERE active = 1",
+            expect(
+                "-- This query will DELETE old records SELECT * FROM users WHERE active = ?",
+                "SELECT",
+                "users",
+                "SELECT users")),
+        // Line comment without space after -- (invalid on MySQL/MariaDB)
+        Arguments.of(
+            "--This query will DELETE old records\nSELECT * FROM users WHERE active = 1",
+            expect(
+                "--This query will DELETE old records SELECT * FROM users WHERE active = ?",
+                "SELECT",
+                "users",
+                "SELECT users")),
+        // "--83" is a line comment per SQL standard and on most databases
+        // (except MySQL/MariaDB which requires a space after "--"
+        // in which case )
+        Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT")));
   }
 
   private static Stream<Arguments> ddlArgs() {
