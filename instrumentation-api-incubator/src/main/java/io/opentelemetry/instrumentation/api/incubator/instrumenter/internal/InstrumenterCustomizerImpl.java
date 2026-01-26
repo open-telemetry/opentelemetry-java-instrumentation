@@ -33,7 +33,7 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
     typeToSpanKey.put(InstrumentationType.RPC_SERVER, SpanKey.RPC_SERVER);
     typeToSpanKey.put(InstrumentationType.MESSAGING_PRODUCER, SpanKey.PRODUCER);
     typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_RECEIVE, SpanKey.CONSUMER_RECEIVE);
-    typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_PROCESS, SpanKey.CONSUMER_RECEIVE);
+    typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_PROCESS, SpanKey.CONSUMER_PROCESS);
   }
 
   private final InternalInstrumenterCustomizer customizer;
