@@ -27,7 +27,7 @@ final class NettyHttpClientAttributesGetter
   public String getUrlFull(NettyRequest requestAndChannel) {
     try {
       String hostHeader = getHost(requestAndChannel);
-      String target = requestAndChannel.request().getUri();
+      String target = requestAndChannel.getRequest().getUri();
       URI uri = new URI(target);
       if ((uri.getHost() == null || uri.getHost().equals("")) && hostHeader != null) {
         return getScheme(requestAndChannel) + "://" + hostHeader + target;
@@ -45,12 +45,12 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   public String getHttpRequestMethod(NettyRequest requestAndChannel) {
-    return requestAndChannel.request().getMethod().name();
+    return requestAndChannel.getRequest().getMethod().name();
   }
 
   @Override
   public List<String> getHttpRequestHeader(NettyRequest requestAndChannel, String name) {
-    return requestAndChannel.request().headers().getAll(name);
+    return requestAndChannel.getRequest().headers().getAll(name);
   }
 
   @Override
@@ -68,19 +68,19 @@ final class NettyHttpClientAttributesGetter
   @Override
   public String getNetworkTransport(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    return ChannelUtil.getNetworkTransport(requestAndChannel.channel());
+    return ChannelUtil.getNetworkTransport(requestAndChannel.getChannel());
   }
 
   @Override
   public String getNetworkProtocolName(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    return requestAndChannel.request().getProtocolVersion().protocolName();
+    return requestAndChannel.getRequest().getProtocolVersion().protocolName();
   }
 
   @Override
   public String getNetworkProtocolVersion(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    HttpVersion version = requestAndChannel.request().getProtocolVersion();
+    HttpVersion version = requestAndChannel.getRequest().getProtocolVersion();
     if (version.minorVersion() == 0) {
       return Integer.toString(version.majorVersion());
     }
@@ -103,7 +103,7 @@ final class NettyHttpClientAttributesGetter
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.remoteAddress();
+    SocketAddress address = requestAndChannel.getRemoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }

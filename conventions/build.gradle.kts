@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.1.0"
+  id("com.diffplug.spotless") version "8.2.0"
 }
 
 spotless {
@@ -54,7 +54,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.1.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.2.0")
   implementation("com.google.guava:guava:33.5.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.1")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
@@ -67,11 +67,11 @@ dependencies {
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.4.0")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.3.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.4.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.27.6")
+  testImplementation("org.assertj:assertj-core:3.27.7")
 }

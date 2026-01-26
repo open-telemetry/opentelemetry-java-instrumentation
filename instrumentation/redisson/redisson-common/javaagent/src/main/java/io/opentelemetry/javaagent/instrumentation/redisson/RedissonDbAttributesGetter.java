@@ -24,7 +24,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
-  @Deprecated
   @Override
   public String getDbQueryText(RedissonRequest request) {
     return request.getStatement();
