@@ -698,7 +698,7 @@ class SqlStatementSanitizerTest {
             "-- This query will DELETE old records\nSELECT * FROM users WHERE active = 1",
             expect(
                 "-- This query will DELETE old records SELECT * FROM users WHERE active = ?",
-                "DELETE", // this is old semconv jflex behavior
+                "SELECT",
                 "users",
                 "SELECT users")),
         // Line comment without space after -- (invalid on MySQL/MariaDB)
@@ -706,16 +706,10 @@ class SqlStatementSanitizerTest {
             "--This query will DELETE old records\nSELECT * FROM users WHERE active = 1",
             expect(
                 "--This query will DELETE old records SELECT * FROM users WHERE active = ?",
-                "DELETE", // this is old semconv jflex behavior
+                "SELECT",
                 "users",
                 "SELECT users")),
-        // Weird case: "--83..." is line comment per SQL standard and on most databases
-        // Except for MySQL/MariaDB which requires a space after "--" for line comments
-        // Stable semconv parser treats "--83" as a line comment (preserved as-is)
-        // Old semconv parser treats "--83" as a numeric expression
-        emitStableDatabaseSemconv()
-            ? Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT"))
-            : Arguments.of("SELECT --83", expect("SELECT ?", "SELECT", null, "SELECT")));
+        Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT")));
   }
 
   private static Stream<Arguments> ddlArgs() {
