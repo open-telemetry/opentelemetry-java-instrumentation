@@ -491,6 +491,15 @@ class SqlStatementSanitizerTest {
             "select col from (select * from anotherTable) alias",
             expect("SELECT", null, "SELECT SELECT anotherTable")),
         Arguments.of(
+            "SELECT * FROM (SELECT * FROM t1) sub, t3",
+            expect("SELECT", null, "SELECT SELECT t1 t3")),
+        Arguments.of(
+            "SELECT * FROM (SELECT * FROM t1) s1, (SELECT * FROM t2) s2",
+            expect("SELECT", null, "SELECT SELECT t1 SELECT t2")),
+        Arguments.of(
+            "SELECT * FROM (SELECT * FROM t1) sub, t2 JOIN t3 ON t2.id = t3.id",
+            expect("SELECT", null, "SELECT SELECT t1 t2 t3")),
+        Arguments.of(
             "select col from table1 union select col from table2",
             expect("SELECT", null, "SELECT table1 SELECT table2")),
         Arguments.of(
