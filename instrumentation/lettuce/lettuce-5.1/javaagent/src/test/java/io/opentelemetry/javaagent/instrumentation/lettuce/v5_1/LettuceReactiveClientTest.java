@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
@@ -66,7 +67,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("GET")
@@ -80,7 +82,8 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET a"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }

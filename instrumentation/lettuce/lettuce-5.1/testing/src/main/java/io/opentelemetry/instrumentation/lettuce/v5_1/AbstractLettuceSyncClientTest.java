@@ -9,12 +9,14 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -139,6 +141,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
@@ -146,6 +149,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         new ArrayList<>(
             asList(
                 DB_SYSTEM_NAME,
+                DB_OPERATION_NAME,
                 SERVER_ADDRESS,
                 SERVER_PORT,
                 NETWORK_PEER_ADDRESS,
@@ -180,6 +184,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -206,6 +211,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -232,6 +238,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                                     equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -269,6 +276,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, containerConnection.port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "LPUSH"),
                                     equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -295,6 +303,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "HMSET"),
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "HMSET user firstname ? lastname ? age ?")))
@@ -323,6 +332,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "HGETALL"),
                                     equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -360,6 +370,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "EVAL"),
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "EVAL " + b64Script + " 1 TESTLIST ? ?")))
@@ -387,6 +398,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "MSET"),
                                     equalTo(maybeStable(DB_STATEMENT), "MSET key1 ? key2 ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -415,6 +427,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
                                           "CLIENT SETINFO lib-name Lettuce")))),
@@ -431,6 +444,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -448,6 +462,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -466,6 +481,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                                       equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))));
     } else {
       testing()
@@ -483,6 +499,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                                       equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
@@ -522,6 +539,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, containerConnection.port),
                                   equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                                   equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")));
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
