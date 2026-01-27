@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import static java.util.Objects.requireNonNull;
+
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
@@ -62,6 +65,7 @@ public final class AgentInitializer {
             agentClassLoader = createAgentClassLoader("inst", javaagentFile);
             agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
             if (!fromPremain || !delayAgentStart()) {
+              requireNonNull(agentStarter);
               agentStarter.start();
               agentStarted = true;
             }
@@ -148,7 +152,7 @@ public final class AgentInitializer {
       return false;
     }
 
-    return agentStarter.delayStart();
+    return requireNonNull(agentStarter).delayStart();
   }
 
   /**
@@ -162,7 +166,7 @@ public final class AgentInitializer {
         new PrivilegedExceptionAction<Void>() {
           @Override
           public Void run() {
-            agentStarter.start();
+            requireNonNull(agentStarter).start();
             agentStarted = true;
             return null;
           }
@@ -184,6 +188,7 @@ public final class AgentInitializer {
     return vmStarted && agentStarted;
   }
 
+  @Nullable
   public static ClassLoader getExtensionsClassLoader() {
     // agentStarter can be null when running tests
     return agentStarter != null ? agentStarter.getExtensionClassLoader() : null;
