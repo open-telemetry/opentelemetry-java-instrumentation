@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -17,7 +19,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler
  */
 public class HttpServerTracingHandler
     extends CombinedChannelDuplexHandler<
-        HttpServerRequestTracingHandler, HttpServerResponseTracingHandler> {
+        ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter> {
 
   public HttpServerTracingHandler(
       Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,

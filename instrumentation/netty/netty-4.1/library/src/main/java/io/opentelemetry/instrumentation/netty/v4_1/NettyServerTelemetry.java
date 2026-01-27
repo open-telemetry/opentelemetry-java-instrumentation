@@ -66,14 +66,12 @@ public final class NettyServerTelemetry {
    * Returns a handler that instruments incoming HTTP requests and outgoing responses in a single
    * handler.
    */
-  public CombinedChannelDuplexHandler<
-          ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
     return createCombinedHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
   }
 
-  public CombinedChannelDuplexHandler<
-          ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
       createCombinedHandler(HttpServerResponseBeforeCommitHandler commitHandler) {
     return new HttpServerTracingHandler(instrumenter, commitHandler, protocolEventHandler);
   }
