@@ -28,8 +28,12 @@ public class InstrumentationLoader implements AgentExtension {
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
     int numberOfLoadedModules = 0;
+    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
+    if (extensionsClassLoader == null) {
+      throw new IllegalStateException("Extensions class loader must not be null");
+    }
     for (InstrumentationModule instrumentationModule :
-        loadOrdered(InstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+        loadOrdered(InstrumentationModule.class, extensionsClassLoader)) {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,

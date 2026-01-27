@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -24,7 +25,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class IndyTypeTransformerImpl implements TypeTransformer {
 
   // path (with trailing slash) to dump transformed advice class to
-  private static final String DUMP_PATH = null;
+  @Nullable private static final String DUMP_PATH = null;
   private final Advice.WithCustomMapping adviceMapping;
   private AgentBuilder.Identified.Extendable agentBuilder;
   private final InstrumentationModule instrumentationModule;
