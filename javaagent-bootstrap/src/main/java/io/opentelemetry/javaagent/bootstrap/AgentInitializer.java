@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.bootstrap;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
