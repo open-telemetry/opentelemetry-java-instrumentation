@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
+import javax.annotation.Nullable;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
@@ -28,6 +30,7 @@ public class IndyBootstrapDispatcher {
    * @param bootstrapMethod the method to delegate to. Must have the same type as {@link
    *     #bootstrap}.
    */
+  @Initializer
   public static void init(MethodHandle bootstrapMethod) {
     bootstrap = bootstrapMethod;
   }
@@ -66,6 +69,7 @@ public class IndyBootstrapDispatcher {
     return MethodHandles.dropArguments(noopNoArg, 0, methodType.parameterList());
   }
 
+  @Nullable
   private static Object getDefaultValue(Class<?> classOrPrimitive) {
     if (classOrPrimitive.isPrimitive()) {
       // arrays of primitives are initialized with the correct primitive default value (e.g. 0 for

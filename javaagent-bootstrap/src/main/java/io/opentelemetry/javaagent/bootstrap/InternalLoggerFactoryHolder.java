@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.util.concurrent.atomic.AtomicReference;
 
 final class InternalLoggerFactoryHolder {
@@ -12,6 +13,7 @@ final class InternalLoggerFactoryHolder {
   private static final AtomicReference<InternalLogger.Factory> loggerFactory =
       new AtomicReference<>(NoopLoggerFactory.INSTANCE);
 
+  @Initializer
   static void initialize(InternalLogger.Factory factory) {
     if (!loggerFactory.compareAndSet(NoopLoggerFactory.INSTANCE, factory)) {
       factory

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import javax.annotation.Nullable;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
@@ -30,6 +31,7 @@ public class PatchLogger {
 
   private final InternalLogger internalLogger;
 
+  @Nullable
   private ResourceBundle resourceBundle;
 
   public static PatchLogger getLogger(String name) {
@@ -304,6 +306,7 @@ public class PatchLogger {
 
   public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {}
 
+  @Nullable
   public ResourceBundle getResourceBundle() {
     return resourceBundle;
   }
@@ -312,6 +315,7 @@ public class PatchLogger {
     this.resourceBundle = resourceBundle;
   }
 
+  @Nullable
   public String getResourceBundleName() {
     return null;
   }
@@ -346,6 +350,7 @@ public class PatchLogger {
 
   public void setFilter(Filter filter) {}
 
+  @Nullable
   public Filter getFilter() {
     return null;
   }

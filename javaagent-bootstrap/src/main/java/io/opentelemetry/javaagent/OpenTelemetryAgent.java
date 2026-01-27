@@ -15,7 +15,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import javax.annotation.Nullable;
 
 /**
  * Premain-Class for the OpenTelemetry Java agent.
@@ -50,8 +49,7 @@ public final class OpenTelemetryAgent {
     startAgent(inst, agentArgs, false);
   }
 
-  private static void startAgent(
-      Instrumentation inst, @Nullable String agentArgs, boolean fromPremain) {
+  private static void startAgent(Instrumentation inst, String agentArgs, boolean fromPremain) {
     try {
       File javaagentFile = installBootstrapJar(inst);
       InstrumentationHolder.setInstrumentation(inst);
