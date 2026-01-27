@@ -604,14 +604,16 @@ class SqlStatementSanitizerTest {
                 "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
-        // Call - stable semconv returns CALL + procedure name for querySummary
+        // Call
         Arguments.of(
             "call test_proc()", expectStoredProcedure("CALL", "test_proc", "CALL test_proc")),
         Arguments.of(
             "call test_proc", expectStoredProcedure("CALL", "test_proc", "CALL test_proc")),
-        // "call next value for sequence" is a sequence operation, not a stored proc call
-        // TODO: sequence name capture will be improved in a later commit
-        Arguments.of("call next value for hibernate_sequence", expect("CALL", null, "CALL value")),
+        // Hibernate uses "call next value for sequence" on HSQLDB and H2 to get sequence values,
+        // while it uses SELECT for this on most other databases.
+        Arguments.of(
+            "call next value for hibernate_sequence",
+            expect("CALL", null, "CALL hibernate_sequence")),
         Arguments.of(
             "call db.test_proc",
             expectStoredProcedure("CALL", "db.test_proc", "CALL db.test_proc")),

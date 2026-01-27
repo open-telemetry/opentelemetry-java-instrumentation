@@ -467,24 +467,35 @@ WHITESPACE           = [ \t\r\n]+
 
   private class Merge extends SimpleOperation {}
 
-  private class Call extends SimpleOperation {
-    private boolean sawNextKeyword = false;
-
-    void handleNext() {
-      sawNextKeyword = true;
-    }
+  private class Call extends Operation {
+    boolean identifierCaptured = false;
+    // Track "NEXT VALUE FOR sequence" pattern - sequence name comes after FOR
+    boolean sawNext = false;
+    boolean sawValue = false;
+    boolean expectingSequenceName = false;
 
     void handleIdentifier() {
-      if (!identifierCaptured) {
+      if (expectingSequenceName) {
+        // This is the sequence name after "NEXT VALUE FOR"
+        appendTargetToSummary();
+        expectingSequenceName = false;
+        identifierCaptured = true;
+      } else if (!identifierCaptured && !sawNext) {
+        storedProcedureName = yytext();
         appendTargetToSummary();
         identifierCaptured = true;
-        // Only set storedProcedureName if this is a real procedure call (not "call next value for sequence").
-        // Hibernate uses "call next value for sequence" on HSQLDB and H2 to get sequence values,
-        // while most other databases use SELECT for this.
-        if (!sawNextKeyword) {
-          storedProcedureName = yytext();
-        }
+      } else if (sawNext && !sawValue && yytext().equalsIgnoreCase("value")) {
+        // This is "VALUE" in "NEXT VALUE FOR"
+        sawValue = true;
+      } else if (sawValue && yytext().equalsIgnoreCase("for")) {
+        // This is "FOR" in "NEXT VALUE FOR" - expect sequence name next
+        expectingSequenceName = true;
       }
+    }
+
+    void handleNext() {
+      sawNext = true;
+      storedProcedureName = null;
     }
   }
 
