@@ -31,7 +31,7 @@ public final class AgentInitializer {
   private static volatile boolean agentStarted = false;
 
   public static void initialize(
-      Instrumentation inst, File javaagentFile, boolean fromPremain, String agentArgs)
+      Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
     if (agentClassLoader != null) {
       return;
