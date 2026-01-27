@@ -35,6 +35,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
+  private boolean captureTemplate = false;
   private boolean captureArguments = false;
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
@@ -88,6 +89,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
@@ -178,24 +180,22 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
+   * Sets whether the message template should be captured in logs if arguments are provided.
+   *
+   * @param captureTemplate whether the message template should be captured in logs if arguments are
+   *     provided
+   */
+  public void setCaptureTemplate(boolean captureTemplate) {
+    this.captureTemplate = captureTemplate;
+  }
+
+  /**
    * Sets whether the arguments should be set to logs.
    *
    * @param captureArguments To enable or disable capturing logger arguments
    */
   public void setCaptureArguments(boolean captureArguments) {
     this.captureArguments = captureArguments;
-  }
-
-  /**
-   * Sets whether the Logstash attributes should be set to logs.
-   *
-   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
-   * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-   *     deprecated and will be removed in a future release.
-   */
-  @Deprecated
-  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
   }
 
   /** Sets whether the Logstash marker attributes should be captured. */

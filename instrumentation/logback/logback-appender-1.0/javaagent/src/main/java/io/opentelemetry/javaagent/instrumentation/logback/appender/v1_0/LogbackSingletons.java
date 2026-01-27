@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import java.util.List;
 
 public final class LogbackSingletons {
@@ -18,45 +18,28 @@ public final class LogbackSingletons {
   private static final LoggingEventMapper mapper;
 
   static {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), "logback_appender");
 
     boolean captureExperimentalAttributes =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental-log-attributes", false);
-    boolean captureCodeAttributes =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+        config.getBoolean("experimental_log_attributes/development", false);
+    boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
     boolean captureMarkerAttribute =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-marker-attribute", false);
+        config.getBoolean("capture_marker_attribute/development", false);
     boolean captureKeyValuePairAttributes =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
-            false);
+        config.getBoolean("capture_key_value_pair_attributes/development", false);
     boolean captureLoggerContext =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
-            false);
-    boolean captureArguments =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-arguments", false);
+        config.getBoolean("capture_logger_context_attributes/development", false);
+    boolean captureTemplate = config.getBoolean("capture_template/development", false);
+    boolean captureArguments = config.getBoolean("capture_arguments/development", false);
     boolean captureLogstashMarkerAttributes =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
-            false);
+        config.getBoolean("capture_logstash_marker_attributes/development", false);
     boolean captureLogstashStructuredArguments =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
-            false);
+        config.getBoolean("capture_logstash_structured_arguments/development", false);
     List<String> captureMdcAttributes =
-        config.getList(
-            "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-            emptyList());
-    boolean captureEventName =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-event-name", false);
+        config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
+    boolean captureEventName = config.getBoolean("capture_event_name/development", false);
 
     mapper =
         LoggingEventMapper.builder()
@@ -66,6 +49,7 @@ public final class LogbackSingletons {
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)

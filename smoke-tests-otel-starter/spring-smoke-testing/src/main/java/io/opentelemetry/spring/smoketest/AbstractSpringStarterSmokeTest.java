@@ -39,6 +39,11 @@ public abstract class AbstractSpringStarterSmokeTest {
 
   protected SpringSmokeTestRunner testing;
 
+  @AfterEach
+  void clear() {
+    testing.clearAllExportedData();
+  }
+
   @BeforeAll
   static void beforeAll() {
     SpringSmokeTestRunner.resetExporters();

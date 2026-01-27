@@ -41,7 +41,3 @@ if (findProperty("testLatestDeps") as Boolean) {
     }
   }
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-}

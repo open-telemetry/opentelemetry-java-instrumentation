@@ -86,7 +86,7 @@ final class TracingCqlSession {
   }
 
   private ResultSet execute(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+    CassandraRequest request = CassandraRequest.create(session, query, false);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -101,7 +101,8 @@ final class TracingCqlSession {
 
   private ResultSet execute(CqlSession session, Statement<?> statement) {
     String query = getQuery(statement);
-    CassandraRequest request = CassandraRequest.create(session, query);
+    CassandraRequest request =
+        CassandraRequest.create(session, query, statement instanceof BoundStatement);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -116,12 +117,13 @@ final class TracingCqlSession {
 
   private CompletionStage<AsyncResultSet> executeAsync(CqlSession session, Statement<?> statement) {
     String query = getQuery(statement);
-    CassandraRequest request = CassandraRequest.create(session, query);
+    CassandraRequest request =
+        CassandraRequest.create(session, query, statement instanceof BoundStatement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
   private CompletionStage<AsyncResultSet> executeAsync(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+    CassandraRequest request = CassandraRequest.create(session, query, false);
     return executeAsync(request, () -> session.executeAsync(query));
   }
 

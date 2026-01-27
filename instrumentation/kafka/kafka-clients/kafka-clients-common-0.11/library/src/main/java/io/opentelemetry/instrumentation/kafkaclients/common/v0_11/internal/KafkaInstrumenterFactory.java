@@ -63,7 +63,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
+  public KafkaInstrumenterFactory setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     return this;

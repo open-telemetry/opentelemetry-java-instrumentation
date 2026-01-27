@@ -67,8 +67,8 @@ public enum OkHttpAttributesGetter
         if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
           return "http";
         }
-        return null;
     }
+    return null;
   }
 
   @Nullable
@@ -91,8 +91,8 @@ public enum OkHttpAttributesGetter
         if ("H2_PRIOR_KNOWLEDGE".equals(response.protocol().name())) {
           return "2";
         }
-        return null;
     }
+    return null;
   }
 
   @Override

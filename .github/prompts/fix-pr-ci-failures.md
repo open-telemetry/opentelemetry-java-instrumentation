@@ -24,8 +24,9 @@ Do not stop a given execution until you have worked through all phases below.
 **Phase 1 is for gathering information ONLY. Do NOT analyze failures or look at any code during this phase.**
 **Your only goal in Phase 1 is to collect: job names, job IDs, log files, and failed task names.**
 
-1. Get repository info: `gh repo view --json owner,name`
-2. For unique job type that failed
+1. Delete any existing CI-PLAN.md file: `rm -f CI-PLAN.md`
+2. Get repository info: `gh repo view --json owner,name`
+3. For unique job type that failed
    - **Important**: Ignore duplicate jobs that only differ by parameters inside of parenthesis. For example:
      - In `abc / def (x, y, z)`, the job is `abc / def` while x, y, and z are parameters
    - **Strategy**: Download logs for 1-2 representative jobs first to identify patterns (e.g., one "build" job, one "test0" job)

@@ -9,23 +9,20 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.Experimental;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
-import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-/** A builder of {@link JettyClientTelemetry}. */
+/** Builder for {@link JettyClientTelemetry}. */
 public final class JettyClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
-  private HttpClientTransport httpClientTransport;
-  private SslContextFactory sslContextFactory;
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
@@ -36,22 +33,9 @@ public final class JettyClientTelemetryBuilder {
     builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setHttpClientTransport(
-      HttpClientTransport httpClientTransport) {
-    this.httpClientTransport = httpClientTransport;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setSslContextFactory(SslContextFactory sslContextFactory) {
-    this.sslContextFactory = sslContextFactory;
-    return this;
-  }
-
   /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributesExtractor(
@@ -61,9 +45,9 @@ public final class JettyClientTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes.
+   * Configures HTTP request headers to capture as span attributes.
    *
-   * @param requestHeaders A list of HTTP header names.
+   * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
@@ -72,9 +56,9 @@ public final class JettyClientTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes.
+   * Configures HTTP response headers to capture as span attributes.
    *
-   * @param responseHeaders A list of HTTP header names.
+   * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedResponseHeaders(
@@ -84,16 +68,15 @@ public final class JettyClientTelemetryBuilder {
   }
 
   /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   * Configures recognized HTTP request methods.
    *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * <p>By default, recognizes methods from <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
    *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
+   * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
-   * @param knownMethods A set of recognized HTTP request methods.
+   * @param knownMethods HTTP request methods to recognize.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
@@ -102,22 +85,7 @@ public final class JettyClientTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorTransformer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
-  }
-
-  /**
-   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
-   * one.
-   */
+  /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorCustomizer) {
@@ -125,14 +93,9 @@ public final class JettyClientTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Returns a new {@link JettyClientTelemetry} with the settings of this {@link
-   * JettyClientTelemetryBuilder}.
-   */
+  /** Returns a new instance with the configured settings. */
   public JettyClientTelemetry build() {
-    TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(builder.build(), sslContextFactory, httpClientTransport);
-
-    return new JettyClientTelemetry(tracingHttpClient);
+    Instrumenter<Request, Response> instrumenter = builder.build();
+    return new JettyClientTelemetry(instrumenter);
   }
 }

@@ -191,12 +191,18 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
-  val pushMatrix by registering(DockerPushImage::class) {
+  val pushLinuxImages by registering(DockerPushImage::class) {
     dependsOn(buildLinuxTestImages)
+    group = "publishing"
+    description = "Push Linux Docker images for the test matrix"
+    images.set(linuxImages)
+  }
+
+  val pushWindowsImages by registering(DockerPushImage::class) {
     dependsOn(buildWindowsTestImages)
     group = "publishing"
-    description = "Push all Docker images for the test matrix"
-    images.set(linuxImages + windowsImages)
+    description = "Push Windows Docker images for the test matrix"
+    images.set(windowsImages)
   }
 
   val printSmokeTestsConfigurations by registering {
@@ -254,10 +260,11 @@ fun configureImage(
     version = version.substringBefore("-")
   }
 
-  // Using separate build directory for different image
-  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"
   val platformSuffix = if (isWindows) "-windows" else ""
+
+  // Using separate build directory for different images
+  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject-$platformSuffix")
 
   val prepareTask = tasks.register<Copy>("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix") {
     val warTask = project(":smoke-tests:images:servlet:$warProject").tasks.named<War>("war")
@@ -283,20 +290,20 @@ fun configureImage(
       "openjdk:$jdk"
     } else if (isWindows) {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:46d804b1c8a658fd84b8f3b3f39a1739b0f0ffccf41a682cea4847982de3bd08"
-        "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:3b16568beff29ff623e7d72018cd6b08f4003964a342a907ad410a0b953f40e6"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk-windowsservercore-ltsc2022@sha256:7c9e423728d04540c0a30d68ca0922390665dfec20e012beb95861d80aa2dd70"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:45a3d356d018942a497b877633f19db401828ecb2a1de3cda635b98d08bfbaeb"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:556d727eb539fd9c6242e75d17e1a2bf59456ea8a37478cfbd6406ca6db0d2d1"
+        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
+        "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:747c58cd1c800b8b23c655dfe2ac6bd23eb00b1266d25ef570bbc08bc1459a17"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk-windowsservercore-ltsc2022@sha256:ba99c85b4f130a5026f286bcaf2b3b4c9e9d9e2bc53b35e5a1fbdb08dbb6c26b"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:2803c59147fadcab9d75280af8021044e0d48b76bb723688c922e6b58ec41421"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:8db805f18c1af5d66bc150dff5f381ce517f9d42956766eb349e80e1d09ce8bf"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:b4e05de303ea02659ee17044d6b68caadfc462f1530f3a461482afee23379cdd"
-        "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:189ce1c8831fa5bdd801127dad99f68a17615f81f4aa839b1a4aae693261929a"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:5a66a3ffd8728ed6c76eb4ec674c37991ac679927381f71774f5aa44cf420082"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:ec2005c536f3661c6ef1253292c9c623e582186749a3ef2ed90903d1aaf74640"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:adc4533ea69967c783ac2327dac7ff548fcf6401a7e595e723b414c0a7920eb2"
+        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
+        "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:fd9fc42ab01c4db92911d2f1d63743d0de62a1c9183ccf40bd4943990f739e22"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:710bbe5d41a4c48ecd1e8d5be5f05d49132a102ab70961006d0675ed8b387d86"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:e8d57b6c5c73d93212a4384f588309b44bc75fd15b38f78e6a6db1b350dc4ef3"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:42fc3fe6804ec612f5ef8a613f8c06d8dd578de6207336077387d4cb32edaa9b"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
@@ -306,11 +313,11 @@ fun configureImage(
       throw GradleException("Unexpected vm: $vm")
     } else {
       when (jdk) {
-        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:d92ff04da09450bb0dc9742e74d4fec66f73cb36bcfb03338cfc410c02a3506d"
-        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:07c3fe25b1f5adff6a7ccdedc93e7b874a409448a97a9d6019092022cecbaffb"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:8fa5ce4c63b39bc83923e965956ee596dfd6e4a050d52d79043bf172caf59245"
-        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:6236238cddc4fea7f294e4eb42f059b90ae3be854ed98c4e5f6694798e451909"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:b597266e56bd857c5a7fa9952419bb434e6d18d90733ef992556751f171e7f28"
+        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
+        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:783de4ccd338b7a4518a3ad8a7c9dc9dd5f0cda2cf14249040781689e170c456"
+        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:47ee963799953f8c233a321e03e3007094d626d044864e065d44753e18ee7fd0"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }

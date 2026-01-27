@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
@@ -84,17 +83,18 @@ public final class AgentInitializer {
   }
 
   private static boolean isSecurityManagerSupportEnabled() {
-    return getBoolean("otel.javaagent.experimental.security-manager-support.enabled", false);
-  }
-
-  private static boolean getBoolean(String property, boolean defaultValue) {
     // this call deliberately uses anonymous class instead of lambda because using lambdas too
     // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     return doPrivileged(
         new PrivilegedAction<Boolean>() {
           @Override
           public Boolean run() {
-            return ConfigPropertiesUtil.getBoolean(property, defaultValue);
+            String value =
+                System.getProperty("otel.javaagent.experimental.security-manager-support.enabled");
+            if (value == null) {
+              value = System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED");
+            }
+            return Boolean.parseBoolean(value);
           }
         });
   }

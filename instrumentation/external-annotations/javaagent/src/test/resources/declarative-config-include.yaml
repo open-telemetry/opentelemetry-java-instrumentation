@@ -1,0 +1,6 @@
+file_format: "1.0-rc.1"
+instrumentation/development:
+  java:
+    external_annotations:
+      include:
+        - io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass$InterestingMethod

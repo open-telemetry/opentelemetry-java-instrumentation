@@ -15,8 +15,6 @@ import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseClientTest;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CouchbaseClientTest extends AbstractCouchbaseClientTest {
@@ -25,26 +23,6 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
   protected DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
     return CouchbaseUtil.envBuilder(bucketSettings, carrierDirectPort, httpDirectPort);
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseAttributes() {
-    return CouchbaseUtil.couchbaseAttributes();
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseQueryAttributes() {
-    return CouchbaseUtil.couchbaseQueryAttributes();
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseClusterManagerAttributes() {
-    return CouchbaseUtil.couchbaseClusterManagerAttributes();
-  }
-
-  @Override
-  protected List<AttributeAssertion> couchbaseN1qlAttributes() {
-    return CouchbaseUtil.couchbaseN1qlAttributes();
   }
 
   @Test

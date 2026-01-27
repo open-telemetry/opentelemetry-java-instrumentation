@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,8 +21,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 final class ConfigurationFile {
-
-  static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
 
   private static Map<String, String> configFileContents;
 
@@ -47,7 +44,10 @@ final class ConfigurationFile {
   // visible for tests
   static Map<String, String> loadConfigFile() {
     // Reading from system property first and from env after
-    String configurationFilePath = ConfigPropertiesUtil.getString(CONFIGURATION_FILE_PROPERTY);
+    String configurationFilePath = System.getProperty("otel.javaagent.configuration-file");
+    if (configurationFilePath == null) {
+      configurationFilePath = System.getenv("OTEL_JAVAAGENT_CONFIGURATION_FILE");
+    }
     if (configurationFilePath == null) {
       return emptyMap();
     }

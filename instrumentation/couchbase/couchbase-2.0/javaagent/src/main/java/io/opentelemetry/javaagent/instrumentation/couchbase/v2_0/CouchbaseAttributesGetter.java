@@ -16,7 +16,7 @@ final class CouchbaseAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
   }
 
@@ -29,7 +29,22 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.statement();
+    if (couchbaseRequest.getSqlStatementInfoWithSummary() != null) {
+      return couchbaseRequest.getSqlStatementInfoWithSummary().getQueryText();
+    }
+    if (couchbaseRequest.getSqlStatementInfo() != null) {
+      return couchbaseRequest.getSqlStatementInfo().getQueryText();
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
+    if (couchbaseRequest.getSqlStatementInfoWithSummary() != null) {
+      return couchbaseRequest.getSqlStatementInfoWithSummary().getQuerySummary();
+    }
+    return null;
   }
 
   @Override

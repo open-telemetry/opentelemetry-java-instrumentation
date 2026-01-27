@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.r2dbc.spi.R2dbcException;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -16,11 +17,12 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution, Void> {
+public enum R2dbcSqlAttributesGetter
+    implements SqlClientAttributesGetter<DbExecution, Void>, ExtractQuerySummaryMarker {
   INSTANCE;
 
   @Override
-  public String getDbSystem(DbExecution request) {
+  public String getDbSystemName(DbExecution request) {
     return request.getSystem();
   }
 
@@ -51,7 +53,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof R2dbcException) {
       return ((R2dbcException) error).getSqlState();
     }
@@ -68,5 +70,10 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Override
   public Integer getServerPort(DbExecution request) {
     return request.getPort();
+  }
+
+  @Override
+  public boolean isParameterizedQuery(DbExecution request) {
+    return request.isParameterizedQuery();
   }
 }

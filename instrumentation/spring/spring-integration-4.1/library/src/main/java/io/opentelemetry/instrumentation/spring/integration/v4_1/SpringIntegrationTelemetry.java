@@ -56,7 +56,7 @@ public final class SpringIntegrationTelemetry {
    * @see org.springframework.messaging.support.InterceptableChannel
    * @see org.springframework.integration.config.GlobalChannelInterceptor
    */
-  public ChannelInterceptor newChannelInterceptor() {
+  public ChannelInterceptor createChannelInterceptor() {
     return new TracingChannelInterceptor(
         propagators, consumerInstrumenter, producerInstrumenter, producerSpanEnabled);
   }

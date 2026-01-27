@@ -13,10 +13,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -37,20 +38,23 @@ public final class GrpcSingletons {
   private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
 
   static {
-    boolean emitMessageEvents =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.grpc.emit-message-events", true);
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "grpc");
+    boolean emitMessageEvents = config.getBoolean("emit_message_events", true);
 
     boolean experimentalSpanAttributes =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
+        config.getBoolean("experimental_span_attributes/development", false);
 
     List<String> clientRequestMetadata =
-        AgentInstrumentationConfig.get()
-            .getList("otel.instrumentation.grpc.capture-metadata.client.request", emptyList());
+        config
+            .get("capture_metadata")
+            .get("client")
+            .getScalarList("request", String.class, emptyList());
     List<String> serverRequestMetadata =
-        AgentInstrumentationConfig.get()
-            .getList("otel.instrumentation.grpc.capture-metadata.server.request", emptyList());
+        config
+            .get("capture_metadata")
+            .get("server")
+            .getScalarList("request", String.class, emptyList());
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
@@ -60,8 +64,8 @@ public final class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    CLIENT_INTERCEPTOR = telemetry.newClientInterceptor();
-    SERVER_INTERCEPTOR = telemetry.newServerInterceptor();
+    CLIENT_INTERCEPTOR = telemetry.createClientInterceptor();
+    SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
   }
 
   public static Context.Storage getStorage() {

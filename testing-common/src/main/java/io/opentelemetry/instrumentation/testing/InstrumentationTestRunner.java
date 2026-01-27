@@ -52,7 +52,11 @@ import org.awaitility.core.ConditionTimeoutException;
  */
 public abstract class InstrumentationTestRunner {
 
-  private final TestInstrumenters testInstrumenters;
+  private final OpenTelemetry openTelemetry;
+  // Lazy initialized so that test runners can load without triggering Instrumenter construction
+  // in the OpenTelemetry API bridging tests where some of the newer OpenTelemetry APIs used by
+  // Instrumenter are absent.
+  @Nullable private TestInstrumenters testInstrumenters;
   protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
   protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
@@ -65,7 +69,7 @@ public abstract class InstrumentationTestRunner {
       tracesByScope = new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
-    testInstrumenters = new TestInstrumenters(openTelemetry);
+    this.openTelemetry = openTelemetry;
   }
 
   public abstract void beforeTestClass();
@@ -285,7 +289,7 @@ public abstract class InstrumentationTestRunner {
    */
   public final <T, E extends Throwable> T runWithSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithSpan(spanName, callback);
+    return getTestInstrumenters().runWithSpan(spanName, callback);
   }
 
   /**
@@ -308,7 +312,7 @@ public abstract class InstrumentationTestRunner {
    */
   public final <T, E extends Throwable> T runWithHttpClientSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithHttpClientSpan(spanName, callback);
+    return getTestInstrumenters().runWithHttpClientSpan(spanName, callback);
   }
 
   /**
@@ -330,13 +334,20 @@ public abstract class InstrumentationTestRunner {
    */
   public final <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
       throws E {
-    return testInstrumenters.runWithHttpServerSpan(callback);
+    return getTestInstrumenters().runWithHttpServerSpan(callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */
   public final <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
       throws E {
-    return testInstrumenters.runWithNonRecordingSpan(callback);
+    return getTestInstrumenters().runWithNonRecordingSpan(callback);
+  }
+
+  private TestInstrumenters getTestInstrumenters() {
+    if (testInstrumenters == null) {
+      testInstrumenters = new TestInstrumenters(openTelemetry);
+    }
+    return testInstrumenters;
   }
 
   private static void awaitUntilAsserted(Runnable runnable) {

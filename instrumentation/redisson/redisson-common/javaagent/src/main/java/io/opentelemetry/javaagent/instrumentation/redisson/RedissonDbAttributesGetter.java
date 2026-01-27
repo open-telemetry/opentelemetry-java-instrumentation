@@ -14,7 +14,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(RedissonRequest request) {
+  public String getDbSystemName(RedissonRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
@@ -24,7 +24,6 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
-  @Deprecated
   @Override
   public String getDbQueryText(RedissonRequest request) {
     return request.getStatement();

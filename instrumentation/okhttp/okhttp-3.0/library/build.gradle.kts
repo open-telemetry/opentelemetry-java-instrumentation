@@ -5,7 +5,9 @@ plugins {
 }
 
 dependencies {
+  compileOnly(project(":muzzle"))
   compileOnly("com.squareup.okhttp3:okhttp:3.11.0")
+
   testLibrary("com.squareup.okhttp3:okhttp:3.0.0")
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }

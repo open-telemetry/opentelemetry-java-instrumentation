@@ -95,7 +95,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
-        .addExecutionInterceptor(telemetry.newExecutionInterceptor());
+        .addExecutionInterceptor(telemetry.createExecutionInterceptor());
   }
 
   @Override
@@ -112,7 +112,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(
                 AwsSdkTelemetry.builder(testing.getOpenTelemetry())
                     .build()
-                    .newExecutionInterceptor())
+                    .createExecutionInterceptor())
             .build());
     configureClient(builder);
     BedrockRuntimeClient client = builder.build();
@@ -447,7 +447,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
     builder.overrideConfiguration(
         ClientOverrideConfiguration.builder()
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
     BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
@@ -881,7 +881,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(
                 AwsSdkTelemetry.builder(testing.getOpenTelemetry())
                     .build()
-                    .newExecutionInterceptor())
+                    .createExecutionInterceptor())
             .build());
     configureClient(builder);
     BedrockRuntimeClient client = builder.build();
@@ -1307,7 +1307,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
     builder.overrideConfiguration(
         ClientOverrideConfiguration.builder()
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
     BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
@@ -1826,7 +1826,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(
                 AwsSdkTelemetry.builder(testing.getOpenTelemetry())
                     .build()
-                    .newExecutionInterceptor())
+                    .createExecutionInterceptor())
             .build());
     configureClient(builder);
     BedrockRuntimeClient client = builder.build();
@@ -2215,7 +2215,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
     builder.overrideConfiguration(
         ClientOverrideConfiguration.builder()
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
     BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());

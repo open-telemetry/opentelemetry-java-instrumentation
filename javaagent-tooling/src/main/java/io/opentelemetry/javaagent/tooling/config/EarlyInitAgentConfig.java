@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -15,8 +15,11 @@ import javax.annotation.Nullable;
  */
 public final class EarlyInitAgentConfig {
 
-  public static EarlyInitAgentConfig create() {
-    return new EarlyInitAgentConfig(ConfigurationFile.getProperties());
+  private static final EarlyInitAgentConfig INSTANCE =
+      new EarlyInitAgentConfig(ConfigurationFile.getProperties());
+
+  public static EarlyInitAgentConfig get() {
+    return INSTANCE;
   }
 
   private final Map<String, String> configFileContents;
@@ -26,27 +29,58 @@ public final class EarlyInitAgentConfig {
   }
 
   @Nullable
-  public String getString(String propertyName) {
-    String value = ConfigPropertiesUtil.getString(propertyName);
-    if (value != null) {
-      return value;
+  public String getLogging() {
+    return getString("otel.javaagent.logging");
+  }
+
+  @Nullable
+  public String getExtensions() {
+    return getString("otel.javaagent.extensions");
+  }
+
+  public boolean isDebug() {
+    return getBoolean("otel.javaagent.debug", false);
+  }
+
+  public boolean isEnabled() {
+    return getBoolean("otel.javaagent.enabled", true);
+  }
+
+  public boolean isExperimentalFieldInjectionEnabled() {
+    return getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
+  }
+
+  public int getLoggingApplicationLogsBufferMaxRecords() {
+    return getInt("otel.javaagent.logging.application.logs-buffer-max-records", 2048);
+  }
+
+  // visible for testing
+
+  @Nullable
+  String getString(String propertyName) {
+    String value = System.getProperty(propertyName);
+    if (value == null) {
+      value = System.getenv(toEnvVarName(propertyName));
     }
-    return configFileContents.get(propertyName);
+    if (value == null) {
+      value = configFileContents.get(propertyName);
+    }
+    return value;
   }
 
-  public boolean getBoolean(String propertyName, boolean defaultValue) {
-    String configFileValueStr = configFileContents.get(propertyName);
-    boolean configFileValue =
-        configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
-    return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
+  // visible for testing
+
+  boolean getBoolean(String propertyName, boolean defaultValue) {
+    String value = getString(propertyName);
+    return value != null ? Boolean.parseBoolean(value) : defaultValue;
   }
 
-  public int getInt(String propertyName, int defaultValue) {
+  // visible for testing
+
+  int getInt(String propertyName, int defaultValue) {
     try {
-      String configFileValueStr = configFileContents.get(propertyName);
-      int configFileValue =
-          configFileValueStr == null ? defaultValue : Integer.parseInt(configFileValueStr);
-      return ConfigPropertiesUtil.getInt(propertyName, configFileValue);
+      String value = getString(propertyName);
+      return value != null ? Integer.parseInt(value) : defaultValue;
     } catch (NumberFormatException ignored) {
       return defaultValue;
     }
@@ -54,5 +88,9 @@ public final class EarlyInitAgentConfig {
 
   public void logEarlyConfigErrorsIfAny() {
     ConfigurationFile.logErrorIfAny();
+  }
+
+  private static String toEnvVarName(String propertyName) {
+    return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }
 }

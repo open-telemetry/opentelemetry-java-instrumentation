@@ -77,7 +77,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -157,7 +160,10 @@ class SpringJpaTest {
                                     .getAttributes()
                                     .get(stringKey("hibernate.session_id")))),
                 span ->
-                    span.hasName("INSERT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "INSERT Customer"
+                                : "INSERT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
@@ -199,7 +205,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
@@ -229,7 +238,10 @@ class SpringJpaTest {
                                     .getAttributes()
                                     .get(stringKey("hibernate.session_id")))),
                 span ->
-                    span.hasName("UPDATE test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "UPDATE Customer"
+                                : "UPDATE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
@@ -273,7 +285,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -316,7 +331,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -360,7 +378,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("DELETE test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "DELETE Customer"
+                                : "DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
