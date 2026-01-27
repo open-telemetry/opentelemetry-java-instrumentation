@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.client;
 
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelOutboundHandler;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -33,18 +33,18 @@ public class NettyClientHandlerFactory {
   }
 
   /**
-   * Returns a new {@link ChannelOutboundHandlerAdapter} that generates telemetry for outgoing HTTP
+   * Returns a new {@link ChannelOutboundHandler} that generates telemetry for outgoing HTTP
    * requests. Must be paired with {@link #createResponseHandler()}.
    */
-  public ChannelOutboundHandlerAdapter createRequestHandler() {
+  public ChannelOutboundHandler createRequestHandler() {
     return new HttpClientRequestTracingHandler(instrumenter);
   }
 
   /**
-   * Returns a new {@link ChannelInboundHandlerAdapter} that generates telemetry for incoming HTTP
+   * Returns a new {@link ChannelInboundHandler} that generates telemetry for incoming HTTP
    * responses. Must be paired with {@link #createRequestHandler()}.
    */
-  public ChannelInboundHandlerAdapter createResponseHandler() {
+  public ChannelInboundHandler createResponseHandler() {
     return new HttpClientResponseTracingHandler(instrumenter, protocolEventHandler);
   }
 
@@ -52,7 +52,7 @@ public class NettyClientHandlerFactory {
    * Returns a new {@link CombinedChannelDuplexHandler} that generates telemetry for outgoing HTTP
    * requests and incoming responses in a single handler.
    */
-  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
     return new HttpClientTracingHandler(instrumenter, protocolEventHandler);
   }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelOutboundHandler;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -44,17 +44,16 @@ public final class NettyServerSingletons {
             : ProtocolEventHandler.Noop.INSTANCE;
   }
 
-  public static ChannelInboundHandlerAdapter createRequestHandler() {
+  public static ChannelInboundHandler createRequestHandler() {
     return new HttpServerRequestTracingHandler(INSTRUMENTER);
   }
 
-  public static ChannelOutboundHandlerAdapter createResponseHandler() {
+  public static ChannelOutboundHandler createResponseHandler() {
     return new HttpServerResponseTracingHandler(
         INSTRUMENTER, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, PROTOCOL_EVENT_HANDLER);
   }
 
-  public static CombinedChannelDuplexHandler<
-          ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
+  public static CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
     return new HttpServerTracingHandler(
         INSTRUMENTER, NettyHttpServerResponseBeforeCommitHandler.INSTANCE, PROTOCOL_EVENT_HANDLER);

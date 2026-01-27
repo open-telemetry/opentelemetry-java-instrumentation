@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelOutboundHandler;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
@@ -45,7 +45,7 @@ public final class NettyServerTelemetry {
    * Returns a handler that instruments incoming HTTP requests. Must be paired with {@link
    * #createResponseHandler()}.
    */
-  public ChannelInboundHandlerAdapter createRequestHandler() {
+  public ChannelInboundHandler createRequestHandler() {
     return new HttpServerRequestTracingHandler(instrumenter);
   }
 
@@ -53,7 +53,7 @@ public final class NettyServerTelemetry {
    * Returns a handler that instruments outgoing HTTP responses. Must be paired with {@link
    * #createRequestHandler()}.
    */
-  public ChannelOutboundHandlerAdapter createResponseHandler() {
+  public ChannelOutboundHandler createResponseHandler() {
     return createResponseHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
   }
 
@@ -62,7 +62,7 @@ public final class NettyServerTelemetry {
    *     release.
    */
   @Deprecated
-  public ChannelOutboundHandlerAdapter createResponseHandler(
+  public ChannelOutboundHandler createResponseHandler(
       HttpServerResponseBeforeCommitHandler commitHandler) {
     return new HttpServerResponseTracingHandler(instrumenter, commitHandler, protocolEventHandler);
   }
@@ -71,7 +71,7 @@ public final class NettyServerTelemetry {
    * Returns a handler that instruments incoming HTTP requests and outgoing responses in a single
    * handler.
    */
-  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
     return createCombinedHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
   }
@@ -81,7 +81,7 @@ public final class NettyServerTelemetry {
    *     release.
    */
   @Deprecated
-  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler(HttpServerResponseBeforeCommitHandler commitHandler) {
     return new HttpServerTracingHandler(instrumenter, commitHandler, protocolEventHandler);
   }
