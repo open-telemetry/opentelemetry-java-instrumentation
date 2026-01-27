@@ -44,13 +44,13 @@ public class OpenTelemetryModule extends AbstractModule {
   @Singleton
   @Provides
   static Handler ratpackServerHandler(RatpackServerTelemetry ratpackTracing) {
-    return ratpackTracing.getHandler();
+    return ratpackTracing.createHandler();
   }
 
   @Singleton
   @Provides
-  static ExecInterceptor ratpackExecInterceptor(RatpackServerTelemetry ratpackTracing) {
-    return ratpackTracing.getExecInterceptor();
+  static ExecInterceptor ratpackExecInterceptor() {
+    return RatpackServerTelemetry.createExecInterceptor();
   }
 
   @Singleton
@@ -61,7 +61,7 @@ public class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  static ExecInitializer ratpackExecInitializer(RatpackServerTelemetry ratpackTracing) {
-    return ratpackTracing.getExecInitializer();
+  static ExecInitializer ratpackExecInitializer() {
+    return RatpackServerTelemetry.createExecInitializer();
   }
 }

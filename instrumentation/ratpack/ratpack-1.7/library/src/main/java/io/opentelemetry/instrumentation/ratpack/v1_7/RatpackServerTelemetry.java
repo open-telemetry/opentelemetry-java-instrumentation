@@ -46,31 +46,61 @@ public final class RatpackServerTelemetry {
     return new RatpackServerTelemetryBuilder(openTelemetry);
   }
 
-  private final OpenTelemetryServerHandler serverHandler;
+  private final Instrumenter<Request, Response> instrumenter;
 
-  RatpackServerTelemetry(Instrumenter<Request, Response> serverInstrumenter) {
-    serverHandler = new OpenTelemetryServerHandler(serverInstrumenter);
+  RatpackServerTelemetry(Instrumenter<Request, Response> instrumenter) {
+    this.instrumenter = instrumenter;
   }
 
-  /** Returns a {@link Handler} to support Ratpack Registry binding. */
+  /**
+   * Returns a {@link Handler} to support Ratpack Registry binding.
+   *
+   * @deprecated Use {@link #createHandler()} instead.
+   */
+  @Deprecated
   public Handler getHandler() {
-    return serverHandler;
+    return createHandler();
   }
 
-  /** Returns {@link ExecInterceptor} instance to support Ratpack Registry binding. */
+  /** Creates a new {@link Handler} to support Ratpack Registry binding. */
+  public Handler createHandler() {
+    return new OpenTelemetryServerHandler(instrumenter);
+  }
+
+  /**
+   * Returns {@link ExecInterceptor} instance to support Ratpack Registry binding.
+   *
+   * @deprecated Use {@link #createExecInterceptor()} instead.
+   */
+  @Deprecated
   public ExecInterceptor getExecInterceptor() {
+    return createExecInterceptor();
+  }
+
+  /** Creates an {@link ExecInterceptor} instance to support Ratpack Registry binding. */
+  public static ExecInterceptor createExecInterceptor() {
     return OpenTelemetryExecInterceptor.INSTANCE;
   }
 
-  /** Returns {@link ExecInitializer} instance to support Ratpack Registry binding. */
+  /**
+   * Returns {@link ExecInitializer} instance to support Ratpack Registry binding.
+   *
+   * @deprecated Use {@link #createExecInitializer()} instead.
+   */
+  @Deprecated
   public ExecInitializer getExecInitializer() {
+    return createExecInitializer();
+  }
+
+  /** Creates an {@link ExecInitializer} instance to support Ratpack Registry binding. */
+  public static ExecInitializer createExecInitializer() {
     return OpenTelemetryExecInitializer.INSTANCE;
   }
 
   /** Configures the {@link RegistrySpec} to produce telemetry. */
   public void configureRegistry(RegistrySpec registry) {
-    registry.add(HandlerDecorator.prepend(serverHandler));
-    registry.add(OpenTelemetryExecInterceptor.INSTANCE);
-    registry.add(OpenTelemetryExecInitializer.INSTANCE);
+    registry.add(HandlerDecorator.prepend(createHandler()));
+    registry.add(createExecInterceptor());
+    registry.add(createExecInitializer());
   }
 }
