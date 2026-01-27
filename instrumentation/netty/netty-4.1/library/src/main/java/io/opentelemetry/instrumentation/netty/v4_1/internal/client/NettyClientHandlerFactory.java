@@ -52,8 +52,7 @@ public class NettyClientHandlerFactory {
    * Returns a new {@link CombinedChannelDuplexHandler} that generates telemetry for outgoing HTTP
    * requests and incoming responses in a single handler.
    */
-  public CombinedChannelDuplexHandler<
-          ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
     return new HttpClientTracingHandler(instrumenter, protocolEventHandler);
   }

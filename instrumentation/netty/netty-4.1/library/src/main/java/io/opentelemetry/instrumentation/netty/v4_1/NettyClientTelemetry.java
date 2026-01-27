@@ -59,8 +59,7 @@ public final class NettyClientTelemetry {
    * Returns a handler that instruments outgoing HTTP requests and incoming responses in a single
    * handler.
    */
-  public CombinedChannelDuplexHandler<
-          ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandlerAdapter, ChannelOutboundHandlerAdapter>
       createCombinedHandler() {
     return handlerFactory.createCombinedHandler();
   }
