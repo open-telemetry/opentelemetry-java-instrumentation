@@ -258,6 +258,10 @@ WHITESPACE           = [ \t\r\n]+
       if (inJoinSubquery) {
         inJoinSubquery = false;
         expectingJoinTableName = false;
+        // After exiting subquery in FROM clause, restore FROM clause tracking
+        // at the current paren level for implicit joins/comma-separated tables
+        fromClauseParenLevel = parenLevel;
+        identifiersAfterMainFromClause = 1;  // The subquery counts as one table reference
       }
       // Reset FROM clause tracking if we're exiting BELOW the level where it started
       if (fromClauseParenLevel >= 0 && parenLevel < fromClauseParenLevel) {
