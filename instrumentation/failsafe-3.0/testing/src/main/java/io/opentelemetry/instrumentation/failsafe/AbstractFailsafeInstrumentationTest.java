@@ -17,7 +17,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -35,7 +34,7 @@ public abstract class AbstractFailsafeInstrumentationTest {
     // given
     CircuitBreaker<Object> userCircuitBreaker =
         CircuitBreaker.builder()
-            .handleResultIf(Objects::isNull)
+            .handleResult(null)
             .withFailureThreshold(2)
             .withDelay(Duration.ZERO)
             .withSuccessThreshold(2)
@@ -84,10 +83,7 @@ public abstract class AbstractFailsafeInstrumentationTest {
 
   protected void captureRetryPolicyMetrics(@Nullable String expectedPolicyName) {
     RetryPolicy<Object> userRetryPolicy =
-        dev.failsafe.RetryPolicy.builder()
-            .handleResultIf(Objects::isNull)
-            .withMaxAttempts(3)
-            .build();
+        dev.failsafe.RetryPolicy.builder().handleResult(null).withMaxAttempts(3).build();
     RetryPolicy<Object> instrumentedRetryPolicy = configure(userRetryPolicy);
     captureRetryPolicyMetrics(
         instrumentedRetryPolicy,
