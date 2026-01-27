@@ -57,7 +57,8 @@ public class Application {
 
     OpenTelemetry openTelemetry = //...
 
-    JavaHttpServerTelemetry.create(openTelemetry).configure(context);
+    Filter filter = JavaHttpServerTelemetry.create(openTelemetry).createFilter();
+    context.getFilters().add(0, filter);
   }
 }
 ```

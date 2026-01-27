@@ -35,7 +35,12 @@ public final class JavaHttpServerTelemetry {
     return new OpenTelemetryFilter(instrumenter);
   }
 
-  /** Configures the {@link HttpContext} to produce telemetry. */
+  /**
+   * Configures the {@link HttpContext} to produce telemetry.
+   *
+   * @deprecated Use {@link #createFilter()} and add it to the {@link HttpContext} directly.
+   */
+  @Deprecated
   public void configure(HttpContext httpContext) {
     httpContext.getFilters().add(0, createFilter());
   }
