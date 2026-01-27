@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import javax.annotation.Nullable;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
@@ -13,6 +12,7 @@ import java.util.logging.Filter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import javax.annotation.Nullable;
 
 /**
  * Dependencies of the agent sometimes call java.util.logging.Logger.getLogger(). This can have the
@@ -31,8 +31,7 @@ public class PatchLogger {
 
   private final InternalLogger internalLogger;
 
-  @Nullable
-  private ResourceBundle resourceBundle;
+  @Nullable private ResourceBundle resourceBundle;
 
   public static PatchLogger getLogger(String name) {
     return new PatchLogger(name);

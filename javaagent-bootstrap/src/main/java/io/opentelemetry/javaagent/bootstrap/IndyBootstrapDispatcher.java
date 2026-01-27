@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.internal.Initializer;
-import javax.annotation.Nullable;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Array;
+import javax.annotation.Nullable;
 
 /**
  * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent
