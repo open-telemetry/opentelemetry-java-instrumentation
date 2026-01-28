@@ -57,10 +57,6 @@ public final class EarlyInitAgentConfig {
   // Full visibility for distributions
   @Nullable
   public String getString(String propertyName) {
-    String value = ConfigPropertiesUtil.getString(propertyName);
-    if (value != null) {
-      return value;
-  String getString(String propertyName) {
     String value = System.getProperty(propertyName);
     if (value == null) {
       value = System.getenv(toEnvVarName(propertyName));
