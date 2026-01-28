@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
+package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.ServletException;
@@ -21,9 +20,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-public class Servlet5Accessor
-    implements ServletAccessor<HttpServletRequest, HttpServletResponse>,
-        HttpServerResponseMutator<HttpServletResponse> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, HttpServletResponse> {
   public static final Servlet5Accessor INSTANCE = new Servlet5Accessor();
 
   private Servlet5Accessor() {}
@@ -163,11 +164,6 @@ public class Servlet5Accessor
   @Override
   public boolean isServletException(Throwable throwable) {
     return throwable instanceof ServletException;
-  }
-
-  @Override
-  public void appendHeader(HttpServletResponse response, String name, String value) {
-    response.addHeader(name, value);
   }
 
   private static class Listener implements AsyncListener {
