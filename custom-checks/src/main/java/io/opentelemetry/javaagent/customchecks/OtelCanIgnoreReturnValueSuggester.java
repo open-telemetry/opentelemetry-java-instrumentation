@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.customchecks;
 
 import static com.google.errorprone.matchers.Description.NO_MATCH;
+import static java.util.Objects.requireNonNull;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
@@ -54,10 +55,8 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
     if (containerClass.getSimpleName().toString().endsWith("Advice")) {
       return NO_MATCH;
     }
-    if (delegate == null) {
-      return NO_MATCH;
-    }
-    Description description = delegate.matchMethod(methodTree, visitorState);
+    Description description = requireNonNull(delegate).matchMethod(methodTree, visitorState);
+
     if (description == NO_MATCH) {
       return description;
     }
