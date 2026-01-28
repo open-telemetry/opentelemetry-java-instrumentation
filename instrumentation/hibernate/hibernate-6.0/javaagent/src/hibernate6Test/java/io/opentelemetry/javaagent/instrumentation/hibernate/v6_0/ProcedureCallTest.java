@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -121,7 +122,12 @@ class ProcedureCallTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
-                            equalTo(maybeStable(DB_OPERATION), "CALL"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "CALL TEST_PROC" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "CALL"),
                             equalTo(
                                 DB_STORED_PROCEDURE_NAME,
                                 emitStableDatabaseSemconv() ? "TEST_PROC" : null)),
