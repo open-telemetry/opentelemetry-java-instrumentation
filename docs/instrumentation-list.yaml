@@ -11913,9 +11913,12 @@ libraries:
       - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
   spark:
   - name: spark-2.3
+    display_name: Spark Web Framework
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
     library_link: https://sparkjava.com/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spark-2.3
     scope:
       name: io.opentelemetry.spark-2.3
@@ -12766,13 +12769,41 @@ libraries:
       - net.spy:spymemcached:[2.12.0,)
   struts:
   - name: struts-2.3
+    display_name: Apache Struts
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache Struts 2 actions (controller spans are disabled by default).
+    library_link: https://struts.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/struts/struts-2.3
     scope:
       name: io.opentelemetry.struts-2.3
     target_versions:
       javaagent:
       - org.apache.struts:struts2-core:[2.1.0,7)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: struts-7.0
+    display_name: Apache Struts 2
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache Struts 2 actions (controller spans are disabled by default).
+    library_link: https://struts.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/struts/struts-7.0
     minimum_java_version: 17
     scope:
@@ -12780,14 +12811,45 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.struts:struts2-core:[7.0.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   tapestry:
   - name: tapestry-5.4
+    display_name: Apache Tapestry
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache Tapestry component events (controller spans are disabled by default).
+    library_link: https://tapestry.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/tapestry-5.4
     scope:
       name: io.opentelemetry.tapestry-5.4
     target_versions:
       javaagent:
       - org.apache.tapestry:tapestry-core:[5.4.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   tomcat:
   - name: tomcat-7.0
     source_path: instrumentation/tomcat/tomcat-7.0
@@ -13343,6 +13405,12 @@ libraries:
           type: STRING
   wicket:
   - name: wicket-8.0
+    display_name: Apache Wicket
+    description: |
+      This instrumentation enriches HTTP server spans with route information for Apache Wicket applications, it does not emit any telemetry on its own.
+    library_link: https://wicket.apache.org/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/wicket-8.0
     scope:
       name: io.opentelemetry.wicket-8.0
