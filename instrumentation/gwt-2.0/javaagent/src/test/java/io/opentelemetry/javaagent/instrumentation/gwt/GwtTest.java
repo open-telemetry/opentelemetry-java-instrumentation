@@ -101,6 +101,7 @@ class GwtTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
 
