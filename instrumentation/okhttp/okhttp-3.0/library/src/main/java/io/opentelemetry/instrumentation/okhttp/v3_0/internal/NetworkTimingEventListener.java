@@ -10,7 +10,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -37,6 +36,7 @@ public final class NetworkTimingEventListener extends EventListener {
 
   // Timing attribute keys
   private static final AttributeKey<Long> CALL_START = AttributeKey.longKey("http.call.start_time");
+  private static final AttributeKey<Long> CALL_END = AttributeKey.longKey("http.call.end_time");
   private static final AttributeKey<Long> DNS_START = AttributeKey.longKey("http.dns.start_time");
   private static final AttributeKey<Long> DNS_END = AttributeKey.longKey("http.dns.end_time");
   private static final AttributeKey<Long> CONNECT_START =
@@ -63,11 +63,6 @@ public final class NetworkTimingEventListener extends EventListener {
       AttributeKey.longKey("http.response.body.start_time");
   private static final AttributeKey<Long> RESPONSE_BODY_END =
       AttributeKey.longKey("http.response.body.end_time");
-  private static final AttributeKey<Long> CALL_END = AttributeKey.longKey("http.call.end_time");
-
-  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-  private static final AttributeKey<String> TRACE_ID = AttributeKey.stringKey("trace_id");
-  private static final AttributeKey<String> SPAN_ID = AttributeKey.stringKey("span_id");
 
   private final Logger eventLogger;
   private final Map<Call, LogRecordBuilder> callToLogBuilder = new ConcurrentHashMap<>();
@@ -137,24 +132,9 @@ public final class NetworkTimingEventListener extends EventListener {
     LogRecordBuilder builder =
         eventLogger
             .logRecordBuilder()
-            // Sets the event.name attribute instead of using the top-level EventName field
-            // because this log record aggregates network timing data rather than representing
-            // a single event.
-            .setAttribute(EVENT_NAME, "okhttp3.network.timing")
-            .setSeverity(Severity.INFO);
-
-    // Add trace/span context
-    Span span = Span.fromContext(context);
-    if (span.getSpanContext().isValid()) {
-      String traceId = span.getSpanContext().getTraceId();
-      String spanId = span.getSpanContext().getSpanId();
-
-      // API support for adding top-level TraceId and SpanId fields is not available yet in {@link
-      // LogRecordBuilder},
-      // so these are currently added as attributes instead.
-      builder.setAttribute(TRACE_ID, traceId);
-      builder.setAttribute(SPAN_ID, spanId);
-    }
+            .setEventName("http.client.network_timing")
+            .setSeverity(Severity.INFO)
+            .setContext(context);
 
     // Dump all deferred attributes into the builder
     Map<AttributeKey<?>, Object> deferred = deferredLogAttributes.remove(call);

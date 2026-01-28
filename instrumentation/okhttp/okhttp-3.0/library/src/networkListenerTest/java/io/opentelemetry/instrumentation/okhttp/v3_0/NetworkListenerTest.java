@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -106,24 +107,36 @@ class NetworkListenerTest extends AbstractOkHttp3Test {
   }
 
   private void assertAllSignalsAndTimingAttributes() {
+    SpanData[] clientSpanHolder = new SpanData[1];
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertClientSpan(span, resolveHttpsAddress("/success"), "POST", 200, null)
-                        .hasNoParent(),
+                span -> {
+                  assertClientSpan(span, resolveHttpsAddress("/success"), "POST", 200, null)
+                      .hasNoParent();
+                  clientSpanHolder[0] = span.actual();
+                },
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+
+    SpanData clientSpan = clientSpanHolder[0];
+    assertThat(clientSpan)
+        .withFailMessage("Http client span was not found in the trace")
+        .isNotNull();
 
     testing.waitAndAssertLogRecords(
         logRecord -> {
+          logRecord.hasEventName("http.client.network_timing");
+
+          // Assert span id and trace id match client span using hasSpanContext()
+          logRecord.hasSpanContext(clientSpan.getSpanContext());
+
           logRecord.hasAttributesSatisfying(
               attrs -> {
                 Map<AttributeKey<?>, Object> attrMap = attrs.asMap();
                 assertThat(attrMap)
                     .containsKeys(
-                        AttributeKey.stringKey("trace_id"),
-                        AttributeKey.stringKey("span_id"),
                         AttributeKey.longKey("http.call.start_time"),
+                        AttributeKey.longKey("http.call.end_time"),
                         AttributeKey.longKey("http.dns.start_time"),
                         AttributeKey.longKey("http.dns.end_time"),
                         AttributeKey.longKey("http.connect.start_time"),
@@ -137,8 +150,7 @@ class NetworkListenerTest extends AbstractOkHttp3Test {
                         AttributeKey.longKey("http.response.headers.start_time"),
                         AttributeKey.longKey("http.response.headers.end_time"),
                         AttributeKey.longKey("http.response.body.start_time"),
-                        AttributeKey.longKey("http.response.body.end_time"),
-                        AttributeKey.longKey("http.call.end_time"));
+                        AttributeKey.longKey("http.response.body.end_time"));
               });
         });
   }
