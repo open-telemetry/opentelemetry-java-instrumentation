@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat.dispatch;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -48,6 +49,7 @@ class TomcatServlet5DispatchImmediateTest extends TomcatDispatchTest {
         context, "/dispatch" + CAPTURE_HEADERS.getPath(), TestServlet5.DispatchImmediate.class);
     addServlet(
         context, "/dispatch" + CAPTURE_PARAMETERS.getPath(), TestServlet5.DispatchImmediate.class);
+    addServlet(context, "/dispatch" + CAPTURE_BODY.getPath(), TestServlet5.DispatchImmediate.class);
     addServlet(
         context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet5.DispatchImmediate.class);
     addServlet(

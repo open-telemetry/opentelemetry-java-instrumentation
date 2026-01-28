@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHol
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.body.Servlet5BodyCaptureRequestWrapper;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
@@ -99,29 +100,28 @@ public class JakartaServletServiceAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Object[] onEnter(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
-      @Advice.Argument(0) ServletRequest request,
-      @Advice.Argument(1) ServletResponse originalResponse) {
+      @Advice.Argument(0) ServletRequest servletRequest,
+      @Advice.Argument(1) ServletResponse servletResponse) {
 
-    ServletResponse response = originalResponse;
-
-    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
-      return new Object[] {null, request, response};
+    if (!(servletRequest instanceof HttpServletRequest)
+        || !(servletResponse instanceof HttpServletResponse)) {
+      return new Object[] {null, servletRequest, servletResponse};
     }
-    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+    HttpServletRequest request =
+        new Servlet5BodyCaptureRequestWrapper((HttpServletRequest) servletRequest);
+    HttpServletResponse response = (HttpServletResponse) servletResponse;
 
     String snippet = getSnippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
-        && !((HttpServletResponse) response)
-            .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
-      response =
-          new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+        && !response.containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
+      response = new Servlet5SnippetInjectingResponseWrapper(response, snippet);
     }
 
     AdviceScope adviceScope =
         new AdviceScope(
             CallDepth.forClass(AppServerBridge.getCallDepthKey()),
             servletOrFilter,
-            (HttpServletRequest) request,
+            request,
             response);
 
     return new Object[] {adviceScope, request, response};
@@ -141,7 +141,6 @@ public class JakartaServletServiceAdvice {
         || !(response instanceof HttpServletResponse)) {
       return;
     }
-
     adviceScope.exit((HttpServletRequest) request, (HttpServletResponse) response, throwable);
   }
 }
