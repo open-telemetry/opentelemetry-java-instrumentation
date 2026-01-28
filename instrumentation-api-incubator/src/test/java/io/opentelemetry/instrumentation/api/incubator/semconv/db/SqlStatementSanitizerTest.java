@@ -379,7 +379,7 @@ class SqlStatementSanitizerTest {
             "SELECT TABLE"),
 
         // hibernate/jpa query language
-        Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "TABLE"));
+        Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "SELECT TABLE"));
   }
 
   private static Stream<Arguments> couchbaseArgs() {
@@ -550,8 +550,9 @@ class SqlStatementSanitizerTest {
         Arguments.of("select next value in hibernate_sequence", expect("SELECT", null, "SELECT")),
 
         // hibernate/jpa
-        Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "schema.table")),
-        Arguments.of("/* update comment */ from table1", expect("SELECT", "table1", "table1")),
+        Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
+        Arguments.of(
+            "/* update comment */ from table1", expect("SELECT", "table1", "SELECT table1")),
 
         // Insert
         Arguments.of(" insert into table where lalala", expect("INSERT", "table", "INSERT table")),
