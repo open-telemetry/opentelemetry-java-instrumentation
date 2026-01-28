@@ -2542,7 +2542,7 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
@@ -2557,11 +2557,9 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -2639,7 +2637,7 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
@@ -2666,11 +2664,9 @@ libraries:
           type: BOOLEAN
         - name: cassandra.speculative_execution.count
           type: LONG
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -2752,7 +2748,7 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
@@ -2779,11 +2775,9 @@ libraries:
           type: BOOLEAN
         - name: cassandra.speculative_execution.count
           type: LONG
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -2844,7 +2838,7 @@ libraries:
         attributes:
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
@@ -2857,7 +2851,7 @@ libraries:
         attributes:
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -2915,7 +2909,7 @@ libraries:
         attributes:
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
@@ -2928,7 +2922,7 @@ libraries:
         attributes:
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -2991,6 +2985,8 @@ libraries:
         - name: db.namespace
           type: STRING
         - name: db.operation.name
+          type: STRING
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -3081,6 +3077,8 @@ libraries:
         - name: db.namespace
           type: STRING
         - name: db.operation.name
+          type: STRING
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -6166,20 +6164,20 @@ libraries:
         attributes:
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
         - name: db.operation.batch.size
           type: LONG
         - name: db.operation.name
+          type: STRING
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -9662,8 +9660,6 @@ libraries:
     target_versions:
       javaagent:
       - com.squareup.okhttp3:okhttp:[3.0,)
-      library:
-      - com.squareup.okhttp3:okhttp:3.0.0
     configurations:
     - name: otel.instrumentation.http.known-methods
       description: |
@@ -11038,7 +11034,7 @@ libraries:
         attributes:
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.system.name
           type: STRING
@@ -11049,11 +11045,9 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -13621,11 +13615,9 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: server.address
           type: STRING
@@ -13634,11 +13626,9 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
@@ -13688,11 +13678,9 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: server.address
           type: STRING
@@ -13701,11 +13689,9 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.collection.name
-          type: STRING
         - name: db.namespace
           type: STRING
-        - name: db.operation.name
+        - name: db.query.summary
           type: STRING
         - name: db.query.text
           type: STRING
