@@ -12057,8 +12057,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID as a request attribute for downstream servlet
-        access.
+      description: Adds the trace ID and span ID as a request attributes for downstream
+        servlet access.
       type: boolean
       default: true
     telemetry:
@@ -12138,8 +12138,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID as a request attribute for downstream servlet
-        access.
+      description: Adds the trace ID and span ID as a request attributes for downstream
+        servlet access.
       type: boolean
       default: true
     telemetry:
@@ -12225,8 +12225,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.servlet.add-trace-id-request-attribute
-      description: Adds the trace ID as a request attribute for downstream servlet
-        access.
+      description: Adds the trace ID and span ID as a request attributes for downstream
+        servlet access.
       type: boolean
       default: true
     telemetry:
