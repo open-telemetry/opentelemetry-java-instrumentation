@@ -11644,12 +11644,38 @@ libraries:
           type: STRING
   rmi:
   - name: rmi
+    display_name: RMI (Remote Method Invocation)
+    description: |
+      This instrumentation enables RPC client spans and RPC server spans for Java RMI (Remote Method Invocation).
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_SERVER_SPANS
+    library_link: https://docs.oracle.com/en/java/javase/17/docs/api/java.rmi/java/rmi/package-summary.html
     source_path: instrumentation/rmi
     scope:
       name: io.opentelemetry.rmi
     target_versions:
       javaagent:
       - Java 8+
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
   rocketmq:
   - name: rocketmq-client-4.8
     display_name: Apache RocketMQ Client - Remoting Protocol
