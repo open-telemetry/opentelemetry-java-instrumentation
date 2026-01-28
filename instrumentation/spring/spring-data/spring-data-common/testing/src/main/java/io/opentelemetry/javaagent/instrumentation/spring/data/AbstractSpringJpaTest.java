@@ -138,9 +138,9 @@ public abstract class AbstractSpringJpaTest<
                         DB_QUERY_SUMMARY,
                         val -> {
                           if (emitStableDatabaseSemconv()) {
-                            assertThat(val).isIn("CALL hibernate_sequence", "CALL JpaCustomer_SEQ");
+                            val.isIn("CALL hibernate_sequence", "CALL JpaCustomer_SEQ");
                           } else {
-                            assertThat(val).isNull();
+                            val.isNull();
                           }
                         }),
                     equalTo(
