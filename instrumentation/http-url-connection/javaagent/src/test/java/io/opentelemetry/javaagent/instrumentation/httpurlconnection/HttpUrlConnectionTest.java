@@ -46,6 +46,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @RegisterExtension

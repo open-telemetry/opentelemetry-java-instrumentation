@@ -1062,6 +1062,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,

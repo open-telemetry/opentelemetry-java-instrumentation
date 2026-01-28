@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("deprecation") // using deprecated semconv
 class HttpClientPeerServiceAttributesExtractorTest {
   @Mock HttpClientAttributesGetter<String, String> httpAttributesExtractor;
 
