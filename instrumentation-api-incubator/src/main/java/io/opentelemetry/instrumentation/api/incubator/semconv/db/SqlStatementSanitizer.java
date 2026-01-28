@@ -91,11 +91,11 @@ public final class SqlStatementSanitizer {
   @AutoValue
   abstract static class CacheKey {
 
-    static CacheKey create(String statement, SqlDialect dialect) {
-      return new AutoValue_SqlStatementSanitizer_CacheKey(statement, dialect);
+    static CacheKey create(String queryText, SqlDialect dialect) {
+      return new AutoValue_SqlStatementSanitizer_CacheKey(queryText, dialect);
     }
 
-    abstract String getStatement();
+    abstract String getQueryText();
 
     abstract SqlDialect getDialect();
   }
