@@ -41,8 +41,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   @SuppressWarnings("unchecked")
@@ -130,7 +129,6 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     return span;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
