@@ -72,7 +72,7 @@ class RmiTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("rmi.app.Greeter/hello")
                         .hasKind(SpanKind.CLIENT)
