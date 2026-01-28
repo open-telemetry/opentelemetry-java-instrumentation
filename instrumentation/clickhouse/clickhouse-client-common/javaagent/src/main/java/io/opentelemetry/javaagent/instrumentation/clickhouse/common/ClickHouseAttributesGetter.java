@@ -58,11 +58,11 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbNamespace(ClickHouseDbRequest request) {
-    String dbName = request.getDbName();
-    if (dbName == null || dbName.isEmpty()) {
+    String namespace = request.getNamespace();
+    if (namespace == null || namespace.isEmpty()) {
       return null;
     }
-    return dbName;
+    return namespace;
   }
 
   @Nullable

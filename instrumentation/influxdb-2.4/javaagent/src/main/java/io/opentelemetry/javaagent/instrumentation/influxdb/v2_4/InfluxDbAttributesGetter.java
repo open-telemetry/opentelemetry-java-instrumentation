@@ -19,8 +19,8 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbOperationName(InfluxDbRequest request) {
-    if (request.getOperation() != null) {
-      return request.getOperation();
+    if (request.getOperationName() != null) {
+      return request.getOperationName();
     }
     return request.getSqlStatementInfo().getOperationName();
   }
@@ -33,7 +33,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbNamespace(InfluxDbRequest request) {
-    String dbName = request.getDbName();
-    return "".equals(dbName) ? null : dbName;
+    String namespace = request.getNamespace();
+    return "".equals(namespace) ? null : namespace;
   }
 }

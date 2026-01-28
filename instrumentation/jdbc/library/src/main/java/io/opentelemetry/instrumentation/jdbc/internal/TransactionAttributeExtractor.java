@@ -24,10 +24,10 @@ enum TransactionAttributeExtractor implements AttributesExtractor<DbRequest, Voi
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DbRequest request) {
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_OPERATION, request.getOperation());
+      internalSet(attributes, DB_OPERATION, request.getOperationName());
     }
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(attributes, DB_OPERATION_NAME, request.getOperation());
+      internalSet(attributes, DB_OPERATION_NAME, request.getOperationName());
     }
   }
 

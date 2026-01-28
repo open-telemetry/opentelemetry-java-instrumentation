@@ -35,7 +35,7 @@ public abstract class ClickHouseDbRequest {
   public abstract Integer getPort();
 
   @Nullable
-  public abstract String getDbName();
+  public abstract String getNamespace();
 
   @Nullable
   public abstract SqlStatementInfo getSqlStatementInfo();

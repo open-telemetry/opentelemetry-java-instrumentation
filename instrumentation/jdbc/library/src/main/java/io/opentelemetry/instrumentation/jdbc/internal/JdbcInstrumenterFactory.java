@@ -121,7 +121,7 @@ public final class JdbcInstrumenterFactory {
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
+            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
