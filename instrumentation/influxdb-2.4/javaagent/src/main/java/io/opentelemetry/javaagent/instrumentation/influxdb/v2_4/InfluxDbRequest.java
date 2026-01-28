@@ -26,10 +26,10 @@ public abstract class InfluxDbRequest {
 
   public abstract int getPort();
 
-  public abstract String getDbName();
+  public abstract String getNamespace();
 
   @Nullable
-  public abstract String getOperation();
+  public abstract String getOperationName();
 
   public abstract SqlStatementInfo getSqlStatementInfo();
 }

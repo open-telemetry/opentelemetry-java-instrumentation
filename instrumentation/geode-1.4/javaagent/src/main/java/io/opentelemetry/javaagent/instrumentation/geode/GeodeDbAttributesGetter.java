@@ -37,9 +37,9 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (SemconvStability.emitStableDatabaseSemconv()) {
       // even though not using the summary, this will use the same
       // sanitization logic that will be the default under 3.0
-      return sanitizer.sanitizeWithSummary(request.getQuery()).getQueryText();
+      return sanitizer.sanitizeWithSummary(request.getQueryText()).getQueryText();
     } else {
-      return sanitizer.sanitize(request.getQuery()).getQueryText();
+      return sanitizer.sanitize(request.getQueryText()).getQueryText();
     }
   }
 
@@ -54,6 +54,6 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbOperationName(GeodeRequest request) {
-    return request.getOperation();
+    return request.getOperationName();
   }
 }
