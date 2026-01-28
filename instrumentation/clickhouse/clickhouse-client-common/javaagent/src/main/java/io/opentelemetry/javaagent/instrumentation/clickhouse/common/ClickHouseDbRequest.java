@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
@@ -19,7 +20,12 @@ public abstract class ClickHouseDbRequest {
 
   public static ClickHouseDbRequest create(
       @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sanitizer.sanitize(sql));
+    SqlStatementInfo sqlStatementInfo =
+        SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
+    SqlStatementInfo sqlStatementInfoWithSummary =
+        SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
+    return new AutoValue_ClickHouseDbRequest(
+        host, port, dbName, sqlStatementInfo, sqlStatementInfoWithSummary);
   }
 
   @Nullable
@@ -29,7 +35,11 @@ public abstract class ClickHouseDbRequest {
   public abstract Integer getPort();
 
   @Nullable
-  public abstract String getDbName();
+  public abstract String getNamespace();
 
+  @Nullable
   public abstract SqlStatementInfo getSqlStatementInfo();
+
+  @Nullable
+  public abstract SqlStatementInfo getSqlStatementInfoWithSummary();
 }

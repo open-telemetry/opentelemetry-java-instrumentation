@@ -98,7 +98,7 @@ public final class HttpResponseReceiverInstrumenter {
       // netty spans to be suppressed too
       Context nettyParentContext =
           context == null ? instrumentationContexts.getParentContext() : context;
-      NettyClientTelemetry.setChannelContext(connection.channel(), nettyParentContext);
+      NettyClientTelemetry.setParentContext(connection.channel(), nettyParentContext);
     }
   }
 

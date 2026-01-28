@@ -23,5 +23,12 @@ class SqlStatementSanitizerUtil {
     return map.computeIfAbsent(queryText, sanitizer::sanitize);
   }
 
+  static SqlStatementInfo sanitizeWithSummary(String queryText) {
+    Map<String, SqlStatementInfo> map =
+        InstrumenterContext.computeIfAbsent(
+            "sanitized-sql-map-with-summary", unused -> new HashMap<>());
+    return map.computeIfAbsent(queryText, sanitizer::sanitizeWithSummary);
+  }
+
   private SqlStatementSanitizerUtil() {}
 }

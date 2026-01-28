@@ -9,7 +9,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeprecatedConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import java.util.Iterator;
 import java.util.Optional;
@@ -88,15 +87,18 @@ class LogbackAppenderInstaller {
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
       OpenTelemetryAppender openTelemetryAppender) {
 
-    // Implemented in the same way as the
-    // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
-    // available
+    // Reading configuration directly from Spring Environment instead of using declarative
+    // configuration because this code runs during ApplicationEnvironmentPreparedEvent, which occurs
+    // before the full Spring application context is available. This is the same approach used by
+    // org.springframework.boot.context.logging.LoggingApplicationListener.
+    // The evaluateBooleanProperty method handles both declarative and non-declarative config by
+    // transforming property names when declarative config is detected.
     Boolean codeAttribute =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-code-attributes");
     if (codeAttribute != null) {
-      openTelemetryAppender.setCaptureCodeAttributes(codeAttribute.booleanValue());
+      openTelemetryAppender.setCaptureCodeAttributes(codeAttribute);
     }
 
     Boolean markerAttribute =
@@ -104,7 +106,7 @@ class LogbackAppenderInstaller {
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-marker-attribute");
     if (markerAttribute != null) {
-      openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute.booleanValue());
+      openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute);
     }
 
     Boolean keyValuePairAttributes =
@@ -112,7 +114,7 @@ class LogbackAppenderInstaller {
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
     if (keyValuePairAttributes != null) {
-      openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes.booleanValue());
+      openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes);
     }
 
     Boolean logAttributes =
@@ -120,7 +122,7 @@ class LogbackAppenderInstaller {
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental-log-attributes");
     if (logAttributes != null) {
-      openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes.booleanValue());
+      openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes);
     }
 
     Boolean loggerContextAttributes =
@@ -128,7 +130,7 @@ class LogbackAppenderInstaller {
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes");
     if (loggerContextAttributes != null) {
-      openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes.booleanValue());
+      openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes);
     }
 
     Boolean captureTemplate =
@@ -136,7 +138,7 @@ class LogbackAppenderInstaller {
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-template");
     if (captureTemplate != null) {
-      openTelemetryAppender.setCaptureTemplate(captureTemplate.booleanValue());
+      openTelemetryAppender.setCaptureTemplate(captureTemplate);
     }
 
     Boolean captureArguments =
@@ -144,17 +146,15 @@ class LogbackAppenderInstaller {
             applicationEnvironmentPreparedEvent,
             "otel.instrumentation.logback-appender.experimental.capture-arguments");
     if (captureArguments != null) {
-      openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
+      openTelemetryAppender.setCaptureArguments(captureArguments);
     }
 
     Boolean captureLogstashMarkerAttributes =
-        DeprecatedConfigProperties.getBoolean(
+        evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-markers",
             "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes");
     if (captureLogstashMarkerAttributes != null) {
-      openTelemetryAppender.setCaptureLogstashMarkerAttributes(
-          captureLogstashMarkerAttributes.booleanValue());
+      openTelemetryAppender.setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes);
     }
 
     Boolean captureLogstashStructuredArguments =
@@ -163,7 +163,7 @@ class LogbackAppenderInstaller {
             "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments");
     if (captureLogstashStructuredArguments != null) {
       openTelemetryAppender.setCaptureLogstashStructuredArguments(
-          captureLogstashStructuredArguments.booleanValue());
+          captureLogstashStructuredArguments);
     }
 
     String mdcAttributeProperty =
@@ -202,9 +202,12 @@ class LogbackAppenderInstaller {
       io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender
           openTelemetryAppender) {
 
-    // Implemented in the same way as the
-    // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
-    // available
+    // Reading configuration directly from Spring Environment instead of using declarative
+    // configuration because this code runs during ApplicationEnvironmentPreparedEvent, which occurs
+    // before the full Spring application context is available. This is the same approach used by
+    // org.springframework.boot.context.logging.LoggingApplicationListener.
+    // The evaluateBooleanProperty method handles both declarative and non-declarative config by
+    // transforming property names when declarative config is detected.
     Boolean addBaggage =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-mdc.add-baggage");
@@ -237,11 +240,24 @@ class LogbackAppenderInstaller {
     }
   }
 
+  /** Evaluates a boolean property, taking into account whether declarative config is in use. */
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
-    return environment.getProperty(
-        EarlyConfig.translatePropertyName(environment, property), Boolean.class);
+    String key = property;
+    if (EarlyConfig.isDeclarativeConfig(environment)) {
+      if (property.startsWith("otel.instrumentation.")) {
+        key =
+            String.format(
+                    "otel.instrumentation/development.java.%s",
+                    property.substring("otel.instrumentation.".length()))
+                .replace('-', '_');
+      } else {
+        throw new IllegalStateException(
+            "No mapping found for property name: " + property + ". Please report this bug.");
+      }
+    }
+    return environment.getProperty(key, Boolean.class);
   }
 
   private static <T> Optional<T> findAppender(Class<T> appenderClass) {

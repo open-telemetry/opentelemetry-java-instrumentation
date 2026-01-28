@@ -28,8 +28,8 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 
 /**
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
- * ExecutionInterceptor} returned by {@link #newExecutionInterceptor()} with an SDK client to have
- * all requests traced.
+ * ExecutionInterceptor} returned by {@link #createExecutionInterceptor()} with an SDK client to
+ * have all requests traced.
  *
  * <p>Certain services additionally require wrapping the SDK client itself:
  *
@@ -126,17 +126,6 @@ public class AwsSdkTelemetry {
         useXrayPropagator,
         recordIndividualHttpError,
         genAiCaptureMessageContent);
-  }
-
-  /**
-   * Returns a new {@link ExecutionInterceptor} that can be used with methods like {@link
-   * ClientOverrideConfiguration.Builder#addExecutionInterceptor(ExecutionInterceptor)}.
-   *
-   * @deprecated Use {@link #createExecutionInterceptor()} instead.
-   */
-  @Deprecated
-  public ExecutionInterceptor newExecutionInterceptor() {
-    return createExecutionInterceptor();
   }
 
   /**

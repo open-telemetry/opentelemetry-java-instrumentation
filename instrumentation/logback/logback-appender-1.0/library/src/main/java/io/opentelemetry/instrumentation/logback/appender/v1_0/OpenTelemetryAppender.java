@@ -198,18 +198,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureArguments = captureArguments;
   }
 
-  /**
-   * Sets whether the Logstash attributes should be set to logs.
-   *
-   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
-   * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-   *     deprecated and will be removed in a future release.
-   */
-  @Deprecated
-  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
-  }
-
   /** Sets whether the Logstash marker attributes should be captured. */
   public void setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
     this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;

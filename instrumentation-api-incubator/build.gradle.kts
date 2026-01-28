@@ -42,12 +42,12 @@ val generateJflex by tasks.registering(JavaExec::class) {
   doFirst {
     val outputDir = outputDirProvider.get().asFile
     outputDir.mkdirs()
-    val specFile = sourceDir.asFile.resolve("SqlSanitizer.jflex")
+    val specFiles = listOf(
+      sourceDir.asFile.resolve("SqlSanitizer.jflex"),
+      sourceDir.asFile.resolve("SqlSanitizerWithSummary.jflex"),
+    )
     args(
-      "-d",
-      outputDir.absolutePath,
-      "--nobak",
-      specFile.absolutePath,
+      listOf("-d", outputDir.absolutePath, "--nobak") + specFiles.map { it.absolutePath },
     )
   }
 }
@@ -66,6 +66,7 @@ tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
     exclude("**/AutoSqlSanitizer.java")
+    exclude("**/AutoSqlSanitizerWithSummary.java")
   }
 
   // Work around https://github.com/jflex-de/jflex/issues/762
@@ -73,6 +74,10 @@ tasks {
     with(options) {
       compilerArgs.add("-Xlint:-fallthrough")
     }
+  }
+
+  test {
+    inputs.dir(jflexOutputDir)
   }
 
   sourcesJar {
@@ -87,12 +92,14 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+    inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
+    inputs.dir(jflexOutputDir)
   }
 
   check {

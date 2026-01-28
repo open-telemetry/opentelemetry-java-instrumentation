@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /**
  * Helper class for creating {@link AttributeBinding} instances based on the {@link Type} of the
@@ -170,6 +171,7 @@ class AttributeBindingFactory {
       Integer[] array = (Integer[]) arg;
       List<Long> wrapper =
           new AbstractList<Long>() {
+            @Nullable
             @Override
             public Long get(int index) {
               Integer value = array[index];
@@ -231,6 +233,7 @@ class AttributeBindingFactory {
       Float[] array = (Float[]) arg;
       List<Double> wrapper =
           new AbstractList<Double>() {
+            @Nullable
             @Override
             public Double get(int index) {
               Float value = array[index];
@@ -292,6 +295,7 @@ class AttributeBindingFactory {
       Object[] array = (Object[]) arg;
       List<String> wrapper =
           new AbstractList<String>() {
+            @Nullable
             @Override
             public String get(int index) {
               Object value = array[index];
@@ -314,6 +318,7 @@ class AttributeBindingFactory {
       List<T> list = (List<T>) arg;
       List<U> wrapper =
           new AbstractList<U>() {
+            @Nullable
             @Override
             public U get(int index) {
               T value = list.get(index);

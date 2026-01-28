@@ -31,8 +31,18 @@ public final class ArmeriaServerTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /** Returns a decorator for instrumenting Armeria services. */
+  /**
+   * Returns a decorator for instrumenting Armeria services.
+   *
+   * @deprecated Use {@link #createDecorator()} instead.
+   */
+  @Deprecated
   public Function<? super HttpService, ? extends HttpService> newDecorator() {
+    return createDecorator();
+  }
+
+  /** Returns a decorator for instrumenting Armeria services. */
+  public Function<HttpService, HttpService> createDecorator() {
     return service -> new OpenTelemetryService(service, instrumenter);
   }
 }

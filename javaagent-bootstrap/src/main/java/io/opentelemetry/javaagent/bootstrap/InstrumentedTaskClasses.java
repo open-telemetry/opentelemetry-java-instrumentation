@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -42,6 +43,7 @@ public final class InstrumentedTaskClasses {
    * Sets the configured ignored tasks predicate. This method is called internally from the agent
    * class loader.
    */
+  @Initializer
   public static void setIgnoredTaskClassesPredicate(Predicate<String> ignoredTasksTriePredicate) {
     if (InstrumentedTaskClasses.ignoredTaskClassesPredicate != null) {
       logger.warning("Ignored task classes were already set earlier; returning.");

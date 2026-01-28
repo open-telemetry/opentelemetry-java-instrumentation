@@ -12,6 +12,7 @@ import java.util.logging.Filter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import javax.annotation.Nullable;
 
 /**
  * Dependencies of the agent sometimes call java.util.logging.Logger.getLogger(). This can have the
@@ -30,7 +31,7 @@ public class PatchLogger {
 
   private final InternalLogger internalLogger;
 
-  private ResourceBundle resourceBundle;
+  @Nullable private ResourceBundle resourceBundle;
 
   public static PatchLogger getLogger(String name) {
     return new PatchLogger(name);
@@ -304,6 +305,7 @@ public class PatchLogger {
 
   public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {}
 
+  @Nullable
   public ResourceBundle getResourceBundle() {
     return resourceBundle;
   }
@@ -312,6 +314,7 @@ public class PatchLogger {
     this.resourceBundle = resourceBundle;
   }
 
+  @Nullable
   public String getResourceBundleName() {
     return null;
   }
@@ -346,6 +349,7 @@ public class PatchLogger {
 
   public void setFilter(Filter filter) {}
 
+  @Nullable
   public Filter getFilter() {
     return null;
   }

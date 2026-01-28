@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -88,8 +89,15 @@ class ReactiveSpringDataTest {
                             equalTo(maybeStable(DB_NAME), "db"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT CUSTOMER.* FROM CUSTOMER"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "CUSTOMER"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT CUSTOMER" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "CUSTOMER"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem://localhost"),

@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -62,36 +60,6 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
    * single element.
    */
   Collection<String> getRawQueryTexts(REQUEST request);
-
-  /**
-   * @deprecated Use {@link DbClientAttributesGetter#getDbOperationBatchSize(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default Long getBatchSize(REQUEST request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  // TODO remove this override when getBatchSize is removed
-  default Long getDbOperationBatchSize(REQUEST request) {
-    return getBatchSize(request);
-  }
-
-  /**
-   * @deprecated Use {@link DbClientAttributesGetter#getDbQueryParameters(Object)} instead.
-   */
-  @Deprecated
-  default Map<String, String> getQueryParameters(REQUEST request) {
-    return Collections.emptyMap();
-  }
-
-  @Override
-  // TODO remove this override when getQueryParameters is removed
-  default Map<String, String> getDbQueryParameters(REQUEST request) {
-    return getQueryParameters(request);
-  }
 
   /**
    * Returns whether the query is parameterized. Prepared statements are always considered

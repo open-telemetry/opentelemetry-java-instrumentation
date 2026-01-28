@@ -41,8 +41,8 @@ public final class NatsTelemetry {
    * Returns a {@link Connection} with telemetry instrumentation.
    *
    * <p>This method should be used together with {@link #configure(Options.Builder)}. Consider using
-   * {@link #newConnection(Options.Builder, ConnectionFactory)} or {@link #newConnection(Options,
-   * ConnectionFactory)} instead.
+   * {@link #createConnection(Options.Builder, ConnectionFactory)} or {@link
+   * #createConnection(Options, ConnectionFactory)} instead.
    */
   public Connection wrap(Connection connection) {
     return OpenTelemetryConnection.wrap(
@@ -53,7 +53,7 @@ public final class NatsTelemetry {
    * Returns a {@link Options.Builder} configured with telemetry instrumentation.
    *
    * <p>This method should be used together with {@link #wrap(Connection)}. Consider using {@link
-   * #newConnection(Options.Builder, ConnectionFactory)} or {@link #newConnection(Options,
+   * #createConnection(Options.Builder, ConnectionFactory)} or {@link #createConnection(Options,
    * ConnectionFactory)} instead.
    */
   public Options.Builder configure(Options.Builder options) {
@@ -78,29 +78,6 @@ public final class NatsTelemetry {
       Options.Builder builder, ConnectionFactory<Options.Builder> connectionFactory)
       throws IOException, InterruptedException {
     return wrap(connectionFactory.create(configure(builder)));
-  }
-
-  /**
-   * Returns a {@link Connection} with telemetry instrumentation.
-   *
-   * @deprecated Use {@link #createConnection(Options, ConnectionFactory)} instead.
-   */
-  @Deprecated
-  public Connection newConnection(Options options, ConnectionFactory<Options> connectionFactory)
-      throws IOException, InterruptedException {
-    return createConnection(options, connectionFactory);
-  }
-
-  /**
-   * Returns a {@link Connection} with telemetry instrumentation.
-   *
-   * @deprecated Use {@link #createConnection(Options.Builder, ConnectionFactory)} instead.
-   */
-  @Deprecated
-  public Connection newConnection(
-      Options.Builder builder, ConnectionFactory<Options.Builder> connectionFactory)
-      throws IOException, InterruptedException {
-    return createConnection(builder, connectionFactory);
   }
 
   public interface ConnectionFactory<T> {
