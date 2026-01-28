@@ -78,7 +78,7 @@ public final class RatpackServerTelemetry {
   }
 
   /** Creates an {@link ExecInterceptor} instance to support Ratpack Registry binding. */
-  public static ExecInterceptor createExecInterceptor() {
+  public ExecInterceptor createExecInterceptor() {
     return OpenTelemetryExecInterceptor.INSTANCE;
   }
 
@@ -93,7 +93,7 @@ public final class RatpackServerTelemetry {
   }
 
   /** Creates an {@link ExecInitializer} instance to support Ratpack Registry binding. */
-  public static ExecInitializer createExecInitializer() {
+  public ExecInitializer createExecInitializer() {
     return OpenTelemetryExecInitializer.INSTANCE;
   }
 
