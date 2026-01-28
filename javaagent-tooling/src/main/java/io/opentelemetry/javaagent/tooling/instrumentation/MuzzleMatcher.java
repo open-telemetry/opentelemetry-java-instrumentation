@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.utility.JavaModule;
@@ -41,7 +43,7 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
   private final Level muzzleLogLevel;
   private final AtomicBoolean initialized = new AtomicBoolean(false);
   private final Cache<ClassLoader, Boolean> matchCache = Cache.weak();
-  private volatile ReferenceMatcher referenceMatcher;
+  @Nullable private volatile ReferenceMatcher referenceMatcher;
 
   MuzzleMatcher(
       TransformSafeLogger instrumentationLogger, InstrumentationModule instrumentationModule) {
@@ -116,6 +118,6 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
     if (initialized.compareAndSet(false, true)) {
       referenceMatcher = ReferenceMatcher.of(instrumentationModule);
     }
-    return referenceMatcher;
+    return requireNonNull(referenceMatcher);
   }
 }

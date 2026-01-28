@@ -391,13 +391,13 @@ public class AgentClassLoader extends URLClassLoader {
    * <p>This class is thread safe.
    */
   public static final class BootstrapClassLoaderProxy extends ClassLoader {
-    private final AgentClassLoader agentClassLoader;
+    @Nullable private final AgentClassLoader agentClassLoader;
 
     static {
       ClassLoader.registerAsParallelCapable();
     }
 
-    public BootstrapClassLoaderProxy(AgentClassLoader agentClassLoader) {
+    public BootstrapClassLoaderProxy(@Nullable AgentClassLoader agentClassLoader) {
       super(null);
       this.agentClassLoader = agentClassLoader;
     }

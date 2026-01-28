@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Objects.requireNonNull;
+
 import java.text.MessageFormat;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -90,8 +92,11 @@ public final class TransformSafeLogger {
     @Override
     public void run() {
       try {
+        BlockingQueue<LogMessage> queue =
+            requireNonNull(
+                logMessageQueue, "logMessageQueue must be initialized when reader is created");
         while (true) {
-          LogMessage logMessage = logMessageQueue.take();
+          LogMessage logMessage = queue.take();
           logMessage.logger.log(
               logMessage.level,
               formatMessage(logMessage.format, logMessage.arguments),
@@ -107,11 +112,15 @@ public final class TransformSafeLogger {
     private final Level level;
     private final Logger logger;
     private final String format;
-    private final Throwable error;
-    private final Object[] arguments;
+    @Nullable private final Throwable error;
+    @Nullable private final Object[] arguments;
 
     private LogMessage(
-        Level level, Logger logger, String format, Throwable error, Object[] arguments) {
+        Level level,
+        Logger logger,
+        String format,
+        @Nullable Throwable error,
+        @Nullable Object[] arguments) {
       this.level = level;
       this.logger = logger;
       this.format = format;
@@ -120,7 +129,7 @@ public final class TransformSafeLogger {
     }
   }
 
-  private static String formatMessage(String format, Object[] arguments) {
+  private static String formatMessage(String format, @Nullable Object[] arguments) {
     if (arguments == null || arguments.length == 0) {
       return format;
     } else {

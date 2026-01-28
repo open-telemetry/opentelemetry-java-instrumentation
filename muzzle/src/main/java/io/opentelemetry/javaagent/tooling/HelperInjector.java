@@ -69,7 +69,7 @@ public class HelperInjector implements Transformer {
 
   // a hook for static instrumentation used to save additional classes created by the agent
   // see https://github.com/open-telemetry/opentelemetry-java-contrib/tree/main/static-instrumenter
-  private static volatile HelperInjectorListener helperInjectorListener;
+  @Nullable private static volatile HelperInjectorListener helperInjectorListener;
 
   static {
     InjectedClassHelper.internalSetHelperClassDetector(HelperInjector::isInjectedClass);
@@ -113,18 +113,27 @@ public class HelperInjector implements Transformer {
       String requestingName,
       List<String> helperClassNames,
       List<HelperResource> helperResources,
-      ClassLoader helpersSource,
-      Instrumentation instrumentation) {
+      @Nullable ClassLoader helpersSource,
+      @Nullable Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
-    List<HelperClassDefinition> helpers =
-        helperClassNames.stream()
-            .distinct()
-            .map(
-                className ->
-                    HelperClassDefinition.create(
-                        className, helpersSource, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+    List<HelperClassDefinition> helpers;
+    if (helperClassNames.isEmpty()) {
+      helpers = Collections.emptyList();
+    } else {
+      if (helpersSource == null) {
+        throw new IllegalArgumentException(
+            "helpersSource must not be null when helperClassNames is not empty");
+      }
+      helpers =
+          helperClassNames.stream()
+              .distinct()
+              .map(
+                  className ->
+                      HelperClassDefinition.create(
+                          className, helpersSource, InjectionMode.CLASS_ONLY))
+              .collect(Collectors.toList());
+    }
 
     this.helperClassesGenerator = (cl) -> helpers;
     this.helperResources = helperResources;
@@ -136,8 +145,8 @@ public class HelperInjector implements Transformer {
       String requestingName,
       Function<ClassLoader, List<HelperClassDefinition>> helperClassesGenerators,
       List<HelperResource> helperResources,
-      ClassLoader helpersSource,
-      Instrumentation instrumentation) {
+      @Nullable ClassLoader helpersSource,
+      @Nullable Instrumentation instrumentation) {
     this.requestingName = requestingName;
 
     this.helperClassesGenerator = helperClassesGenerators;
@@ -149,7 +158,7 @@ public class HelperInjector implements Transformer {
   public static HelperInjector forDynamicTypes(
       String requestingName,
       Collection<DynamicType.Unloaded<?>> helpers,
-      Instrumentation instrumentation) {
+      @Nullable Instrumentation instrumentation) {
 
     List<HelperClassDefinition> helperDefinitions =
         helpers.stream()
@@ -164,16 +173,19 @@ public class HelperInjector implements Transformer {
     helperInjectorListener = listener;
   }
 
+  @Nullable
   @Override
   @CanIgnoreReturnValue
   public DynamicType.Builder<?> transform(
-      DynamicType.Builder<?> builder,
-      TypeDescription typeDescription,
-      ClassLoader classLoader,
-      JavaModule javaModule,
-      ProtectionDomain protectionDomain) {
+      @Nullable DynamicType.Builder<?> builder,
+      @Nullable TypeDescription typeDescription,
+      @Nullable ClassLoader classLoader,
+      @Nullable JavaModule javaModule,
+      @Nullable ProtectionDomain protectionDomain) {
+    ClassLoader maskedClassLoader =
+        classLoader != null ? classLoader : BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
     injectedClassLoaders.computeIfAbsent(
-        maskNullClassLoader(classLoader),
+        maskedClassLoader,
         cl -> {
           List<HelperClassDefinition> helpers =
               helperClassesGenerator.apply(unmaskNullClassLoader(cl));
@@ -210,6 +222,9 @@ public class HelperInjector implements Transformer {
 
   private void injectHelperResources(
       ClassLoader classLoader, Map<String, URL> additionalResources) {
+    if (helpersSource == null) {
+      return;
+    }
     for (HelperResource helperResource : helperResources) {
       List<URL> resources;
       try {
@@ -256,7 +271,7 @@ public class HelperInjector implements Transformer {
 
   @SuppressWarnings("NonApiType")
   private void injectHelperClasses(
-      TypeDescription typeDescription,
+      @Nullable TypeDescription typeDescription,
       ClassLoader classLoader,
       LinkedHashMap<String, Supplier<byte[]>> classnameToBytes) {
     if (classnameToBytes.isEmpty()) {
@@ -353,6 +368,7 @@ public class HelperInjector implements Transformer {
     packageLookups.put(supplier.getClass().getPackage().getName(), supplier.get());
   }
 
+  @Nullable
   private static ClassInjector getClassInjector(String packageName) {
     MethodHandles.Lookup lookup = packageLookups.get(packageName);
     return lookup != null ? ClassInjector.UsingLookup.of(lookup) : null;
@@ -447,6 +463,7 @@ public class HelperInjector implements Transformer {
     return classLoader != null ? classLoader : BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
   }
 
+  @Nullable
   private static ClassLoader unmaskNullClassLoader(ClassLoader classLoader) {
     return isBootClassLoader(classLoader) ? null : classLoader;
   }
@@ -467,6 +484,7 @@ public class HelperInjector implements Transformer {
     return helperMap.containsKey(className);
   }
 
+  @Nullable
   private static HelperClassInfo getHelperClassInfo(ClassLoader classLoader, String className) {
     if (classLoader == null) {
       throw new IllegalStateException("boot loader not supported");
@@ -480,10 +498,14 @@ public class HelperInjector implements Transformer {
       return null;
     }
 
+    Supplier<byte[]> bytes = helperClass.bytes;
+    if (bytes == null) {
+      return null;
+    }
     return new HelperClassInfo() {
       @Override
       public byte[] getClassBytes() {
-        return helperClass.bytes.get();
+        return bytes.get();
       }
 
       @Override
@@ -494,9 +516,9 @@ public class HelperInjector implements Transformer {
   }
 
   private static class HelperClass {
-    private final Supplier<byte[]> bytes;
+    @Nullable private final Supplier<byte[]> bytes;
 
-    HelperClass(Supplier<byte[]> bytes) {
+    HelperClass(@Nullable Supplier<byte[]> bytes) {
       this.bytes = bytes;
     }
   }

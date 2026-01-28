@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.bootstrap;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import javax.annotation.Nullable;
 
 /**
  * This SPI can be used to define which packages/classes belong to the bootstrap class loader: all
@@ -24,5 +25,5 @@ public interface BootstrapPackagesConfigurer {
    * Configure the passed {@code builder} and define which classes should always be loaded by the
    * bootstrap class loader.
    */
-  void configure(BootstrapPackagesBuilder builder, ConfigProperties config);
+  void configure(BootstrapPackagesBuilder builder, @Nullable ConfigProperties config);
 }

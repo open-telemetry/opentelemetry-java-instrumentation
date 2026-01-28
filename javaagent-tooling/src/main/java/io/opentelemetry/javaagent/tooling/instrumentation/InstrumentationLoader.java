@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.tooling.AgentExtension;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(AgentExtension.class)
@@ -26,10 +27,14 @@ public class InstrumentationLoader implements AgentExtension {
       new InstrumentationModuleInstaller(InstrumentationHolder.getInstrumentation());
 
   @Override
-  public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
+  public AgentBuilder extend(AgentBuilder agentBuilder, @Nullable ConfigProperties config) {
     int numberOfLoadedModules = 0;
+    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
+    if (extensionsClassLoader == null) {
+      throw new IllegalStateException("Extensions class loader must not be null");
+    }
     for (InstrumentationModule instrumentationModule :
-        loadOrdered(InstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+        loadOrdered(InstrumentationModule.class, extensionsClassLoader)) {
       if (logger.isLoggable(FINE)) {
         logger.log(
             FINE,

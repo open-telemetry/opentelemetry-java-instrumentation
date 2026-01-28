@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
@@ -56,11 +57,11 @@ public final class InstrumentationModuleInstaller {
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
-  private final Instrumentation instrumentation;
+  @Nullable private final Instrumentation instrumentation;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
       VirtualFieldImplementationInstallerFactory.getInstance();
 
-  public InstrumentationModuleInstaller(Instrumentation instrumentation) {
+  public InstrumentationModuleInstaller(@Nullable Instrumentation instrumentation) {
     this.instrumentation = instrumentation;
   }
 
@@ -69,7 +70,7 @@ public final class InstrumentationModuleInstaller {
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      @Nullable ConfigProperties config) {
     if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(),
         instrumentationModule.defaultEnabled(config))) {
@@ -134,13 +135,17 @@ public final class InstrumentationModuleInstaller {
           return helpers;
         };
 
+    Instrumentation inst = instrumentation;
+    if (inst == null) {
+      throw new IllegalStateException("Instrumentation must not be null");
+    }
     HelperInjector helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperGenerator,
             helperResourceBuilder.getResources(),
             instrumentationModule.getClass().getClassLoader(),
-            instrumentation);
+            inst);
 
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
@@ -188,13 +193,21 @@ public final class InstrumentationModuleInstaller {
     }
 
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
+    Instrumentation inst = instrumentation;
+    if (extensionsClassLoader == null) {
+      throw new IllegalStateException("Extensions class loader must not be null");
+    }
+    if (inst == null) {
+      throw new IllegalStateException("Instrumentation must not be null");
+    }
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
             helperResourceBuilder.getResources(),
-            Utils.getExtensionsClassLoader(),
-            instrumentation);
+            extensionsClassLoader,
+            inst);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
@@ -216,8 +229,7 @@ public final class InstrumentationModuleInstaller {
                           .jpmsModulesToOpen()
                           .forEach(
                               (javaModule, packages) -> {
-                                ModuleOpener.open(
-                                    instrumentation, javaModule, classLoader, packages);
+                                ModuleOpener.open(inst, javaModule, classLoader, packages);
                               });
                       openerRun.set(true);
                     }
