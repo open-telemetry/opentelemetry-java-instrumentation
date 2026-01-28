@@ -12,14 +12,15 @@ import org.apache.geode.cache.Region;
 @AutoValue
 public abstract class GeodeRequest {
 
-  public static GeodeRequest create(Region<?, ?> region, String operation, @Nullable String query) {
-    return new AutoValue_GeodeRequest(region, operation, query);
+  public static GeodeRequest create(
+      Region<?, ?> region, String operationName, @Nullable String queryText) {
+    return new AutoValue_GeodeRequest(region, operationName, queryText);
   }
 
   public abstract Region<?, ?> getRegion();
 
-  public abstract String getOperation();
+  public abstract String getOperationName();
 
   @Nullable
-  public abstract String getQuery();
+  public abstract String getQueryText();
 }

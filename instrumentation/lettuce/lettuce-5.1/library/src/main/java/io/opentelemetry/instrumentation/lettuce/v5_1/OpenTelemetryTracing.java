@@ -313,18 +313,18 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
-      // Set db.statement on SpanBuilder before starting span so it's available to samplers
+      // Set db.query.text on SpanBuilder before starting span so it's available to samplers
       if (name != null) {
-        String statement =
+        String queryText =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        if (statement != null) {
+        if (queryText != null) {
           if (SemconvStability.emitStableDatabaseSemconv()) {
-            spanBuilder.setAttribute(DB_QUERY_TEXT, statement);
-            attributesBuilder.put(DB_QUERY_TEXT, statement);
+            spanBuilder.setAttribute(DB_QUERY_TEXT, queryText);
+            attributesBuilder.put(DB_QUERY_TEXT, queryText);
           }
           if (SemconvStability.emitOldDatabaseSemconv()) {
-            spanBuilder.setAttribute(DB_STATEMENT, statement);
-            attributesBuilder.put(DB_STATEMENT, statement);
+            spanBuilder.setAttribute(DB_STATEMENT, queryText);
+            attributesBuilder.put(DB_STATEMENT, queryText);
           }
         }
       }

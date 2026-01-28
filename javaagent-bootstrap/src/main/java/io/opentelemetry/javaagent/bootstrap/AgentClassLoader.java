@@ -43,8 +43,16 @@ public class AgentClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  private static final String AGENT_INITIALIZER_JAR =
-      System.getProperty("otel.javaagent.experimental.initializer.jar", "");
+  @Nullable private static final String AGENT_INITIALIZER_JAR = initializerJar();
+
+  @Nullable
+  private static String initializerJar() {
+    String value = System.getProperty("otel.javaagent.experimental.initializer.jar");
+    if (value != null) {
+      return value;
+    }
+    return System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR");
+  }
 
   private static final String META_INF = "META-INF/";
   private static final String META_INF_VERSIONS = META_INF + "versions/";
@@ -131,7 +139,7 @@ public class AgentClassLoader extends URLClassLoader {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
 
-    if (!AGENT_INITIALIZER_JAR.isEmpty()) {
+    if (AGENT_INITIALIZER_JAR != null && !AGENT_INITIALIZER_JAR.isEmpty()) {
       URL url;
       try {
         url = new File(AGENT_INITIALIZER_JAR).toURI().toURL();

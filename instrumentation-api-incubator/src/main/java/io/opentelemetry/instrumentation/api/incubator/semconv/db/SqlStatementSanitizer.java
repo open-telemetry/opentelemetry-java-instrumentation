@@ -21,6 +21,8 @@ public final class SqlStatementSanitizer {
 
   private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
       Cache.bounded(1000);
+  private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCacheWithSummary =
+      Cache.bounded(1000);
   private static final int LARGE_STATEMENT_THRESHOLD = 10 * 1024;
 
   public static SqlStatementSanitizer create(boolean statementSanitizationEnabled) {
@@ -56,6 +58,31 @@ public final class SqlStatementSanitizer {
     return AutoSqlSanitizer.sanitize(statement, dialect);
   }
 
+  /** Sanitize and extract query summary. */
+  public SqlStatementInfo sanitizeWithSummary(@Nullable String statement) {
+    return sanitizeWithSummary(statement, SqlDialect.DEFAULT);
+  }
+
+  /** Sanitize and extract query summary. */
+  public SqlStatementInfo sanitizeWithSummary(@Nullable String statement, SqlDialect dialect) {
+    if (!statementSanitizationEnabled || statement == null) {
+      return SqlStatementInfo.createWithSummary(statement, null, null);
+    }
+    // sanitization result will not be cached for statements larger than the threshold to avoid
+    // cache growing too large
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
+    if (statement.length() > LARGE_STATEMENT_THRESHOLD) {
+      return sanitizeWithSummaryImpl(statement, dialect);
+    }
+    return sqlToStatementInfoCacheWithSummary.computeIfAbsent(
+        CacheKey.create(statement, dialect), k -> sanitizeWithSummaryImpl(statement, dialect));
+  }
+
+  private static SqlStatementInfo sanitizeWithSummaryImpl(String statement, SqlDialect dialect) {
+    supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
+    return AutoSqlSanitizerWithSummary.sanitize(statement, dialect);
+  }
+
   // visible for tests
   static boolean isCached(String statement) {
     return sqlToStatementInfoCache.get(CacheKey.create(statement, SqlDialect.DEFAULT)) != null;
@@ -64,11 +91,11 @@ public final class SqlStatementSanitizer {
   @AutoValue
   abstract static class CacheKey {
 
-    static CacheKey create(String statement, SqlDialect dialect) {
-      return new AutoValue_SqlStatementSanitizer_CacheKey(statement, dialect);
+    static CacheKey create(String queryText, SqlDialect dialect) {
+      return new AutoValue_SqlStatementSanitizer_CacheKey(queryText, dialect);
     }
 
-    abstract String getStatement();
+    abstract String getQueryText();
 
     abstract SqlDialect getDialect();
   }

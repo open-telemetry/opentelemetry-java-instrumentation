@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 
@@ -23,7 +23,7 @@ public final class NettyClientTelemetry {
   private final NettyClientHandlerFactory handlerFactory;
 
   NettyClientTelemetry(
-      Instrumenter<NettyRequest, HttpResponse> instrumenter,
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       boolean emitExperimentalHttpClientEvents) {
     this.handlerFactory =
         new NettyClientHandlerFactory(instrumenter, emitExperimentalHttpClientEvents);
@@ -69,8 +69,18 @@ public final class NettyClientTelemetry {
    * Propagates the {@link Context} to the {@link Channel}. Must be called before each HTTP request
    * on the channel.
    */
-  // TODO (trask) rename to setParentContext()?
+  public static void setParentContext(Channel channel, Context parentContext) {
+    channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
+  }
+
+  /**
+   * Propagates the {@link Context} to the {@link Channel}. Must be called before each HTTP request
+   * on the channel.
+   *
+   * @deprecated Use {@link #setParentContext(Channel, Context)} instead.
+   */
+  @Deprecated
   public static void setChannelContext(Channel channel, Context context) {
-    channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(context);
+    setParentContext(channel, context);
   }
 }

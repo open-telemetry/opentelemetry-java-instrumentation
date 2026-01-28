@@ -10932,6 +10932,9 @@ libraries:
       - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
   quartz:
   - name: quartz-2.0
+    display_name: Quartz
+    description: This instrumentation enables spans for Quartz job execution.
+    library_link: https://www.quartz-scheduler.org/
     source_path: instrumentation/quartz-2.0
     scope:
       name: io.opentelemetry.quartz-2.0
@@ -10940,6 +10943,30 @@ libraries:
       - org.quartz-scheduler:quartz:[2.0.0,)
       library:
       - org.quartz-scheduler:quartz:2.0.0
+    configurations:
+    - name: otel.instrumentation.quartz.experimental-span-attributes
+      description: Enables the experimental `job.system` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.quartz.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
   r2dbc:
   - name: r2dbc-1.0
     display_name: R2DBC
@@ -11758,12 +11785,38 @@ libraries:
           type: STRING
   rmi:
   - name: rmi
+    display_name: RMI (Remote Method Invocation)
+    description: |
+      This instrumentation enables RPC client spans and RPC server spans for Java RMI (Remote Method Invocation).
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_SERVER_SPANS
+    library_link: https://docs.oracle.com/en/java/javase/17/docs/api/java.rmi/java/rmi/package-summary.html
     source_path: instrumentation/rmi
     scope:
       name: io.opentelemetry.rmi
     target_versions:
       javaagent:
       - Java 8+
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
   rocketmq:
   - name: rocketmq-client-4.8
     display_name: Apache RocketMQ Client - Remoting Protocol
