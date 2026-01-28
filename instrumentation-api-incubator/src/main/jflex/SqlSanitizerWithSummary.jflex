@@ -349,75 +349,46 @@ WHITESPACE           = [ \t\r\n]+
 
   private class Insert extends Operation {
     boolean expectingTableName = false;
-    boolean tableCaptured = false;
-    boolean inEmbeddedSelect = false;
-    boolean expectingSelectTableName = false;
-    int selectParenLevel = -1;
 
     void handleInto() {
       expectingTableName = true;
     }
 
-    void handleIdentifier() {
-      if (expectingTableName && !tableCaptured) {
-        appendTargetToSummary();
-        tableCaptured = true;
-        expectingTableName = false;
-        return;
-      }
-
-      if (inEmbeddedSelect && expectingSelectTableName && parenLevel == selectParenLevel) {
-        appendTargetToSummary();
-        expectingSelectTableName = false;
-      }
-    }
-
     void handleSelect() {
-      inEmbeddedSelect = true;
-      selectParenLevel = parenLevel;
+      operation = new Select();
       appendOperationToSummary("SELECT");
     }
 
-    void handleFrom() {
-      if (inEmbeddedSelect) {
-        expectingSelectTableName = true;
+    void handleIdentifier() {
+      if (expectingTableName) {
+        appendTargetToSummary();
+        expectingTableName = false;
       }
     }
   }
 
   private class Delete extends Operation {
     boolean expectingTableName = false;
-    boolean tableCaptured = false;
-    boolean inEmbeddedSelect = false;
-    boolean expectingSelectTableName = false;
-    int selectParenLevel = -1;
+    boolean identifierCaptured = false;
 
     void handleFrom() {
-      if (!inEmbeddedSelect) {
-        expectingTableName = true;
-      } else {
-        expectingSelectTableName = true;
+      expectingTableName = true;
+    }
+
+    void handleSelect() {
+      // Once we've captured the DELETE table, any SELECT is a subquery
+      if (identifierCaptured) {
+        operation = new Select();
+        appendOperationToSummary("SELECT");
       }
     }
 
     void handleIdentifier() {
-      if (expectingTableName && !tableCaptured) {
+      if (expectingTableName) {
         appendTargetToSummary();
-        tableCaptured = true;
         expectingTableName = false;
-        return;
+        identifierCaptured = true;
       }
-
-      if (inEmbeddedSelect && expectingSelectTableName && parenLevel == selectParenLevel) {
-        appendTargetToSummary();
-        expectingSelectTableName = false;
-      }
-    }
-
-    void handleSelect() {
-      inEmbeddedSelect = true;
-      selectParenLevel = parenLevel;
-      appendOperationToSummary("SELECT");
     }
   }
 
@@ -435,32 +406,19 @@ WHITESPACE           = [ \t\r\n]+
 
   private class Update extends Operation {
     boolean identifierCaptured = false;
-    boolean inEmbeddedSelect = false;
-    boolean expectingSelectTableName = false;
-    int selectParenLevel = -1;
-
-    void handleIdentifier() {
-      if (!identifierCaptured && !inEmbeddedSelect) {
-        appendTargetToSummary();
-        identifierCaptured = true;
-        return;
-      }
-
-      if (inEmbeddedSelect && expectingSelectTableName && parenLevel == selectParenLevel) {
-        appendTargetToSummary();
-        expectingSelectTableName = false;
-      }
-    }
 
     void handleSelect() {
-      inEmbeddedSelect = true;
-      selectParenLevel = parenLevel;
-      appendOperationToSummary("SELECT");
+      // Once we've captured the UPDATE table, any SELECT is a subquery
+      if (identifierCaptured) {
+        operation = new Select();
+        appendOperationToSummary("SELECT");
+      }
     }
 
-    void handleFrom() {
-      if (inEmbeddedSelect) {
-        expectingSelectTableName = true;
+    void handleIdentifier() {
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
       }
     }
   }
