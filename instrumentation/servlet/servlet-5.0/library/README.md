@@ -35,7 +35,7 @@ Create telemetry producing servlet filter as shown below:
 ```java
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetry;
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 
 // ...
 
