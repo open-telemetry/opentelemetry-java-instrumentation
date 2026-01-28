@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 
@@ -19,13 +20,20 @@ public final class OperationNameUtil {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlStatementInfo info = sanitizer.sanitize(query);
-    if (info.getOperationName() != null) {
-      operation = info.getOperationName();
-      if (info.getCollectionName() != null) {
-        operation += " " + info.getCollectionName();
-      } else if (info.getStoredProcedureName() != null) {
-        operation += " " + info.getStoredProcedureName();
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      SqlStatementInfo info = sanitizer.sanitizeWithSummary(query);
+      if (info.getQuerySummary() != null) {
+        operation = info.getQuerySummary();
+      }
+    } else {
+      SqlStatementInfo info = sanitizer.sanitize(query);
+      if (info.getOperationName() != null) {
+        operation = info.getOperationName();
+        if (info.getCollectionName() != null) {
+          operation += " " + info.getCollectionName();
+        } else if (info.getStoredProcedureName() != null) {
+          operation += " " + info.getStoredProcedureName();
+        }
       }
     }
     return operation;
