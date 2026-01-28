@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class TomcatServlet5Test extends BaseTomcatServlet5Test {
+class TomcatDispatchTest extends BaseTomcatDispatchTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
