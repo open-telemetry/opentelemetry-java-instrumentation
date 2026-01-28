@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public final class ConfigPropertiesBackedConfigProvider implements ConfigProvider {
 
   private final DeclarativeConfigProperties instrumentationConfig;
+  private final ConfigProperties configProperties;
 
   public static ConfigProvider create(ConfigProperties configProperties) {
     return new ConfigPropertiesBackedConfigProvider(configProperties);
@@ -27,10 +28,15 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
     this.instrumentationConfig =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             configProperties);
+    this.configProperties = configProperties;
   }
 
   @Override
   public DeclarativeConfigProperties getInstrumentationConfig() {
     return instrumentationConfig;
+  }
+
+  public ConfigProperties getConfigProperties() {
+    return configProperties;
   }
 }

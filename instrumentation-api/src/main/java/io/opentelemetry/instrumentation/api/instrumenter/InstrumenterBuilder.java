@@ -429,6 +429,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
 
             @Override
+            public OpenTelemetry getOpenTelemetry() {
+              return builder.openTelemetry;
+            }
+
+            @Override
             public boolean hasType(SpanKey type) {
               return spanKeys.contains(type);
             }
