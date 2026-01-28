@@ -135,7 +135,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_OPERATION), "ClusterManager.hasBucket"),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()))));
+                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(
+                                stringKey("couchbase.local.address"), experimentalAttribute()))));
   }
 
   @ParameterizedTest
@@ -318,6 +320,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(
+                                stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
                                 stringKey("couchbase.operation_id"), experimentalAttribute()))));
   }
