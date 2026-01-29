@@ -311,7 +311,11 @@ class SpringJpaTest {
                     span.satisfies(
                             val ->
                                 assertThat(val.getName())
-                                    .isIn(asList("SELECT spring.jpa.Customer", "Hibernate Query")))
+                                    .isIn(
+                                        emitStableDatabaseSemconv()
+                                            ? asList("SELECT spring.jpa.Customer", "hibernate")
+                                            : asList(
+                                                "SELECT spring.jpa.Customer", "Hibernate Query")))
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

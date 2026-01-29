@@ -1,0 +1,15 @@
+description: >
+  This instrumentation enables database client spans and database client metrics for Memcached
+  operations using the Spymemcached client.
+display_name: Spymemcached
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/couchbase/spymemcached
+configurations:
+  - name: otel.instrumentation.spymemcached.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `spymemcached.result` and
+      `spymemcached.command.cancelled`.
+    type: boolean
+    default: false
