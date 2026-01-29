@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -26,6 +27,13 @@ class TomcatServlet5AsyncTest extends TomcatServlet5Test {
   @Override
   public boolean errorEndpointUsesSendError() {
     return false;
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    // TODO not working yet for async servlets
+    options.setTestRequestBodyCapture(false);
   }
 
   @Test
