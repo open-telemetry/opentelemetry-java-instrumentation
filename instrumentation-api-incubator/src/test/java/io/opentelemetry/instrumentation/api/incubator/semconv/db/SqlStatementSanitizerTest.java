@@ -743,7 +743,10 @@ class SqlStatementSanitizerTest {
             "SELECT * FROM a, (SELECT * FROM b), c", expect("SELECT", null, "SELECT a SELECT b c")),
         Arguments.of(
             "SELECT * FROM (SELECT * FROM inner1), (SELECT * FROM inner2), outer_table",
-            expect("SELECT", null, "SELECT SELECT inner1 SELECT inner2 outer_table")));
+            expect("SELECT", null, "SELECT SELECT inner1 SELECT inner2 outer_table")),
+
+        // Parenthesized table name - not a subquery - valid on MySQL
+        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")));
   }
 
   private static Stream<Arguments> ddlArgs() {

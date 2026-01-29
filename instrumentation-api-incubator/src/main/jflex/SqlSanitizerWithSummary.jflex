@@ -111,6 +111,11 @@ WHITESPACE           = [ \t\r\n]+
   // Track the paren levels where we pushed operations (to know when to pop)
   private final ArrayDeque<Integer> subqueryStartLevels = new ArrayDeque<>();
 
+  // Pending subquery: when we see ( that might start a subquery, we don't push immediately.
+  // Instead, we wait to see if an operation keyword (SELECT, etc.) appears inside.
+  // If it does, we do the push. If we see an identifier first, it's a parenthesized table name.
+  private boolean pendingSubqueryPush = false;
+
   private boolean shouldStartNewOperation() {
     return !insideComment && operation == none;
   }
@@ -126,8 +131,23 @@ WHITESPACE           = [ \t\r\n]+
     operation = none;
   }
 
+  /** Called when an operation keyword is seen - confirms pending subquery if any. */
+  private void confirmPendingSubqueryIfNeeded() {
+    if (pendingSubqueryPush) {
+      pushOperation();
+      pendingSubqueryPush = false;
+    }
+  }
+
+  /** Called when an identifier is seen - cancels pending subquery (it's a parenthesized table name). */
+  private void cancelPendingSubqueryIfNeeded() {
+    pendingSubqueryPush = false;
+  }
+
   /** Pop operation from stack if we're exiting a subquery. */
   private void popOperationIfNeeded() {
+    // Cancel pending subquery - any ) while pending means exiting the potential subquery
+    pendingSubqueryPush = false;
     if (!subqueryStartLevels.isEmpty() && parenLevel < subqueryStartLevels.peek()) {
       subqueryStartLevels.pop();
       operation = operationStack.pop();
@@ -315,12 +335,6 @@ WHITESPACE           = [ \t\r\n]+
 
       // Handle table list capture (FROM): capture first identifier after FROM or comma
       if (captureTableList && identifierCount == 1) {
-        // Only capture identifiers at FROM clause's paren level
-        // This allows capturing tables from nested FROM clauses while skipping aliases
-        if (fromClauseParenLevel >= 0 && parenLevel != fromClauseParenLevel) {
-          return;
-        }
-
         appendTargetToSummary();
         captureTableList = false;
         // Don't reset identifierCount - keep counting for implicit join detection
@@ -546,6 +560,8 @@ WHITESPACE           = [ \t\r\n]+
 
   "SELECT" {
           if (!insideComment) {
+            // Confirm pending subquery if we see SELECT inside parens
+            confirmPendingSubqueryIfNeeded();
             if (operation == none) {
               setOperation(new Select());
               appendOperationToSummary("SELECT");
@@ -730,6 +746,8 @@ WHITESPACE           = [ \t\r\n]+
       }
   "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
           if (!insideComment) {
+            // If we see a reserved word where we expected a subquery, it's a parenthesized name
+            cancelPendingSubqueryIfNeeded();
             if (operation.expectingOperationTarget()) {
               operation.handleOperationTarget(yytext());
             } else {
@@ -762,6 +780,8 @@ WHITESPACE           = [ \t\r\n]+
       }
   {IDENTIFIER} {
           if (!insideComment) {
+            // If we see an identifier where we expected a subquery, it's a parenthesized table name
+            cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
           }
           appendCurrentFragment();
@@ -774,8 +794,8 @@ WHITESPACE           = [ \t\r\n]+
             boolean enteringSubquery = operation.isEnteringSubquery();
             parenLevel += 1;
             if (enteringSubquery) {
-              // Push current operation and reset for subquery
-              pushOperation();
+              // Don't push immediately - mark as pending and wait to see if there's an operation keyword
+              pendingSubqueryPush = true;
             } else {
               operation.handleOpenParen();
             }
