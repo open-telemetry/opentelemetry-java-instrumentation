@@ -91,14 +91,14 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer")
     inputs.dir(jflexOutputDir)
   }
 
   val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup")
     inputs.dir(jflexOutputDir)
   }
 
