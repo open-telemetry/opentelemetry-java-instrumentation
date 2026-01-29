@@ -12864,11 +12864,65 @@ libraries:
     - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
   spymemcached:
   - name: spymemcached-2.12
+    display_name: Spymemcached
+    description: |
+      This instrumentation enables database client spans and database client metrics for Memcached operations using the Spymemcached client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/couchbase/spymemcached
     source_path: instrumentation/spymemcached-2.12
     scope:
       name: io.opentelemetry.spymemcached-2.12
     javaagent_target_versions:
     - net.spy:spymemcached:[2.12.0,)
+    configurations:
+    - name: otel.instrumentation.spymemcached.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `spymemcached.result` and `spymemcached.command.cancelled`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.instrumentation.spymemcached.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: spymemcached.command.cancelled
+          type: BOOLEAN
+        - name: spymemcached.result
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
   struts:
   - name: struts-2.3
     display_name: Apache Struts
