@@ -48,7 +48,11 @@ import javax.management.openmbean.CompositeData;
  * <pre>
  *   jvm.gc.duration{jvm.gc.name="G1 Young Generation",jvm.gc.action="end of minor GC"} 0.022
  * </pre>
+ *
+ * @deprecated Use {@link RuntimeMetrics} instead, and configure metric views to select specific
+ *     metrics.
  */
+@Deprecated
 public final class GarbageCollector {
 
   private static final Logger logger = Logger.getLogger(GarbageCollector.class.getName());

@@ -32,6 +32,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
+@SuppressWarnings("deprecation") // until Threads is moved to internal package
 @ExtendWith(MockitoExtension.class)
 class ThreadsStableSemconvTest {
 

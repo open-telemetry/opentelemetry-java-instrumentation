@@ -43,7 +43,11 @@ import java.util.function.Function;
  *   jvm.memory.used{type="non_heap",pool="Metaspace"} 400
  *   jvm.memory.committed{type="non_heap",pool="Metaspace"} 500
  * </pre>
+ *
+ * @deprecated Use {@link RuntimeMetrics} instead, and configure metric views to select specific
+ *     metrics.
  */
+@Deprecated
 public final class MemoryPools {
 
   /** Register observers for java runtime memory metrics. */

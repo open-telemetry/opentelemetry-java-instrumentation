@@ -32,7 +32,11 @@ import java.util.List;
  *   jvm.class.unloaded 2
  *   jvm.class.count 98
  * </pre>
+ *
+ * @deprecated Use {@link RuntimeMetrics} instead, and configure metric views to select specific
+ *     metrics.
  */
+@Deprecated
 public final class Classes {
 
   // Visible for testing

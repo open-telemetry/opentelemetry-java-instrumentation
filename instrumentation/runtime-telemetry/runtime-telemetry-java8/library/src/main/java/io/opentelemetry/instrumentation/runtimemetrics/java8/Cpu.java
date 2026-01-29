@@ -35,7 +35,11 @@ import javax.annotation.Nullable;
  *   jvm.cpu.count 8
  *   jvm.cpu.recent_utilization 0.1
  * </pre>
+ *
+ * @deprecated Use {@link RuntimeMetrics} instead, and configure metric views to select specific
+ *     metrics.
  */
+@Deprecated
 public final class Cpu {
 
   // Visible for testing

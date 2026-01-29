@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // until Classes is moved to internal package
 @ExtendWith(MockitoExtension.class)
 class ClassesStableSemconvTest {
 

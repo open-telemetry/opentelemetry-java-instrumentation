@@ -29,17 +29,19 @@ runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-runtime-telemetry-ja
 
 ### Usage
 
-Register observers for the desired runtime metrics:
+Register JVM runtime metrics:
 
 ```java
 OpenTelemetry openTelemetry = // OpenTelemetry instance configured elsewhere
 
-Classes.registerObservers(openTelemetry);
-Cpu.registerObservers(openTelemetry);
-MemoryPools.registerObservers(openTelemetry);
-Threads.registerObservers(openTelemetry);
-GarbageCollector.registerObservers(openTelemetry);
+RuntimeMetrics runtimeMetrics = RuntimeMetrics.create(openTelemetry);
+
+// When done, close to stop metric collection
+runtimeMetrics.close();
 ```
+
+To select specific metrics, configure [metric views](https://opentelemetry.io/docs/specs/otel/metrics/sdk/#view)
+on the SDK to filter which metrics are exported.
 
 ## Garbage Collector Dependent Metrics
 

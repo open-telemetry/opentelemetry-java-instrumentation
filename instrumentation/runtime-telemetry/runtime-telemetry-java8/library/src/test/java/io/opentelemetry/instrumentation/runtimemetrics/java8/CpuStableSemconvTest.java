@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // until Cpu is moved to internal package
 class CpuStableSemconvTest {
 
   @RegisterExtension

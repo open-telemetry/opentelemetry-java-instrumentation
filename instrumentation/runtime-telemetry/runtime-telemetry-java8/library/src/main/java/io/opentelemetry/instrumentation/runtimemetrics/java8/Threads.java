@@ -49,7 +49,11 @@ import javax.annotation.Nullable;
  *   jvm.thread.count{jvm.thread.daemon=false,jvm.thread.state="waiting"} 2
  *   jvm.thread.count{jvm.thread.daemon=false,jvm.thread.state="runnable"} 3
  * </pre>
+ *
+ * @deprecated Use {@link RuntimeMetrics} instead, and configure metric views to select specific
+ *     metrics.
  */
+@Deprecated
 public final class Threads {
 
   // Visible for testing
