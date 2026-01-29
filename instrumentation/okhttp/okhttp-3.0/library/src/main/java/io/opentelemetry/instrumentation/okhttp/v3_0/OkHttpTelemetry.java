@@ -77,7 +77,7 @@ public final class OkHttpTelemetry {
     OkHttpClient.Builder builder = baseClient.newBuilder();
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());
-    builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter));
+    builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter, true));
     // Pass true to TracingInterceptor to store context for NetworkTimingEventListener
     builder.networkInterceptors().add(0, new TracingInterceptor(instrumenter, propagators, true));
     // Add NetworkTimingEventListener to capture timing events as log record
