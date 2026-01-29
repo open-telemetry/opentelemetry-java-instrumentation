@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+// TODO : move to library ?
 public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper {
 
   // TODO: make request size configurable

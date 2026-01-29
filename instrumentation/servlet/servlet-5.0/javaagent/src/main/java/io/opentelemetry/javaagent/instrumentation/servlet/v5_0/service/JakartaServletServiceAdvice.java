@@ -144,6 +144,7 @@ public class JakartaServletServiceAdvice {
         || !(response instanceof HttpServletResponse)) {
       return;
     }
+
     adviceScope.exit((HttpServletRequest) request, (HttpServletResponse) response, throwable);
   }
 }

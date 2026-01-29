@@ -10,6 +10,7 @@ import jakarta.servlet.ServletInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+// TODO : move to library ?
 public class Servlet5BodyCaptureInputStreamWrapper extends ServletInputStream {
 
   private final ServletInputStream inputStream;
