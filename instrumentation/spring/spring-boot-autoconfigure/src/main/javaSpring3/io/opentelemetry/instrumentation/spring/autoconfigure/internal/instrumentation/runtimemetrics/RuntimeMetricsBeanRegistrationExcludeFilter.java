@@ -9,7 +9,7 @@ import org.springframework.beans.factory.aot.BeanRegistrationExcludeFilter;
 import org.springframework.beans.factory.support.RegisteredBean;
 
 /**
- * Configures runtime metrics collection for Java 17+.
+ * Excludes Java 17+ runtime metrics configuration from Spring AOT processing.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -20,6 +20,8 @@ public class RuntimeMetricsBeanRegistrationExcludeFilter implements BeanRegistra
     // The JFR-based runtime metric code is excluded from the Spring AOT processing step.
     // That way, this code is not included in a Spring native image application.
 
-    return Java17RuntimeMetricsProvider.class.getName().equals(registeredBean.getBeanName());
+    return Java17RuntimeMetricsAutoConfiguration.class
+        .getName()
+        .equals(registeredBean.getBeanName());
   }
 }
