@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -37,8 +36,6 @@ import org.yaml.snakeyaml.Yaml;
  * of the instrumentation-list.yaml file.
  */
 public class YamlHelper {
-
-  private static final Logger logger = Logger.getLogger(YamlHelper.class.getName());
 
   private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -140,7 +137,15 @@ public class YamlHelper {
     }
 
     moduleMap.put("scope", getScopeMap(module));
-    addTargetVersions(module, moduleMap);
+
+    if (module.hasStandaloneLibrary()) {
+      moduleMap.put("has_standalone_library", true);
+    }
+
+    if (module.getAgentTargetVersions() != null && !module.getAgentTargetVersions().isEmpty()) {
+      moduleMap.put("javaagent_target_versions", new ArrayList<>(module.getAgentTargetVersions()));
+    }
+
     addConfigurations(module, moduleMap);
 
     // Get telemetry grouping lists
@@ -241,26 +246,6 @@ public class YamlHelper {
       scopeMap.put("attributes", attributesMap);
     }
     return scopeMap;
-  }
-
-  private static void addTargetVersions(
-      InstrumentationModule module, Map<String, Object> moduleMap) {
-    Map<String, Object> targetVersions = new TreeMap<>();
-    if (module.getTargetVersions() != null && !module.getTargetVersions().isEmpty()) {
-      module
-          .getTargetVersions()
-          .forEach(
-              (type, versions) -> {
-                if (!versions.isEmpty()) {
-                  targetVersions.put(type.toString(), new ArrayList<>(versions));
-                }
-              });
-    }
-    if (targetVersions.isEmpty()) {
-      logger.info("No Target versions found for " + module.getInstrumentationName());
-    } else {
-      moduleMap.put("target_versions", targetVersions);
-    }
   }
 
   private static void addConfigurations(
