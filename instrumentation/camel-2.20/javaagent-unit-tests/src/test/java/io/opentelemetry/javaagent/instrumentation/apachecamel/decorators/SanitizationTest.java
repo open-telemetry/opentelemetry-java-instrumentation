@@ -9,7 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.DbAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.stream.Stream;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -17,6 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SanitizationTest {
 
   @ParameterizedTest
@@ -29,9 +34,7 @@ class SanitizationTest {
     when(message.getHeader("CamelCqlQuery")).thenReturn(original);
     when(exchange.getIn()).thenReturn(message);
 
-    SqlStatementInfo info = decorator.getSqlStatementInfo(exchange);
-    assertThat(info.getQueryText()).isEqualTo(expectedStatement);
-    assertThat(info.getQuerySummary()).isEqualTo(expectedSummary);
+    assertSanitizedStatement(decorator, exchange, expectedStatement, expectedSummary);
   }
 
   static Stream<Arguments> sanitizeCqlArgs() {
@@ -60,9 +63,7 @@ class SanitizationTest {
     when(message.getBody()).thenReturn(original);
     when(exchange.getIn()).thenReturn(message);
 
-    SqlStatementInfo info = decorator.getSqlStatementInfo(exchange);
-    assertThat(info.getQueryText()).isEqualTo(expectedStatement);
-    assertThat(info.getQuerySummary()).isEqualTo(expectedSummary);
+    assertSanitizedStatement(decorator, exchange, expectedStatement, expectedSummary);
   }
 
   static Stream<Arguments> sanitizeJdbcArgs() {
@@ -92,9 +93,7 @@ class SanitizationTest {
     when(message.getHeader("CamelSqlQuery")).thenReturn(original);
     when(exchange.getIn()).thenReturn(message);
 
-    SqlStatementInfo info = decorator.getSqlStatementInfo(exchange);
-    assertThat(info.getQueryText()).isEqualTo(expectedStatement);
-    assertThat(info.getQuerySummary()).isEqualTo(expectedSummary);
+    assertSanitizedStatement(decorator, exchange, expectedStatement, expectedSummary);
   }
 
   static Stream<Arguments> sanitizeSqlArgs() {
@@ -106,5 +105,23 @@ class SanitizationTest {
         Arguments.of("UPDATE table SET col=12", "UPDATE table SET col=?", "UPDATE table"),
         Arguments.of(
             "insert into table where col=321", "insert into table where col=?", "INSERT table"));
+  }
+
+  private static void assertSanitizedStatement(
+      DbSpanDecorator decorator,
+      Exchange exchange,
+      String expectedStatement,
+      String expectedSummary) {
+    AttributesBuilder attributesBuilder = Attributes.builder();
+    decorator.setQueryAttributes(attributesBuilder, exchange);
+    Attributes attributes = attributesBuilder.build();
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(DbAttributes.DB_QUERY_TEXT)).isEqualTo(expectedStatement);
+      assertThat(attributes.get(DbAttributes.DB_QUERY_SUMMARY)).isEqualTo(expectedSummary);
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(attributes.get(DbIncubatingAttributes.DB_STATEMENT)).isEqualTo(expectedStatement);
+    }
   }
 }

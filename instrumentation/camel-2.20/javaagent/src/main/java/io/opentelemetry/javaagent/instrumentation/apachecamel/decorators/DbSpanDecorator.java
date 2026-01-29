@@ -85,15 +85,6 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  // visible for testing
-  SqlStatementInfo getSqlStatementInfo(Exchange exchange) {
-    String rawQueryText = getRawQueryText(exchange);
-    if (rawQueryText == null) {
-      return null;
-    }
-    return sanitizer.sanitizeWithSummary(rawQueryText);
-  }
-
   private String getDbName(Endpoint endpoint) {
     switch (component) {
       case "mongodb":
@@ -134,6 +125,21 @@ class DbSpanDecorator extends BaseSpanDecorator {
       attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
     }
 
+    setQueryAttributes(attributes, exchange);
+
+    String dbName = getDbName(endpoint);
+    if (dbName != null) {
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbAttributes.DB_NAMESPACE, dbName);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      }
+    }
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
       SqlStatementInfo sqlStatementInfo =
@@ -150,16 +156,6 @@ class DbSpanDecorator extends BaseSpanDecorator {
       }
       if (sqlStatementInfo != null) {
         attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlStatementInfo.getQueryText());
-      }
-    }
-
-    String dbName = getDbName(endpoint);
-    if (dbName != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_NAMESPACE, dbName);
-      }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
       }
     }
   }
