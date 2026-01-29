@@ -38,7 +38,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets whether the {@code db.statement} attribute extracted by the constructed {@link
+   * Sets whether the {@code db.query.text} attribute extracted by the constructed {@link
    * SqlClientAttributesExtractor} should be sanitized. If set to {@code true}, all parameters that
    * can potentially contain sensitive information will be masked. Enabled by default.
    */

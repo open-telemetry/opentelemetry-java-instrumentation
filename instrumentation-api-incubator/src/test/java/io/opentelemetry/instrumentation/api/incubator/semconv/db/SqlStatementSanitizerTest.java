@@ -304,7 +304,6 @@ class SqlStatementSanitizerTest {
             "SELECT TABLE_123"),
 
         // Semi-nonsensical almost-numbers to elide or not
-        Arguments.of("SELECT --83--...--8e+76e3E-1", "SELECT ?", "SELECT"),
         Arguments.of("SELECT DEADBEEF", "SELECT DEADBEEF", "SELECT"),
         Arguments.of("SELECT 123-45-6789", "SELECT ?", "SELECT"),
         Arguments.of("SELECT 1/2/34", "SELECT ?/?/?", "SELECT"),
@@ -380,7 +379,7 @@ class SqlStatementSanitizerTest {
             "SELECT TABLE"),
 
         // hibernate/jpa query language
-        Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "TABLE"));
+        Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "SELECT TABLE"));
   }
 
   private static Stream<Arguments> couchbaseArgs() {
@@ -472,10 +471,9 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT x, y, (select a from b) as z FROM table",
             expect("SELECT", null, "SELECT SELECT b table")),
-        // TODO: invalid SQL - may be refined in later commits
         Arguments.of(
             "select delete, insert into, merge, update from table", // invalid SQL
-            expect("SELECT", "table", "SELECT DELETE INSERT MERGE UPDATE table")),
+            expect("SELECT", "table", "SELECT table")),
         Arguments.of(
             "select col /* from table2 */ from table", expect("SELECT", "table", "SELECT table")),
         Arguments.of(
@@ -491,8 +489,23 @@ class SqlStatementSanitizerTest {
             "select col from (select * from anotherTable) alias",
             expect("SELECT", null, "SELECT SELECT anotherTable")),
         Arguments.of(
+            "SELECT * FROM (SELECT * FROM t1) sub, t3",
+            expect("SELECT", null, "SELECT SELECT t1 t3")),
+        Arguments.of(
+            "SELECT * FROM (SELECT * FROM t1) s1, (SELECT * FROM t2) s2",
+            expect("SELECT", null, "SELECT SELECT t1 SELECT t2")),
+        Arguments.of(
+            "SELECT * FROM (SELECT * FROM t1) sub, t2 JOIN t3 ON t2.id = t3.id",
+            expect("SELECT", null, "SELECT SELECT t1 t2 t3")),
+        Arguments.of(
             "select col from table1 union select col from table2",
             expect("SELECT", null, "SELECT table1 SELECT table2")),
+        Arguments.of(
+            "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT id, name FROM vendors",
+            expect("SELECT", null, "SELECT employees SELECT contractors SELECT vendors")),
+        Arguments.of(
+            "select id, (select max(foo) from (select foo from foos union all select foo from bars)) as foo from main_table",
+            expect("SELECT", null, "SELECT SELECT SELECT foos SELECT bars main_table")),
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
             expect("SELECT", null, "SELECT table SELECT anotherTable")),
@@ -537,15 +550,15 @@ class SqlStatementSanitizerTest {
         Arguments.of("select next value in hibernate_sequence", expect("SELECT", null, "SELECT")),
 
         // hibernate/jpa
-        Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "schema.table")),
-        Arguments.of("/* update comment */ from table1", expect("SELECT", "table1", "table1")),
+        Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
+        Arguments.of(
+            "/* update comment */ from table1", expect("SELECT", "table1", "SELECT table1")),
 
         // Insert
         Arguments.of(" insert into table where lalala", expect("INSERT", "table", "INSERT table")),
-        // TODO: invalid SQL - may be refined in later commits
         Arguments.of(
             "insert insert into table where lalala", // invalid SQL
-            expect("INSERT", "table", "INSERT INSERT table")),
+            expect("INSERT", "table", "INSERT table")),
         Arguments.of(
             "insert into db.table where lalala", expect("INSERT", "db.table", "INSERT db.table")),
         Arguments.of(
@@ -592,14 +605,16 @@ class SqlStatementSanitizerTest {
                 "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
-        // Call - stable semconv returns CALL + procedure name for querySummary
+        // Call
         Arguments.of(
             "call test_proc()", expectStoredProcedure("CALL", "test_proc", "CALL test_proc")),
         Arguments.of(
             "call test_proc", expectStoredProcedure("CALL", "test_proc", "CALL test_proc")),
-        // "call next value for sequence" is a sequence operation, not a stored proc call
-        // TODO: sequence name capture will be improved in a later commit
-        Arguments.of("call next value for hibernate_sequence", expect("CALL", null, "CALL value")),
+        // Hibernate uses "call next value for sequence" on HSQLDB and H2 to get sequence values,
+        // while it uses SELECT for this on most other databases.
+        Arguments.of(
+            "call next value for hibernate_sequence",
+            expect("CALL", null, "CALL hibernate_sequence")),
         Arguments.of(
             "call db.test_proc",
             expectStoredProcedure("CALL", "db.test_proc", "CALL db.test_proc")),
@@ -692,7 +707,37 @@ class SqlStatementSanitizerTest {
         Arguments.of("   ;   ", expect(" ; ", null, null, null)),
         Arguments.of("/* comment only */", expect("/* comment only */", null, null, null)),
         Arguments.of("   ", expect(" ", null, null, null)),
-        Arguments.of("", expect("", null, null, null)));
+        Arguments.of("", expect("", null, null, null)),
+
+        // Line comments
+        Arguments.of(
+            "-- This query will DELETE old records\nSELECT * FROM users WHERE active = 1",
+            expect(
+                "-- This query will DELETE old records SELECT * FROM users WHERE active = ?",
+                "SELECT",
+                "users",
+                "SELECT users")),
+        // Line comment without space after -- (invalid on MySQL/MariaDB)
+        Arguments.of(
+            "--This query will DELETE old records\nSELECT * FROM users WHERE active = 1",
+            expect(
+                "--This query will DELETE old records SELECT * FROM users WHERE active = ?",
+                "SELECT",
+                "users",
+                "SELECT users")),
+        // "--83" is a line comment per SQL standard and on most databases
+        // (except MySQL/MariaDB which requires a space after "--"
+        // in which case )
+        Arguments.of("SELECT --83", expect("SELECT --83", "SELECT", null, "SELECT")),
+
+        // PostgreSQL tagged dollar-quoted strings: $tag$string$tag$
+        // https://neon.com/postgresql/postgresql-plpgsql/dollar-quoted-string-constants
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD = $tag$hello world$tag$",
+            expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")),
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD = $a$nested $b$value$b$ here$a$",
+            expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")));
   }
 
   private static Stream<Arguments> ddlArgs() {
@@ -717,6 +762,17 @@ class SqlStatementSanitizerTest {
             expect("CREATE VIEW", null, "CREATE VIEW tmp SELECT table")),
         Arguments.of(
             "CREATE PROCEDURE p AS SELECT * FROM table GO",
-            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p SELECT table")));
+            expect("CREATE PROCEDURE", null, "CREATE PROCEDURE p SELECT table")),
+        // ALTER TABLE with DROP/ADD clauses
+        Arguments.of(
+            "ALTER TABLE t2 DROP COLUMN c, DROP COLUMN d",
+            expect("ALTER TABLE", "t2", "ALTER TABLE t2")),
+        Arguments.of(
+            "ALTER TABLE users ADD COLUMN email VARCHAR(255), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
+            expect(
+                "ALTER TABLE users ADD COLUMN email VARCHAR(?), DROP COLUMN legacy_id, MODIFY COLUMN status INT",
+                "ALTER TABLE",
+                "users",
+                "ALTER TABLE users")));
   }
 }

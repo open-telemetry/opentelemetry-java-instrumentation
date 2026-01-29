@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal;
 
 import io.netty.channel.ChannelHandler;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -26,11 +25,11 @@ public final class HttpSchemeUtil {
     }
   }
 
-  public static String getScheme(NettyRequest requestAndChannel) {
+  public static String getScheme(NettyCommonRequest requestAndChannel) {
     return isHttps(requestAndChannel) ? "https" : "http";
   }
 
-  private static boolean isHttps(NettyRequest requestAndChannel) {
+  private static boolean isHttps(NettyCommonRequest requestAndChannel) {
     return sslHandlerClass != null
         && requestAndChannel.getChannel().pipeline().get(sslHandlerClass) != null;
   }

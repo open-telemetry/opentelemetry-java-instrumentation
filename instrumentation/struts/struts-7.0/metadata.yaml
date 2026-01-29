@@ -1,0 +1,13 @@
+display_name: Apache Struts 2
+description: >
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for Apache Struts 2 actions (controller spans are disabled by default).
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+library_link: https://struts.apache.org/
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false

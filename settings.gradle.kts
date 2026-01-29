@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3.1"
+  id("com.gradle.develocity") version "4.3.2"
 }
 
 dependencyResolutionManagement {
@@ -604,6 +604,7 @@ include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
 include(":instrumentation:servlet:servlet-5.0:jetty11-testing")
 include(":instrumentation:servlet:servlet-5.0:jetty12-testing")
+include(":instrumentation:servlet:servlet-5.0:library")
 include(":instrumentation:servlet:servlet-5.0:testing")
 include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")

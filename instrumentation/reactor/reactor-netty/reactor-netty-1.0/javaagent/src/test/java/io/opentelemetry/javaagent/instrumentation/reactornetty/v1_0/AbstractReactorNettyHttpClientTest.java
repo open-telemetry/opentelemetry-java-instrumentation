@@ -275,6 +275,7 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void shouldEndSpanOnMonoTimeout() {
     HttpClient httpClient = createHttpClient();
 

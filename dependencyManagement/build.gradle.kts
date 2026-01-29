@@ -43,7 +43,7 @@ val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.37.0"
+val semConvVersion = "1.39.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -85,7 +85,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.13.0",
+  "com.uber.nullaway:nullaway:0.13.1",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.20.0",

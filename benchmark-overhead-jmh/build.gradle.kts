@@ -22,7 +22,7 @@ tasks {
   //   error: plug-in not found: ErrorProne
   withType<JavaCompile>().configureEach {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

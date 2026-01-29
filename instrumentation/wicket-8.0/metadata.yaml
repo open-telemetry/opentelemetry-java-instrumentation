@@ -1,0 +1,7 @@
+display_name: Apache Wicket
+description: >
+  This instrumentation enriches HTTP server spans with route information for Apache Wicket
+  applications, it does not emit any telemetry on its own.
+features:
+  - HTTP_ROUTE
+library_link: https://wicket.apache.org/

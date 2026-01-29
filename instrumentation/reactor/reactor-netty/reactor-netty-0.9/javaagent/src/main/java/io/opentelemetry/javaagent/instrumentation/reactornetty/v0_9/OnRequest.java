@@ -15,6 +15,6 @@ public class OnRequest implements BiConsumer<HttpClientRequest, Connection> {
   @Override
   public void accept(HttpClientRequest r, Connection c) {
     Context context = r.currentContext().get(MapConnect.CONTEXT_ATTRIBUTE);
-    NettyClientTelemetry.setChannelContext(c.channel(), context);
+    NettyClientTelemetry.setParentContext(c.channel(), context);
   }
 }

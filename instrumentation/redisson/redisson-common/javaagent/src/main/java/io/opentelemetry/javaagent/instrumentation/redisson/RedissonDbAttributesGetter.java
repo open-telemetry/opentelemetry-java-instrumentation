@@ -26,13 +26,13 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
 
   @Override
   public String getDbQueryText(RedissonRequest request) {
-    return request.getStatement();
+    return request.getQueryText();
   }
 
   @Nullable
   @Override
   public String getDbOperationName(RedissonRequest request) {
-    return request.getOperation();
+    return request.getOperationName();
   }
 
   @Override

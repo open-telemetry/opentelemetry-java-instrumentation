@@ -90,6 +90,7 @@ class Netty40ConnectionSpanTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void successfulRequest() throws Exception {
     // when
     URI uri = URI.create("http://localhost:" + server.httpPort() + "/success");

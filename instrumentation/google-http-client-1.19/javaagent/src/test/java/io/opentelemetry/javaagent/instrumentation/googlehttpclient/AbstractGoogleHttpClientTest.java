@@ -96,6 +96,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
   protected abstract HttpResponse sendRequest(HttpRequest request) throws Exception;
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void errorTracesWhenExceptionIsNotThrown() throws Exception {
     URI uri = resolveAddress("/error");
 

@@ -34,7 +34,7 @@ tasks {
   // TODO this should live in jmh-conventions
   named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

@@ -28,6 +28,7 @@ public class SpanParser {
       List.of(
           "asdf",
           "x-test-",
+          "test-parameter",
           "test-baggage-",
           "test_message",
           "Test_Message",
