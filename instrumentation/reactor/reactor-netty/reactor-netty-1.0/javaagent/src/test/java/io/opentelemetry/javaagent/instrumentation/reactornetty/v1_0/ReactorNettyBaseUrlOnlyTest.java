@@ -84,6 +84,7 @@ class ReactorNettyBaseUrlOnlyTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testSuccessfulRequest() {
     HttpClient httpClient = HttpClient.create();
     String uri = "http://localhost:" + server.httpPort() + "/base";

@@ -73,6 +73,7 @@ class PeerServiceAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void shouldSetPeerNameIfItMatches() {
     // given
     Map<String, String> peerServiceMapping = new HashMap<>();
