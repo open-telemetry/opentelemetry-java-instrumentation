@@ -7,31 +7,35 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.RuntimeMetricsConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
-import java.util.Comparator;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 
 /**
- * Configures runtime metrics collection.
+ * Configures runtime metrics collection for Java 8+. This is a fallback configuration that only
+ * activates when Java17RuntimeMetricsAutoConfiguration is not present (i.e., on Java versions older
+ * than 17).
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "runtime-telemetry")
+@ConditionalOnMissingBean(Java17RuntimeMetricsAutoConfiguration.class)
 @Configuration
-public class RuntimeMetricsAutoConfiguration {
+public class Java8RuntimeMetricsAutoConfiguration {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(RuntimeMetricsAutoConfiguration.class);
+      LoggerFactory.getLogger(Java8RuntimeMetricsAutoConfiguration.class);
 
   @Nullable private AutoCloseable closeable;
 
@@ -47,20 +51,12 @@ public class RuntimeMetricsAutoConfiguration {
     ConfigurableApplicationContext applicationContext = event.getApplicationContext();
     OpenTelemetry openTelemetry = applicationContext.getBean(OpenTelemetry.class);
 
-    double version =
-        Math.max(8, Double.parseDouble(System.getProperty("java.specification.version")));
-    Optional<RuntimeMetricsProvider> metricsProvider =
-        applicationContext.getBeanProvider(RuntimeMetricsProvider.class).stream()
-            .sorted(Comparator.comparing(RuntimeMetricsProvider::minJavaVersion).reversed())
-            .filter(provider -> provider.minJavaVersion() <= version)
-            .findFirst();
-
-    if (metricsProvider.isPresent()) {
-      this.closeable =
-          metricsProvider.get().start(openTelemetry, instrumentationMode(openTelemetry));
-    } else {
-      logger.debug("No runtime metrics instrumentation available for Java {}", version);
-    }
+    logger.debug("Use runtime metrics instrumentation for Java 8");
+    this.closeable =
+        RuntimeMetricsConfigUtil.configure(
+            RuntimeMetrics.builder(openTelemetry),
+            openTelemetry,
+            instrumentationMode(openTelemetry));
   }
 
   private static String instrumentationMode(OpenTelemetry openTelemetry) {
