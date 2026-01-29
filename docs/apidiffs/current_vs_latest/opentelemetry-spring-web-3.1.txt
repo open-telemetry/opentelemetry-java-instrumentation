@@ -1,0 +1,16 @@
+Comparing source compatibility of opentelemetry-spring-web-3.1-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) org.springframework.http.client.ClientHttpRequestInterceptor createInterceptor()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<org.springframework.http.HttpRequest,org.springframework.http.client.ClientHttpResponse>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<org.springframework.http.HttpRequest>>)
