@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -17,6 +19,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -33,12 +37,14 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -81,6 +87,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
@@ -775,6 +782,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     testing.waitAndAssertTraces(assertions);
+
+    if (endpoint == EXCEPTION && emitExceptionAsLogs()) {
+      assertExceptionLogs(options.expectedException, "http.server.request.exception");
+    }
   }
 
   @CanIgnoreReturnValue
@@ -782,9 +793,41 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
       span.hasStatus(StatusData.error());
-      span.hasException(expectedException);
+      if (emitExceptionAsSpanEvents()) {
+        span.hasException(expectedException);
+      }
     }
     return span;
+  }
+
+  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing.getExportedLogRecords().stream()
+                      .filter(log -> expectedEventName.equals(log.getEventName()))
+                      .collect(Collectors.toList());
+
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.ERROR)
+                  .hasEventName(expectedEventName)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          ExceptionAttributes.EXCEPTION_TYPE,
+                          expectedException.getClass().getName()),
+                      satisfies(
+                          ExceptionAttributes.EXCEPTION_MESSAGE,
+                          message -> {
+                            if (expectedException.getMessage() != null) {
+                              message.isEqualTo(expectedException.getMessage());
+                            }
+                          }),
+                      satisfies(
+                          ExceptionAttributes.EXCEPTION_STACKTRACE,
+                          stacktrace -> stacktrace.isNotNull()));
+            });
   }
 
   protected SpanDataAssert assertHandlerSpan(
@@ -848,7 +891,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      span.hasException(options.expectedException);
+      if (emitExceptionAsSpanEvents()) {
+        span.hasException(options.expectedException);
+      }
     }
 
     span.hasAttributesSatisfying(
