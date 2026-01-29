@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.0"
-    id("org.graalvm.buildtools.native") version "0.11.3"
+    id("org.graalvm.buildtools.native") version "0.11.4"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.6"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3.1"
+  id("com.gradle.develocity") version "4.3.2"
 }
 
 dependencyResolutionManagement {
@@ -604,6 +604,7 @@ include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
 include(":instrumentation:servlet:servlet-5.0:jetty11-testing")
 include(":instrumentation:servlet:servlet-5.0:jetty12-testing")
+include(":instrumentation:servlet:servlet-5.0:library")
 include(":instrumentation:servlet:servlet-5.0:testing")
 include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")

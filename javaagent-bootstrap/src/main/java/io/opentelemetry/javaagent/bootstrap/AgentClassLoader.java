@@ -43,8 +43,16 @@ public class AgentClassLoader extends URLClassLoader {
     ClassLoader.registerAsParallelCapable();
   }
 
-  private static final String AGENT_INITIALIZER_JAR =
-      System.getProperty("otel.javaagent.experimental.initializer.jar", "");
+  @Nullable private static final String AGENT_INITIALIZER_JAR = initializerJar();
+
+  @Nullable
+  private static String initializerJar() {
+    String value = System.getProperty("otel.javaagent.experimental.initializer.jar");
+    if (value != null) {
+      return value;
+    }
+    return System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_INITIALIZER_JAR");
+  }
 
   private static final String META_INF = "META-INF/";
   private static final String META_INF_VERSIONS = META_INF + "versions/";
@@ -131,7 +139,7 @@ public class AgentClassLoader extends URLClassLoader {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
 
-    if (!AGENT_INITIALIZER_JAR.isEmpty()) {
+    if (AGENT_INITIALIZER_JAR != null && !AGENT_INITIALIZER_JAR.isEmpty()) {
       URL url;
       try {
         url = new File(AGENT_INITIALIZER_JAR).toURI().toURL();
@@ -147,6 +155,7 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
+  @Nullable
   private static ClassLoader getParentClassLoader() {
     if (JAVA_VERSION > 8) {
       return new PlatformDelegatingClassLoader();
@@ -188,6 +197,7 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
+  @Nullable
   private Class<?> findAgentClass(String name) throws ClassNotFoundException {
     AgentJarResource jarResource = findAgentJarResource(name.replace('.', '/') + ".class");
     if (jarResource != null) {
@@ -251,11 +261,13 @@ public class AgentClassLoader extends URLClassLoader {
     }
   }
 
+  @Nullable
   private static String getPackageName(String className) {
     int index = className.lastIndexOf('.');
     return index == -1 ? null : className.substring(0, index);
   }
 
+  @Nullable
   private AgentJarResource findAgentJarResource(String name) {
     // shading renames .class to .classdata
     boolean isClass = name.endsWith(".class");
@@ -278,8 +290,9 @@ public class AgentClassLoader extends URLClassLoader {
     return "data";
   }
 
+  @Nullable
   private AgentJarResource findVersionedAgentJarResource(
-      AgentJarResource jarResource, String name) {
+      @Nullable AgentJarResource jarResource, String name) {
     // same logic as in JarFile.getVersionedEntry
     if (!name.startsWith(META_INF)) {
       // search for versioned entry by looping over possible versions form high to low
@@ -318,12 +331,14 @@ public class AgentClassLoader extends URLClassLoader {
     return super.findResource(name);
   }
 
+  @Nullable
   private URL findJarResource(String name) {
     AgentJarResource jarResource = findAgentJarResource(name);
     return getAgentJarResourceUrl(jarResource);
   }
 
-  private URL getAgentJarResourceUrl(AgentJarResource jarResource) {
+  @Nullable
+  private URL getAgentJarResourceUrl(@Nullable AgentJarResource jarResource) {
     if (jarResource != null) {
       try {
         return new URL(jarBase, jarResource.getName());
@@ -388,6 +403,7 @@ public class AgentClassLoader extends URLClassLoader {
     }
 
     @Override
+    @Nullable
     public URL getResource(String resourceName) {
       // find resource from boot loader
       URL url = super.getResource(resourceName);
@@ -426,6 +442,7 @@ public class AgentClassLoader extends URLClassLoader {
       return jarEntry;
     }
 
+    @Nullable
     static AgentJarResource create(String name, JarEntry jarEntry) {
       return jarEntry != null ? new AgentJarResource(name, jarEntry) : null;
     }
@@ -492,6 +509,7 @@ public class AgentClassLoader extends URLClassLoader {
     }
 
     @Override
+    @Nullable
     public Permission getPermission() {
       return null;
     }

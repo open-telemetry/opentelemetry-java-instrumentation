@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.netty.http.client.HttpClient;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ReactorNettyConnectionSpanTest {
 
   @RegisterExtension

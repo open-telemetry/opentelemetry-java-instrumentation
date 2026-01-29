@@ -62,7 +62,6 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("com.google.guava:guava")
-  testImplementation("org.junit-pioneer:junit-pioneer")
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
@@ -129,7 +128,7 @@ tasks {
   // TODO this should live in jmh-conventions
   named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

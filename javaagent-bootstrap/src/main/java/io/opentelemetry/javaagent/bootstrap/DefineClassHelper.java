@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.nio.ByteBuffer;
 
 public class DefineClassHelper {
@@ -62,6 +63,7 @@ public class DefineClassHelper {
    * Sets the {@link Handler} with callbacks to execute when {@code ClassLoader.defineClass} is
    * called.
    */
+  @Initializer
   public static void internalSetHandler(Handler handler) {
     if (DefineClassHelper.handler != null) {
       // Only possible by misuse of this API, just ignore.
@@ -77,6 +79,7 @@ public class DefineClassHelper {
    * @param handler the handler to set
    * @return the previously active handler
    */
+  @Initializer
   public static Handler internalSetHandlerForTests(Handler handler) {
     Handler oldHandler = DefineClassHelper.handler;
     DefineClassHelper.handler = handler;

@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHelper;
 import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

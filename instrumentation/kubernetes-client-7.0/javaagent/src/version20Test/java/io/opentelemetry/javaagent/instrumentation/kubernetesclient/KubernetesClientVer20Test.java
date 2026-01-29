@@ -40,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class KubernetesClientVer20Test {
 
   private static final String TEST_USER_AGENT = "test-user-agent";
