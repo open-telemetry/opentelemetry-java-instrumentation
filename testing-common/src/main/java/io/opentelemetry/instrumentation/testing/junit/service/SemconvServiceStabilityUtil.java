@@ -1,0 +1,27 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.testing.junit.service;
+
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+
+// until old peer.service attribute is dropped in 3.0
+@SuppressWarnings("deprecation") // using deprecated semconv
+public final class SemconvServiceStabilityUtil {
+
+  /** Returns PEER_SERVICE or SERVICE_PEER_NAME depending on service.peer semconv stability mode. */
+  public static AttributeKey<String> maybeStablePeerService() {
+    if (SemconvStability.emitStableServicePeerSemconv()) {
+      return SERVICE_PEER_NAME;
+    }
+    return PEER_SERVICE;
+  }
+
+  private SemconvServiceStabilityUtil() {}
+}

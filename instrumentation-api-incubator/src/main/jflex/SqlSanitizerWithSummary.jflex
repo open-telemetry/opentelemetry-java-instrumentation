@@ -653,8 +653,9 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment) {
             if (operation == none) {
               // hql/jpql queries may skip SELECT and start with FROM clause
-              // treat such queries as SELECT queries (but don't add SELECT to summary)
+              // treat such queries as SELECT queries
               setOperation(new Select());
+              appendOperationToSummary("SELECT");
             }
             operation.handleFrom();
           }

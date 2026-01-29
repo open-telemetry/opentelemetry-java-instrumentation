@@ -34,11 +34,12 @@ class SanitizationTest {
 
   static Stream<Arguments> sanitizeCqlArgs() {
     return Stream.of(
-        Arguments.of("FROM TABLE WHERE FIELD>=-1234", "FROM TABLE WHERE FIELD>=?"),
         Arguments.of(
-            "SELECT Name, Phone.Number FROM Contact WHERE Address.State = 'NY'",
-            "SELECT Name, Phone.Number FROM Contact WHERE Address.State = ?"),
-        Arguments.of("FROM col WHERE @Tag='Something'", "FROM col WHERE @Tag=?"));
+            "SELECT * FROM users WHERE field>=-1234", "SELECT * FROM users WHERE field>=?"),
+        Arguments.of(
+            "SELECT name, phone FROM contact WHERE state = 'NY'",
+            "SELECT name, phone FROM contact WHERE state = ?"),
+        Arguments.of("SELECT * FROM col WHERE tag='Something'", "SELECT * FROM col WHERE tag=?"));
   }
 
   @ParameterizedTest

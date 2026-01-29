@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class AwsSpanAssertions {
   private AwsSpanAssertions() {}
 

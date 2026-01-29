@@ -60,6 +60,7 @@ class ArmeriaHttp2Test {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testHello() throws Exception {
     // verify that spans are created and context is propagated
     AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().get();
