@@ -23,6 +23,7 @@ import java.security.PermissionCollection;
 import java.security.Permissions;
 import java.security.cert.Certificate;
 import java.util.Enumeration;
+import java.util.function.Function;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -121,7 +122,6 @@ public class AgentClassLoader extends URLClassLoader {
     }
 
     this.isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled;
-    bootstrapProxy = new BootstrapClassLoaderProxy(this);
 
     jarEntryPrefix =
         internalJarFileName
@@ -138,6 +138,14 @@ public class AgentClassLoader extends URLClassLoader {
     } catch (IOException e) {
       throw new IllegalStateException("Unable to open agent jar", e);
     }
+
+    bootstrapProxy =
+        new BootstrapClassLoaderProxy(
+            resourceName -> {
+              JarEntry jarEntry = jarFile.getJarEntry(resourceName);
+              AgentJarResource jarResource = AgentJarResource.create(resourceName, jarEntry);
+              return getAgentJarResourceUrl(jarResource);
+            });
 
     if (AGENT_INITIALIZER_JAR != null && !AGENT_INITIALIZER_JAR.isEmpty()) {
       URL url;
@@ -391,15 +399,15 @@ public class AgentClassLoader extends URLClassLoader {
    * <p>This class is thread safe.
    */
   public static final class BootstrapClassLoaderProxy extends ClassLoader {
-    private final AgentClassLoader agentClassLoader;
+    private final Function<String, URL> getResourceFunction;
 
     static {
       ClassLoader.registerAsParallelCapable();
     }
 
-    public BootstrapClassLoaderProxy(AgentClassLoader agentClassLoader) {
+    public BootstrapClassLoaderProxy(Function<String, URL> getResourceFunction) {
       super(null);
-      this.agentClassLoader = agentClassLoader;
+      this.getResourceFunction = getResourceFunction;
     }
 
     @Override
@@ -411,12 +419,7 @@ public class AgentClassLoader extends URLClassLoader {
         return url;
       }
       // find from agent jar
-      if (agentClassLoader != null) {
-        JarEntry jarEntry = agentClassLoader.jarFile.getJarEntry(resourceName);
-        AgentJarResource jarResource = AgentJarResource.create(resourceName, jarEntry);
-        return agentClassLoader.getAgentJarResourceUrl(jarResource);
-      }
-      return null;
+      return getResourceFunction.apply(resourceName);
     }
 
     @Override
