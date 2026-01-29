@@ -25,6 +25,19 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
 
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=exception")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+
 // since 2.3.x, undertow is compiled by JDK 11
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 if (latestDepTest) {

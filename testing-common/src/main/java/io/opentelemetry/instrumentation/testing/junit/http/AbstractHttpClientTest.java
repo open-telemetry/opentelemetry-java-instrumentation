@@ -9,15 +9,18 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.co
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -25,6 +28,7 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -383,11 +387,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           trace -> {
             List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
             assertions.add(
-                span ->
-                    assertClientSpan(
-                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
-                        .hasNoParent()
-                        .hasException(clientError));
+                span -> {
+                  assertClientSpan(
+                          span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                      .hasNoParent();
+                  if (SemconvStability.emitOldExceptionSemconv()) {
+                    span.hasException(clientError);
+                  }
+                });
             for (int i = 0; i < options.getMaxRedirects(); i++) {
               assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
             }
@@ -587,11 +594,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasNoParent()
                       .hasStatus(StatusData.error())
                       .hasException(ex),
-              span ->
-                  assertClientSpan(span, uri, method, null, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError));
+              span -> {
+                assertClientSpan(span, uri, method, null, null).hasParent(trace.getSpan(0));
+                if (SemconvStability.emitOldExceptionSemconv()) {
+                  span.hasException(clientError);
+                }
+              });
         });
+
+    if (SemconvStability.emitStableExceptionSemconv()) {
+      assertExceptionLogs(clientError, "http.client.exception");
+    }
   }
 
   @Test
@@ -623,13 +636,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  assertClientSpan(span, uri, method, null, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
+              span -> {
+                assertClientSpan(span, uri, method, null, null).hasParent(trace.getSpan(0));
+                if (SemconvStability.emitOldExceptionSemconv()) {
+                  span.hasException(clientError);
+                }
+              },
               span ->
                   span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
+
+    if (SemconvStability.emitStableExceptionSemconv()) {
+      assertExceptionLogs(clientError, "http.client.exception");
+    }
   }
 
   @Test
@@ -659,11 +678,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasNoParent()
                       .hasStatus(StatusData.error())
                       .hasException(ex),
-              span ->
-                  assertClientSpan(span, uri, method, null, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError));
+              span -> {
+                assertClientSpan(span, uri, method, null, null).hasParent(trace.getSpan(0));
+                if (SemconvStability.emitOldExceptionSemconv()) {
+                  span.hasException(clientError);
+                }
+              });
         });
+
+    if (SemconvStability.emitStableExceptionSemconv()) {
+      assertExceptionLogs(clientError, "http.client.exception");
+    }
   }
 
   @Test
@@ -693,12 +718,18 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasNoParent()
                       .hasStatus(StatusData.error())
                       .hasException(ex),
-              span ->
-                  assertClientSpan(span, uri, method, null, null)
-                      .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
+              span -> {
+                assertClientSpan(span, uri, method, null, null).hasParent(trace.getSpan(0));
+                if (SemconvStability.emitOldExceptionSemconv()) {
+                  span.hasException(clientError);
+                }
+              },
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
+
+    if (SemconvStability.emitStableExceptionSemconv()) {
+      assertExceptionLogs(clientError, "http.client.exception");
+    }
   }
 
   @DisabledIfSystemProperty(
@@ -1218,5 +1249,21 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   protected final URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
+  }
+
+  private void assertExceptionLogs(Throwable exception, String eventName) {
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasSeverity(Severity.ERROR)
+                .hasEventName(eventName)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        ExceptionAttributes.EXCEPTION_TYPE,
+                        exception.getClass().getCanonicalName()),
+                    equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, exception.getMessage()),
+                    satisfies(
+                        ExceptionAttributes.EXCEPTION_STACKTRACE,
+                        stacktrace -> assertThat(stacktrace).isNotNull())));
   }
 }

@@ -238,6 +238,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .setSpanStatusExtractor(
                 spanStatusExtractorCustomizer.apply(
                     HttpSpanStatusExtractor.create(attributesGetter)))
+            .setExceptionEventName("http.client.exception")
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())

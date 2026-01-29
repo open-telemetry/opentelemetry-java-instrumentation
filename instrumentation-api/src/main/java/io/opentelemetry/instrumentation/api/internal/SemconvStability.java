@@ -24,12 +24,18 @@ public final class SemconvStability {
   private static final boolean emitOldCodeSemconv;
   private static final boolean emitStableCodeSemconv;
 
+  private static final boolean emitOldExceptionSemconv;
+  private static final boolean emitStableExceptionSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
 
     boolean oldCode = true;
     boolean stableCode = false;
+
+    boolean oldException = true;
+    boolean stableException = false;
 
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
@@ -58,6 +64,15 @@ public final class SemconvStability {
         oldCode = true;
         stableCode = true;
       }
+
+      if (values.contains("exception")) {
+        oldException = false;
+        stableException = true;
+      }
+      if (values.contains("exception/dup")) {
+        oldException = true;
+        stableException = true;
+      }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
@@ -65,6 +80,9 @@ public final class SemconvStability {
 
     emitOldCodeSemconv = oldCode;
     emitStableCodeSemconv = stableCode;
+
+    emitOldExceptionSemconv = oldException;
+    emitStableExceptionSemconv = stableException;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -73,6 +91,14 @@ public final class SemconvStability {
 
   public static boolean emitStableDatabaseSemconv() {
     return emitStableDatabaseSemconv;
+  }
+
+  public static boolean emitOldExceptionSemconv() {
+    return emitOldExceptionSemconv;
+  }
+
+  public static boolean emitStableExceptionSemconv() {
+    return emitStableExceptionSemconv;
   }
 
   private static final Map<String, String> dbSystemNameMap = new HashMap<>();

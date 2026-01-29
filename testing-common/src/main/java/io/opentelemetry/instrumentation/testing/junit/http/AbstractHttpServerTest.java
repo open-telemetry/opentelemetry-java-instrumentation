@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -24,12 +25,14 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -39,6 +42,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SchemaUrls;
@@ -277,6 +281,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
       String spanId = assertResponseHasCustomizedHeaders(response, EXCEPTION, null);
       assertTheTraces(1, null, null, spanId, method, EXCEPTION);
+
+      if (SemconvStability.emitStableExceptionSemconv()) {
+        assertExceptionLogs(options.expectedException, "http.server.exception");
+      }
     } finally {
       Awaitility.reset();
     }
@@ -782,9 +790,32 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
       span.hasStatus(StatusData.error());
-      span.hasException(expectedException);
+      if (SemconvStability.emitOldExceptionSemconv()) {
+        span.hasException(expectedException);
+      }
     }
     return span;
+  }
+
+  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasSeverity(Severity.ERROR)
+                .hasEventName(expectedEventName)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        ExceptionAttributes.EXCEPTION_TYPE, expectedException.getClass().getName()),
+                    satisfies(
+                        ExceptionAttributes.EXCEPTION_MESSAGE,
+                        message -> {
+                          if (expectedException.getMessage() != null) {
+                            assertThat(message).isEqualTo(expectedException.getMessage());
+                          }
+                        }),
+                    satisfies(
+                        ExceptionAttributes.EXCEPTION_STACKTRACE,
+                        stacktrace -> assertThat(stacktrace).isNotNull())));
   }
 
   protected SpanDataAssert assertHandlerSpan(
@@ -848,7 +879,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      span.hasException(options.expectedException);
+      if (SemconvStability.emitOldExceptionSemconv()) {
+        span.hasException(options.expectedException);
+      }
     }
 
     span.hasAttributesSatisfying(

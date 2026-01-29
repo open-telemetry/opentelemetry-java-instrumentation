@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -16,7 +20,11 @@ import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
+import io.opentelemetry.semconv.ExceptionAttributes;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -71,6 +79,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   private final String instrumentationName;
   private final Tracer tracer;
+  @Nullable private final Logger logger;
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
@@ -81,6 +90,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[]
       operationListenerAttributesExtractors;
   private final ErrorCauseExtractor errorCauseExtractor;
+  @Nullable private final String exceptionEventName;
   private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
@@ -90,6 +100,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer = builder.buildTracer();
+    this.logger = SemconvStability.emitStableExceptionSemconv() ? builder.buildLogger() : null;
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
@@ -100,6 +111,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.operationListenerAttributesExtractors =
         builder.operationListenerAttributesExtractors.toArray(new AttributesExtractor[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
+    this.exceptionEventName = builder.exceptionEventName;
     this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
@@ -259,7 +271,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     if (error != null) {
       error = errorCauseExtractor.extract(error);
-      span.recordException(error);
+      if (SemconvStability.emitOldExceptionSemconv()) {
+        span.recordException(error);
+      }
+      if (SemconvStability.emitStableExceptionSemconv()) {
+        emitExceptionLog(context, error);
+      }
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
@@ -298,6 +315,37 @@ public class Instrumenter<REQUEST, RESPONSE> {
     } else {
       span.end();
     }
+  }
+
+  private void emitExceptionLog(Context context, Throwable throwable) {
+    if (logger == null) {
+      // this condition is to keep nullaway happy
+      // this can't happen since logger is non-null when stable exception semconv is enabled
+      return;
+    }
+    LogRecordBuilder logRecordBuilder = logger.logRecordBuilder();
+    logRecordBuilder.setContext(context);
+    logRecordBuilder.setSeverity(Severity.ERROR);
+    logRecordBuilder.setSeverityText("ERROR");
+    if (exceptionEventName != null) {
+      logRecordBuilder.setEventName(exceptionEventName);
+    }
+
+    if (logRecordBuilder instanceof ExtendedLogRecordBuilder) {
+      ((ExtendedLogRecordBuilder) logRecordBuilder).setException(throwable);
+    } else {
+      logRecordBuilder.setAttribute(
+          ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      String message = throwable.getMessage();
+      if (message != null) {
+        logRecordBuilder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, message);
+      }
+      StringWriter writer = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(writer));
+      logRecordBuilder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+    }
+
+    logRecordBuilder.emit();
   }
 
   private static long getNanos(@Nullable Instant time) {

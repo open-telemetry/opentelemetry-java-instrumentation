@@ -209,6 +209,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
             .setSpanStatusExtractor(
                 spanStatusExtractorCustomizer.apply(
                     HttpSpanStatusExtractor.create(attributesGetter)))
+            .setExceptionEventName("http.server.exception")
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
