@@ -1,5 +1,7 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
-  id "java"
+  id("java")
 
   /*
   Instrumentation agent extension mechanism expects a single jar containing everything required
@@ -10,30 +12,28 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.gradleup.shadow" version "9.3.1"
-  id "com.diffplug.spotless" version "8.2.1"
+  id("com.gradleup.shadow") version "9.3.1"
+  id("com.diffplug.spotless") version "8.2.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.25.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "2.25.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.25.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-check") version "2.25.0-alpha-SNAPSHOT"
 }
 
-group 'io.opentelemetry.example'
-version '1.0'
+group = "io.opentelemetry.example"
+version = "1.0"
 
-ext {
-  versions = [
-    // this line is managed by .github/scripts/update-sdk-version.sh
-    opentelemetrySdk           : "1.58.0",
+val versions = mapOf(
+  // this line is managed by .github/scripts/update-sdk-version.sh
+  "opentelemetrySdk" to "1.58.0",
 
-    // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "2.25.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "2.25.0-alpha-SNAPSHOT"
-  ]
+  // these lines are managed by .github/scripts/update-version.sh
+  "opentelemetryJavaagent" to "2.25.0-SNAPSHOT",
+  "opentelemetryJavaagentAlpha" to "2.25.0-alpha-SNAPSHOT"
+)
 
-  deps = [
-    autoservice: dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.1.1')
-  ]
-}
+val deps = mapOf(
+  "autoservice" to "com.google.auto.service:auto-service:1.1.1"
+)
 
 repositories {
   mavenCentral()
@@ -49,7 +49,7 @@ configurations {
   We don't need the agent during development of this extension module.
   This agent is used only during integration test.
   */
-  otel
+  create("otel")
 }
 
 spotless {
@@ -61,11 +61,11 @@ spotless {
 }
 
 dependencies {
-  implementation(platform("io.opentelemetry:opentelemetry-bom:${versions.opentelemetrySdk}"))
+  implementation(platform("io.opentelemetry:opentelemetry-bom:${versions["opentelemetrySdk"]}"))
 
   // these serve as a test of the instrumentation boms
-  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
-  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
+  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions["opentelemetryJavaagent"]}"))
+  implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions["opentelemetryJavaagentAlpha"]}"))
 
   /*
   Interfaces and SPIs that we implement. We use `compileOnly` dependency because during
@@ -77,8 +77,10 @@ dependencies {
   compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
 
   //Provides @AutoService annotation that makes registration of our SPI implementations much easier
-  compileOnly deps.autoservice
-  annotationProcessor deps.autoservice
+  deps["autoservice"]?.let {
+    compileOnly(it)
+    annotationProcessor(it)
+  }
 
   /*
    Used by our demo instrumentation module to reference classes of the target instrumented library.
@@ -88,19 +90,19 @@ dependencies {
    NB! Only Advice (and "helper") classes of instrumentation modules can access classes from application classpath.
    See https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/writing-instrumentation-module.md#advice-classes
    */
-  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+  compileOnly(group = "javax.servlet", name = "javax.servlet-api", version = "3.0.1")
 
   /*
   This dependency is required for DemoSpanProcessor both during compile and runtime.
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation 'org.apache.commons:commons-lang3:3.20.0'
+  implementation("org.apache.commons:commons-lang3:3.20.0")
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.3")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.0")
-  testImplementation("com.google.protobuf:protobuf-java-util:4.33.4")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+  testImplementation("com.google.protobuf:protobuf-java-util:4.33.3")
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha")
@@ -110,33 +112,33 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.26")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.24")
 
   //Otel Java instrumentation that we use and extend during integration tests
-  otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
+  add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")
 
   //TODO remove when start using io.opentelemetry.instrumentation.javaagent-instrumentation plugin
-  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions.opentelemetryJavaagentAlpha}")
-  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
+  add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions["opentelemetryJavaagentAlpha"]}")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api:${versions["opentelemetryJavaagentAlpha"]}")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions["opentelemetryJavaagentAlpha"]}")
 }
 
 //Produces a copy of upstream javaagent with this extension jar included inside it
 //The location of extension directory inside agent jar is hard-coded in the agent source code
-task extendedAgent(type: Jar) {
-  dependsOn(configurations.otel)
-  archiveFileName = "opentelemetry-javaagent.jar"
-  from zipTree(configurations.otel.singleFile)
-  from(tasks.shadowJar.archiveFile) {
-    into "extensions"
+val extendedAgent by tasks.registering(Jar::class) {
+  dependsOn(configurations.named("otel"))
+  archiveFileName.set("opentelemetry-javaagent.jar")
+  from(zipTree(configurations.named("otel").get().singleFile))
+  from(tasks.named<ShadowJar>("shadowJar").get().archiveFile) {
+    into("extensions")
   }
 
   //Preserve MANIFEST.MF file from the upstream javaagent
   doFirst {
     manifest.from(
-      zipTree(configurations.otel.singleFile).matching {
-        include 'META-INF/MANIFEST.MF'
+      zipTree(configurations.named("otel").get().singleFile).matching {
+        include("META-INF/MANIFEST.MF")
       }.singleFile
     )
   }
@@ -146,19 +148,21 @@ tasks {
   test {
     useJUnitPlatform()
 
-    inputs.files(layout.files(tasks.shadowJar))
-    inputs.files(layout.files(tasks.extendedAgent))
+    inputs.files(layout.files(named<ShadowJar>("shadowJar")))
+    inputs.files(layout.files(extendedAgent))
 
-    systemProperty 'io.opentelemetry.smoketest.agentPath', configurations.otel.singleFile.absolutePath
-    systemProperty 'io.opentelemetry.smoketest.extendedAgentPath', tasks.extendedAgent.archiveFile.get().asFile.absolutePath
-    systemProperty 'io.opentelemetry.smoketest.extensionPath', tasks.shadowJar.archiveFile.get().asFile.absolutePath
+    systemProperty("io.opentelemetry.smoketest.agentPath", configurations.named("otel").get().singleFile.absolutePath)
+    systemProperty("io.opentelemetry.smoketest.extendedAgentPath", extendedAgent.get().archiveFile.get().asFile.absolutePath)
+    systemProperty("io.opentelemetry.smoketest.extensionPath", named<ShadowJar>("shadowJar").get().archiveFile.get().asFile.absolutePath)
   }
 
   compileJava {
     options.release.set(8)
   }
 
-  assemble.dependsOn(shadowJar)
+  assemble {
+    dependsOn(named("shadowJar"))
+  }
 }
 
 muzzle {
