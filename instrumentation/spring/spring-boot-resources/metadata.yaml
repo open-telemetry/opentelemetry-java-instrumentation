@@ -1,3 +1,4 @@
+display_name: Spring Boot Resource Detector
 description: >
   This instrumentation automatically detects the `service.name` and `service.version` for Spring
   Boot applications and sets them as resource attributes.
