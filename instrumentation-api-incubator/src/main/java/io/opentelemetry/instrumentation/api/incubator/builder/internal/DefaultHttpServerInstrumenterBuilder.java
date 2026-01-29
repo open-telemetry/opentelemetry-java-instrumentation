@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
@@ -214,6 +215,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get())
             .setSchemaUrl(SchemaUrls.V1_37_0);
+    Experimental.setExceptionEventName(builder, "http.server.exception");
     if (emitExperimentalHttpServerTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
