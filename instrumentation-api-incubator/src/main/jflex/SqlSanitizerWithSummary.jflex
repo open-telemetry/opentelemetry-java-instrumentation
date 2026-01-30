@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import java.util.ArrayDeque;
 import java.util.regex.Pattern;
 
 %%
@@ -105,12 +106,54 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = none;
   private SqlDialect dialect;
 
+  // Stack to save outer operations when entering subqueries
+  private final ArrayDeque<Operation> operationStack = new ArrayDeque<>();
+  // Track the paren levels where we pushed operations (to know when to pop)
+  private final ArrayDeque<Integer> subqueryStartLevels = new ArrayDeque<>();
+
+  // Pending subquery: when we see ( that might start a subquery, we don't push immediately.
+  // Instead, we wait to see if an operation keyword (SELECT, etc.) appears inside.
+  // If it does, we do the push. If we see an identifier first, it's a parenthesized table name.
+  private boolean pendingSubqueryPush = false;
+
   private boolean shouldStartNewOperation() {
     return !insideComment && operation == none;
   }
 
   private void setOperation(Operation operation) {
     this.operation = operation;
+  }
+
+  /** Push current operation onto stack and reset to none for subquery processing. */
+  private void pushOperation() {
+    operationStack.push(operation);
+    subqueryStartLevels.push(parenLevel);
+    operation = none;
+  }
+
+  /** Called when an operation keyword is seen - confirms pending subquery if any. */
+  private void confirmPendingSubqueryIfNeeded() {
+    if (pendingSubqueryPush) {
+      pushOperation();
+      pendingSubqueryPush = false;
+    }
+  }
+
+  /** Called when an identifier is seen - cancels pending subquery (it's a parenthesized table name). */
+  private void cancelPendingSubqueryIfNeeded() {
+    pendingSubqueryPush = false;
+  }
+
+  /** Pop operation from stack if we're exiting a subquery. */
+  private void popOperationIfNeeded() {
+    // Cancel pending subquery - any ) while pending means exiting the potential subquery
+    pendingSubqueryPush = false;
+    if (!subqueryStartLevels.isEmpty() && parenLevel < subqueryStartLevels.peek()) {
+      subqueryStartLevels.pop();
+      operation = operationStack.pop();
+      // Signal to the restored operation that a subquery was processed
+      operation.handleSubqueryComplete();
+    }
   }
 
   private abstract class Operation {
@@ -128,6 +171,12 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingOperationTarget() {
       return false;
     }
+    /** Returns true if open paren should start a subquery context. */
+    boolean isEnteringSubquery() {
+      return false;
+    }
+    /** Called after a subquery completes and this operation is restored. */
+    void handleSubqueryComplete() {}
   }
 
   private abstract class DdlOperation extends Operation {
@@ -172,177 +221,145 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   private class Select extends Operation {
-    // you can reference a table in the FROM clause in one of the following ways:
-    //   table
-    //   table t
-    //   table as t
-    // in other words, you need max 3 identifiers to reference a table
-    private static final int FROM_TABLE_REF_MAX_IDENTIFIERS = 3;
+    // Max identifiers in a table reference: "table", "table alias", or "table as alias"
+    private static final int TABLE_REF_MAX_IDENTIFIERS = 3;
 
-    boolean expectingTableName = false;
-    boolean mainTableSetAlready = false;
-    int identifiersAfterMainFromClause = 0;
-    boolean expectingJoinTableName = false;
-    int identifiersAfterJoin = 0;
-    boolean inJoinSubquery = false;
-    boolean inImplicitJoin = false;
-    int identifiersAfterComma = 0;
+    // Table capture modes (mutually exclusive)
+    boolean captureTableList = false;   // FROM clause: capture tables, comma restarts capture
+    boolean captureSingleTable = false; // JOIN clause: capture one table then stop
+
+    // Counts identifiers since we started expecting a table (after FROM/JOIN/comma)
+    // Used for: (1) capturing first identifier as table name, (2) detecting implicit joins via comma
+    int identifierCount = 0;
+
+    // FROM clause context - tracks paren level where FROM appeared (-1 if not in FROM clause)
     int fromClauseParenLevel = -1;
-    boolean expectingSubqueryOrTable = false;
-    // Track if we just saw AS keyword and are expecting potential column alias list
+
+    // AS keyword tracking: set when AS seen, cleared after alias identifier or open paren
     boolean sawAsKeyword = false;
-    // Track if we're inside a column alias list (after derived table AS alias(...))
-    boolean inColumnAliasList = false;
+
+    // Column alias list paren level: >= 0 means inside "AS alias(col1, col2)" syntax
     int columnAliasListParenLevel = -1;
 
     void handleFrom() {
-      // Set expectingTableName to capture tables
-      expectingTableName = true;
-      expectingSubqueryOrTable = true;
-      // Update fromClauseParenLevel for this FROM clause
+      // Enter table list capture mode for FROM clause
+      captureTableList = true;
+      // Track the paren level where FROM clause started
       // This allows nested SELECTs to track their own FROM clause level
       fromClauseParenLevel = parenLevel;
+      identifierCount = 0;
       sawAsKeyword = false;
     }
 
     void handleJoin() {
-      // After JOIN, expect a table name
-      expectingTableName = true;
-      expectingJoinTableName = true;
-      identifiersAfterJoin = 0;
-      identifiersAfterMainFromClause = 0;
-      expectingSubqueryOrTable = true;
+      // Enter single table capture mode for JOIN clause
+      captureSingleTable = true;
+      identifierCount = 0;
       sawAsKeyword = false;
     }
 
     void handleApply() {
-      // APPLY is similar to JOIN in SQL Server
-      expectingTableName = true;
-      expectingJoinTableName = true;
-      identifiersAfterJoin = 0;
-      identifiersAfterMainFromClause = 0;
-      expectingSubqueryOrTable = true;
+      // APPLY is similar to JOIN in SQL Server (CROSS APPLY, OUTER APPLY)
+      captureSingleTable = true;
+      identifierCount = 0;
       sawAsKeyword = false;
     }
 
     void handleAs() {
-      // Mark that we saw AS - next identifier is alias, then open paren might be column alias list
+      // Mark that we saw AS keyword
+      // Next identifier is an alias, and open paren after alias might be column alias list
       sawAsKeyword = true;
     }
 
+    boolean isEnteringSubquery() {
+      // Entering subquery if we're in table capture mode and haven't seen an identifier yet
+      // sawAsKeyword check prevents "AS alias(" from being treated as subquery
+      return !sawAsKeyword && (captureTableList || captureSingleTable) && identifierCount == 0;
+    }
+
     void handleOpenParen() {
-      // If we just saw AS keyword and an open paren, this is a column alias list
+      // "AS alias(" starts a column alias list for derived tables
+      // e.g., SELECT * FROM (SELECT a, b FROM t) AS sub(col1, col2)
       if (sawAsKeyword) {
-        inColumnAliasList = true;
         columnAliasListParenLevel = parenLevel;
         sawAsKeyword = false;
-        return;
       }
-
-      // If we just saw JOIN/FROM and now see '(', we're entering a subquery
-      if ((expectingJoinTableName || expectingSubqueryOrTable) && identifiersAfterJoin == 0) {
-        inJoinSubquery = true;
-        expectingSubqueryOrTable = false;
-      }
+      // Note: subquery push is handled at the global level before this is called
     }
 
     void handleCloseParen() {
-      // If we're closing the column alias list paren, exit that state
+      // Exit column alias list when its paren closes
       // Note: parenLevel has already been decremented when this is called
-      if (inColumnAliasList && parenLevel < columnAliasListParenLevel) {
-        inColumnAliasList = false;
+      if (columnAliasListParenLevel >= 0 && parenLevel < columnAliasListParenLevel) {
         columnAliasListParenLevel = -1;
       }
+      // Note: subquery state restoration is handled at the global level via operation stack
+    }
 
-      // Exiting a JOIN subquery
-      if (inJoinSubquery) {
-        inJoinSubquery = false;
-        expectingJoinTableName = false;
-        // After exiting subquery in FROM clause, restore FROM clause tracking
-        // at the current paren level for implicit joins/comma-separated tables
-        fromClauseParenLevel = parenLevel;
-        identifiersAfterMainFromClause = 1;  // The subquery counts as one table reference
-      }
-      // Reset FROM clause tracking if we're exiting BELOW the level where it started
-      if (fromClauseParenLevel >= 0 && parenLevel < fromClauseParenLevel) {
-        fromClauseParenLevel = -1;
-        expectingTableName = false;
+    void handleSubqueryComplete() {
+      // A subquery counts as one table reference in the FROM clause
+      captureTableList = false;
+      captureSingleTable = false;
+      if (identifierCount == 0) {
+        identifierCount = 1;
       }
     }
 
     void handleSelect() {
-      // SELECT inside a JOIN subquery
+      // Reset FROM clause tracking for nested SELECT (e.g., after UNION/INTERSECT/EXCEPT)
+      // This prevents column commas from being treated as implicit joins
+      // Called when SELECT keyword is encountered while already in a Select operation
+      fromClauseParenLevel = -1;
+      captureTableList = false;
+      captureSingleTable = false;
+      identifierCount = 0;
+      sawAsKeyword = false;
+      columnAliasListParenLevel = -1;
     }
 
     void handleIdentifier() {
-      // Don't capture identifiers if we're inside a column alias list
-      if (inColumnAliasList) {
+      // Don't capture identifiers if we're inside a column alias list or after AS (alias name)
+      if (columnAliasListParenLevel >= 0 || sawAsKeyword) {
         return;
       }
 
-      // If we saw AS, this identifier is the table/subquery alias - keep sawAsKeyword true
-      // so we can detect the column alias list paren that might follow
-      if (sawAsKeyword) {
+      ++identifierCount;
+
+      // Handle single table capture (JOIN): capture first identifier then stop
+      if (captureSingleTable && identifierCount == 1) {
+        appendTargetToSummary();
+        captureSingleTable = false;
+        identifierCount = 0;
         return;
       }
 
-      if (identifiersAfterMainFromClause > 0) {
-        ++identifiersAfterMainFromClause;
+      // Handle table list capture (FROM): capture first identifier after FROM or comma
+      if (captureTableList && identifierCount == 1) {
+        appendTargetToSummary();
+        captureTableList = false;
+        // Don't reset identifierCount - keep counting for implicit join detection
       }
-
-      if (expectingJoinTableName) {
-        ++identifiersAfterJoin;
-        // Capture first identifier after JOIN (the table name)
-        // Skip if we're inside a JOIN subquery (don't capture table names until subquery closes)
-        if (!inJoinSubquery && identifiersAfterJoin == 1) {
-          appendTargetToSummary();
-          expectingJoinTableName = false;
-          expectingTableName = false;
-          identifiersAfterJoin = 0;
-          expectingSubqueryOrTable = false;
-          return;
-        }
-      }
-
-      if (!expectingTableName) {
-        return;
-      }
-
-      // Skip identifiers if we're not at the FROM clause's paren level
-      // This allows capturing tables from nested FROM clauses while skipping aliases
-      if (fromClauseParenLevel >= 0 && parenLevel != fromClauseParenLevel) {
-        return;
-      }
-
-      appendTargetToSummary();
-      mainTableSetAlready = true;
-      expectingTableName = false;
-      expectingSubqueryOrTable = false;
-      // start counting identifiers after encountering main from clause
-      identifiersAfterMainFromClause = 1;
     }
 
     void handleComma() {
       // Don't process commas if we're inside a column alias list
-      if (inColumnAliasList) {
+      if (columnAliasListParenLevel >= 0) {
         return;
       }
 
       // Reset sawAsKeyword - comma indicates we're not entering a column alias list
       sawAsKeyword = false;
 
-      // comma was encountered in the FROM clause, i.e. implicit join
-      // (if less than 3 identifiers have appeared before first comma then it means that it's a table list;
-      // any other list that can appear later needs at least 4 idents)
+      // Detect implicit join: comma in FROM clause after seeing 1-3 identifiers (a table reference)
+      // A table reference can be: "table", "table alias", or "table as alias" (max 3 identifiers)
+      // If we see more than 3 identifiers before comma, it's not a table list (e.g., column list)
       // Only treat comma as table separator if we're at the same paren level as the FROM clause
       if (fromClauseParenLevel >= 0 && parenLevel == fromClauseParenLevel
-          && identifiersAfterMainFromClause > 0
-          && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
-        // Expect next table name after comma in FROM clause
-        inImplicitJoin = true;
-        expectingTableName = true;
-        identifiersAfterMainFromClause = 0;
-        identifiersAfterComma = 0;
+          && identifierCount > 0
+          && identifierCount <= TABLE_REF_MAX_IDENTIFIERS) {
+        // Comma in FROM clause - restart table list capture for next table
+        captureTableList = true;
+        identifierCount = 0;
       }
     }
   }
@@ -543,6 +560,8 @@ WHITESPACE           = [ \t\r\n]+
 
   "SELECT" {
           if (!insideComment) {
+            // Confirm pending subquery if we see SELECT inside parens
+            confirmPendingSubqueryIfNeeded();
             if (operation == none) {
               setOperation(new Select());
               appendOperationToSummary("SELECT");
@@ -622,7 +641,10 @@ WHITESPACE           = [ \t\r\n]+
   "VALUES" {
           if (shouldStartNewOperation()) {
             setOperation(new Values());
-            appendOperationToSummary("VALUES");
+            // Only append VALUES to summary if at top level (not inside a subquery)
+            if (operationStack.isEmpty()) {
+              appendOperationToSummary("VALUES");
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -706,15 +728,16 @@ WHITESPACE           = [ \t\r\n]+
             // Reset operation state for next statement
             operation = none;
             parenLevel = 0;
+            operationStack.clear();
+            subqueryStartLevels.clear();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "UNION" | "INTERSECT" | "EXCEPT" | "MINUS" {
-          if (!insideComment) {
-            // Reset operation so next SELECT starts fresh
-            operation = none;
-          }
+          // UNION etc. don't reset operation - the next SELECT will be handled
+          // by the existing operation via handleSelect(), or if at top level,
+          // a new Select will be created.
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
@@ -724,6 +747,8 @@ WHITESPACE           = [ \t\r\n]+
       }
   "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
           if (!insideComment) {
+            // If we see a reserved word where we expected a subquery, it's a parenthesized name
+            cancelPendingSubqueryIfNeeded();
             if (operation.expectingOperationTarget()) {
               operation.handleOperationTarget(yytext());
             } else {
@@ -756,6 +781,8 @@ WHITESPACE           = [ \t\r\n]+
       }
   {IDENTIFIER} {
           if (!insideComment) {
+            // If we see an identifier where we expected a subquery, it's a parenthesized table name
+            cancelPendingSubqueryIfNeeded();
             operation.handleIdentifier();
           }
           appendCurrentFragment();
@@ -764,8 +791,15 @@ WHITESPACE           = [ \t\r\n]+
 
   {OPEN_PAREN}  {
           if (!insideComment) {
+            // Check if we're entering a subquery BEFORE incrementing parenLevel
+            boolean enteringSubquery = operation.isEnteringSubquery();
             parenLevel += 1;
-            operation.handleOpenParen();
+            if (enteringSubquery) {
+              // Don't push immediately - mark as pending and wait to see if there's an operation keyword
+              pendingSubqueryPush = true;
+            } else {
+              operation.handleOpenParen();
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -774,6 +808,8 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment) {
             parenLevel -= 1;
             operation.handleCloseParen();
+            // Pop operation from stack if we're exiting a subquery
+            popOperationIfNeeded();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
