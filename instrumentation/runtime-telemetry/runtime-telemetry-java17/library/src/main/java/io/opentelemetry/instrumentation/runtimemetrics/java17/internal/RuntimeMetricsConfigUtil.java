@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetricsBuilder;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -16,6 +17,9 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class RuntimeMetricsConfigUtil {
+
+  private static final Logger logger = Logger.getLogger(RuntimeMetricsConfigUtil.class.getName());
+
   private RuntimeMetricsConfigUtil() {}
 
   @Nullable
@@ -48,7 +52,12 @@ public final class RuntimeMetricsConfigUtil {
 
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
         .getBoolean("capture_gc_cause", false)) {
-      builder.captureGcCause();
+      logger.warning(
+          "The capture_gc_cause configuration option is deprecated and will be removed in 3.0."
+              + " Prefer using metric views to enable the jvm.gc.cause attribute."
+              + " See https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/instrumentation/runtime-telemetry/README.md"
+              + " for more information.");
+      RuntimeMetricsBuilderInternal.captureGcCause(builder);
     }
 
     return builder.build();

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsBuilderInternal;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsFactory;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -23,6 +24,11 @@ public final class RuntimeMetricsBuilder {
   private boolean disableJmx = false;
   private boolean emitExperimentalTelemetry = false;
   private boolean captureGcCause = false;
+
+  static {
+    RuntimeMetricsBuilderInternal.internalSetCaptureGcCauseSetter(
+        builder -> builder.captureGcCause = true);
+  }
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -82,7 +88,13 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
-  /** Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric. */
+  /**
+   * Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.
+   *
+   * @deprecated Prefer using metric views to enable the jvm.gc.cause attribute. See
+   *     https://opentelemetry.io/docs/specs/otel/metrics/sdk/#view for more information.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public RuntimeMetricsBuilder captureGcCause() {
     captureGcCause = true;

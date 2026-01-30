@@ -542,8 +542,11 @@
     {
       "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
-      "defaultValue": false
+      "description": "Deprecated: Will be removed in 3.0. Use metric views instead. Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
+      "defaultValue": false,
+      "deprecation": {
+        "reason": "Use metric views to include the jvm.gc.cause attribute instead."
+      }
     },
     {
       "name": "otel.instrumentation.runtime-telemetry.enabled",

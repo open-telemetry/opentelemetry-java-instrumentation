@@ -13,7 +13,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.management.GarbageCollectorMXBean;
@@ -81,13 +83,18 @@ public class GarbageCollector {
       boolean captureGcCause) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
 
-    DoubleHistogram gcDuration =
+    DoubleHistogramBuilder builder =
         meter
             .histogramBuilder("jvm.gc.duration")
             .setDescription("Duration of JVM garbage collection actions.")
             .setUnit("s")
-            .setExplicitBucketBoundariesAdvice(GC_DURATION_BUCKETS)
-            .build();
+            .setExplicitBucketBoundariesAdvice(GC_DURATION_BUCKETS);
+    // Only apply advice to filter out jvm.gc.cause when captureGcCause is false
+    // (skipping when true for backward compatibility until 3.0)
+    if (!captureGcCause) {
+      applyGcDurationAdvice(builder);
+    }
+    DoubleHistogram gcDuration = builder.build();
 
     List<AutoCloseable> result = new ArrayList<>();
     for (GarbageCollectorMXBean gcBean : gcBeans) {
@@ -96,25 +103,30 @@ public class GarbageCollector {
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
       GcNotificationListener listener =
-          new GcNotificationListener(gcDuration, notificationInfoExtractor, captureGcCause);
+          new GcNotificationListener(gcDuration, notificationInfoExtractor);
       notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
       result.add(() -> notificationEmitter.removeNotificationListener(listener));
     }
     return result;
   }
 
+  private static void applyGcDurationAdvice(DoubleHistogramBuilder builder) {
+    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
+      return;
+    }
+    ((ExtendedDoubleHistogramBuilder) builder)
+        .setAttributesAdvice(asList(JvmAttributes.JVM_GC_NAME, JvmAttributes.JVM_GC_ACTION));
+  }
+
   private static final class GcNotificationListener implements NotificationListener {
 
-    private final boolean captureGcCause;
     private final DoubleHistogram gcDuration;
     private final Function<Notification, GarbageCollectionNotificationInfo>
         notificationInfoExtractor;
 
     private GcNotificationListener(
         DoubleHistogram gcDuration,
-        Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
-        boolean captureGcCause) {
-      this.captureGcCause = captureGcCause;
+        Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
       this.gcDuration = gcDuration;
       this.notificationInfoExtractor = notificationInfoExtractor;
     }
@@ -126,14 +138,12 @@ public class GarbageCollector {
 
       String gcName = notificationInfo.getGcName();
       String gcAction = notificationInfo.getGcAction();
+      String gcCause = notificationInfo.getGcCause();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
       AttributesBuilder builder = Attributes.builder();
       builder.put(JvmAttributes.JVM_GC_NAME, gcName);
       builder.put(JvmAttributes.JVM_GC_ACTION, gcAction);
-      if (captureGcCause) {
-        String gcCause = notificationInfo.getGcCause();
-        builder.put(JVM_GC_CAUSE, gcCause);
-      }
+      builder.put(JVM_GC_CAUSE, gcCause);
       gcDuration.record(duration, builder.build());
     }
   }
