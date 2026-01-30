@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -60,6 +61,8 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
         test.addServlet(
             context, "/dispatch" + CAPTURE_PARAMETERS.getPath(), TestServlet5.DispatchAsync.class);
         test.addServlet(
+            context, "/dispatch" + CAPTURE_BODY.getPath(), TestServlet5.DispatchAsync.class);
+        test.addServlet(
             context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet5.DispatchAsync.class);
         test.addServlet(
             context, "/dispatch" + HTML_PRINT_WRITER.getPath(), TestServlet5.DispatchAsync.class);
@@ -107,6 +110,8 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
             "/dispatch" + CAPTURE_PARAMETERS.getPath(),
             TestServlet5.DispatchImmediate.class);
         test.addServlet(
+            context, "/dispatch" + CAPTURE_BODY.getPath(), TestServlet5.DispatchImmediate.class);
+        test.addServlet(
             context, "/dispatch" + INDEXED_CHILD.getPath(), TestServlet5.DispatchImmediate.class);
         test.addServlet(
             context,
@@ -148,6 +153,8 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
             "/dispatch" + CAPTURE_PARAMETERS.getPath(),
             RequestDispatcherServlet.Forward.class);
         test.addServlet(
+            context, "/dispatch" + CAPTURE_BODY.getPath(), RequestDispatcherServlet.Forward.class);
+        test.addServlet(
             context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Forward.class);
         test.addServlet(
             context,
@@ -186,6 +193,8 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
             context,
             "/dispatch" + CAPTURE_PARAMETERS.getPath(),
             RequestDispatcherServlet.Include.class);
+        test.addServlet(
+            context, "/dispatch" + CAPTURE_BODY.getPath(), RequestDispatcherServlet.Include.class);
         test.addServlet(
             context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Include.class);
         test.addServlet(
