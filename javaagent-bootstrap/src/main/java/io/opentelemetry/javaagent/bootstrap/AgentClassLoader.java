@@ -141,10 +141,17 @@ public class AgentClassLoader extends URLClassLoader {
 
     bootstrapProxy =
         new BootstrapClassLoaderProxy(
-            resourceName -> {
-              JarEntry jarEntry = jarFile.getJarEntry(resourceName);
-              AgentJarResource jarResource = AgentJarResource.create(resourceName, jarEntry);
-              return getAgentJarResourceUrl(jarResource);
+            // this call deliberately uses anonymous class instead of lambda because using lambdas
+            // too
+            // early on early jdk8 causes jvm to crash. See CrashEarlyJdk8Test.
+            new Function<String, URL>() {
+              @Nullable
+              @Override
+              public URL apply(String resourceName) {
+                JarEntry jarEntry = jarFile.getJarEntry(resourceName);
+                AgentJarResource jarResource = AgentJarResource.create(resourceName, jarEntry);
+                return getAgentJarResourceUrl(jarResource);
+              }
             });
 
     if (AGENT_INITIALIZER_JAR != null && !AGENT_INITIALIZER_JAR.isEmpty()) {
