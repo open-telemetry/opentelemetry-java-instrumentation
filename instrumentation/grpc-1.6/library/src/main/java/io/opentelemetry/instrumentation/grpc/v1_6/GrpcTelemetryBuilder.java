@@ -116,7 +116,16 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets the {@code peer.service} attribute for http client spans. */
+  /**
+   * Sets the {@code peer.service} attribute for http client spans.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead:
+   *     <pre>{@code
+   * builder.addAttributesExtractor(
+   *     AttributesExtractor.constant(AttributeKey.stringKey("peer.service"), "service-name"));
+   * }</pre>
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setPeerService(String peerService) {
     this.peerService = peerService;
