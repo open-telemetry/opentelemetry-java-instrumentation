@@ -503,6 +503,10 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT id, name FROM vendors",
             expect("SELECT", null, "SELECT employees SELECT contractors SELECT vendors")),
+        // Parenthesized table with UNION - identifier cancels pending subquery push
+        Arguments.of(
+            "SELECT * FROM (t UNION SELECT * FROM t2), t3",
+            expect("SELECT", null, "SELECT t SELECT t2")),
         Arguments.of(
             "select id, (select max(foo) from (select foo from foos union all select foo from bars)) as foo from main_table",
             expect("SELECT", null, "SELECT SELECT SELECT foos SELECT bars main_table")),
