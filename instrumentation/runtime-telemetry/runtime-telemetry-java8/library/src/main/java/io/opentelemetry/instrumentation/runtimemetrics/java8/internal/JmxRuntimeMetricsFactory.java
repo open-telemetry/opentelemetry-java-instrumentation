@@ -14,25 +14,16 @@ import java.util.List;
  * any time.
  */
 public class JmxRuntimeMetricsFactory {
-  @SuppressWarnings({"CatchingUnchecked", "deprecation"}) // until moved internal and undeprecated
+  @SuppressWarnings({"CatchingUnchecked", "deprecation"}) // ExperimentalXxx classes are deprecated
   public static List<AutoCloseable> buildObservables(
       OpenTelemetry openTelemetry, boolean emitExperimentalTelemetry, boolean captureGcCause) {
     // Set up metrics gathered by JMX
     List<AutoCloseable> observables = new ArrayList<>();
-    observables.addAll(
-        io.opentelemetry.instrumentation.runtimemetrics.java8.Classes.registerObservers(
-            openTelemetry));
-    observables.addAll(
-        io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu.registerObservers(openTelemetry));
-    observables.addAll(
-        io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector.registerObservers(
-            openTelemetry, captureGcCause));
-    observables.addAll(
-        io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools.registerObservers(
-            openTelemetry));
-    observables.addAll(
-        io.opentelemetry.instrumentation.runtimemetrics.java8.Threads.registerObservers(
-            openTelemetry));
+    observables.addAll(Classes.registerObservers(openTelemetry));
+    observables.addAll(Cpu.registerObservers(openTelemetry));
+    observables.addAll(GarbageCollector.registerObservers(openTelemetry, captureGcCause));
+    observables.addAll(MemoryPools.registerObservers(openTelemetry));
+    observables.addAll(Threads.registerObservers(openTelemetry));
     if (emitExperimentalTelemetry) {
       observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
       observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
