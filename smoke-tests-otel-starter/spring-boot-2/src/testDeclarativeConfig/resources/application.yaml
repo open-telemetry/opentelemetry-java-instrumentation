@@ -40,8 +40,9 @@ otel:
 
   instrumentation/development:
     java:
-      runtime-telemetry:
-        emit_experimental_telemetry: true
-      http:
-        client:
-          emit_experimental_telemetry: true
+      common:
+        http:
+          client:
+            emit_experimental_telemetry/development: true
+      runtime_telemetry:
+        emit_experimental_telemetry/development: true

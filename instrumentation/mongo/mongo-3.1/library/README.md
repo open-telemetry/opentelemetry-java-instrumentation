@@ -37,7 +37,7 @@ MongoTelemetry mongoTelemetry = MongoTelemetry.builder(openTelemetry).build();
 
 MongoClientSettings settings = MongoClientSettings.builder()
     .applyConnectionString(ConnectionString("mongodb://localhost:27017"))
-    .addCommandListener(mongoTelemetry.newCommandListener())
+    .addCommandListener(mongoTelemetry.createCommandListener())
     .build();
 
 // With Reactive Streams

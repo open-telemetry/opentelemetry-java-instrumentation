@@ -23,7 +23,7 @@ final class LettuceDbAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(RedisCommand<?, ?, ?> request) {
+  public String getDbSystemName(RedisCommand<?, ?, ?> request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
@@ -33,7 +33,6 @@ final class LettuceDbAttributesGetter
     return null;
   }
 
-  @Deprecated
   @Override
   public String getDbQueryText(RedisCommand<?, ?, ?> request) {
     String command = LettuceInstrumentationUtil.getCommandName(request);

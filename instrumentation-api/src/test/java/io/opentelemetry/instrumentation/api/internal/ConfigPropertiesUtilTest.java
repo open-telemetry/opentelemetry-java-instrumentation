@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
+@SuppressWarnings("deprecation") // using deprecated config property
 class ConfigPropertiesUtilTest {
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_STRING", value = "env")

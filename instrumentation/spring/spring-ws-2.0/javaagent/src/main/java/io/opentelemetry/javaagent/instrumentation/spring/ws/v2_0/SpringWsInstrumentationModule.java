@@ -10,7 +10,6 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,9 +26,9 @@ public class SpringWsInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled() {
     // this instrumentation only produces controller telemetry
-    return super.defaultEnabled(config) && ExperimentalConfig.get().controllerTelemetryEnabled();
+    return super.defaultEnabled() && ExperimentalConfig.get().controllerTelemetryEnabled();
   }
 
   @Override

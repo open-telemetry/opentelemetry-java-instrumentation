@@ -20,10 +20,12 @@ public final class OperationNameUtil {
     // operation name
     String operation = "Hibernate Query";
     SqlStatementInfo info = sanitizer.sanitize(query);
-    if (info.getOperation() != null) {
-      operation = info.getOperation();
-      if (info.getMainIdentifier() != null) {
-        operation += " " + info.getMainIdentifier();
+    if (info.getOperationName() != null) {
+      operation = info.getOperationName();
+      if (info.getCollectionName() != null) {
+        operation += " " + info.getCollectionName();
+      } else if (info.getStoredProcedureName() != null) {
+        operation += " " + info.getStoredProcedureName();
       }
     }
     return operation;

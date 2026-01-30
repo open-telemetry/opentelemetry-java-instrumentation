@@ -435,6 +435,11 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-arguments",
+      "type": "java.lang.String",
+      "description": "Enable the capture of Logback log event arguments."
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-code-attributes",
       "type": "java.lang.Boolean",
       "description": "Enable the capture of source code attributes. Note that capturing source code attributes at logging sites might add a performance overhead.",
@@ -480,6 +485,11 @@
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.lang.String",
       "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes. This is a comma-separated list of attribute names."
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-template",
+      "type": "java.lang.String",
+      "description": "Enable the capture of Logback log event message template (if arguments are provided)."
     },
     {
       "name": "otel.instrumentation.logback-mdc.enabled",

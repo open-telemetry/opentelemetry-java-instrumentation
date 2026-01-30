@@ -14,14 +14,16 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.AnnotationExcludedMethods;
 import io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.SpanAttributeUtil.Parameter;
+import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.util.Arrays;
 import java.util.List;
 import kotlin.coroutines.Continuation;
@@ -54,10 +56,9 @@ import org.objectweb.asm.util.CheckClassAdapter;
 class WithSpanInstrumentation implements TypeInstrumentation {
   // whether to check the transformed bytecode with asm CheckClassAdapter
   private static final boolean CHECK_CLASS =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.kotlinx-coroutines.check-class",
-              AgentInstrumentationConfig.get().getBoolean("otel.javaagent.debug", false));
+      DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "kotlinx_coroutines")
+          .getBoolean("check_class", EarlyInitAgentConfig.get().isDebug());
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
   // this matcher matches all methods that should be excluded from transformation

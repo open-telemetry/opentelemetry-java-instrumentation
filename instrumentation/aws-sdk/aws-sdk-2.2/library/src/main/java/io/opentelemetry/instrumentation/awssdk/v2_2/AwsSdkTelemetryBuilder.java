@@ -23,7 +23,7 @@ public final class AwsSdkTelemetryBuilder {
   private boolean useMessagingPropagator;
   private boolean recordIndividualHttpError;
   private boolean useXrayPropagator = true;
-  private boolean messagingReceiveInstrumentationEnabled;
+  private boolean messagingReceiveTelemetryEnabled;
   private boolean genaiCaptureMessageContent;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -110,9 +110,9 @@ public final class AwsSdkTelemetryBuilder {
    * connecting it to the producer trace.
    */
   @CanIgnoreReturnValue
-  public AwsSdkTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+  public AwsSdkTelemetryBuilder setMessagingReceiveTelemetryEnabled(
+      boolean messagingReceiveTelemetryEnabled) {
+    this.messagingReceiveTelemetryEnabled = messagingReceiveTelemetryEnabled;
     return this;
   }
 
@@ -139,7 +139,7 @@ public final class AwsSdkTelemetryBuilder {
         useMessagingPropagator,
         useXrayPropagator,
         recordIndividualHttpError,
-        messagingReceiveInstrumentationEnabled,
+        messagingReceiveTelemetryEnabled,
         genaiCaptureMessageContent);
   }
 }

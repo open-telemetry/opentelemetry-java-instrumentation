@@ -204,7 +204,7 @@ public final class BedrockRuntimeImpl {
     if (modelId == null) {
       return null;
     }
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       // titan using invoke model is a text completion request
       return GenAiOperationNameIncubatingValues.TEXT_COMPLETION;
     }
@@ -245,23 +245,23 @@ public final class BedrockRuntimeImpl {
       return null;
     }
     Document count = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       Document config = body.asMap().get("textGenerationConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       count = config.asMap().get("maxTokenCount");
-    } else if (modelId.startsWith("amazon.nova")) {
+    } else if (modelId.contains("amazon.nova")) {
       Document config = body.asMap().get("inferenceConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       count = config.asMap().get("max_new_tokens");
-    } else if (modelId.startsWith("anthropic.claude")
-        || modelId.startsWith("cohere.command")
-        || modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("anthropic.claude")
+        || modelId.contains("cohere.command")
+        || modelId.contains("mistral.mistral")) {
       count = body.asMap().get("max_tokens");
-    } else if (modelId.startsWith("meta.llama")) {
+    } else if (modelId.contains("meta.llama")) {
       count = body.asMap().get("max_gen_len");
     }
     if (count != null && count.isNumber()) {
@@ -305,22 +305,22 @@ public final class BedrockRuntimeImpl {
       return null;
     }
     Document temperature = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       Document config = body.asMap().get("textGenerationConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       temperature = config.asMap().get("temperature");
-    } else if (modelId.startsWith("amazon.nova")) {
+    } else if (modelId.contains("amazon.nova")) {
       Document config = body.asMap().get("inferenceConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       temperature = config.asMap().get("temperature");
-    } else if (modelId.startsWith("anthropic.claude")
-        || modelId.startsWith("meta.llama")
-        || modelId.startsWith("cohere.command")
-        || modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("anthropic.claude")
+        || modelId.contains("meta.llama")
+        || modelId.contains("cohere.command")
+        || modelId.contains("mistral.mistral")) {
       temperature = body.asMap().get("temperature");
     }
     if (temperature != null && temperature.isNumber()) {
@@ -362,23 +362,23 @@ public final class BedrockRuntimeImpl {
       return null;
     }
     Document topP = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       Document config = body.asMap().get("textGenerationConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       topP = config.asMap().get("topP");
-    } else if (modelId.startsWith("amazon.nova")) {
+    } else if (modelId.contains("amazon.nova")) {
       Document config = body.asMap().get("inferenceConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       topP = config.asMap().get("topP");
-    } else if (modelId.startsWith("anthropic.claude")
-        || modelId.startsWith("meta.llama")
-        || modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("anthropic.claude")
+        || modelId.contains("meta.llama")
+        || modelId.contains("mistral.mistral")) {
       topP = body.asMap().get("top_p");
-    } else if (modelId.startsWith("cohere.command")) {
+    } else if (modelId.contains("cohere.command")) {
       topP = body.asMap().get("p");
     }
     if (topP != null && topP.isNumber()) {
@@ -421,21 +421,21 @@ public final class BedrockRuntimeImpl {
       return null;
     }
     Document stopSequences = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       Document config = body.asMap().get("textGenerationConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       stopSequences = config.asMap().get("stopSequences");
-    } else if (modelId.startsWith("amazon.nova")) {
+    } else if (modelId.contains("amazon.nova")) {
       Document config = body.asMap().get("inferenceConfig");
       if (config == null || !config.isMap()) {
         return null;
       }
       stopSequences = config.asMap().get("stopSequences");
-    } else if (modelId.startsWith("anthropic.claude") || modelId.startsWith("cohere.command")) {
+    } else if (modelId.contains("anthropic.claude") || modelId.contains("cohere.command")) {
       stopSequences = body.asMap().get("stop_sequences");
-    } else if (modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("mistral.mistral")) {
       stopSequences = body.asMap().get("stop");
     }
     // meta llama request does not support stop sequences
@@ -483,7 +483,7 @@ public final class BedrockRuntimeImpl {
     if (!body.isMap()) {
       return null;
     }
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       List<String> stopReasons = new ArrayList<>();
       Document results = body.asMap().get("results");
       if (results == null || !results.isList()) {
@@ -499,13 +499,13 @@ public final class BedrockRuntimeImpl {
       return stopReasons;
     }
     Document stopReason = null;
-    if (modelId.startsWith("amazon.nova")) {
+    if (modelId.contains("amazon.nova")) {
       stopReason = body.asMap().get("stopReason");
-    } else if (modelId.startsWith("anthropic.claude") || modelId.startsWith("meta.llama")) {
+    } else if (modelId.contains("anthropic.claude") || modelId.contains("meta.llama")) {
       stopReason = body.asMap().get("stop_reason");
-    } else if (modelId.startsWith("cohere.command-r")) {
+    } else if (modelId.contains("cohere.command-r")) {
       stopReason = body.asMap().get("finish_reason");
-    } else if (modelId.startsWith("cohere.command")) {
+    } else if (modelId.contains("cohere.command")) {
       List<String> stopReasons = new ArrayList<>();
       Document results = body.asMap().get("generations");
       if (results == null || !results.isList()) {
@@ -519,7 +519,7 @@ public final class BedrockRuntimeImpl {
         stopReasons.add(stopReason.asString());
       }
       return stopReasons;
-    } else if (modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("mistral.mistral")) {
       List<String> stopReasons = new ArrayList<>();
       Document results = body.asMap().get("outputs");
       if (results == null || !results.isList()) {
@@ -577,23 +577,23 @@ public final class BedrockRuntimeImpl {
       return null;
     }
     Document count = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       count = body.asMap().get("inputTextTokenCount");
-    } else if (modelId.startsWith("amazon.nova")) {
+    } else if (modelId.contains("amazon.nova")) {
       Document usage = body.asMap().get("usage");
       if (usage == null || !usage.isMap()) {
         return null;
       }
       count = usage.asMap().get("inputTokens");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.contains("anthropic.claude")) {
       Document usage = body.asMap().get("usage");
       if (usage == null || !usage.isMap()) {
         return null;
       }
       count = usage.asMap().get("input_tokens");
-    } else if (modelId.startsWith("meta.llama")) {
+    } else if (modelId.contains("meta.llama")) {
       count = body.asMap().get("prompt_token_count");
-    } else if (modelId.startsWith("cohere.command-r")) {
+    } else if (modelId.contains("cohere.command-r")) {
       // approximate input tokens based on prompt length
       Document requestBody = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
       if (requestBody == null || !requestBody.isMap()) {
@@ -604,7 +604,7 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       count = Document.fromNumber(Math.ceil(prompt.length() / CHARS_PER_TOKEN));
-    } else if (modelId.startsWith("cohere.command") || modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("cohere.command") || modelId.contains("mistral.mistral")) {
       // approximate input tokens based on prompt length
       Document requestBody = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
       if (requestBody == null || !requestBody.isMap()) {
@@ -659,7 +659,7 @@ public final class BedrockRuntimeImpl {
       return null;
     }
     Document count = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       Document results = body.asMap().get("results");
       if (results == null || !results.isList()) {
         return null;
@@ -673,27 +673,27 @@ public final class BedrockRuntimeImpl {
         outputTokens += tokenCount.asNumber().intValue();
       }
       return outputTokens;
-    } else if (modelId.startsWith("amazon.nova")) {
+    } else if (modelId.contains("amazon.nova")) {
       Document usage = body.asMap().get("usage");
       if (usage == null || !usage.isMap()) {
         return null;
       }
       count = usage.asMap().get("outputTokens");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.contains("anthropic.claude")) {
       Document usage = body.asMap().get("usage");
       if (usage == null || !usage.isMap()) {
         return null;
       }
       count = usage.asMap().get("output_tokens");
-    } else if (modelId.startsWith("meta.llama")) {
+    } else if (modelId.contains("meta.llama")) {
       count = body.asMap().get("generation_token_count");
-    } else if (modelId.startsWith("cohere.command-r")) {
+    } else if (modelId.contains("cohere.command-r")) {
       Document text = body.asMap().get("text");
       if (text == null || !text.isString()) {
         return null;
       }
       count = Document.fromNumber(Math.ceil(text.asString().length() / CHARS_PER_TOKEN));
-    } else if (modelId.startsWith("cohere.command")) {
+    } else if (modelId.contains("cohere.command")) {
       Document generations = body.asMap().get("generations");
       if (generations == null || !generations.isList()) {
         return null;
@@ -707,7 +707,7 @@ public final class BedrockRuntimeImpl {
         outputLength += text.asString().length();
       }
       count = Document.fromNumber(Math.ceil(outputLength / CHARS_PER_TOKEN));
-    } else if (modelId.startsWith("mistral.mistral")) {
+    } else if (modelId.contains("mistral.mistral")) {
       Document outputs = body.asMap().get("outputs");
       if (outputs == null || !outputs.isList()) {
         return null;
@@ -788,7 +788,7 @@ public final class BedrockRuntimeImpl {
       return;
     }
 
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       Document inputText = body.asMap().get("inputText");
       if (inputText == null || !inputText.isString()) {
         return;
@@ -804,9 +804,9 @@ public final class BedrockRuntimeImpl {
     }
 
     ModelFamily modelFamily = null;
-    if (modelId.startsWith("amazon.nova")) {
+    if (modelId.contains("amazon.nova")) {
       modelFamily = ModelFamily.AMAZON_NOVA;
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.contains("anthropic.claude")) {
       modelFamily = ModelFamily.ANTHROPIC_CLAUDE;
     }
     if (modelFamily == ModelFamily.AMAZON_NOVA || modelFamily == ModelFamily.ANTHROPIC_CLAUDE) {
@@ -919,7 +919,7 @@ public final class BedrockRuntimeImpl {
       return;
     }
     ModelFamily modelFamily = null;
-    if (modelId.startsWith("amazon.titan")) {
+    if (modelId.contains("amazon.titan")) {
       // Text completion records an event per result.
       Document results = body.asMap().get("results");
       if (results == null || !results.isList()) {
@@ -954,7 +954,7 @@ public final class BedrockRuntimeImpl {
 
     String stopReasonString = null;
     Document content = null;
-    if (modelId.startsWith("amazon.nova")) {
+    if (modelId.contains("amazon.nova")) {
       modelFamily = ModelFamily.AMAZON_NOVA;
       Document stopReason = body.asMap().get("stopReason");
       Document output = body.asMap().get("output");
@@ -967,7 +967,7 @@ public final class BedrockRuntimeImpl {
       }
       content = message.asMap().get("content");
       stopReasonString = stopReason.asString();
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.contains("anthropic.claude")) {
       modelFamily = ModelFamily.ANTHROPIC_CLAUDE;
       Document stopReason = body.asMap().get("stop_reason");
       content = body.asMap().get("content");
@@ -1341,11 +1341,11 @@ public final class BedrockRuntimeImpl {
         return;
       }
       Document result = deserializeDocument(((PayloadPart) event).bytes().asByteArrayUnsafe());
-      if (requestModel.startsWith("amazon.titan")) {
+      if (requestModel.contains("amazon.titan")) {
         handleEventAmazonTitan(result);
-      } else if (requestModel.startsWith("amazon.nova")) {
+      } else if (requestModel.contains("amazon.nova")) {
         handleEventAmazonNova(result);
-      } else if (requestModel.startsWith("anthropic.claude")) {
+      } else if (requestModel.contains("anthropic.claude")) {
         handleEventAnthropicClaude(result);
       }
     }

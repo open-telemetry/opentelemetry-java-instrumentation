@@ -43,7 +43,7 @@ public class OkHttpConfiguration {
 
   //Use this Call.Factory implementation for making standard http client calls.
   public Call.Factory createTracedClient(OpenTelemetry openTelemetry) {
-    return OkHttpTelemetry.builder(openTelemetry).build().newCallFactory(createClient());
+    return OkHttpTelemetry.builder(openTelemetry).build().createCallFactory(createClient());
   }
 
   //your configuration of the OkHttpClient goes here:

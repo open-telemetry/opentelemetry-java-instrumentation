@@ -1,4 +1,4 @@
-# Library Instrumentation for Java Servlet version 3.0 and higher
+# Library Instrumentation for Java Servlet version 3.0 to 5.0
 
 Provides OpenTelemetry instrumentation for Java Servlets through a servlet filter.
 
@@ -46,5 +46,5 @@ OpenTelemetry openTelemetry = ...;
 ServletTelemetry telemetry = ServletTelemetry.create(openTelemetry);
 
 // Create telemetry producing servlet filter
-Filter filter = telemetry.newFilter();
+Filter filter = telemetry.createFilter();
 ```

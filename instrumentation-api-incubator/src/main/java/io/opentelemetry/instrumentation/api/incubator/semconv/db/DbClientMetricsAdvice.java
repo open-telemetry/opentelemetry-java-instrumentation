@@ -33,6 +33,7 @@ final class DbClientMetricsAdvice {
                 DbAttributes.DB_COLLECTION_NAME,
                 DbAttributes.DB_NAMESPACE,
                 DbAttributes.DB_OPERATION_NAME,
+                DbAttributes.DB_QUERY_SUMMARY,
                 DbAttributes.DB_RESPONSE_STATUS_CODE,
                 ErrorAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PEER_ADDRESS,

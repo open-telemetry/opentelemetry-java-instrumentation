@@ -21,10 +21,10 @@ public class ServletTestUtil {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
             .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
-            .setCapturedRequestParameters(singletonList("test-parameter"));
+            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
+    Experimental.setCapturedRequestParameters(builder, singletonList("test-parameter"));
     Experimental.addTraceIdRequestAttribute(builder, true);
-    return builder.build().newFilter();
+    return builder.build().createFilter();
   }
 
   public static void configureTomcat(OpenTelemetry openTelemetry, Context servletContext) {

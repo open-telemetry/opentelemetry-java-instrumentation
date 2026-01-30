@@ -42,7 +42,7 @@ OpenTelemetry openTelemetry = ...;
 ApacheHttpClientTelemetry telemetry = ApacheHttpClientTelemetry.create(openTelemetry);
 
 // Get a traced HttpClient
-CloseableHttpClient httpClient = telemetry.newHttpClient();
+CloseableHttpClient httpClient = telemetry.createHttpClient();
 
 // ... use the httpClient to make requests
 ```

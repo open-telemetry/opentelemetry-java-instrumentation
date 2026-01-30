@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import javax.sql.DataSource;
@@ -28,25 +28,33 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
-  public static boolean captureQueryParameters() {
-    return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
+  @SuppressWarnings("deprecation") // using deprecated config property
+  public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
+    return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+        .getBoolean(
+            "capture_query_parameters/development",
+            io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
+                "otel.instrumentation.jdbc.experimental.capture-query-parameters", false));
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry) {
-    return createStatementInstrumenter(openTelemetry, captureQueryParameters());
+    return createStatementInstrumenter(openTelemetry, captureQueryParameters(openTelemetry));
   }
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
+    @SuppressWarnings("deprecation") // using deprecated config property
+    boolean statementSanitizationEnabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+            .get("database")
+            .get("statement_sanitizer")
+            .getBoolean(
+                "enabled",
+                io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.common.db-statement-sanitizer.enabled", true));
     return createStatementInstrumenter(
-        openTelemetry,
-        emptyList(),
-        true,
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
-        captureQueryParameters);
+        openTelemetry, emptyList(), true, statementSanitizationEnabled, captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -92,10 +100,15 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
-    return createTransactionInstrumenter(
-        openTelemetry,
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+    @SuppressWarnings("deprecation") // using deprecated config property
+    boolean enabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+            .get("transaction/development")
+            .getBoolean(
+                "enabled",
+                io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+    return createTransactionInstrumenter(openTelemetry, enabled);
   }
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
@@ -108,7 +121,7 @@ public final class JdbcInstrumenterFactory {
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
+            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)

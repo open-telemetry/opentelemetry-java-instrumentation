@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -86,7 +87,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -628,8 +629,15 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "SELECT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
+                                equalTo(
+                                    DbIncubatingAttributes.DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? spanName : null),
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
                                     expectedParameterValue))));

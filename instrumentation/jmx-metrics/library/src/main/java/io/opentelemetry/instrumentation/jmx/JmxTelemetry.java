@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.jmx;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.jmx.engine.JmxMetricInsight;
-import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.engine.JmxMetricInsight;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.management.MBeanServerConnection;

@@ -114,7 +114,7 @@ public final class KafkaTelemetryBuilder {
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-            .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled);
+            .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,

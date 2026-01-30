@@ -12,7 +12,7 @@ To register instrumentation only on a specific SDK client, register the intercep
 AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry).build();
 DynamoDbClient client = DynamoDbClient.builder()
   .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetry.newExecutionInterceptor()))
+    .addExecutionInterceptor(telemetry.createExecutionInterceptor()))
     .build())
   .build();
 ```

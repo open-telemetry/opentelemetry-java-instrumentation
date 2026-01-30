@@ -22,40 +22,52 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbQueryText(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
+    if (request.getSqlStatementInfoWithSummary() != null) {
+      return request.getSqlStatementInfoWithSummary().getQueryText();
     }
-    return request.getSqlStatementInfo().getFullStatement();
+    if (request.getSqlStatementInfo() != null) {
+      return request.getSqlStatementInfo().getQueryText();
+    }
+    return null;
   }
 
   @Nullable
   @Override
   public String getDbOperationName(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
+    if (request.getSqlStatementInfo() != null) {
+      return request.getSqlStatementInfo().getOperationName();
     }
-    return request.getSqlStatementInfo().getOperation();
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getDbQuerySummary(ClickHouseDbRequest request) {
+    if (request.getSqlStatementInfoWithSummary() != null) {
+      return request.getSqlStatementInfoWithSummary().getQuerySummary();
+    }
+    return null;
   }
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(ClickHouseDbRequest request) {
+  public String getDbSystemName(ClickHouseDbRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
   }
 
   @Nullable
   @Override
   public String getDbNamespace(ClickHouseDbRequest request) {
-    String dbName = request.getDbName();
-    if (dbName == null || dbName.isEmpty()) {
+    String namespace = request.getNamespace();
+    if (namespace == null || namespace.isEmpty()) {
       return null;
     }
-    return dbName;
+    return namespace;
   }
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
   }
 }

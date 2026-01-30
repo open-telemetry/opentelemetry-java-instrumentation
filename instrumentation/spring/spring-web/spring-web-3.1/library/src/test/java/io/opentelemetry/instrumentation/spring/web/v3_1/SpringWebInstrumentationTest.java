@@ -50,7 +50,7 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
                 .setCapturedResponseHeaders(
                     Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
                 .build()
-                .newInterceptor());
+                .createInterceptor());
   }
 
   @Override
