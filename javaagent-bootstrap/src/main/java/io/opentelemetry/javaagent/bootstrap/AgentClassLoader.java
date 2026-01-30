@@ -142,8 +142,7 @@ public class AgentClassLoader extends URLClassLoader {
     bootstrapProxy =
         new BootstrapClassLoaderProxy(
             // this call deliberately uses anonymous class instead of lambda because using lambdas
-            // too
-            // early on early jdk8 causes jvm to crash. See CrashEarlyJdk8Test.
+            // too early on early jdk8 causes jvm to crash. See CrashEarlyJdk8Test.
             new Function<String, URL>() {
               @Nullable
               @Override
