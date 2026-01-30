@@ -11,10 +11,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -195,12 +195,12 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Sets custom {@link PeerServiceResolver}. */
+  /** Sets custom {@link ServicePeerResolver}. */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
-      PeerServiceResolver peerServiceResolver) {
+      ServicePeerResolver peerServiceResolver) {
     return addAttributesExtractor(
-        HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
+        HttpClientServicePeerAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
   @CanIgnoreReturnValue

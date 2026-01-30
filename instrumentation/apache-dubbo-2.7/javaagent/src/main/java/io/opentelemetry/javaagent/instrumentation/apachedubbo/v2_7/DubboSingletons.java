@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import org.apache.dubbo.rpc.Filter;
 
@@ -20,7 +20,7 @@ public final class DubboSingletons {
     DubboTelemetry telemetry =
         DubboTelemetry.builder(GlobalOpenTelemetry.get())
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
+                ServicePeerAttributesExtractor.create(
                     new DubboClientNetworkAttributesGetter(),
                     AgentCommonConfig.get().getPeerServiceResolver()))
             .build();

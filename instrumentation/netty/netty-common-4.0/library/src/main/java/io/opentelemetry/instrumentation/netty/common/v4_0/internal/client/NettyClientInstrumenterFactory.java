@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -44,7 +44,7 @@ public final class NettyClientInstrumenterFactory {
   }
 
   public NettyConnectionInstrumenter createConnectionInstrumenter(
-      @Nullable PeerServiceResolver peerServiceResolver) {
+      @Nullable ServicePeerResolver servicePeerResolver) {
     if (connectionTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopConnectionInstrumenter.INSTANCE;
     }
@@ -68,9 +68,9 @@ public final class NettyClientInstrumenterFactory {
       builder.addAttributesExtractor(HttpClientAttributesExtractor.create(getter));
     }
 
-    if (peerServiceResolver != null) {
+    if (servicePeerResolver != null) {
       builder.addAttributesExtractor(
-          HttpClientPeerServiceAttributesExtractor.create(getter, peerServiceResolver));
+          HttpClientServicePeerAttributesExtractor.create(getter, servicePeerResolver));
     }
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =

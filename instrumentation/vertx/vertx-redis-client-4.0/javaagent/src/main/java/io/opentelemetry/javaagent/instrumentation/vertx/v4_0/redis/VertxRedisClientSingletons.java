@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -52,7 +52,7 @@ public final class VertxRedisClientSingletons {
             .addAttributesExtractor(
                 NetworkAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
+                ServicePeerAttributesExtractor.create(
                     VertxRedisClientNetAttributesGetter.INSTANCE,
                     AgentCommonConfig.get().getPeerServiceResolver()))
             .addOperationMetrics(DbClientMetrics.get());

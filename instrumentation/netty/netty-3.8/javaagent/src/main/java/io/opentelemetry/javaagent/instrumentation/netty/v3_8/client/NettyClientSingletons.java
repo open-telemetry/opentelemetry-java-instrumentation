@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
@@ -43,7 +43,7 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                HttpClientPeerServiceAttributesExtractor.create(
+                HttpClientServicePeerAttributesExtractor.create(
                     NettyConnectHttpAttributesGetter.INSTANCE,
                     AgentCommonConfig.get().getPeerServiceResolver()))
             .setSchemaUrl(SchemaUrls.V1_37_0)

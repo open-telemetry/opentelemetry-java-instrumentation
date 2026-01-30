@@ -221,6 +221,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       // GraalVM native image does not support buffer pools - have to investigate why
       jmxMetrics.add("jvm.buffer.memory.used");
     }
+    // JMX metrics always use the java8 scope since they come from JmxRuntimeMetricsUtil
+    // in the runtime-telemetry-java8 module
     jmxMetrics.forEach(
         metricName ->
             testing.waitAndAssertMetrics(
