@@ -24,8 +24,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
@@ -39,8 +39,8 @@ import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final SqlQuerySanitizer sanitizer =
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   private final String component;
   private final String system;
@@ -142,20 +142,19 @@ class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      SqlStatementInfo sqlStatementInfo =
+      SqlQuery sqlQuery =
           SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
-      SqlStatementInfo sqlStatementInfoWithSummary =
+      SqlQuery sqlQueryWithSummary =
           SemconvStability.emitStableDatabaseSemconv()
               ? sanitizer.sanitizeWithSummary(rawQueryText)
               : null;
 
-      if (sqlStatementInfoWithSummary != null) {
-        attributes.put(DbAttributes.DB_QUERY_TEXT, sqlStatementInfoWithSummary.getQueryText());
-        attributes.put(
-            DbAttributes.DB_QUERY_SUMMARY, sqlStatementInfoWithSummary.getQuerySummary());
+      if (sqlQueryWithSummary != null) {
+        attributes.put(DbAttributes.DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
+        attributes.put(DbAttributes.DB_QUERY_SUMMARY, sqlQueryWithSummary.getQuerySummary());
       }
-      if (sqlStatementInfo != null) {
-        attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlStatementInfo.getQueryText());
+      if (sqlQuery != null) {
+        attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlQuery.getQueryText());
       }
     }
   }
