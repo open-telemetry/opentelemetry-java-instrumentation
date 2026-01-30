@@ -85,7 +85,7 @@ public class JdbcAdviceScope {
         return DbRequest.create(statement, null);
       } else {
         return DbRequest.create(
-            statement, batchInfo.getStatements(), batchInfo.getBatchSize(), false);
+            statement, batchInfo.getQueryTexts(), batchInfo.getBatchSize(), false);
       }
     }
   }

@@ -19,7 +19,11 @@ import javax.annotation.Nullable;
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics}
+ *     instead, and configure metric views to select specific metrics.
  */
+@Deprecated
 public final class ExperimentalCpu {
 
   /** Register observers for java runtime experimental CPU metrics. */

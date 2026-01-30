@@ -301,9 +301,9 @@ fun configureImage(
       when (jdk) {
         "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
         "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:fd9fc42ab01c4db92911d2f1d63743d0de62a1c9183ccf40bd4943990f739e22"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:98c3bfb322f622989531f2cdc57d1aaefd1b9b7a8b59c15d3c125dcd7276ea6f"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:709602221b6a92c5cc7ecadfaf21bf1ae01f001186baf0a48bbf3dfa234f84ac"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:10331564d9ae41b6a534ddea472f37270a3c286e89857261631a0d772a4d8617"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:710bbe5d41a4c48ecd1e8d5be5f05d49132a102ab70961006d0675ed8b387d86"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:e8d57b6c5c73d93212a4384f588309b44bc75fd15b38f78e6a6db1b350dc4ef3"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:42fc3fe6804ec612f5ef8a613f8c06d8dd578de6207336077387d4cb32edaa9b"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }

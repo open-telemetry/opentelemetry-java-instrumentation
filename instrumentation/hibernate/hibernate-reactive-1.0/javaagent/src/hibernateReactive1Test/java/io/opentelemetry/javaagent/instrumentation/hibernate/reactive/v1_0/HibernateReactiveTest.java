@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -314,8 +315,15 @@ class HibernateReactiveTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),

@@ -43,7 +43,7 @@ public final class MetaDataCollector {
 
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
-      Pattern.compile("(.*?/instrumentation/.*?)(/javaagent|/library|/testing)");
+      Pattern.compile("(.*?/instrumentation/.*)(/javaagent|/library|/testing|/.*?-testing)");
 
   private static final YAMLMapper YAML =
       YAMLMapper.builder(

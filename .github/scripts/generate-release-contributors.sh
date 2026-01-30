@@ -79,9 +79,12 @@ query($q: String!, $endCursor: String) {
 echo "$contributors1" "$contributors2" \
   | sed 's/ /\n/g' \
   | sort -uf \
-  | grep -v linux-foundation-easycla \
+  | grep -v codecov \
+  | grep -v copilot-pull-request-reviewer \
+  | grep -v copilot-swe-agent \
   | grep -v github-actions \
-  | grep -v renovate \
-  | grep -v opentelemetrybot \
+  | grep -v github-advanced-security \
+  | grep -v linux-foundation-easycla \
   | grep -v otelbot \
+  | grep -v renovate \
   | sed 's/^/@/'

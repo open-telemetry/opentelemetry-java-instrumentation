@@ -184,7 +184,6 @@ testing {
       implementation("org.mockito:mockito-inline")
       implementation("org.mockito:mockito-junit-jupiter")
 
-      implementation("org.objenesis:objenesis")
       implementation("ch.qos.logback:logback-classic")
       implementation("org.slf4j:log4j-over-slf4j")
       implementation("org.slf4j:jcl-over-slf4j")

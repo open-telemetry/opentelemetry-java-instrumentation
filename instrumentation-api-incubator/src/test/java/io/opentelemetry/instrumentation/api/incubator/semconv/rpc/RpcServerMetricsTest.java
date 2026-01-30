@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class RpcServerMetricsTest {
 
   @Test

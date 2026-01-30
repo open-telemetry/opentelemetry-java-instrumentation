@@ -59,7 +59,11 @@ public final class Experimental {
    *
    * @param builder the client telemetry builder
    * @param peerService the peer service name
+   * @deprecated Use {@code
+   *     builder.addAttributesExtractor(AttributesExtractor.constant(AttributeKey.stringKey("peer.service"),
+   *     "service-name"))} instead.
    */
+  @Deprecated
   public static void setClientPeerService(
       ArmeriaClientTelemetryBuilder builder, String peerService) {
     if (setClientPeerService != null) {

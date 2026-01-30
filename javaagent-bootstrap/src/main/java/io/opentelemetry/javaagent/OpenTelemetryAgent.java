@@ -42,11 +42,11 @@ import javax.annotation.Nullable;
 @SuppressWarnings("SystemOut")
 public final class OpenTelemetryAgent {
 
-  public static void premain(String agentArgs, Instrumentation inst) {
+  public static void premain(@Nullable String agentArgs, Instrumentation inst) {
     startAgent(inst, agentArgs, true);
   }
 
-  public static void agentmain(String agentArgs, Instrumentation inst) {
+  public static void agentmain(@Nullable String agentArgs, Instrumentation inst) {
     startAgent(inst, agentArgs, false);
   }
 

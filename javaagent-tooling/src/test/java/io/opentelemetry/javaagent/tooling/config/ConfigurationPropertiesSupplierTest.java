@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-@ClearSystemProperty(key = ConfigurationFile.CONFIGURATION_FILE_PROPERTY)
+@ClearSystemProperty(key = "otel.javaagent.configuration-file")
 class ConfigurationPropertiesSupplierTest {
 
   @BeforeEach
@@ -42,7 +42,7 @@ class ConfigurationPropertiesSupplierTest {
     // given
     Path configFile = tempDir.resolve("test-config.properties");
     Files.write(configFile, singleton("otel.instrumentation.custom.key = 42"));
-    System.setProperty(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, configFile.toString());
+    System.setProperty("otel.javaagent.configuration-file", configFile.toString());
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =

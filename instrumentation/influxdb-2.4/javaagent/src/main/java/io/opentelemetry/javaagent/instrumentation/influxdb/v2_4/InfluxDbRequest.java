@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
@@ -19,17 +20,26 @@ public abstract class InfluxDbRequest {
 
   public static InfluxDbRequest create(
       String host, int port, String dbName, String operation, String sql) {
-    return new AutoValue_InfluxDbRequest(host, port, dbName, operation, sanitizer.sanitize(sql));
+    SqlStatementInfo sqlStatementInfo =
+        SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
+    SqlStatementInfo sqlStatementInfoWithSummary =
+        SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
+    return new AutoValue_InfluxDbRequest(
+        host, port, dbName, operation, sqlStatementInfo, sqlStatementInfoWithSummary);
   }
 
   public abstract String getHost();
 
   public abstract int getPort();
 
-  public abstract String getDbName();
+  public abstract String getNamespace();
 
   @Nullable
-  public abstract String getOperation();
+  public abstract String getOperationName();
 
+  @Nullable
   public abstract SqlStatementInfo getSqlStatementInfo();
+
+  @Nullable
+  public abstract SqlStatementInfo getSqlStatementInfoWithSummary();
 }

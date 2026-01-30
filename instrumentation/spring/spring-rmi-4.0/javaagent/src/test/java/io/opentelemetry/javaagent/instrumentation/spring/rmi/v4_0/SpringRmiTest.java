@@ -47,6 +47,7 @@ import org.springframework.stereotype.Component;
 import springrmi.app.SpringRmiGreeter;
 import springrmi.app.SpringRmiGreeterImpl;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SpringRmiTest {
 
   @RegisterExtension

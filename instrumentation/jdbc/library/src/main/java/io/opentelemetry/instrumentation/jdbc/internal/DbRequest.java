@@ -107,25 +107,30 @@ public abstract class DbRequest {
       DbInfo dbInfo,
       Collection<String> queryTexts,
       Long batchSize,
-      String operation,
+      String operationName,
       Map<String, String> preparedStatementParameters,
       boolean parameterizedQuery) {
     return new AutoValue_DbRequest(
-        dbInfo, queryTexts, batchSize, operation, preparedStatementParameters, parameterizedQuery);
+        dbInfo,
+        queryTexts,
+        batchSize,
+        operationName,
+        preparedStatementParameters,
+        parameterizedQuery);
   }
 
   @Nullable
-  public static DbRequest createTransaction(Connection connection, String operation) {
+  public static DbRequest createTransaction(Connection connection, String operationName) {
     Connection realConnection = JdbcUtils.unwrapConnection(connection);
     if (realConnection == null) {
       return null;
     }
 
-    return createTransaction(JdbcUtils.extractDbInfo(realConnection), operation);
+    return createTransaction(JdbcUtils.extractDbInfo(realConnection), operationName);
   }
 
-  public static DbRequest createTransaction(DbInfo dbInfo, String operation) {
-    return create(dbInfo, Collections.emptyList(), null, operation, emptyMap(), false);
+  public static DbRequest createTransaction(DbInfo dbInfo, String operationName) {
+    return create(dbInfo, Collections.emptyList(), null, operationName, emptyMap(), false);
   }
 
   public abstract DbInfo getDbInfo();
@@ -137,7 +142,7 @@ public abstract class DbRequest {
 
   // used for transaction instrumentation
   @Nullable
-  public abstract String getOperation();
+  public abstract String getOperationName();
 
   public abstract Map<String, String> getPreparedStatementParameters();
 

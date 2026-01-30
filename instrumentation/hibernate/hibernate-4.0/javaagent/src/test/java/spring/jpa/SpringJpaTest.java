@@ -14,6 +14,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -91,8 +92,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -152,8 +160,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
-                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "INSERT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "INSERT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -182,7 +197,8 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("CALL test")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "CALL hibernate_sequence" : "CALL test")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -193,9 +209,14 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 "call next value for hibernate_sequence"),
                             equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "CALL hibernate_sequence" : null),
+                            equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                            equalTo(maybeStable(DB_OPERATION), "CALL")),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -228,8 +249,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "insert into Customer (.*) values \\(.* \\?, \\?\\)"))),
-                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "INSERT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "INSERT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")));
           }
         });
     testing.clearData();
@@ -280,8 +308,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -311,8 +346,15 @@ class SpringJpaTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "update Customer set firstName=?, lastName=? where id=?"),
-                            equalTo(maybeStable(DB_OPERATION), "UPDATE"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "UPDATE Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "UPDATE"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer"))));
     testing.clearData();
 
     Customer foundCustomer =
@@ -357,8 +399,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer"))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
@@ -400,8 +449,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -432,8 +488,15 @@ class SpringJpaTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
-                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "DELETE Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "DELETE"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")));
 
           } else {
             String findAction;
@@ -473,8 +536,15 @@ class SpringJpaTest {
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -513,8 +583,15 @@ class SpringJpaTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
-                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "DELETE Customer" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "DELETE"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Customer")));
           }
         });
   }

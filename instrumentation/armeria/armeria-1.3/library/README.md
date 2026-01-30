@@ -47,7 +47,7 @@ ArmeriaServerTelemetry telemetry = ArmeriaServerTelemetry.create(openTelemetry);
 
 // Add the decorator to your server builder
 Server server = Server.builder()
-    .decorator(telemetry.newDecorator())
+    .decorator(telemetry.createDecorator())
     // ... other server configuration
     .build();
 ```
@@ -70,7 +70,7 @@ ArmeriaClientTelemetry telemetry = ArmeriaClientTelemetry.create(openTelemetry);
 
 // Add the decorator to your client builder
 WebClient client = new ClientBuilder("http://my-service.com")
-    .decorator(telemetry.newDecorator())
+    .decorator(telemetry.createDecorator())
     // ... other client configuration
     .build(WebClient.class);
 ```

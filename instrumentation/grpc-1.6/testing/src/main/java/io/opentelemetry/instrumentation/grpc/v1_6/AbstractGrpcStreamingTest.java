@@ -53,6 +53,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractGrpcStreamingTest {
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);

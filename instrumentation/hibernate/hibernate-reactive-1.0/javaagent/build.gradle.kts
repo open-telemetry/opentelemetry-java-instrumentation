@@ -104,15 +104,34 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
+    }
+
+  if (testJavaVersion.isJava8) {
+    named("hibernateReactive2TestStableSemconv", Test::class).configure {
+      enabled = false
+    }
+    if (latestDepTest) {
+      named("hibernateReactive1TestStableSemconv", Test::class).configure {
+        enabled = false
+      }
+    }
+  }
+  if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
+    named("hibernateReactive4TestStableSemconv", Test::class).configure {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }
 

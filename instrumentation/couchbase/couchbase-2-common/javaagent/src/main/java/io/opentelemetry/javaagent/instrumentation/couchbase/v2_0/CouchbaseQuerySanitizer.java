@@ -77,14 +77,22 @@ public final class CouchbaseQuerySanitizer {
   }
 
   public static SqlStatementInfo sanitize(Object query) {
+    return sanitizeInternal(query, false);
+  }
+
+  public static SqlStatementInfo sanitizeWithSummary(Object query) {
+    return sanitizeInternal(query, true);
+  }
+
+  private static SqlStatementInfo sanitizeInternal(Object query, boolean withSummary) {
     if (query instanceof String) {
-      return sanitizeString((String) query);
+      return sanitizeString((String) query, withSummary);
     }
     // Query is present in Couchbase [2.0.0, 2.2.0)
     // Statement is present starting from Couchbase 2.1.0
     if ((QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass()))
         || (STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass()))) {
-      return sanitizeString(query.toString());
+      return sanitizeString(query.toString(), withSummary);
     }
     // SpatialViewQuery is present starting from Couchbase 2.1.0
     String queryClassName = query.getClass().getName();
@@ -96,14 +104,14 @@ public final class CouchbaseQuerySanitizer {
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String statement = getStatementString(N1QL_GET_STATEMENT, query);
       if (statement != null) {
-        return sanitizeString(statement);
+        return sanitizeString(statement, withSummary);
       }
     }
     // AnalyticsQuery is present starting from Couchbase 2.4.3
     if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String statement = getStatementString(ANALYTICS_GET_STATEMENT, query);
       if (statement != null) {
-        return sanitizeString(statement);
+        return sanitizeString(statement, withSummary);
       }
     }
     return SqlStatementInfo.create(query.getClass().getSimpleName(), null, null);
@@ -120,7 +128,10 @@ public final class CouchbaseQuerySanitizer {
     }
   }
 
-  private static SqlStatementInfo sanitizeString(String query) {
+  private static SqlStatementInfo sanitizeString(String query, boolean withSummary) {
+    if (withSummary) {
+      return sanitizer.sanitizeWithSummary(query, SqlDialect.COUCHBASE);
+    }
     return sanitizer.sanitize(query, SqlDialect.COUCHBASE);
   }
 

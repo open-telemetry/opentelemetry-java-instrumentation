@@ -26,7 +26,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -64,6 +63,7 @@ public final class OpenTelemetryDriver implements Driver {
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
     Boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
@@ -71,7 +71,7 @@ public final class OpenTelemetryDriver implements Driver {
             .getBoolean("enabled");
     if (enabled == null) {
       enabled =
-          ConfigPropertiesUtil.getBoolean(
+          io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
               "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled");
     }
     if (enabled == null) {
@@ -83,7 +83,7 @@ public final class OpenTelemetryDriver implements Driver {
     }
     if (enabled == null) {
       enabled =
-          ConfigPropertiesUtil.getBoolean(
+          io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
               "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
     }
     if (enabled == null) {

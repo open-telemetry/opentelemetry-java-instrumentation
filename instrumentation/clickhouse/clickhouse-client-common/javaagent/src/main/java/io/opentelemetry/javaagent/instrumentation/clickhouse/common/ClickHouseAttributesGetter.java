@@ -22,19 +22,31 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbQueryText(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
+    if (request.getSqlStatementInfoWithSummary() != null) {
+      return request.getSqlStatementInfoWithSummary().getQueryText();
     }
-    return request.getSqlStatementInfo().getQueryText();
+    if (request.getSqlStatementInfo() != null) {
+      return request.getSqlStatementInfo().getQueryText();
+    }
+    return null;
   }
 
   @Nullable
   @Override
   public String getDbOperationName(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
+    if (request.getSqlStatementInfo() != null) {
+      return request.getSqlStatementInfo().getOperationName();
     }
-    return request.getSqlStatementInfo().getOperationName();
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getDbQuerySummary(ClickHouseDbRequest request) {
+    if (request.getSqlStatementInfoWithSummary() != null) {
+      return request.getSqlStatementInfoWithSummary().getQuerySummary();
+    }
+    return null;
   }
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
@@ -46,11 +58,11 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbNamespace(ClickHouseDbRequest request) {
-    String dbName = request.getDbName();
-    if (dbName == null || dbName.isEmpty()) {
+    String namespace = request.getNamespace();
+    if (namespace == null || namespace.isEmpty()) {
       return null;
     }
-    return dbName;
+    return namespace;
   }
 
   @Nullable

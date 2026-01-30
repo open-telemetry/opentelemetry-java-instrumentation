@@ -64,7 +64,7 @@ bootstrap.group(eventLoopGroup)
     });
 
 Channel channel = bootstrap.connect("localhost", 8080).sync().channel();
-NettyClientTelemetry.setChannelContext(channel, Context.current());
+NettyClientTelemetry.setParentContext(channel, Context.current());
 ```
 
 #### HTTP Server

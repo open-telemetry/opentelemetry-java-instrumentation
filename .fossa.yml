@@ -951,6 +951,9 @@ targets:
       target: ':instrumentation:servlet:servlet-5.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:servlet:servlet-5.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:servlet:servlet-common:bootstrap'
     - type: gradle
       path: ./

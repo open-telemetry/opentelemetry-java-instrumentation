@@ -29,9 +29,7 @@ public final class SupportabilityMetrics {
   private final ConcurrentMap<String, AtomicLong> counters = new ConcurrentHashMap<>();
 
   private static final SupportabilityMetrics INSTANCE =
-      new SupportabilityMetrics(
-              ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false), logger::fine)
-          .start();
+      new SupportabilityMetrics(DebugUtil.isAgentDebugEnabled(), logger::fine).start();
 
   public static SupportabilityMetrics instance() {
     return INSTANCE;
