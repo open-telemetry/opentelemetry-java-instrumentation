@@ -21,7 +21,8 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
-  private static final AttributeKey<String> SPAN_BODY_ATTRIBUTE =
+  // TODO: maybe we should move this to a dedicated helper class
+  public static final AttributeKey<String> SPAN_BODY_ATTRIBUTE =
       AttributeKey.stringKey("http.request.body.text");
   public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";
 
@@ -45,17 +46,23 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       @Nullable ServletResponseContext<RESPONSE> responseServletResponseContext,
       @Nullable Throwable error) {
 
-    Object requestBody =
-        accessor.getRequestAttribute(
-            requestServletRequestContext.request(), REQUEST_BODY_ATTRIBUTE);
-
-    if (requestBody instanceof ByteBuffer) {
-      ByteBuffer buffer = (ByteBuffer) requestBody;
-      // TODO: decide how to get the charset/encoding
-      buffer.arrayOffset();
-      attributes.put(
-          SPAN_BODY_ATTRIBUTE,
-          new String(buffer.array(), 0, buffer.position(), StandardCharsets.UTF_8));
+    String body = getRequestBodyValue(accessor, requestServletRequestContext.request());
+    if (body != null) {
+      attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }
+  }
+
+  @Nullable
+  public static <REQUEST, RESPONSE> String getRequestBodyValue(
+      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
+    Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
+
+    if (!(bodyAttribute instanceof ByteBuffer)) {
+      return null;
+    }
+    ByteBuffer buffer = (ByteBuffer) bodyAttribute;
+    // TODO: decide how to get the charset/encoding
+    buffer.arrayOffset();
+    return new String(buffer.array(), 0, buffer.position(), StandardCharsets.UTF_8);
   }
 }
