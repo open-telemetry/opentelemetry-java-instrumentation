@@ -665,6 +665,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Insert());
             appendOperationToSummary("INSERT");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -673,6 +676,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Delete());
             appendOperationToSummary("DELETE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -681,6 +687,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Update());
             appendOperationToSummary("UPDATE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -689,6 +698,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Call());
             appendOperationToSummary("CALL");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -697,6 +709,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
             appendOperationToSummary("MERGE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -705,6 +720,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Create());
             appendOperationToSummary("CREATE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -713,6 +731,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
             appendOperationToSummary("DROP");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -721,6 +742,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
             appendOperationToSummary("ALTER");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -740,6 +764,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
             appendOperationToSummary(yytext());
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
