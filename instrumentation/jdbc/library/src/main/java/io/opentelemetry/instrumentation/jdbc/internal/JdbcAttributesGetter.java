@@ -39,6 +39,24 @@ public final class JdbcAttributesGetter
   @Override
   public String getDbNamespace(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
+    String db = dbInfo.getDb();
+    String name = dbInfo.getName();
+
+    // SQL Server: combine instance and database per semconv
+    // Format: {instance_name}|{database_name} for named instances
+    // https://opentelemetry.io/docs/specs/semconv/db/sql-server/
+    if ("mssql".equals(dbInfo.getSystem()) && name != null && db != null) {
+      return name + "|" + db;
+    }
+
+    return name == null ? db : name;
+  }
+
+  @Deprecated
+  @Nullable
+  @Override
+  public String getDbName(DbRequest request) {
+    DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 

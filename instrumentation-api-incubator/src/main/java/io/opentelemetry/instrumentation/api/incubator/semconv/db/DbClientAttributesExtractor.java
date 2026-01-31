@@ -110,7 +110,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_SYSTEM, getter.getDbSystemName(request));
       internalSet(attributes, DB_USER, getter.getUser(request));
-      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
+      internalSet(attributes, DB_NAME, getter.getDbName(request));
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
