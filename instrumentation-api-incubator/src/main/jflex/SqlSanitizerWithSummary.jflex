@@ -534,6 +534,93 @@ WHITESPACE           = [ \t\r\n]+
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
 
+  /** TRUNCATE operation - captures TABLE keyword and table name. */
+  private class Truncate extends Operation {
+    boolean tableCaptured = false;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      String text = yytext();
+      // Include TABLE keyword in summary
+      if (text.equalsIgnoreCase("TABLE")) {
+        if (!tableCaptured) {
+          appendTargetToSummary();
+          tableCaptured = true;
+        }
+        return;
+      }
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  /** REPLACE operation (MySQL) - like INSERT, captures table name. */
+  private class Replace extends Operation {
+    boolean expectingTableName = false;
+    boolean tableCaptured = false;
+
+    void handleInto() {
+      expectingTableName = true;
+    }
+
+    void handleIdentifier() {
+      if (!tableCaptured) {
+        appendTargetToSummary();
+        tableCaptured = true;
+        expectingTableName = false;
+      }
+    }
+  }
+
+  /** LOCK operation - captures TABLE/TABLES keyword and table name. */
+  private class Lock extends Operation {
+    boolean tableCaptured = false;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      String text = yytext();
+      // Include TABLE/TABLES keywords in summary
+      if (text.equalsIgnoreCase("TABLE") || text.equalsIgnoreCase("TABLES")) {
+        if (!tableCaptured) {
+          appendTargetToSummary();
+          tableCaptured = true;
+        }
+        return;
+      }
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  /** USE operation - captures database name. */
+  private class Use extends SimpleOperation {}
+
+  /** Transaction control operations (BEGIN, COMMIT, ROLLBACK) - captures TRANSACTION if present. */
+  private class TransactionControl extends Operation {
+    boolean transactionCaptured = false;
+
+    void handleIdentifier() {
+      // Capture TRANSACTION keyword if present (e.g., BEGIN TRANSACTION, COMMIT TRANSACTION)
+      if (!transactionCaptured && yytext().equalsIgnoreCase("TRANSACTION")) {
+        appendTargetToSummary();
+        transactionCaptured = true;
+      }
+    }
+  }
+
+  /** GRANT operation - blocks other keywords from being parsed. */
+  private class Grant extends Operation {}
+
+  /** REVOKE operation - blocks other keywords from being parsed. */
+  private class Revoke extends Operation {}
+
+  /** SHOW operation - blocks other keywords from being parsed. */
+  private class Show extends Operation {}
+
   private SqlStatementInfo getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
@@ -657,6 +744,86 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "TRUNCATE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Truncate());
+            appendOperationToSummary("TRUNCATE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "REPLACE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Replace());
+            appendOperationToSummary("REPLACE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "LOCK" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Lock());
+            appendOperationToSummary("LOCK");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "USE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Use());
+            appendOperationToSummary("USE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "BEGIN" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            appendOperationToSummary("BEGIN");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "COMMIT" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            appendOperationToSummary("COMMIT");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ROLLBACK" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            appendOperationToSummary("ROLLBACK");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "GRANT" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Grant());
+            appendOperationToSummary("GRANT");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "REVOKE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Revoke());
+            appendOperationToSummary("REVOKE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "SHOW" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Show());
+            appendOperationToSummary("SHOW");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "CONNECT" {
           appendCurrentFragment();
           // sanitize SAP HANA CONNECT statement
@@ -719,10 +886,16 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "ONLY" {
+          // PostgreSQL: FROM/UPDATE/DELETE ONLY - just skip, don't treat as table name
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   ";" {
           if (!insideComment) {
-            // Statement separator - only append separator if we have content
-            if (querySummaryBuilder.length() > 0) {
+            // Statement separator - only append separator if we have content and not already ending with semicolon
+            if (querySummaryBuilder.length() > 0
+                && querySummaryBuilder.charAt(querySummaryBuilder.length() - 1) != ';') {
               querySummaryBuilder.append(';');
             }
             // Reset operation state for next statement
