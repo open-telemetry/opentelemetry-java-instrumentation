@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import rmi.app.Greeter;
 import rmi.app.Server;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class RmiTest {
 
   @RegisterExtension

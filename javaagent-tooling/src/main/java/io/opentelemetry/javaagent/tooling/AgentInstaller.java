@@ -295,12 +295,7 @@ public class AgentInstaller {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      try {
-        configurer.configure(builder);
-      } catch (UnsupportedOperationException e) {
-        // fall back to the deprecated method
-        configurer.configure(builder, config);
-      }
+      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();

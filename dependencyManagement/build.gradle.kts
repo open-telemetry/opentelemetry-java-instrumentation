@@ -43,7 +43,7 @@ val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.38.0"
+val semConvVersion = "1.39.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -88,7 +88,7 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.13.1",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
-  "commons-codec:commons-codec:1.20.0",
+  "commons-codec:commons-codec:1.21.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",

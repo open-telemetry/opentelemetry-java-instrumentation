@@ -35,6 +35,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class AwsSpanAssertions {
 
   private AwsSpanAssertions() {}
@@ -52,7 +53,6 @@ class AwsSpanAssertions {
     return sqs(span, spanName, queueUrl, queueName, CLIENT);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   static SpanDataAssert sqs(
       SpanDataAssert span, String spanName, String queueUrl, String queueName, SpanKind spanKind) {
 

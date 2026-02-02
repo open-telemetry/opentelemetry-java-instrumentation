@@ -6,11 +6,6 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +14,7 @@ import java.util.List;
  * any time.
  */
 public class JmxRuntimeMetricsFactory {
-  @SuppressWarnings("CatchingUnchecked")
+  @SuppressWarnings({"CatchingUnchecked", "deprecation"}) // ExperimentalXxx classes are deprecated
   public static List<AutoCloseable> buildObservables(
       OpenTelemetry openTelemetry, boolean emitExperimentalTelemetry, boolean captureGcCause) {
     // Set up metrics gathered by JMX
