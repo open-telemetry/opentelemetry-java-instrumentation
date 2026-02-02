@@ -103,7 +103,10 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                      span.hasName(
+                              emitStableDatabaseSemconv()
+                                  ? "USE " + parameter.keyspace
+                                  : "DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -113,7 +116,12 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace))),
+                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv()
+                                      ? "USE " + parameter.keyspace
+                                      : null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -189,7 +197,10 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                      span.hasName(
+                              emitStableDatabaseSemconv()
+                                  ? "USE " + parameter.keyspace
+                                  : "DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -199,7 +210,12 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace))),
+                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv()
+                                      ? "USE " + parameter.keyspace
+                                      : null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
