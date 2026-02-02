@@ -7,6 +7,7 @@ muzzle {
     group.set("dev.failsafe")
     module.set("failsafe")
     versions.set("[3.0.1,)")
+    assertInverse.set(true)
   }
 }
 
