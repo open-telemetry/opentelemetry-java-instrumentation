@@ -33,8 +33,8 @@ final class RetryPolicyInstrumentation implements TypeInstrumentation {
   }
 
   public static final class BuildAdvice {
-    @Nullable private static final Field FAILURE_LISTENER_FIELD;
-    @Nullable private static final Field SUCCESS_LISTENER_FIELD;
+    @Nullable public static final Field FAILURE_LISTENER_FIELD;
+    @Nullable public static final Field SUCCESS_LISTENER_FIELD;
 
     static {
       Field failureListenerField = null;
