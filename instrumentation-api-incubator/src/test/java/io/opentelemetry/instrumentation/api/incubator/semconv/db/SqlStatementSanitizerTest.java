@@ -503,6 +503,10 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT id, name FROM vendors",
             expect("SELECT", null, "SELECT employees SELECT contractors SELECT vendors")),
+        // Parenthesized table with UNION - identifier cancels pending subquery push
+        Arguments.of(
+            "SELECT * FROM (t UNION SELECT * FROM t2), t3",
+            expect("SELECT", null, "SELECT t SELECT t2")),
         Arguments.of(
             "select id, (select max(foo) from (select foo from foos union all select foo from bars)) as foo from main_table",
             expect("SELECT", null, "SELECT SELECT SELECT foos SELECT bars main_table")),
@@ -737,7 +741,17 @@ class SqlStatementSanitizerTest {
             expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")),
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = $a$nested $b$value$b$ here$a$",
-            expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")));
+            expect("SELECT * FROM TABLE WHERE FIELD = ?", "SELECT", "TABLE", "SELECT TABLE")),
+
+        // Subqueries in comma-separated FROM lists - state properly isolated via operation stack
+        Arguments.of(
+            "SELECT * FROM a, (SELECT * FROM b), c", expect("SELECT", null, "SELECT a SELECT b c")),
+        Arguments.of(
+            "SELECT * FROM (SELECT * FROM inner1), (SELECT * FROM inner2), outer_table",
+            expect("SELECT", null, "SELECT SELECT inner1 SELECT inner2 outer_table")),
+
+        // Parenthesized table name - not a subquery - valid on MySQL
+        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")));
   }
 
   private static Stream<Arguments> ddlArgs() {

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -16,7 +17,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -318,7 +318,7 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(ERROR_TYPE, "cancelled"),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
