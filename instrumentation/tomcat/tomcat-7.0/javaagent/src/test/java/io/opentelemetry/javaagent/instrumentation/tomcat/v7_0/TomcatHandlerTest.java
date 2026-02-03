@@ -98,7 +98,6 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setContextPath("/app");
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
-    options.setTestRequestBodyCapture(true);
     options.setTestErrorBody(false);
 
     options.setHasResponseSpan(
