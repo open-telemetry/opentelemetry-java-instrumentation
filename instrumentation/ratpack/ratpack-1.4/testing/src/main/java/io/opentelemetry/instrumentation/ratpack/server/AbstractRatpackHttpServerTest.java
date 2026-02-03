@@ -211,7 +211,6 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
         });
   }
 
-
   protected void registerHandlers(Chain chain) throws Exception {}
 
   protected void process(ServerEndpoint endpoint, Consumer<ServerEndpoint> consumer) {
