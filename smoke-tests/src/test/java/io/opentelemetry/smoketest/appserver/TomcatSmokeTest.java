@@ -25,6 +25,13 @@ abstract class TomcatSmokeTest extends AppServerTest {
     return !"7.0.109".equals(serverVersion);
   }
 
+  @Override
+  protected boolean testRequestOutsideDeployedApp() {
+    // On Windows, Tomcat 7 has timing issues where the first request to a path outside the
+    // deployed application doesn't produce a span.
+    return !(isWindows && "7.0.109".equals(serverVersion));
+  }
+
   @AppServer(version = "7.0.109", jdk = "8")
   static class Tomcat7Jdk8 extends TomcatSmokeTest {}
 
