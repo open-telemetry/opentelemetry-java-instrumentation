@@ -59,6 +59,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     options.setHasHandlerSpan(endpoint -> true);
     options.setTestNotFound(false);
     options.setHasResponseCustomizer(endpoint -> true);
+    options.setTestRequestBodyCapture(false);
   }
 
   @Test

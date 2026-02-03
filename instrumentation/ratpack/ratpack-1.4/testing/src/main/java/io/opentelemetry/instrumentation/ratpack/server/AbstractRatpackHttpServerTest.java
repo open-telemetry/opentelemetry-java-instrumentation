@@ -292,6 +292,9 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
 
+    // request body capture not supported yet
+    options.setTestRequestBodyCapture(false)
+
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
           if (endpoint.getStatus() == 404) {
