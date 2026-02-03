@@ -65,7 +65,8 @@ public final class HttpServerTestOptions {
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
-  boolean testRequestBodyCapture = true;
+  // request body capture disabled by default and opt-in as only a few servers/frameworks support it
+  boolean testRequestBodyCapture = false;
 
   HttpServerTestOptions() {}
 

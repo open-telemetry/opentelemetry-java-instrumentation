@@ -211,6 +211,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
         });
   }
 
+
   protected void registerHandlers(Chain chain) throws Exception {}
 
   protected void process(ServerEndpoint endpoint, Consumer<ServerEndpoint> consumer) {
@@ -291,9 +292,6 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
-
-    // request body capture not supported yet
-    options.setTestRequestBodyCapture(false)
 
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

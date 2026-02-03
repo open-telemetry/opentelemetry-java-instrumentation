@@ -36,9 +36,6 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
       @Override
       protected void configure(HttpServerTestOptions options) {
         options.setVerifyServerSpanEndTime(false);
-
-        // request body capture not supported with dispatch async
-        options.setTestRequestBodyCapture(false);
       }
 
       @Override
