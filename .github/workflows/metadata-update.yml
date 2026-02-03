@@ -30,15 +30,7 @@ jobs:
       pull-requests: write # for adding label and assignee to PR
 
     steps:
-      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
-        id: otelbot-token
-        with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          token: ${{ steps.otelbot-token.outputs.token }}
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -74,6 +66,13 @@ jobs:
         if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
 
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
       - name: Find or create metadata update branch
         if: steps.diffcheck.outputs.has_diff == 'true'
         id: findbranch
@@ -84,8 +83,6 @@ jobs:
 
       - name: Commit and push changes
         if: steps.diffcheck.outputs.has_diff == 'true'
-        env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
