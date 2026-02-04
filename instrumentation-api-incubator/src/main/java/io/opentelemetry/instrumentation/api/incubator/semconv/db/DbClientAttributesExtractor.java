@@ -108,7 +108,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_SYSTEM, getter.getDbSystem(request));
       attributes.put(DB_USER, getter.getUser(request));
-      attributes.put(DB_NAME, getter.getDbNamespace(request));
+      attributes.put(DB_NAME, getter.getDbName(request));
       attributes.put(DB_CONNECTION_STRING, getter.getConnectionString(request));
       attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION, getter.getDbOperationName(request));

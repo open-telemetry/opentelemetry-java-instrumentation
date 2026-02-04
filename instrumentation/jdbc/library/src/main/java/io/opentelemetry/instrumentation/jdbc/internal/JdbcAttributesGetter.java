@@ -61,30 +61,42 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
               // PostgreSQL-compatible fork, inherits PG string literal rules
               "polardb"));
 
-  @Nullable
   @Override
   public String getDbSystemName(DbRequest request) {
-    return request.getDbInfo().getSystem();
+    return request.getDbInfo().getDbSystemName();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  public String getDbSystem(DbRequest request) {
+    return request.getDbInfo().getDbSystem();
   }
 
   @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getUser(DbRequest request) {
-    return request.getDbInfo().getUser();
+    return request.getDbInfo().getDbUser();
   }
 
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
-    return request.getDbInfo().getName();
+    return request.getDbInfo().getDbNamespace();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  @Override
+  public String getDbName(DbRequest request) {
+    return request.getDbInfo().getDbName();
   }
 
   @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getConnectionString(DbRequest request) {
-    return request.getDbInfo().getShortUrl();
+    return request.getDbInfo().getDbConnectionString();
   }
 
   @Override
@@ -131,12 +143,12 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getServerAddress(DbRequest request) {
-    return request.getDbInfo().getHost();
+    return request.getDbInfo().getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbRequest request) {
-    return request.getDbInfo().getPort();
+    return request.getDbInfo().getServerPort();
   }
 }

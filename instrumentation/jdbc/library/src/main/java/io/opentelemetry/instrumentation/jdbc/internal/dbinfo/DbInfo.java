@@ -21,37 +21,48 @@ public abstract class DbInfo {
     return new AutoValue_DbInfo.Builder();
   }
 
+  /** The stable/new db.system.name value (e.g., "h2database", "microsoft.sql_server"). */
   @Nullable
-  public abstract String getSystem();
+  public abstract String getDbSystemName();
 
+  // @Deprecated to be removed in 3.0
+  // Have to leave @Deprecated commented out because AutoValue generates equals()/hashCode() that
+  // call this method
+  // without @SuppressWarnings, causing build failure with -Werror.
+  // @AutoValue.CopyAnnotations does
+  // not help because @SuppressWarnings has SOURCE retention and is not copied to generated code.
   @Nullable
-  public abstract String getSubtype();
+  public abstract String getDbSystem();
 
   // "type:[subtype:]//host:port"
   @Nullable
-  public abstract String getShortUrl();
+  public abstract String getDbConnectionString();
 
   @Nullable
-  public abstract String getUser();
+  public abstract String getDbUser();
 
   @Nullable
-  public abstract String getName();
+  public abstract String getDbName();
 
   @Nullable
-  public abstract String getHost();
+  public abstract String getDbNamespace();
 
   @Nullable
-  public abstract Integer getPort();
+  public abstract String getServerAddress();
+
+  @Nullable
+  public abstract Integer getServerPort();
 
   public Builder toBuilder() {
     return builder()
-        .system(getSystem())
-        .subtype(getSubtype())
-        .shortUrl(getShortUrl())
-        .user(getUser())
-        .name(getName())
-        .host(getHost())
-        .port(getPort());
+        .dbSystemName(getDbSystemName())
+        .dbSystem(getDbSystem())
+        .dbConnectionString(getDbConnectionString())
+        .dbUser(getDbUser())
+        .dbName(getDbName())
+        .dbNamespace(getDbNamespace())
+        .serverAddress(getServerAddress())
+        .serverPort(getServerPort());
   }
 
   /**
@@ -61,19 +72,26 @@ public abstract class DbInfo {
   @AutoValue.Builder
   public abstract static class Builder {
 
-    public abstract Builder system(String system);
+    public abstract Builder dbSystemName(String dbSystemName);
 
-    public abstract Builder subtype(String subtype);
+    // Deprecated: use dbSystemName() instead; to be removed in 3.0.
+    // Not using @Deprecated because AutoValue generates equals()/hashCode() that call this method
+    // without @SuppressWarnings, causing build failure with -Werror. @AutoValue.CopyAnnotations
+    // does not help because @SuppressWarnings has SOURCE retention and is not copied to generated
+    // code.
+    public abstract Builder dbSystem(String dbSystem);
 
-    public abstract Builder shortUrl(String shortUrl);
+    public abstract Builder dbConnectionString(String dbConnectionString);
 
-    public abstract Builder user(String user);
+    public abstract Builder dbUser(String dbUser);
 
-    public abstract Builder name(String name);
+    public abstract Builder dbName(String dbName);
 
-    public abstract Builder host(String host);
+    public abstract Builder dbNamespace(String dbNamespace);
 
-    public abstract Builder port(Integer port);
+    public abstract Builder serverAddress(String serverAddress);
+
+    public abstract Builder serverPort(Integer serverPort);
 
     public abstract DbInfo build();
   }
