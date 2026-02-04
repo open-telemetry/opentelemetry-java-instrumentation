@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
@@ -57,12 +58,16 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
     Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
 
-    if (!(bodyAttribute instanceof ByteBuffer)) {
-      return null;
+    if (bodyAttribute instanceof ByteBuffer) {
+      ByteBuffer buffer = (ByteBuffer) bodyAttribute;
+      String encoding = accessor.getRequestContentEncoding(request);
+      Charset charset = StandardCharsets.UTF_8;
+      if (encoding != null && Charset.isSupported(encoding)) {
+        charset = Charset.forName(encoding);
+      }
+      buffer.arrayOffset();
+      return new String(buffer.array(), 0, buffer.position(), charset);
     }
-    ByteBuffer buffer = (ByteBuffer) bodyAttribute;
-    // TODO: decide how to get the charset/encoding
-    buffer.arrayOffset();
-    return new String(buffer.array(), 0, buffer.position(), StandardCharsets.UTF_8);
+    return null;
   }
 }
