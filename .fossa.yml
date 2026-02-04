@@ -279,6 +279,12 @@ targets:
       target: ':instrumentation:rmi:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:runtime-telemetry:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:runtime-telemetry:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:scala-fork-join-2.8:javaagent'
     - type: gradle
       path: ./
