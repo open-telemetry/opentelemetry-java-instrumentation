@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
@@ -45,9 +44,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
-
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
@@ -205,13 +201,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       PeerServiceResolver peerServiceResolver) {
     return addAttributesExtractor(
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
-  }
-
-  /** Sets the {@code peer.service} attribute for http client spans. */
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerService(
-      String peerService) {
-    return addAttributesExtractor(AttributesExtractor.constant(PEER_SERVICE, peerService));
   }
 
   @CanIgnoreReturnValue

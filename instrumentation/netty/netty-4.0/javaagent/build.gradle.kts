@@ -57,8 +57,19 @@ tasks {
     }
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    filter {
+      excludeTestsMatching("Netty40ConnectionSpanTest")
+      excludeTestsMatching("Netty40ClientSslTest")
+    }
+  }
+
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }
 
