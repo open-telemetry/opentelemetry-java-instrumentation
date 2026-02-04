@@ -12060,8 +12060,8 @@ libraries:
     - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
-    description: This instrumentation enables spans for jobs run by the Spring Batch
-      framework.
+    description: |
+      This instrumentation enables spans for Spring Batch job execution, including job, step, and chunk processing.
     library_link: https://spring.io/projects/spring-batch
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
@@ -12092,6 +12092,7 @@ libraries:
         - name: job.system
           type: STRING
   - name: spring-boot-actuator-autoconfigure-2.0
+    display_name: Spring Boot Actuator Autoconfigure
     description: |
       This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from Spring Boot Actuator. It does not produce telemetry on its own.
     library_link: https://spring.io/projects/spring-boot
@@ -12102,6 +12103,7 @@ libraries:
     javaagent_target_versions:
     - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
   - name: spring-boot-resources
+    display_name: Spring Boot Resource Detector
     description: |
       This instrumentation automatically detects the `service.name` and `service.version` for Spring Boot applications and sets them as resource attributes.
       It uses the following strategies (first successful wins):
@@ -12118,8 +12120,9 @@ libraries:
     scope:
       name: io.opentelemetry.spring-boot-resources
   - name: spring-cloud-aws-3.0
+    display_name: Spring Cloud AWS
     description: |
-      This instrumentation enhances tracing for Spring Cloud AWS. It augments the existing AWS SDK instrumentation by providing higher-level tracing for SQS operations, capturing details specific to Spring Cloud AWS SQS usage and linking them to the underlying AWS SDK traces.
+      This instrumentation enhances messaging span creation for Spring Cloud AWS SQS. It coordinates with the AWS SDK instrumentation to create process spans at the appropriate points in Spring Cloud AWS message handling.
     library_link: https://spring.io/projects/spring-cloud-aws
     source_path: instrumentation/spring/spring-cloud-aws-3.0
     minimum_java_version: 17
@@ -12129,7 +12132,7 @@ libraries:
     - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
   - name: spring-cloud-gateway-2.0
     description: |
-      This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
+      This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate any telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
     library_link: https://github.com/spring-cloud/spring-cloud-gateway
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
     scope:
@@ -12144,12 +12147,22 @@ libraries:
       type: boolean
       default: false
   - name: spring-cloud-gateway-webmvc-4.3
+    description: |
+      This instrumentation enhances tracing for Spring Cloud Gateway Server WebMVC. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Spring WebMVC with Spring Cloud Gateway-specific attributes.
+    library_link: https://github.com/spring-cloud/spring-cloud-gateway
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-webmvc-4.3
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-cloud-gateway-webmvc-4.3
     javaagent_target_versions:
     - org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:[4.3.0,)
+    configurations:
+    - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
+      description: Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
+        `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on
+        spans.
+      type: boolean
+      default: false
   - name: spring-core-2.0
     description: |
       This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
