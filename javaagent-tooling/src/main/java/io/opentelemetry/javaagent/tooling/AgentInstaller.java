@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
-import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -162,10 +161,7 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig =
-        requireNonNull(
-            AutoConfigureUtil.getConfig(autoConfiguredSdk), "SDK config must not be null");
-    requireNonNull(extensionClassLoader, "Extension class loader must not be null");
+    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
@@ -282,7 +278,7 @@ public class AgentInstaller {
   }
 
   private static void setBootstrapPackages(
-      ConfigProperties config, ClassLoader extensionClassLoader) {
+      @Nullable ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer :
         load(BootstrapPackagesConfigurer.class, extensionClassLoader)) {
@@ -298,7 +294,9 @@ public class AgentInstaller {
   // Need to call deprecated API for backward compatibility with extensions that haven't migrated
   @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
-      ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
+      @Nullable ConfigProperties config,
+      ClassLoader extensionClassLoader,
+      AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {

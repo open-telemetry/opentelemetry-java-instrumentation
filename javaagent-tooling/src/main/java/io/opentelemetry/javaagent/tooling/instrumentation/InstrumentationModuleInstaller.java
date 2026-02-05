@@ -71,7 +71,7 @@ public final class InstrumentationModuleInstaller {
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      @Nullable ConfigProperties config) {
     if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(),
         instrumentationModule.defaultEnabled(config))) {
