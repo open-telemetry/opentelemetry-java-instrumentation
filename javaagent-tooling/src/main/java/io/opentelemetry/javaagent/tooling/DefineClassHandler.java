@@ -118,7 +118,7 @@ public class DefineClassHandler implements Handler {
       previous = null;
     }
 
-    private DefineClassContextImpl(DefineClassContextImpl previous) {
+    private DefineClassContextImpl(@Nullable DefineClassContextImpl previous) {
       this.previous = previous;
     }
 
@@ -131,7 +131,7 @@ public class DefineClassHandler implements Handler {
 
     @Override
     public void exit() {
-      defineClassContext.set(previous);
+      defineClassContext.set(previous != null ? previous : NOP);
     }
   }
 }
