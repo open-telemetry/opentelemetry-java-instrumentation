@@ -30,7 +30,7 @@ public final class SpringIntegrationSingletons {
                   .get("producer")
                   .getBoolean("enabled", false))
           .build()
-          .newChannelInterceptor();
+          .createChannelInterceptor();
 
   public static String[] patterns() {
     return PATTERNS.toArray(new String[0]);

@@ -17,7 +17,7 @@ import java.util.Collection;
 import java.util.function.UnaryOperator;
 import org.springframework.web.server.ServerWebExchange;
 
-/** A builder of {@link SpringWebfluxServerTelemetry}. */
+/** Builder for {@link SpringWebfluxServerTelemetry}. */
 public final class SpringWebfluxServerTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
@@ -39,8 +39,8 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder addAttributesExtractor(
@@ -50,10 +50,9 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes from server
-   * instrumentation.
+   * Configures HTTP request headers to capture as span attributes.
    *
-   * @param requestHeaders A list of HTTP header names.
+   * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setCapturedRequestHeaders(
@@ -63,10 +62,9 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes from server
-   * instrumentation.
+   * Configures HTTP response headers to capture as span attributes.
    *
-   * @param responseHeaders A list of HTTP header names.
+   * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setCapturedResponseHeaders(
@@ -76,16 +74,15 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   * Configures recognized HTTP request methods.
    *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * <p>By default, recognizes methods from <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
    *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
+   * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
-   * @param knownMethods A set of recognized HTTP request methods.
+   * @param knownMethods HTTP request methods to recognize.
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
@@ -94,22 +91,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Sets custom server {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebfluxServerTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<ServerWebExchange>> serverSpanNameExtractor) {
-    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
-  }
-
-  /**
-   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
-   * one.
-   */
+  /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<ServerWebExchange>> spanNameExtractorCustomizer) {
@@ -117,10 +99,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Returns a new {@link SpringWebfluxServerTelemetry} with the settings of this {@link
-   * SpringWebfluxServerTelemetryBuilder}.
-   */
+  /** Returns a new instance with the configured settings. */
   public SpringWebfluxServerTelemetry build() {
     return new SpringWebfluxServerTelemetry(builder.build());
   }

@@ -47,7 +47,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
   @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
-        .addExecutionInterceptor(telemetry.newExecutionInterceptor());
+        .addExecutionInterceptor(telemetry.createExecutionInterceptor());
   }
 
   private static String base64ify(String json) {

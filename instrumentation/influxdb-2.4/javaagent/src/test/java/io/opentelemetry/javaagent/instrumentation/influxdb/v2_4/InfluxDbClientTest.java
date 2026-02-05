@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -13,17 +14,15 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -114,28 +113,51 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(null, "CREATE DATABASE", dbName))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_OPERATION), "CREATE DATABASE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", dbName))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + dbName)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions("SELECT * FROM cpu GROUP BY *", "SELECT", dbName))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu GROUP BY *"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu" : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(null, "DROP DATABASE", dbName))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_OPERATION), "DROP DATABASE"))));
   }
 
   @Test
@@ -147,20 +169,32 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(
-                                "SELECT * FROM cpu_load where test1 = ?",
-                                "SELECT",
-                                databaseName))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "SELECT * FROM cpu_load where test1 = ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
 
     assertDurationMetric(
         testing,
         "io.opentelemetry.influxdb-2.4",
         DB_SYSTEM_NAME,
         DB_NAMESPACE,
-        DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         SERVER_ADDRESS,
         SERVER_PORT);
   }
@@ -180,13 +214,25 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(
-                                "SELECT * FROM cpu_load where time >= ? AND time <= ?",
-                                "SELECT",
-                                databaseName))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "SELECT * FROM cpu_load where time >= ? AND time <= ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
   }
 
   @Test
@@ -201,11 +247,23 @@ class InfluxDbClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT cpu_load"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(
-                                "SELECT * FROM cpu_load", "SELECT", databaseName))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu_load"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
   }
 
   @Test
@@ -232,14 +290,28 @@ class InfluxDbClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT h2o_feet; SELECT h2o_feet"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
-                            attributeAssertions(
-                                "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?",
-                                "SELECT",
-                                databaseName)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT h2o_feet; SELECT h2o_feet"
+                                    : null)),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -268,12 +340,20 @@ class InfluxDbClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT " + databaseName)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
-                            attributeAssertions(
-                                "SELECT MEAN(water_level) FROM;", "SELECT", databaseName)),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT MEAN(water_level) FROM;"),
+                            equalTo(
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null)),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -291,8 +371,12 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(null, "WRITE", databaseName))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))));
   }
 
   @Test
@@ -309,8 +393,12 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
-                            attributeAssertions(null, "WRITE", databaseName))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), databaseName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))));
   }
 
   @Test
@@ -328,22 +416,11 @@ class InfluxDbClientTest {
                 span ->
                     span.hasName("WRITE")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(attributeAssertions(null, "WRITE", null))));
-  }
-
-  private static List<AttributeAssertion> attributeAssertions(
-      String statement, String operation, String databaseName) {
-    List<AttributeAssertion> result = new ArrayList<>();
-    result.addAll(
-        asList(
-            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
-            equalTo(maybeStable(DB_NAME), databaseName),
-            equalTo(SERVER_ADDRESS, host),
-            equalTo(SERVER_PORT, port),
-            equalTo(maybeStable(DB_OPERATION), operation)));
-    if (statement != null) {
-      result.add(equalTo(maybeStable(DB_STATEMENT), statement));
-    }
-    return result;
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_NAME), null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_OPERATION), "WRITE"))));
   }
 }

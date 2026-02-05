@@ -11,10 +11,6 @@ dependencies {
   implementation("org.yaml:snakeyaml:2.5")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
-
-  testImplementation("org.assertj:assertj-core")
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
 tasks {

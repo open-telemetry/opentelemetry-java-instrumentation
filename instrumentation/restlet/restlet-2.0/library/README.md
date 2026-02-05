@@ -42,7 +42,7 @@ public class RestletExample {
     OpenTelemetry openTelemetry = ...;
 
     RestletTelemetry restletTelemetry = RestletTelemetry.create(openTelemetry);
-    Filter tracingFilter = restletTelemetry.newFilter("/api");
+    Filter tracingFilter = restletTelemetry.createFilter("/api");
 
     Application application = new Application() {
       @Override

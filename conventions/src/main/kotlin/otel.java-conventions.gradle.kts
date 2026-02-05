@@ -184,7 +184,6 @@ testing {
       implementation("org.mockito:mockito-inline")
       implementation("org.mockito:mockito-junit-jupiter")
 
-      implementation("org.objenesis:objenesis")
       implementation("ch.qos.logback:logback-classic")
       implementation("org.slf4j:log4j-over-slf4j")
       implementation("org.slf4j:jcl-over-slf4j")
@@ -416,7 +415,7 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.0.0"
+  toolVersion = "13.1.0"
   maxWarnings = 0
 }
 

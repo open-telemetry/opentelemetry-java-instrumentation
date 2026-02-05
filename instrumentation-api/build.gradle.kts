@@ -22,7 +22,6 @@ dependencies {
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
-  testImplementation("org.junit-pioneer:junit-pioneer")
 
   jmhImplementation(project(":instrumentation-api-incubator"))
 }
@@ -35,7 +34,7 @@ tasks {
   // TODO this should live in jmh-conventions
   named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

@@ -32,3 +32,7 @@ dependencies {
   latestDepTestLibrary("org.eclipse.jetty:jetty-server:7.+") // see servlet-3.0 module
   latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:7.+") // see servlet-3.0 module
 }
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+}

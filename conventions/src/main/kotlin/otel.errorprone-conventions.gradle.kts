@@ -15,10 +15,11 @@ val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] =
 tasks {
   withType<JavaCompile>().configureEach {
     with(options) {
+      compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
       errorprone {
         if (disableErrorProne) {
           logger.warn("Errorprone has been disabled. Build may not result in a valid PR build.")
-          isEnabled.set(false)
+          enabled.set(false)
         }
 
         disableWarningsInGeneratedCode.set(true)
@@ -123,6 +124,7 @@ tasks {
         disable("NonFinalStaticField")
 
         // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
         if (testLatestDeps) {

@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
 
@@ -30,7 +30,7 @@ public final class GraphqlSingletons {
   }
 
   public static Instrumentation addInstrumentation(Instrumentation instrumentation) {
-    Instrumentation ourInstrumentation = TELEMETRY.newInstrumentation();
+    Instrumentation ourInstrumentation = TELEMETRY.createInstrumentation();
     return InstrumentationUtil.addInstrumentation(instrumentation, ourInstrumentation);
   }
 
@@ -49,7 +49,7 @@ public final class GraphqlSingletons {
     private final boolean addOperationNameToSpanName;
 
     Configuration(OpenTelemetry openTelemetry) {
-      ExtendedDeclarativeConfigProperties config =
+      DeclarativeConfigProperties config =
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
       this.captureQuery = config.getBoolean("capture_query", true);

@@ -24,6 +24,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
@@ -32,6 +33,7 @@ import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
@@ -66,27 +68,18 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  // visible for testing
-  String getStatement(Exchange exchange, Endpoint endpoint) {
+  @Nullable
+  private String getRawQueryText(Exchange exchange) {
     switch (component) {
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
-        if (cqlObj != null) {
-          return sanitizer.sanitize(cqlObj.toString()).getFullStatement();
-        }
-        return null;
+        return cqlObj != null ? cqlObj.toString() : null;
       case "jdbc":
         Object body = exchange.getIn().getBody();
-        if (body instanceof String) {
-          return sanitizer.sanitize((String) body).getFullStatement();
-        }
-        return null;
+        return body instanceof String ? (String) body : null;
       case "sql":
         Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
-        if (sqlquery instanceof String) {
-          return sanitizer.sanitize((String) sqlquery).getFullStatement();
-        }
-        return null;
+        return sqlquery instanceof String ? (String) sqlquery : null;
       default:
         return null;
     }
@@ -131,15 +124,9 @@ class DbSpanDecorator extends BaseSpanDecorator {
     if (SemconvStability.emitOldDatabaseSemconv()) {
       attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
     }
-    String statement = getStatement(exchange, endpoint);
-    if (statement != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_QUERY_TEXT, statement);
-      }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
-      }
-    }
+
+    setQueryAttributes(attributes, exchange);
+
     String dbName = getDbName(endpoint);
     if (dbName != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
@@ -147,6 +134,28 @@ class DbSpanDecorator extends BaseSpanDecorator {
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      }
+    }
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
+    String rawQueryText = getRawQueryText(exchange);
+    if (rawQueryText != null) {
+      SqlStatementInfo sqlStatementInfo =
+          SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
+      SqlStatementInfo sqlStatementInfoWithSummary =
+          SemconvStability.emitStableDatabaseSemconv()
+              ? sanitizer.sanitizeWithSummary(rawQueryText)
+              : null;
+
+      if (sqlStatementInfoWithSummary != null) {
+        attributes.put(DbAttributes.DB_QUERY_TEXT, sqlStatementInfoWithSummary.getQueryText());
+        attributes.put(
+            DbAttributes.DB_QUERY_SUMMARY, sqlStatementInfoWithSummary.getQuerySummary());
+      }
+      if (sqlStatementInfo != null) {
+        attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlStatementInfo.getQueryText());
       }
     }
   }

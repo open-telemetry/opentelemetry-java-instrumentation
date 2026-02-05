@@ -180,7 +180,6 @@ testing {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation("org.mockito:mockito-inline")
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))

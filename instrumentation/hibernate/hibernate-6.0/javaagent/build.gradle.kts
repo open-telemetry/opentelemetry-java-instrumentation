@@ -49,6 +49,7 @@ testing {
       dependencies {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation(project(":instrumentation:hibernate:testing"))
         if (latestDepTest) {
           implementation("org.hibernate:hibernate-core:6.+")
         } else {
@@ -66,6 +67,7 @@ testing {
       dependencies {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation(project(":instrumentation:hibernate:testing"))
         if (latestDepTest) {
           implementation("org.hibernate:hibernate-core:7.+")
         } else {
@@ -101,14 +103,23 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
+    }
+
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named("hibernate7TestStableSemconv", Test::class).configure {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testExperimental)
+    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
   }
 }

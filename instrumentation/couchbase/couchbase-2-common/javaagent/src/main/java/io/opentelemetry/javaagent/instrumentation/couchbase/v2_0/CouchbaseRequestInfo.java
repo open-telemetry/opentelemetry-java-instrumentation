@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.context.ContextKey.named;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
@@ -40,14 +42,17 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
-
+    SqlStatementInfo sqlStatementInfo =
+        emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitize(query) : null;
+    SqlStatementInfo sqlStatementInfoWithSummary =
+        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitizeWithSummary(query) : null;
+    String operation = sqlStatementInfo != null ? sqlStatementInfo.getOperationName() : null;
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getFullStatement(), statement.getOperation(), false);
+        bucket, sqlStatementInfo, sqlStatementInfoWithSummary, operation, false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -69,7 +74,10 @@ public abstract class CouchbaseRequestInfo {
   public abstract String bucket();
 
   @Nullable
-  public abstract String statement();
+  public abstract SqlStatementInfo getSqlStatementInfo();
+
+  @Nullable
+  public abstract SqlStatementInfo getSqlStatementInfoWithSummary();
 
   @Nullable
   public abstract String operation();

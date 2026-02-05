@@ -13,12 +13,14 @@ import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter
-    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
+    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo>,
+        ExtractQuerySummaryMarker {
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String CASSANDRA = "cassandra";
 
@@ -55,5 +57,10 @@ final class CassandraSqlAttributesGetter
       return (InetSocketAddress) endPoint.resolve();
     }
     return null;
+  }
+
+  @Override
+  public boolean isParameterizedQuery(CassandraRequest request) {
+    return request.isParameterizedQuery();
   }
 }

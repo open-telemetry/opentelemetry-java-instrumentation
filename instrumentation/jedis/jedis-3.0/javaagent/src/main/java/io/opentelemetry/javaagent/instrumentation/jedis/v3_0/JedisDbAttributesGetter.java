@@ -23,11 +23,11 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbQueryText(JedisRequest request) {
-    return request.getStatement();
+    return request.getQueryText();
   }
 
   @Override
   public String getDbOperationName(JedisRequest request) {
-    return request.getOperation();
+    return request.getOperationName();
   }
 }

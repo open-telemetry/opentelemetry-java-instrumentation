@@ -26,14 +26,14 @@ class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
         .setCapturedResponseHeaders(
             Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
         .build()
-        .getHttpClient();
+        .createHttpClient();
   }
 
   @Override
   protected HttpClient createHttpsClient(SslContextFactory.Client sslContextFactory) {
-    return JettyClientTelemetry.builder(testing.getOpenTelemetry())
-        .setSslContextFactory(sslContextFactory)
-        .build()
-        .getHttpClient();
+    HttpClient client =
+        JettyClientTelemetry.builder(testing.getOpenTelemetry()).build().createHttpClient();
+    client.setSslContextFactory(sslContextFactory);
+    return client;
   }
 }

@@ -7,14 +7,9 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 
 public final class AgentConfig {
-
-  public static boolean isDebugModeEnabled(ConfigProperties config) {
-    return config.getBoolean("otel.javaagent.debug", false);
-  }
 
   public static String instrumentationMode() {
     String mode =

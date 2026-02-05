@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -16,7 +17,8 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+public final class JdbcAttributesGetter
+    implements SqlClientAttributesGetter<DbRequest, Void>, ExtractQuerySummaryMarker {
 
   public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
 
@@ -53,13 +55,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public Long getBatchSize(DbRequest request) {
+  public Long getDbOperationBatchSize(DbRequest request) {
     return request.getBatchSize();
   }
 
   @Nullable
   @Override
-  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }
@@ -67,8 +69,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public Map<String, String> getQueryParameters(DbRequest request) {
+  public Map<String, String> getDbQueryParameters(DbRequest request) {
     return request.getPreparedStatementParameters();
+  }
+
+  @Override
+  public boolean isParameterizedQuery(DbRequest request) {
+    return request.isParameterizedQuery();
   }
 
   @Nullable

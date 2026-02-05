@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -44,9 +45,9 @@ public final class CommonConfig {
   }
 
   public CommonConfig(OpenTelemetry openTelemetry) {
-    ExtendedDeclarativeConfigProperties generalConfig =
+    DeclarativeConfigProperties generalConfig =
         DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
-    ExtendedDeclarativeConfigProperties commonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     peerServiceResolver = PeerServiceResolver.create(openTelemetry);
 

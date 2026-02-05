@@ -24,6 +24,9 @@ public final class SemconvStability {
   private static final boolean emitOldCodeSemconv;
   private static final boolean emitStableCodeSemconv;
 
+  private static final boolean emitOldServicePeerSemconv;
+  private static final boolean emitStableServicePeerSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
@@ -31,7 +34,13 @@ public final class SemconvStability {
     boolean oldCode = true;
     boolean stableCode = false;
 
-    String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
+    boolean oldServicePeer = true;
+    boolean stableServicePeer = false;
+
+    String value = System.getProperty("otel.semconv-stability.opt-in");
+    if (value == null) {
+      value = System.getenv("OTEL_SEMCONV_STABILITY_OPT_IN");
+    }
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
 
@@ -55,6 +64,15 @@ public final class SemconvStability {
         oldCode = true;
         stableCode = true;
       }
+
+      if (values.contains("service.peer")) {
+        oldServicePeer = false;
+        stableServicePeer = true;
+      }
+      if (values.contains("service.peer/dup")) {
+        oldServicePeer = true;
+        stableServicePeer = true;
+      }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
@@ -62,6 +80,9 @@ public final class SemconvStability {
 
     emitOldCodeSemconv = oldCode;
     emitStableCodeSemconv = stableCode;
+
+    emitOldServicePeerSemconv = oldServicePeer;
+    emitStableServicePeerSemconv = stableServicePeer;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -70,6 +91,14 @@ public final class SemconvStability {
 
   public static boolean emitStableDatabaseSemconv() {
     return emitStableDatabaseSemconv;
+  }
+
+  public static boolean emitOldServicePeerSemconv() {
+    return emitOldServicePeerSemconv;
+  }
+
+  public static boolean emitStableServicePeerSemconv() {
+    return emitStableServicePeerSemconv;
   }
 
   private static final Map<String, String> dbSystemNameMap = new HashMap<>();

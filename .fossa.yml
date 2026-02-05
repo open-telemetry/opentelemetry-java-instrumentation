@@ -900,6 +900,15 @@ targets:
       target: ':instrumentation:restlet:restlet-2.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:rocketmq:rocketmq-client-4.8:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rocketmq:rocketmq-client-4.8:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rocketmq:rocketmq-client-5.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent'
     - type: gradle
       path: ./
@@ -946,6 +955,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:servlet:servlet-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-common:bootstrap'
@@ -1138,15 +1150,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent'

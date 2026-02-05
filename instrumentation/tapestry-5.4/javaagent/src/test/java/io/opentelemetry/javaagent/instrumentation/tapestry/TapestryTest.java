@@ -29,8 +29,7 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
   private static WebClient client;
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected Server setupServer() throws Exception {
