@@ -162,6 +162,12 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    if (sdkConfig == null) {
+      throw new IllegalStateException("SDK config must not be null");
+    }
+    if (extensionClassLoader == null) {
+      throw new IllegalStateException("Extension class loader must not be null");
+    }
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
@@ -261,13 +267,16 @@ public class AgentInstaller {
 
     VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
         VirtualFieldImplementationInstallerFactory.getInstance();
-    for (EarlyInstrumentationModule earlyInstrumentationModule :
-        loadOrdered(EarlyInstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
+    if (extensionsClassLoader != null) {
+      for (EarlyInstrumentationModule earlyInstrumentationModule :
+          loadOrdered(EarlyInstrumentationModule.class, extensionsClassLoader)) {
 
-      VirtualFieldImplementationInstaller contextProvider =
-          virtualFieldInstallerFactory.create(
-              earlyInstrumentationModule.getInstrumentationModule());
-      extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
+        VirtualFieldImplementationInstaller contextProvider =
+            virtualFieldInstallerFactory.create(
+                earlyInstrumentationModule.getInstrumentationModule());
+        extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
+      }
     }
 
     agentBuilder = AgentBuilderUtil.optimize(extendableAgentBuilder);

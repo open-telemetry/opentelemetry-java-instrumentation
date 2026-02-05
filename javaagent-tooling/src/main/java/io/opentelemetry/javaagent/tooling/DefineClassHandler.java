@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassReader;
 
 public class DefineClassHandler implements Handler {
@@ -27,7 +28,7 @@ public class DefineClassHandler implements Handler {
         || (classBytes.length == 40
             && new String(classBytes, StandardCharsets.ISO_8859_1)
                 .startsWith("J9ROMCLASSCOOKIE"))) {
-      return null;
+      return DefineClassContextImpl.NOP;
     }
 
     Set<String> superNames = new HashSet<>();
@@ -109,9 +110,9 @@ public class DefineClassHandler implements Handler {
   private static class DefineClassContextImpl implements DefineClassContext {
     private static final DefineClassContextImpl NOP = new DefineClassContextImpl();
 
-    private final DefineClassContextImpl previous;
-    String failedClassDotName;
-    Set<String> superDotNames;
+    @Nullable private final DefineClassContextImpl previous;
+    @Nullable String failedClassDotName;
+    @Nullable Set<String> superDotNames;
 
     private DefineClassContextImpl() {
       previous = null;
