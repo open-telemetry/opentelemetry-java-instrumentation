@@ -54,19 +54,30 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   }
 
   @Nullable
+  @SuppressWarnings(
+      "ByteBufferBackingArray") // we know the buffer is array-backed and check it at runtime
   public static <REQUEST, RESPONSE> String getRequestBodyValue(
       ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
     Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
 
     if (bodyAttribute instanceof ByteBuffer) {
       ByteBuffer buffer = (ByteBuffer) bodyAttribute;
+      if (buffer.position() == 0) {
+        // buffer is empty or has been already flipped and read
+        return null;
+      }
       String encoding = accessor.getRequestContentEncoding(request);
       Charset charset = StandardCharsets.UTF_8;
       if (encoding != null && Charset.isSupported(encoding)) {
         charset = Charset.forName(encoding);
       }
-      buffer.arrayOffset();
-      return new String(buffer.array(), 0, buffer.position(), charset);
+      if (!buffer.hasArray()) {
+        return null;
+      }
+      buffer.flip();
+      String result = new String(buffer.array(), buffer.position(), buffer.limit(), charset);
+      buffer.clear();
+      return result;
     }
     return null;
   }
