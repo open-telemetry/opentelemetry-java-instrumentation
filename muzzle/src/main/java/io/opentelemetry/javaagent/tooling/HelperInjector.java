@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
@@ -121,17 +122,15 @@ public class HelperInjector implements Transformer {
     if (helperClassNames.isEmpty()) {
       helpers = Collections.emptyList();
     } else {
-      if (helpersSource == null) {
-        throw new IllegalArgumentException(
-            "helpersSource must not be null when helperClassNames is not empty");
-      }
+      ClassLoader source =
+          requireNonNull(
+              helpersSource, "helpersSource must not be null when helperClassNames is not empty");
       helpers =
           helperClassNames.stream()
               .distinct()
               .map(
                   className ->
-                      HelperClassDefinition.create(
-                          className, helpersSource, InjectionMode.CLASS_ONLY))
+                      HelperClassDefinition.create(className, source, InjectionMode.CLASS_ONLY))
               .collect(Collectors.toList());
     }
 

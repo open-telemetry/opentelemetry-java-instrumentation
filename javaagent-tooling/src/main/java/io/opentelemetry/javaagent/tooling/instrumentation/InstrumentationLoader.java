@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
@@ -28,10 +29,9 @@ public class InstrumentationLoader implements AgentExtension {
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
     int numberOfLoadedModules = 0;
-    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
-    if (extensionsClassLoader == null) {
-      throw new IllegalStateException("Extensions class loader must not be null");
-    }
+    ClassLoader extensionsClassLoader =
+        requireNonNull(
+            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
     for (InstrumentationModule instrumentationModule :
         loadOrdered(InstrumentationModule.class, extensionsClassLoader)) {
       if (logger.isLoggable(FINE)) {

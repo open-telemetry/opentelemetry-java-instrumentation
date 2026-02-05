@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -135,17 +136,13 @@ public final class InstrumentationModuleInstaller {
           return helpers;
         };
 
-    Instrumentation inst = instrumentation;
-    if (inst == null) {
-      throw new IllegalStateException("Instrumentation must not be null");
-    }
     HelperInjector helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperGenerator,
             helperResourceBuilder.getResources(),
             instrumentationModule.getClass().getClassLoader(),
-            inst);
+            requireNonNull(instrumentation, "Instrumentation must not be null"));
 
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
@@ -193,14 +190,11 @@ public final class InstrumentationModuleInstaller {
     }
 
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
-    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
-    Instrumentation inst = instrumentation;
-    if (extensionsClassLoader == null) {
-      throw new IllegalStateException("Extensions class loader must not be null");
-    }
-    if (inst == null) {
-      throw new IllegalStateException("Instrumentation must not be null");
-    }
+    ClassLoader extensionsClassLoader =
+        requireNonNull(
+            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
+    Instrumentation inst =
+        requireNonNull(instrumentation, "Instrumentation must not be null");
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -161,13 +162,10 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    if (sdkConfig == null) {
-      throw new IllegalStateException("SDK config must not be null");
-    }
-    if (extensionClassLoader == null) {
-      throw new IllegalStateException("Extension class loader must not be null");
-    }
+    ConfigProperties sdkConfig =
+        requireNonNull(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk), "SDK config must not be null");
+    requireNonNull(extensionClassLoader, "Extension class loader must not be null");
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(

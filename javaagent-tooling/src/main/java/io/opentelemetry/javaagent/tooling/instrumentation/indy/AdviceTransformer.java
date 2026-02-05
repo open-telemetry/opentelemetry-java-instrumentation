@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -501,10 +503,8 @@ class AdviceTransformer {
           public void visitInsn(int opcode) {
             if (isEnterAdvice && Opcodes.ARETURN == opcode) {
               // expecting object array on stack
-              GeneratorAdapter ga = generatorRef.get();
-              if (ga == null) {
-                throw new IllegalStateException("GeneratorAdapter not initialized");
-              }
+              GeneratorAdapter ga =
+                  requireNonNull(generatorRef.get(), "GeneratorAdapter not initialized");
               // duplicate array
               ga.dup();
               // push array index for the map
@@ -537,10 +537,8 @@ class AdviceTransformer {
           @Override
           public void visitCode() {
             super.visitCode();
-            GeneratorAdapter ga = generatorRef.get();
-            if (ga == null) {
-              throw new IllegalStateException("GeneratorAdapter not initialized");
-            }
+            GeneratorAdapter ga =
+                requireNonNull(generatorRef.get(), "GeneratorAdapter not initialized");
             Type[] argumentTypes = ga.getArgumentTypes();
 
             if (isEnterAdvice) {
@@ -669,9 +667,7 @@ class AdviceTransformer {
                 writableArguments,
                 writableReturn,
                 adviceLocals);
-        if (mv == null) {
-          throw new IllegalStateException("instrumentOurParameters returned null");
-        }
+        requireNonNull(mv, "instrumentOurParameters returned null");
         methodNode.accept(mv);
 
         methodNode = tmp;
@@ -710,9 +706,7 @@ class AdviceTransformer {
         MethodVisitor mv =
             instrumentAdviceLocals(
                 false, tmp, methodNode, originalDescriptor, adviceLocals, enterArgument, -1);
-        if (mv == null) {
-          throw new IllegalStateException("instrumentAdviceLocals returned null");
-        }
+        requireNonNull(mv, "instrumentAdviceLocals returned null");
         methodNode.accept(mv);
 
         methodNode = tmp;
