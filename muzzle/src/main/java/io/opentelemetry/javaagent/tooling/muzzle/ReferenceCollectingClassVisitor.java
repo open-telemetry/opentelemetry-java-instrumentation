@@ -628,7 +628,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
                 "Invalid VirtualField#find(Class, Class) usage: you cannot pass primitive types as the field type");
           }
 
-            virtualFieldMappingsBuilder.register(type.getClassName(), fieldType.getClassName());
+          virtualFieldMappingsBuilder.register(type.getClassName(), fieldType.getClassName());
         } else {
           throw new MuzzleCompilationException(
               "Invalid VirtualField#find(Class, Class) usage: you cannot pass variables,"

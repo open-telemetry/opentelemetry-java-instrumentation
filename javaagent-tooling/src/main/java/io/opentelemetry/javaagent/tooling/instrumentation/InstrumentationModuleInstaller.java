@@ -193,8 +193,7 @@ public final class InstrumentationModuleInstaller {
     ClassLoader extensionsClassLoader =
         requireNonNull(
             Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
-    Instrumentation inst =
-        requireNonNull(instrumentation, "Instrumentation must not be null");
+    Instrumentation inst = requireNonNull(instrumentation, "Instrumentation must not be null");
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
