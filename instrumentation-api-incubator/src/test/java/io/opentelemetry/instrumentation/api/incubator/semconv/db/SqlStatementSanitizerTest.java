@@ -754,7 +754,31 @@ class SqlStatementSanitizerTest {
             expect("SELECT", null, "SELECT SELECT inner1 SELECT inner2 outer_table")),
 
         // Parenthesized table name - not a subquery - valid on MySQL
-        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")));
+        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")),
+
+        // SQL keywords used as identifiers (table names)
+        // Note: old semconv path (collectionName) doesn't handle keywords as identifiers
+        Arguments.of(
+            "SELECT * FROM insert WHERE x = 1",
+            expect("SELECT * FROM insert WHERE x = ?", "SELECT", "WHERE", "SELECT insert")),
+        Arguments.of("SELECT * FROM update", expect("SELECT", null, "SELECT update")),
+        Arguments.of("SELECT * FROM delete", expect("SELECT", null, "SELECT delete")),
+        Arguments.of("SELECT * FROM call", expect("SELECT", null, "SELECT call")),
+        Arguments.of("SELECT * FROM merge", expect("SELECT", null, "SELECT merge")),
+        Arguments.of("SELECT * FROM create", expect("SELECT", null, "SELECT create")),
+        Arguments.of("SELECT * FROM drop", expect("SELECT", null, "SELECT drop")),
+        Arguments.of("SELECT * FROM alter", expect("SELECT", null, "SELECT alter")),
+        Arguments.of("SELECT * FROM exec", expect("SELECT", "exec", "SELECT exec")),
+        Arguments.of("SELECT * FROM execute", expect("SELECT", "execute", "SELECT execute")),
+
+        // SQL keywords used as column names
+        Arguments.of(
+            "SELECT insert, update FROM mytable", expect("SELECT", "mytable", "SELECT mytable")),
+
+        // SQL keywords used as table aliases
+        Arguments.of("SELECT * FROM mytable insert", expect("SELECT", "mytable", "SELECT mytable")),
+        Arguments.of(
+            "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")));
   }
 
   private static Stream<Arguments> ddlArgs() {
