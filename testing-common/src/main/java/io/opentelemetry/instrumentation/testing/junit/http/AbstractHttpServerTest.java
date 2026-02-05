@@ -649,7 +649,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                         .hasAttribute(bodyKey, bodyContent)));
   }
 
-  private Stream<Arguments> requestBodyCaptureParameters() {
+  private static Stream<Arguments> requestBodyCaptureParameters() {
     return Stream.of(
             MediaType.PLAIN_TEXT,
             MediaType.PLAIN_TEXT_UTF_8,
