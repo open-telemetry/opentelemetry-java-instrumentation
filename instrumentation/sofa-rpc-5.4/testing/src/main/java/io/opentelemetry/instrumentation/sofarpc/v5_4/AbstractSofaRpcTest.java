@@ -44,6 +44,7 @@ import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSofaRpcTest {
 
   protected abstract InstrumentationExtension testing();
