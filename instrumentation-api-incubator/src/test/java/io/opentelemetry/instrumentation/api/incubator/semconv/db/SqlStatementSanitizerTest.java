@@ -524,6 +524,9 @@ class SqlStatementSanitizerTest {
             "SELECT * FROM t1 OUTER APPLY (SELECT * FROM t2 WHERE t2.id = t1.id)",
             expect("SELECT", null, "SELECT t1 SELECT t2")),
         Arguments.of(
+            "SELECT * FROM t1, LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id)",
+            expect("SELECT", null, "SELECT t1 SELECT t2")),
+        Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
             "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),

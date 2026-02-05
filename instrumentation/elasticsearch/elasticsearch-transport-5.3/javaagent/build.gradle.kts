@@ -21,7 +21,9 @@ muzzle {
     versions.set("[5.3.0,6.0.0)")
     // version 7.11.0 depends on org.elasticsearch:elasticsearch-plugin-classloader:7.11.0
     // which does not exist
-    skip("7.11.0")
+    // 9.3.0 has missing org.elasticsearch:exponential-histogram
+    // see https://github.com/elastic/elasticsearch/issues/141846
+    skip("7.11.0", "9.3.0")
     // version 8.8.0 depends on elasticsearch:elasticsearch-preallocate which doesn't exist
     excludeDependency("org.elasticsearch:elasticsearch-preallocate")
     assertInverse.set(true)
@@ -81,8 +83,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
   val testExperimental by registering(Test::class) {

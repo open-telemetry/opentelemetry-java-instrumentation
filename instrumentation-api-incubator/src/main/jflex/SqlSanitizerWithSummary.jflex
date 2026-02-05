@@ -705,6 +705,11 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "LATERAL" {
+          // LATERAL is a keyword used before derived tables - just recognize it, don't capture as identifier
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "NEXT" {
           if (!insideComment) {
             operation.handleNext();
