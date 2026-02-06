@@ -6,9 +6,9 @@ rules:
   - bean: org.apache.camel:context=*,type=context,name=*
     prefix: camel.context.
     metricAttribute:
-      context: param(context)
-      camel_version: beanattr(CamelVersion)
-      camel_class_resolver: beanattr(PackageScanClassResolver)
+      camel.context: param(context)
+      camel.version: beanattr(CamelVersion)
+      camel.class_resolver: beanattr(PackageScanClassResolver)
     mapping:
       # camel.context.route.started
       StartedRoutes:
@@ -64,44 +64,44 @@ rules:
         type: counter
         unit: "{exchange}"
         desc: The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.
-      # camel.context.exchange.processing.time.max
+      # camel.context.exchange.processing.duration.max
       MaxProcessingTime:
-        metric: exchange.processing.time.max
+        metric: exchange.processing.duration.max
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the longest time, in milliseconds, to process an exchange since context start-up or the last reset operation.
-      # camel.context.exchange.processing.time.mean
+      # camel.context.exchange.processing.duration.mean
       MeanProcessingTime:
-        metric: exchange.processing.time.mean
+        metric: exchange.processing.duration.mean
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since context start-up or the last reset operation.
-      # camel.context.exchange.processing.time.min
+      # camel.context.exchange.processing.duration.min
       MinProcessingTime:
-        metric: exchange.processing.time.min
+        metric: exchange.processing.duration.min
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the shortest time, in milliseconds, to process an exchange since context start-up or the last reset operation.
-      # camel.context.exchange.processing.time.last
+      # camel.context.exchange.processing.duration.last
       LastProcessingTime:
-        metric: exchange.processing.time.last
+        metric: exchange.processing.duration.last
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the time, in milliseconds, it took to process the last exchange.
-      # camel.context.exchange.processing.time.last_delta
+      # camel.context.exchange.processing.duration.last_delta
       DeltaProcessingTime:
-        metric: exchange.processing.time.last_delta
+        metric: exchange.processing.duration.last_delta
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the context.
-      # camel.context.exchange.processing.time.total
+      # camel.context.exchange.processing.duration.sum
       TotalProcessingTime:
-        metric: exchange.processing.time.total
+        metric: exchange.processing.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
@@ -112,8 +112,9 @@ rules:
   - bean: org.apache.camel:context=*,type=routes,name=*
     prefix: camel.route.
     metricAttribute:
-      route: beanattr(RouteId)
-      context: param(context)
+      camel.context: param(context)
+      camel.version: beanattr(CamelVersion)
+      camel.route: beanattr(RouteId)
     mapping:
       # camel.route.exchange.count
       ExchangesTotal:
@@ -157,44 +158,44 @@ rules:
         type: counter
         unit: "{exchange}"
         desc: The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.
-      # camel.route.exchange.processing.time.max
+      # camel.route.exchange.processing.duration.max
       MaxProcessingTime:
-        metric: exchange.processing.time.max
+        metric: exchange.processing.duration.max
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the longest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.
-      # camel.route.exchange.processing.time.mean
+      # camel.route.exchange.processing.duration.mean
       MeanProcessingTime:
-        metric: exchange.processing.time.mean
+        metric: exchange.processing.duration.mean
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since the route start-up or the last reset operation.
-      # camel.route.exchange.processing.time.min
+      # camel.route.exchange.processing.duration.min
       MinProcessingTime:
-        metric: exchange.processing.time.min
+        metric: exchange.processing.duration.min
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the shortest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.
-      # camel.route.exchange.processing.time.last
+      # camel.route.exchange.processing.duration.last
       LastProcessingTime:
-        metric: exchange.processing.time.last
+        metric: exchange.processing.duration.last
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the time, in milliseconds, it took the route to process the last exchange.
-      # camel.route.exchange.processing.time.last_delta
+      # camel.route.exchange.processing.duration.last_delta
       DeltaProcessingTime:
-        metric: exchange.processing.time.last_delta
+        metric: exchange.processing.duration.last_delta
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the route.
-      # camel.route.exchange.processing.time.total
+      # camel.route.exchange.processing.duration.sum
       TotalProcessingTime:
-        metric: exchange.processing.time.total
+        metric: exchange.processing.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
@@ -205,10 +206,11 @@ rules:
   - bean: org.apache.camel:context=*,type=processors,name=*
     prefix: camel.processor.
     metricAttribute:
-      processor: beanattr(ProcessorId)
-      route: beanattr(RouteId)
-      context: param(context)
-      destination: beanattr(Destination)
+      camel.context: param(context)
+      camel.version: beanattr(CamelVersion)
+      camel.route: beanattr(RouteId)
+      camel.processor: beanattr(ProcessorId)
+      camel.destination: beanattr(Destination)
     mapping:
       # camel.processor.exchange.count
       ExchangesTotal:
@@ -252,44 +254,44 @@ rules:
         type: counter
         unit: "{exchange}"
         desc: The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.
-      # camel.processor.exchange.processing.time.max
+      # camel.processor.exchange.processing.duration.max
       MaxProcessingTime:
-        metric: exchange.processing.time.max
+        metric: exchange.processing.duration.max
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the longest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.
-      # camel.processor.exchange.processing.time.mean
+      # camel.processor.exchange.processing.duration.mean
       MeanProcessingTime:
-        metric: exchange.processing.time.mean
+        metric: exchange.processing.duration.mean
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since processor start-up or the last reset operation.
-      # camel.processor.exchange.processing.time.min
+      # camel.processor.exchange.processing.duration.min
       MinProcessingTime:
-        metric: exchange.processing.time.min
+        metric: exchange.processing.duration.min
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the shortest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.
-      # camel.processor.exchange.processing.time.last
+      # camel.processor.exchange.processing.duration.last
       LastProcessingTime:
-        metric: exchange.processing.time.last
+        metric: exchange.processing.duration.last
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the time, in milliseconds, it took the selected processor to process the last exchange.
-      # camel.processor.exchange.processing.time.last_delta
+      # camel.processor.exchange.processing.duration.last_delta
       DeltaProcessingTime:
-        metric: exchange.processing.time.last_delta
+        metric: exchange.processing.duration.last_delta
         type: gauge
         sourceUnit: ms
         unit: s
         desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the selected processor.
-      # camel.processor.exchange.processing.time.total
+      # camel.processor.exchange.processing.duration.sum
       TotalProcessingTime:
-        metric: exchange.processing.time.total
+        metric: exchange.processing.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
@@ -300,9 +302,10 @@ rules:
   - bean: org.apache.camel:context=*,type=threadpools,name=*
     prefix: camel.threadpool.
     metricAttribute:
-      route: beanattr(RouteId)
-      context: param(context)
-      pool_id: beanattr(Id)
+      camel.context: param(context)
+      camel.version: beanattr(CamelVersion)
+      camel.route: beanattr(RouteId)
+      camel.pool_id: beanattr(Id)
     mapping:
       # camel.threadpool.task.count
       TaskCount:
