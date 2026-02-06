@@ -15,6 +15,8 @@ import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerConfig;
 import dev.failsafe.RetryPolicy;
 import dev.failsafe.RetryPolicyConfig;
+import dev.failsafe.event.EventListener;
+import dev.failsafe.event.ExecutionCompletedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -87,23 +89,8 @@ public final class FailsafeTelemetry {
    */
   public <R> RetryPolicy<R> createRetryPolicy(RetryPolicy<R> delegate, String retryPolicyName) {
     RetryPolicyConfig<R> userConfig = delegate.getConfig();
-    Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
-    LongCounter executionCounter =
-        meter
-            .counterBuilder("failsafe.retry_policy.execution.count")
-            .setDescription(
-                "Count of execution attempts processed by the retry policy, "
-                    + "where one execution represents the total number of attempts.")
-            .setUnit("{execution}")
-            .build();
-    LongHistogram attemptsHistogram =
-        meter
-            .histogramBuilder("failsafe.retry_policy.attempts")
-            .setDescription("Number of attempts for each execution.")
-            .setUnit("{attempt}")
-            .ofLongs()
-            .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
-            .build();
+    LongCounter executionCounter = buildRetryPolicyExecutionCounter();
+    LongHistogram attemptsHistogram = buildRetryPolicyAttemptsHistogram();
     Attributes attributes = Attributes.of(RETRY_POLICY_NAME, retryPolicyName);
     return RetryPolicy.builder(userConfig)
         .onFailure(
@@ -112,6 +99,62 @@ public final class FailsafeTelemetry {
         .onSuccess(
             RetryPolicyEventListenerBuilders.buildInstrumentedSuccessListener(
                 userConfig, executionCounter, attemptsHistogram, attributes))
+        .build();
+  }
+
+  /**
+   * Returns an instrumented failure listener.
+   *
+   * @param delegate user policy configuration
+   * @param retryPolicyName identifier for the policy being built
+   * @param <R> {@link RetryPolicyConfig}'s result type
+   * @return instrumented failure listener
+   */
+  public <R> EventListener<ExecutionCompletedEvent<R>> createInstrumentedFailureListener(
+      RetryPolicyConfig<R> delegate, String retryPolicyName) {
+    LongCounter executionCounter = buildRetryPolicyExecutionCounter();
+    LongHistogram attemptsHistogram = buildRetryPolicyAttemptsHistogram();
+    Attributes attributes = Attributes.of(RETRY_POLICY_NAME, retryPolicyName);
+    return RetryPolicyEventListenerBuilders.buildInstrumentedFailureListener(
+        delegate, executionCounter, attemptsHistogram, attributes);
+  }
+
+  /**
+   * Returns an instrumented success listener.
+   *
+   * @param delegate user policy configuration
+   * @param retryPolicyName identifier for the policy being built
+   * @param <R> {@link RetryPolicyConfig}'s result type
+   * @return instrumented success listener
+   */
+  public <R> EventListener<ExecutionCompletedEvent<R>> createInstrumentedSuccessListener(
+      RetryPolicyConfig<R> delegate, String retryPolicyName) {
+    LongCounter executionCounter = buildRetryPolicyExecutionCounter();
+    LongHistogram attemptsHistogram = buildRetryPolicyAttemptsHistogram();
+    Attributes attributes = Attributes.of(RETRY_POLICY_NAME, retryPolicyName);
+    return RetryPolicyEventListenerBuilders.buildInstrumentedSuccessListener(
+        delegate, executionCounter, attemptsHistogram, attributes);
+  }
+
+  private LongCounter buildRetryPolicyExecutionCounter() {
+    return openTelemetry
+        .getMeter(INSTRUMENTATION_NAME)
+        .counterBuilder("failsafe.retry_policy.execution.count")
+        .setDescription(
+            "Count of execution attempts processed by the retry policy, "
+                + "where one execution represents the total number of attempts.")
+        .setUnit("{execution}")
+        .build();
+  }
+
+  private LongHistogram buildRetryPolicyAttemptsHistogram() {
+    return openTelemetry
+        .getMeter(INSTRUMENTATION_NAME)
+        .histogramBuilder("failsafe.retry_policy.attempts")
+        .setDescription("Number of attempts for each execution.")
+        .setUnit("{attempt}")
+        .ofLongs()
+        .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
         .build();
   }
 }
