@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,9 +17,6 @@ import java.util.Set;
  * any time.
  */
 public final class SemconvStability {
-
-  // copied from RpcIncubatingAttributes
-  private static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
 
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
