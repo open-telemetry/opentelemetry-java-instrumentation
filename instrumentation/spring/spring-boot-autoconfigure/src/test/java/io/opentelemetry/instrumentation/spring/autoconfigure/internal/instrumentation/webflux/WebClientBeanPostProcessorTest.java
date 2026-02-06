@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.concurrent.atomic.AtomicLong;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -22,82 +24,59 @@ class WebClientBeanPostProcessorTest {
     beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
   }
 
+  private BeanPostProcessor underTest;
+
+  @BeforeEach
+  void setUp() {
+    underTest = new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
+  }
+
   @Test
-  @DisplayName(
-      "when processed bean is NOT of type WebClient or WebClientBuilder should return Object")
+  @DisplayName("when processed bean is NOT of type WebClient should return same Object")
   void returnsObject() {
-    BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
+    Object original = new Object();
 
-    assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
-        .isExactlyInstanceOf(Object.class);
+    assertThat(underTest.postProcessAfterInitialization(original, "testObject")).isSameAs(original);
   }
 
   @Test
-  @DisplayName("when processed bean is of type WebClient should return WebClient")
-  void returnsWebClient() {
-    BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
-
-    assertThat(underTest.postProcessAfterInitialization(WebClient.create(), "testWebClient"))
-        .isInstanceOf(WebClient.class);
-  }
-
-  @Test
-  @DisplayName("when processed bean is of type WebClientBuilder should return WebClientBuilder")
-  void returnsWebClientBuilder() {
-    BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
-
-    assertThat(
-            underTest.postProcessAfterInitialization(WebClient.builder(), "testWebClientBuilder"))
-        .isInstanceOf(WebClient.Builder.class);
-  }
-
-  @Test
-  @DisplayName("when processed bean is of type WebClient should add exchange filter to WebClient")
-  void addsExchangeFilterWebClient() {
-    BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
-
+  @DisplayName("when processed bean is of type WebClient should return WebClient with filter")
+  void returnsWebClientWithFilter() {
     WebClient webClient = WebClient.create();
     Object processedWebClient =
         underTest.postProcessAfterInitialization(webClient, "testWebClient");
 
-    assertThat(processedWebClient).isInstanceOf(WebClient.class);
-    ((WebClient) processedWebClient)
-        .mutate()
-        .filters(
-            functions ->
-                assertThat(
-                        functions.stream()
-                            .filter(WebClientBeanPostProcessorTest::isOtelExchangeFilter)
-                            .count())
-                    .isEqualTo(1));
+    assertThat(processedWebClient).isInstanceOf(WebClient.class).isNotSameAs(webClient);
+    assertFilterCount((WebClient) processedWebClient, 1);
   }
 
   @Test
-  @DisplayName(
-      "when processed bean is of type WebClientBuilder should add ONE exchange filter to WebClientBuilder")
-  void addsExchangeFilterWebClientBuilder() {
-    BeanPostProcessor underTest =
-        new WebClientBeanPostProcessor(beanFactory.getBeanProvider(OpenTelemetry.class));
+  @DisplayName("when WebClient already has filter should return same instance")
+  void doesNotAddDuplicateFilter() {
+    WebClient webClient = WebClient.create();
+    WebClient firstProcessed =
+        (WebClient) underTest.postProcessAfterInitialization(webClient, "testWebClient");
+    WebClient secondProcessed =
+        (WebClient) underTest.postProcessAfterInitialization(firstProcessed, "testWebClient");
 
-    WebClient.Builder webClientBuilder = WebClient.builder();
-    underTest.postProcessAfterInitialization(webClientBuilder, "testWebClientBuilder");
-    underTest.postProcessAfterInitialization(webClientBuilder, "testWebClientBuilder");
-    underTest.postProcessAfterInitialization(webClientBuilder, "testWebClientBuilder");
-
-    webClientBuilder.filters(
-        functions ->
-            assertThat(
-                    functions.stream()
-                        .filter(WebClientBeanPostProcessorTest::isOtelExchangeFilter)
-                        .count())
-                .isEqualTo(1));
+    assertThat(secondProcessed).isSameAs(firstProcessed);
+    assertFilterCount(secondProcessed, 1);
   }
 
-  private static boolean isOtelExchangeFilter(ExchangeFilterFunction wctf) {
-    return wctf.getClass().getName().startsWith("io.opentelemetry.instrumentation");
+  private static void assertFilterCount(WebClient webClient, long expectedCount) {
+    AtomicLong count = new AtomicLong(0);
+    webClient
+        .mutate()
+        .filters(
+            filters ->
+                count.set(
+                    filters.stream()
+                        .filter(WebClientBeanPostProcessorTest::isOtelExchangeFilter)
+                        .count()));
+    assertThat(count.get()).isEqualTo(expectedCount);
+  }
+
+  private static boolean isOtelExchangeFilter(ExchangeFilterFunction filter) {
+    return filter.getClass().getName().startsWith("io.opentelemetry.instrumentation");
   }
 }
