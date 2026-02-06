@@ -991,6 +991,58 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+  - name: apache-httpclient-5.6
+    display_name: Apache HttpClient
+    description: This instrumentation provides a library integration that enables
+      HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://hc.apache.org/index.html
+    source_path: instrumentation/apache-httpclient/apache-httpclient-5.6
+    scope:
+      name: io.opentelemetry.apache-httpclient-5.6
+      schema_url: https://opentelemetry.io/schemas/1.37.0
+    has_standalone_library: true
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-shenyu-2.4
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
