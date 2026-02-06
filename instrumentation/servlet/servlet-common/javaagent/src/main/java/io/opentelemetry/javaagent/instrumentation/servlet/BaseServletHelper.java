@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAdditionalAttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestBodyExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
@@ -139,6 +140,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     captureRequestParameters(serverSpan, request);
     captureEnduserId(serverSpan, request);
+    captureRequestBody(serverSpan, request);
   }
 
   /**
@@ -176,6 +178,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       if (name != null) {
         serverSpan.setAttribute(EnduserIncubatingAttributes.ENDUSER_ID, name);
       }
+    }
+  }
+
+  private void captureRequestBody(Span serverSpan, REQUEST request) {
+    String body = ServletRequestBodyExtractor.getRequestBodyValue(accessor, request);
+    if (body != null) {
+      serverSpan.setAttribute(ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE, body);
     }
   }
 
