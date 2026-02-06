@@ -6,11 +6,12 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetricsBuilder;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EnabledInstrumentations;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -50,22 +51,27 @@ public class Java17RuntimeMetricsAutoConfiguration {
   public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
     ConfigurableApplicationContext applicationContext = event.getApplicationContext();
     OpenTelemetry openTelemetry = applicationContext.getBean(OpenTelemetry.class);
+    EnabledInstrumentations enabledInstrumentations =
+        EarlyConfig.getEnabledInstrumentations(applicationContext.getEnvironment());
 
     logger.debug("Use runtime metrics instrumentation for Java 17+");
-    this.closeable =
-        RuntimeMetricsConfigUtil.configure(
-            RuntimeMetrics.builder(openTelemetry),
-            openTelemetry,
-            instrumentationMode(openTelemetry));
-  }
+    RuntimeMetricsBuilder builder = RuntimeMetrics.builder(openTelemetry);
 
-  private static String instrumentationMode(OpenTelemetry openTelemetry) {
-    String mode =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "spring_starter")
-            .getString("instrumentation_mode", "default");
-    if (!mode.equals("default") && !mode.equals("none")) {
-      throw new ConfigurationException("Unknown instrumentation mode: " + mode);
+    if (RuntimeMetricsConfigUtil.allEnabled(openTelemetry)) {
+      builder.enableAllFeatures();
+    } else if (Boolean.TRUE.equals(
+        enabledInstrumentations.getEnabled("runtime-telemetry-java17"))) {
+      // default configuration
+    } else {
+      if (enabledInstrumentations.isEnabled("runtime-telemetry")) {
+        // This only uses metrics gathered by JMX
+        builder.disableAllFeatures();
+      } else {
+        // nothing is enabled
+        return;
+      }
     }
-    return mode;
+
+    this.closeable = RuntimeMetricsConfigUtil.configure(builder, openTelemetry).build();
   }
 }
