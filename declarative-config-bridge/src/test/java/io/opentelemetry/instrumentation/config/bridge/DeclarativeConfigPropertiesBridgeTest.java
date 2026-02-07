@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.config.bridge;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalInstrumentationModel;
@@ -34,9 +33,8 @@ class DeclarativeConfigPropertiesBridgeTest {
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty(
                 "instrumentation/development", new ExperimentalInstrumentationModel());
-    DeclarativeConfigProperties emptyConfigProps =
-        DeclarativeConfiguration.toConfigProperties(emptyModel);
-    SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyConfigProps);
+    SdkConfigProvider emptyConfigProvider =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(emptyModel));
     emptyBridge =
         new DeclarativeConfigPropertiesBridgeBuilder()
             .buildFromInstrumentationConfig(
@@ -49,9 +47,9 @@ class DeclarativeConfigPropertiesBridgeTest {
             DeclarativeConfigPropertiesBridgeTest.class
                 .getClassLoader()
                 .getResourceAsStream("config.yaml"));
-    DeclarativeConfigProperties configProps = DeclarativeConfiguration.toConfigProperties(model);
     return builder.buildFromInstrumentationConfig(
-        SdkConfigProvider.create(configProps).getInstrumentationConfig());
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model))
+            .getInstrumentationConfig());
   }
 
   @Test
