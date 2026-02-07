@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -173,6 +175,20 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures the instrumentation to redact specific URL query parameters.
+   *
+   * @param sensitiveQueryParameters the set of query parameter names whose values should be
+   *     redacted.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSensitiveQueryParameters(
+      Set<String> sensitiveQueryParameters) {
+    Experimental.setSensitiveQueryParameters(
+        httpAttributesExtractorBuilder, sensitiveQueryParameters);
+    return this;
+  }
+
+  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
@@ -231,6 +247,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     set(
         config::shouldEmitExperimentalHttpServerTelemetry,
         this::setEmitExperimentalHttpServerTelemetry);
+    set(config::getSensitiveQueryParameters, this::setSensitiveQueryParameters);
     return this;
   }
 
