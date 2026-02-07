@@ -31,7 +31,8 @@ public interface Trie<V> {
    * there wasn't a match. For example: for a trie containing an {@code ("abc", 10)} entry {@code
    * trie.getOrDefault("abcd", -1)} will return {@code 10}.
    */
-  V getOrDefault(CharSequence str, V defaultValue);
+  @Nullable
+  V getOrDefault(CharSequence str, @Nullable V defaultValue);
 
   /** Returns {@code true} if this trie contains the prefix {@code str}. */
   default boolean contains(CharSequence str) {

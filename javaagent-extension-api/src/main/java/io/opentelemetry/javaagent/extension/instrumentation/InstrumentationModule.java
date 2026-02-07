@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -107,7 +108,7 @@ public abstract class InstrumentationModule implements Ordered {
    * @deprecated Use {@link #defaultEnabled()} instead.
    */
   @Deprecated // will be removed in 3.0.0
-  public boolean defaultEnabled(ConfigProperties config) {
+  public boolean defaultEnabled(@Nullable ConfigProperties config) {
     return defaultEnabled();
   }
 
