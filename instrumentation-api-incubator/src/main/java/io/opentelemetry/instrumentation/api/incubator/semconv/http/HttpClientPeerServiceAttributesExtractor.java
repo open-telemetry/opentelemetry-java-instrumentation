@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 
@@ -16,18 +17,19 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGet
  * @deprecated Use {@link HttpClientServicePeerAttributesExtractor} instead.
  */
 @Deprecated
+@SuppressWarnings("deprecation") // uses deprecated PeerServiceResolver
 public final class HttpClientPeerServiceAttributesExtractor {
 
   /**
    * Returns a new {@link AttributesExtractor} that will use the passed {@code attributesGetter} to
    * extract server address and port (with fallback to the HTTP Host header).
    */
-  @SuppressWarnings("deprecation") // using deprecated PeerServiceResolver
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
       io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver
           peerServiceResolver) {
-    return HttpClientServicePeerAttributesExtractor.create(attributesGetter, peerServiceResolver);
+    return HttpClientServicePeerAttributesExtractor.create(
+        attributesGetter, ServicePeerResolver.fromPeerServiceResolver(peerServiceResolver));
   }
 
   private HttpClientPeerServiceAttributesExtractor() {}

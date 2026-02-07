@@ -5,19 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
-import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -27,12 +25,6 @@ import javax.annotation.Nullable;
  */
 public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
-
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
-  // copied from ServiceIncubatingAttributes
-  private static final AttributeKey<String> SERVICE_PEER_NAME =
-      AttributeKey.stringKey("service.peer.name");
 
   private final AddressAndPortExtractor<REQUEST> addressAndPortExtractor;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
@@ -51,11 +43,34 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Returns a new {@link HttpClientServicePeerAttributesExtractor} that will use the passed {@code
    * attributesGetter} to extract server address and port (with fallback to the HTTP Host header).
+   *
+   * @param attributesGetter the getter to extract HTTP client attributes from the request
+   * @param openTelemetry the OpenTelemetry instance to read service peer mapping configuration from
    */
-  public static <REQUEST, RESPONSE>
-      HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE> create(
-          HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-          ServicePeerResolver peerServiceResolver) {
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  @SuppressWarnings("deprecation") // delegating to deprecated method for now
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter, OpenTelemetry openTelemetry) {
+    return create(attributesGetter, new ServicePeerResolver(openTelemetry));
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   *
+   * <p>This method only exists to bridge the deprecated {@code
+   * HttpClientPeerServiceAttributesExtractor}.
+   *
+   * @deprecated Use {@link #create(HttpClientAttributesGetter, OpenTelemetry)} instead.
+   */
+  @Deprecated
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      ServicePeerResolver peerServiceResolver) {
+    if (peerServiceResolver.isEmpty()) {
+      return new EmptyAttributesExtractor<>();
+    }
     AddressAndPortExtractor<REQUEST> addressAndPortExtractor =
         new ServerAddressAndPortExtractor<>(
             attributesGetter, new HostAddressAndPortExtractor<>(attributesGetter));
@@ -66,7 +81,6 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
 
-  @SuppressWarnings("deprecation") // old semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -75,33 +89,17 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    if (peerServiceResolver.isEmpty()) {
-      // optimization for common case
+    AddressAndPort addressAndPort = addressAndPortExtractor.extract(request);
+    String host = addressAndPort.getAddress();
+    if (host == null) {
       return;
     }
 
-    AddressAndPort addressAndPort = addressAndPortExtractor.extract(request);
-
-    Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
-    String peerService =
-        mapToPeerService(addressAndPort.getAddress(), addressAndPort.getPort(), pathSupplier);
-    if (peerService != null) {
-      if (SemconvStability.emitOldServicePeerSemconv()) {
-        attributes.put(PEER_SERVICE, peerService);
-      }
-      if (SemconvStability.emitStableServicePeerSemconv()) {
-        attributes.put(SERVICE_PEER_NAME, peerService);
-      }
-    }
-  }
-
-  @Nullable
-  private String mapToPeerService(
-      @Nullable String host, @Nullable Integer port, Supplier<String> pathSupplier) {
-    if (host == null) {
-      return null;
-    }
-    return peerServiceResolver.resolveService(host, port, pathSupplier);
+    peerServiceResolver.resolve(
+        host,
+        addressAndPort.getPort(),
+        () -> getUrlPath(attributesGetter, request),
+        attributes::put);
   }
 
   @Nullable
@@ -112,5 +110,20 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
       return null;
     }
     return UrlParser.getPath(urlFull);
+  }
+
+  private static final class EmptyAttributesExtractor<REQUEST, RESPONSE>
+      implements AttributesExtractor<REQUEST, RESPONSE> {
+
+    @Override
+    public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        REQUEST request,
+        @Nullable RESPONSE response,
+        @Nullable Throwable error) {}
   }
 }

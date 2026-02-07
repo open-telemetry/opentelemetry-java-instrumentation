@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // testing deprecated classes
+@SuppressWarnings("deprecation") // testing deprecated PeerServiceResolver
 class PeerServiceResolverTest {
 
   @Test

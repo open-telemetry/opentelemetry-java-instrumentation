@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExp
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -195,14 +194,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Sets custom {@link ServicePeerResolver}. */
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
-      ServicePeerResolver peerServiceResolver) {
-    return addAttributesExtractor(
-        HttpClientServicePeerAttributesExtractor.create(attributesGetter, peerServiceResolver));
-  }
-
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setBuilderCustomizer(
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
@@ -258,11 +249,12 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
     set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
     set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
-    set(config::getPeerServiceResolver, this::setPeerServiceResolver);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientTelemetry);
     set(config::redactQueryParameters, this::setRedactQueryParameters);
+    addAttributesExtractor(
+        HttpClientServicePeerAttributesExtractor.create(attributesGetter, openTelemetry));
     return this;
   }
 

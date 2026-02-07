@@ -11,7 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -39,7 +39,7 @@ public final class JdbcSingletons {
   static {
     AttributesExtractor<DbRequest, Void> peerServiceExtractor =
         ServicePeerAttributesExtractor.create(
-            JdbcAttributesGetter.INSTANCE, AgentCommonConfig.get().getPeerServiceResolver());
+            JdbcAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
 
     CAPTURE_QUERY_PARAMETERS =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")

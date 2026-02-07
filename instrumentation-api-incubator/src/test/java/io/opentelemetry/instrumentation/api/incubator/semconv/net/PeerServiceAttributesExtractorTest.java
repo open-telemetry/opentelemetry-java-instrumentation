@@ -29,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("deprecation") // testing deprecated classes
+@SuppressWarnings("deprecation") // testing deprecated PeerService* classes
 class PeerServiceAttributesExtractorTest {
   @Mock ServerAttributesGetter<String> netAttributesExtractor;
 
@@ -78,6 +78,7 @@ class PeerServiceAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void shouldSetPeerNameIfItMatches() {
     // given
     Map<String, String> peerServiceMapping = new HashMap<>();

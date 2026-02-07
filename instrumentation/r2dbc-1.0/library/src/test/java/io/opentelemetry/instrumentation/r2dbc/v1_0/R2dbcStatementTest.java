@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServicePeerResolver;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlAttributesGetter;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -44,16 +42,9 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   @Override
   protected ConnectionFactory createProxyConnectionFactory(
       ConnectionFactoryOptions connectionFactoryOptions) {
-    // Create peer service mapping for testing
-    Map<String, String> peerServiceMapping = new HashMap<>();
-    peerServiceMapping.put("127.0.0.1", "test-peer-service");
-    peerServiceMapping.put("localhost", "test-peer-service");
-    peerServiceMapping.put("192.0.2.1", "test-peer-service");
-
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
-            ServicePeerAttributesExtractor.create(
-                R2dbcSqlAttributesGetter.INSTANCE, ServicePeerResolver.create(peerServiceMapping)))
+            AttributesExtractor.constant(maybeStablePeerService(), "test-peer-service"))
         .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
