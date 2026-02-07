@@ -15,16 +15,16 @@ import java.util.Map;
  * that each statement would be sanitized only once for given {@link Instrumenter} call.
  */
 class SqlStatementSanitizerUtil {
-  private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
+  private static final SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
 
-  static SqlStatementInfo sanitize(String queryText) {
-    Map<String, SqlStatementInfo> map =
+  static SqlQuery sanitize(String queryText) {
+    Map<String, SqlQuery> map =
         InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
     return map.computeIfAbsent(queryText, sanitizer::sanitize);
   }
 
-  static SqlStatementInfo sanitizeWithSummary(String queryText) {
-    Map<String, SqlStatementInfo> map =
+  static SqlQuery sanitizeWithSummary(String queryText) {
+    Map<String, SqlQuery> map =
         InstrumenterContext.computeIfAbsent(
             "sanitized-sql-map-with-summary", unused -> new HashMap<>());
     return map.computeIfAbsent(queryText, sanitizer::sanitizeWithSummary);

@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -60,14 +60,13 @@ class InstrumenterContextTest {
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
     // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
-    Map<String, SqlStatementInfo> sanitizedMap =
-        (Map<String, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
+    Map<String, SqlQuery> sanitizedMap =
+        (Map<String, SqlQuery>) InstrumenterContext.get().get("sanitized-sql-map");
     assertThat(sanitizedMap).containsKey(testQuery);
 
     // replace cached sanitization result to verify it is used
     sanitizedMap.put(
-        testQuery,
-        SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+        testQuery, SqlQuery.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);

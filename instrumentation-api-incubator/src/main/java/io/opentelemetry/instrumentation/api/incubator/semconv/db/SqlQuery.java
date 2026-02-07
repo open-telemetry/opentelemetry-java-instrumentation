@@ -8,33 +8,28 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 
-/**
- * @deprecated Use {@link SqlQuery} instead. This class will be removed in a future release.
- */
-@Deprecated
 @AutoValue
-@AutoValue.CopyAnnotations
-public abstract class SqlStatementInfo {
+public abstract class SqlQuery {
 
   private static final String SQL_CALL = "CALL";
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
-  /** Creates a SqlStatementInfo for stable semconv (uses querySummary). */
-  public static SqlStatementInfo createWithSummary(
+  /** Creates a SqlQuery for stable semconv (uses querySummary). */
+  public static SqlQuery createWithSummary(
       @Nullable String queryText,
       @Nullable String storedProcedureName,
       @Nullable String querySummary) {
     String truncatedQuerySummary = truncateQuerySummary(querySummary);
     // In stable semconv: operationName and collectionName are always null
-    return new AutoValue_SqlStatementInfo(
+    return new AutoValue_SqlQuery(
         queryText, null, null, storedProcedureName, truncatedQuerySummary);
   }
 
   /**
-   * Creates a SqlStatementInfo for old semconv (no querySummary). Package-private for backward
+   * Creates a SqlQuery for old semconv (no querySummary). Package-private for backward
    * compatibility with old jflex-generated sanitizer.
    */
-  public static SqlStatementInfo create(
+  public static SqlQuery create(
       @Nullable String queryText, @Nullable String operationName, @Nullable String target) {
     // AutoValue constructor: (queryText, operationName, collectionName, storedProcedureName,
     // querySummary)
@@ -43,7 +38,7 @@ public abstract class SqlStatementInfo {
         SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName) ? null : target;
     String storedProcedureName =
         SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName) ? target : null;
-    return new AutoValue_SqlStatementInfo(
+    return new AutoValue_SqlQuery(
         queryText, operationName, collectionName, storedProcedureName, null);
   }
 

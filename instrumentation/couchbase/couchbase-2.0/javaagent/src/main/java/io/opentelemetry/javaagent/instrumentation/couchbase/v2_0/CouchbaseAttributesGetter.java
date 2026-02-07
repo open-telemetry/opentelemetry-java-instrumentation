@@ -29,11 +29,11 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
-    if (couchbaseRequest.getSqlStatementInfoWithSummary() != null) {
-      return couchbaseRequest.getSqlStatementInfoWithSummary().getQueryText();
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQueryText();
     }
-    if (couchbaseRequest.getSqlStatementInfo() != null) {
-      return couchbaseRequest.getSqlStatementInfo().getQueryText();
+    if (couchbaseRequest.getSqlQuery() != null) {
+      return couchbaseRequest.getSqlQuery().getQueryText();
     }
     return null;
   }
@@ -41,8 +41,8 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
-    if (couchbaseRequest.getSqlStatementInfoWithSummary() != null) {
-      return couchbaseRequest.getSqlStatementInfoWithSummary().getQuerySummary();
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQuerySummary();
     }
     return null;
   }
