@@ -17,7 +17,26 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-final class PeerServiceMapping implements DeclarativeConfigProperties {
+/**
+ * Bridges the flat config property {@code otel.instrumentation.common.peer-service-mapping} to the
+ * declarative config structure at {@code java.common.service_peer_mapping}.
+ *
+ * <p>The flat property format is: {@code host=serviceName,host2=serviceName2}
+ *
+ * <p>The declarative config format is:
+ *
+ * <pre>
+ * service_peer_mapping:
+ *   - peer: host
+ *     service_name: serviceName
+ *   - peer: host2
+ *     service_name: serviceName2
+ * </pre>
+ *
+ * <p>Note: The flat property does not support {@code service_namespace}, so it will always be null
+ * when bridging from flat config.
+ */
+final class ServicePeerMapping implements DeclarativeConfigProperties {
 
   private final Map<String, String> fields;
   private final ComponentLoader componentLoader;
@@ -33,13 +52,14 @@ final class PeerServiceMapping implements DeclarativeConfigProperties {
     for (Map.Entry<String, String> entry : map.entrySet()) {
       Map<String, String> fields = new HashMap<>();
       fields.put("peer", entry.getKey());
-      fields.put("service", entry.getValue());
-      result.add(new PeerServiceMapping(fields, configProperties.getComponentLoader()));
+      fields.put("service_name", entry.getValue());
+      // service_namespace is not supported in flat config, will be null
+      result.add(new ServicePeerMapping(fields, configProperties.getComponentLoader()));
     }
     return result;
   }
 
-  private PeerServiceMapping(Map<String, String> fields, ComponentLoader componentLoader) {
+  private ServicePeerMapping(Map<String, String> fields, ComponentLoader componentLoader) {
     this.fields = fields;
     this.componentLoader = componentLoader;
   }
