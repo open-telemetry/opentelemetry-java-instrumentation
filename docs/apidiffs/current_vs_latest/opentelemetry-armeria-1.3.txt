@@ -1,0 +1,33 @@
+Comparing source compatibility of opentelemetry-armeria-1.3-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) java.util.function.Function<? super com.linecorp.armeria.client.HttpClient,? extends com.linecorp.armeria.client.HttpClient> newDecorator()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<com.linecorp.armeria.client.ClientRequestContext,com.linecorp.armeria.common.logging.RequestLog>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<com.linecorp.armeria.client.ClientRequestContext>>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder setSpanStatusExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor<com.linecorp.armeria.client.ClientRequestContext,com.linecorp.armeria.common.logging.RequestLog>>)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) java.util.function.Function<? super com.linecorp.armeria.server.HttpService,? extends com.linecorp.armeria.server.HttpService> newDecorator()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<com.linecorp.armeria.server.ServiceRequestContext,com.linecorp.armeria.common.logging.RequestLog>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<com.linecorp.armeria.server.ServiceRequestContext>>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder setSpanStatusExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor<com.linecorp.armeria.server.ServiceRequestContext,com.linecorp.armeria.common.logging.RequestLog>>)

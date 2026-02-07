@@ -1,0 +1,35 @@
+Comparing source compatibility of opentelemetry-ratpack-1.7-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) ratpack.http.client.HttpClient instrument(ratpack.http.client.HttpClient)
+		+++  NEW EXCEPTION: java.lang.Exception
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<ratpack.http.client.RequestSpec,ratpack.http.client.HttpResponse>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<ratpack.http.client.RequestSpec>>)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) void configureRegistry(ratpack.registry.RegistrySpec)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) ratpack.exec.ExecInitializer getExecInitializer()
+	+++  NEW METHOD: PUBLIC(+) ratpack.exec.ExecInterceptor getExecInterceptor()
+	+++  NEW METHOD: PUBLIC(+) ratpack.handling.Handler getHandler()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<ratpack.http.Request,ratpack.http.Response>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<ratpack.http.Request>>)

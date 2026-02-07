@@ -1,0 +1,45 @@
+Comparing source compatibility of opentelemetry-netty-4.1-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.CombinedChannelDuplexHandler<? extends io.netty.channel.ChannelInboundHandlerAdapter,? extends io.netty.channel.ChannelOutboundHandlerAdapter> createCombinedHandler()
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.ChannelOutboundHandlerAdapter createRequestHandler()
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.ChannelInboundHandlerAdapter createResponseHandler()
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) void setChannelContext(io.netty.channel.Channel, io.opentelemetry.context.Context)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<io.opentelemetry.instrumentation.netty.v4_1.NettyRequest,io.netty.handler.codec.http.HttpResponse>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<io.opentelemetry.instrumentation.netty.v4_1.NettyRequest>>)
++++  NEW CLASS: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.netty.v4_1.NettyRequest  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) NettyRequest()
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.Channel getChannel()
+	+++  NEW METHOD: PUBLIC(+) java.net.SocketAddress getRemoteAddress()
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+	+++  NEW METHOD: PUBLIC(+) io.netty.handler.codec.http.HttpRequest getRequest()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.CombinedChannelDuplexHandler<? extends io.netty.channel.ChannelInboundHandlerAdapter,? extends io.netty.channel.ChannelOutboundHandlerAdapter> createCombinedHandler()
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.CombinedChannelDuplexHandler<? extends io.netty.channel.ChannelInboundHandlerAdapter,? extends io.netty.channel.ChannelOutboundHandlerAdapter> createCombinedHandler(io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseBeforeCommitHandler)
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.ChannelInboundHandlerAdapter createRequestHandler()
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.ChannelOutboundHandlerAdapter createResponseHandler()
+	+++  NEW METHOD: PUBLIC(+) io.netty.channel.ChannelOutboundHandlerAdapter createResponseHandler(io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseBeforeCommitHandler)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<io.opentelemetry.instrumentation.netty.v4_1.NettyRequest>>)

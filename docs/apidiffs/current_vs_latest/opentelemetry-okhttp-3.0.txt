@@ -1,0 +1,16 @@
+Comparing source compatibility of opentelemetry-okhttp-3.0-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) okhttp3.Call$Factory createCallFactory(okhttp3.OkHttpClient)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<okhttp3.Interceptor$Chain,okhttp3.Response>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<okhttp3.Interceptor$Chain>>)

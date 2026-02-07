@@ -1,0 +1,21 @@
+Comparing source compatibility of opentelemetry-apache-httpclient-4.3-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) org.apache.http.HttpRequest getRequest()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) org.apache.http.impl.client.CloseableHttpClient createHttpClient()
+	+++  NEW METHOD: PUBLIC(+) org.apache.http.impl.client.HttpClientBuilder createHttpClientBuilder()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest,org.apache.http.HttpResponse>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpClientRequest>>)
