@@ -1,0 +1,3 @@
+# Override for PR template - first line doesn't need to be H1
+extends: ../.markdownlint.yaml
+MD041: false
