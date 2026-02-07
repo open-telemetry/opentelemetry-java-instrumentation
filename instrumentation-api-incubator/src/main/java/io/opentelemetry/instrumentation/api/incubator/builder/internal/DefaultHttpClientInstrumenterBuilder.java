@@ -231,6 +231,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
             .setSchemaUrl(SchemaUrls.V1_37_0);
+    Experimental.setExceptionEventName(builder, "http.client.exception");
     if (emitExperimentalHttpClientTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))

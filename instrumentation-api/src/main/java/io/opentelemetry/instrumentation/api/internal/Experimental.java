@@ -32,6 +32,9 @@ public final class Experimental {
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
       operationListenerAttributesExtractorAdder;
 
+  @Nullable
+  private static volatile BiConsumer<InstrumenterBuilder<?, ?>, String> exceptionEventNameSetter;
+
   private Experimental() {}
 
   public static void setRedactQueryParameters(
@@ -84,5 +87,21 @@ public final class Experimental {
           operationListenerAttributesExtractorAdder) {
     Experimental.operationListenerAttributesExtractorAdder =
         (BiConsumer) operationListenerAttributesExtractorAdder;
+  }
+
+  /**
+   * Sets the event name to use when emitting exceptions as log records. Only used when stable
+   * exception semconv is enabled.
+   */
+  public static void setExceptionEventName(
+      InstrumenterBuilder<?, ?> builder, String exceptionEventName) {
+    if (exceptionEventNameSetter != null) {
+      exceptionEventNameSetter.accept(builder, exceptionEventName);
+    }
+  }
+
+  public static void internalSetExceptionEventName(
+      BiConsumer<InstrumenterBuilder<?, ?>, String> exceptionEventNameSetter) {
+    Experimental.exceptionEventNameSetter = exceptionEventNameSetter;
   }
 }
