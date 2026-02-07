@@ -2,13 +2,15 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+// This module's main code has been consolidated into :instrumentation:runtime-telemetry:javaagent
+// Tests are kept to verify backward compatibility
+
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
 dependencies {
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
 }
 
 tasks {
