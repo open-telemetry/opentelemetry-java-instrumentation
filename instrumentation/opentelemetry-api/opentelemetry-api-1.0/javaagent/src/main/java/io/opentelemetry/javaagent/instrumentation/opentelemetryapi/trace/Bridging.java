@@ -15,6 +15,7 @@ import application.io.opentelemetry.api.trace.SpanKind;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.api.trace.TraceState;
 import application.io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -113,12 +114,9 @@ public class Bridging {
         (key, value) -> {
           io.opentelemetry.api.common.AttributeKey agentKey = toAgent(key);
           if (agentKey != null) {
-            // For VALUE type attributes, use helper to convert the Value object
+            // For VALUE type attributes, use ValueBridging to convert the Value object
             if (key.getType().name().equals("VALUE")) {
-              Object agentValue = toAgentValueHelper(value);
-              if (agentValue != null) {
-                agentAttributes.put(agentKey, agentValue);
-              }
+              agentAttributes.put(agentKey, ValueBridging.toAgent(value));
             } else {
               agentAttributes.put(agentKey, value);
             }
@@ -184,59 +182,6 @@ public class Bridging {
         io.opentelemetry.api.trace.TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();
-  }
-
-  // VALUE type bridging helper - loaded via reflection lazily from versioned module (1.59+)
-  private static volatile ValueBridgingHelper valueBridgingHelper;
-  private static volatile boolean valueBridgingHelperInitialized = false;
-
-  private static ValueBridgingHelper getValueBridgingHelper() {
-    if (!valueBridgingHelperInitialized) {
-      synchronized (Bridging.class) {
-        if (!valueBridgingHelperInitialized) {
-          // this class is defined in opentelemetry-api-1.59
-          valueBridgingHelper =
-              getHelper(
-                  "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_59.ValueBridgingHelperImpl");
-          valueBridgingHelperInitialized = true;
-        }
-      }
-    }
-    return valueBridgingHelper;
-  }
-
-  private static ValueBridgingHelper getHelper(String className) {
-    try {
-      Class<?> clazz = Class.forName(className);
-      return (ValueBridgingHelper) clazz.getConstructor().newInstance();
-    } catch (ClassNotFoundException
-        | NoSuchMethodException
-        | InstantiationException
-        | IllegalAccessException
-        | java.lang.reflect.InvocationTargetException exception) {
-      return null;
-    }
-  }
-
-  /** Converts application Value to agent Value using the helper if available. */
-  public static Object toAgentValue(Object applicationValue) {
-    ValueBridgingHelper helper = getValueBridgingHelper();
-    if (helper != null) {
-      return helper.toAgentValue(applicationValue);
-    }
-    // No helper available - skip VALUE attributes on older API versions
-    logger.log(FINE, "VALUE attribute type requires SDK 1.59.0+, skipping");
-    return null;
-  }
-
-  /** Converts application Value to agent Value using the helper if available (internal). */
-  private static Object toAgentValueHelper(Object applicationValue) {
-    return toAgentValue(applicationValue);
-  }
-
-  /** Interface for VALUE type bridging, implemented by versioned module. */
-  public interface ValueBridgingHelper {
-    Object toAgentValue(Object applicationValue);
   }
 
   private Bridging() {}

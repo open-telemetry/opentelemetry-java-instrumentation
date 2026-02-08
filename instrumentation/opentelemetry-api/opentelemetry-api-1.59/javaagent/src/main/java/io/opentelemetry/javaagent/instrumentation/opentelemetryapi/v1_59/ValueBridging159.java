@@ -9,42 +9,43 @@ import static java.util.logging.Level.FINE;
 
 import application.io.opentelemetry.api.common.KeyValue;
 import application.io.opentelemetry.api.common.Value;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
- * Implementation of VALUE type bridging for SDK 1.59.0+.
+ * Bridges application {@link Value} objects to agent {@link io.opentelemetry.api.common.Value}
+ * objects for SDK 1.59.0+.
  *
- * <p>This class handles conversion of application {@link Value} objects to agent {@link
- * io.opentelemetry.api.common.Value} objects. It is loaded via reflection by {@link
- * io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging}.
+ * <p>Loaded via reflection by {@link
+ * io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging}.
  */
-public class ValueBridgingHelperImpl implements Bridging.ValueBridgingHelper {
+public final class ValueBridging159 {
 
-  private static final Logger logger = Logger.getLogger(ValueBridgingHelperImpl.class.getName());
+  public static final Function<Object, Object> INSTANCE = ValueBridging159::toAgentValue;
 
-  /** Default constructor - required for reflection-based instantiation. */
-  public ValueBridgingHelperImpl() {}
+  private static final Logger logger = Logger.getLogger(ValueBridging159.class.getName());
 
-  @Override
-  public Object toAgentValue(Object applicationValue) {
+  private ValueBridging159() {}
+
+  @Nullable
+  private static Object toAgentValue(@Nullable Object applicationValue) {
     if (applicationValue == null) {
       return null;
     }
-
     if (!(applicationValue instanceof Value)) {
       logger.log(FINE, "Expected Value but got: {0}", applicationValue.getClass().getName());
       return null;
     }
-
     return convertValue((Value<?>) applicationValue);
   }
 
-  // Suppress unchecked cast warnings - values are cast based on type name which should be safe
+  // Unchecked casts are safe because we switch on the type name and cast accordingly
   @SuppressWarnings("unchecked")
+  @Nullable
   private static io.opentelemetry.api.common.Value<?> convertValue(Value<?> applicationValue) {
     String typeName = applicationValue.getType().name();
     switch (typeName) {
@@ -84,7 +85,7 @@ public class ValueBridgingHelperImpl implements Bridging.ValueBridgingHelper {
                 io.opentelemetry.api.common.KeyValue.of(applicationKv.getKey(), agentKvValue);
           }
         }
-        // Trim array if any elements were skipped
+        // Trim array if unexpected Value types were encountered
         if (i < agentKvArray.length) {
           io.opentelemetry.api.common.KeyValue[] trimmed =
               new io.opentelemetry.api.common.KeyValue[i];

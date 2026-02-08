@@ -699,34 +699,34 @@ public class TelemetryConverter {
   }
 
   /**
-   * Puts a homogeneous primitive array into the builder using the provided putter.
+   * Puts a homogeneous primitive array into the builder using the provided setter.
    *
    * @return true if the array was homogeneous primitive and was put, false otherwise
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private static boolean putHomogeneousArray(String key, ArrayValue array, BiConsumer putter) {
+  private static boolean putHomogeneousArray(String key, ArrayValue array, BiConsumer setter) {
     AnyValue.ValueCase arrayType = homogeneousArrayType(array);
     if (arrayType == null) {
       return false;
     }
     switch (arrayType) {
       case STRING_VALUE:
-        putter.accept(
+        setter.accept(
             stringArrayKey(key),
             array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
         return true;
       case BOOL_VALUE:
-        putter.accept(
+        setter.accept(
             booleanArrayKey(key),
             array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
         return true;
       case INT_VALUE:
-        putter.accept(
+        setter.accept(
             longArrayKey(key),
             array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
         return true;
       case DOUBLE_VALUE:
-        putter.accept(
+        setter.accept(
             doubleArrayKey(key),
             array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
         return true;

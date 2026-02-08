@@ -31,9 +31,9 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
   public static class InitAdvice {
     @Advice.OnMethodEnter
     public static void init() {
-      // the sole purpose of this advice is to ensure that ValueBridgingHelperImpl is recognized
+      // the sole purpose of this advice is to ensure that ValueBridging159 is recognized
       // as helper class and injected into class loader
-      ValueBridgingHelperImpl.class.getName();
+      ValueBridging159.class.getName();
     }
   }
 }

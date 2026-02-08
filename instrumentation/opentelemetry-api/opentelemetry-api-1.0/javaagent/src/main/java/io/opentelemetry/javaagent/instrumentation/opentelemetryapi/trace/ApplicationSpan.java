@@ -11,6 +11,7 @@ import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.api.trace.SpanContext;
 import application.io.opentelemetry.api.trace.StatusCode;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -57,17 +58,14 @@ public class ApplicationSpan implements Span {
   @Override
   @CanIgnoreReturnValue
   // unchecked: toAgent returns raw AttributeKey, VALUE bridging requires casting to Object key
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
     io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
-      // For VALUE type attributes, bridge the Value object as well
+      // For VALUE type attributes, need to bridge the Value object as well
       if (applicationKey.getType().name().equals("VALUE")) {
-        Object agentValue = Bridging.toAgentValue(value);
-        if (agentValue != null) {
-          agentSpan.setAttribute(
-              (io.opentelemetry.api.common.AttributeKey<Object>) agentKey, agentValue);
-        }
+        agentSpan.setAttribute(
+            (io.opentelemetry.api.common.AttributeKey) agentKey, ValueBridging.toAgent(value));
       } else {
         agentSpan.setAttribute(agentKey, value);
       }
