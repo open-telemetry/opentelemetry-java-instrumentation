@@ -36,6 +36,8 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
+  @SuppressWarnings(
+      "OtelUnnecessarilyFullyQualified") // play.mvc.Http.Context.Implicit FQCN required
   protected Server setupServer() {
     RoutingDsl router =
         new RoutingDsl()
@@ -50,6 +52,8 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                     controller(
                         INDEXED_CHILD,
                         () -> {
+                          // FQCN required - play.mvc.Http.Context.Implicit is deeply nested static
+                          // access
                           INDEXED_CHILD.collectSpanAttributes(
                               it -> play.mvc.Http.Context.Implicit.request().getQueryString(it));
                           return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
@@ -67,12 +71,15 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                 () ->
                     controller(
                         CAPTURE_HEADERS,
-                        () ->
-                            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-                                .withHeader(
-                                    "X-Test-Response",
-                                    play.mvc.Http.Context.Implicit.request()
-                                        .getHeader("X-Test-Request"))))
+                        () -> {
+                          // FQCN required - play.mvc.Http.Context.Implicit is deeply nested static
+                          // access
+                          String header =
+                              play.mvc.Http.Context.Implicit.request().getHeader("X-Test-Request");
+                          return Results.status(
+                                  CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+                              .withHeader("X-Test-Response", header);
+                        }))
             .GET(ERROR.getPath())
             .routeTo(
                 () -> controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))

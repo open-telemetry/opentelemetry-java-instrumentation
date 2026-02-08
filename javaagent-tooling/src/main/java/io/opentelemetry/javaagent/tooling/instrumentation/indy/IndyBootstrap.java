@@ -14,6 +14,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.reflect.Method;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -117,7 +118,7 @@ public class IndyBootstrap {
 
     // callsite resolution needs privileged access to call Class#getClassLoader() and
     // MethodHandles$Lookup#findStatic
-    return java.security.AccessController.doPrivileged(
+    return AccessController.doPrivileged(
         (PrivilegedAction<CallSite>)
             () -> internalBootstrap(lookup, adviceMethodName, adviceMethodType, args));
   }

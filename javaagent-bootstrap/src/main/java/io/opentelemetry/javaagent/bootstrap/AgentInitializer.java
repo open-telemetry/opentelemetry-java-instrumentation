@@ -10,6 +10,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import javax.annotation.Nullable;
@@ -105,12 +106,12 @@ public final class AgentInitializer {
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   private static <T> T doPrivilegedExceptionAction(PrivilegedExceptionAction<T> action)
       throws Exception {
-    return java.security.AccessController.doPrivileged(action);
+    return AccessController.doPrivileged(action);
   }
 
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   private static <T> T doPrivileged(PrivilegedAction<T> action) {
-    return java.security.AccessController.doPrivileged(action);
+    return AccessController.doPrivileged(action);
   }
 
   /**

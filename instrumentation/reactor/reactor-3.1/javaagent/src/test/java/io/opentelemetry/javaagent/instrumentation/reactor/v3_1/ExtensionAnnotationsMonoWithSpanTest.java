@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
+import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractTraced;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
@@ -25,20 +26,20 @@ class ExtensionAnnotationsMonoWithSpanTest extends BaseMonoWithSpanTest {
   static class Traced extends AbstractTraced<Mono<String>, Mono<String>> {
 
     @Override
-    @io.opentelemetry.extension.annotations.WithSpan
+    @WithSpan
     protected Mono<String> completable() {
       UnicastProcessor<String> source = UnicastProcessor.create();
       return source.singleOrEmpty();
     }
 
     @Override
-    @io.opentelemetry.extension.annotations.WithSpan
+    @WithSpan
     protected Mono<String> alreadySucceeded() {
       return Mono.just(SUCCESS_VALUE);
     }
 
     @Override
-    @io.opentelemetry.extension.annotations.WithSpan
+    @WithSpan
     protected Mono<String> alreadyFailed() {
       return Mono.error(FAILURE);
     }

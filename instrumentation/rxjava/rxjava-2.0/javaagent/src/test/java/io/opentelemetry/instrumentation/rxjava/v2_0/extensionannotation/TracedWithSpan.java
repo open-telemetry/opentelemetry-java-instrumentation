@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rxjava.v2_0.extensionannotation;
 
+import io.opentelemetry.extension.annotations.WithSpan;
 import io.opentelemetry.instrumentation.rxjava.v2_0.AbstractTracedWithSpan;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
@@ -18,43 +19,43 @@ import org.reactivestreams.Publisher;
 public class TracedWithSpan extends AbstractTracedWithSpan {
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Completable completable(Completable source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Maybe<String> maybe(Maybe<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Single<String> single(Single<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Observable<String> observable(Observable<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Flowable<String> flowable(Flowable<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public ParallelFlowable<String> parallelFlowable(ParallelFlowable<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Publisher<String> publisher(Publisher<String> source) {
     return source;
   }

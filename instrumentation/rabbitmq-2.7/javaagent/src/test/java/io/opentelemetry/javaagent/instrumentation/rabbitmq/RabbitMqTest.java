@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -440,7 +441,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void captureMessageHeaderAsSpanAttributes() throws IOException, InterruptedException {
     String queueName = channel.queueDeclare().getQueue();
-    Map<String, Object> headers = new java.util.HashMap<>();
+    Map<String, Object> headers = new HashMap<>();
     headers.put("Test_Message_Header", "test");
     AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().headers(headers).build();
     channel.basicPublish(

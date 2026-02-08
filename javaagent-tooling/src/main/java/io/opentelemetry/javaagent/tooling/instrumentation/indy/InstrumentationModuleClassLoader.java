@@ -16,6 +16,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URL;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Collections;
@@ -227,7 +228,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
             result = defineClassWithPackage(name, bytecode);
           } else {
             result =
-                java.security.AccessController.doPrivileged(
+                AccessController.doPrivileged(
                     (PrivilegedAction<Class<?>>) () -> defineClassWithPackage(name, bytecode));
           }
         }
@@ -387,7 +388,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     if (System.getSecurityManager() == null) {
       return InstrumentationModuleClassLoader.class.getProtectionDomain();
     }
-    return java.security.AccessController.doPrivileged(
+    return AccessController.doPrivileged(
         (PrivilegedAction<ProtectionDomain>)
             ((Class<?>) InstrumentationModuleClassLoader.class)::getProtectionDomain);
   }

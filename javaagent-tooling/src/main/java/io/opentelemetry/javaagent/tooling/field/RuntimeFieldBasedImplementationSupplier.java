@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.AccessController;
 import java.security.PrivilegedAction;
 
 final class RuntimeFieldBasedImplementationSupplier
@@ -22,7 +23,7 @@ final class RuntimeFieldBasedImplementationSupplier
     if (System.getSecurityManager() == null) {
       return findInternal(type, fieldType);
     }
-    return java.security.AccessController.doPrivileged(
+    return AccessController.doPrivileged(
         (PrivilegedAction<VirtualField<U, V>>) () -> findInternal(type, fieldType));
   }
 

@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import io.opentelemetry.api.trace.Span;
 import java.util.concurrent.Callable;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 
 // To better see which library is tested
-@SuppressWarnings("UnnecessarilyFullyQualified")
 public class SayTracedHello {
 
   public SayTracedHello() {}
@@ -66,7 +66,7 @@ public class SayTracedHello {
     return "hello!";
   }
 
-  @org.springframework.cloud.sleuth.annotation.NewSpan
+  @NewSpan
   public String sleuth() {
     Span.current().setAttribute("providerAttr", "Sleuth");
     return "hello!";
