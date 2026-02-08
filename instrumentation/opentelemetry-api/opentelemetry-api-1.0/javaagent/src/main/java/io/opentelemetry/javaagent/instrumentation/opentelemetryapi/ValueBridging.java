@@ -20,12 +20,6 @@ public final class ValueBridging {
 
   private ValueBridging() {}
 
-  /**
-   * Converts an application Value to an agent Value.
-   *
-   * @param applicationValue the application Value object
-   * @return the agent Value object, or null if conversion is not available
-   */
   @Nullable
   public static Object toAgent(@Nullable Object applicationValue) {
     return BRIDGE.apply(applicationValue);

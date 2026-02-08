@@ -15,7 +15,6 @@ import static java.util.stream.Collectors.toList;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.common.Value;
-import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import io.opentelemetry.api.logs.Severity;
@@ -534,10 +533,7 @@ public class TelemetryConverter {
           converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
           break;
         case KVLIST_VALUE:
-          // Convert KVLIST_VALUE to ExtendedAttributes recursively
-          converted.put(
-              ExtendedAttributeKey.extendedAttributesKey(key),
-              kvlistToExtendedAttributes(value.getKvlistValue()));
+          converted.put(key, fromProtoExtended(value.getKvlistValue().getValuesList()));
           break;
         case VALUE_NOT_SET:
           converted.put(valueKey(key), Value.empty());
@@ -547,41 +543,6 @@ public class TelemetryConverter {
       }
     }
     return converted.build();
-  }
-
-  /** Convert a KeyValueList proto to ExtendedAttributes. */
-  @SuppressWarnings("deprecation") // need to support deprecated EXTENDED_ATTRIBUTES type
-  private static ExtendedAttributes kvlistToExtendedAttributes(KeyValueList kvlist) {
-    ExtendedAttributesBuilder builder = ExtendedAttributes.builder();
-    for (KeyValue kv : kvlist.getValuesList()) {
-      String key = kv.getKey();
-      AnyValue anyValue = kv.getValue();
-      switch (anyValue.getValueCase()) {
-        case STRING_VALUE:
-          builder.put(key, anyValue.getStringValue());
-          break;
-        case BOOL_VALUE:
-          builder.put(key, anyValue.getBoolValue());
-          break;
-        case INT_VALUE:
-          builder.put(key, anyValue.getIntValue());
-          break;
-        case DOUBLE_VALUE:
-          builder.put(key, anyValue.getDoubleValue());
-          break;
-        case KVLIST_VALUE:
-          // Recursively convert nested KVLIST_VALUE to ExtendedAttributes
-          builder.put(
-              ExtendedAttributeKey.extendedAttributesKey(key),
-              kvlistToExtendedAttributes(anyValue.getKvlistValue()));
-          break;
-        default:
-          // For other types (ARRAY, BYTES, VALUE_NOT_SET), use Value
-          builder.put(valueKey(key), anyValueToValue(anyValue));
-          break;
-      }
-    }
-    return builder.build();
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {

@@ -114,7 +114,6 @@ public class Bridging {
         (key, value) -> {
           io.opentelemetry.api.common.AttributeKey agentKey = toAgent(key);
           if (agentKey != null) {
-            // For VALUE type attributes, use ValueBridging to convert the Value object
             if (key.getType().name().equals("VALUE")) {
               agentAttributes.put(agentKey, ValueBridging.toAgent(value));
             } else {
@@ -147,7 +146,6 @@ public class Bridging {
       case DOUBLE_ARRAY:
         return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
       default:
-        // Handle VALUE type added in 1.59.0 without direct enum reference for muzzle compatibility
         if (applicationKey.getType().name().equals("VALUE")) {
           return io.opentelemetry.api.common.AttributeKey.valueKey(applicationKey.getKey());
         }
