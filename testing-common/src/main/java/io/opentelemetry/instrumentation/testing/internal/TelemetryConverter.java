@@ -74,8 +74,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -92,6 +92,8 @@ public class TelemetryConverter {
   // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
   // class is missing
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
+  private static final Value<?> EMPTY_VALUE = computeEmptyValue();
   private static final boolean hasExtendedLogRecordData =
       classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
   private static final boolean hasExtendedAttributes =
@@ -352,7 +354,7 @@ public class TelemetryConverter {
 
   private static Value<?> getBodyValue(AnyValue value) {
     Value<?> result = anyValueToValue(value);
-    return Value.empty().equals(result) ? null : result;
+    return Objects.equals(result, EMPTY_VALUE) ? null : result;
   }
 
   private static Value<?> anyValueToValue(AnyValue value) {
@@ -386,7 +388,7 @@ public class TelemetryConverter {
       case BYTES_VALUE:
         return Value.of(value.getBytesValue().toByteArray());
       case VALUE_NOT_SET:
-        return Value.empty();
+        return EMPTY_VALUE;
     }
     throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
@@ -520,9 +522,40 @@ public class TelemetryConverter {
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
           if (array.getValuesCount() != 0) {
-            if (!putHomogeneousArray(key, array, converted::put)) {
+            AnyValue.ValueCase arrayType = homogeneousArrayType(array);
+            if (arrayType == null) {
               // Heterogeneous arrays or arrays with complex types use VALUE attribute type
               converted.put(valueKey(key), anyValueToValue(value));
+            } else {
+              switch (arrayType) {
+                case STRING_VALUE:
+                  converted.put(
+                      stringArrayKey(key),
+                      array.getValuesList().stream()
+                          .map(AnyValue::getStringValue)
+                          .collect(toList()));
+                  break;
+                case BOOL_VALUE:
+                  converted.put(
+                      booleanArrayKey(key),
+                      array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                  break;
+                case INT_VALUE:
+                  converted.put(
+                      longArrayKey(key),
+                      array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                  break;
+                case DOUBLE_VALUE:
+                  converted.put(
+                      doubleArrayKey(key),
+                      array.getValuesList().stream()
+                          .map(AnyValue::getDoubleValue)
+                          .collect(toList()));
+                  break;
+                default:
+                  // homogeneousArrayType only returns primitive types, this case won't be reached
+                  throw new AssertionError("Unexpected array type: " + arrayType);
+              }
             }
           } else {
             // Empty array
@@ -536,10 +569,10 @@ public class TelemetryConverter {
           converted.put(key, fromProtoExtended(value.getKvlistValue().getValuesList()));
           break;
         case VALUE_NOT_SET:
-          converted.put(valueKey(key), Value.empty());
+          if (EMPTY_VALUE != null) {
+            converted.put(valueKey(key), EMPTY_VALUE);
+          }
           break;
-        default:
-          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();
@@ -566,9 +599,40 @@ public class TelemetryConverter {
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
           if (array.getValuesCount() != 0) {
-            if (!putHomogeneousArray(key, array, converted::put)) {
+            AnyValue.ValueCase arrayType = homogeneousArrayType(array);
+            if (arrayType == null) {
               // Heterogeneous arrays or arrays with complex types use VALUE attribute type
               converted.put(valueKey(key), anyValueToValue(value));
+            } else {
+              switch (arrayType) {
+                case STRING_VALUE:
+                  converted.put(
+                      stringArrayKey(key),
+                      array.getValuesList().stream()
+                          .map(AnyValue::getStringValue)
+                          .collect(toList()));
+                  break;
+                case BOOL_VALUE:
+                  converted.put(
+                      booleanArrayKey(key),
+                      array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                  break;
+                case INT_VALUE:
+                  converted.put(
+                      longArrayKey(key),
+                      array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                  break;
+                case DOUBLE_VALUE:
+                  converted.put(
+                      doubleArrayKey(key),
+                      array.getValuesList().stream()
+                          .map(AnyValue::getDoubleValue)
+                          .collect(toList()));
+                  break;
+                default:
+                  // homogeneousArrayType only returns primitive types, this case won't be reached
+                  throw new AssertionError("Unexpected array type: " + arrayType);
+              }
             }
           } else {
             // Empty array
@@ -582,10 +646,10 @@ public class TelemetryConverter {
           converted.put(valueKey(key), anyValueToValue(value));
           break;
         case VALUE_NOT_SET:
-          converted.put(valueKey(key), Value.empty());
+          if (EMPTY_VALUE != null) {
+            converted.put(valueKey(key), EMPTY_VALUE);
+          }
           break;
-        default:
-          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();
@@ -659,43 +723,6 @@ public class TelemetryConverter {
     return firstType;
   }
 
-  /**
-   * Puts a homogeneous primitive array into the builder using the provided setter.
-   *
-   * @return true if the array was homogeneous primitive and was put, false otherwise
-   */
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static boolean putHomogeneousArray(String key, ArrayValue array, BiConsumer setter) {
-    AnyValue.ValueCase arrayType = homogeneousArrayType(array);
-    if (arrayType == null) {
-      return false;
-    }
-    switch (arrayType) {
-      case STRING_VALUE:
-        setter.accept(
-            stringArrayKey(key),
-            array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
-        return true;
-      case BOOL_VALUE:
-        setter.accept(
-            booleanArrayKey(key),
-            array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
-        return true;
-      case INT_VALUE:
-        setter.accept(
-            longArrayKey(key),
-            array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
-        return true;
-      case DOUBLE_VALUE:
-        setter.accept(
-            doubleArrayKey(key),
-            array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
-        return true;
-      default:
-        return false;
-    }
-  }
-
   private static TraceState extractTraceState(String traceStateHeader) {
     if (traceStateHeader.isEmpty()) {
       return TraceState.getDefault();
@@ -752,6 +779,19 @@ public class TelemetryConverter {
       return true;
     } catch (ClassNotFoundException e) {
       return false;
+    }
+  }
+
+  // Unchecked cast is safe because Value.empty() returns Value<?>
+  @SuppressWarnings("unchecked")
+  private static Value<?> computeEmptyValue() {
+    if (!canUseValue) {
+      return null;
+    }
+    try {
+      return (Value<?>) Value.class.getMethod("empty").invoke(null);
+    } catch (Exception e) {
+      return null;
     }
   }
 

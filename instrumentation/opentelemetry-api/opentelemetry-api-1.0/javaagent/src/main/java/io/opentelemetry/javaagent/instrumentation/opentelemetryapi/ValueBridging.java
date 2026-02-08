@@ -25,6 +25,8 @@ public final class ValueBridging {
     return BRIDGE.apply(applicationValue);
   }
 
+  // Unchecked cast is safe because ValueBridging159.INSTANCE is known to be Function<Object,
+  // Object>
   @SuppressWarnings("unchecked")
   private static Function<Object, Object> load() {
     try {
