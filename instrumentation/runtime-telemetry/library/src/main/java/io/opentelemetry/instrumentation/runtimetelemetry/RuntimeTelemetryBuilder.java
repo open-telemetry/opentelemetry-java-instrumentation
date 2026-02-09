@@ -28,7 +28,7 @@ public final class RuntimeTelemetryBuilder {
   private boolean emitExperimentalMetrics = false;
   private boolean preferJfrMetrics = false;
   private boolean disableJmx = false;
-  private boolean captureGcCause = true;
+  private boolean captureGcCause = false;
   // For backward compatibility: support separate instrumentation names for JMX and JFR metrics
   private String jmxInstrumentationName = null;
   private String jfrInstrumentationName = null;

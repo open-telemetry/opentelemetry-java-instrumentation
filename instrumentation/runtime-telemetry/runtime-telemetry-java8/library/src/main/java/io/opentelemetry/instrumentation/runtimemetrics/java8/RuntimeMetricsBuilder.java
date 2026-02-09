@@ -31,7 +31,7 @@ public final class RuntimeMetricsBuilder {
     // Disable all JFR features - java8 module was JMX-only. This also ensures backward
     // compatibility if the unified module adds new default-enabled JFR features in the future.
     Internal.setDisableAllJfrFeatures(delegate, true);
-    // java8 default for captureGcCause was false (unified module default is true)
+    // Explicitly set to preserve backward compatibility if unified default changes
     Internal.setCaptureGcCause(delegate, false);
   }
 
@@ -53,8 +53,7 @@ public final class RuntimeMetricsBuilder {
    * Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.
    *
    * @deprecated Use {@link RuntimeTelemetry#builder(OpenTelemetry)} in the {@code
-   *     runtime-telemetry} module instead. The unified {@link RuntimeTelemetryBuilder} enables GC
-   *     cause capture by default.
+   *     runtime-telemetry} module instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
