@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
  * library/framework. It will be used by the {@link RpcClientAttributesExtractor} or {@link
  * RpcServerAttributesExtractor} to obtain the various RPC attributes in a type-generic way.
  */
-public interface RpcAttributesGetter<REQUEST> {
+public interface RpcAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   String getSystem(REQUEST request);
@@ -22,6 +22,10 @@ public interface RpcAttributesGetter<REQUEST> {
   @Nullable
   String getService(REQUEST request);
 
+  /**
+   * @deprecated Use {@link #getRpcMethod(REQUEST)} for stable semconv.
+   */
+  @Deprecated
   @Nullable
   String getMethod(REQUEST request);
 
@@ -33,5 +37,63 @@ public interface RpcAttributesGetter<REQUEST> {
   @Nullable
   default Long getResponseSize(REQUEST request) {
     return null;
+  }
+
+  /**
+   * Returns the fully-qualified RPC method name for stable semconv.
+   *
+   * @param request the request object
+   * @return the fully-qualified RPC method name (e.g., "my.Service/Method"), or null if service or
+   *     method is unavailable
+   */
+  @Nullable
+  default String getRpcMethod(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>This method should return {@code null} if there was no error.
+   *
+   * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
+   * will be used as error type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   *
+   * <p>Examples: {@code OK}, {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
+   */
+  @Nullable
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
+  }
+
+  /**
+   * Returns whether the RPC method is recognized as a predefined method by the RPC framework or
+   * library.
+   *
+   * <p>Some RPC frameworks or libraries provide a fixed set of recognized methods for client stubs
+   * and server implementations. Instrumentations for such frameworks MUST return {@code true} only
+   * when the method is recognized by the framework or library.
+   *
+   * <p>When the method is not recognized (for example, when the server receives a request for a
+   * method that is not predefined on the server), or when instrumentation is not able to reliably
+   * detect if the method is predefined, this method MUST return {@code false}.
+   *
+   * <p>When this method returns {@code false}, the {@code rpc.method} attribute will be set to
+   * {@code "_OTHER"} and the {@code rpc.method_original} attribute will be set to the original
+   * method name.
+   *
+   * <p>Note: If the RPC instrumentation could end up converting valid RPC methods to {@code
+   * "_OTHER"}, then it SHOULD provide a way to configure the list of recognized RPC methods.
+   *
+   * @param request the request object
+   * @return {@code true} if the method is recognized as predefined by the framework, {@code false}
+   *     otherwise
+   */
+  default boolean isPredefined(REQUEST request) {
+    return false;
   }
 }
