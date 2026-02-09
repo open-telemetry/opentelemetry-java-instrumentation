@@ -1,3 +1,4 @@
+display_name: Spring Batch
 disabled_by_default: true
 description: >
   This instrumentation enables spans for Spring Batch job execution, including job, step, and

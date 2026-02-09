@@ -12060,6 +12060,7 @@ libraries:
     - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
+    display_name: Spring Batch
     description: |
       This instrumentation enables spans for Spring Batch job execution, including job, step, and chunk processing.
     library_link: https://spring.io/projects/spring-batch
@@ -12133,6 +12134,7 @@ libraries:
     javaagent_target_versions:
     - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
   - name: spring-cloud-gateway-2.0
+    display_name: Spring Cloud Gateway
     description: |
       This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate any telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
     library_link: https://github.com/spring-cloud/spring-cloud-gateway
@@ -12201,6 +12203,7 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: spring-integration-4.1
+    display_name: Spring Integration
     description: This instrumentation enables producer and consumer messaging spans
       for Spring Integration.
     library_link: https://spring.io/projects/spring-integration
