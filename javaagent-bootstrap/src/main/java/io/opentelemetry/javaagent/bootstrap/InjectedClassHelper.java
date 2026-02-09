@@ -5,17 +5,19 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.security.ProtectionDomain;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** Helper class for detecting and loading injected helper classes. */
 public final class InjectedClassHelper {
 
   private InjectedClassHelper() {}
 
-  private static volatile BiPredicate<ClassLoader, String> helperClassDetector;
+  @Nullable private static volatile BiPredicate<ClassLoader, String> helperClassDetector;
 
   /** Sets the {@link Function} for detecting injected helper classes. */
   public static void internalSetHelperClassDetector(
@@ -40,6 +42,7 @@ public final class InjectedClassHelper {
 
   private static volatile BiFunction<ClassLoader, String, HelperClassInfo> helperClassInfo;
 
+  @Initializer
   public static void internalSetHelperClassInfo(
       BiFunction<ClassLoader, String, HelperClassInfo> helperClassInfo) {
     if (InjectedClassHelper.helperClassInfo != null) {
@@ -49,6 +52,7 @@ public final class InjectedClassHelper {
     InjectedClassHelper.helperClassInfo = helperClassInfo;
   }
 
+  @Nullable
   public static HelperClassInfo getHelperClassInfo(ClassLoader classLoader, String className) {
     if (helperClassInfo == null) {
       return null;

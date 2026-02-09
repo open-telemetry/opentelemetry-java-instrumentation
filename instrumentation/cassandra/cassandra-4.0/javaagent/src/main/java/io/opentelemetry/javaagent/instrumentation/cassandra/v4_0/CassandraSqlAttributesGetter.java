@@ -11,6 +11,7 @@ import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -18,7 +19,8 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter
-    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
+    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo>,
+        ExtractQuerySummaryMarker {
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override

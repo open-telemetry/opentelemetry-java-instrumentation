@@ -30,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // until ExperimentalBufferPools is renamed
 @ExtendWith(MockitoExtension.class)
 class ExperimentalBufferPoolsTest {
 

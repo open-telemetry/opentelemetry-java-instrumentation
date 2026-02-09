@@ -46,7 +46,7 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
-  void shouldSkipDbNameIfTableAlreadyHasDbNamePrefix() {
+  void shouldSkipNamespaceIfTableAlreadyHasNamespacePrefix() {
     // given
     DbRequest dbRequest = new DbRequest();
 

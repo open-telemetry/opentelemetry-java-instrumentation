@@ -41,7 +41,7 @@ public abstract class RedissonRequest {
   public abstract Object getCommand();
 
   @Nullable
-  public String getOperation() {
+  public String getOperationName() {
     Object command = getCommand();
     if (command instanceof CommandData) {
       return ((CommandData<?, ?>) command).getCommand().getName();
@@ -55,7 +55,7 @@ public abstract class RedissonRequest {
   }
 
   @Nullable
-  public String getStatement() {
+  public String getQueryText() {
     List<String> sanitizedStatements = sanitizeStatement();
     switch (sanitizedStatements.size()) {
       case 0:

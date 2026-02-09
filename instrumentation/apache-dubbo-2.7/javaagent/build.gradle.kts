@@ -50,8 +50,18 @@ tasks.withType<Test>().configureEach {
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
 
+val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}StableSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+}
+
 tasks {
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }

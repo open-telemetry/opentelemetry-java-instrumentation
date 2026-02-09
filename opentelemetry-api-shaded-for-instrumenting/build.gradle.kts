@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
   id("com.gradleup.shadow")
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
 }
 
 description = "opentelemetry-api shaded for internal javaagent usage"

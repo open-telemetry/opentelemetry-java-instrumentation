@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -13,7 +14,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -56,6 +56,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Netty41ClientSslTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -145,7 +146,7 @@ class Netty41ClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -157,7 +158,7 @@ class Netty41ClientSslTest {
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(SpanKind.INTERNAL)
@@ -215,7 +216,7 @@ class Netty41ClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -227,7 +228,7 @@ class Netty41ClientSslTest {
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(PEER_SERVICE, "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(SpanKind.INTERNAL)

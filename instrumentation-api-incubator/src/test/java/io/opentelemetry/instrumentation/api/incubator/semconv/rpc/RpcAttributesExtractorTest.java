@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
 
   enum TestGetter implements RpcAttributesGetter<Map<String, String>> {

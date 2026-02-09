@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
@@ -22,6 +23,9 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from PeerIncubatingAttributes
   private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
+  // copied from ServiceIncubatingAttributes
+  private static final AttributeKey<String> SERVICE_PEER_NAME =
+      AttributeKey.stringKey("service.peer.name");
 
   private final ServerAttributesGetter<REQUEST> attributesGetter;
   private final PeerServiceResolver peerServiceResolver;
@@ -63,7 +67,12 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     Integer serverPort = attributesGetter.getServerPort(request);
     String peerService = mapToPeerService(serverAddress, serverPort);
     if (peerService != null) {
-      attributes.put(PEER_SERVICE, peerService);
+      if (SemconvStability.emitOldServicePeerSemconv()) {
+        attributes.put(PEER_SERVICE, peerService);
+      }
+      if (SemconvStability.emitStableServicePeerSemconv()) {
+        attributes.put(SERVICE_PEER_NAME, peerService);
+      }
     }
   }
 

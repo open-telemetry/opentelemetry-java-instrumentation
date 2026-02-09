@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Accessor;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
 import jakarta.servlet.Servlet;
@@ -81,7 +81,10 @@ public class JakartaServletServiceAdvice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(contextToUpdate, (HttpServletResponse) response, Servlet5Accessor.INSTANCE);
+            .customize(
+                contextToUpdate,
+                (HttpServletResponse) response,
+                Servlet5HttpServerResponseMutator.INSTANCE);
       }
     }
 

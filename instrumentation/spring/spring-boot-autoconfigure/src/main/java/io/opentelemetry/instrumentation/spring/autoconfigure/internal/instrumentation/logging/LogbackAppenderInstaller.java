@@ -87,9 +87,12 @@ class LogbackAppenderInstaller {
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
       OpenTelemetryAppender openTelemetryAppender) {
 
-    // Implemented in the same way as the
-    // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
-    // available
+    // Reading configuration directly from Spring Environment instead of using declarative
+    // configuration because this code runs during ApplicationEnvironmentPreparedEvent, which occurs
+    // before the full Spring application context is available. This is the same approach used by
+    // org.springframework.boot.context.logging.LoggingApplicationListener.
+    // The evaluateBooleanProperty method handles both declarative and non-declarative config by
+    // transforming property names when declarative config is detected.
     Boolean codeAttribute =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
@@ -199,9 +202,12 @@ class LogbackAppenderInstaller {
       io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender
           openTelemetryAppender) {
 
-    // Implemented in the same way as the
-    // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
-    // available
+    // Reading configuration directly from Spring Environment instead of using declarative
+    // configuration because this code runs during ApplicationEnvironmentPreparedEvent, which occurs
+    // before the full Spring application context is available. This is the same approach used by
+    // org.springframework.boot.context.logging.LoggingApplicationListener.
+    // The evaluateBooleanProperty method handles both declarative and non-declarative config by
+    // transforming property names when declarative config is detected.
     Boolean addBaggage =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-mdc.add-baggage");

@@ -39,7 +39,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
   ToIntFunction<Context> resendCountIncrementer = HttpClientRequestResendCount::getAndIncrement;
-  boolean redactQueryParameters;
+  boolean redactQueryParameters = true;
 
   static {
     Experimental.internalSetRedactHttpClientQueryParameters(

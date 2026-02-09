@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
-import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
 
 public final class Helpers {
@@ -56,9 +55,7 @@ public final class Helpers {
         if (codecCtx != null) {
           if (channel.pipeline().get(HttpServerTracingHandler.class) == null) {
 
-            ChannelHandler ourHandler =
-                NettyServerSingletons.serverTelemetry()
-                    .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+            ChannelHandler ourHandler = NettyServerSingletons.createCombinedHandler();
 
             channel
                 .pipeline()

@@ -1,15 +1,13 @@
+display_name: JDBC
 description: >
-  The JDBC instrumentation provides database client spans and metrics. Each call produces a span
-  named after the SQL verb, enriched with standard DB client attributes (system, database,
-  operation, sanitized statement, peer address) and error details if an exception occurs.
-
-  The instrumentation unwraps pooled connections (via java.sql.Wrapper) to cache database metadata
-  against the underlying physical connection. Without proper unwrapping support, caching is limited
-  to the wrapper instance, which typically changes each time a connection is retrieved from the pool.
-  This can result in repeated metadata extraction, potentially causing performance degradation.
-
-  There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
-  but is disabled by default due to the volume of telemetry produced.
+  This instrumentation enables database client spans and database client metrics for JDBC operations.
+  There is also a datasource instrumentation that creates spans for datasource connections (disabled
+  by default). Note: The instrumentation unwraps pooled connections to cache metadata against the
+  underlying physical connection; without proper unwrapping, repeated metadata extraction can cause
+  performance degradation.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
 library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
 configurations:
   - name: otel.instrumentation.jdbc.statement-sanitizer.enabled

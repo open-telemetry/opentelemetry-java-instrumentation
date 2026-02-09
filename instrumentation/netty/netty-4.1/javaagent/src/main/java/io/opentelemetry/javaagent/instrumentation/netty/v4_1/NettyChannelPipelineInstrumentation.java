@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.VirtualFieldHelper.CHANNEL_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons.serverTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -97,15 +96,11 @@ public class NettyChannelPipelineInstrumentation
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
-        ourHandler =
-            serverTelemetry()
-                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+        ourHandler = NettyServerSingletons.createCombinedHandler();
       } else if (handler instanceof HttpRequestDecoder) {
-        ourHandler = serverTelemetry().createRequestHandler();
+        ourHandler = NettyServerSingletons.createRequestHandler();
       } else if (handler instanceof HttpResponseEncoder) {
-        ourHandler =
-            serverTelemetry()
-                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+        ourHandler = NettyServerSingletons.createCombinedHandler();
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
         ourHandler = clientHandlerFactory().createCombinedHandler();

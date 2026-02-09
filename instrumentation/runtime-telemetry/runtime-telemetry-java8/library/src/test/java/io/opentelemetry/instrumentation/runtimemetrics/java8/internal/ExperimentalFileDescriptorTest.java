@@ -22,6 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // until ExperimentalFileDescriptor is renamed
 @ExtendWith(MockitoExtension.class)
 class ExperimentalFileDescriptorTest {
 

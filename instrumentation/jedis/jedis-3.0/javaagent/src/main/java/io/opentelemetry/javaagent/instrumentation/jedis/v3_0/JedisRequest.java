@@ -31,7 +31,7 @@ public abstract class JedisRequest {
 
   public abstract List<byte[]> getArgs();
 
-  public String getOperation() {
+  public String getOperationName() {
     ProtocolCommand command = getCommand();
     if (command instanceof Protocol.Command) {
       return ((Protocol.Command) command).name();
@@ -42,7 +42,7 @@ public abstract class JedisRequest {
     }
   }
 
-  public String getStatement() {
-    return sanitizer.sanitize(getOperation(), getArgs());
+  public String getQueryText() {
+    return sanitizer.sanitize(getOperationName(), getArgs());
   }
 }

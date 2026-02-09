@@ -221,8 +221,7 @@ additional_telemetry:                             # Manually document telemetry 
 We parse gradle files in order to determine several pieces of metadata:
 
 - Javaagent versions are determined by the `muzzle` plugin configurations
-- Library versions are determined by the library dependency versions
-  - when available, latestDepTestLibrary is used to determine the latest supported version
+- Standalone Library versions are identified, but we do not try and parse version ranges
 - Minimum Java version is determined by the `otelJava` configurations
 
 ### Scope

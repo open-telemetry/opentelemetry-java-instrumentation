@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
@@ -29,6 +30,9 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from PeerIncubatingAttributes
   private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
+  // copied from ServiceIncubatingAttributes
+  private static final AttributeKey<String> SERVICE_PEER_NAME =
+      AttributeKey.stringKey("service.peer.name");
 
   private final AddressAndPortExtractor<REQUEST> addressAndPortExtractor;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
@@ -82,7 +86,12 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     String peerService =
         mapToPeerService(addressAndPort.getAddress(), addressAndPort.getPort(), pathSupplier);
     if (peerService != null) {
-      attributes.put(PEER_SERVICE, peerService);
+      if (SemconvStability.emitOldServicePeerSemconv()) {
+        attributes.put(PEER_SERVICE, peerService);
+      }
+      if (SemconvStability.emitStableServicePeerSemconv()) {
+        attributes.put(SERVICE_PEER_NAME, peerService);
+      }
     }
   }
 

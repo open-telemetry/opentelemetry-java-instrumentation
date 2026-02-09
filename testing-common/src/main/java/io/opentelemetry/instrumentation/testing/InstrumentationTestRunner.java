@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
@@ -31,6 +32,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -261,6 +263,24 @@ public abstract class InstrumentationTestRunner {
         () -> assertThat(getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
         await().timeout(Duration.ofSeconds(20)));
     return getExportedLogRecords();
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertLogRecords(Consumer<LogRecordDataAssert>... assertions) {
+    waitAndAssertLogRecords(Arrays.asList(assertions));
+  }
+
+  public final void waitAndAssertLogRecords(
+      Iterable<? extends Consumer<LogRecordDataAssert>> assertions) {
+    List<Consumer<LogRecordDataAssert>> assertionsList = new ArrayList<>();
+    assertions.forEach(assertionsList::add);
+
+    List<LogRecordData> logRecordDataList = waitForLogRecords(assertionsList.size());
+    Iterator<Consumer<LogRecordDataAssert>> assertionIterator = assertionsList.iterator();
+    for (LogRecordData logRecordData : logRecordDataList) {
+      assertionIterator.next().accept(assertThat(logRecordData));
+    }
   }
 
   private List<MetricData> instrumentationMetrics(String instrumentationName) {

@@ -156,13 +156,11 @@ public final class RuntimeMetrics implements AutoCloseable {
 
     private static boolean isJfrAvailable() {
       try {
-        Class.forName("jdk.jfr.FlightRecorder");
-        // UnsatisfiedLinkError or ClassNotFoundException
-      } catch (Exception e) {
+        return FlightRecorder.isAvailable();
+      } catch (Throwable e) {
+        // NoClassDefFoundError, UnsatisfiedLinkError (native images), or other issues
         return false;
       }
-
-      return FlightRecorder.isAvailable();
     }
   }
 }

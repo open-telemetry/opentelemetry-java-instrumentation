@@ -11,25 +11,25 @@ import net.spy.memcached.MemcachedConnection;
 @AutoValue
 public abstract class SpymemcachedRequest {
 
-  public static SpymemcachedRequest create(MemcachedConnection connection, String statement) {
-    return new AutoValue_SpymemcachedRequest(connection, statement);
+  public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
+    return new AutoValue_SpymemcachedRequest(connection, queryText);
   }
 
   public abstract MemcachedConnection getConnection();
 
-  public abstract String getStatement();
+  public abstract String getQueryText();
 
   public String dbOperation() {
-    String statement = getStatement();
-    if (statement.startsWith("async")) {
-      statement = statement.substring("async".length());
+    String queryText = getQueryText();
+    if (queryText.startsWith("async")) {
+      queryText = queryText.substring("async".length());
     }
-    if (statement.startsWith("CAS")) {
+    if (queryText.startsWith("CAS")) {
       // 'CAS' name is special, we have to lowercase whole name
-      return "cas" + statement.substring("CAS".length());
+      return "cas" + queryText.substring("CAS".length());
     }
 
-    char[] chars = statement.toCharArray();
+    char[] chars = queryText.toCharArray();
     // Lowercase first letter
     chars[0] = Character.toLowerCase(chars[0]);
     return new String(chars);

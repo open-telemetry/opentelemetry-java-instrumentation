@@ -16,7 +16,7 @@ import net.bytebuddy.description.type.TypeDefinition;
 public class Utils {
 
   private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
-      new BootstrapClassLoaderProxy(null);
+      new BootstrapClassLoaderProxy(resourceName -> null);
 
   /** Return the class loader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
