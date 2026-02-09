@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
-enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttributes> {
+enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttributes, Response> {
   INSTANCE;
 
   @Override
@@ -22,6 +22,7 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<ExecutionAttribute
     return request.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
   }
 
+  @Deprecated
   @Override
   public String getMethod(ExecutionAttributes request) {
     return request.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
