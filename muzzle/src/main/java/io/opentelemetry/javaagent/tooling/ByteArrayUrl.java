@@ -14,7 +14,6 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.URLStreamHandler;
 import java.nio.charset.StandardCharsets;
-import java.security.AccessController;
 import java.security.Permission;
 import java.security.PrivilegedAction;
 
@@ -27,7 +26,7 @@ public class ByteArrayUrl {
   @SuppressWarnings("removal")
   public static URL create(String contentName, byte[] data) {
     if (System.getSecurityManager() != null) {
-      return AccessController.doPrivileged(
+      return java.security.AccessController.doPrivileged(
           (PrivilegedAction<URL>)
               () -> {
                 return doCreate(contentName, data);

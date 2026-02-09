@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.api.trace.SpanKind;
-import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -113,7 +112,7 @@ public final class SupportabilityMetrics {
     if (System.getSecurityManager() == null) {
       return action.run();
     }
-    return AccessController.doPrivileged(action);
+    return java.security.AccessController.doPrivileged(action);
   }
 
   /**
