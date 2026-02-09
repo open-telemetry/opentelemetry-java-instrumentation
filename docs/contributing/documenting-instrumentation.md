@@ -207,6 +207,7 @@ List of possible options:
 * `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
 * `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
 * `LOGGING_BRIDGE`: Instrumentation that bridges logging framework events to the OpenTelemetry Logs API. These instrumentations capture log records from standard logging frameworks and emit them as OpenTelemetry log records.
+* `RESOURCE_DETECTOR`: Instrumentation that sets resource attributes based on certain conditions
 
 ### Library Link
 

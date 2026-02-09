@@ -12116,6 +12116,8 @@ libraries:
         - Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
         - Check for --spring.application.name program argument via sun.java.command system property
     library_link: https://spring.io/projects/spring-boot
+    features:
+    - RESOURCE_DETECTOR
     source_path: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
@@ -12134,6 +12136,8 @@ libraries:
     description: |
       This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate any telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
     library_link: https://github.com/spring-cloud/spring-cloud-gateway
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
     scope:
       name: io.opentelemetry.spring-cloud-gateway-2.0
@@ -12147,6 +12151,7 @@ libraries:
       type: boolean
       default: false
   - name: spring-cloud-gateway-webmvc-4.3
+    display_name: Spring Cloud Gateway Server WebMVC
     description: |
       This instrumentation enhances tracing for Spring Cloud Gateway Server WebMVC. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Spring WebMVC with Spring Cloud Gateway-specific attributes.
     library_link: https://github.com/spring-cloud/spring-cloud-gateway
@@ -12158,15 +12163,17 @@ libraries:
     - org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:[4.3.0,)
     configurations:
     - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
-      description: Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
-        `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on
-        spans.
+      description: |
+        Enables experimental `spring-cloud-gateway.route` attributes (e.g., `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
       type: boolean
       default: false
   - name: spring-core-2.0
+    display_name: Spring Core
     description: |
-      This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
+      This instrumentation provides context propagation for Spring Core asynchronous task execution, it does not emit any telemetry on its own.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/package-summary.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/spring/spring-core-2.0
     minimum_java_version: 17
     scope:
@@ -12174,8 +12181,9 @@ libraries:
     javaagent_target_versions:
     - org.springframework:spring-core:[2.0,]
   - name: spring-data-1.8
-    description: |
-      This instrumentation enhances tracing for Spring Data operations. It works in conjunction with other instrumentations, such as JDBC, to provide additional context and details for database interactions initiated through Spring Data.
+    display_name: Spring Data
+    description: This instrumentation enables spans for Spring Data repository method
+      invocations.
     library_link: https://spring.io/projects/spring-data
     source_path: instrumentation/spring/spring-data/spring-data-1.8
     scope:

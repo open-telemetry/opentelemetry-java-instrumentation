@@ -1,3 +1,4 @@
+display_name: Spring Cloud Gateway Server WebMVC
 description: >
   This instrumentation enhances tracing for Spring Cloud Gateway Server WebMVC. It does not
   generate new telemetry on its own, but rather enriches existing traces produced by other
