@@ -32,7 +32,7 @@ public final class RuntimeMetricsBuilder {
     Internal.setJfrInstrumentationName(delegate, "io.opentelemetry.runtime-telemetry-java17");
     // Use legacy metric for backward compatibility (jvm.cpu.limit instead of jvm.cpu.count)
     Internal.setUseLegacyJfrCpuCountMetric(delegate, true);
-    // java17 default for captureGcCause was false (unified module default is true)
+    // Explicitly set to preserve backward compatibility if unified default changes
     Internal.setCaptureGcCause(delegate, false);
 
     // Disable all JFR features first, then selectively enable based on java17 defaults.
