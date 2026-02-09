@@ -12217,11 +12217,11 @@ libraries:
       type: boolean
       default: false
     - name: otel.instrumentation.spring-integration.global-channel-interceptor-patterns
-      description: An array of Spring channel name patterns that will be intercepted.
+      description: A list of Spring channel name patterns that will be intercepted.
       type: list
       default: '*'
     - name: otel.instrumentation.messaging.experimental.capture-headers
-      description: Allows configuring headers to capture as span attributes.
+      description: A comma-separated list of header names to capture as span attributes.
       type: list
       default: ''
     telemetry:
@@ -12242,8 +12242,11 @@ libraries:
         - name: messaging.operation
           type: STRING
   - name: spring-jms-2.0
-    description: This instrumentation enables the generation of consumer messaging
-      spans for Spring JMS.
+    display_name: Spring JMS
+    description: This instrumentation enables messaging spans for Spring JMS message
+      consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
     source_path: instrumentation/spring/spring-jms/spring-jms-2.0
     scope:
@@ -12274,8 +12277,11 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-jms-6.0
-    description: This instrumentation enables the generation of consumer messaging
-      spans for Spring JMS.
+    display_name: Spring JMS
+    description: This instrumentation enables messaging spans for Spring JMS message
+      consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
     source_path: instrumentation/spring/spring-jms/spring-jms-6.0
     minimum_java_version: 17
