@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -19,7 +20,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -107,7 +107,7 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(PEER_SERVICE, "test-peer-service"))));
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
   @Test
@@ -154,7 +154,7 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(PEER_SERVICE, "test-peer-service")),
+                                equalTo(maybeStablePeerService(), "test-peer-service")),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

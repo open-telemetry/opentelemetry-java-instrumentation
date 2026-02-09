@@ -524,6 +524,9 @@ class SqlStatementSanitizerTest {
             "SELECT * FROM t1 OUTER APPLY (SELECT * FROM t2 WHERE t2.id = t1.id)",
             expect("SELECT", null, "SELECT t1 SELECT t2")),
         Arguments.of(
+            "SELECT * FROM t1, LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id)",
+            expect("SELECT", null, "SELECT t1 SELECT t2")),
+        Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
             "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),
@@ -657,6 +660,21 @@ class SqlStatementSanitizerTest {
                 "t1",
                 "SELECT t1; INSERT t2")),
 
+        // Trailing semicolons
+        Arguments.of("SELECT * FROM t;", expect("SELECT * FROM t;", "SELECT", "t", "SELECT t")),
+        Arguments.of("SELECT * FROM t;;", expect("SELECT * FROM t;;", "SELECT", "t", "SELECT t")),
+
+        // PostgreSQL ONLY keyword (inherits from parent table only, not children)
+        Arguments.of(
+            "SELECT * FROM ONLY parent",
+            expect("SELECT * FROM ONLY parent", "SELECT", "ONLY", "SELECT parent")),
+        Arguments.of(
+            "DELETE FROM ONLY parent WHERE id = 1",
+            expect("DELETE FROM ONLY parent WHERE id = ?", "DELETE", "ONLY", "DELETE parent")),
+        Arguments.of(
+            "UPDATE ONLY parent SET x = 1",
+            expect("UPDATE ONLY parent SET x = ?", "UPDATE", "ONLY", "UPDATE parent")),
+
         // Standalone VALUES clause
         Arguments.of("VALUES (1)", expect("VALUES (?)", null, null, "VALUES")),
         Arguments.of(
@@ -751,7 +769,77 @@ class SqlStatementSanitizerTest {
             expect("SELECT", null, "SELECT SELECT inner1 SELECT inner2 outer_table")),
 
         // Parenthesized table name - not a subquery - valid on MySQL
-        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")));
+        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")),
+
+        // TRUNCATE statement
+        Arguments.of(
+            "TRUNCATE TABLE users",
+            expect("TRUNCATE TABLE users", null, null, "TRUNCATE TABLE users")),
+        Arguments.of("TRUNCATE users", expect("TRUNCATE users", null, null, "TRUNCATE users")),
+        Arguments.of(
+            "TRUNCATE TABLE schema.table",
+            expect("TRUNCATE TABLE schema.table", null, null, "TRUNCATE TABLE schema.table")),
+
+        // REPLACE statement (MySQL)
+        Arguments.of(
+            "REPLACE INTO users VALUES (1, 'name')",
+            expect("REPLACE INTO users VALUES (?, ?)", null, null, "REPLACE users")),
+        Arguments.of(
+            "REPLACE users SET name = 'foo'",
+            expect("REPLACE users SET name = ?", null, null, "REPLACE users")),
+        Arguments.of(
+            "REPLACE INTO db.table (col) VALUES (1)",
+            expect("REPLACE INTO db.table (col) VALUES (?)", null, null, "REPLACE db.table")),
+
+        // Transaction control statements
+        Arguments.of("BEGIN", expect("BEGIN", null, null, "BEGIN")),
+        Arguments.of(
+            "BEGIN TRANSACTION", expect("BEGIN TRANSACTION", null, null, "BEGIN TRANSACTION")),
+        Arguments.of("COMMIT", expect("COMMIT", null, null, "COMMIT")),
+        Arguments.of(
+            "COMMIT TRANSACTION", expect("COMMIT TRANSACTION", null, null, "COMMIT TRANSACTION")),
+        Arguments.of("ROLLBACK", expect("ROLLBACK", null, null, "ROLLBACK")),
+        Arguments.of(
+            "ROLLBACK TRANSACTION",
+            expect("ROLLBACK TRANSACTION", null, null, "ROLLBACK TRANSACTION")),
+
+        // LOCK statement
+        Arguments.of(
+            "LOCK TABLE users", expect("LOCK TABLE users", null, null, "LOCK TABLE users")),
+        Arguments.of(
+            "LOCK TABLE users IN EXCLUSIVE MODE",
+            expect("LOCK TABLE users IN EXCLUSIVE MODE", null, null, "LOCK TABLE users")),
+        Arguments.of(
+            "LOCK TABLES users WRITE, orders READ",
+            expect("LOCK TABLES users WRITE, orders READ", null, null, "LOCK TABLES users")),
+
+        // USE statement
+        Arguments.of("USE mydb", expect("USE mydb", null, null, "USE mydb")),
+        Arguments.of(
+            "USE `my database`", expect("USE `my database`", null, null, "USE `my database`")),
+
+        // GRANT statement
+        Arguments.of(
+            "GRANT SELECT ON users TO some_user",
+            expect("GRANT SELECT ON users TO some_user", "SELECT", null, "GRANT")),
+        Arguments.of(
+            "GRANT ALL PRIVILEGES ON database.* TO 'user'@'host'",
+            expect("GRANT ALL PRIVILEGES ON database.* TO ?@?", null, null, "GRANT")),
+
+        // REVOKE statement
+        Arguments.of(
+            "REVOKE SELECT ON users FROM some_user",
+            expect("REVOKE SELECT ON users FROM some_user", "SELECT", "some_user", "REVOKE")),
+        Arguments.of(
+            "REVOKE ALL PRIVILEGES ON database.* FROM 'user'@'host'",
+            expect("REVOKE ALL PRIVILEGES ON database.* FROM ?@?", "SELECT", null, "REVOKE")),
+
+        // SHOW statement
+        Arguments.of("SHOW TABLES", expect("SHOW TABLES", null, null, "SHOW")),
+        Arguments.of(
+            "SHOW CREATE TABLE users",
+            expect("SHOW CREATE TABLE users", "CREATE TABLE", "users", "SHOW")),
+        Arguments.of("SHOW DATABASES", expect("SHOW DATABASES", null, null, "SHOW")));
   }
 
   private static Stream<Arguments> ddlArgs() {
