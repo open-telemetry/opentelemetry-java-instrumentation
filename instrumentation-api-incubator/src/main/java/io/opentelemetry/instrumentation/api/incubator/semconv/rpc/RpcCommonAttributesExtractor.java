@@ -11,14 +11,33 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 
-abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
+public abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
+
+  static final ContextKey<String> OLD_RPC_METHOD_CONTEXT_KEY =
+      ContextKey.named("otel-rpc-old-method");
+
+  @SuppressWarnings("deprecation") // for getMethod()
+  public static <REQUEST> ContextCustomizer<REQUEST> oldMethodContextCustomizer(
+      RpcAttributesGetter<REQUEST, ?> getter) {
+    return (context, request, startAttributes) -> {
+      if (SemconvStability.emitOldRpcSemconv() && SemconvStability.emitStableRpcSemconv()) {
+        String oldMethod = getter.getMethod(request);
+        if (oldMethod != null) {
+          return context.with(OLD_RPC_METHOD_CONTEXT_KEY, oldMethod);
+        }
+      }
+      return context;
+    };
+  }
 
   // Stable semconv keys
   static final AttributeKey<String> RPC_SYSTEM_NAME = AttributeKey.stringKey("rpc.system.name");
@@ -60,8 +79,10 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldRpcSemconv()) {
       internalSet(attributes, RPC_SYSTEM, system);
       internalSet(attributes, RPC_SERVICE, getter.getService(request));
-      internalSet(
-          attributes, SemconvStability.getOldRpcMethodAttributeKey(), getter.getMethod(request));
+      if (!SemconvStability.emitStableRpcSemconv()) {
+        // only set old rpc.method on spans when there's no clash with stable rpc.method
+        internalSet(attributes, RPC_METHOD, getter.getMethod(request));
+      }
     }
   }
 

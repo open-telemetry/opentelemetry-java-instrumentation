@@ -135,7 +135,9 @@ class RpcAttributesExtractorTest {
     if (SemconvStability.emitOldRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM, "test"));
       expectedEntries.add(entry(RPC_SERVICE, "my.Service"));
-      expectedEntries.add(entry(SemconvStability.getOldRpcMethodAttributeKey(), "Method"));
+      if (!SemconvStability.emitStableRpcSemconv()) {
+        expectedEntries.add(entry(RPC_METHOD, "Method"));
+      }
     }
 
     // safe conversion for test assertions

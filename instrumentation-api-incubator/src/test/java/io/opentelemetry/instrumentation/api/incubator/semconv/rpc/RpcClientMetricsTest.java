@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.OLD_RPC_METHOD_CONTEXT_KEY;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -75,12 +76,19 @@ class RpcClientMetricsTest {
                         "090a0b0c0d0e0f00",
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
+    if (SemconvStability.emitOldRpcSemconv() && SemconvStability.emitStableRpcSemconv()) {
+      parent = parent.with(OLD_RPC_METHOD_CONTEXT_KEY, "exampleMethod");
+    }
 
     Context context1 = listener.onStart(parent, requestAttributes1, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    Context context2 = listener.onStart(Context.root(), requestAttributes2, nanos(150));
+    Context context2Root = Context.root();
+    if (SemconvStability.emitOldRpcSemconv() && SemconvStability.emitStableRpcSemconv()) {
+      context2Root = context2Root.with(OLD_RPC_METHOD_CONTEXT_KEY, "exampleMethod");
+    }
+    Context context2 = listener.onStart(context2Root, requestAttributes2, nanos(150));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
@@ -304,7 +312,9 @@ class RpcClientMetricsTest {
     if (SemconvStability.emitOldRpcSemconv()) {
       builder.put(RPC_SYSTEM, system);
       builder.put(RPC_SERVICE, service);
-      builder.put(SemconvStability.getOldRpcMethodAttributeKey(), method);
+      if (!SemconvStability.emitStableRpcSemconv()) {
+        builder.put(RPC_METHOD, method);
+      }
     }
 
     if (SemconvStability.emitStableRpcSemconv()) {

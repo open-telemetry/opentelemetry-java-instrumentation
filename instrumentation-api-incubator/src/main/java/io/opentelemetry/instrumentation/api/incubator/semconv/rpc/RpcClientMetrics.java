@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.OLD_RPC_METHOD_CONTEXT_KEY;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -103,7 +105,8 @@ public final class RpcClientMetrics implements OperationListener {
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         RPC_CLIENT_REQUEST_METRICS_STATE,
-        new AutoValue_RpcClientMetrics_State(startAttributes, startNanos));
+        new AutoValue_RpcClientMetrics_State(
+            startAttributes, startNanos, context.get(OLD_RPC_METHOD_CONTEXT_KEY)));
   }
 
   @Override
@@ -121,10 +124,8 @@ public final class RpcClientMetrics implements OperationListener {
 
     // Record to old histogram (milliseconds)
     if (oldClientDurationHistogram != null) {
-      oldClientDurationHistogram.record(
-          durationNanos / NANOS_PER_MS,
-          SemconvStability.getOldRpcMetricAttributes(attributes),
-          context);
+      Attributes oldAttributes = getOldAttributes(attributes, state);
+      oldClientDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
     }
 
     // Record to stable histogram (seconds)
@@ -133,22 +134,27 @@ public final class RpcClientMetrics implements OperationListener {
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {
+      Attributes oldAttributes = getOldAttributes(attributes, state);
+
       Long rpcClientRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
       if (rpcClientRequestBodySize != null) {
-        oldClientRequestSize.record(
-            rpcClientRequestBodySize,
-            SemconvStability.getOldRpcMetricAttributes(attributes),
-            context);
+        oldClientRequestSize.record(rpcClientRequestBodySize, oldAttributes, context);
       }
 
       Long rpcClientResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
       if (rpcClientResponseBodySize != null) {
-        oldClientResponseSize.record(
-            rpcClientResponseBodySize,
-            SemconvStability.getOldRpcMetricAttributes(attributes),
-            context);
+        oldClientResponseSize.record(rpcClientResponseBodySize, oldAttributes, context);
       }
     }
+  }
+
+  private static Attributes getOldAttributes(Attributes attributes, State state) {
+    String oldRpcMethod = state.oldRpcMethod();
+    if (oldRpcMethod != null) {
+      // dup mode: replace stable rpc.method with old value
+      return attributes.toBuilder().put(RPC_METHOD, oldRpcMethod).build();
+    }
+    return attributes;
   }
 
   @AutoValue
@@ -157,5 +163,8 @@ public final class RpcClientMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
+
+    @Nullable
+    abstract String oldRpcMethod();
   }
 }
