@@ -25,7 +25,7 @@ public class CassandraTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
 
   protected CassandraTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -37,9 +37,18 @@ public class CassandraTelemetryBuilder {
    * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
-  public CassandraTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    this.statementSanitizationEnabled = enabled;
+  public CassandraTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
+    this.querySanitizationEnabled = enabled;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public CassandraTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
+    return setQuerySanitizationEnabled(enabled);
   }
 
   /**
@@ -47,7 +56,7 @@ public class CassandraTelemetryBuilder {
    * CassandraTelemetryBuilder}.
    */
   public CassandraTelemetry build() {
-    return new CassandraTelemetry(createInstrumenter(openTelemetry, statementSanitizationEnabled));
+    return new CassandraTelemetry(createInstrumenter(openTelemetry, querySanitizationEnabled));
   }
 
   @SuppressWarnings("deprecation") // to support old database semantic conventions
