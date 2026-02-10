@@ -49,7 +49,8 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
-  /** Configures whether JDBC Statements are sanitized. Enabled by default. 
+  /**
+   * Configures whether JDBC Statements are sanitized. Enabled by default.
    *
    * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
    */
