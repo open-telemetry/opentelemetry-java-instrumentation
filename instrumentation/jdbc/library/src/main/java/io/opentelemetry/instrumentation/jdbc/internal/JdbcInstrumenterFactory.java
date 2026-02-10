@@ -79,7 +79,7 @@ public final class JdbcInstrumenterFactory {
             DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(statementSanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractors(extractors)

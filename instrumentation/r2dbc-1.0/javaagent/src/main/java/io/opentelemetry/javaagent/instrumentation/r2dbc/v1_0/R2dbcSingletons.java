@@ -22,7 +22,7 @@ public final class R2dbcSingletons {
   static {
     R2dbcTelemetryBuilder builder =
         R2dbcTelemetry.builder(GlobalOpenTelemetry.get())
-            .setStatementSanitizationEnabled(
+            .setQuerySanitizationEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
                     .get("statement_sanitizer")
                     .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()))
