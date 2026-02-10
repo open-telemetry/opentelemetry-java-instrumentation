@@ -21,7 +21,7 @@ class DubboAgentTraceChainTest extends AbstractDubboTraceChainTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
+  protected boolean hasServicePeerName() {
     return true;
   }
 }
