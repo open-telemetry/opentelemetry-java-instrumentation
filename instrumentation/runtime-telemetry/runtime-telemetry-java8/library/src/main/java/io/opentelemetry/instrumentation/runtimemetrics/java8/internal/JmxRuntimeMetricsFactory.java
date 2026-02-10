@@ -29,6 +29,7 @@ public class JmxRuntimeMetricsFactory {
       observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
       observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
       observables.addAll(ExperimentalFileDescriptor.registerObservers(openTelemetry));
+      observables.addAll(ExperimentalThreads.registerObservers(openTelemetry));
     }
     return observables;
   }
