@@ -47,7 +47,7 @@ POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
+  static SqlQuery sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizerWithSummary sanitizer = new AutoSqlSanitizerWithSummary(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
@@ -61,7 +61,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.createWithSummary(null, null, null);
+      return SqlQuery.createWithSummary(null, null, null);
     }
   }
 
@@ -684,7 +684,7 @@ WHITESPACE           = [ \t\r\n]+
     return cteNames.contains(identifier.toLowerCase());
   }
 
-  private SqlStatementInfo getResult() {
+  private SqlQuery getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
     }
@@ -699,7 +699,7 @@ WHITESPACE           = [ \t\r\n]+
       summary = summary.substring(0, summary.length() - 1);
     }
 
-    return SqlStatementInfo.createWithSummary(normalizedStatement, storedProcedureName, summary);
+    return SqlQuery.createWithSummary(normalizedStatement, storedProcedureName, summary);
   }
 
 %}

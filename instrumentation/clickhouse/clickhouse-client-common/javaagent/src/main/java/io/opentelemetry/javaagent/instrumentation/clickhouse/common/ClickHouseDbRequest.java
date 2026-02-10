@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
@@ -15,17 +15,15 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class ClickHouseDbRequest {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final SqlQuerySanitizer sanitizer =
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static ClickHouseDbRequest create(
       @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {
-    SqlStatementInfo sqlStatementInfo =
-        SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
-    SqlStatementInfo sqlStatementInfoWithSummary =
+    SqlQuery sqlQuery = SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
+    SqlQuery sqlQueryWithSummary =
         SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
-    return new AutoValue_ClickHouseDbRequest(
-        host, port, dbName, sqlStatementInfo, sqlStatementInfoWithSummary);
+    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sqlQuery, sqlQueryWithSummary);
   }
 
   @Nullable
@@ -38,8 +36,8 @@ public abstract class ClickHouseDbRequest {
   public abstract String getNamespace();
 
   @Nullable
-  public abstract SqlStatementInfo getSqlStatementInfo();
+  public abstract SqlQuery getSqlQuery();
 
   @Nullable
-  public abstract SqlStatementInfo getSqlStatementInfoWithSummary();
+  public abstract SqlQuery getSqlQueryWithSummary();
 }
