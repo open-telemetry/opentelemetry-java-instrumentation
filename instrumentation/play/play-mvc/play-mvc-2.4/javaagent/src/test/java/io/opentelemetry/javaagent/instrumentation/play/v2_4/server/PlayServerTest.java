@@ -26,6 +26,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import play.mvc.Http;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
@@ -36,8 +37,6 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
-  @SuppressWarnings(
-      "OtelUnnecessarilyFullyQualified") // play.mvc.Http.Context.Implicit FQCN required
   protected Server setupServer() {
     RoutingDsl router =
         new RoutingDsl()
@@ -52,10 +51,8 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                     controller(
                         INDEXED_CHILD,
                         () -> {
-                          // FQCN required - play.mvc.Http.Context.Implicit is deeply nested static
-                          // access
                           INDEXED_CHILD.collectSpanAttributes(
-                              it -> play.mvc.Http.Context.Implicit.request().getQueryString(it));
+                              it -> Http.Context.Implicit.request().getQueryString(it));
                           return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                         }))
             .GET(QUERY_PARAM.getPath())
@@ -72,10 +69,8 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                     controller(
                         CAPTURE_HEADERS,
                         () -> {
-                          // FQCN required - play.mvc.Http.Context.Implicit is deeply nested static
-                          // access
                           String header =
-                              play.mvc.Http.Context.Implicit.request().getHeader("X-Test-Request");
+                              Http.Context.Implicit.request().getHeader("X-Test-Request");
                           return Results.status(
                                   CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
                               .withHeader("X-Test-Response", header);
