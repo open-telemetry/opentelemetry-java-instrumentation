@@ -175,8 +175,7 @@ public class OtelDeprecatedApiUsage extends BugChecker
   private static Symbol.ClassSymbol getTopLevelClass(Symbol sym) {
     Symbol current = sym;
     while (current != null) {
-      if (current instanceof Symbol.ClassSymbol) {
-        Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) current;
+      if (current instanceof Symbol.ClassSymbol classSymbol) {
         Symbol owner = classSymbol.owner;
         // Top-level class is owned by a package
         if (owner instanceof Symbol.PackageSymbol) {

@@ -29,9 +29,9 @@ class OtelDeprecatedApiUsageTest {
             "package test;",
             "public class PositiveCases {",
             "  void method() {",
-            "    // BUG: Diagnostic contains: Use of deprecated API",
+            "    // BUG: Diagnostic contains: Use of deprecated API: deprecatedMethod()",
             "    DeprecatedClass.deprecatedMethod();",
-            "    // BUG: Diagnostic contains: Use of deprecated API",
+            "    // BUG: Diagnostic contains: Use of deprecated API: DEPRECATED_FIELD",
             "    String s = DeprecatedClass.DEPRECATED_FIELD;",
             "  }",
             "}")
@@ -51,7 +51,7 @@ class OtelDeprecatedApiUsageTest {
             "PositiveCases.java",
             "package test;",
             "public class PositiveCases {",
-            "  // BUG: Diagnostic contains: Use of deprecated API",
+            "  // BUG: Diagnostic contains: Use of deprecated API: test.DeprecatedClass",
             "  DeprecatedClass obj;",
             "}")
         .doTest();
