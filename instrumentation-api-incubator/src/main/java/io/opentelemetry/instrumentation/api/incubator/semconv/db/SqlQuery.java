@@ -34,10 +34,9 @@ public abstract class SqlQuery {
     // AutoValue constructor: (queryText, operationName, collectionName, storedProcedureName,
     // querySummary)
     // For old semconv: derive collectionName and storedProcedureName from target based on operation
-    String collectionName =
-        SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName) ? null : target;
-    String storedProcedureName =
-        SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName) ? target : null;
+    boolean isStoredProcedure = SQL_CALL.equals(operationName) || "EXECUTE".equals(operationName);
+    String collectionName = isStoredProcedure ? null : target;
+    String storedProcedureName = isStoredProcedure ? target : null;
     return new AutoValue_SqlQuery(
         queryText, operationName, collectionName, storedProcedureName, null);
   }
