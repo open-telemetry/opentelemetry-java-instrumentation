@@ -12125,7 +12125,7 @@ libraries:
   - name: spring-cloud-aws-3.0
     display_name: Spring Cloud AWS
     description: |
-      This instrumentation enhances messaging span creation for Spring Cloud AWS SQS. It coordinates with the AWS SDK instrumentation to create process spans at the appropriate points in Spring Cloud AWS message handling.
+      This instrumentation enhances messaging span creation for Spring Cloud AWS SQS. It coordinates with the AWS SDK instrumentation to create spans at the appropriate points in Spring Cloud AWS message handling.
     library_link: https://spring.io/projects/spring-cloud-aws
     source_path: instrumentation/spring/spring-cloud-aws-3.0
     minimum_java_version: 17
@@ -12155,7 +12155,7 @@ libraries:
   - name: spring-cloud-gateway-webmvc-4.3
     display_name: Spring Cloud Gateway Server WebMVC
     description: |
-      This instrumentation enhances tracing for Spring Cloud Gateway Server WebMVC. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Spring WebMVC with Spring Cloud Gateway-specific attributes.
+      This instrumentation enhances tracing for Spring Cloud Gateway Server WebMVC. It does not generate any telemetry on its own, but rather enriches existing traces produced by other instrumentations like Spring WebMVC with Spring Cloud Gateway-specific attributes.
     library_link: https://github.com/spring-cloud/spring-cloud-gateway
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-webmvc-4.3
     minimum_java_version: 17

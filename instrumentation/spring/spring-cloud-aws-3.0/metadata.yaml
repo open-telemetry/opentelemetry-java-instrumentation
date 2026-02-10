@@ -1,6 +1,6 @@
 display_name: Spring Cloud AWS
 description: >
   This instrumentation enhances messaging span creation for Spring Cloud AWS SQS. It coordinates
-  with the AWS SDK instrumentation to create process spans at the appropriate points in Spring
+  with the AWS SDK instrumentation to create spans at the appropriate points in Spring
   Cloud AWS message handling.
 library_link: https://spring.io/projects/spring-cloud-aws
