@@ -42,6 +42,24 @@ rules:
         type: updowncounter
         unit: "{thread}"
         desc: Number of executing platform threads.
+      # jvm.thread.daemon.count (experimental) - matches JMX Exporter's jvm_threads_daemon
+      DaemonThreadCount:
+        metric: daemon.count
+        type: updowncounter
+        unit: "{thread}"
+        desc: Number of daemon threads currently running.
+      # jvm.thread.peak.count (experimental) - matches JMX Exporter's jvm_threads_peak
+      PeakThreadCount:
+        metric: peak.count
+        type: updowncounter
+        unit: "{thread}"
+        desc: Peak thread count since JVM start or last peak reset.
+      # jvm.thread.started.count (experimental) - matches JMX Exporter's jvm_threads_started_total
+      TotalStartedThreadCount:
+        metric: started.count
+        type: counter
+        unit: "{thread}"
+        desc: Total number of threads started since JVM start.
 
   - bean: java.lang:type=ClassLoading
     prefix: jvm.class.

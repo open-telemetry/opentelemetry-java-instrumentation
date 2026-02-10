@@ -114,6 +114,30 @@ class JvmTest extends TargetSystemTest {
                         .isUpDownCounter()
                         .hasDataPointsWithoutAttributes())
             .add(
+                "jvm.thread.daemon.count",
+                metric ->
+                    metric
+                        .hasDescription("Number of daemon threads currently running.")
+                        .hasUnit("{thread}")
+                        .isUpDownCounter()
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jvm.thread.peak.count",
+                metric ->
+                    metric
+                        .hasDescription("Peak thread count since JVM start or last peak reset.")
+                        .hasUnit("{thread}")
+                        .isUpDownCounter()
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jvm.thread.started.count",
+                metric ->
+                    metric
+                        .hasDescription("Total number of threads started since JVM start.")
+                        .hasUnit("{thread}")
+                        .isCounter()
+                        .hasDataPointsWithoutAttributes())
+            .add(
                 "jvm.class.loaded",
                 metric ->
                     metric
