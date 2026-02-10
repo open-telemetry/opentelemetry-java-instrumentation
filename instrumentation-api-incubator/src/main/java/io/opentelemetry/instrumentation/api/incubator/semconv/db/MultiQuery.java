@@ -51,8 +51,8 @@ class MultiQuery {
     for (String rawQueryText : rawQueryTexts) {
       SqlQuery sanitizedStatement =
           withSummary
-              ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
-              : SqlStatementSanitizerUtil.sanitize(rawQueryText);
+              ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
+              : SqlQuerySanitizerUtil.sanitize(rawQueryText);
       String collectionName = sanitizedStatement.getCollectionName();
       uniqueCollectionName.set(collectionName);
       String storedProcedureName = sanitizedStatement.getStoredProcedureName();

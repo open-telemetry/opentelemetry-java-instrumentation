@@ -7,24 +7,28 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Helper class for sanitizing sql that keeps sanitization results in {@link InstrumenterContext} so
  * that each statement would be sanitized only once for given {@link Instrumenter} call.
- *
- * @deprecated Use {@link SqlQuerySanitizerUtil} instead. This class will be removed in a future
- *     release.
  */
-@Deprecated
-class SqlStatementSanitizerUtil {
+class SqlQuerySanitizerUtil {
+  private static final SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
 
   static SqlQuery sanitize(String queryText) {
-    return SqlQuerySanitizerUtil.sanitize(queryText);
+    Map<String, SqlQuery> map =
+        InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
+    return map.computeIfAbsent(queryText, sanitizer::sanitize);
   }
 
   static SqlQuery sanitizeWithSummary(String queryText) {
-    return SqlQuerySanitizerUtil.sanitizeWithSummary(queryText);
+    Map<String, SqlQuery> map =
+        InstrumenterContext.computeIfAbsent(
+            "sanitized-sql-map-with-summary", unused -> new HashMap<>());
+    return map.computeIfAbsent(queryText, sanitizer::sanitizeWithSummary);
   }
 
-  private SqlStatementSanitizerUtil() {}
+  private SqlQuerySanitizerUtil() {}
 }
