@@ -46,7 +46,7 @@ public final class JdbcInstrumenterFactory {
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
     @SuppressWarnings("deprecation") // using deprecated config property
-    boolean statementSanitizationEnabled =
+    boolean querySanitizationEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
             .get("database")
             .get("statement_sanitizer")
@@ -55,23 +55,23 @@ public final class JdbcInstrumenterFactory {
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.common.db-statement-sanitizer.enabled", true));
     return createStatementInstrumenter(
-        openTelemetry, emptyList(), true, statementSanitizationEnabled, captureQueryParameters);
+        openTelemetry, emptyList(), true, querySanitizationEnabled, captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       boolean enabled,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     return createStatementInstrumenter(
-        openTelemetry, emptyList(), enabled, statementSanitizationEnabled, captureQueryParameters);
+        openTelemetry, emptyList(), enabled, querySanitizationEnabled, captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
@@ -79,7 +79,7 @@ public final class JdbcInstrumenterFactory {
             DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractors(extractors)

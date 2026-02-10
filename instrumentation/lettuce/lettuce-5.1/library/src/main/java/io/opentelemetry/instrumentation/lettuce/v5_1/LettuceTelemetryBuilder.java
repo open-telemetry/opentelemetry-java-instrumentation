@@ -16,7 +16,7 @@ public final class LettuceTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
   private boolean encodingEventsEnabled = false;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -27,11 +27,25 @@ public final class LettuceTelemetryBuilder {
    * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
    * LettuceTelemetry} should be sanitized. If set to {@code true}, all parameters that can
    * potentially contain sensitive information will be masked. Enabled by default.
+   *
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
    */
   @CanIgnoreReturnValue
+  @Deprecated
   public LettuceTelemetryBuilder setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+    return setQuerySanitizationEnabled(statementSanitizationEnabled);
+  }
+
+  /**
+   * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
+   * LettuceTelemetry} should be sanitized. If set to {@code true}, all parameters that can
+   * potentially contain sensitive information will be masked. Enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public LettuceTelemetryBuilder setQuerySanitizationEnabled(
+      boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
   }
 
@@ -52,7 +66,7 @@ public final class LettuceTelemetryBuilder {
   public LettuceTelemetry build() {
     return new LettuceTelemetry(
         openTelemetry,
-        statementSanitizationEnabled,
+        querySanitizationEnabled,
         encodingEventsEnabled,
         DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
   }
