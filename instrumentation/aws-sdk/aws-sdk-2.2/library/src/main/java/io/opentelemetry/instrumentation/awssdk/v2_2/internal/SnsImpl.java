@@ -54,7 +54,7 @@ class SnsImpl {
 
   private static boolean injectIntoMessageAttributes(
       Map<String, MessageAttributeValue> messageAttributes,
-      io.opentelemetry.context.Context otelContext,
+      Context otelContext,
       TextMapPropagator messagingPropagator) {
     // Note: Code is 1:1 copy & paste from SQS, but due to different types (packages) cannot be
     // reused.

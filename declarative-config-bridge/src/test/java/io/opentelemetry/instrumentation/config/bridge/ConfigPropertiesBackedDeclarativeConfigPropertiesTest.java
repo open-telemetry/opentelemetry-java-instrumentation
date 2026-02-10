@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -108,16 +109,20 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testGeneralPeerServiceMapping() {
+  void testJavaCommonServicePeerMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.peer-service-mapping", "old-name=new-name");
+        createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");
 
-    assertThat(
-            config
-                .getStructured("general")
-                .getStructured("peer")
-                .getStructuredList("service_mapping"))
-        .isNotNull();
+    List<DeclarativeConfigProperties> mappings =
+        config
+            .getStructured("java")
+            .getStructured("common")
+            .getStructuredList("service_peer_mapping");
+    assertThat(mappings).isNotNull().hasSize(1);
+    assertThat(mappings.get(0).getString("peer")).isEqualTo("1.2.3.4");
+    assertThat(mappings.get(0).getString("service_name")).isEqualTo("FooService");
+    // service_namespace is not supported in flat config
+    assertThat(mappings.get(0).getString("service_namespace")).isNull();
   }
 
   @Test

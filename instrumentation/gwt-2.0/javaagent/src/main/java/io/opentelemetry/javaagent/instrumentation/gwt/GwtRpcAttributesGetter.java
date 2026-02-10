@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.gwt;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
 
-enum GwtRpcAttributesGetter implements RpcAttributesGetter<Method> {
+enum GwtRpcAttributesGetter implements RpcAttributesGetter<Method, Void> {
   INSTANCE;
 
   @Override
@@ -21,6 +21,7 @@ enum GwtRpcAttributesGetter implements RpcAttributesGetter<Method> {
     return method.getDeclaringClass().getName();
   }
 
+  @Deprecated
   @Override
   public String getMethod(Method method) {
     return method.getName();

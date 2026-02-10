@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -64,7 +65,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return;
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+    for (Logger logger : loggerContext.getLoggerList()) {
       logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
     }
   }

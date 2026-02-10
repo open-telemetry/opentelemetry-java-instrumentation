@@ -17,6 +17,7 @@ import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.common.internal.DaemonThreadFactory;
+import io.opentelemetry.sdk.common.internal.RateLimiter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -155,15 +156,13 @@ final class JarAnalyzer implements ClassFileTransformer {
 
     private final ExtendedLogRecordBuilder eventLogger;
     private final BlockingQueue<URL> toProcess;
-    private final io.opentelemetry.sdk.common.internal.RateLimiter rateLimiter;
+    private final RateLimiter rateLimiter;
 
     private Worker(
         ExtendedLogRecordBuilder eventLogger, BlockingQueue<URL> toProcess, int jarsPerSecond) {
       this.eventLogger = eventLogger;
       this.toProcess = toProcess;
-      this.rateLimiter =
-          new io.opentelemetry.sdk.common.internal.RateLimiter(
-              jarsPerSecond, jarsPerSecond, Clock.getDefault());
+      this.rateLimiter = new RateLimiter(jarsPerSecond, jarsPerSecond, Clock.getDefault());
     }
 
     /**

@@ -79,13 +79,13 @@ public final class SqsParentContext {
 
   static Context ofMessage(
       SqsMessage message, TextMapPropagator messagingPropagator, boolean shouldUseXrayPropagator) {
-    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
+    Context parentContext = Context.root();
 
     if (messagingPropagator != null) {
       parentContext = ofMessageAttributes(message.messageAttributes(), messagingPropagator);
     }
 
-    if (shouldUseXrayPropagator && parentContext == io.opentelemetry.context.Context.root()) {
+    if (shouldUseXrayPropagator && parentContext == Context.root()) {
       parentContext = ofSystemAttributes(message.attributesAsStrings());
     }
 

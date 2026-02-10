@@ -58,7 +58,7 @@ public final class MetaDataCollector {
       Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind,
-      java.util.Set<InstrumentationScopeInfo> instrumentationScopes)
+      Set<InstrumentationScopeInfo> instrumentationScopes)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);

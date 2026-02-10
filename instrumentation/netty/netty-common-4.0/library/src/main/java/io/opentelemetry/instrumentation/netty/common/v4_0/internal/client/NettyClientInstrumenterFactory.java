@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -43,8 +42,9 @@ public final class NettyClientInstrumenterFactory {
     return builder.build();
   }
 
-  public NettyConnectionInstrumenter createConnectionInstrumenter(
-      @Nullable PeerServiceResolver peerServiceResolver) {
+  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
+  // via openTelemetry.getConfigProvider()
+  public NettyConnectionInstrumenter createConnectionInstrumenter(OpenTelemetry openTelemetry) {
     if (connectionTelemetryState == NettyConnectionInstrumentationFlag.DISABLED) {
       return NoopConnectionInstrumenter.INSTANCE;
     }
@@ -68,10 +68,8 @@ public final class NettyClientInstrumenterFactory {
       builder.addAttributesExtractor(HttpClientAttributesExtractor.create(getter));
     }
 
-    if (peerServiceResolver != null) {
-      builder.addAttributesExtractor(
-          HttpClientPeerServiceAttributesExtractor.create(getter, peerServiceResolver));
-    }
+    builder.addAttributesExtractor(
+        HttpClientServicePeerAttributesExtractor.create(getter, openTelemetry));
 
     Instrumenter<NettyConnectionRequest, Channel> instrumenter =
         builder.buildInstrumenter(

@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import graphql.execution.ResultPath;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-final class Graphql20OpenTelemetryInstrumentationState
-    extends io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState {
+final class Graphql20OpenTelemetryInstrumentationState extends OpenTelemetryInstrumentationState {
   private static final String ROOT_PATH = ResultPath.rootPath().toString();
 
   private final ConcurrentMap<String, Context> contextStorage = new ConcurrentHashMap<>();

@@ -3297,7 +3297,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3370,7 +3370,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3434,7 +3434,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3499,7 +3499,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6036,7 +6036,7 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6066,9 +6066,9 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
+          type: STRING
+        - name: service.peer.name
           type: STRING
       - span_kind: INTERNAL
         attributes:
@@ -6120,7 +6120,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6144,12 +6144,12 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: jedis-3.0
     description: This instrumentation enables database client spans and database client
       metrics for Jedis Redis operations.
@@ -6195,7 +6195,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6229,12 +6229,12 @@ libraries:
           type: LONG
         - name: network.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: jedis-4.0
     description: This instrumentation enables database client spans and database client
       metrics for Jedis Redis operations.
@@ -8023,7 +8023,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -8043,12 +8043,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: lettuce-5.0
     description: |
       This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
@@ -8117,7 +8117,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -8139,12 +8139,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: lettuce-5.1
     description: |
       This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
@@ -9671,7 +9671,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9715,7 +9715,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9759,7 +9759,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10815,7 +10815,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10843,12 +10843,12 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   rabbitmq:
   - name: rabbitmq-2.7
     display_name: RabbitMQ
@@ -13308,7 +13308,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13344,12 +13344,12 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: vertx-rx-java-3.5
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
@@ -13383,7 +13383,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13411,12 +13411,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: vertx-sql-client-5.0
     source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
     minimum_java_version: 11
@@ -13445,7 +13445,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13473,12 +13473,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: vertx-web-3.0
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:
