@@ -130,14 +130,6 @@ public final class CommonConfig {
     return querySanitizationEnabled;
   }
 
-  /**
-   * @deprecated Use {@link #isQuerySanitizationEnabled()} instead.
-   */
-  @Deprecated
-  public boolean isStatementSanitizationEnabled() {
-    return isQuerySanitizationEnabled();
-  }
-
   public boolean isSqlCommenterEnabled() {
     return sqlCommenterEnabled;
   }
