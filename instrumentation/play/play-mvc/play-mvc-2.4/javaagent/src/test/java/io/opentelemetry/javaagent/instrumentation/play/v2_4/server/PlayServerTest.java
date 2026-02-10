@@ -68,13 +68,11 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
                 () ->
                     controller(
                         CAPTURE_HEADERS,
-                        () -> {
-                          String header =
-                              Http.Context.Implicit.request().getHeader("X-Test-Request");
-                          return Results.status(
-                                  CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-                              .withHeader("X-Test-Response", header);
-                        }))
+                        () ->
+                            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+                                .withHeader(
+                                    "X-Test-Response",
+                                    Http.Context.Implicit.request().getHeader("X-Test-Request"))))
             .GET(ERROR.getPath())
             .routeTo(
                 () -> controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))
