@@ -26,7 +26,7 @@ public final class MongoTelemetryBuilder {
   }
 
   /**
-   * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
+   * Sets whether the {@code db.query.text} attribute on the spans emitted by the constructed {@link
    * MongoTelemetry} should be sanitized. If set to {@code true}, all parameters that can
    * potentially contain sensitive information will be masked. Enabled by default.
    *
@@ -40,7 +40,7 @@ public final class MongoTelemetryBuilder {
   }
 
   /**
-   * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
+   * Sets whether the {@code db.query.text} attribute on the spans emitted by the constructed {@link
    * MongoTelemetry} should be sanitized. If set to {@code true}, all parameters that can
    * potentially contain sensitive information will be masked. Enabled by default.
    */
