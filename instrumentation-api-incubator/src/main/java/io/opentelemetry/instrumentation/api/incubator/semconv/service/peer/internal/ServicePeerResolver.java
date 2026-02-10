@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -28,6 +30,8 @@ import javax.annotation.Nullable;
  * any time.
  */
 public class ServicePeerResolver {
+
+  private static final Logger logger = Logger.getLogger(ServicePeerResolver.class.getName());
 
   // copied from PeerIncubatingAttributes
   private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
@@ -40,7 +44,7 @@ public class ServicePeerResolver {
   private static final Comparator<ServiceMatcher> matcherComparator =
       nullsFirst(
           comparing(ServiceMatcher::getPort, nullsFirst(naturalOrder()))
-              .thenComparing(comparing(ServiceMatcher::getPath, nullsFirst(naturalOrder()))));
+              .thenComparing(ServiceMatcher::getPath, nullsFirst(naturalOrder())));
 
   private final Map<String, Map<ServiceMatcher, ServicePeer>> servicePeerMapping = new HashMap<>();
 
@@ -52,9 +56,21 @@ public class ServicePeerResolver {
               String peer = entry.getString("peer");
               String serviceName = entry.getString("service_name");
               String serviceNamespace = entry.getString("service_namespace");
-              if (peer != null && (serviceName != null || serviceNamespace != null)) {
-                addMapping(peer, serviceName, serviceNamespace);
+              if (peer == null) {
+                logger.log(
+                    Level.WARNING,
+                    "Invalid service_peer_mapping entry - peer is required: {0}",
+                    entry);
+                return;
               }
+              if (serviceName == null && serviceNamespace == null) {
+                logger.log(
+                    Level.WARNING,
+                    "Invalid service_peer_mapping entry - at least one of service_name or service_namespace is required: {0}",
+                    entry);
+                return;
+              }
+              addMapping(peer, serviceName, serviceNamespace);
             });
   }
 
@@ -69,6 +85,7 @@ public class ServicePeerResolver {
       return;
     }
     ServicePeer info = new ServicePeer(serviceName, serviceNamespace);
+    // prepend a scheme so that UrlParser can parse the host, port, and path
     String url = "https://" + peer;
     String host = UrlParser.getHost(url);
     Integer port = UrlParser.getPort(url);
