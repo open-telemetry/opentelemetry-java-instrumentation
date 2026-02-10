@@ -9,6 +9,7 @@ group = "io.opentelemetry.javaagent"
 
 dependencies {
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-incubator")
 }
 
 // OpenTelemetry Instrumentation Annotations shaded so that it can be used in instrumentation of
