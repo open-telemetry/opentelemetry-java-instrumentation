@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -48,7 +49,7 @@ class PatchLoggerTest {
       patchLoggerMethods.add(methodSignature);
     }
     Set<MethodSignature> julLoggerMethods = new HashSet<>();
-    for (Method method : java.util.logging.Logger.class.getMethods()) {
+    for (Method method : Logger.class.getMethods()) {
       String methodName = method.getName();
       MethodSignature builder = new MethodSignature();
       builder.name = methodName;

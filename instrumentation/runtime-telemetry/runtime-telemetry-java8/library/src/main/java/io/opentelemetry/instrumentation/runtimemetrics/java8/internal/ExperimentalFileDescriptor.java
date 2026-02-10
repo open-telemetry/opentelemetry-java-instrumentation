@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import com.sun.management.UnixOperatingSystemMXBean;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.ManagementFactory;
@@ -53,8 +54,7 @@ public final class ExperimentalFileDescriptor {
               .buildWithCallback(
                   observableMeasurement -> {
                     long openFileDescriptorCount =
-                        ((com.sun.management.UnixOperatingSystemMXBean) osBean)
-                            .getOpenFileDescriptorCount();
+                        ((UnixOperatingSystemMXBean) osBean).getOpenFileDescriptorCount();
                     if (openFileDescriptorCount >= 0) {
                       observableMeasurement.record(openFileDescriptorCount);
                     }

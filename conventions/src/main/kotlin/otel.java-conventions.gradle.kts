@@ -73,7 +73,11 @@ tasks.withType<JavaCompile>().configureEach {
           // jdk21 generates more serial warnings than previous versions
           "-Xlint:-serial",
           // suppress warning: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
-          "-Xlint:-classfile"
+          "-Xlint:-classfile",
+          // We suppress the "deprecation" warning because --release 8 causes javac to warn on
+          // importing deprecated classes (fixed in JDK 9+, see https://bugs.openjdk.org/browse/JDK-8032211).
+          // We use a custom Error Prone check instead (OtelDeprecatedApiUsage).
+          "-Xlint:-deprecation"
         )
       )
       if (System.getProperty("dev") != "true") {

@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 import org.apache.derby.jdbc.EmbeddedDriver;
+import org.h2.Driver;
 import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -83,7 +84,7 @@ public abstract class AbstractPreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
