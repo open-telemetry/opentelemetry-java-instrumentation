@@ -72,7 +72,6 @@ import io.opentelemetry.testing.internal.proto.trace.v1.Span;
 import io.opentelemetry.testing.internal.proto.trace.v1.Status;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -521,45 +520,36 @@ public class TelemetryConverter {
           break;
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
-          if (array.getValuesCount() != 0) {
-            AnyValue.ValueCase arrayType = homogeneousArrayType(array);
-            if (arrayType == null) {
-              // Heterogeneous arrays or arrays with complex types use VALUE attribute type
-              converted.put(valueKey(key), anyValueToValue(value));
-            } else {
-              switch (arrayType) {
-                case STRING_VALUE:
-                  converted.put(
-                      stringArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getStringValue)
-                          .collect(toList()));
-                  break;
-                case BOOL_VALUE:
-                  converted.put(
-                      booleanArrayKey(key),
-                      array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
-                  break;
-                case INT_VALUE:
-                  converted.put(
-                      longArrayKey(key),
-                      array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
-                  break;
-                case DOUBLE_VALUE:
-                  converted.put(
-                      doubleArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getDoubleValue)
-                          .collect(toList()));
-                  break;
-                default:
-                  // homogeneousArrayType only returns primitive types, this case won't be reached
-                  throw new AssertionError("Unexpected array type: " + arrayType);
-              }
-            }
+          AnyValue.ValueCase arrayType = homogeneousArrayType(array);
+          if (arrayType == null) {
+            // Heterogeneous arrays, arrays with complex types, or empty arrays
+            converted.put(valueKey(key), anyValueToValue(value));
           } else {
-            // Empty array
-            converted.put(valueKey(key), Value.of(Collections.<Value<?>>emptyList()));
+            switch (arrayType) {
+              case STRING_VALUE:
+                converted.put(
+                    stringArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
+                break;
+              case BOOL_VALUE:
+                converted.put(
+                    booleanArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                break;
+              case INT_VALUE:
+                converted.put(
+                    longArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                break;
+              case DOUBLE_VALUE:
+                converted.put(
+                    doubleArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
+                break;
+              default:
+                // homogeneousArrayType only returns primitive types, this case won't be reached
+                throw new AssertionError("Unexpected array type: " + arrayType);
+            }
           }
           break;
         case BYTES_VALUE:
@@ -598,45 +588,36 @@ public class TelemetryConverter {
           break;
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
-          if (array.getValuesCount() != 0) {
-            AnyValue.ValueCase arrayType = homogeneousArrayType(array);
-            if (arrayType == null) {
-              // Heterogeneous arrays or arrays with complex types use VALUE attribute type
-              converted.put(valueKey(key), anyValueToValue(value));
-            } else {
-              switch (arrayType) {
-                case STRING_VALUE:
-                  converted.put(
-                      stringArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getStringValue)
-                          .collect(toList()));
-                  break;
-                case BOOL_VALUE:
-                  converted.put(
-                      booleanArrayKey(key),
-                      array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
-                  break;
-                case INT_VALUE:
-                  converted.put(
-                      longArrayKey(key),
-                      array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
-                  break;
-                case DOUBLE_VALUE:
-                  converted.put(
-                      doubleArrayKey(key),
-                      array.getValuesList().stream()
-                          .map(AnyValue::getDoubleValue)
-                          .collect(toList()));
-                  break;
-                default:
-                  // homogeneousArrayType only returns primitive types, this case won't be reached
-                  throw new AssertionError("Unexpected array type: " + arrayType);
-              }
-            }
+          AnyValue.ValueCase arrayType = homogeneousArrayType(array);
+          if (arrayType == null) {
+            // Heterogeneous arrays, arrays with complex types, or empty arrays
+            converted.put(valueKey(key), anyValueToValue(value));
           } else {
-            // Empty array
-            converted.put(valueKey(key), Value.of(Collections.<Value<?>>emptyList()));
+            switch (arrayType) {
+              case STRING_VALUE:
+                converted.put(
+                    stringArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
+                break;
+              case BOOL_VALUE:
+                converted.put(
+                    booleanArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                break;
+              case INT_VALUE:
+                converted.put(
+                    longArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                break;
+              case DOUBLE_VALUE:
+                converted.put(
+                    doubleArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
+                break;
+              default:
+                // homogeneousArrayType only returns primitive types, this case won't be reached
+                throw new AssertionError("Unexpected array type: " + arrayType);
+            }
           }
           break;
         case BYTES_VALUE:
