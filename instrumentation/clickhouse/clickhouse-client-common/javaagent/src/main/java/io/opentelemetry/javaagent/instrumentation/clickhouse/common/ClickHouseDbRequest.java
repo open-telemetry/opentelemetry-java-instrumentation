@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 public abstract class ClickHouseDbRequest {
 
   private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static ClickHouseDbRequest create(
       @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {

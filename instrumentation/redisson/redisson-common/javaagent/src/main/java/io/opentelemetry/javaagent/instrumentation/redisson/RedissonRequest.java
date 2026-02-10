@@ -29,7 +29,7 @@ import org.redisson.client.protocol.CommandsData;
 public abstract class RedissonRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);

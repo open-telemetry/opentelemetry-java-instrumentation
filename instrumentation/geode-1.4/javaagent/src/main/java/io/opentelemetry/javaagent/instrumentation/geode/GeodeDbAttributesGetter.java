@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
   private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override

@@ -26,7 +26,7 @@ public final class R2dbcSingletons {
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
                     .get("statement_sanitizer")
                     .getBoolean(
-                        "enabled", AgentCommonConfig.get().isStatementSanitizationEnabled()))
+                        "enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
                     R2dbcSqlAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()));

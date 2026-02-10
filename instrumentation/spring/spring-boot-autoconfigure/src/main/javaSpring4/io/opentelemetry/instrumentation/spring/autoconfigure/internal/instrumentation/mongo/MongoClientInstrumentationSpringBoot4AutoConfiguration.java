@@ -30,7 +30,7 @@ public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
                 .setStatementSanitizationEnabled(
-                    InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                    InstrumentationConfigUtil.isQuerySanitizationEnabled(
                         openTelemetry, "mongo"))
                 .build()
                 .createCommandListener());

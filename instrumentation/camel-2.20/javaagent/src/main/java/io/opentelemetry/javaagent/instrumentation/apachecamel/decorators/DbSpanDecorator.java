@@ -40,7 +40,7 @@ import org.apache.camel.Exchange;
 class DbSpanDecorator extends BaseSpanDecorator {
 
   private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   private final String component;
   private final String system;
