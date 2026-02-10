@@ -33,8 +33,7 @@ public class MongoClientInstrumentationAutoConfiguration {
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
                 .setStatementSanitizationEnabled(
-                    InstrumentationConfigUtil.isQuerySanitizationEnabled(
-                        openTelemetry, "mongo"))
+                    InstrumentationConfigUtil.isQuerySanitizationEnabled(openTelemetry, "mongo"))
                 .build()
                 .createCommandListener());
   }
