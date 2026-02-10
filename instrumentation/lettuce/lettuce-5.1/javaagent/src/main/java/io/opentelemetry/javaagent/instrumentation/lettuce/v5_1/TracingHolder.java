@@ -20,7 +20,7 @@ public final class TracingHolder {
 
   public static final Tracing TRACING =
       LettuceTelemetry.builder(GlobalOpenTelemetry.get())
-          .setStatementSanitizationEnabled(AgentCommonConfig.get().isStatementSanitizationEnabled())
+          .setQuerySanitizationEnabled(AgentCommonConfig.get().isStatementSanitizationEnabled())
           .setEncodingSpanEventsEnabled(CAPTURE_COMMAND_ENCODING_EVENTS)
           .build()
           .createTracing();

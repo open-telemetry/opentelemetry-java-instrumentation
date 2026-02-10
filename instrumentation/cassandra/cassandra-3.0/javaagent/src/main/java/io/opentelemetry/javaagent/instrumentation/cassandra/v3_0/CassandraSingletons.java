@@ -34,7 +34,7 @@ public final class CassandraSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
                     .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
-                    .setStatementSanitizationEnabled(
+                    .setQuerySanitizationEnabled(
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(new CassandraAttributesExtractor())
