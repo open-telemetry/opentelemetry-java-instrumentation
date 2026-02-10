@@ -17,13 +17,11 @@ import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Arrays;
@@ -47,10 +45,8 @@ class ValueAttributeTest {
 
   @Test
   void stringValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of("test"));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of("test")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -62,10 +58,8 @@ class ValueAttributeTest {
 
   @Test
   void longValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of(123L));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of(123L)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -77,10 +71,8 @@ class ValueAttributeTest {
 
   @Test
   void doubleValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of(1.23));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of(1.23)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -92,10 +84,8 @@ class ValueAttributeTest {
 
   @Test
   void booleanValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of(true));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of(true)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -107,10 +97,12 @@ class ValueAttributeTest {
 
   @Test
   void stringArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of(Arrays.asList(Value.of("a"), Value.of("b"))));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span",
+        () ->
+            Span.current()
+                .setAttribute(
+                    valueKey("key"), Value.of(Arrays.asList(Value.of("a"), Value.of("b")))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -123,10 +115,12 @@ class ValueAttributeTest {
 
   @Test
   void longArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of(Arrays.asList(Value.of(1L), Value.of(2L))));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span",
+        () ->
+            Span.current()
+                .setAttribute(
+                    valueKey("key"), Value.of(Arrays.asList(Value.of(1L), Value.of(2L)))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -139,10 +133,12 @@ class ValueAttributeTest {
 
   @Test
   void doubleArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), Value.of(Arrays.asList(Value.of(1.1), Value.of(2.2))));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span",
+        () ->
+            Span.current()
+                .setAttribute(
+                    valueKey("key"), Value.of(Arrays.asList(Value.of(1.1), Value.of(2.2)))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -155,11 +151,12 @@ class ValueAttributeTest {
 
   @Test
   void booleanArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(
-        valueKey("key"), Value.of(Arrays.asList(Value.of(true), Value.of(false))));
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span",
+        () ->
+            Span.current()
+                .setAttribute(
+                    valueKey("key"), Value.of(Arrays.asList(Value.of(true), Value.of(false)))));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -172,11 +169,8 @@ class ValueAttributeTest {
 
   @Test
   void bytesValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> value = Value.of(new byte[] {1, 2, 3});
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), value);
-    testSpan.end();
+    testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -188,12 +182,9 @@ class ValueAttributeTest {
 
   @Test
   void keyValueListValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> value =
         Value.of(KeyValue.of("key1", Value.of("value1")), KeyValue.of("key2", Value.of(123L)));
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), value);
-    testSpan.end();
+    testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -205,15 +196,12 @@ class ValueAttributeTest {
 
   @Test
   void nestedArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> value =
         Value.of(
             Arrays.asList(
                 Value.of(Arrays.asList(Value.of("a"), Value.of("b"))),
                 Value.of(Arrays.asList(Value.of("c"), Value.of("d")))));
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), value);
-    testSpan.end();
+    testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -225,11 +213,8 @@ class ValueAttributeTest {
 
   @Test
   void heterogeneousArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> value = Value.of(Value.of("string"), Value.of(42L), Value.of(true));
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), value);
-    testSpan.end();
+    testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -241,10 +226,8 @@ class ValueAttributeTest {
 
   @Test
   void emptyValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("emptyValue"), Value.empty());
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span", () -> Span.current().setAttribute(valueKey("emptyValue"), Value.empty()));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -257,10 +240,8 @@ class ValueAttributeTest {
 
   @Test
   void nullValueIsDropped() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("nullValue"), null);
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span", () -> Span.current().setAttribute(valueKey("nullValue"), null));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -270,11 +251,8 @@ class ValueAttributeTest {
 
   @Test
   void emptyArrayValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> value = Value.of(Collections.<Value<?>>emptyList());
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), value);
-    testSpan.end();
+    testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -286,12 +264,9 @@ class ValueAttributeTest {
 
   @Test
   void nestedKeyValueListValue() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> value =
         Value.of(KeyValue.of("outer", Value.of(KeyValue.of("inner", Value.of("deep")))));
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("key"), value);
-    testSpan.end();
+    testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -303,13 +278,14 @@ class ValueAttributeTest {
 
   @Test
   void multipleValueAttributes() {
-    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
     Value<?> bytesValue = Value.of(new byte[] {0});
-    Span testSpan = tracer.spanBuilder("test-span").startSpan();
-    testSpan.setAttribute(valueKey("string"), Value.of("hello"));
-    testSpan.setAttribute(valueKey("long"), Value.of(42L));
-    testSpan.setAttribute(valueKey("bytes"), bytesValue);
-    testSpan.end();
+    testing.runWithSpan(
+        "test-span",
+        () -> {
+          Span.current().setAttribute(valueKey("string"), Value.of("hello"));
+          Span.current().setAttribute(valueKey("long"), Value.of(42L));
+          Span.current().setAttribute(valueKey("bytes"), bytesValue);
+        });
 
     testing.waitAndAssertTraces(
         trace ->
