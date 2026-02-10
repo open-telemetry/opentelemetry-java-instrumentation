@@ -43,8 +43,7 @@ public final class LettuceTelemetryBuilder {
    * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setQuerySanitizationEnabled(
-      boolean querySanitizationEnabled) {
+  public LettuceTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
   }

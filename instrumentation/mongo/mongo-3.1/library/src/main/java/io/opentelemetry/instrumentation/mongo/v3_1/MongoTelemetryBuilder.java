@@ -45,8 +45,7 @@ public final class MongoTelemetryBuilder {
    * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
-  public MongoTelemetryBuilder setQuerySanitizationEnabled(
-      boolean querySanitizationEnabled) {
+  public MongoTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
   }
