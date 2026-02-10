@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("deprecation") // testing deprecated PeerService* classes
 class PeerServiceAttributesExtractorTest {
   @Mock ServerAttributesGetter<String> netAttributesExtractor;
 
@@ -37,8 +39,8 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceResolver peerServiceResolver =
         PeerServiceResolver.create(singletonMap("1.2.3.4", "myService"));
 
-    PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+    AttributesExtractor<String, String> underTest =
+        PeerServiceAttributesExtractor.create(netAttributesExtractor, peerServiceResolver);
 
     Context context = Context.root();
 
@@ -57,8 +59,8 @@ class PeerServiceAttributesExtractorTest {
     PeerServiceResolver peerServiceResolver =
         PeerServiceResolver.create(singletonMap("example.com", "myService"));
 
-    PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+    AttributesExtractor<String, String> underTest =
+        PeerServiceAttributesExtractor.create(netAttributesExtractor, peerServiceResolver);
 
     when(netAttributesExtractor.getServerAddress(any())).thenReturn("example2.com");
 
@@ -85,8 +87,8 @@ class PeerServiceAttributesExtractorTest {
 
     PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
 
-    PeerServiceAttributesExtractor<String, String> underTest =
-        new PeerServiceAttributesExtractor<>(netAttributesExtractor, peerServiceResolver);
+    AttributesExtractor<String, String> underTest =
+        PeerServiceAttributesExtractor.create(netAttributesExtractor, peerServiceResolver);
 
     when(netAttributesExtractor.getServerAddress(any())).thenReturn("example.com");
 
