@@ -176,28 +176,28 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
-        SqlQuery sanitizedStatement =
+        SqlQuery sanitizedQuery =
             SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
         return computeSpanName(
             namespace,
-            sanitizedStatement.getOperationName(),
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            sanitizedQuery.getOperationName(),
+            sanitizedQuery.getCollectionName(),
+            sanitizedQuery.getStoredProcedureName());
       }
 
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedStatement =
+        SqlQuery sanitizedQuery =
             getter instanceof ExtractQuerySummaryMarker
                 ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
                 : SqlQuerySanitizerUtil.sanitize(rawQueryText);
         boolean batch = isBatch(request);
-        String querySummary = sanitizedStatement.getQuerySummary();
+        String querySummary = sanitizedQuery.getQuerySummary();
         if (querySummary != null) {
           return batch ? "BATCH " + querySummary : querySummary;
         }
-        String operationName = sanitizedStatement.getOperationName();
+        String operationName = sanitizedQuery.getOperationName();
         if (batch) {
           operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
         }
@@ -205,8 +205,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             getter,
             request,
             operationName,
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            sanitizedQuery.getCollectionName(),
+            sanitizedQuery.getStoredProcedureName());
       }
 
       MultiQuery multiQuery =
