@@ -11,8 +11,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
@@ -23,7 +24,7 @@ import java.util.function.UnaryOperator;
 /** Builder for {@link NettyClientTelemetry}. */
 public final class NettyClientTelemetryBuilder {
 
-  private final DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder;
+  private final DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder;
   private boolean emitExperimentalHttpClientEvents = false;
 
   static {
@@ -70,7 +71,7 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<NettyRequest, HttpResponse> attributesExtractor) {
-    builder.addAttributesExtractor(attributesExtractor);
+    builder.addAttributesExtractor(new AttributesExtractorAdapter(attributesExtractor));
     return this;
   }
 
@@ -96,7 +97,9 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorCustomizer) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
+    builder.setSpanNameExtractorCustomizer(
+        InstrumenterUtil.convertSpanNameExtractor(
+            spanNameExtractorCustomizer, NettyRequest::delegate, NettyRequest::create));
     return this;
   }
 

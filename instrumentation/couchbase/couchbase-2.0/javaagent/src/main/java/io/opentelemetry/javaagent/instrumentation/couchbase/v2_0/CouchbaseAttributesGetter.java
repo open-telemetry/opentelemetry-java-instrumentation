@@ -29,7 +29,22 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
-    return couchbaseRequest.statement();
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQueryText();
+    }
+    if (couchbaseRequest.getSqlQuery() != null) {
+      return couchbaseRequest.getSqlQuery().getQueryText();
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbQuerySummary(CouchbaseRequestInfo couchbaseRequest) {
+    if (couchbaseRequest.getSqlQueryWithSummary() != null) {
+      return couchbaseRequest.getSqlQueryWithSummary().getQuerySummary();
+    }
+    return null;
   }
 
   @Override

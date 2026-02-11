@@ -5,25 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_STATEMENT_SANITIZER_CACHE_MISS;
-
-import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import javax.annotation.Nullable;
 
 /**
  * This class is responsible for masking potentially sensitive parameters in SQL (and SQL-like)
  * statements and queries.
+ *
+ * @deprecated Use {@link SqlQuerySanitizer} instead. This class will be removed in a future
+ *     release.
  */
+@Deprecated
 public final class SqlStatementSanitizer {
-  private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
-
-  private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCache =
-      Cache.bounded(1000);
-  private static final Cache<CacheKey, SqlStatementInfo> sqlToStatementInfoCacheWithSummary =
-      Cache.bounded(1000);
-  private static final int LARGE_STATEMENT_THRESHOLD = 10 * 1024;
 
   public static SqlStatementSanitizer create(boolean statementSanitizationEnabled) {
     return new SqlStatementSanitizer(statementSanitizationEnabled);
@@ -40,22 +32,9 @@ public final class SqlStatementSanitizer {
   }
 
   public SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
-    if (!statementSanitizationEnabled || statement == null) {
-      return SqlStatementInfo.create(statement, null, null);
-    }
-    // sanitization result will not be cached for statements larger than the threshold to avoid
-    // cache growing too large
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
-    if (statement.length() > LARGE_STATEMENT_THRESHOLD) {
-      return sanitizeImpl(statement, dialect);
-    }
-    return sqlToStatementInfoCache.computeIfAbsent(
-        CacheKey.create(statement, dialect), k -> sanitizeImpl(statement, dialect));
-  }
-
-  private static SqlStatementInfo sanitizeImpl(String statement, SqlDialect dialect) {
-    supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizer.sanitize(statement, dialect);
+    SqlQuery sqlQuery =
+        SqlQuerySanitizer.create(statementSanitizationEnabled).sanitize(statement, dialect);
+    return toStatementInfo(sqlQuery);
   }
 
   /** Sanitize and extract query summary. */
@@ -65,38 +44,28 @@ public final class SqlStatementSanitizer {
 
   /** Sanitize and extract query summary. */
   public SqlStatementInfo sanitizeWithSummary(@Nullable String statement, SqlDialect dialect) {
-    if (!statementSanitizationEnabled || statement == null) {
-      return SqlStatementInfo.createWithSummary(statement, null, null);
-    }
-    // sanitization result will not be cached for statements larger than the threshold to avoid
-    // cache growing too large
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
-    if (statement.length() > LARGE_STATEMENT_THRESHOLD) {
-      return sanitizeWithSummaryImpl(statement, dialect);
-    }
-    return sqlToStatementInfoCacheWithSummary.computeIfAbsent(
-        CacheKey.create(statement, dialect), k -> sanitizeWithSummaryImpl(statement, dialect));
+    SqlQuery sqlQuery =
+        SqlQuerySanitizer.create(statementSanitizationEnabled)
+            .sanitizeWithSummary(statement, dialect);
+    return toStatementInfo(sqlQuery);
   }
 
-  private static SqlStatementInfo sanitizeWithSummaryImpl(String statement, SqlDialect dialect) {
-    supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizerWithSummary.sanitize(statement, dialect);
+  private static SqlStatementInfo toStatementInfo(SqlQuery sqlQuery) {
+    if (sqlQuery.getQuerySummary() != null) {
+      return SqlStatementInfo.createWithSummary(
+          sqlQuery.getQueryText(), sqlQuery.getStoredProcedureName(), sqlQuery.getQuerySummary());
+    } else {
+      return SqlStatementInfo.create(
+          sqlQuery.getQueryText(),
+          sqlQuery.getOperationName(),
+          sqlQuery.getCollectionName() != null
+              ? sqlQuery.getCollectionName()
+              : sqlQuery.getStoredProcedureName());
+    }
   }
 
   // visible for tests
   static boolean isCached(String statement) {
-    return sqlToStatementInfoCache.get(CacheKey.create(statement, SqlDialect.DEFAULT)) != null;
-  }
-
-  @AutoValue
-  abstract static class CacheKey {
-
-    static CacheKey create(String statement, SqlDialect dialect) {
-      return new AutoValue_SqlStatementSanitizer_CacheKey(statement, dialect);
-    }
-
-    abstract String getStatement();
-
-    abstract SqlDialect getDialect();
+    return SqlQuerySanitizer.isCached(statement);
   }
 }

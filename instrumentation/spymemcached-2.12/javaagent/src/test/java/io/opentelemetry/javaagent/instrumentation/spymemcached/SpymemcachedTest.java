@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -16,8 +17,11 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
@@ -74,6 +78,9 @@ class SpymemcachedTest {
 
   static GenericContainer<?> memcachedContainer;
   static InetSocketAddress memcachedAddress;
+
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.spymemcached.experimental-span-attributes");
 
   @BeforeAll
   static void setUp() {
@@ -136,6 +143,16 @@ class SpymemcachedTest {
   }
 
   @Test
+  void getDurationMetric() {
+    MemcachedClient memcached = getMemcached(singletonMap("test-get", "get test"));
+    testing.runWithSpan(
+        "parent", () -> assertThat(memcached.get(key("test-get"))).isEqualTo("get test"));
+
+    assertDurationMetric(
+        testing, "io.opentelemetry.spymemcached-2.12", DB_SYSTEM_NAME, maybeStable(DB_OPERATION));
+  }
+
+  @Test
   void getHit() {
     MemcachedClient memcached = getMemcached(singletonMap("test-get", "get test"));
     testing.runWithSpan(
@@ -156,7 +173,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test
@@ -180,7 +199,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "miss"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "miss" : null))));
   }
 
   @Test
@@ -217,7 +238,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(booleanKey("spymemcached.command.cancelled"), true))));
+                            equalTo(
+                                booleanKey("spymemcached.command.cancelled"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? true : null))));
   }
 
   @Test
@@ -373,7 +396,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "set"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(booleanKey("spymemcached.command.cancelled"), true))));
+                            equalTo(
+                                booleanKey("spymemcached.command.cancelled"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? true : null))));
   }
 
   @Test
@@ -412,7 +437,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test
@@ -490,7 +517,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "miss"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "miss" : null))));
   }
 
   @Test
@@ -556,7 +585,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test
@@ -638,7 +669,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test
@@ -690,7 +723,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test
@@ -908,7 +943,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test
@@ -1007,7 +1044,9 @@ class SpymemcachedTest {
                             equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), "hit"))));
+                            equalTo(
+                                stringKey("spymemcached.result"),
+                                EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
   }
 
   @Test

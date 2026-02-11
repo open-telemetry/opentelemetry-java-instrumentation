@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
@@ -21,10 +19,7 @@ import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import org.assertj.core.api.ListAssert;
@@ -157,25 +152,15 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertTraces(assertions);
   }
 
-  private void doWaitAndAssertLogRecords(List<Consumer<LogRecordDataAssert>> assertions) {
-    List<LogRecordData> logRecordDataList = waitForLogRecords(assertions.size());
-    Iterator<Consumer<LogRecordDataAssert>> assertionIterator = assertions.iterator();
-    for (LogRecordData logRecordData : logRecordDataList) {
-      assertionIterator.next().accept(assertThat(logRecordData));
-    }
-  }
-
   public final void waitAndAssertLogRecords(
       Iterable<? extends Consumer<LogRecordDataAssert>> assertions) {
-    List<Consumer<LogRecordDataAssert>> assertionsList = new ArrayList<>();
-    assertions.forEach(assertionsList::add);
-    doWaitAndAssertLogRecords(assertionsList);
+    testRunner.waitAndAssertLogRecords(assertions);
   }
 
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertLogRecords(Consumer<LogRecordDataAssert>... assertions) {
-    doWaitAndAssertLogRecords(Arrays.asList(assertions));
+    testRunner.waitAndAssertLogRecords(assertions);
   }
 
   /**

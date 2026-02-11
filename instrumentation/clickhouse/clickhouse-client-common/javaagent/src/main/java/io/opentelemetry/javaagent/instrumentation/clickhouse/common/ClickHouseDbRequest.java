@@ -6,20 +6,24 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class ClickHouseDbRequest {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final SqlQuerySanitizer sanitizer =
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static ClickHouseDbRequest create(
       @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {
-    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sanitizer.sanitize(sql));
+    SqlQuery sqlQuery = SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
+    SqlQuery sqlQueryWithSummary =
+        SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
+    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sqlQuery, sqlQueryWithSummary);
   }
 
   @Nullable
@@ -29,7 +33,11 @@ public abstract class ClickHouseDbRequest {
   public abstract Integer getPort();
 
   @Nullable
-  public abstract String getDbName();
+  public abstract String getNamespace();
 
-  public abstract SqlStatementInfo getSqlStatementInfo();
+  @Nullable
+  public abstract SqlQuery getSqlQuery();
+
+  @Nullable
+  public abstract SqlQuery getSqlQueryWithSummary();
 }

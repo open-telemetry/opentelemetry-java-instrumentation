@@ -29,7 +29,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.ConnectException;
 import java.util.HashMap;
@@ -233,10 +232,8 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", url);
 
-    HttpClientAttributesExtractorBuilder<Map<String, String>, Map<String, String>> builder =
-        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter());
-    Experimental.setRedactQueryParameters(builder, true);
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor = builder.build();
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter()).build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);

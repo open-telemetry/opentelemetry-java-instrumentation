@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,17 +29,6 @@ public class GradleParser {
 
   private static final Pattern muzzlePassBlockPattern =
       Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
-
-  private static final Pattern libraryPattern =
-      Pattern.compile("library\\(\"([^\"]+:[^\"]+):([^\"]+)\"\\)");
-
-  private static final Pattern compileOnlyPattern =
-      Pattern.compile(
-          "compileOnly\\(\"([^\"]+:[^\"]+)(?::[^\"]+)?\"\\)\\s*\\{\\s*version\\s*\\{.*?strictly\\(\"([^\"]+)\"\\).*?}\\s*",
-          Pattern.DOTALL);
-
-  private static final Pattern latestDepTestLibraryPattern =
-      Pattern.compile("latestDepTestLibrary\\(\"([^\"]+:[^\"]+):([^\"]+)\"\\)");
 
   private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\(\\)");
 
@@ -59,16 +49,12 @@ public class GradleParser {
    */
   public static DependencyInfo parseGradleFile(
       String gradleFileContents, InstrumentationType type) {
-    DependencyInfo results;
-    Map<String, String> variables = extractVariables(gradleFileContents);
-
-    if (type.equals(InstrumentationType.JAVAAGENT)) {
-      results = parseMuzzle(gradleFileContents, variables);
-    } else {
-      results = parseLibraryDependencies(gradleFileContents, variables);
+    if (type.equals(InstrumentationType.LIBRARY)) {
+      return new DependencyInfo(Collections.emptySet(), null);
     }
 
-    return results;
+    Map<String, String> variables = extractVariables(gradleFileContents);
+    return parseMuzzle(gradleFileContents, variables);
   }
 
   /**
@@ -106,57 +92,6 @@ public class GradleParser {
         results.add(summary);
       }
     }
-    return new DependencyInfo(results, minJavaVersion);
-  }
-
-  /**
-   * Parses the "dependencies" block from the given Gradle file content and extracts information
-   * about what library versions are supported. Looks for library() and compileOnly() blocks for
-   * lower bounds, and latestDepTestLibrary() for upper bounds.
-   *
-   * @param gradleFileContents Contents of a Gradle build file as a String
-   * @param variables Map of variable names to their values
-   * @return A set of strings summarizing the group, module, and versions
-   */
-  private static DependencyInfo parseLibraryDependencies(
-      String gradleFileContents, Map<String, String> variables) {
-    Map<String, String> versions = new HashMap<>();
-
-    Matcher libraryMatcher = libraryPattern.matcher(gradleFileContents);
-
-    while (libraryMatcher.find()) {
-      String groupAndArtifact = libraryMatcher.group(1);
-      String version = libraryMatcher.group(2);
-      versions.put(groupAndArtifact, version);
-    }
-
-    Matcher compileOnlyMatcher = compileOnlyPattern.matcher(gradleFileContents);
-    while (compileOnlyMatcher.find()) {
-      String groupAndArtifact = compileOnlyMatcher.group(1);
-      String version = compileOnlyMatcher.group(2);
-      versions.put(groupAndArtifact, version);
-    }
-
-    Matcher latestDepTestLibraryMatcher = latestDepTestLibraryPattern.matcher(gradleFileContents);
-    while (latestDepTestLibraryMatcher.find()) {
-      String groupAndArtifact = latestDepTestLibraryMatcher.group(1);
-      String version = latestDepTestLibraryMatcher.group(2);
-      if (versions.containsKey(groupAndArtifact)) {
-        versions.put(groupAndArtifact, versions.get(groupAndArtifact) + "," + version);
-      }
-    }
-
-    Set<String> results = new HashSet<>();
-    for (Map.Entry<String, String> entry : versions.entrySet()) {
-      if (entry.getValue().contains(",")) {
-        results.add(interpolate(entry.getKey() + ":[" + entry.getValue() + ")", variables));
-      } else {
-        results.add(interpolate(entry.getKey() + ":" + entry.getValue(), variables));
-      }
-    }
-
-    Integer minJavaVersion = parseMinJavaVersion(gradleFileContents);
-
     return new DependencyInfo(results, minJavaVersion);
   }
 
@@ -245,17 +180,15 @@ public class GradleParser {
     return null;
   }
 
-  public static Map<InstrumentationType, Set<String>> extractVersions(
+  public static Set<String> extractVersions(
       List<String> gradleFiles, InstrumentationModule module) {
-    Map<InstrumentationType, Set<String>> versionsByType = new HashMap<>();
-    gradleFiles.forEach(file -> processGradleFile(file, versionsByType, module));
-    return versionsByType;
+    Set<String> allVersions = new HashSet<>();
+    gradleFiles.forEach(file -> processGradleFile(file, allVersions, module));
+    return allVersions;
   }
 
   private static void processGradleFile(
-      String filePath,
-      Map<InstrumentationType, Set<String>> versionsByType,
-      InstrumentationModule module) {
+      String filePath, Set<String> versions, InstrumentationModule module) {
     String fileContents = FileManager.readFileToString(filePath);
     if (fileContents == null) {
       return;
@@ -266,13 +199,16 @@ public class GradleParser {
       return;
     }
 
-    DependencyInfo dependencyInfo = parseGradleFile(fileContents, type.get());
-    if (dependencyInfo == null) {
+    if (type.get() == InstrumentationType.LIBRARY) {
+      module.setHasStandaloneLibrary(true);
       return;
     }
 
-    addVersions(versionsByType, type.get(), dependencyInfo.versions());
-    setMinJavaVersionIfPresent(module, dependencyInfo);
+    DependencyInfo dependencyInfo = parseGradleFile(fileContents, type.get());
+    versions.addAll(dependencyInfo.versions());
+    if (dependencyInfo.minJavaVersionSupported() != null) {
+      module.setMinJavaVersion(dependencyInfo.minJavaVersionSupported());
+    }
   }
 
   private static Optional<InstrumentationType> determineInstrumentationType(String filePath) {
@@ -282,20 +218,6 @@ public class GradleParser {
       return Optional.of(InstrumentationType.LIBRARY);
     }
     return Optional.empty();
-  }
-
-  private static void addVersions(
-      Map<InstrumentationType, Set<String>> versionsByType,
-      InstrumentationType type,
-      Set<String> versions) {
-    versionsByType.computeIfAbsent(type, k -> new HashSet<>()).addAll(versions);
-  }
-
-  private static void setMinJavaVersionIfPresent(
-      InstrumentationModule module, DependencyInfo dependencyInfo) {
-    if (dependencyInfo.minJavaVersionSupported() != null) {
-      module.setMinJavaVersion(dependencyInfo.minJavaVersionSupported());
-    }
   }
 
   private GradleParser() {}

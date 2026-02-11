@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
         .getBoolean(
@@ -44,6 +45,7 @@ public final class JdbcInstrumenterFactory {
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
+    @SuppressWarnings("deprecation") // using deprecated config property
     boolean statementSanitizationEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
             .get("database")
@@ -77,7 +79,7 @@ public final class JdbcInstrumenterFactory {
             DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(statementSanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractors(extractors)
@@ -99,6 +101,7 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
+    @SuppressWarnings("deprecation") // using deprecated config property
     boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
             .get("transaction/development")
@@ -119,7 +122,7 @@ public final class JdbcInstrumenterFactory {
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
+            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)

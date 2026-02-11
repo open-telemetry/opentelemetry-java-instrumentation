@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import application.io.opentelemetry.api.trace.Span;
 import application.io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -51,9 +52,7 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
       io.opentelemetry.context.Context agentContext =
           AgentContextStorage.getAgentContext(applicationContext);
 
-      io.opentelemetry.instrumentation.api.internal.HttpRouteState agentRouteState =
-          io.opentelemetry.instrumentation.api.internal.HttpRouteState.fromContextOrNull(
-              agentContext);
+      HttpRouteState agentRouteState = HttpRouteState.fromContextOrNull(agentContext);
       if (agentRouteState == null) {
         return;
       }
@@ -70,8 +69,7 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
 
       io.opentelemetry.context.Context agentContext =
           AgentContextStorage.getAgentContext(applicationContext);
-      io.opentelemetry.instrumentation.api.internal.HttpRouteState.updateSpan(
-          agentContext, Bridging.toAgentOrNull(applicationSpan));
+      HttpRouteState.updateSpan(agentContext, Bridging.toAgentOrNull(applicationSpan));
     }
   }
 }

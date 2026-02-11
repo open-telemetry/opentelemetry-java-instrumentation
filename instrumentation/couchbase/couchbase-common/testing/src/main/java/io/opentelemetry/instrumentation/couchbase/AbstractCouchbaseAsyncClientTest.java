@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -29,6 +30,7 @@ import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQuery;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -133,7 +135,9 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_OPERATION), "ClusterManager.hasBucket"),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()))));
+                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(
+                                stringKey("couchbase.local.address"), experimentalAttribute()))));
   }
 
   @ParameterizedTest
@@ -296,18 +300,28 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    span.hasName("SELECT " + bucketCouchbase.name())
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "SELECT"
+                                : "SELECT " + bucketCouchbase.name())
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                SemconvStability.emitStableDatabaseSemconv() ? null : "SELECT"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), s -> s.startsWith("SELECT mockrow")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                SemconvStability.emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            satisfies(
+                                stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
                                 stringKey("couchbase.operation_id"), experimentalAttribute()))));
   }

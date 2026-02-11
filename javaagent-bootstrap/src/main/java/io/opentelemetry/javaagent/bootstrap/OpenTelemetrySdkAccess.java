@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,6 +44,7 @@ public final class OpenTelemetrySdkAccess {
    * from the agent class loader to execute the SDK's force flush mechanism. Instrumentation must
    * not call this.
    */
+  @Initializer
   public static void internalSetForceFlush(ForceFlusher forceFlush) {
     if (OpenTelemetrySdkAccess.forceFlush != null) {
       // Only possible by misuse of this API, just ignore.

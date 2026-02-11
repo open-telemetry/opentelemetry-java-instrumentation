@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
@@ -17,9 +20,9 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -28,16 +31,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("deprecation") // testing deprecated class
 class HttpClientPeerServiceAttributesExtractorTest {
   @Mock HttpClientAttributesGetter<String, String> httpAttributesExtractor;
 
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {
     // given
-    PeerServiceResolver peerServiceResolver =
-        PeerServiceResolver.create(singletonMap("1.2.3.4", "myService"));
+    io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver
+        peerServiceResolver =
+            io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver.create(
+                singletonMap("1.2.3.4", "myService"));
 
-    HttpClientPeerServiceAttributesExtractor<String, String> underTest =
+    AttributesExtractor<String, String> underTest =
         HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
@@ -55,10 +61,12 @@ class HttpClientPeerServiceAttributesExtractorTest {
   @Test
   void shouldNotSetAnyValueIfPeerNameDoesNotMatch() {
     // given
-    PeerServiceResolver peerServiceResolver =
-        PeerServiceResolver.create(singletonMap("example.com", "myService"));
+    io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver
+        peerServiceResolver =
+            io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver.create(
+                singletonMap("example.com", "myService"));
 
-    HttpClientPeerServiceAttributesExtractor<String, String> underTest =
+    AttributesExtractor<String, String> underTest =
         HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
@@ -84,9 +92,12 @@ class HttpClientPeerServiceAttributesExtractorTest {
     peerServiceMapping.put("example.com", "myService");
     peerServiceMapping.put("1.2.3.4", "someOtherService");
 
-    PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
+    io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver
+        peerServiceResolver =
+            io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver.create(
+                peerServiceMapping);
 
-    HttpClientPeerServiceAttributesExtractor<String, String> underTest =
+    AttributesExtractor<String, String> underTest =
         HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
@@ -102,17 +113,25 @@ class HttpClientPeerServiceAttributesExtractorTest {
 
     // then
     assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build())
-        .containsOnly(entry(PeerIncubatingAttributes.PEER_SERVICE, "myService"));
+    Attributes attrs = endAttributes.build();
+    if (SemconvStability.emitOldServicePeerSemconv()
+        && SemconvStability.emitStableServicePeerSemconv()) {
+      assertThat(attrs)
+          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
+    } else {
+      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
+    }
   }
 
   @Test
   void shouldFallbackToHostHeaderWhenServerAddressIsNull() {
     // given
-    PeerServiceResolver peerServiceResolver =
-        PeerServiceResolver.create(singletonMap("example.com", "myService"));
+    io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver
+        peerServiceResolver =
+            io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver.create(
+                singletonMap("example.com", "myService"));
 
-    HttpClientPeerServiceAttributesExtractor<String, String> underTest =
+    AttributesExtractor<String, String> underTest =
         HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
@@ -132,7 +151,13 @@ class HttpClientPeerServiceAttributesExtractorTest {
 
     // then
     assertThat(startAttributes.build()).isEmpty();
-    assertThat(endAttributes.build())
-        .containsOnly(entry(PeerIncubatingAttributes.PEER_SERVICE, "myService"));
+    Attributes attrs = endAttributes.build();
+    if (SemconvStability.emitOldServicePeerSemconv()
+        && SemconvStability.emitStableServicePeerSemconv()) {
+      assertThat(attrs)
+          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
+    } else {
+      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
+    }
   }
 }
