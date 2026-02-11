@@ -53,7 +53,7 @@ public abstract class AbstractDubboTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasPeerService();
+  protected abstract boolean hasServicePeerName();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -147,7 +147,7 @@ public abstract class AbstractDubboTest {
                                 equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
@@ -281,7 +281,7 @@ public abstract class AbstractDubboTest {
                                 equalTo(RPC_METHOD, "$invokeAsync"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
