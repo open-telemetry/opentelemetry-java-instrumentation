@@ -37,10 +37,7 @@ public final class MongoTelemetry {
       int maxNormalizedQueryLength) {
     this.instrumenter =
         MongoInstrumenterFactory.createInstrumenter(
-            openTelemetry,
-            instrumentationName,
-            querySanitizationEnabled,
-            maxNormalizedQueryLength);
+            openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
   }
 
   /**

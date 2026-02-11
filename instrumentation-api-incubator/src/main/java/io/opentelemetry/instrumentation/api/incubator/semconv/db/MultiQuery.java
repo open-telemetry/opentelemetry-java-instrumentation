@@ -31,8 +31,7 @@ class MultiQuery {
     this.querySummary = querySummary;
   }
 
-  static MultiQuery analyze(
-      Collection<String> rawQueryTexts, boolean querySanitizationEnabled) {
+  static MultiQuery analyze(Collection<String> rawQueryTexts, boolean querySanitizationEnabled) {
     return analyzeInternal(rawQueryTexts, querySanitizationEnabled, false);
   }
 

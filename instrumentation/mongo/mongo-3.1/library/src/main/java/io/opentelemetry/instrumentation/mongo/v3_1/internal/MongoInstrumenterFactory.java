@@ -26,9 +26,7 @@ public final class MongoInstrumenterFactory {
       new MongoAttributesExtractor();
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      String instrumentationName,
-      boolean querySanitizationEnabled) {
+      OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
         instrumentationName,
