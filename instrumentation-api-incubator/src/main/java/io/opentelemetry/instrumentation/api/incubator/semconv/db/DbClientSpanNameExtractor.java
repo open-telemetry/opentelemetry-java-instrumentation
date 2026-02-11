@@ -177,7 +177,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           return computeSpanName(namespace, null, null, null);
         }
         SqlQuery sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+            SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
         return computeSpanName(
             namespace,
@@ -190,8 +190,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlQuery sanitizedStatement =
             getter instanceof ExtractQuerySummaryMarker
-                ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
-                : SqlStatementSanitizerUtil.sanitize(rawQueryText);
+                ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
+                : SqlQuerySanitizerUtil.sanitize(rawQueryText);
         boolean batch = isBatch(request);
         String querySummary = sanitizedStatement.getQuerySummary();
         if (querySummary != null) {

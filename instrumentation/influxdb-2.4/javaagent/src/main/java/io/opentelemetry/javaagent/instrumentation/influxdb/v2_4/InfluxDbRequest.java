@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 public abstract class InfluxDbRequest {
 
   private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static InfluxDbRequest create(
       String host, int port, String dbName, String operation, String sql) {

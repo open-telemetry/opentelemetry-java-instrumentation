@@ -18,7 +18,7 @@ public final class OperationNameUtil {
   private static final String FALLBACK_SPAN_NAME = "hibernate";
 
   private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   // query could be HQL or SQL
   public static String getOperationNameForQuery(@Nullable String query) {
