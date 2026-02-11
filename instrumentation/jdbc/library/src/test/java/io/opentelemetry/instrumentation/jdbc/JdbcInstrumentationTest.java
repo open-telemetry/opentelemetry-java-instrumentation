@@ -41,7 +41,7 @@ class JdbcInstrumentationTest extends AbstractJdbcInstrumentationTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
+  protected boolean hasServicePeerName() {
     return false;
   }
 }

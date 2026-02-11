@@ -19,9 +19,9 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<Long> RPC_REQUEST_SIZE = AttributeKey.longKey("rpc.request.size");
   static final AttributeKey<Long> RPC_RESPONSE_SIZE = AttributeKey.longKey("rpc.response.size");
 
-  private final RpcAttributesGetter<REQUEST> getter;
+  private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
 
-  RpcSizeAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  RpcSizeAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 
@@ -30,7 +30,7 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
    * attributesGetter} instance to determine the request and response size.
    */
   public static <REQUEST, RESPONSE> RpcSizeAttributesExtractor<REQUEST, RESPONSE> create(
-      RpcAttributesGetter<REQUEST> attributesGetter) {
+      RpcAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     return new RpcSizeAttributesExtractor<>(attributesGetter);
   }
 

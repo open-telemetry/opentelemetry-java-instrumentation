@@ -73,7 +73,11 @@ tasks.withType<JavaCompile>().configureEach {
           // jdk21 generates more serial warnings than previous versions
           "-Xlint:-serial",
           // suppress warning: Cannot find annotation method 'forRemoval()' in type 'Deprecated'
-          "-Xlint:-classfile"
+          "-Xlint:-classfile",
+          // We suppress the "deprecation" warning because --release 8 causes javac to warn on
+          // importing deprecated classes (fixed in JDK 9+, see https://bugs.openjdk.org/browse/JDK-8032211).
+          // We use a custom Error Prone check instead (OtelDeprecatedApiUsage).
+          "-Xlint:-deprecation"
         )
       )
       if (System.getProperty("dev") != "true") {
@@ -143,7 +147,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.130.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.131.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -415,7 +419,7 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.0.0"
+  toolVersion = "13.2.0"
   maxWarnings = 0
 }
 

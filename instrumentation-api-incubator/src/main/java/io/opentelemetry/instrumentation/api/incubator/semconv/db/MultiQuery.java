@@ -49,10 +49,10 @@ class MultiQuery {
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     UniqueValue uniqueQuerySummary = new UniqueValue();
     for (String rawQueryText : rawQueryTexts) {
-      SqlStatementInfo sanitizedStatement =
+      SqlQuery sanitizedStatement =
           withSummary
-              ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
-              : SqlStatementSanitizerUtil.sanitize(rawQueryText);
+              ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
+              : SqlQuerySanitizerUtil.sanitize(rawQueryText);
       String collectionName = sanitizedStatement.getCollectionName();
       uniqueCollectionName.set(collectionName);
       String storedProcedureName = sanitizedStatement.getStoredProcedureName();

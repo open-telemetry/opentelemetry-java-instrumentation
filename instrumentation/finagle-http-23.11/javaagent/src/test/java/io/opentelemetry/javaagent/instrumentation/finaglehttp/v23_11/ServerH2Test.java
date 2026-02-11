@@ -76,7 +76,7 @@ class ServerH2Test extends AbstractServerTest {
                         TEST_USER_AGENT,
                         HttpHeaderNames.X_FORWARDED_FOR.toString(),
                         TEST_CLIENT_IP))),
-            com.twitter.util.Duration.fromSeconds(20));
+            Duration.fromSeconds(20));
 
     Await.result(client.close(), Duration.fromSeconds(5));
 

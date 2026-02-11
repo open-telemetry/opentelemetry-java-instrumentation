@@ -20,6 +20,7 @@ import io.lettuce.core.api.reactive.RedisReactiveCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
@@ -262,7 +263,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   @Test
   void testNonReactiveCommandShouldNotProduceSpan() throws Exception {
     Class<?> commandsClass = RedisReactiveCommands.class;
-    java.lang.reflect.Method digestMethod;
+    Method digestMethod;
     // The digest() signature changed between 5 -> 6
     try {
       digestMethod = commandsClass.getMethod("digest", String.class);

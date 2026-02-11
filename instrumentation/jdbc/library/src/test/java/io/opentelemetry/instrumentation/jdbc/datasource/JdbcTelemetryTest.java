@@ -220,7 +220,7 @@ class JdbcTelemetryTest {
   void buildWithSanitizationDisabled() throws SQLException {
     JdbcTelemetry telemetry =
         JdbcTelemetry.builder(testing.getOpenTelemetry())
-            .setStatementSanitizationEnabled(false)
+            .setQuerySanitizationEnabled(false)
             .build();
 
     DataSource dataSource = telemetry.wrap(new TestDataSource());

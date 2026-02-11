@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 %%
@@ -45,7 +48,7 @@ POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
+  static SqlQuery sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizerWithSummary sanitizer = new AutoSqlSanitizerWithSummary(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
@@ -59,7 +62,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.createWithSummary(null, null, null);
+      return SqlQuery.createWithSummary(null, null, null);
     }
   }
 
@@ -106,6 +109,9 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = none;
   private SqlDialect dialect;
 
+  // Global set of CTE names defined in the current statement (for filtering CTE references)
+  private final Set<String> cteNames = new HashSet<>();
+
   // Stack to save outer operations when entering subqueries
   private final ArrayDeque<Operation> operationStack = new ArrayDeque<>();
   // Track the paren levels where we pushed operations (to know when to pop)
@@ -118,6 +124,12 @@ WHITESPACE           = [ \t\r\n]+
 
   private boolean shouldStartNewOperation() {
     return !insideComment && operation == none;
+  }
+
+  /** Returns true if we should start a main query operation (no operation yet, or With at main query level). */
+  private boolean shouldStartMainOperation() {
+    return !insideComment
+        && (operation == none || (operation instanceof With && ((With) operation).isMainQueryLevel()));
   }
 
   private void setOperation(Operation operation) {
@@ -325,9 +337,14 @@ WHITESPACE           = [ \t\r\n]+
 
       ++identifierCount;
 
+      // Check if this is a CTE reference (should be filtered from table list)
+      boolean isCteReference = isCteReference(yytext());
+
       // Handle single table capture (JOIN): capture first identifier then stop
       if (captureSingleTable && identifierCount == 1) {
-        appendTargetToSummary();
+        if (!isCteReference) {
+          appendTargetToSummary();
+        }
         captureSingleTable = false;
         identifierCount = 0;
         return;
@@ -335,7 +352,9 @@ WHITESPACE           = [ \t\r\n]+
 
       // Handle table list capture (FROM): capture first identifier after FROM or comma
       if (captureTableList && identifierCount == 1) {
-        appendTargetToSummary();
+        if (!isCteReference) {
+          appendTargetToSummary();
+        }
         captureTableList = false;
         // Don't reset identifierCount - keep counting for implicit join detection
       }
@@ -492,7 +511,139 @@ WHITESPACE           = [ \t\r\n]+
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
 
-  private SqlStatementInfo getResult() {
+  /** TRUNCATE operation - captures TABLE keyword and table name. */
+  private class Truncate extends Operation {
+    boolean tableCaptured = false;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      String text = yytext();
+      // Include TABLE keyword in summary
+      if (text.equalsIgnoreCase("TABLE")) {
+        if (!tableCaptured) {
+          appendTargetToSummary();
+          tableCaptured = true;
+        }
+        return;
+      }
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  /** REPLACE operation (MySQL) - like INSERT, captures table name. */
+  private class Replace extends Operation {
+    boolean expectingTableName = false;
+    boolean tableCaptured = false;
+
+    void handleInto() {
+      expectingTableName = true;
+    }
+
+    void handleIdentifier() {
+      if (!tableCaptured) {
+        appendTargetToSummary();
+        tableCaptured = true;
+        expectingTableName = false;
+      }
+    }
+  }
+
+  /** LOCK operation - captures TABLE/TABLES keyword and table name. */
+  private class Lock extends Operation {
+    boolean tableCaptured = false;
+    boolean identifierCaptured = false;
+
+    void handleIdentifier() {
+      String text = yytext();
+      // Include TABLE/TABLES keywords in summary
+      if (text.equalsIgnoreCase("TABLE") || text.equalsIgnoreCase("TABLES")) {
+        if (!tableCaptured) {
+          appendTargetToSummary();
+          tableCaptured = true;
+        }
+        return;
+      }
+      if (!identifierCaptured) {
+        appendTargetToSummary();
+        identifierCaptured = true;
+      }
+    }
+  }
+
+  /** USE operation - captures database name. */
+  private class Use extends SimpleOperation {}
+
+  /** Transaction control operations (BEGIN, COMMIT, ROLLBACK) - captures TRANSACTION if present. */
+  private class TransactionControl extends Operation {
+    boolean transactionCaptured = false;
+
+    void handleIdentifier() {
+      // Capture TRANSACTION keyword if present (e.g., BEGIN TRANSACTION, COMMIT TRANSACTION)
+      if (!transactionCaptured && yytext().equalsIgnoreCase("TRANSACTION")) {
+        appendTargetToSummary();
+        transactionCaptured = true;
+      }
+    }
+  }
+
+  /** GRANT operation - blocks other keywords from being parsed. */
+  private class Grant extends Operation {}
+
+  /** REVOKE operation - blocks other keywords from being parsed. */
+  private class Revoke extends Operation {}
+
+  /** SHOW operation - blocks other keywords from being parsed. */
+  private class Show extends Operation {}
+
+  /**
+   * WITH clause operation - handles CTE (Common Table Expression) definitions.
+   * CTEs have the form: WITH name AS (query), name2 AS (query2), ... main_query
+   */
+  private class With extends Operation {
+    // State: true when expecting a CTE name (after WITH or after comma between CTEs)
+    boolean expectingCteName = true;
+
+    // The paren level when WITH was seen - used to detect main query vs CTE body
+    final int baseParenLevel = parenLevel;
+
+    void handleIdentifier() {
+      if (expectingCteName) {
+        // This is the CTE name - record it in global set for filtering CTE references
+        cteNames.add(yytext().toLowerCase(Locale.ROOT));
+        expectingCteName = false;
+      }
+    }
+
+    boolean isEnteringSubquery() {
+      // After we've captured a CTE name, ( starts the CTE body
+      return !expectingCteName;
+    }
+
+    void handleComma() {
+      // Comma at base level means another CTE definition follows
+      if (isMainQueryLevel()) {
+        expectingCteName = true;
+      }
+    }
+
+    /** Returns true if we're at the main query level (outside any CTE body). */
+    boolean isMainQueryLevel() {
+      return parenLevel == baseParenLevel;
+    }
+  }
+
+  /**
+   * Check if an identifier is a CTE reference (should be filtered from table list).
+   * Uses global cteNames set populated by With operation.
+   */
+  private boolean isCteReference(String identifier) {
+    return cteNames.contains(identifier.toLowerCase(Locale.ROOT));
+  }
+
+  private SqlQuery getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
     }
@@ -507,7 +658,7 @@ WHITESPACE           = [ \t\r\n]+
       summary = summary.substring(0, summary.length() - 1);
     }
 
-    return SqlStatementInfo.createWithSummary(normalizedStatement, storedProcedureName, summary);
+    return SqlQuery.createWithSummary(normalizedStatement, storedProcedureName, summary);
   }
 
 %}
@@ -516,11 +667,24 @@ WHITESPACE           = [ \t\r\n]+
 
 <YYINITIAL> {
 
+  "WITH" {
+          if (shouldStartNewOperation()) {
+            setOperation(new With());
+            // Don't append WITH to summary - only the main query operation will be appended
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "RECURSIVE" {
+          // Prevent RECURSIVE keyword from being captured as a CTE name
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "SELECT" {
           if (!insideComment) {
             // Confirm pending subquery if we see SELECT inside parens
             confirmPendingSubqueryIfNeeded();
-            if (operation == none) {
+            if (shouldStartMainOperation()) {
               setOperation(new Select());
               appendOperationToSummary("SELECT");
             } else if (operation instanceof Select) {
@@ -533,25 +697,34 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "INSERT" {
-          if (shouldStartNewOperation()) {
+          if (shouldStartMainOperation()) {
             setOperation(new Insert());
             appendOperationToSummary("INSERT");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "DELETE" {
-          if (shouldStartNewOperation()) {
+          if (shouldStartMainOperation()) {
             setOperation(new Delete());
             appendOperationToSummary("DELETE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "UPDATE" {
-          if (shouldStartNewOperation()) {
+          if (shouldStartMainOperation()) {
             setOperation(new Update());
             appendOperationToSummary("UPDATE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -560,6 +733,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Call());
             appendOperationToSummary("CALL");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -568,6 +744,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Merge());
             appendOperationToSummary("MERGE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -576,6 +755,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Create());
             appendOperationToSummary("CREATE");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -584,6 +766,9 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Drop());
             appendOperationToSummary("DROP");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -592,16 +777,23 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Alter());
             appendOperationToSummary("ALTER");
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
   "VALUES" {
-          if (shouldStartNewOperation()) {
-            setOperation(new Values());
-            // Only append VALUES to summary if at top level (not inside a subquery)
-            if (operationStack.isEmpty()) {
-              appendOperationToSummary("VALUES");
+          if (!insideComment) {
+            // Confirm pending subquery if we see VALUES inside parens (e.g., CTE body)
+            confirmPendingSubqueryIfNeeded();
+            if (shouldStartNewOperation()) {
+              setOperation(new Values());
+              // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
+              if (operationStack.isEmpty()) {
+                appendOperationToSummary("VALUES");
+              }
             }
           }
           appendCurrentFragment();
@@ -611,6 +803,89 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Execute());
             appendOperationToSummary(yytext());
+          } else if (!insideComment) {
+            cancelPendingSubqueryIfNeeded();
+            operation.handleIdentifier();
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "TRUNCATE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Truncate());
+            appendOperationToSummary("TRUNCATE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "REPLACE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Replace());
+            appendOperationToSummary("REPLACE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "LOCK" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Lock());
+            appendOperationToSummary("LOCK");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "USE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Use());
+            appendOperationToSummary("USE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "BEGIN" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            appendOperationToSummary("BEGIN");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "COMMIT" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            appendOperationToSummary("COMMIT");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ROLLBACK" {
+          if (shouldStartNewOperation()) {
+            setOperation(new TransactionControl());
+            appendOperationToSummary("ROLLBACK");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "GRANT" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Grant());
+            appendOperationToSummary("GRANT");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "REVOKE" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Revoke());
+            appendOperationToSummary("REVOKE");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "SHOW" {
+          if (shouldStartNewOperation()) {
+            setOperation(new Show());
+            appendOperationToSummary("SHOW");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -663,6 +938,11 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "LATERAL" {
+          // LATERAL is a keyword used before derived tables - just recognize it, don't capture as identifier
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "NEXT" {
           if (!insideComment) {
             operation.handleNext();
@@ -677,10 +957,16 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "ONLY" {
+          // PostgreSQL: FROM/UPDATE/DELETE ONLY - just skip, don't treat as table name
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   ";" {
           if (!insideComment) {
-            // Statement separator - only append separator if we have content
-            if (querySummaryBuilder.length() > 0) {
+            // Statement separator - only append separator if we have content and not already ending with semicolon
+            if (querySummaryBuilder.length() > 0
+                && querySummaryBuilder.charAt(querySummaryBuilder.length() - 1) != ';') {
               querySummaryBuilder.append(';');
             }
             // Reset operation state for next statement
@@ -688,6 +974,7 @@ WHITESPACE           = [ \t\r\n]+
             parenLevel = 0;
             operationStack.clear();
             subqueryStartLevels.clear();
+            cteNames.clear();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

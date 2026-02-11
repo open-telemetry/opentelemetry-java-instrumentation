@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -48,7 +49,7 @@ class PatchLoggerTest {
       patchLoggerMethods.add(methodSignature);
     }
     Set<MethodSignature> julLoggerMethods = new HashSet<>();
-    for (Method method : java.util.logging.Logger.class.getMethods()) {
+    for (Method method : Logger.class.getMethods()) {
       String methodName = method.getName();
       MethodSignature builder = new MethodSignature();
       builder.name = methodName;
@@ -122,7 +123,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
@@ -153,8 +154,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -188,8 +189,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -226,7 +227,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
@@ -375,7 +376,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
@@ -406,8 +407,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -441,8 +442,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -479,7 +480,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
@@ -506,7 +507,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", null);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", null);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", null);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", null);
@@ -537,8 +538,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -576,8 +577,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -611,8 +612,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -646,8 +647,8 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw: b,c", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni: c,d", null);
-    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.INFO);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc: d,e", null);
+    inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc: d,e", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.DEBUG);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif: e,f", null);
     inOrder.verify(internalLogger).isLoggable(InternalLogger.Level.TRACE);
@@ -684,7 +685,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
@@ -718,7 +719,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);
@@ -752,7 +753,7 @@ class PatchLoggerTest {
     inOrder.verify(internalLogger).log(InternalLogger.Level.ERROR, "ereves", a);
     inOrder.verify(internalLogger).log(InternalLogger.Level.WARN, "gninraw", b);
     inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "ofni", c);
-    inOrder.verify(internalLogger).log(InternalLogger.Level.INFO, "gifnoc", d);
+    inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "gifnoc", d);
     inOrder.verify(internalLogger).log(InternalLogger.Level.DEBUG, "enif", e);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "renif", f);
     inOrder.verify(internalLogger).log(InternalLogger.Level.TRACE, "tsenif", g);

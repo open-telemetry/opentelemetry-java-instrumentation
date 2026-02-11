@@ -90,7 +90,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
+        SqlQuery sanitizedStatement = SqlQuerySanitizerUtil.sanitize(rawQueryText);
         String operationName = sanitizedStatement.getOperationName();
         internalSet(
             attributes,
@@ -109,10 +109,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean shouldSanitize = statementSanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlStatementInfo sanitizedStatement =
+        SqlQuery sanitizedStatement =
             getter instanceof ExtractQuerySummaryMarker
-                ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
-                : SqlStatementSanitizerUtil.sanitize(rawQueryText);
+                ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
+                : SqlQuerySanitizerUtil.sanitize(rawQueryText);
         internalSet(
             attributes,
             DB_QUERY_TEXT,

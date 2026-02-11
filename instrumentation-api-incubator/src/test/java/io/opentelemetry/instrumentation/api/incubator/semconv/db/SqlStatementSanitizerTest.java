@@ -17,6 +17,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // testing deprecated SqlStatementSanitizer and SqlStatementInfo
 class SqlStatementSanitizerTest {
 
   private static final SqlStatementSanitizer SANITIZER = SqlStatementSanitizer.create(true);
@@ -524,6 +525,9 @@ class SqlStatementSanitizerTest {
             "SELECT * FROM t1 OUTER APPLY (SELECT * FROM t2 WHERE t2.id = t1.id)",
             expect("SELECT", null, "SELECT t1 SELECT t2")),
         Arguments.of(
+            "SELECT * FROM t1, LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id)",
+            expect("SELECT", null, "SELECT t1 SELECT t2")),
+        Arguments.of(
             "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
             "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),
@@ -657,6 +661,21 @@ class SqlStatementSanitizerTest {
                 "t1",
                 "SELECT t1; INSERT t2")),
 
+        // Trailing semicolons
+        Arguments.of("SELECT * FROM t;", expect("SELECT * FROM t;", "SELECT", "t", "SELECT t")),
+        Arguments.of("SELECT * FROM t;;", expect("SELECT * FROM t;;", "SELECT", "t", "SELECT t")),
+
+        // PostgreSQL ONLY keyword (inherits from parent table only, not children)
+        Arguments.of(
+            "SELECT * FROM ONLY parent",
+            expect("SELECT * FROM ONLY parent", "SELECT", "ONLY", "SELECT parent")),
+        Arguments.of(
+            "DELETE FROM ONLY parent WHERE id = 1",
+            expect("DELETE FROM ONLY parent WHERE id = ?", "DELETE", "ONLY", "DELETE parent")),
+        Arguments.of(
+            "UPDATE ONLY parent SET x = 1",
+            expect("UPDATE ONLY parent SET x = ?", "UPDATE", "ONLY", "UPDATE parent")),
+
         // Standalone VALUES clause
         Arguments.of("VALUES (1)", expect("VALUES (?)", null, null, "VALUES")),
         Arguments.of(
@@ -751,7 +770,121 @@ class SqlStatementSanitizerTest {
             expect("SELECT", null, "SELECT SELECT inner1 SELECT inner2 outer_table")),
 
         // Parenthesized table name - not a subquery - valid on MySQL
-        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")));
+        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT TABLE")),
+
+        // TRUNCATE statement
+        Arguments.of(
+            "TRUNCATE TABLE users",
+            expect("TRUNCATE TABLE users", null, null, "TRUNCATE TABLE users")),
+        Arguments.of("TRUNCATE users", expect("TRUNCATE users", null, null, "TRUNCATE users")),
+        Arguments.of(
+            "TRUNCATE TABLE schema.table",
+            expect("TRUNCATE TABLE schema.table", null, null, "TRUNCATE TABLE schema.table")),
+
+        // REPLACE statement (MySQL)
+        Arguments.of(
+            "REPLACE INTO users VALUES (1, 'name')",
+            expect("REPLACE INTO users VALUES (?, ?)", null, null, "REPLACE users")),
+        Arguments.of(
+            "REPLACE users SET name = 'foo'",
+            expect("REPLACE users SET name = ?", null, null, "REPLACE users")),
+        Arguments.of(
+            "REPLACE INTO db.table (col) VALUES (1)",
+            expect("REPLACE INTO db.table (col) VALUES (?)", null, null, "REPLACE db.table")),
+
+        // Transaction control statements
+        Arguments.of("BEGIN", expect("BEGIN", null, null, "BEGIN")),
+        Arguments.of(
+            "BEGIN TRANSACTION", expect("BEGIN TRANSACTION", null, null, "BEGIN TRANSACTION")),
+        Arguments.of("COMMIT", expect("COMMIT", null, null, "COMMIT")),
+        Arguments.of(
+            "COMMIT TRANSACTION", expect("COMMIT TRANSACTION", null, null, "COMMIT TRANSACTION")),
+        Arguments.of("ROLLBACK", expect("ROLLBACK", null, null, "ROLLBACK")),
+        Arguments.of(
+            "ROLLBACK TRANSACTION",
+            expect("ROLLBACK TRANSACTION", null, null, "ROLLBACK TRANSACTION")),
+
+        // LOCK statement
+        Arguments.of(
+            "LOCK TABLE users", expect("LOCK TABLE users", null, null, "LOCK TABLE users")),
+        Arguments.of(
+            "LOCK TABLE users IN EXCLUSIVE MODE",
+            expect("LOCK TABLE users IN EXCLUSIVE MODE", null, null, "LOCK TABLE users")),
+        Arguments.of(
+            "LOCK TABLES users WRITE, orders READ",
+            expect("LOCK TABLES users WRITE, orders READ", null, null, "LOCK TABLES users")),
+
+        // USE statement
+        Arguments.of("USE mydb", expect("USE mydb", null, null, "USE mydb")),
+        Arguments.of(
+            "USE `my database`", expect("USE `my database`", null, null, "USE `my database`")),
+
+        // GRANT statement
+        Arguments.of(
+            "GRANT SELECT ON users TO some_user",
+            expect("GRANT SELECT ON users TO some_user", "SELECT", null, "GRANT")),
+        Arguments.of(
+            "GRANT ALL PRIVILEGES ON database.* TO 'user'@'host'",
+            expect("GRANT ALL PRIVILEGES ON database.* TO ?@?", null, null, "GRANT")),
+
+        // REVOKE statement
+        Arguments.of(
+            "REVOKE SELECT ON users FROM some_user",
+            expect("REVOKE SELECT ON users FROM some_user", "SELECT", "some_user", "REVOKE")),
+        Arguments.of(
+            "REVOKE ALL PRIVILEGES ON database.* FROM 'user'@'host'",
+            expect("REVOKE ALL PRIVILEGES ON database.* FROM ?@?", "SELECT", null, "REVOKE")),
+
+        // SHOW statement
+        Arguments.of("SHOW TABLES", expect("SHOW TABLES", null, null, "SHOW")),
+        Arguments.of(
+            "SHOW CREATE TABLE users",
+            expect("SHOW CREATE TABLE users", "CREATE TABLE", "users", "SHOW")),
+        Arguments.of("SHOW DATABASES", expect("SHOW DATABASES", null, null, "SHOW")),
+
+        // SQL keywords used as identifiers (table names)
+        // Note: old semconv path (collectionName) doesn't handle keywords as identifiers
+        Arguments.of(
+            "SELECT * FROM insert WHERE x = 1",
+            expect("SELECT * FROM insert WHERE x = ?", "SELECT", "WHERE", "SELECT insert")),
+        Arguments.of("SELECT * FROM update", expect("SELECT", null, "SELECT update")),
+        Arguments.of("SELECT * FROM delete", expect("SELECT", null, "SELECT delete")),
+        Arguments.of("SELECT * FROM call", expect("SELECT", null, "SELECT call")),
+        Arguments.of("SELECT * FROM merge", expect("SELECT", null, "SELECT merge")),
+        Arguments.of("SELECT * FROM create", expect("SELECT", null, "SELECT create")),
+        Arguments.of("SELECT * FROM drop", expect("SELECT", null, "SELECT drop")),
+        Arguments.of("SELECT * FROM alter", expect("SELECT", null, "SELECT alter")),
+        Arguments.of("SELECT * FROM exec", expect("SELECT", "exec", "SELECT exec")),
+        Arguments.of("SELECT * FROM execute", expect("SELECT", "execute", "SELECT execute")),
+
+        // SQL keywords used as column names
+        Arguments.of(
+            "SELECT insert, update FROM mytable", expect("SELECT", "mytable", "SELECT mytable")),
+
+        // SQL keywords used as table aliases
+        Arguments.of("SELECT * FROM mytable insert", expect("SELECT", "mytable", "SELECT mytable")),
+        Arguments.of(
+            "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")),
+
+        // CTEs (Common Table Expressions) - CTE names are filtered from query summary
+        Arguments.of(
+            "WITH cte AS (SELECT a FROM b) SELECT * FROM cte",
+            expect("SELECT", null, "SELECT b SELECT")),
+        Arguments.of(
+            "WITH cte AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM cte",
+            expect(
+                "WITH cte AS (VALUES (?, ?), (?, ?)) SELECT * FROM cte",
+                "SELECT",
+                "cte",
+                "SELECT")),
+        // Multiple CTEs - CTE references filtered in main query
+        Arguments.of(
+            "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM t2) SELECT * FROM a JOIN b ON a.id = b.id",
+            expect("SELECT", null, "SELECT t1 SELECT t2 SELECT")),
+        // Recursive CTE - self-reference filtered in CTE body and main query
+        Arguments.of(
+            "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
+            expect("SELECT", null, "SELECT t SELECT t SELECT")));
   }
 
   private static Stream<Arguments> ddlArgs() {
