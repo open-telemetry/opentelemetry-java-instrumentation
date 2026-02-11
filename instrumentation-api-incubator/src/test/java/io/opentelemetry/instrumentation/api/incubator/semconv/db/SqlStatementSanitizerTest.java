@@ -864,7 +864,27 @@ class SqlStatementSanitizerTest {
         // SQL keywords used as table aliases
         Arguments.of("SELECT * FROM mytable insert", expect("SELECT", "mytable", "SELECT mytable")),
         Arguments.of(
-            "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")));
+            "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")),
+
+        // CTEs (Common Table Expressions) - CTE names are filtered from query summary
+        Arguments.of(
+            "WITH cte AS (SELECT a FROM b) SELECT * FROM cte",
+            expect("SELECT", null, "SELECT b SELECT")),
+        Arguments.of(
+            "WITH cte AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM cte",
+            expect(
+                "WITH cte AS (VALUES (?, ?), (?, ?)) SELECT * FROM cte",
+                "SELECT",
+                "cte",
+                "SELECT")),
+        // Multiple CTEs - CTE references filtered in main query
+        Arguments.of(
+            "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM t2) SELECT * FROM a JOIN b ON a.id = b.id",
+            expect("SELECT", null, "SELECT t1 SELECT t2 SELECT")),
+        // Recursive CTE - self-reference filtered in CTE body and main query
+        Arguments.of(
+            "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
+            expect("SELECT", null, "SELECT t SELECT t SELECT")));
   }
 
   private static Stream<Arguments> ddlArgs() {

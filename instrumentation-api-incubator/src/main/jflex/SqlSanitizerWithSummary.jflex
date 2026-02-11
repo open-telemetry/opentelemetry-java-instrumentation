@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 %%
@@ -106,6 +109,9 @@ WHITESPACE           = [ \t\r\n]+
   private Operation operation = none;
   private SqlDialect dialect;
 
+  // Global set of CTE names defined in the current statement (for filtering CTE references)
+  private final Set<String> cteNames = new HashSet<>();
+
   // Stack to save outer operations when entering subqueries
   private final ArrayDeque<Operation> operationStack = new ArrayDeque<>();
   // Track the paren levels where we pushed operations (to know when to pop)
@@ -118,6 +124,12 @@ WHITESPACE           = [ \t\r\n]+
 
   private boolean shouldStartNewOperation() {
     return !insideComment && operation == none;
+  }
+
+  /** Returns true if we should start a main query operation (no operation yet, or With at main query level). */
+  private boolean shouldStartMainOperation() {
+    return !insideComment
+        && (operation == none || (operation instanceof With && ((With) operation).isMainQueryLevel()));
   }
 
   private void setOperation(Operation operation) {
@@ -325,9 +337,14 @@ WHITESPACE           = [ \t\r\n]+
 
       ++identifierCount;
 
+      // Check if this is a CTE reference (should be filtered from table list)
+      boolean isCteReference = isCteReference(yytext());
+
       // Handle single table capture (JOIN): capture first identifier then stop
       if (captureSingleTable && identifierCount == 1) {
-        appendTargetToSummary();
+        if (!isCteReference) {
+          appendTargetToSummary();
+        }
         captureSingleTable = false;
         identifierCount = 0;
         return;
@@ -335,7 +352,9 @@ WHITESPACE           = [ \t\r\n]+
 
       // Handle table list capture (FROM): capture first identifier after FROM or comma
       if (captureTableList && identifierCount == 1) {
-        appendTargetToSummary();
+        if (!isCteReference) {
+          appendTargetToSummary();
+        }
         captureTableList = false;
         // Don't reset identifierCount - keep counting for implicit join detection
       }
@@ -621,6 +640,51 @@ WHITESPACE           = [ \t\r\n]+
   /** SHOW operation - blocks other keywords from being parsed. */
   private class Show extends Operation {}
 
+  /**
+   * WITH clause operation - handles CTE (Common Table Expression) definitions.
+   * CTEs have the form: WITH name AS (query), name2 AS (query2), ... main_query
+   */
+  private class With extends Operation {
+    // State: true when expecting a CTE name (after WITH or after comma between CTEs)
+    boolean expectingCteName = true;
+
+    // The paren level when WITH was seen - used to detect main query vs CTE body
+    final int baseParenLevel = parenLevel;
+
+    void handleIdentifier() {
+      if (expectingCteName) {
+        // This is the CTE name - record it in global set for filtering CTE references
+        cteNames.add(yytext().toLowerCase(Locale.ROOT));
+        expectingCteName = false;
+      }
+    }
+
+    boolean isEnteringSubquery() {
+      // After we've captured a CTE name, ( starts the CTE body
+      return !expectingCteName;
+    }
+
+    void handleComma() {
+      // Comma at base level means another CTE definition follows
+      if (isMainQueryLevel()) {
+        expectingCteName = true;
+      }
+    }
+
+    /** Returns true if we're at the main query level (outside any CTE body). */
+    boolean isMainQueryLevel() {
+      return parenLevel == baseParenLevel;
+    }
+  }
+
+  /**
+   * Check if an identifier is a CTE reference (should be filtered from table list).
+   * Uses global cteNames set populated by With operation.
+   */
+  private boolean isCteReference(String identifier) {
+    return cteNames.contains(identifier.toLowerCase(Locale.ROOT));
+  }
+
   private SqlQuery getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
@@ -645,11 +709,24 @@ WHITESPACE           = [ \t\r\n]+
 
 <YYINITIAL> {
 
+  "WITH" {
+          if (shouldStartNewOperation()) {
+            setOperation(new With());
+            // Don't append WITH to summary - only the main query operation will be appended
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "RECURSIVE" {
+          // Prevent RECURSIVE keyword from being captured as a CTE name
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "SELECT" {
           if (!insideComment) {
             // Confirm pending subquery if we see SELECT inside parens
             confirmPendingSubqueryIfNeeded();
-            if (operation == none) {
+            if (shouldStartMainOperation()) {
               setOperation(new Select());
               appendOperationToSummary("SELECT");
             } else if (operation instanceof Select) {
@@ -662,7 +739,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "INSERT" {
-          if (shouldStartNewOperation()) {
+          if (shouldStartMainOperation()) {
             setOperation(new Insert());
             appendOperationToSummary("INSERT");
           } else if (!insideComment) {
@@ -673,7 +750,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "DELETE" {
-          if (shouldStartNewOperation()) {
+          if (shouldStartMainOperation()) {
             setOperation(new Delete());
             appendOperationToSummary("DELETE");
           } else if (!insideComment) {
@@ -684,7 +761,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "UPDATE" {
-          if (shouldStartNewOperation()) {
+          if (shouldStartMainOperation()) {
             setOperation(new Update());
             appendOperationToSummary("UPDATE");
           } else if (!insideComment) {
@@ -750,11 +827,15 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "VALUES" {
-          if (shouldStartNewOperation()) {
-            setOperation(new Values());
-            // Only append VALUES to summary if at top level (not inside a subquery)
-            if (operationStack.isEmpty()) {
-              appendOperationToSummary("VALUES");
+          if (!insideComment) {
+            // Confirm pending subquery if we see VALUES inside parens (e.g., CTE body)
+            confirmPendingSubqueryIfNeeded();
+            if (shouldStartNewOperation()) {
+              setOperation(new Values());
+              // Only append VALUES to summary if at top level (not inside a subquery or CTE body)
+              if (operationStack.isEmpty()) {
+                appendOperationToSummary("VALUES");
+              }
             }
           }
           appendCurrentFragment();
@@ -935,6 +1016,7 @@ WHITESPACE           = [ \t\r\n]+
             parenLevel = 0;
             operationStack.clear();
             subqueryStartLevels.clear();
+            cteNames.clear();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
