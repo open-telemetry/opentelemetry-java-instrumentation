@@ -85,7 +85,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private String getDbName(Endpoint endpoint) {
+  private String getDbNamespace(Endpoint endpoint) {
     switch (component) {
       case "mongodb":
         Map<String, String> mongoParameters = toQueryParameters(endpoint.getEndpointUri());
@@ -127,13 +127,13 @@ class DbSpanDecorator extends BaseSpanDecorator {
 
     setQueryAttributes(attributes, exchange);
 
-    String dbName = getDbName(endpoint);
-    if (dbName != null) {
+    String namespace = getDbNamespace(endpoint);
+    if (namespace != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_NAMESPACE, dbName);
+        attributes.put(DbAttributes.DB_NAMESPACE, namespace);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+        attributes.put(DbIncubatingAttributes.DB_NAME, namespace);
       }
     }
   }
