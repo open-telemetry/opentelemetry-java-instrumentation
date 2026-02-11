@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import org.elasticsearch.action.ActionResponse;
 
 public final class ElasticsearchTransportInstrumenterFactory {
@@ -42,6 +43,7 @@ public final class ElasticsearchTransportInstrumenterFactory {
       instrumenterBuilder.addAttributesExtractor(experimentalAttributesExtractor);
     }
 
+    Experimental.setExceptionEventName(instrumenterBuilder, "db.client.operation.exception");
     return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

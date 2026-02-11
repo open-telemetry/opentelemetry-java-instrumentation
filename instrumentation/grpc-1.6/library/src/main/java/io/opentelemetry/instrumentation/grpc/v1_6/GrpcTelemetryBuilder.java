@@ -221,6 +221,8 @@ public final class GrpcTelemetryBuilder {
           AttributesExtractor.constant(PEER_SERVICE, peerService));
     }
 
+    Experimental.setExceptionEventName(serverInstrumenterBuilder, "rpc.server.call.exception");
+    Experimental.setExceptionEventName(clientInstrumenterBuilder, "rpc.client.call.exception");
     return new GrpcTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(GrpcRequestGetter.INSTANCE),
         // gRPC client interceptors require two phases, one to set up request and one to execute.

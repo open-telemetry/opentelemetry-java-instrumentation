@@ -10,7 +10,9 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.lang.reflect.Method;
 
 public final class GwtSingletons {
@@ -24,13 +26,14 @@ public final class GwtSingletons {
 
   static {
     GwtRpcAttributesGetter rpcAttributesGetter = GwtRpcAttributesGetter.INSTANCE;
-    INSTRUMENTER =
+    InstrumenterBuilder<Method, Void> builder =
         Instrumenter.<Method, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+    Experimental.setExceptionEventName(builder, "rpc.server.call.exception");
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   public static Instrumenter<Method, Void> instrumenter() {

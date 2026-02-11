@@ -10,7 +10,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 
 public final class RmiServerSingletons {
 
@@ -19,13 +21,14 @@ public final class RmiServerSingletons {
   static {
     RmiServerAttributesGetter rpcAttributesGetter = RmiServerAttributesGetter.INSTANCE;
 
-    INSTRUMENTER =
+    InstrumenterBuilder<ClassAndMethod, Void> builder =
         Instrumenter.<ClassAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .buildInstrumenter(SpanKindExtractor.alwaysServer());
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+    Experimental.setExceptionEventName(builder, "rpc.server.call.exception");
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
   public static Instrumenter<ClassAndMethod, Void> instrumenter() {

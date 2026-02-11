@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 
 public final class CouchbaseSingletons {
 
@@ -40,6 +41,7 @@ public final class CouchbaseSingletons {
       builder.addAttributesExtractor(new ExperimentalAttributesExtractor());
     }
 
+    Experimental.setExceptionEventName(builder, "db.client.operation.exception");
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
