@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -653,7 +654,7 @@ WHITESPACE           = [ \t\r\n]+
     void handleIdentifier() {
       if (expectingCteName) {
         // This is the CTE name - record it in global set for filtering CTE references
-        cteNames.add(yytext().toLowerCase());
+        cteNames.add(yytext().toLowerCase(Locale.ROOT));
         expectingCteName = false;
       }
     }
@@ -681,7 +682,7 @@ WHITESPACE           = [ \t\r\n]+
    * Uses global cteNames set populated by With operation.
    */
   private boolean isCteReference(String identifier) {
-    return cteNames.contains(identifier.toLowerCase());
+    return cteNames.contains(identifier.toLowerCase(Locale.ROOT));
   }
 
   private SqlQuery getResult() {
