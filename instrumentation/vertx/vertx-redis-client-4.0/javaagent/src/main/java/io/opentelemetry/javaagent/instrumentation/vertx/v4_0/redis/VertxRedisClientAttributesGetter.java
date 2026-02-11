@@ -17,7 +17,7 @@ public enum VertxRedisClientAttributesGetter
   INSTANCE;
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override

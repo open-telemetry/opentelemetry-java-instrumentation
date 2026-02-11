@@ -16,7 +16,7 @@ public final class LettuceTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
   private boolean encodingEventsEnabled = false;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -29,10 +29,19 @@ public final class LettuceTelemetryBuilder {
    * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
+  public LettuceTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public LettuceTelemetryBuilder setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
-    return this;
+    return setQuerySanitizationEnabled(statementSanitizationEnabled);
   }
 
   /**
@@ -52,7 +61,7 @@ public final class LettuceTelemetryBuilder {
   public LettuceTelemetry build() {
     return new LettuceTelemetry(
         openTelemetry,
-        statementSanitizationEnabled,
+        querySanitizationEnabled,
         encodingEventsEnabled,
         DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
   }

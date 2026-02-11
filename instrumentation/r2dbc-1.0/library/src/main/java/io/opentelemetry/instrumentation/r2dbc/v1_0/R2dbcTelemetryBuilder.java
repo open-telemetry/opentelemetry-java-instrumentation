@@ -20,7 +20,7 @@ import java.util.function.UnaryOperator;
 public final class R2dbcTelemetryBuilder {
 
   private final R2dbcInstrumenterBuilder instrumenterBuilder;
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
   private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorCustomizer =
       UnaryOperator.identity();
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
@@ -46,9 +46,18 @@ public final class R2dbcTelemetryBuilder {
    * potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
-  public R2dbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    this.statementSanitizationEnabled = enabled;
+  public R2dbcTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
+    this.querySanitizationEnabled = enabled;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public R2dbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
+    return setQuerySanitizationEnabled(enabled);
   }
 
   /**
@@ -79,7 +88,7 @@ public final class R2dbcTelemetryBuilder {
    */
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
-        instrumenterBuilder.build(spanNameExtractorCustomizer, statementSanitizationEnabled),
+        instrumenterBuilder.build(spanNameExtractorCustomizer, querySanitizationEnabled),
         sqlCommenterBuilder.build());
   }
 }

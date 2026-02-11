@@ -29,8 +29,8 @@ public final class VertxSqlInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
-                    .setStatementSanitizationEnabled(
-                        AgentCommonConfig.get().isStatementSanitizationEnabled())
+                    .setQuerySanitizationEnabled(
+                        AgentCommonConfig.get().isQuerySanitizationEnabled())
                     .build())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))

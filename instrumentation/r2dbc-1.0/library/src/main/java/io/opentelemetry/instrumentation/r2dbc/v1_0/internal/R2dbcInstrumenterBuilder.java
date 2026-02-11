@@ -53,7 +53,7 @@ public final class R2dbcInstrumenterBuilder {
             openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(DbClientMetrics.get())
