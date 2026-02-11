@@ -14,7 +14,7 @@ import java.util.Map;
  * Helper class for sanitizing sql that keeps sanitization results in {@link InstrumenterContext} so
  * that each statement would be sanitized only once for given {@link Instrumenter} call.
  */
-class SqlStatementSanitizerUtil {
+class SqlQuerySanitizerUtil {
   private static final SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
 
   static SqlQuery sanitize(String queryText) {
@@ -30,5 +30,5 @@ class SqlStatementSanitizerUtil {
     return map.computeIfAbsent(queryText, sanitizer::sanitizeWithSummary);
   }
 
-  private SqlStatementSanitizerUtil() {}
+  private SqlQuerySanitizerUtil() {}
 }
