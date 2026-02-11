@@ -33,13 +33,13 @@ public final class MongoTelemetry {
   MongoTelemetry(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
     this.instrumenter =
         MongoInstrumenterFactory.createInstrumenter(
             openTelemetry,
             instrumentationName,
-            statementSanitizationEnabled,
+            querySanitizationEnabled,
             maxNormalizedQueryLength);
   }
 

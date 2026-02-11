@@ -24,14 +24,14 @@ public final class SqlQuerySanitizer {
       Cache.bounded(1000);
   private static final int LARGE_STATEMENT_THRESHOLD = 10 * 1024;
 
-  public static SqlQuerySanitizer create(boolean statementSanitizationEnabled) {
-    return new SqlQuerySanitizer(statementSanitizationEnabled);
+  public static SqlQuerySanitizer create(boolean querySanitizationEnabled) {
+    return new SqlQuerySanitizer(querySanitizationEnabled);
   }
 
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
 
-  private SqlQuerySanitizer(boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  private SqlQuerySanitizer(boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
   public SqlQuery sanitize(@Nullable String statement) {
@@ -39,7 +39,7 @@ public final class SqlQuerySanitizer {
   }
 
   public SqlQuery sanitize(@Nullable String statement, SqlDialect dialect) {
-    if (!statementSanitizationEnabled || statement == null) {
+    if (!querySanitizationEnabled || statement == null) {
       return SqlQuery.create(statement, null, null);
     }
     // sanitization result will not be cached for statements larger than the threshold to avoid
@@ -64,7 +64,7 @@ public final class SqlQuerySanitizer {
 
   /** Sanitize and extract query summary. */
   public SqlQuery sanitizeWithSummary(@Nullable String statement, SqlDialect dialect) {
-    if (!statementSanitizationEnabled || statement == null) {
+    if (!querySanitizationEnabled || statement == null) {
       return SqlQuery.createWithSummary(statement, null, null);
     }
     // sanitization result will not be cached for statements larger than the threshold to avoid
