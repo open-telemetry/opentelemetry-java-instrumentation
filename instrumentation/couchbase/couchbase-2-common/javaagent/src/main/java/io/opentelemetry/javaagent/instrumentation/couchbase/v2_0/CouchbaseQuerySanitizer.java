@@ -102,16 +102,16 @@ public final class CouchbaseQuerySanitizer {
     }
     // N1qlQuery is present starting from Couchbase 2.2.0
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
-      String statement = getStatementString(N1QL_GET_STATEMENT, query);
-      if (statement != null) {
-        return sanitizeString(statement, withSummary);
+      String queryString = getStatementString(N1QL_GET_STATEMENT, query);
+      if (queryString != null) {
+        return sanitizeString(queryString, withSummary);
       }
     }
     // AnalyticsQuery is present starting from Couchbase 2.4.3
     if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
-      String statement = getStatementString(ANALYTICS_GET_STATEMENT, query);
-      if (statement != null) {
-        return sanitizeString(statement, withSummary);
+      String queryString = getStatementString(ANALYTICS_GET_STATEMENT, query);
+      if (queryString != null) {
+        return sanitizeString(queryString, withSummary);
       }
     }
     return SqlQuery.create(query.getClass().getSimpleName(), null, null);
