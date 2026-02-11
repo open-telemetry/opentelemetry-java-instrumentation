@@ -16,6 +16,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -100,13 +101,13 @@ class RpcAttributesExtractorTest {
 
   // Old semconv keys (from RpcIncubatingAttributes)
   private static final AttributeKey<String> RPC_SYSTEM =
-      io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+      RpcIncubatingAttributes.RPC_SYSTEM;
 
   private static final AttributeKey<String> RPC_SERVICE =
-      io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+      RpcIncubatingAttributes.RPC_SERVICE;
 
   private static final AttributeKey<String> RPC_METHOD =
-      io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+      RpcIncubatingAttributes.RPC_METHOD;
 
   private static void testExtractor(
       AttributesExtractor<Map<String, String>, Void> extractor, @Nullable String originalMethod) {
