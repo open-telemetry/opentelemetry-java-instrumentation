@@ -1082,7 +1082,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if ("opentelemetry-java-instrumentation".equals(distroName)) {
                 String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
                 if (expectedServicePeerName != null) {
-                  assertThat(attrs).containsEntry(maybeStablePeerService(), expectedServicePeerName);
+                  assertThat(attrs)
+                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
                 }
               }
 
