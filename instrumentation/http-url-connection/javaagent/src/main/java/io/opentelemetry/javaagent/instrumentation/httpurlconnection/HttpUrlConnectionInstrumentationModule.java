@@ -10,12 +10,13 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class HttpUrlConnectionInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+    implements EarlyInstrumentationModule, ExperimentalInstrumentationModule {
 
   public HttpUrlConnectionInstrumentationModule() {
     super("http-url-connection");
