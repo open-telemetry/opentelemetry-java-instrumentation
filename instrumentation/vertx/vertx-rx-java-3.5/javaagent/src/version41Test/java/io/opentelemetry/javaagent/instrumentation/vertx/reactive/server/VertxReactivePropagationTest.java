@@ -123,11 +123,14 @@ class VertxReactivePropagationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1)),
                 span ->
-                    span.hasName("SELECT test.products")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT products"
+                                : "SELECT test.products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
                             equalTo(
@@ -222,11 +225,14 @@ class VertxReactivePropagationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
                 span ->
-                    span.hasName("SELECT test.products")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT products"
+                                : "SELECT test.products")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
                             equalTo(

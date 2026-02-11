@@ -97,7 +97,11 @@ class SlickTest {
                       DB_CONNECTION_STRING,
                       if (emitStableDatabaseSemconv()) null else "h2:mem:"
                     ),
-                    equalTo(maybeStable(DB_STATEMENT), "SELECT ?"),
+                    equalTo(
+                      maybeStable(DB_STATEMENT),
+                      if (emitStableDatabaseSemconv()) "SELECT 3"
+                      else "SELECT ?"
+                    ),
                     equalTo(maybeStable(DB_OPERATION), "SELECT")
                   )
             }

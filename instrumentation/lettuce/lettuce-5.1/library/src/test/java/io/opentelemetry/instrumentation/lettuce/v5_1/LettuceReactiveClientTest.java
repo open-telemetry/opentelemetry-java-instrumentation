@@ -33,7 +33,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                 LettuceTelemetry.builder(testing().getOpenTelemetry())
                     .setEncodingSpanEventsEnabled(true)
                     .build()
-                    .newTracing())
+                    .createTracing())
             .build(),
         uri);
   }

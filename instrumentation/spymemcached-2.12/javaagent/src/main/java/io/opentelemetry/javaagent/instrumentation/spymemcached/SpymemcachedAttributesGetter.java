@@ -22,7 +22,6 @@ public class SpymemcachedAttributesGetter
     return null;
   }
 
-  @Deprecated
   @Override
   @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {

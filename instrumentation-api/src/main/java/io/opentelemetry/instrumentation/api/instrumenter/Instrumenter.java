@@ -272,6 +272,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (operationListeners == null) {
       operationListeners = this.operationListeners;
     }
+
+    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
+    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
+
     if (operationListeners.length != 0) {
       if (operationListenerAttributesExtractors.length != 0) {
         UnsafeAttributes operationAttributes = new UnsafeAttributes();
@@ -288,9 +292,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
         operationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
-
-    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
-    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
 
     if (endTime != null) {
       span.end(endTime);

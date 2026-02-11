@@ -51,7 +51,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof R2dbcException) {
       return ((R2dbcException) error).getSqlState();
     }
@@ -68,5 +68,10 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Override
   public Integer getServerPort(DbExecution request) {
     return request.getPort();
+  }
+
+  @Override
+  public boolean isParameterizedQuery(DbExecution request) {
+    return request.isParameterizedQuery();
   }
 }

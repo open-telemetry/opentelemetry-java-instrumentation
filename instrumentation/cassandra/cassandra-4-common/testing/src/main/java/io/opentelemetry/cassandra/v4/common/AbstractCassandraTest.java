@@ -5,6 +5,7 @@
 
 package io.opentelemetry.cassandra.v4.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -263,7 +264,7 @@ public abstract class AbstractCassandraTest {
                     "sync_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT sync_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT sync_test.users",
                     "SELECT",
                     "users"))));
   }
@@ -317,7 +318,7 @@ public abstract class AbstractCassandraTest {
                     "async_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT async_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT async_test.users",
                     "SELECT",
                     "users"))));
   }

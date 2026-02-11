@@ -61,7 +61,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
         protocolEventHandler.handle(
             ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
             context,
-            request != null ? request.request() : null,
+            request != null ? request.getRequest() : null,
             response);
       } else {
         NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
@@ -76,7 +76,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
         protocolEventHandler.handle(
             ProtocolSpecificEvent.SWITCHING_PROTOCOLS,
             context,
-            request != null ? request.request() : null,
+            request != null ? request.getRequest() : null,
             response);
       }
       // HTTP 101 proto switch note: netty sends EmptyLastHttpContent upon proto upgrade;

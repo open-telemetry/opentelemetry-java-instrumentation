@@ -13,8 +13,8 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 
@@ -26,7 +26,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
 
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
-    ExtendedDeclarativeConfigProperties messaging =
+    DeclarativeConfigProperties messaging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
@@ -50,7 +50,7 @@ public class TracingRequestHandler extends RequestHandler2 {
                 ConfigPropertiesUtil.getList(
                     "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
         .build()
-        .newRequestHandler();
+        .createRequestHandler();
   }
 
   @Override

@@ -79,6 +79,6 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     // thread, to Netty instrumentation, which executes on event loops. If it's possible, it may
     // require instrumenting internal classes. Using a header which is more or less guaranteed to
     // always exist is arguably more stable.
-    return request.request().headers().contains("amz-sdk-invocation-id");
+    return request.getRequest().headers().contains("amz-sdk-invocation-id");
   }
 }

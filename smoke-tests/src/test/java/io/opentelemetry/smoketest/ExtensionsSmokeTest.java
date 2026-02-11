@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
+@DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class ExtensionsSmokeTest {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtensionsSmokeTest.class);

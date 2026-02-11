@@ -28,7 +28,6 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Vertx;
@@ -142,7 +141,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -187,21 +186,6 @@ class VertxSqlClientTest {
 
     latch.await(30, TimeUnit.SECONDS);
 
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            Arrays.asList(
-                equalTo(maybeStable(DB_NAME), DB),
-                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                equalTo(maybeStable(DB_STATEMENT), "invalid"),
-                equalTo(PEER_SERVICE, "test-peer-service"),
-                equalTo(SERVER_ADDRESS, host),
-                equalTo(SERVER_PORT, port)));
-
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "42601"));
-      assertions.add(equalTo(ERROR_TYPE, "io.vertx.pgclient.PgException"));
-    }
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -223,7 +207,21 @@ class VertxSqlClientTest {
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(assertions),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_RESPONSE_STATUS_CODE,
+                                SemconvStability.emitStableDatabaseSemconv() ? "42601" : null),
+                            equalTo(
+                                ERROR_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "io.vertx.pgclient.PgException"
+                                    : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -249,7 +247,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -280,7 +278,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("INSERT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "INSERT test" : "INSERT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -370,7 +368,8 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT tempdb.test")
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -436,7 +435,8 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT tempdb.test")
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

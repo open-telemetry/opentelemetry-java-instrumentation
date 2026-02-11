@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,10 +29,10 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
       new ConcurrentHashMap<>();
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
-  private final List<String> captureRequestParameters;
+  private final Collection<String> captureRequestParameters;
 
   public ServletRequestParametersExtractor(
-      ServletAccessor<REQUEST, RESPONSE> accessor, List<String> captureRequestParameters) {
+      ServletAccessor<REQUEST, RESPONSE> accessor, Collection<String> captureRequestParameters) {
     this.accessor = accessor;
     this.captureRequestParameters = captureRequestParameters;
   }
