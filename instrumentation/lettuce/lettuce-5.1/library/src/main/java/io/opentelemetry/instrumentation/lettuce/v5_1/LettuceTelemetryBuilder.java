@@ -24,9 +24,10 @@ public final class LettuceTelemetryBuilder {
   }
 
   /**
-   * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
-   * LettuceTelemetry} should be sanitized. If set to {@code true}, all parameters that can
-   * potentially contain sensitive information will be masked. Enabled by default.
+   * Sets whether the {@code db.statement}/{@code db.query.text} attribute on the spans emitted by
+   * the constructed {@link LettuceTelemetry} should be sanitized. If set to {@code true}, all
+   * parameters that can potentially contain sensitive information will be masked. Enabled by
+   * default.
    */
   @CanIgnoreReturnValue
   public LettuceTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {

@@ -271,7 +271,7 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
-      // Extract args BEFORE calling start() so db.statement can include them
+      // Extract args BEFORE calling start() so db.query.text can include them
       // when it's set on SpanBuilder (making it available to samplers)
       if (command.getArgs() != null) {
         argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
