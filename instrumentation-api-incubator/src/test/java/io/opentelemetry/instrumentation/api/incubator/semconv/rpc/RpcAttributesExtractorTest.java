@@ -100,14 +100,11 @@ class RpcAttributesExtractorTest {
       AttributeKey.stringKey("rpc.system.name");
 
   // Old semconv keys (from RpcIncubatingAttributes)
-  private static final AttributeKey<String> RPC_SYSTEM =
-      RpcIncubatingAttributes.RPC_SYSTEM;
+  private static final AttributeKey<String> RPC_SYSTEM = RpcIncubatingAttributes.RPC_SYSTEM;
 
-  private static final AttributeKey<String> RPC_SERVICE =
-      RpcIncubatingAttributes.RPC_SERVICE;
+  private static final AttributeKey<String> RPC_SERVICE = RpcIncubatingAttributes.RPC_SERVICE;
 
-  private static final AttributeKey<String> RPC_METHOD =
-      RpcIncubatingAttributes.RPC_METHOD;
+  private static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
 
   private static void testExtractor(
       AttributesExtractor<Map<String, String>, Void> extractor, @Nullable String originalMethod) {
