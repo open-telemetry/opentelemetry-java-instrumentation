@@ -147,7 +147,12 @@ class SpymemcachedTest {
         "parent", () -> assertThat(memcached.get(key("test-get"))).isEqualTo("get test"));
 
     assertDurationMetric(
-        testing, "io.opentelemetry.spymemcached-2.12", DB_SYSTEM_NAME, maybeStable(DB_OPERATION));
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        maybeStable(DB_OPERATION),
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
