@@ -40,12 +40,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
             .orElse(null);
   }
 
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
   private final int maxNormalizedQueryLength;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
-  MongoDbAttributesGetter(boolean statementSanitizationEnabled, int maxNormalizedQueryLength) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
@@ -109,7 +109,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
             ? new JsonWriter(stringWriter, jsonWriterSettings)
             : new JsonWriter(stringWriter);
 
-    if (statementSanitizationEnabled) {
+    if (querySanitizationEnabled) {
       writeScrubbed(command, jsonWriter, /* isRoot= */ true);
     } else {
       new BsonDocumentCodec().encode(jsonWriter, command, EncoderContext.builder().build());

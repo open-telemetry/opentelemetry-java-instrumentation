@@ -62,18 +62,18 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
   private final AttributeKey<String> oldSemconvTableAttribute;
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
   private final boolean captureQueryParameters;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     this.getter = getter;
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     // capturing query parameters disables statement sanitization
-    this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
+    this.querySanitizationEnabled = !captureQueryParameters && querySanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
     internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
@@ -95,7 +95,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         internalSet(
             attributes,
             DB_STATEMENT,
-            statementSanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
+            querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
         internalSet(attributes, DB_OPERATION, operationName);
         internalSet(attributes, oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
       }
@@ -106,7 +106,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
       }
       boolean parameterizedQuery = getter.isParameterizedQuery(request);
-      boolean shouldSanitize = statementSanitizationEnabled && !parameterizedQuery;
+      boolean shouldSanitize = querySanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlQuery sanitizedQuery =

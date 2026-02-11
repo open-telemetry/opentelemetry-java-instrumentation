@@ -62,7 +62,7 @@ public class CassandraTelemetryBuilder {
 
   @SuppressWarnings("deprecation") // to support old database semantic conventions
   protected Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
-      OpenTelemetry openTelemetry, boolean statementSanitizationEnabled) {
+      OpenTelemetry openTelemetry, boolean querySanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
     return Instrumenter.<CassandraRequest, ExecutionInfo>builder(
@@ -70,7 +70,7 @@ public class CassandraTelemetryBuilder {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
                 .setTableAttribute(DB_CASSANDRA_TABLE)
-                .setQuerySanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .build())
         .addAttributesExtractor(new CassandraAttributesExtractor())
         .addOperationMetrics(DbClientMetrics.get())
