@@ -49,10 +49,9 @@ final class ClickHouseAttributesGetter
     return null;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
   }
 
   @Nullable

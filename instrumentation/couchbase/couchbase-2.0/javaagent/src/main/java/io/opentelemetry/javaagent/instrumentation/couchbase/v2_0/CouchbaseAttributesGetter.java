@@ -14,10 +14,9 @@ import javax.annotation.Nullable;
 final class CouchbaseAttributesGetter
     implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
   }
 
   @Override

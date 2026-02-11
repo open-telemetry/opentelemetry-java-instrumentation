@@ -26,7 +26,7 @@ import org.bson.json.JsonWriterSettings;
 
 class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent, Void> {
 
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String MONGODB = "mongodb";
 
   @Nullable private static final Method IS_TRUNCATED_METHOD;
