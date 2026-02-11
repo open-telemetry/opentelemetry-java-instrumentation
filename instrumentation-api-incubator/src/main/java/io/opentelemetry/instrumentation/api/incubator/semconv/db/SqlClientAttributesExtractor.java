@@ -128,8 +128,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
               attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
         }
         internalSet(attributes, DB_COLLECTION_NAME, sanitizedQuery.getCollectionName());
-        internalSet(
-            attributes, DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());
+        internalSet(attributes, DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             getter instanceof ExtractQuerySummaryMarker

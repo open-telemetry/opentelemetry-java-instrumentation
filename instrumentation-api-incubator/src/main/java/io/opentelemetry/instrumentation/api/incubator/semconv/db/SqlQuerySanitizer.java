@@ -20,8 +20,7 @@ public final class SqlQuerySanitizer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<CacheKey, SqlQuery> sqlToQueryCache = Cache.bounded(1000);
-  private static final Cache<CacheKey, SqlQuery> sqlToQueryCacheWithSummary =
-      Cache.bounded(1000);
+  private static final Cache<CacheKey, SqlQuery> sqlToQueryCacheWithSummary = Cache.bounded(1000);
   private static final int LARGE_QUERY_THRESHOLD = 10 * 1024;
 
   public static SqlQuerySanitizer create(boolean statementSanitizationEnabled) {

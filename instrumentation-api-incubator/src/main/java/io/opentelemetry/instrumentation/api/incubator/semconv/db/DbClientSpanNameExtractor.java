@@ -176,8 +176,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
-        SqlQuery sanitizedQuery =
-            SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
         return computeSpanName(
             namespace,
