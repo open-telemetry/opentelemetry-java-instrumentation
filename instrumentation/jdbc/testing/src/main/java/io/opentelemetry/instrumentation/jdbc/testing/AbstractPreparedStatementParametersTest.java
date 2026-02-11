@@ -59,14 +59,14 @@ public abstract class AbstractPreparedStatementParametersTest {
     return connection;
   }
 
-  private static final String dbName = "jdbcUnitTest";
-  private static final String dbNameLower = dbName.toLowerCase(Locale.ROOT);
+  private static final String namespace = "jdbcUnitTest";
+  private static final String namespaceLower = namespace.toLowerCase(Locale.ROOT);
 
   private static final Map<String, String> jdbcUrls =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + dbName,
-          "derby", "jdbc:derby:memory:" + dbName,
-          "hsqldb", "jdbc:hsqldb:mem:" + dbName);
+          "h2", "jdbc:h2:mem:" + namespace,
+          "derby", "jdbc:derby:memory:" + namespace,
+          "hsqldb", "jdbc:hsqldb:mem:" + namespace);
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
 
@@ -88,7 +88,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + namespaceLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -625,7 +625,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), namespaceLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
