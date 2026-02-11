@@ -1080,9 +1080,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .getResource()
                       .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
               if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
-                if (expectedPeerService != null) {
-                  assertThat(attrs).containsEntry(maybeStablePeerService(), expectedPeerService);
+                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
+                if (expectedServicePeerName != null) {
+                  assertThat(attrs).containsEntry(maybeStablePeerService(), expectedServicePeerName);
                 }
               }
 
