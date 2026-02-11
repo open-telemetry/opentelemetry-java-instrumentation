@@ -94,7 +94,7 @@ class MongoDbAttributesGetterTest {
 
   static String sanitizeStatementAcrossVersions(
       MongoDbAttributesGetter extractor, BsonDocument query) {
-    return sanitizeAcrossVersions(extractor.sanitizeStatement(query));
+    return sanitizeAcrossVersions(extractor.sanitizeQuery(query));
   }
 
   static String sanitizeAcrossVersions(String json) {
