@@ -58,8 +58,7 @@ class MultiQuery {
       uniqueStoredProcedureName.set(storedProcedureName);
       String operationName = sanitizedQuery.getOperationName();
       uniqueOperationName.set(operationName);
-      uniqueQueryTexts.add(
-          querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
+      uniqueQueryTexts.add(querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
       uniqueQuerySummary.set(sanitizedQuery.getQuerySummary());
     }
 
