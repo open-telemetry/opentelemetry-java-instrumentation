@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_QUERY_SANITIZER_CACHE_MISS;
+import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_SANITIZER_CACHE_MISS;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
@@ -53,7 +53,7 @@ public final class SqlQuerySanitizer {
   }
 
   private static SqlQuery sanitizeImpl(String query, SqlDialect dialect) {
-    supportability.incrementCounter(SQL_QUERY_SANITIZER_CACHE_MISS);
+    supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizer.sanitize(query, dialect);
   }
 
@@ -78,7 +78,7 @@ public final class SqlQuerySanitizer {
   }
 
   private static SqlQuery sanitizeWithSummaryImpl(String query, SqlDialect dialect) {
-    supportability.incrementCounter(SQL_QUERY_SANITIZER_CACHE_MISS);
+    supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizerWithSummary.sanitize(query, dialect);
   }
 
