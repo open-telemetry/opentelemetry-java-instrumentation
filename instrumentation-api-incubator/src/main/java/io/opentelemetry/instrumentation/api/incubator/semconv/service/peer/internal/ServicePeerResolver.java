@@ -75,8 +75,8 @@ public class ServicePeerResolver {
   }
 
   @SuppressWarnings("deprecation") // used by deprecated PeerServiceResolver
-  public ServicePeerResolver(Map<String, String> peerServiceNameMapping) {
-    peerServiceNameMapping.forEach((peer, serviceName) -> addMapping(peer, serviceName, null));
+  public ServicePeerResolver(Map<String, String> servicePeerNameMapping) {
+    servicePeerNameMapping.forEach((peer, serviceName) -> addMapping(peer, serviceName, null));
   }
 
   private void addMapping(
