@@ -191,10 +191,10 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     }
     List<String> list = configProperties.getList(resolvePropertyKey(name));
     if (list.isEmpty()) {
-      // this choice has some implications, such as that there's no way to explicitly
-      // set an empty list using env var / sys props, e.g. for known_methods or
-      // sensitive_query_parameters, but this choice seems safer to return null
-      // and use the default value in these cases
+      // returning null instead of empty list here has some implications,
+      // such as that there's no way to explicitly set an empty list using env var / sys props,
+      // e.g. for known_methods or sensitive_query_parameters,
+      // but it seems safer to return null and use the default value in these cases
       return null;
     }
     return (List<T>) list;
