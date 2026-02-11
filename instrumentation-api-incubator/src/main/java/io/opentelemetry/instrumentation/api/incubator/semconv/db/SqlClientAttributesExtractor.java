@@ -90,14 +90,14 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedStatement = SqlQuerySanitizerUtil.sanitize(rawQueryText);
-        String operationName = sanitizedStatement.getOperationName();
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryText);
+        String operationName = sanitizedQuery.getOperationName();
         internalSet(
             attributes,
             DB_STATEMENT,
-            statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
+            statementSanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
         internalSet(attributes, DB_OPERATION, operationName);
-        internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getCollectionName());
+        internalSet(attributes, oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
       }
     }
 
@@ -109,27 +109,26 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean shouldSanitize = statementSanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedStatement =
+        SqlQuery sanitizedQuery =
             getter instanceof ExtractQuerySummaryMarker
                 ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
                 : SqlQuerySanitizerUtil.sanitize(rawQueryText);
         internalSet(
             attributes,
             DB_QUERY_TEXT,
-            shouldSanitize ? sanitizedStatement.getQueryText() : rawQueryText);
-        String querySummary = sanitizedStatement.getQuerySummary();
+            shouldSanitize ? sanitizedQuery.getQueryText() : rawQueryText);
+        String querySummary = sanitizedQuery.getQuerySummary();
         internalSet(
             attributes,
             DB_QUERY_SUMMARY,
             isBatch && querySummary != null ? "BATCH " + querySummary : querySummary);
         if (!(getter instanceof ExtractQuerySummaryMarker)) {
-          String operationName = sanitizedStatement.getOperationName();
+          String operationName = sanitizedQuery.getOperationName();
           internalSet(
               attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
         }
-        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getCollectionName());
-        internalSet(
-            attributes, DB_STORED_PROCEDURE_NAME, sanitizedStatement.getStoredProcedureName());
+        internalSet(attributes, DB_COLLECTION_NAME, sanitizedQuery.getCollectionName());
+        internalSet(attributes, DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             getter instanceof ExtractQuerySummaryMarker

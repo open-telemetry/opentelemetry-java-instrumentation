@@ -82,7 +82,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Override
   public String getDbQueryText(CommandStartedEvent event) {
-    return sanitizeStatement(event.getCommand());
+    return sanitizeQuery(event.getCommand());
   }
 
   @Override
@@ -100,7 +100,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  String sanitizeStatement(BsonDocument command) {
+  String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown
     // API incompatibilities, which we can't detect by Muzzle because we use reflection.
