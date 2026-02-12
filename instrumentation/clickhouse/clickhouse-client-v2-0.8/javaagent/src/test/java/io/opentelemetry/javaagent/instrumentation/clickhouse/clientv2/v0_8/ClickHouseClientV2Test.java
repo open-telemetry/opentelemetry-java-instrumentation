@@ -58,7 +58,7 @@ class ClickHouseClientV2Test {
   private static final GenericContainer<?> clickhouseServer =
       new GenericContainer<>("clickhouse/clickhouse-server:24.4.2").withExposedPorts(8123);
 
-  private static final String dbName = "default";
+  private static final String databaseName = "default";
   private static final String tableName = "test_table";
   private static int port;
   private static String host;
@@ -75,7 +75,7 @@ class ClickHouseClientV2Test {
     client =
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
-            .setDefaultDatabase(dbName)
+            .setDefaultDatabase(databaseName)
             .setUsername(username)
             .setPassword(password)
             .setOption("compress", "false")
@@ -118,12 +118,14 @@ class ClickHouseClientV2Test {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
@@ -163,12 +165,14 @@ class ClickHouseClientV2Test {
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "INSERT test_table" : "INSERT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "INSERT test_table"
+                                : "INSERT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -182,12 +186,14 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
@@ -217,12 +223,14 @@ class ClickHouseClientV2Test {
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from " + tableName),
@@ -252,13 +260,13 @@ class ClickHouseClientV2Test {
                     span.hasName(
                             emitStableDatabaseSemconv()
                                 ? "SELECT non_existent_table"
-                                : "SELECT " + dbName)
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_STATEMENT), "select * from non_existent_table"),
@@ -295,12 +303,14 @@ class ClickHouseClientV2Test {
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -329,12 +339,14 @@ class ClickHouseClientV2Test {
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -368,12 +380,14 @@ class ClickHouseClientV2Test {
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "INSERT test_table" : "INSERT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "INSERT test_table"
+                                : "INSERT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -387,12 +401,14 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() ? null : "INSERT")),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
@@ -430,12 +446,14 @@ class ClickHouseClientV2Test {
                 span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test_table" : "SELECT " + dbName)
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test_table"
+                                : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
