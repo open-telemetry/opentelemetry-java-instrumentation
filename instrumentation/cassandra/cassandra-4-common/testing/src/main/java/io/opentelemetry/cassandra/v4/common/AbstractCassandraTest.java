@@ -140,7 +140,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? parameter.spanName : null),
@@ -201,7 +201,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? parameter.spanName : null),
@@ -340,7 +340,7 @@ public abstract class AbstractCassandraTest {
   protected static class Parameter {
     public final String keyspace;
     public final String statement;
-    public final String expectedStatement;
+    public final String expectedQueryText;
     public final String spanName;
     public final String operation;
     public final String table;
@@ -348,13 +348,13 @@ public abstract class AbstractCassandraTest {
     public Parameter(
         String keyspace,
         String statement,
-        String expectedStatement,
+        String expectedQueryText,
         String spanName,
         String operation,
         String table) {
       this.keyspace = keyspace;
       this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;

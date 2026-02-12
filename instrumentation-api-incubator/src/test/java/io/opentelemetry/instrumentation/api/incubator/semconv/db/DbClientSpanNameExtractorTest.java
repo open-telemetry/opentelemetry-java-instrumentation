@@ -114,7 +114,7 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
-  void shouldExtractDbName() {
+  void shouldExtractDbNamespace() {
     // given
     DbRequest dbRequest = new DbRequest();
 

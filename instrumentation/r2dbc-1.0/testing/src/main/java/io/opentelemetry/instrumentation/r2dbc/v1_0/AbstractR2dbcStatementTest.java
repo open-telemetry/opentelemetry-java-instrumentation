@@ -185,7 +185,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_SYSTEM), parameter.system),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv()
@@ -298,7 +298,7 @@ public abstract class AbstractR2dbcStatementTest {
 
     final String system;
     final String statement;
-    final String expectedStatement;
+    final String expectedQueryText;
     final String spanName;
     final String table;
     final String operation;
@@ -306,13 +306,13 @@ public abstract class AbstractR2dbcStatementTest {
     Parameter(
         String system,
         String statement,
-        String expectedStatement,
+        String expectedQueryText,
         String spanName,
         String table,
         String operation) {
       this.system = system;
       this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.table = table;
       this.operation = operation;

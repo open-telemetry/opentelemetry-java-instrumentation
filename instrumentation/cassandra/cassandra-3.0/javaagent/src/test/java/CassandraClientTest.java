@@ -136,7 +136,7 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
@@ -161,7 +161,7 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
@@ -231,7 +231,7 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
@@ -261,7 +261,7 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
@@ -410,7 +410,7 @@ class CassandraClientTest {
   private static class Parameter {
     final String keyspace;
     final String statement;
-    final String expectedStatement;
+    final String expectedQueryText;
     final String spanName;
     final String operation;
     final String table;
@@ -418,13 +418,13 @@ class CassandraClientTest {
     Parameter(
         String keyspace,
         String statement,
-        String expectedStatement,
+        String expectedQueryText,
         String spanName,
         String operation,
         String table) {
       this.keyspace = keyspace;
       this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;

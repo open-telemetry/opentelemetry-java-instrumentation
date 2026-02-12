@@ -31,6 +31,6 @@ public class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
-    return spymemcachedRequest.dbOperation();
+    return spymemcachedRequest.dbOperationName();
   }
 }
