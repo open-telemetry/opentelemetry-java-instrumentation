@@ -34,7 +34,7 @@ class SanitizationTest {
     when(message.getHeader("CamelCqlQuery")).thenReturn(original);
     when(exchange.getIn()).thenReturn(message);
 
-    assertSanitizedQuery(decorator, exchange, expectedStatement, expectedSummary);
+    assertSanitizedQuery(decorator, exchange, expectedQueryText, expectedSummary);
   }
 
   static Stream<Arguments> sanitizeCqlArgs() {
@@ -63,7 +63,7 @@ class SanitizationTest {
     when(message.getBody()).thenReturn(original);
     when(exchange.getIn()).thenReturn(message);
 
-    assertSanitizedQuery(decorator, exchange, expectedStatement, expectedSummary);
+    assertSanitizedQuery(decorator, exchange, expectedQueryText, expectedSummary);
   }
 
   static Stream<Arguments> sanitizeJdbcArgs() {
@@ -93,7 +93,7 @@ class SanitizationTest {
     when(message.getHeader("CamelSqlQuery")).thenReturn(original);
     when(exchange.getIn()).thenReturn(message);
 
-    assertSanitizedQuery(decorator, exchange, expectedStatement, expectedSummary);
+    assertSanitizedQuery(decorator, exchange, expectedQueryText, expectedSummary);
   }
 
   static Stream<Arguments> sanitizeSqlArgs() {
