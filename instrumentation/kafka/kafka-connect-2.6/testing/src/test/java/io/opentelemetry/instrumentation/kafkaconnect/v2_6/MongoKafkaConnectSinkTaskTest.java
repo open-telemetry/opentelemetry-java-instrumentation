@@ -57,7 +57,7 @@ import org.testcontainers.utility.DockerImageName;
 class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   // MongoDB-specific constants
   private static final String MONGO_NETWORK_ALIAS = "mongodb";
-  private static final String NAMESPACE = "testdb";
+  private static final String DATABASE_NAME = "testdb";
   private static final String COLLECTION_NAME = "person";
   private static final String CONNECTOR_NAME = "test-mongo-connector";
   private static final String TOPIC_NAME = "test-mongo-topic";
@@ -159,7 +159,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
-                    span.hasName("update " + NAMESPACE + "." + COLLECTION_NAME)
+                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))),
         trace ->
@@ -270,15 +270,15 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
-                    span.hasName("update " + NAMESPACE + "." + COLLECTION_NAME)
+                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("update " + NAMESPACE + "." + COLLECTION_NAME)
+                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("update " + NAMESPACE + "." + COLLECTION_NAME)
+                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))),
         trace ->
@@ -295,7 +295,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
     configMap.put("tasks.max", "1");
     configMap.put("connection.uri", format(Locale.ROOT, "mongodb://%s:27017", MONGO_NETWORK_ALIAS));
-    configMap.put("database", NAMESPACE);
+    configMap.put("database", DATABASE_NAME);
     configMap.put("collection", COLLECTION_NAME);
     configMap.put("topics", topicName);
     configMap.put("key.converter", "org.apache.kafka.connect.storage.StringConverter");
@@ -326,7 +326,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
     configMap.put("tasks.max", "1");
     configMap.put("connection.uri", format(Locale.ROOT, "mongodb://%s:27017", MONGO_NETWORK_ALIAS));
-    configMap.put("database", NAMESPACE);
+    configMap.put("database", DATABASE_NAME);
     configMap.put("collection", COLLECTION_NAME);
     // Configure multiple topics separated by commas
     configMap.put("topics", String.join(",", topicNames));
@@ -356,7 +356,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   private static long getRecordCountFromMongo() {
     try (MongoClient mongoClient = MongoClients.create(mongoDB.getConnectionString())) {
-      MongoDatabase database = mongoClient.getDatabase(NAMESPACE);
+      MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
       return collection.countDocuments();
     }
@@ -364,7 +364,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   private static void clearMongoCollection() {
     try (MongoClient mongoClient = MongoClients.create(mongoDB.getConnectionString())) {
-      MongoDatabase database = mongoClient.getDatabase(NAMESPACE);
+      MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
       collection.drop();
     }

@@ -59,14 +59,14 @@ public abstract class AbstractPreparedStatementParametersTest {
     return connection;
   }
 
-  private static final String namespace = "jdbcUnitTest";
-  private static final String namespaceLower = namespace.toLowerCase(Locale.ROOT);
+  private static final String databaseName = "jdbcUnitTest";
+  private static final String databaseNameLower = databaseName.toLowerCase(Locale.ROOT);
 
   private static final Map<String, String> jdbcUrls =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + namespace,
-          "derby", "jdbc:derby:memory:" + namespace,
-          "hsqldb", "jdbc:hsqldb:mem:" + namespace);
+          "h2", "jdbc:h2:mem:" + databaseName,
+          "derby", "jdbc:derby:memory:" + databaseName,
+          "hsqldb", "jdbc:hsqldb:mem:" + databaseName);
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
 
@@ -88,7 +88,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + namespaceLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -625,7 +625,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), namespaceLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
