@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
-@AutoService(InstrumentationModule.class)
+@AutoService({InstrumentationModule.class, EarlyInstrumentationModule.class})
 public class HttpUrlConnectionInstrumentationModule extends InstrumentationModule
     implements EarlyInstrumentationModule, ExperimentalInstrumentationModule {
 
