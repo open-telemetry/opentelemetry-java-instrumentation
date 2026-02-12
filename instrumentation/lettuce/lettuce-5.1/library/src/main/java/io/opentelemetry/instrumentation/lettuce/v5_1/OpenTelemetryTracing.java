@@ -295,17 +295,16 @@ final class OpenTelemetryTracing implements Tracing {
 
     private synchronized void finishWithResponse(LettuceResponse resp) {
       this.response = resp;
+      if (this.error == null && resp.getThrowable() != null) {
+        this.error = resp.getThrowable();
+      }
       finish();
     }
 
     @Override
     public synchronized void finish() {
       if (context != null) {
-        Throwable t = error;
-        if (t == null && response != null) {
-          t = response.getThrowable();
-        }
-        instrumenter.end(context, request, response, t);
+        instrumenter.end(context, request, response, error);
       }
     }
   }
