@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import application.io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -44,11 +43,22 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static List<Function<? super ContextStorage, ? extends ContextStorage>> methodExit(
-        @Advice.Return
-            List<Function<? super ContextStorage, ? extends ContextStorage>> originalWrappers) {
-      List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers =
-          new ArrayList<>(originalWrappers);
+    public static List<
+            Function<
+                ? super application.io.opentelemetry.context.ContextStorage,
+                ? extends application.io.opentelemetry.context.ContextStorage>>
+        methodExit(
+            @Advice.Return
+                List<
+                        Function<
+                            ? super application.io.opentelemetry.context.ContextStorage,
+                            ? extends application.io.opentelemetry.context.ContextStorage>>
+                    originalWrappers) {
+      List<
+              Function<
+                  ? super application.io.opentelemetry.context.ContextStorage,
+                  ? extends application.io.opentelemetry.context.ContextStorage>>
+          wrappers = new ArrayList<>(originalWrappers);
       // AgentContextStorage wrapper doesn't delegate, so needs to be the innermost wrapper
       wrappers.add(0, AgentContextStorage.wrap());
       return wrappers;

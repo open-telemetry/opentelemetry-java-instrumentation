@@ -19,6 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.javaagent.customchecks;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
@@ -439,7 +440,35 @@ class OtelUnnecessarilyFullyQualifiedTest {
         .doTest();
   }
 
-  // BEGIN application.io.opentelemetry.* handling tests
+  @Test
+  void lambdaParameter() {
+    compilationHelper
+        .addSourceLines(
+            "Lib.java",
+            """
+            import java.util.List;
+            import java.util.stream.Stream;
+
+            interface Lib {
+              Stream<List<String>> f();
+            }
+            """)
+        .addSourceLines(
+            "Test.java",
+            """
+            class Test {
+              void f(Lib l) {
+                l.f().map(x -> x);
+              }
+
+              void g(Lib l) {
+                l.f().map(x -> x);
+              }
+            }
+            """)
+        .setArgs("-XepOpt:OtelUnnecessarilyFullyQualified:BatchFindings=true")
+        .doTest();
+  }
 
   @Test
   void applicationClassesNotFlagged() {
@@ -499,6 +528,4 @@ class OtelUnnecessarilyFullyQualifiedTest {
             """)
         .doTest();
   }
-
-  // END application.io.opentelemetry.* handling tests
 }

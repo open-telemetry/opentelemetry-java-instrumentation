@@ -5,65 +5,65 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs;
 
-import application.io.opentelemetry.api.common.KeyValue;
-import application.io.opentelemetry.api.common.Value;
-import application.io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.common.KeyValue;
+import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLogRecordBuilder;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
-    implements LogRecordBuilder {
+    implements application.io.opentelemetry.api.logs.LogRecordBuilder {
 
-  private final io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder;
+  private final LogRecordBuilder agentLogRecordBuilder;
 
-  public ApplicationLogRecordBuilder142(
-      io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder) {
+  public ApplicationLogRecordBuilder142(LogRecordBuilder agentLogRecordBuilder) {
     super(agentLogRecordBuilder);
     this.agentLogRecordBuilder = agentLogRecordBuilder;
   }
 
   @Override
-  public LogRecordBuilder setBody(Value<?> body) {
+  public application.io.opentelemetry.api.logs.LogRecordBuilder setBody(
+      application.io.opentelemetry.api.common.Value<?> body) {
     agentLogRecordBuilder.setBody(convertValue(body));
     return this;
   }
 
-  protected static io.opentelemetry.api.common.Value<?> convertValue(Value<?> value) {
+  protected static Value<?> convertValue(application.io.opentelemetry.api.common.Value<?> value) {
     if (value == null) {
       return null;
     }
 
     switch (value.getType()) {
       case STRING:
-        return io.opentelemetry.api.common.Value.of((String) value.getValue());
+        return Value.of((String) value.getValue());
       case BOOLEAN:
-        return io.opentelemetry.api.common.Value.of((Boolean) value.getValue());
+        return Value.of((Boolean) value.getValue());
       case LONG:
-        return io.opentelemetry.api.common.Value.of((Long) value.getValue());
+        return Value.of((Long) value.getValue());
       case DOUBLE:
-        return io.opentelemetry.api.common.Value.of((Double) value.getValue());
+        return Value.of((Double) value.getValue());
       case ARRAY:
         @SuppressWarnings("unchecked") // type is checked before casting
-        List<Value<?>> values = (List<Value<?>>) value.getValue();
-        List<io.opentelemetry.api.common.Value<?>> convertedValues = new ArrayList<>();
-        for (Value<?> source : values) {
+        List<application.io.opentelemetry.api.common.Value<?>> values =
+            (List<application.io.opentelemetry.api.common.Value<?>>) value.getValue();
+        List<Value<?>> convertedValues = new ArrayList<>();
+        for (application.io.opentelemetry.api.common.Value<?> source : values) {
           convertedValues.add(convertValue(source));
         }
-        return io.opentelemetry.api.common.Value.of(convertedValues);
+        return Value.of(convertedValues);
       case KEY_VALUE_LIST:
         @SuppressWarnings("unchecked") // type is checked before casting
-        List<KeyValue> keyValueList = (List<KeyValue>) value.getValue();
-        io.opentelemetry.api.common.KeyValue[] convertedKeyValueList =
-            new io.opentelemetry.api.common.KeyValue[keyValueList.size()];
+        List<application.io.opentelemetry.api.common.KeyValue> keyValueList =
+            (List<application.io.opentelemetry.api.common.KeyValue>) value.getValue();
+        KeyValue[] convertedKeyValueList = new KeyValue[keyValueList.size()];
         int i = 0;
-        for (KeyValue source : keyValueList) {
+        for (application.io.opentelemetry.api.common.KeyValue source : keyValueList) {
           convertedKeyValueList[i++] =
-              io.opentelemetry.api.common.KeyValue.of(
-                  source.getKey(), convertValue(source.getValue()));
+              KeyValue.of(source.getKey(), convertValue(source.getValue()));
         }
-        return io.opentelemetry.api.common.Value.of(convertedKeyValueList);
+        return Value.of(convertedKeyValueList);
       case BYTES:
         ByteBuffer byteBuffer = (ByteBuffer) value.getValue();
         byte[] bytes = new byte[byteBuffer.remaining()];

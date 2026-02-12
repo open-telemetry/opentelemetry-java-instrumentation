@@ -14,6 +14,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Comparator;
@@ -151,8 +152,7 @@ public class ServicePeerResolver {
 
   // TODO: remove this method when deprecated PeerServiceResolver is removed
   @SuppressWarnings("deprecation") // bridges deprecated PeerServiceResolver
-  public static ServicePeerResolver fromPeerServiceResolver(
-      io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver resolver) {
+  public static ServicePeerResolver fromPeerServiceResolver(PeerServiceResolver resolver) {
     return new ServicePeerResolver(new HashMap<>()) {
       @Override
       public boolean isEmpty() {

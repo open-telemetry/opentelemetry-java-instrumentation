@@ -19,6 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.opentelemetry.javaagent.customchecks;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
@@ -76,12 +77,25 @@ import javax.lang.model.element.Name;
 /** Flags uses of fully qualified names which are not ambiguous if imported. */
 @BugPattern(
     severity = SeverityLevel.WARNING,
-    summary = "This fully qualified name is unambiguous to the compiler if imported.")
+    summary = "This fully qualified name is unambiguous to the compiler if imported.",
+    // so it can be suppressed with @SuppressWarnings("UnnecessarilyFullyQualified")
+    altNames = "UnnecessarilyFullyQualified")
 @AutoService(BugChecker.class)
 public final class OtelUnnecessarilyFullyQualified extends BugChecker
     implements CompilationUnitTreeMatcher {
 
   private static final ImmutableSet<String> EXEMPTED_NAMES = ImmutableSet.of("Annotation");
+
+  /**
+   * Fully qualified names that are intentionally kept as FQNs. For example, {@code
+   * io.opentelemetry.extension.annotations.WithSpan} is the deprecated predecessor of {@code
+   * io.opentelemetry.instrumentation.annotations.WithSpan}; test code that exercises the old
+   * annotation uses the FQN to make it obvious which variant is under test.
+   */
+  private static final ImmutableSet<String> EXEMPTED_FQNS =
+      ImmutableSet.of(
+          "io.opentelemetry.extension.annotations.SpanAttribute",
+          "io.opentelemetry.extension.annotations.WithSpan");
 
   /**
    * Class names which are bad as a direct import if they have an enclosing class.
@@ -198,18 +212,26 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
         if (!isFullyQualified(tree)) {
           return;
         }
-        // BEGIN application.io.opentelemetry.* handling: skip shaded application classes
-        // that must use fully qualified names to avoid conflicts with the agent's copy
         if (isApplicationClass(tree)) {
           return;
         }
-        // END application.io.opentelemetry.* handling
+        Symbol sym = getSymbol(tree);
+        if (sym instanceof ClassSymbol
+            && EXEMPTED_FQNS.contains(sym.getQualifiedName().toString())) {
+          return;
+        }
         if (isBadNestedClass(tree) || isExemptedEnclosingType(tree)) {
           handle(new TreePath(path, tree.getExpression()));
           return;
         }
         Symbol symbol = getSymbol(tree);
         if (!(symbol instanceof ClassSymbol)) {
+          return;
+        }
+        // Classes deprecated for removal (e.g. java.security.AccessController) must stay
+        // fully qualified: importing them produces a [removal] javadoc warning that cannot
+        // be suppressed at the import site, only at usage sites via @SuppressWarnings.
+        if (isDeprecatedForRemoval(symbol)) {
           return;
         }
         if (state.getEndPosition(tree) == Position.NOPOS) {
@@ -227,6 +249,24 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
         return BAD_NESTED_CLASSES.contains(tree.getIdentifier().toString());
       }
 
+      private boolean isDeprecatedForRemoval(Symbol symbol) {
+        // When not cross-compiling, the javac symbol flag works directly.
+        if (symbol.isDeprecatedForRemoval()) {
+          return true;
+        }
+        // When compiling with --release 8, javac loads JDK class metadata from ct.sym
+        // which uses Java 8's @Deprecated (no forRemoval element), so the
+        // DEPRECATED_REMOVAL flag is never set on the symbol. Fall back to loading
+        // the class from the running JVM (JDK 9+) to check the actual annotation.
+        try {
+          Class<?> clazz = Class.forName(symbol.getQualifiedName().toString());
+          Deprecated deprecated = clazz.getAnnotation(Deprecated.class);
+          return deprecated != null && deprecated.forRemoval();
+        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+          return false;
+        }
+      }
+
       private boolean isExemptedEnclosingType(MemberSelectTree tree) {
         ExpressionTree expression = tree.getExpression();
         if (!(expression instanceof MemberSelectTree)) {
@@ -240,8 +280,6 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
         return exemptedEnclosingTypes.contains(symbol.getQualifiedName().toString());
       }
 
-      // BEGIN application.io.opentelemetry.* handling: check if the fully qualified
-      // name starts with "application", indicating a shaded application class
       private boolean isApplicationClass(MemberSelectTree tree) {
         ExpressionTree expression = tree;
         while (expression instanceof MemberSelectTree) {
@@ -253,8 +291,6 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
         return false;
       }
 
-      // END application.io.opentelemetry.* handling
-
       private boolean isFullyQualified(MemberSelectTree tree) {
         AtomicBoolean isFullyQualified = new AtomicBoolean();
         new SimpleTreeVisitor<Void, Void>() {
@@ -264,7 +300,7 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
           }
 
           @Override
-          public Void visitIdentifier(IdentifierTree identifierTree, Void aVoid) {
+          public Void visitIdentifier(IdentifierTree identifierTree, Void unused) {
             if (getSymbol(identifierTree) instanceof PackageSymbol) {
               isFullyQualified.set(true);
             }

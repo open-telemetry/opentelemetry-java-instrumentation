@@ -5,28 +5,27 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics;
 
-import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogramBuilder;
 import java.util.List;
 
 class ApplicationDoubleHistogramBuilder132 extends ApplicationDoubleHistogramBuilder {
 
-  private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;
+  private final DoubleHistogramBuilder agentBuilder;
 
-  ApplicationDoubleHistogramBuilder132(
-      io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder) {
+  ApplicationDoubleHistogramBuilder132(DoubleHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
   }
 
   @Override
-  public LongHistogramBuilder ofLongs() {
+  public application.io.opentelemetry.api.metrics.LongHistogramBuilder ofLongs() {
     return new ApplicationLongHistogramBuilder132(agentBuilder.ofLongs());
   }
 
   @Override
-  public DoubleHistogramBuilder setExplicitBucketBoundariesAdvice(List<Double> bucketBoundaries) {
+  public application.io.opentelemetry.api.metrics.DoubleHistogramBuilder
+      setExplicitBucketBoundariesAdvice(List<Double> bucketBoundaries) {
     agentBuilder.setExplicitBucketBoundariesAdvice(bucketBoundaries);
     return this;
   }
