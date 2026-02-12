@@ -11,9 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.linecorp.armeria.client.grpc.GrpcClientBuilder;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.URI;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,8 +40,14 @@ public class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentat
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter
-    public static void onEnter(@Advice.This GrpcClientBuilder builder) {
-      builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createClientInterceptor());
+    public static void onEnter(
+        @Advice.This GrpcClientBuilder builder, @Advice.FieldValue("uri") @Nullable URI uri) {
+      String target = null;
+      if (SemconvStability.emitStableRpcSemconv() && uri != null) {
+        target = uri.getAuthority();
+      }
+      GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());
+      builder.intercept(Internal.createClientInterceptor(telemetry, target));
     }
   }
 }

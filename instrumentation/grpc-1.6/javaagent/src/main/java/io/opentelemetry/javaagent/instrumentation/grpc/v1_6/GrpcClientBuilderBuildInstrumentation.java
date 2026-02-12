@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -30,7 +31,8 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("io.grpc.ManagedChannelBuilder"))
-        .and(declaresField(named("interceptors")));
+        .and(declaresField(named("interceptors")))
+        .and(declaresField(named("target")));
   }
 
   @Override
@@ -46,9 +48,11 @@ public class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentatio
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addInterceptor(
         @Advice.This ManagedChannelBuilder<?> builder,
-        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors) {
+        @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors,
+        @Advice.FieldValue("target") String target) {
       if (!Boolean.TRUE.equals(MANAGED_CHANNEL_BUILDER_INSTRUMENTED.get(builder))) {
-        interceptors.add(0, GrpcSingletons.CLIENT_INTERCEPTOR);
+        String effectiveTarget = SemconvStability.emitStableRpcSemconv() ? target : null;
+        interceptors.add(0, GrpcSingletons.createClientInterceptor(effectiveTarget));
         MANAGED_CHANNEL_BUILDER_INSTRUMENTED.set(builder, true);
       }
     }
