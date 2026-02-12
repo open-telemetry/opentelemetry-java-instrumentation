@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -23,8 +22,8 @@ enum VertxRedisClientAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, VertxRedisClientRequest request) {
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(
-          attributes, DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());
+      attributes.put(
+          DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());
     }
   }
 

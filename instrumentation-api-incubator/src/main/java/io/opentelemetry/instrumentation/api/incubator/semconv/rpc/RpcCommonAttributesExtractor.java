@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -30,9 +29,9 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, RPC_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, RPC_SERVICE, getter.getService(request));
-    internalSet(attributes, RPC_METHOD, getter.getMethod(request));
+    attributes.put(RPC_SYSTEM, getter.getSystem(request));
+    attributes.put(RPC_SERVICE, getter.getService(request));
+    attributes.put(RPC_METHOD, getter.getMethod(request));
   }
 
   @Override

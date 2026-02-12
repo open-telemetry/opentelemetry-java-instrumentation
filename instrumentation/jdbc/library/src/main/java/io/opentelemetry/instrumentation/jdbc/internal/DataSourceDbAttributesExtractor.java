@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -43,15 +42,15 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
       return;
     }
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(attributes, DB_NAMESPACE, getName(dbInfo));
-      internalSet(
-          attributes, DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
+      attributes.put(DB_NAMESPACE, getName(dbInfo));
+      attributes.put(
+          DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_USER, dbInfo.getUser());
-      internalSet(attributes, DB_NAME, getName(dbInfo));
-      internalSet(attributes, DB_CONNECTION_STRING, dbInfo.getShortUrl());
-      internalSet(attributes, DB_SYSTEM, dbInfo.getSystem());
+      attributes.put(DB_USER, dbInfo.getUser());
+      attributes.put(DB_NAME, getName(dbInfo));
+      attributes.put(DB_CONNECTION_STRING, dbInfo.getShortUrl());
+      attributes.put(DB_SYSTEM, dbInfo.getSystem());
     }
   }
 

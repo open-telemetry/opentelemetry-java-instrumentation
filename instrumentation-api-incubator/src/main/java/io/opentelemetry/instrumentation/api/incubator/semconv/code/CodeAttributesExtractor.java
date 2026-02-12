@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -48,7 +47,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
       sb.append(cls.getName());
 
       if (SemconvStability.isEmitOldCodeSemconv()) {
-        internalSet(attributes, CODE_NAMESPACE, cls.getName());
+        attributes.put(CODE_NAMESPACE, cls.getName());
       }
     }
     String methodName = getter.getMethodName(request);
@@ -58,11 +57,11 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
       }
       sb.append(methodName);
       if (SemconvStability.isEmitOldCodeSemconv()) {
-        internalSet(attributes, CODE_FUNCTION, methodName);
+        attributes.put(CODE_FUNCTION, methodName);
       }
     }
     if (SemconvStability.isEmitStableCodeSemconv() && sb.length() > 0) {
-      internalSet(attributes, CodeAttributes.CODE_FUNCTION_NAME, sb.toString());
+      attributes.put(CodeAttributes.CODE_FUNCTION_NAME, sb.toString());
     }
   }
 

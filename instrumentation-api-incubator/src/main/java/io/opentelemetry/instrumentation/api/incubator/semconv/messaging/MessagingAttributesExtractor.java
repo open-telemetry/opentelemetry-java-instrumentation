@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -91,29 +90,29 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, MESSAGING_SYSTEM, getter.getSystem(request));
+    attributes.put(MESSAGING_SYSTEM, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
-      internalSet(attributes, MESSAGING_DESTINATION_TEMPORARY, true);
-      internalSet(attributes, MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
+      attributes.put(MESSAGING_DESTINATION_TEMPORARY, true);
+      attributes.put(MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
     } else {
-      internalSet(attributes, MESSAGING_DESTINATION_NAME, getter.getDestination(request));
-      internalSet(
-          attributes, MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
+      attributes.put(MESSAGING_DESTINATION_NAME, getter.getDestination(request));
+      attributes.put(
+          MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
     }
-    internalSet(
-        attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
+    attributes.put(
+        MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
     boolean isAnonymousDestination = getter.isAnonymousDestination(request);
     if (isAnonymousDestination) {
-      internalSet(attributes, MESSAGING_DESTINATION_ANONYMOUS, true);
+      attributes.put(MESSAGING_DESTINATION_ANONYMOUS, true);
     }
-    internalSet(attributes, MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
-    internalSet(attributes, MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
-    internalSet(
-        attributes, MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
-    internalSet(attributes, MESSAGING_CLIENT_ID, getter.getClientId(request));
+    attributes.put(MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
+    attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
+    attributes.put(
+        MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
+    attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
     if (operation != null) {
-      internalSet(attributes, MESSAGING_OPERATION, operation.operationName());
+      attributes.put(MESSAGING_OPERATION, operation.operationName());
     }
   }
 
@@ -124,14 +123,14 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    internalSet(attributes, MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
-    internalSet(
-        attributes, MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
+    attributes.put(MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
+    attributes.put(
+        MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);
       if (!values.isEmpty()) {
-        internalSet(attributes, CapturedMessageHeadersUtil.attributeKey(name), values);
+        attributes.put(CapturedMessageHeadersUtil.attributeKey(name), values);
       }
     }
   }

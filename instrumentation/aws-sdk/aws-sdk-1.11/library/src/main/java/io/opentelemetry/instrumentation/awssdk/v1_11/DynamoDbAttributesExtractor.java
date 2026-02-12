@@ -37,19 +37,19 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM_NAME, AWS_DYNAMODB);
+      AttributesExtractorUtil.attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM, DYNAMODB);
+      AttributesExtractorUtil.attributes.put(DB_SYSTEM, DYNAMODB);
     }
 
     String operation = getOperationName(request.getOriginalRequest());
     if (operation != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION_NAME, operation);
+        AttributesExtractorUtil.attributes.put(DB_OPERATION_NAME, operation);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION, operation);
+        AttributesExtractorUtil.attributes.put(DB_OPERATION, operation);
       }
     }
 

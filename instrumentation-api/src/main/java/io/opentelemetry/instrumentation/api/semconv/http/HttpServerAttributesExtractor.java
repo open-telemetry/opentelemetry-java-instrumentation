@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -81,8 +80,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalServerExtractor.onStart(attributes, request);
     internalClientExtractor.onStart(attributes, request);
 
-    internalSet(attributes, HttpAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
-    internalSet(attributes, UserAgentAttributes.USER_AGENT_ORIGINAL, userAgent(request));
+    attributes.put(HttpAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
+    attributes.put(UserAgentAttributes.USER_AGENT_ORIGINAL, userAgent(request));
   }
 
   @Override
@@ -97,7 +96,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     internalNetworkExtractor.onEnd(attributes, request, response);
 
-    internalSet(attributes, HttpAttributes.HTTP_ROUTE, httpRouteGetter.apply(context));
+    attributes.put(HttpAttributes.HTTP_ROUTE, httpRouteGetter.apply(context));
   }
 
   /**
