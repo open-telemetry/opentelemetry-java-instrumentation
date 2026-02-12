@@ -22,7 +22,7 @@ public final class JdbcTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private boolean dataSourceInstrumenterEnabled = false;
   private boolean statementInstrumenterEnabled = true;
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
@@ -51,9 +51,18 @@ public final class JdbcTelemetryBuilder {
 
   /** Configures whether JDBC Statements are sanitized. Enabled by default. */
   @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    this.statementSanitizationEnabled = enabled;
+  public JdbcTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
+    this.querySanitizationEnabled = enabled;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
+    return setQuerySanitizationEnabled(enabled);
   }
 
   /** Configures whether spans are created for JDBC Transactions. Disabled by default. */
@@ -85,7 +94,7 @@ public final class JdbcTelemetryBuilder {
         JdbcInstrumenterFactory.createStatementInstrumenter(
             openTelemetry,
             statementInstrumenterEnabled,
-            statementSanitizationEnabled,
+            querySanitizationEnabled,
             captureQueryParameters);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(

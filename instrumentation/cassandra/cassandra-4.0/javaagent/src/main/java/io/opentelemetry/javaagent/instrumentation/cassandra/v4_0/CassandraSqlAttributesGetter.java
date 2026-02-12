@@ -22,10 +22,9 @@ final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo>,
         ExtractQuerySummaryMarker {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(CassandraRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.CASSANDRA;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
   }
 
   @Override

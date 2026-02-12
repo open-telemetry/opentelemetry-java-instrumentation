@@ -38,14 +38,14 @@ public abstract class DbRequest {
   }
 
   @Nullable
-  public static DbRequest create(Statement statement, String dbStatementString) {
-    return create(statement, dbStatementString, null, emptyMap(), false);
+  public static DbRequest create(Statement statement, String dbQueryString) {
+    return create(statement, dbQueryString, null, emptyMap(), false);
   }
 
   @Nullable
   public static DbRequest create(
       Statement statement,
-      String dbStatementString,
+      String dbQueryString,
       Long batchSize,
       Map<String, String> preparedStatementParameters,
       boolean parameterizedQuery) {
@@ -56,7 +56,7 @@ public abstract class DbRequest {
 
     return create(
         extractDbInfo(connection),
-        dbStatementString,
+        dbQueryString,
         batchSize,
         preparedStatementParameters,
         parameterizedQuery);

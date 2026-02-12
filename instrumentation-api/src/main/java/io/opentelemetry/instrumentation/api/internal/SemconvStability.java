@@ -27,6 +27,9 @@ public final class SemconvStability {
   private static final boolean emitOldServicePeerSemconv;
   private static final boolean emitStableServicePeerSemconv;
 
+  private static final boolean emitOldRpcSemconv;
+  private static final boolean emitStableRpcSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
@@ -36,6 +39,9 @@ public final class SemconvStability {
 
     boolean oldServicePeer = true;
     boolean stableServicePeer = false;
+
+    boolean oldRpc = true;
+    boolean stableRpc = false;
 
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
@@ -73,6 +79,15 @@ public final class SemconvStability {
         oldServicePeer = true;
         stableServicePeer = true;
       }
+
+      if (values.contains("rpc")) {
+        oldRpc = false;
+        stableRpc = true;
+      }
+      if (values.contains("rpc/dup")) {
+        oldRpc = true;
+        stableRpc = true;
+      }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
@@ -83,6 +98,9 @@ public final class SemconvStability {
 
     emitOldServicePeerSemconv = oldServicePeer;
     emitStableServicePeerSemconv = stableServicePeer;
+
+    emitOldRpcSemconv = oldRpc;
+    emitStableRpcSemconv = stableRpc;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -132,6 +150,26 @@ public final class SemconvStability {
 
   public static boolean isEmitStableCodeSemconv() {
     return emitStableCodeSemconv;
+  }
+
+  public static boolean emitOldRpcSemconv() {
+    return emitOldRpcSemconv;
+  }
+
+  public static boolean emitStableRpcSemconv() {
+    return emitStableRpcSemconv;
+  }
+
+  private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
+
+  static {
+    rpcSystemNameMap.put("apache_dubbo", "dubbo");
+    rpcSystemNameMap.put("connect_rpc", "connectrpc");
+  }
+
+  public static String stableRpcSystemName(String oldRpcSystem) {
+    String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
+    return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
   }
 
   private SemconvStability() {}

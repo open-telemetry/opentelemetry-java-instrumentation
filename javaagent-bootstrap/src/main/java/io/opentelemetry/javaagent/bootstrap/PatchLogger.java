@@ -188,7 +188,7 @@ public class PatchLogger {
       return InternalLogger.Level.ERROR;
     } else if (level.intValue() >= Level.WARNING.intValue()) {
       return InternalLogger.Level.WARN;
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
+    } else if (level.intValue() >= Level.INFO.intValue()) {
       return InternalLogger.Level.INFO;
     } else if (level.intValue() >= Level.FINE.intValue()) {
       return InternalLogger.Level.DEBUG;

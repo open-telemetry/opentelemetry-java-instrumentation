@@ -18,6 +18,7 @@ import okhttp3.Response;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+@SuppressWarnings("OtelDeprecatedApiUsage") // SPDY_3 is deprecated but still used in okhttp 3.x
 public enum OkHttpAttributesGetter
     implements HttpClientAttributesGetter<Interceptor.Chain, Response> {
   INSTANCE;

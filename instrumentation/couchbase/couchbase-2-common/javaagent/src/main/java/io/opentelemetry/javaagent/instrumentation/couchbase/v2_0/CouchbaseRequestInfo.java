@@ -12,7 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,13 +46,12 @@ public abstract class CouchbaseRequestInfo {
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlStatementInfo sqlStatementInfo =
-        emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitize(query) : null;
-    SqlStatementInfo sqlStatementInfoWithSummary =
+    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitize(query) : null;
+    SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitizeWithSummary(query) : null;
-    String operation = sqlStatementInfo != null ? sqlStatementInfo.getOperationName() : null;
+    String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, sqlStatementInfo, sqlStatementInfoWithSummary, operation, false);
+        bucket, sqlQuery, sqlQueryWithSummary, operation, false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -74,10 +73,10 @@ public abstract class CouchbaseRequestInfo {
   public abstract String bucket();
 
   @Nullable
-  public abstract SqlStatementInfo getSqlStatementInfo();
+  public abstract SqlQuery getSqlQuery();
 
   @Nullable
-  public abstract SqlStatementInfo getSqlStatementInfoWithSummary();
+  public abstract SqlQuery getSqlQueryWithSummary();
 
   @Nullable
   public abstract String operation();

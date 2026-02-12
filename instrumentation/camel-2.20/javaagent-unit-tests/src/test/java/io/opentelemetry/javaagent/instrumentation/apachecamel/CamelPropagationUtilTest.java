@@ -11,9 +11,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.extension.trace.propagation.JaegerPropagator;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
@@ -31,7 +31,8 @@ class CamelPropagationUtilTest {
   @BeforeAll
   static void setUp() {
     GlobalOpenTelemetry.set(
-        OpenTelemetry.propagating(ContextPropagators.create(JaegerPropagator.getInstance())));
+        OpenTelemetry.propagating(
+            ContextPropagators.create(W3CTraceContextPropagator.getInstance())));
   }
 
   @Test
@@ -40,7 +41,7 @@ class CamelPropagationUtilTest {
     Endpoint endpoint = new HttpEndpoint("", new HttpComponent(), URI.create(""));
     Map<String, Object> exchangeHeaders =
         Collections.singletonMap(
-            "uber-trace-id", "1f7f8dab3f0043b1b9cf0a75caf57510:a13825abcb764bd3:0:1");
+            "traceparent", "00-1f7f8dab3f0043b1b9cf0a75caf57510-a13825abcb764bd3-01");
 
     // when
     Context parent = CamelPropagationUtil.extractParent(exchangeHeaders, endpoint);
@@ -56,7 +57,7 @@ class CamelPropagationUtilTest {
   void shouldNotFailExtractingNullHttpParentForHttpEndpoint() throws Exception {
     // given
     Endpoint endpoint = new HttpEndpoint("", new HttpComponent(), URI.create(""));
-    Map<String, Object> exchangeHeaders = Collections.singletonMap("uber-trace-id", null);
+    Map<String, Object> exchangeHeaders = Collections.singletonMap("traceparent", null);
 
     // when
     Context parent = CamelPropagationUtil.extractParent(exchangeHeaders, endpoint);

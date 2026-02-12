@@ -32,7 +32,7 @@ final class FailsafeTelemetryTest {
   void captureCircuitBreakerMetrics() {
     // given
     CircuitBreaker<Object> userCircuitBreaker =
-        dev.failsafe.CircuitBreaker.builder()
+        CircuitBreaker.builder()
             .handleResultIf(Objects::isNull)
             .withFailureThreshold(2)
             .withDelay(Duration.ZERO)
@@ -85,10 +85,7 @@ final class FailsafeTelemetryTest {
   void captureRetryPolicyMetrics() {
     // given
     RetryPolicy<Object> userRetryPolicy =
-        dev.failsafe.RetryPolicy.builder()
-            .handleResultIf(Objects::isNull)
-            .withMaxAttempts(3)
-            .build();
+        RetryPolicy.builder().handleResultIf(Objects::isNull).withMaxAttempts(3).build();
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicy<Object> instrumentedRetryPolicy =
         failsafeTelemetry.createRetryPolicy(userRetryPolicy, "testing");

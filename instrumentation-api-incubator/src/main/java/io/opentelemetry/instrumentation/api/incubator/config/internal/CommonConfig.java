@@ -9,7 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,14 +22,13 @@ import javax.annotation.Nullable;
  */
 public final class CommonConfig {
 
-  private final PeerServiceResolver peerServiceResolver;
   private final List<String> clientRequestHeaders;
   private final List<String> clientResponseHeaders;
   private final List<String> serverRequestHeaders;
   private final List<String> serverResponseHeaders;
   private final Set<String> knownHttpRequestMethods;
   private final EnduserConfig enduserConfig;
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
   private final boolean sqlCommenterEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
@@ -49,7 +47,6 @@ public final class CommonConfig {
         DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    peerServiceResolver = PeerServiceResolver.create(openTelemetry);
 
     clientRequestHeaders =
         generalConfig
@@ -77,7 +74,7 @@ public final class CommonConfig {
                 .get("http")
                 .getScalarList(
                     "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
-    statementSanitizationEnabled =
+    querySanitizationEnabled =
         commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true);
     sqlCommenterEnabled =
         commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled", false);
@@ -105,10 +102,6 @@ public final class CommonConfig {
         commonConfig.get("logging").getString("trace_flags", LoggingContextConstants.TRACE_FLAGS);
   }
 
-  public PeerServiceResolver getPeerServiceResolver() {
-    return peerServiceResolver;
-  }
-
   public List<String> getClientRequestHeaders() {
     return clientRequestHeaders;
   }
@@ -133,8 +126,8 @@ public final class CommonConfig {
     return enduserConfig;
   }
 
-  public boolean isStatementSanitizationEnabled() {
-    return statementSanitizationEnabled;
+  public boolean isQuerySanitizationEnabled() {
+    return querySanitizationEnabled;
   }
 
   public boolean isSqlCommenterEnabled() {

@@ -350,18 +350,18 @@ public final class RedisCommandSanitizer {
     SANITIZERS = unmodifiableMap(sanitizers);
   }
 
-  public static RedisCommandSanitizer create(boolean statementSanitizationEnabled) {
-    return new RedisCommandSanitizer(statementSanitizationEnabled);
+  public static RedisCommandSanitizer create(boolean querySanitizationEnabled) {
+    return new RedisCommandSanitizer(querySanitizationEnabled);
   }
 
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
 
-  private RedisCommandSanitizer(boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  private RedisCommandSanitizer(boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
   public String sanitize(String command, List<?> args) {
-    if (!statementSanitizationEnabled) {
+    if (!querySanitizationEnabled) {
       return KeepAllArgs.INSTANCE.sanitize(command, args);
     }
     return SANITIZERS

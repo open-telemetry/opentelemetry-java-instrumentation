@@ -19,12 +19,11 @@ final class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override

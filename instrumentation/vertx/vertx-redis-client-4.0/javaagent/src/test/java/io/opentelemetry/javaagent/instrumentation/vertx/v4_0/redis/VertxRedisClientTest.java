@@ -217,12 +217,12 @@ class VertxRedisClientTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
+  private static AttributeAssertion[] redisSpanAttributes(String operation, String queryText) {
     // not testing database/dup
     if (emitStableDatabaseSemconv()) {
       return new AttributeAssertion[] {
         equalTo(DB_SYSTEM_NAME, "redis"),
-        equalTo(DB_QUERY_TEXT, statement),
+        equalTo(DB_QUERY_TEXT, queryText),
         equalTo(DB_OPERATION_NAME, operation),
         equalTo(DB_NAMESPACE, "1"),
         equalTo(SERVER_ADDRESS, host),
@@ -234,7 +234,7 @@ class VertxRedisClientTest {
     } else {
       return new AttributeAssertion[] {
         equalTo(DB_SYSTEM, "redis"),
-        equalTo(DB_STATEMENT, statement),
+        equalTo(DB_STATEMENT, queryText),
         equalTo(DB_OPERATION, operation),
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
         equalTo(SERVER_ADDRESS, host),

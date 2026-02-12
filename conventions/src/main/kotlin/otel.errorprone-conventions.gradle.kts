@@ -132,6 +132,13 @@ tasks {
           // version. Disable rules that suggest using new language features.
           disable("StatementSwitchToExpressionSwitch")
           disable("PatternMatchingInstanceof")
+          // Disable our custom deprecation check since newer library versions
+          // may deprecate APIs that weren't deprecated before.
+          //
+          // Except for the custom-checks project to avoid "not a valid checker name" error.
+          if (!project.name.equals("custom-checks")) {
+            disable("OtelDeprecatedApiUsage")
+          }
         }
 
         if (name.contains("Jmh") || name.contains("Test")) {

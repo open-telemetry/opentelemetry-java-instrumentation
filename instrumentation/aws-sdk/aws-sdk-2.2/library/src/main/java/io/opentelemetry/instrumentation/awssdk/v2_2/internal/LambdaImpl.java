@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -44,8 +45,7 @@ final class LambdaImpl {
   private LambdaImpl() {}
 
   @Nullable
-  static SdkRequest modifyRequest(
-      SdkRequest request, io.opentelemetry.context.Context otelContext) {
+  static SdkRequest modifyRequest(SdkRequest request, Context otelContext) {
     if (isDirectLambdaInvocation(request)) {
       return modifyOrAddCustomContextHeader((InvokeRequest) request, otelContext);
     }
@@ -56,8 +56,7 @@ final class LambdaImpl {
     return request instanceof InvokeRequest;
   }
 
-  static SdkRequest modifyOrAddCustomContextHeader(
-      InvokeRequest request, io.opentelemetry.context.Context otelContext) {
+  static SdkRequest modifyOrAddCustomContextHeader(InvokeRequest request, Context otelContext) {
     InvokeRequest.Builder builder = request.toBuilder();
     // Unfortunately the value of this thing is a base64-encoded json with a character limit; also
     // therefore not comma-composable like many http headers

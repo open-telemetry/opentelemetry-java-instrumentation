@@ -29,7 +29,7 @@ import org.redisson.client.protocol.CommandsData;
 public abstract class RedissonRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
@@ -56,19 +56,19 @@ public abstract class RedissonRequest {
 
   @Nullable
   public String getQueryText() {
-    List<String> sanitizedStatements = sanitizeStatement();
-    switch (sanitizedStatements.size()) {
+    List<String> sanitizedQueries = sanitizeQuery();
+    switch (sanitizedQueries.size()) {
       case 0:
         return null;
       // optimize for the most common case
       case 1:
-        return sanitizedStatements.get(0);
+        return sanitizedQueries.get(0);
       default:
-        return String.join(";", sanitizedStatements);
+        return String.join(";", sanitizedQueries);
     }
   }
 
-  private List<String> sanitizeStatement() {
+  private List<String> sanitizeQuery() {
     Object command = getCommand();
     // get command
     if (command instanceof CommandsData) {

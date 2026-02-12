@@ -56,7 +56,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public Unit invoke(KtorClientTelemetryBuilder builder) {
       builder.setOpenTelemetry(GlobalOpenTelemetry.get());
       KtorBuilderUtil.clientBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
-      return kotlin.Unit.INSTANCE;
+      return Unit.INSTANCE;
     }
   }
 }

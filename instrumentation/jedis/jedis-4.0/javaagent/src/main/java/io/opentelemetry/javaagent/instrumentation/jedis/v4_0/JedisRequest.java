@@ -22,7 +22,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public abstract class JedisRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static JedisRequest create(ProtocolCommand command, List<byte[]> args) {
     return new AutoValue_JedisRequest(command, args);

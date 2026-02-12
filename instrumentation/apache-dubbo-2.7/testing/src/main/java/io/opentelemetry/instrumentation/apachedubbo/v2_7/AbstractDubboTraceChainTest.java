@@ -65,7 +65,7 @@ public abstract class AbstractDubboTraceChainTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasPeerService();
+  protected abstract boolean hasServicePeerName();
 
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>();
@@ -189,7 +189,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
@@ -226,7 +226,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
@@ -392,7 +392,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasPeerService() ? "test-peer-service" : null),
+                                    hasServicePeerName() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(

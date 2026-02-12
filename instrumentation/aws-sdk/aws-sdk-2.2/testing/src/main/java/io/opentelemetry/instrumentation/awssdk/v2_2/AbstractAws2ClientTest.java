@@ -67,6 +67,7 @@ import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.Ec2AsyncClient;
@@ -81,8 +82,11 @@ import software.amazon.awssdk.services.lambda.LambdaAsyncClientBuilder;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.LambdaClientBuilder;
 import software.amazon.awssdk.services.lambda.model.CreateEventSourceMappingRequest;
+import software.amazon.awssdk.services.lambda.model.CreateEventSourceMappingResponse;
 import software.amazon.awssdk.services.lambda.model.GetEventSourceMappingRequest;
+import software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse;
 import software.amazon.awssdk.services.lambda.model.GetFunctionRequest;
+import software.amazon.awssdk.services.lambda.model.GetFunctionResponse;
 import software.amazon.awssdk.services.rds.RdsAsyncClient;
 import software.amazon.awssdk.services.rds.RdsAsyncClientBuilder;
 import software.amazon.awssdk.services.rds.RdsClient;
@@ -107,7 +111,9 @@ import software.amazon.awssdk.services.sfn.SfnAsyncClientBuilder;
 import software.amazon.awssdk.services.sfn.SfnClient;
 import software.amazon.awssdk.services.sfn.SfnClientBuilder;
 import software.amazon.awssdk.services.sfn.model.DescribeActivityRequest;
+import software.amazon.awssdk.services.sfn.model.DescribeActivityResponse;
 import software.amazon.awssdk.services.sfn.model.DescribeStateMachineRequest;
+import software.amazon.awssdk.services.sfn.model.DescribeStateMachineResponse;
 import software.amazon.awssdk.services.sns.SnsAsyncClient;
 import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -867,10 +873,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         S3Client.builder()
             .overrideConfiguration(
                 createOverrideConfigurationBuilder()
-                    .retryPolicy(
-                        software.amazon.awssdk.core.retry.RetryPolicy.builder()
-                            .numRetries(1)
-                            .build())
+                    .retryPolicy(RetryPolicy.builder().numRetries(1).build())
                     .build())
             .endpointOverride(clientUri)
             .region(Region.AP_NORTHEAST_1)
@@ -991,15 +994,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     Object response = call.apply(client);
     assertThat(response)
         .satisfiesAnyOf(
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.sfn.model.DescribeActivityResponse.class),
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.sfn.model.DescribeStateMachineResponse
-                            .class));
+            r -> assertThat(r).isInstanceOf(DescribeActivityResponse.class),
+            r -> assertThat(r).isInstanceOf(DescribeStateMachineResponse.class));
     clientAssertions("Sfn", operation, method, response, requestId);
   }
 
@@ -1020,15 +1016,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     Object response = call.apply(wrapClient(SfnClient.class, SfnAsyncClient.class, client));
     assertThat(response)
         .satisfiesAnyOf(
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.sfn.model.DescribeActivityResponse.class),
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.sfn.model.DescribeStateMachineResponse
-                            .class));
+            r -> assertThat(r).isInstanceOf(DescribeActivityResponse.class),
+            r -> assertThat(r).isInstanceOf(DescribeStateMachineResponse.class));
     clientAssertions("Sfn", operation, method, response, requestId);
   }
 
@@ -1164,20 +1153,9 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     Object response = call.apply(client);
     assertThat(response)
         .satisfiesAnyOf(
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.lambda.model.GetFunctionResponse.class),
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.lambda.model
-                            .CreateEventSourceMappingResponse.class),
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse
-                            .class));
+            r -> assertThat(r).isInstanceOf(GetFunctionResponse.class),
+            r -> assertThat(r).isInstanceOf(CreateEventSourceMappingResponse.class),
+            r -> assertThat(r).isInstanceOf(GetEventSourceMappingResponse.class));
     clientAssertions("Lambda", operation, method, response, requestId);
   }
 
@@ -1202,20 +1180,9 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     Object response = call.apply(wrapClient(LambdaClient.class, LambdaAsyncClient.class, client));
     assertThat(response)
         .satisfiesAnyOf(
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.lambda.model.GetFunctionResponse.class),
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.lambda.model
-                            .CreateEventSourceMappingResponse.class),
-            r ->
-                assertThat(r)
-                    .isInstanceOf(
-                        software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse
-                            .class));
+            r -> assertThat(r).isInstanceOf(GetFunctionResponse.class),
+            r -> assertThat(r).isInstanceOf(CreateEventSourceMappingResponse.class),
+            r -> assertThat(r).isInstanceOf(GetEventSourceMappingResponse.class));
     clientAssertions("Lambda", operation, method, response, requestId);
   }
 }

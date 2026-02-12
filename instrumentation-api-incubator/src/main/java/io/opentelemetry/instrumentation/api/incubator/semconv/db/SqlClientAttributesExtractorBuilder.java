@@ -19,7 +19,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
-  boolean statementSanitizationEnabled = true;
+  boolean querySanitizationEnabled = true;
   boolean captureQueryParameters = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -43,10 +43,20 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * can potentially contain sensitive information will be masked. Enabled by default.
    */
   @CanIgnoreReturnValue
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setQuerySanitizationEnabled(
+      boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
+    return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
-    return this;
+    return setQuerySanitizationEnabled(statementSanitizationEnabled);
   }
 
   /**
@@ -70,6 +80,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, oldSemconvTableAttribute, statementSanitizationEnabled, captureQueryParameters);
+        getter, oldSemconvTableAttribute, querySanitizationEnabled, captureQueryParameters);
   }
 }

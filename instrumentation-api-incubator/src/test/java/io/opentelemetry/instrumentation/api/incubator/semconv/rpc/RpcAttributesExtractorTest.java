@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
 
-  enum TestGetter implements RpcAttributesGetter<Map<String, String>> {
+  enum TestGetter implements RpcAttributesGetter<Map<String, String>, Void> {
     INSTANCE;
 
     @Override
@@ -33,6 +33,7 @@ class RpcAttributesExtractorTest {
       return request.get("service");
     }
 
+    @Deprecated
     @Override
     public String getMethod(Map<String, String> request) {
       return request.get("method");
