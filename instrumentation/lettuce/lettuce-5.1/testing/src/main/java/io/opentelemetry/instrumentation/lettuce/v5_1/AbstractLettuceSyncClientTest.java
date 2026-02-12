@@ -528,11 +528,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
                               addExtraAttributes(
-                                  equalTo(
-                                      AttributeKey.stringKey("error"),
-                                      Boolean.getBoolean("testLatestDeps")
-                                          ? null
-                                          : "Connection disconnected"),
                                   equalTo(NETWORK_TYPE, "ipv4"),
                                   equalTo(NETWORK_PEER_ADDRESS, ip),
                                   equalTo(NETWORK_PEER_PORT, containerConnection.port),

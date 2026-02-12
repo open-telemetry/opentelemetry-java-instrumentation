@@ -16,7 +16,6 @@ import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -32,7 +31,7 @@ final class OpenTelemetryTracing implements Tracing {
   private final TracerProvider tracerProvider;
 
   OpenTelemetryTracing(
-      Instrumenter<LettuceRequest, Void> instrumenter,
+      Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
       RedisCommandSanitizer sanitizer,
       boolean encodingEventsEnabled) {
     this.tracerProvider =
@@ -74,7 +73,7 @@ final class OpenTelemetryTracing implements Tracing {
     private final Tracer openTelemetryTracer;
 
     OpenTelemetryTracerProvider(
-        Instrumenter<LettuceRequest, Void> instrumenter,
+        Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
         RedisCommandSanitizer sanitizer,
         boolean encodingEventsEnabled) {
       openTelemetryTracer = new OpenTelemetryTracer(instrumenter, sanitizer, encodingEventsEnabled);
@@ -116,12 +115,12 @@ final class OpenTelemetryTracing implements Tracing {
 
   private static class OpenTelemetryTracer extends Tracer {
 
-    private final Instrumenter<LettuceRequest, Void> instrumenter;
+    private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
     private final RedisCommandSanitizer sanitizer;
     private final boolean encodingEventsEnabled;
 
     OpenTelemetryTracer(
-        Instrumenter<LettuceRequest, Void> instrumenter,
+        Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
         RedisCommandSanitizer sanitizer,
         boolean encodingEventsEnabled) {
       this.instrumenter = instrumenter;
@@ -156,17 +155,18 @@ final class OpenTelemetryTracing implements Tracing {
   private static class OpenTelemetrySpan extends Tracer.Span {
 
     private final Context parentContext;
-    private final Instrumenter<LettuceRequest, Void> instrumenter;
+    private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
     private final boolean encodingEventsEnabled;
     private final LettuceRequest request;
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
+    @Nullable private LettuceResponse response;
     @Nullable private Context context;
 
     OpenTelemetrySpan(
         Context parentContext,
-        Instrumenter<LettuceRequest, Void> instrumenter,
+        Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
         RedisCommandSanitizer sanitizer,
         boolean encodingEventsEnabled) {
       this.parentContext = parentContext;
@@ -179,11 +179,6 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     public synchronized Tracer.Span name(String name) {
       request.setCommand(name);
-
-      if (context != null) {
-        Span.fromContext(context).updateName(name);
-      }
-
       return this;
     }
 
@@ -205,38 +200,23 @@ final class OpenTelemetryTracing implements Tracing {
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       // Extract args BEFORE calling start() so db.query.text can include them
-      // Extract args BEFORE calling start() so db.statement can include them
       if (command.getArgs() != null) {
         request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
       }
 
       start();
 
-      Context currentContext = context;
-      if (currentContext == null) {
+      if (context == null) {
         return this;
       }
-
-      Span span = Span.fromContext(currentContext);
-      span.updateName(command.getType().toString());
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
         completeableCommand.onComplete(
             (o, throwable) -> {
-              if (throwable != null) {
-                span.recordException(throwable);
-              }
-
               CommandOutput<?, ?, ?> output = command.getOutput();
-              if (output != null) {
-                String errorMsg = output.getError();
-                if (errorMsg != null) {
-                  span.setStatus(StatusCode.ERROR);
-                }
-              }
-
-              finish();
+              String errorMsg = output != null ? output.getError() : null;
+              finishWithResponse(new LettuceResponse(errorMsg, throwable));
             });
       }
 
@@ -249,27 +229,17 @@ final class OpenTelemetryTracing implements Tracing {
     public synchronized Tracer.Span start() {
       if (instrumenter.shouldStart(parentContext, request)) {
         context = instrumenter.start(parentContext, request);
-        Span span = Span.fromContext(context);
-
-        // Update span name if command was set before start
-        if (request.getCommand() != null) {
-          span.updateName(request.getCommand());
-        }
 
         // Apply buffered events
         if (events != null) {
+          Span span = Span.fromContext(context);
           for (int i = 0; i < events.size(); i += 2) {
             span.addEvent((String) events.get(i), (Instant) events.get(i + 1));
           }
           events = null;
         }
 
-        // Apply buffered error
-        if (error != null) {
-          span.setStatus(StatusCode.ERROR);
-          span.recordException(error);
-          error = null;
-        }
+        // Buffered error (if any) will be passed to instrumenter.end() in finish()
       }
 
       return this;
@@ -313,9 +283,6 @@ final class OpenTelemetryTracing implements Tracing {
         }
         return this;
       }
-      if (context != null) {
-        Span.fromContext(context).setAttribute(key, value);
-      }
       return this;
     }
 
@@ -326,10 +293,19 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
+    private synchronized void finishWithResponse(LettuceResponse resp) {
+      this.response = resp;
+      finish();
+    }
+
     @Override
     public synchronized void finish() {
       if (context != null) {
-        instrumenter.end(context, request, null, error);
+        Throwable t = error;
+        if (t == null && response != null) {
+          t = response.getThrowable();
+        }
+        instrumenter.end(context, request, response, t);
       }
     }
   }

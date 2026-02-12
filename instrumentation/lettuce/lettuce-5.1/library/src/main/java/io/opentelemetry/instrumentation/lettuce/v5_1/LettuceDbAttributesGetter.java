@@ -9,11 +9,15 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class LettuceDbAttributesGetter implements DbClientAttributesGetter<LettuceRequest, Void> {
+final class LettuceDbAttributesGetter
+    implements DbClientAttributesGetter<LettuceRequest, LettuceResponse> {
+
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  private static final String REDIS = "redis";
 
   @Override
   public String getDbSystemName(LettuceRequest request) {
-    return "redis";
+    return REDIS;
   }
 
   @Nullable
@@ -58,7 +62,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<Lettuc
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      LettuceRequest request, @Nullable Void unused) {
+      LettuceRequest request, @Nullable LettuceResponse unused) {
     return request.getAddress();
   }
 }

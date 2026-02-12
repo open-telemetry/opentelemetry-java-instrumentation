@@ -27,12 +27,12 @@ public final class LettuceTelemetry {
     return new LettuceTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<LettuceRequest, Void> instrumenter;
+  private final Instrumenter<LettuceRequest, LettuceResponse> instrumenter;
   private final RedisCommandSanitizer sanitizer;
   private final boolean encodingEventsEnabled;
 
   LettuceTelemetry(
-      Instrumenter<LettuceRequest, Void> instrumenter,
+      Instrumenter<LettuceRequest, LettuceResponse> instrumenter,
       boolean querySanitizationEnabled,
       boolean encodingEventsEnabled) {
     this.instrumenter = instrumenter;

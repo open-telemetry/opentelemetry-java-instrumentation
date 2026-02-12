@@ -15,11 +15,11 @@ import javax.annotation.Nullable;
 final class LettuceRequest {
 
   private final RedisCommandSanitizer sanitizer;
-  @Nullable private volatile String command;
-  @Nullable private volatile List<String> argsList;
-  @Nullable private volatile String argsString;
-  @Nullable private volatile InetSocketAddress address;
-  @Nullable private volatile Long databaseIndex;
+  @Nullable private String command;
+  @Nullable private List<String> argsList;
+  @Nullable private String argsString;
+  @Nullable private InetSocketAddress address;
+  @Nullable private Long databaseIndex;
 
   LettuceRequest(RedisCommandSanitizer sanitizer) {
     this.sanitizer = sanitizer;
