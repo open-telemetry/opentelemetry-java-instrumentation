@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.25.0 (2026-02-12)
+
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Make Netty 4.1 library public API self-contained
