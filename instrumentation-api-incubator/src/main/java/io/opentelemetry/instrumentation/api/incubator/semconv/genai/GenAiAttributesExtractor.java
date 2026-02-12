@@ -74,13 +74,10 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_PROVIDER_NAME, getter.getSystem(request));
     attributes.put(GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
     attributes.put(GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
-    attributes.put(
-        GEN_AI_REQUEST_ENCODING_FORMATS, getter.getRequestEncodingFormats(request));
-    attributes.put(
-        GEN_AI_REQUEST_FREQUENCY_PENALTY, getter.getRequestFrequencyPenalty(request));
+    attributes.put(GEN_AI_REQUEST_ENCODING_FORMATS, getter.getRequestEncodingFormats(request));
+    attributes.put(GEN_AI_REQUEST_FREQUENCY_PENALTY, getter.getRequestFrequencyPenalty(request));
     attributes.put(GEN_AI_REQUEST_MAX_TOKENS, getter.getRequestMaxTokens(request));
-    attributes.put(
-        GEN_AI_REQUEST_PRESENCE_PENALTY, getter.getRequestPresencePenalty(request));
+    attributes.put(GEN_AI_REQUEST_PRESENCE_PENALTY, getter.getRequestPresencePenalty(request));
     attributes.put(GEN_AI_REQUEST_STOP_SEQUENCES, getter.getRequestStopSequences(request));
     attributes.put(GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
     attributes.put(GEN_AI_REQUEST_TOP_K, getter.getRequestTopK(request));
@@ -100,9 +97,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     }
     attributes.put(GEN_AI_RESPONSE_ID, getter.getResponseId(request, response));
     attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
-    attributes.put(
-        GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
-    attributes.put(
-        GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
+    attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
+    attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
   }
 }

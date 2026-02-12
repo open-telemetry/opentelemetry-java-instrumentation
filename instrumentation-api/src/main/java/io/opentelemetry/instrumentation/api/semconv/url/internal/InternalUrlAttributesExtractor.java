@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.url.internal;
 
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter;
 import io.opentelemetry.semconv.UrlAttributes;

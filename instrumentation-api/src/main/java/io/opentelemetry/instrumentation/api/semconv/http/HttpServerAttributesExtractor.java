@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;

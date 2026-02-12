@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -37,8 +36,7 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
           NetworkAttributes.NETWORK_TRANSPORT,
           lowercase(getter.getNetworkTransport(request, response)));
       attributes.put(
-          NetworkAttributes.NETWORK_TYPE,
-          lowercase(getter.getNetworkType(request, response)));
+          NetworkAttributes.NETWORK_TYPE, lowercase(getter.getNetworkType(request, response)));
       attributes.put(
           NetworkAttributes.NETWORK_PROTOCOL_NAME,
           lowercase(getter.getNetworkProtocolName(request, response)));

@@ -53,8 +53,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     }
 
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
-    attributes.put(
-        AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
+    attributes.put(AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
   }
 
   private static String getOperationName(Object request) {

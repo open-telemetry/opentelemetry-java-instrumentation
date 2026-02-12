@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.ServerAttributes;
 

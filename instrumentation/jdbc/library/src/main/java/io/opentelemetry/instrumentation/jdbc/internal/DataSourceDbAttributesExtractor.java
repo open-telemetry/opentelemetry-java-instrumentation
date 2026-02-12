@@ -43,8 +43,7 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
     }
     if (SemconvStability.emitStableDatabaseSemconv()) {
       attributes.put(DB_NAMESPACE, getName(dbInfo));
-      attributes.put(
-          DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
+      attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       attributes.put(DB_USER, dbInfo.getUser());

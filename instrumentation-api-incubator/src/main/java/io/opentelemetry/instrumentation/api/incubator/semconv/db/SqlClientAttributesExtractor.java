@@ -92,8 +92,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryText);
         String operationName = sanitizedQuery.getOperationName();
         attributes.put(
-            DB_STATEMENT,
-            querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
+            DB_STATEMENT, querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
         attributes.put(DB_OPERATION, operationName);
         attributes.put(oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
       }
@@ -112,16 +111,14 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
                 ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
                 : SqlQuerySanitizerUtil.sanitize(rawQueryText);
         attributes.put(
-            DB_QUERY_TEXT,
-            shouldSanitize ? sanitizedQuery.getQueryText() : rawQueryText);
+            DB_QUERY_TEXT, shouldSanitize ? sanitizedQuery.getQueryText() : rawQueryText);
         String querySummary = sanitizedQuery.getQuerySummary();
         attributes.put(
             DB_QUERY_SUMMARY,
             isBatch && querySummary != null ? "BATCH " + querySummary : querySummary);
         if (!(getter instanceof ExtractQuerySummaryMarker)) {
           String operationName = sanitizedQuery.getOperationName();
-          attributes.put(
-              DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
+          attributes.put(DB_OPERATION_NAME, isBatch ? "BATCH " + operationName : operationName);
         }
         attributes.put(DB_COLLECTION_NAME, sanitizedQuery.getCollectionName());
         attributes.put(DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());

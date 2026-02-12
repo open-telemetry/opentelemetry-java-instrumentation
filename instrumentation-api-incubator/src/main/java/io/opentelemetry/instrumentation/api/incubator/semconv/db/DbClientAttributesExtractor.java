@@ -95,8 +95,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
       attributes.put(
-          DB_SYSTEM_NAME,
-          SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
+          DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
       attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
       attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
@@ -148,8 +147,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(ERROR_TYPE, error.getClass().getName());
       }
       if (error != null || response != null) {
-        attributes.put(
-            DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
+        attributes.put(DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
       }
     }
   }
