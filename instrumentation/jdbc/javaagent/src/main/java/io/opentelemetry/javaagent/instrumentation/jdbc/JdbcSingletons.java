@@ -37,7 +37,7 @@ public final class JdbcSingletons {
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
-    AttributesExtractor<DbRequest, Void> peerServiceExtractor =
+    AttributesExtractor<DbRequest, Void> servicePeerExtractor =
         ServicePeerAttributesExtractor.create(
             JdbcAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
 
@@ -48,7 +48,7 @@ public final class JdbcSingletons {
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
-            Collections.singletonList(peerServiceExtractor),
+            Collections.singletonList(servicePeerExtractor),
             true,
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("statement_sanitizer")
@@ -58,7 +58,7 @@ public final class JdbcSingletons {
     TRANSACTION_INSTRUMENTER =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
-            Collections.singletonList(peerServiceExtractor),
+            Collections.singletonList(servicePeerExtractor),
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("transaction/development")
                 .getBoolean("enabled", false));
