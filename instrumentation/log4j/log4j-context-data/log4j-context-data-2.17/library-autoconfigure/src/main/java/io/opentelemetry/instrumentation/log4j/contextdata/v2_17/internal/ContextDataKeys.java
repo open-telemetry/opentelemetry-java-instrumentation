@@ -27,6 +27,7 @@ public final class ContextDataKeys {
     this.traceFlags = traceFlags;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   public static ContextDataKeys create(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties logging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("logging");

@@ -204,6 +204,7 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+      // Extract args BEFORE calling start() so db.query.text can include them
       // Extract args BEFORE calling start() so db.statement can include them
       if (command.getArgs() != null) {
         request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));

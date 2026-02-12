@@ -40,7 +40,7 @@ class Netty41ClientTest extends AbstractNetty41ClientTest {
   @Override
   protected void configureChannel(Channel channel) {
     // Current context must be propagated to the channel
-    NettyClientTelemetry.setChannelContext(channel, Context.current());
+    NettyClientTelemetry.setParentContext(channel, Context.current());
   }
 
   @Override

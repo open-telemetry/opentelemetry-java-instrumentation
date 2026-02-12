@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
@@ -175,32 +176,46 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
-        SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
         return computeSpanName(
             namespace,
-            sanitizedStatement.getOperationName(),
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            sanitizedQuery.getOperationName(),
+            sanitizedQuery.getCollectionName(),
+            sanitizedQuery.getStoredProcedureName());
       }
 
       if (rawQueryTexts.size() == 1) {
-        SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
-        String operationName = sanitizedStatement.getOperationName();
-        if (isBatch(request)) {
+        String rawQueryText = rawQueryTexts.iterator().next();
+        SqlQuery sanitizedQuery =
+            getter instanceof ExtractQuerySummaryMarker
+                ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
+                : SqlQuerySanitizerUtil.sanitize(rawQueryText);
+        boolean batch = isBatch(request);
+        String querySummary = sanitizedQuery.getQuerySummary();
+        if (querySummary != null) {
+          return batch ? "BATCH " + querySummary : querySummary;
+        }
+        String operationName = sanitizedQuery.getOperationName();
+        if (batch) {
           operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
         }
         return computeSpanNameStable(
             getter,
             request,
             operationName,
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            sanitizedQuery.getCollectionName(),
+            sanitizedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
+      MultiQuery multiQuery =
+          getter instanceof ExtractQuerySummaryMarker
+              ? MultiQuery.analyzeWithSummary(rawQueryTexts, false)
+              : MultiQuery.analyze(rawQueryTexts, false);
+      String querySummary = multiQuery.getQuerySummary();
+      if (querySummary != null) {
+        return querySummary;
+      }
       return computeSpanNameStable(
           getter,
           request,

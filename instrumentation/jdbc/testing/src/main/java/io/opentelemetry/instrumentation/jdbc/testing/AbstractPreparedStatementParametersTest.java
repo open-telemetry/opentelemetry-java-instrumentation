@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 import org.apache.derby.jdbc.EmbeddedDriver;
+import org.h2.Driver;
 import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -82,11 +84,11 @@ public abstract class AbstractPreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -628,8 +630,15 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : "SELECT"),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : table),
+                                equalTo(
+                                    DbIncubatingAttributes.DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? spanName : null),
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
                                     expectedParameterValue))));

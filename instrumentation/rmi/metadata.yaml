@@ -1,0 +1,8 @@
+description: >
+  This instrumentation enables RPC client spans and RPC server spans for Java RMI
+  (Remote Method Invocation).
+display_name: RMI (Remote Method Invocation)
+semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_SERVER_SPANS
+library_link: https://docs.oracle.com/en/java/javase/17/docs/api/java.rmi/java/rmi/package-summary.html

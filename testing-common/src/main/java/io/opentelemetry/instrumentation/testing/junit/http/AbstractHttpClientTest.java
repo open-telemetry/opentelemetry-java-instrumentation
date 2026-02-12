@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -31,7 +32,6 @@ import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
@@ -1062,6 +1062,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
@@ -1073,16 +1074,16 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              // Check for peer.service when running with javaagent instrumentation
+              // Check for service.peer.name when running with javaagent instrumentation
               String distroName =
                   span.actual()
                       .getResource()
                       .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
               if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
-                if (expectedPeerService != null) {
+                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
+                if (expectedServicePeerName != null) {
                   assertThat(attrs)
-                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
+                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
                 }
               }
 

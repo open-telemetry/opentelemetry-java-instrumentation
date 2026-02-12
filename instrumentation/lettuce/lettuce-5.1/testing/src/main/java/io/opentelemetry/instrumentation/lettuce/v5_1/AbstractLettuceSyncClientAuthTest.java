@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
@@ -55,7 +56,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
   @Test
   void testAuthCommand() throws Exception {
     Class<?> commandsClass = RedisCommands.class;
-    java.lang.reflect.Method authMethod;
+    Method authMethod;
     // the auth() argument type changed between 5.x -> 6.x
     try {
       authMethod = commandsClass.getMethod("auth", String.class);

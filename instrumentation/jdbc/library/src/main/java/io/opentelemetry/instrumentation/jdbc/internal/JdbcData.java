@@ -138,18 +138,18 @@ public final class JdbcData {
    * any time.
    */
   public static final class StatementBatchInfo {
-    private final List<String> statements = new ArrayList<>();
+    private final List<String> queryTexts = new ArrayList<>();
 
     void add(String sql) {
-      statements.add(sql);
+      queryTexts.add(sql);
     }
 
-    public Collection<String> getStatements() {
-      return statements;
+    public Collection<String> getQueryTexts() {
+      return queryTexts;
     }
 
     public long getBatchSize() {
-      return statements.size();
+      return queryTexts.size();
     }
   }
 

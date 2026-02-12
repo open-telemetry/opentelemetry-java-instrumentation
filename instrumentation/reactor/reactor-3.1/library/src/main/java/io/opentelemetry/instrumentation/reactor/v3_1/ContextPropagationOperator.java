@@ -44,6 +44,7 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.context.ContextView;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
 public final class ContextPropagationOperator {
@@ -145,7 +146,7 @@ public final class ContextPropagationOperator {
    */
   @NoMuzzle
   public static Context getOpenTelemetryContextFromContextView(
-      reactor.util.context.ContextView contextView, Context defaultTraceContext) {
+      ContextView contextView, Context defaultTraceContext) {
     return contextView.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 

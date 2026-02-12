@@ -33,10 +33,10 @@ public final class LettuceTelemetry {
 
   LettuceTelemetry(
       Instrumenter<LettuceRequest, Void> instrumenter,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean encodingEventsEnabled) {
     this.instrumenter = instrumenter;
-    this.sanitizer = RedisCommandSanitizer.create(statementSanitizationEnabled);
+    this.sanitizer = RedisCommandSanitizer.create(querySanitizationEnabled);
     this.encodingEventsEnabled = encodingEventsEnabled;
   }
 

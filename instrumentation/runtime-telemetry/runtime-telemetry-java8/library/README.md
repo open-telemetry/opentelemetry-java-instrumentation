@@ -29,16 +29,56 @@ runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-runtime-telemetry-ja
 
 ### Usage
 
-Register observers for the desired runtime metrics:
+Register JVM runtime metrics:
 
 ```java
 OpenTelemetry openTelemetry = // OpenTelemetry instance configured elsewhere
 
-Classes.registerObservers(openTelemetry);
-Cpu.registerObservers(openTelemetry);
-MemoryPools.registerObservers(openTelemetry);
-Threads.registerObservers(openTelemetry);
-GarbageCollector.registerObservers(openTelemetry);
+RuntimeMetrics runtimeMetrics = RuntimeMetrics.create(openTelemetry);
+
+// When done, close to stop metric collection
+runtimeMetrics.close();
+```
+
+To select specific metrics, configure [metric views](https://opentelemetry.io/docs/languages/java/sdk/#views)
+on the SDK to filter or customize which metrics are exported.
+
+For example, using [declarative configuration](https://github.com/open-telemetry/opentelemetry-java-examples/tree/main/declarative-configuration):
+
+```yaml
+meter_provider:
+  views:
+    # Drop jvm.memory.committed metric
+    - selector:
+        instrument_name: jvm.memory.committed
+      stream:
+        aggregation:
+          drop:
+    # Only retain jvm.memory.type attribute on jvm.memory.used
+    - selector:
+        instrument_name: jvm.memory.used
+      stream:
+        attribute_keys:
+          included:
+            - jvm.memory.type
+```
+
+To retain only `jvm.memory.used` and drop all other JVM runtime metrics:
+
+```yaml
+meter_provider:
+  views:
+    # Drop all metrics from this instrumentation scope
+    - selector:
+        meter_name: io.opentelemetry.runtime-telemetry-java8
+      stream:
+        aggregation:
+          drop:
+    # Keep jvm.memory.used (views are additive, this creates a second stream)
+    - selector:
+        meter_name: io.opentelemetry.runtime-telemetry-java8
+        instrument_name: jvm.memory.used
+      stream: {}
 ```
 
 ## Garbage Collector Dependent Metrics

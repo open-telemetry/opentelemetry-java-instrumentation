@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.File;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Component;
 import springrmi.app.SpringRmiGreeter;
 import springrmi.app.SpringRmiGreeterImpl;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SpringRmiTest {
 
   @RegisterExtension
@@ -92,7 +94,7 @@ class SpringRmiTest {
 
     Map<String, Object> map = new HashMap<>();
     map.put(EJBContainer.APP_NAME, "test");
-    map.put(EJBContainer.MODULES, new java.io.File("build/classes/java/test"));
+    map.put(EJBContainer.MODULES, new File("build/classes/java/test"));
     ejbContainer = EJBContainer.createEJBContainer(map);
 
     Map<String, Object> props = new HashMap<>();
