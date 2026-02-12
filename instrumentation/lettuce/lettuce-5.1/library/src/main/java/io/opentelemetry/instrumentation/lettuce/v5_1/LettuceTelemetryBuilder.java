@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -67,6 +68,7 @@ public final class LettuceTelemetryBuilder {
    */
   public LettuceTelemetry build() {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    LettuceServerAttributesGetter serverAttributesGetter = new LettuceServerAttributesGetter();
 
     Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
         Instrumenter.<LettuceRequest, LettuceResponse>builder(
@@ -74,6 +76,7 @@ public final class LettuceTelemetryBuilder {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(serverAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, request, response, error) -> {
