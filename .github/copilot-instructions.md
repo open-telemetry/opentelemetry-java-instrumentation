@@ -21,6 +21,10 @@ val testExperimental by registering(Test::class) {
 
 * Always import classes when possible (i.e. don't use fully qualified class names in code).
 
+## Code formatting
+
+**IMPORTANT**: Always run `./gradlew spotlessApply` as the very last step before completing any task to ensure all code is properly formatted according to the project's style guidelines.
+
 ## Gradle CLI
 
 Never use the `--rerun-tasks` flag unless explicitly asked to use this option.
