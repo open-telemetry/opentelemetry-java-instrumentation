@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -35,18 +34,18 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
       Context parentContext,
       ExecutionAttributes executionAttributes) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      AttributesExtractorUtil.attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
+      attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      AttributesExtractorUtil.attributes.put(DB_SYSTEM, DYNAMODB);
+      attributes.put(DB_SYSTEM, DYNAMODB);
     }
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
     if (operation != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        AttributesExtractorUtil.attributes.put(DB_OPERATION_NAME, operation);
+        attributes.put(DB_OPERATION_NAME, operation);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        AttributesExtractorUtil.attributes.put(DB_OPERATION, operation);
+        attributes.put(DB_OPERATION, operation);
       }
     }
   }

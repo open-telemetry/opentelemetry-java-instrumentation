@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
 import javax.annotation.Nullable;
 
 public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
@@ -24,7 +23,7 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     String destination = findMessageDestination(request.getOriginalRequest());
-    AttributesExtractorUtil.attributes.put(MESSAGING_DESTINATION_NAME, destination);
+    attributes.put(MESSAGING_DESTINATION_NAME, destination);
   }
 
   /*
