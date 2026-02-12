@@ -219,24 +219,22 @@ class SqlStatementSanitizerTest {
   }
 
   @Test
-  public void largeStatementCached() {
-    // test that short statement is cached
-    String shortStatement = "SELECT * FROM TABLE WHERE FIELD = 1234";
-    String sanitizedShort =
-        SqlStatementSanitizer.create(true).sanitize(shortStatement).getQueryText();
+  public void largeQueryCached() {
+    // test that short query is cached
+    String shortQuery = "SELECT * FROM TABLE WHERE FIELD = 1234";
+    String sanitizedShort = SqlStatementSanitizer.create(true).sanitize(shortQuery).getQueryText();
     assertThat(sanitizedShort).doesNotContain("1234");
-    assertThat(SqlStatementSanitizer.isCached(shortStatement)).isTrue();
+    assertThat(SqlStatementSanitizer.isCached(shortQuery)).isTrue();
 
-    // test that large statement is not cached
+    // test that large query is not cached
     StringBuffer s = new StringBuffer();
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-    String largeStatement = s.toString();
-    String sanitizedLarge =
-        SqlStatementSanitizer.create(true).sanitize(largeStatement).getQueryText();
+    String largeQuery = s.toString();
+    String sanitizedLarge = SqlStatementSanitizer.create(true).sanitize(largeQuery).getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
-    assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
+    assertThat(SqlStatementSanitizer.isCached(largeQuery)).isFalse();
   }
 
   @Test

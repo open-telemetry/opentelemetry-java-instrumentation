@@ -20,24 +20,23 @@ import org.junit.jupiter.api.Test;
 class MongoDbAttributesGetterTest {
 
   @Test
-  @DisplayName("should sanitize statements to json")
-  void shouldSanitizeStatementsToJson() {
+  @DisplayName("should sanitize queries to json")
+  void shouldSanitizeQueriesToJson() {
     MongoDbAttributesGetter extractor =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
-    assertThat(
-            sanitizeStatementAcrossVersions(extractor, new BsonDocument("cmd", new BsonInt32(1))))
+    assertThat(sanitizeQueryAcrossVersions(extractor, new BsonDocument("cmd", new BsonInt32(1))))
         .isEqualTo("{\"cmd\": \"?\"}");
 
     assertThat(
-            sanitizeStatementAcrossVersions(
+            sanitizeQueryAcrossVersions(
                 extractor,
                 new BsonDocument("cmd", new BsonInt32(1))
                     .append("sub", new BsonDocument("a", new BsonInt32(1)))))
         .isEqualTo("{\"cmd\": \"?\", \"sub\": {\"a\": \"?\"}}");
 
     assertThat(
-            sanitizeStatementAcrossVersions(
+            sanitizeQueryAcrossVersions(
                 extractor,
                 new BsonDocument("cmd", new BsonInt32(1))
                     .append("sub", new BsonArray(singletonList(new BsonInt32(1))))))
@@ -51,7 +50,7 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(
-            sanitizeStatementAcrossVersions(
+            sanitizeQueryAcrossVersions(
                 extractor,
                 new BsonDocument("cmd", new BsonString("c"))
                     .append("f", new BsonString("c"))
@@ -65,7 +64,7 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter extractor = new MongoDbAttributesGetter(true, 20);
 
     String normalized =
-        sanitizeStatementAcrossVersions(
+        sanitizeQueryAcrossVersions(
             extractor,
             new BsonDocument("cmd", new BsonString("c"))
                 .append("f1", new BsonString("c1"))
@@ -81,7 +80,7 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter extractor = new MongoDbAttributesGetter(true, 27);
 
     String normalized =
-        sanitizeStatementAcrossVersions(
+        sanitizeQueryAcrossVersions(
             extractor,
             new BsonDocument("cmd", new BsonString("c"))
                 .append("f1", new BsonArray(asList(new BsonString("c1"), new BsonString("c2"))))
@@ -92,8 +91,7 @@ class MongoDbAttributesGetterTest {
         .isIn("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
   }
 
-  static String sanitizeStatementAcrossVersions(
-      MongoDbAttributesGetter extractor, BsonDocument query) {
+  static String sanitizeQueryAcrossVersions(MongoDbAttributesGetter extractor, BsonDocument query) {
     return sanitizeAcrossVersions(extractor.sanitizeQuery(query));
   }
 
