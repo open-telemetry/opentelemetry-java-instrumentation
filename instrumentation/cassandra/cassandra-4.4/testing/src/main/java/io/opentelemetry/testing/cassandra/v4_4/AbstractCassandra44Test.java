@@ -50,7 +50,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
         .runWithSpan(
             "parent",
             () ->
-                Flux.from(session.executeReactive(parameter.statement))
+                Flux.from(session.executeReactive(parameter.queryText))
                     .doOnComplete(() -> testing().runWithSpan("child", () -> {}))
                     .blockLast());
 

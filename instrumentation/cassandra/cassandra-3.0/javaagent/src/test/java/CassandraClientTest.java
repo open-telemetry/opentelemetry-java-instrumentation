@@ -96,7 +96,7 @@ class CassandraClientTest {
   void syncTest(Parameter parameter) {
     Session session = cluster.connect(parameter.keyspace);
 
-    session.execute(parameter.statement);
+    session.execute(parameter.queryText);
 
     if (parameter.keyspace != null) {
       testing.waitAndAssertTraces(
@@ -186,7 +186,7 @@ class CassandraClientTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          ResultSetFuture future = session.executeAsync(parameter.statement);
+          ResultSetFuture future = session.executeAsync(parameter.queryText);
           future.addListener(
               () -> testing.runWithSpan("callbackListener", () -> callbackExecuted.set(true)),
               executor);
@@ -409,7 +409,7 @@ class CassandraClientTest {
 
   private static class Parameter {
     final String keyspace;
-    final String statement;
+    final String queryText;
     final String expectedQueryText;
     final String spanName;
     final String operation;
@@ -417,13 +417,13 @@ class CassandraClientTest {
 
     Parameter(
         String keyspace,
-        String statement,
+        String queryText,
         String expectedQueryText,
         String spanName,
         String operation,
         String table) {
       this.keyspace = keyspace;
-      this.statement = statement;
+      this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.operation = operation;

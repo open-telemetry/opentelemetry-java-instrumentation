@@ -117,7 +117,7 @@ public abstract class AbstractCassandraTest {
   void syncTest(Parameter parameter) {
     CqlSession session = getSession(parameter.keyspace);
 
-    session.execute(parameter.statement);
+    session.execute(parameter.queryText);
 
     testing()
         .waitAndAssertTraces(
@@ -174,7 +174,7 @@ public abstract class AbstractCassandraTest {
             "parent",
             () ->
                 session
-                    .executeAsync(parameter.statement)
+                    .executeAsync(parameter.queryText)
                     .toCompletableFuture()
                     .whenComplete((result, throwable) -> testing().runWithSpan("child", () -> {}))
                     .get());
@@ -339,7 +339,7 @@ public abstract class AbstractCassandraTest {
 
   protected static class Parameter {
     public final String keyspace;
-    public final String statement;
+    public final String queryText;
     public final String expectedQueryText;
     public final String spanName;
     public final String operation;
@@ -347,13 +347,13 @@ public abstract class AbstractCassandraTest {
 
     public Parameter(
         String keyspace,
-        String statement,
+        String queryText,
         String expectedQueryText,
         String spanName,
         String operation,
         String table) {
       this.keyspace = keyspace;
-      this.statement = statement;
+      this.queryText = queryText;
       this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.operation = operation;

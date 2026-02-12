@@ -19,7 +19,7 @@ public abstract class SpymemcachedRequest {
 
   public abstract String getQueryText();
 
-  public String dbOperationName() {
+  public String getOperationName() {
     String queryText = getQueryText();
     if (queryText.startsWith("async")) {
       queryText = queryText.substring("async".length());
