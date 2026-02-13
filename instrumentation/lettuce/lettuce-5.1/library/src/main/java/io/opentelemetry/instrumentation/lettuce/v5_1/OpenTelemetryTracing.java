@@ -238,8 +238,6 @@ final class OpenTelemetryTracing implements Tracing {
           }
           events = null;
         }
-
-        // Buffered error (if any) will be passed to instrumenter.end() in finish()
       }
 
       return this;

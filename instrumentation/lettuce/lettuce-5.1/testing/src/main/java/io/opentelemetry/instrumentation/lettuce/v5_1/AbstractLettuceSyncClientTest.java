@@ -420,7 +420,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
@@ -437,7 +438,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
@@ -455,7 +457,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
@@ -524,28 +527,38 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
-                      span.hasName("SHUTDOWN")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, containerConnection.port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")));
+                      span.hasName("SHUTDOWN").hasKind(SpanKind.CLIENT);
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event in addition to encode events
-                        span.hasException(new RedisException("Connection disconnected"))
+                        span.hasAttributesSatisfyingExactly(
+                                addExtraErrorAttributes(
+                                    "io.lettuce.core.RedisException",
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, containerConnection.port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")))
+                            .hasException(new RedisException("Connection disconnected"))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"),
                                 event -> event.hasName("exception"));
                       } else {
-                        span.satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
+                        span.hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, containerConnection.port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
                       }
                     }));
   }

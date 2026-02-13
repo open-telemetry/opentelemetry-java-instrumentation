@@ -6,13 +6,17 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.TestInstance;
@@ -81,6 +85,15 @@ public abstract class AbstractLettuceClientTest {
 
   protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
     return Arrays.asList(assertions);
+  }
+
+  protected static List<AttributeAssertion> addExtraErrorAttributes(
+      String errorType, AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      result.add(equalTo(ERROR_TYPE, errorType));
+    }
+    return result;
   }
 
   protected static void assertCommandEncodeEvents(SpanData span) {

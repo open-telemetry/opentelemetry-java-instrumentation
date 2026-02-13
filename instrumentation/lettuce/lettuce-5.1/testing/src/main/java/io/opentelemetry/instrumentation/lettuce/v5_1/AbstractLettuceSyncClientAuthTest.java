@@ -77,7 +77,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
@@ -94,7 +95,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
@@ -112,7 +114,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
