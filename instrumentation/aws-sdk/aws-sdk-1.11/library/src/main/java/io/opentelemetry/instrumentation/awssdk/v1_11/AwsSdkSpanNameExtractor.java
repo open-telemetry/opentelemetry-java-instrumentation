@@ -12,14 +12,28 @@ import java.util.concurrent.ConcurrentHashMap;
 class AwsSdkSpanNameExtractor implements SpanNameExtractor<Request<?>> {
 
   private static final AwsSdkRpcAttributesGetter rpcAttributes = AwsSdkRpcAttributesGetter.INSTANCE;
+  private static final ClassValue<String> OPERATION_NAME =
+      new ClassValue<String>() {
+        @Override
+        protected String computeValue(Class<?> type) {
+          String ret = type.getSimpleName();
+          if (!ret.endsWith("Request")) {
+            // Best effort check one parent to support implicit subclasses
+            ret = type.getSuperclass().getSimpleName();
+          }
+          if (ret.endsWith("Request")) {
+            ret = ret.substring(0, ret.length() - 7); // remove 'Request'
+          }
+          return ret;
+        }
+      };
   private final NamesCache namesCache = new NamesCache();
 
-  @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(Request<?> request) {
     return qualifiedOperation(
         rpcAttributes.getService(request),
-        rpcAttributes.getMethod(request),
+        OPERATION_NAME.get(request.getOriginalRequest().getClass()),
         request.getOriginalRequest().getClass());
   }
 

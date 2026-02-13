@@ -12,22 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>, Response<?>> {
   INSTANCE;
 
-  private static final ClassValue<String> OPERATION_NAME =
-      new ClassValue<String>() {
-        @Override
-        protected String computeValue(Class<?> type) {
-          String ret = type.getSimpleName();
-          if (!ret.endsWith("Request")) {
-            // Best effort check one parent to support implicit subclasses
-            ret = type.getSuperclass().getSimpleName();
-          }
-          if (ret.endsWith("Request")) {
-            ret = ret.substring(0, ret.length() - 7); // remove 'Request'
-          }
-          return ret;
-        }
-      };
-
   @Override
   public String getSystem(Request<?> request) {
     return "aws-api";
@@ -36,11 +20,5 @@ enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>, Respon
   @Override
   public String getService(Request<?> request) {
     return request.getServiceName();
-  }
-
-  @Deprecated
-  @Override
-  public String getMethod(Request<?> request) {
-    return OPERATION_NAME.get(request.getOriginalRequest().getClass());
   }
 }

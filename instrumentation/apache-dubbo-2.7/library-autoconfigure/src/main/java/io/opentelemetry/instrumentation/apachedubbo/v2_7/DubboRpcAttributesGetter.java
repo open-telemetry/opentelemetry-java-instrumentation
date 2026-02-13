@@ -20,10 +20,4 @@ enum DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Resul
   public String getService(DubboRequest request) {
     return request.invocation().getInvoker().getInterface().getName();
   }
-
-  @Deprecated
-  @Override
-  public String getMethod(DubboRequest request) {
-    return request.invocation().getMethodName();
-  }
 }

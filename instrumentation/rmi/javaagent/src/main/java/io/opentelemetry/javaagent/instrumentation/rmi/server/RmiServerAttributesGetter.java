@@ -20,10 +20,4 @@ enum RmiServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod, Vo
   public String getService(ClassAndMethod classAndMethod) {
     return classAndMethod.declaringClass().getName();
   }
-
-  @Deprecated
-  @Override
-  public String getMethod(ClassAndMethod classAndMethod) {
-    return classAndMethod.methodName();
-  }
 }

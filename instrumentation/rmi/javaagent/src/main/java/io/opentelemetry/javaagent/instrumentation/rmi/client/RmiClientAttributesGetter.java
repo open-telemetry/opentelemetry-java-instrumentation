@@ -20,10 +20,4 @@ enum RmiClientAttributesGetter implements RpcAttributesGetter<Method, Void> {
   public String getService(Method method) {
     return method.getDeclaringClass().getName();
   }
-
-  @Deprecated
-  @Override
-  public String getMethod(Method method) {
-    return method.getName();
-  }
 }

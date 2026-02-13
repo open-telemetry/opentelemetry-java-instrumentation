@@ -25,7 +25,6 @@ final class RpcMetricsAdvice {
       asList(
           RpcCommonAttributesExtractor.RPC_SYSTEM,
           RpcCommonAttributesExtractor.RPC_SERVICE,
-          RpcCommonAttributesExtractor.RPC_METHOD,
           RPC_GRPC_STATUS_CODE,
           NetworkAttributes.NETWORK_TYPE,
           NetworkAttributes.NETWORK_TRANSPORT,

@@ -32,12 +32,6 @@ class RpcAttributesExtractorTest {
     public String getService(Map<String, String> request) {
       return request.get("service");
     }
-
-    @Deprecated
-    @Override
-    public String getMethod(Map<String, String> request) {
-      return request.get("method");
-    }
   }
 
   @Test
@@ -62,13 +56,11 @@ class RpcAttributesExtractorTest {
     assertThat(attributes.build())
         .containsOnly(
             entry(RpcIncubatingAttributes.RPC_SYSTEM, "test"),
-            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"),
-            entry(RpcIncubatingAttributes.RPC_METHOD, "Method"));
+            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"));
     extractor.onEnd(attributes, context, request, null, null);
     assertThat(attributes.build())
         .containsOnly(
             entry(RpcIncubatingAttributes.RPC_SYSTEM, "test"),
-            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"),
-            entry(RpcIncubatingAttributes.RPC_METHOD, "Method"));
+            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"));
   }
 }

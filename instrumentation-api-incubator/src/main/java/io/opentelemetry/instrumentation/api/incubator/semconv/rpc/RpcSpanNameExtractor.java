@@ -25,14 +25,16 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
     this.getter = getter;
   }
 
-  @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(REQUEST request) {
+    String rpcMethod = getter.getRpcMethod(request);
+    if (rpcMethod != null) {
+      return rpcMethod;
+    }
     String service = getter.getService(request);
-    String method = getter.getMethod(request);
-    if (service == null || method == null) {
+    if (service == null) {
       return "RPC request";
     }
-    return service + '/' + method;
+    return service;
   }
 }

@@ -19,34 +19,29 @@ class RpcSpanNameExtractorTest {
 
   @Mock RpcAttributesGetter<RpcRequest, Void> getter;
 
-  @SuppressWarnings("deprecation") // testing deprecated method
   @Test
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.getService(request)).thenReturn("my.Service");
-    when(getter.getMethod(request)).thenReturn("Method");
+    when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated method
   @Test
-  void serviceNull() {
-    RpcRequest request = new RpcRequest();
-
-    when(getter.getMethod(request)).thenReturn("Method");
-
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("RPC request");
-  }
-
-  @Test
-  void methodNull() {
+  void serviceOnly() {
     RpcRequest request = new RpcRequest();
 
     when(getter.getService(request)).thenReturn("my.Service");
+
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    assertThat(extractor.extract(request)).isEqualTo("my.Service");
+  }
+
+  @Test
+  void serviceNull() {
+    RpcRequest request = new RpcRequest();
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");

@@ -33,18 +33,6 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status>
     return fullMethodName.substring(0, slashIndex);
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(slashIndex + 1);
-  }
-
   @Override
   @Nullable
   public Long getRequestSize(GrpcRequest request) {
