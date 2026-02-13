@@ -200,7 +200,6 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, Object>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, Object>, Void>builder(new TestAttributesGetter())
-            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
             .build();
 
     // when
@@ -213,7 +212,7 @@ class SqlClientAttributesExtractorTest {
           .containsOnly(
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"),
+              entry(DbIncubatingAttributes.DB_SQL_TABLE, "table"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
               entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT table"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
@@ -221,7 +220,7 @@ class SqlClientAttributesExtractorTest {
           .containsOnly(
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"));
+              entry(DbIncubatingAttributes.DB_SQL_TABLE, "table"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(

@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.MongoException;
-import com.mongodb.ServerAddress;
-import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.lang.reflect.InvocationTargetException;

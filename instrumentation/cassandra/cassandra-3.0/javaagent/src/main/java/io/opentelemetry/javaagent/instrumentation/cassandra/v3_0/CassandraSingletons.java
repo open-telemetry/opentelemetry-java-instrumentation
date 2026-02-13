@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public final class CassandraSingletons {
@@ -33,7 +32,6 @@ public final class CassandraSingletons {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
                     .setQuerySanitizationEnabled(
                         AgentCommonConfig.get().isQuerySanitizationEnabled())
                     .build())

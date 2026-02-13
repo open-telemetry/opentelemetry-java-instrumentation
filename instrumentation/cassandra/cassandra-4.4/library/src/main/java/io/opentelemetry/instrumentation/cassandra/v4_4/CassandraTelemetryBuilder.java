@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
@@ -19,9 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 public class CassandraTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.cassandra-4.4";
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_CASSANDRA_TABLE =
-      AttributeKey.stringKey("db.cassandra.table");
 
   private final OpenTelemetry openTelemetry;
 
@@ -60,7 +56,6 @@ public class CassandraTelemetryBuilder {
             openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
-                .setTableAttribute(DB_CASSANDRA_TABLE)
                 .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .build())
         .addAttributesExtractor(new CassandraAttributesExtractor())
