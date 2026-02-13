@@ -1,0 +1,17 @@
+Comparing source compatibility of opentelemetry-servlet-3.0-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) javax.servlet.Filter createFilter()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<javax.servlet.http.HttpServletRequest>>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder setSpanStatusExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor<javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse>>)

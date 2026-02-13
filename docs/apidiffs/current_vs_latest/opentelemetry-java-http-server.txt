@@ -1,0 +1,18 @@
+Comparing source compatibility of opentelemetry-java-http-server-2.25.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) void configure(com.sun.net.httpserver.HttpContext)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) com.sun.net.httpserver.Filter createFilter()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder addAttributesExtractor(io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<com.sun.net.httpserver.HttpExchange,com.sun.net.httpserver.HttpExchange>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder setKnownMethods(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder setSpanNameExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<com.sun.net.httpserver.HttpExchange>>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder setSpanStatusExtractorCustomizer(java.util.function.UnaryOperator<io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor<com.sun.net.httpserver.HttpExchange,com.sun.net.httpserver.HttpExchange>>)

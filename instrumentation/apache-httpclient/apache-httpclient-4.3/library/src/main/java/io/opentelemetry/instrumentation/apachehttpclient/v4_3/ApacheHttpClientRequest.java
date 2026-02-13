@@ -46,14 +46,6 @@ public final class ApacheHttpClientRequest {
     return delegate;
   }
 
-  /**
-   * @deprecated use {@link #getRequest()} instead.
-   */
-  @Deprecated
-  public HttpRequest getDelegate() {
-    return getRequest();
-  }
-
   List<String> getHeader(String name) {
     return headersToList(delegate.getHeaders(name));
   }
@@ -95,23 +87,13 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
   @Nullable
-  public String getServerAddress() {
+  String getServerAddress() {
     return uri == null ? null : uri.getHost();
   }
 
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
   @Nullable
-  public Integer getServerPort() {
+  Integer getServerPort() {
     return uri == null ? null : uri.getPort();
   }
 
@@ -143,13 +125,8 @@ public final class ApacheHttpClientRequest {
     }
   }
 
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
   @Nullable
-  public InetSocketAddress getNetworkPeerAddress() {
+  InetSocketAddress getNetworkPeerAddress() {
     if (target == null) {
       return null;
     }
