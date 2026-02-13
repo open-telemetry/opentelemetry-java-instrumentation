@@ -1,31 +1,24 @@
-# Style guideline
+# Style Guide
 
-We follow the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
+This project follows the
+[Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
 
 ## Code Formatting
 
 ### Auto-formatting
 
-The build will fail if the source code is not formatted according to the google java style.
+The build will fail if source code is not formatted according to Google Java
+Style.
 
-The main goal is to avoid extensive reformatting caused by different IDEs having different opinions
-about how things should be formatted by establishing a consistent standard.
-
-Running
+Run the following command to reformat all files:
 
 ```bash
 ./gradlew spotlessApply
 ```
 
-reformats all the files that need reformatting.
-
-Running
-
-```bash
-./gradlew spotlessCheck
-```
-
-runs the formatting verification task only.
+For IntelliJ users, an `.editorconfig` file is provided that IntelliJ will automatically use to
+adjust code formatting settings. However, it does not support all required rules, so you may still
+need to run `./gradlew spotlessApply` periodically.
 
 #### Pre-commit hook
 
@@ -36,13 +29,6 @@ It can be activated with this command:
 ```bash
 git config core.hooksPath .githooks
 ```
-
-#### Editorconfig
-
-As additional convenience for IntelliJ users, we provide an `.editorconfig`
-file. IntelliJ will automatically use it to adjust its code formatting settings.
-It does not support all required rules, so you still have to run
-`spotlessApply` from time to time.
 
 ### Additional checks
 
@@ -90,9 +76,9 @@ Some of these are enforced by checkstyle rules:
 
 ## Java Language Conventions
 
-### Ordering of class contents
+### Class organization
 
-The following order is preferred:
+Prefer this order:
 
 - Static fields (final before non-final)
 - Instance fields (final before non-final)
@@ -100,12 +86,11 @@ The following order is preferred:
 - Methods
 - Nested classes
 
-If methods call each other, it's nice if the calling method is ordered (somewhere) above
-the method that it calls. For example, a private method would be ordered (somewhere) below
-the non-private methods that use it.
+**Method ordering**: Place calling methods above the methods they call. For example, place private
+methods below the non-private methods that use them.
 
-In static utility classes (where all members are static), the private constructor
-(used to prevent construction) should be ordered after methods instead of before methods.
+**Static utility classes**: Place the private constructor (used to prevent instantiation) after all
+methods.
 
 ### `final` keyword usage
 
@@ -141,8 +126,11 @@ plugins {
 
 ### `Optional` usage
 
-Following the reasoning from [Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12),
+Following the reasoning from
+[Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12),
 `java.util.Optional` usage is kept to a minimum.
+
+**Guidelines**:
 
 - `Optional` shouldn't appear in public API signatures
 - Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
