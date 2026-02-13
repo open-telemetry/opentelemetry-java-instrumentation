@@ -76,6 +76,20 @@ Some of these are enforced by checkstyle rules:
 
 ## Java Language Conventions
 
+### Visibility modifiers
+
+Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
+still allows the code to function correctly.
+
+### Internal packages
+
+Classes in `.internal` packages are not considered public API and may change without notice. These
+packages contain implementation details that should not be used by external consumers.
+
+- Use `.internal` packages for implementation classes that need to be public within the module but
+  should not be used externally
+- Try to avoid referencing `.internal` classes from other modules
+
 ### Class organization
 
 Prefer this order:
