@@ -44,21 +44,9 @@ class SqlClientAttributesExtractorTest {
       return read(map, "db.system");
     }
 
-    @Deprecated
-    @Override
-    public String getUser(Map<String, Object> map) {
-      return read(map, "db.user");
-    }
-
     @Override
     public String getDbNamespace(Map<String, Object> map) {
       return read(map, "db.namespace");
-    }
-
-    @Deprecated
-    @Override
-    public String getConnectionString(Map<String, Object> map) {
-      return read(map, "db.connection_string");
     }
 
     @Override
@@ -122,9 +110,7 @@ class SqlClientAttributesExtractorTest {
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
               entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
-              entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
-              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"),
@@ -135,9 +121,7 @@ class SqlClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-              entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
-              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"));

@@ -42,9 +42,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
-  private static final AttributeKey<String> DB_CONNECTION_STRING =
-      AttributeKey.stringKey("db.connection_string");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
@@ -109,9 +106,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_SYSTEM, getter.getDbSystemName(request));
-      internalSet(attributes, DB_USER, getter.getUser(request));
       internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
-      internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
     }
