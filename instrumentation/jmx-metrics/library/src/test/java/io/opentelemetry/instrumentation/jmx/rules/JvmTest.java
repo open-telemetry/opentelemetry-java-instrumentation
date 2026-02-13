@@ -175,7 +175,8 @@ class JvmTest extends TargetSystemTest {
                 "jvm.file_descriptor.limit",
                 metric ->
                     metric
-                        .hasDescription("Measure of max open file descriptors as reported by the JVM.")
+                        .hasDescription(
+                            "Measure of max open file descriptors as reported by the JVM.")
                         .hasUnit("{file_descriptor}")
                         .isUpDownCounter()
                         .hasDataPointsWithoutAttributes())
