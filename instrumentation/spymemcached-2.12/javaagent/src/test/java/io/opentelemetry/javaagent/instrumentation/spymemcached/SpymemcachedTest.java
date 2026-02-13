@@ -420,6 +420,8 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(
                                 stringKey("spymemcached.result"),
                                 EXPERIMENTAL_ATTRIBUTES_ENABLED ? "hit" : null))));
