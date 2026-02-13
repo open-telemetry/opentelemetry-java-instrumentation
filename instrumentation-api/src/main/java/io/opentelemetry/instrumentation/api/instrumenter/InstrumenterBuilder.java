@@ -22,7 +22,6 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
@@ -387,12 +386,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    @SuppressWarnings("deprecation") // using deprecated config property
-    String result =
-        commonConfig.getString(
-            "span_suppression_strategy/development",
-            ConfigPropertiesUtil.getString(
-                "otel.instrumentation.experimental.span-suppression-strategy", ""));
+    String result = commonConfig.getString("span_suppression_strategy/development", "");
     return result.isEmpty() ? null : result;
   }
 

@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import javax.sql.DataSource;
@@ -29,13 +28,9 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
-  @SuppressWarnings("deprecation") // using deprecated config property
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
-        .getBoolean(
-            "capture_query_parameters/development",
-            ConfigPropertiesUtil.getBoolean(
-                "otel.instrumentation.jdbc.experimental.capture-query-parameters", false));
+        .getBoolean("capture_query_parameters/development", false);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -45,15 +40,11 @@ public final class JdbcInstrumenterFactory {
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
-    @SuppressWarnings("deprecation") // using deprecated config property
     boolean querySanitizationEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
             .get("database")
             .get("statement_sanitizer")
-            .getBoolean(
-                "enabled",
-                ConfigPropertiesUtil.getBoolean(
-                    "otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+            .getBoolean("enabled", true);
     return createStatementInstrumenter(
         openTelemetry, emptyList(), true, querySanitizationEnabled, captureQueryParameters);
   }
@@ -101,14 +92,10 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
-    @SuppressWarnings("deprecation") // using deprecated config property
     boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
             .get("transaction/development")
-            .getBoolean(
-                "enabled",
-                ConfigPropertiesUtil.getBoolean(
-                    "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+            .getBoolean("enabled", false);
     return createTransactionInstrumenter(openTelemetry, enabled);
   }
 

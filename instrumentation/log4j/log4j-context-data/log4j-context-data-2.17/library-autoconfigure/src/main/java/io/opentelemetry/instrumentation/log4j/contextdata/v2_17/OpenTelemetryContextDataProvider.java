@@ -12,7 +12,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.Collections;
@@ -27,14 +26,10 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
 
-  @SuppressWarnings("deprecation") // using deprecated config property
   private static final boolean BAGGAGE_ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(
               GlobalOpenTelemetry.get(), "log4j_context_data")
-          .getBoolean(
-              "add_baggage",
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.log4j-context-data.add-baggage", false));
+          .getBoolean("add_baggage", false);
 
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
