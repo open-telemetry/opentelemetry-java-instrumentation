@@ -53,7 +53,7 @@ class LogbackAppenderInstaller {
   private static boolean isAppenderAddable(ApplicationEnvironmentPreparedEvent event, String name) {
     ConfigurableEnvironment environment = event.getEnvironment();
     return EarlyConfig.otelEnabled(environment)
-        && EarlyConfig.getEnabledInstrumentations(environment).isEnabled(name);
+        && EarlyConfig.isInstrumentationEnabled(environment, name, true);
   }
 
   private static void reInitializeOpenTelemetryAppender(

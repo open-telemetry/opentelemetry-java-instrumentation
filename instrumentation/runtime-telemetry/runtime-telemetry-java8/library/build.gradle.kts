@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":instrumentation-api-incubator"))
+  implementation(project(":instrumentation-api"))
 }

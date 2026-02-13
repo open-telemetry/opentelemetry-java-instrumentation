@@ -5,23 +5,29 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetricsBuilder;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class RuntimeMetricsConfigUtil {
+  private RuntimeMetricsConfigUtil() {}
 
-  @CanIgnoreReturnValue
-  public static RuntimeMetricsBuilder configure(
-      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry) {
+  @Nullable
+  public static RuntimeMetrics configure(
+      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry, boolean defaultEnabled) {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
+    if (!config.getBoolean("enabled", defaultEnabled)) {
+      // nothing is enabled
+      return null;
+    }
 
     if (config.getBoolean("emit_experimental_telemetry/development", false)) {
       builder.emitExperimentalTelemetry();
@@ -31,8 +37,6 @@ public final class RuntimeMetricsConfigUtil {
       builder.captureGcCause();
     }
 
-    return builder;
+    return builder.build();
   }
-
-  private RuntimeMetricsConfigUtil() {}
 }

@@ -9,8 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.RuntimeMetricsConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EnabledInstrumentations;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -50,18 +48,10 @@ public class Java8RuntimeMetricsAutoConfiguration {
   public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
     ConfigurableApplicationContext applicationContext = event.getApplicationContext();
     OpenTelemetry openTelemetry = applicationContext.getBean(OpenTelemetry.class);
-    EnabledInstrumentations enabledInstrumentations =
-        EarlyConfig.getEnabledInstrumentations(applicationContext.getEnvironment());
 
     logger.debug("Use runtime metrics instrumentation for Java 8");
-
-    if (!enabledInstrumentations.isEnabled("runtime-telemetry")) {
-      // nothing is enabled
-      return;
-    }
-
     this.closeable =
-        RuntimeMetricsConfigUtil.configure(RuntimeMetrics.builder(openTelemetry), openTelemetry)
-            .build();
+        RuntimeMetricsConfigUtil.configure(
+            RuntimeMetrics.builder(openTelemetry), openTelemetry, true);
   }
 }
