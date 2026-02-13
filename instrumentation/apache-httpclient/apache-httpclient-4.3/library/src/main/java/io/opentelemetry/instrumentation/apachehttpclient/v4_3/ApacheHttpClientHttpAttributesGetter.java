@@ -57,27 +57,18 @@ enum ApacheHttpClientHttpAttributesGetter
     return request.getProtocolVersion();
   }
 
-  // internal usage of deprecated methods - these will only be changed to package visibility, not
-  // removed, and these accesses will be fine since in same package
-  @SuppressWarnings("deprecation")
   @Override
   @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
     return request.getServerAddress();
   }
 
-  // internal usage of deprecated methods - these will only be changed to package visibility, not
-  // removed, and these accesses will be fine since in same package
-  @SuppressWarnings("deprecation")
   @Override
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
     return request.getServerPort();
   }
 
-  // internal usage of deprecated methods - these will only be changed to package visibility, not
-  // removed, and these accesses will be fine since in same package
-  @SuppressWarnings("deprecation")
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
