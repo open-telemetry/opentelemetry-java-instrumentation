@@ -44,6 +44,19 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   String getDbNamespace(REQUEST request);
 
   /**
+   * Returns the database name for old semantic conventions. This is only used for the old {@code
+   * db.name} attribute. Override this if the old semconv value differs from the new {@code
+   * db.namespace} value.
+   *
+   * @deprecated This method is only for backward compatibility with old semantic conventions.
+   */
+  @Deprecated // will be removed in 3.0.0
+  @Nullable
+  default String getDbName(REQUEST request) {
+    return getDbNamespace(request);
+  }
+
+  /**
    * Returns the database user name. This is only used for old semantic conventions.
    *
    * @deprecated There is no replacement at this time.
