@@ -55,17 +55,6 @@ class AwsSpanAssertions {
   static SpanDataAssert sqs(
       SpanDataAssert span, String spanName, String queueUrl, String queueName, SpanKind spanKind) {
 
-    String rpcMethod;
-    if (spanName.startsWith("SQS.")) {
-      rpcMethod = spanName.substring(4);
-    } else if (spanName.endsWith("process")) {
-      rpcMethod = "ReceiveMessage";
-    } else if (spanName.endsWith("publish")) {
-      rpcMethod = "SendMessage";
-    } else {
-      throw new IllegalStateException("can't get rpc method from span name " + spanName);
-    }
-
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
@@ -92,7 +81,7 @@ class AwsSpanAssertions {
                             v -> assertThat(v).isNull(),
                             v -> assertThat(v).isInstanceOf(Number.class))),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(RPC_SYSTEM, "aws-api")),
+                equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, "AmazonSQS")));
 
     if (spanName.endsWith("receive")
@@ -122,7 +111,7 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(stringKey("aws.bucket.name"), bucketName),
-            equalTo(RPC_SYSTEM, "aws-api")),
+            equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Amazon S3"),
             equalTo(HTTP_REQUEST_METHOD, method),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -144,7 +133,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
             equalTo(AWS_SNS_TOPIC_ARN, topicArn),
-            equalTo(RPC_SYSTEM, "aws-api")),
+            equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "AmazonSNS"),
             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
