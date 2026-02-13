@@ -154,7 +154,7 @@ class GwtTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
                 span ->
-                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                    span.hasName("test.gwt.shared.MessageService")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -175,7 +175,7 @@ class GwtTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent(),
                 span ->
-                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                    span.hasName("test.gwt.shared.MessageService")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasException(new IOException())
