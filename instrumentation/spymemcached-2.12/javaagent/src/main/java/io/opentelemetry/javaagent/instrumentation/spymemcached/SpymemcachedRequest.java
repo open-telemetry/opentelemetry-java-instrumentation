@@ -25,7 +25,7 @@ public abstract class SpymemcachedRequest {
   @Nullable
   public abstract MemcachedNode getHandlingNode();
 
-  public String dbOperation() {
+  public String getOperationName() {
     String queryText = getQueryText();
     if (queryText.startsWith("async")) {
       queryText = queryText.substring("async".length());

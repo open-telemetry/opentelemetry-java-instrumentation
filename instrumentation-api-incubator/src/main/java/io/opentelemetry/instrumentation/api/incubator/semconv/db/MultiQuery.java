@@ -31,37 +31,35 @@ class MultiQuery {
     this.querySummary = querySummary;
   }
 
-  static MultiQuery analyze(
-      Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
-    return analyzeInternal(rawQueryTexts, statementSanitizationEnabled, false);
+  static MultiQuery analyze(Collection<String> rawQueryTexts, boolean querySanitizationEnabled) {
+    return analyzeInternal(rawQueryTexts, querySanitizationEnabled, false);
   }
 
   static MultiQuery analyzeWithSummary(
-      Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
-    return analyzeInternal(rawQueryTexts, statementSanitizationEnabled, true);
+      Collection<String> rawQueryTexts, boolean querySanitizationEnabled) {
+    return analyzeInternal(rawQueryTexts, querySanitizationEnabled, true);
   }
 
   private static MultiQuery analyzeInternal(
-      Collection<String> rawQueryTexts, boolean statementSanitizationEnabled, boolean withSummary) {
+      Collection<String> rawQueryTexts, boolean querySanitizationEnabled, boolean withSummary) {
     UniqueValue uniqueCollectionName = new UniqueValue();
     UniqueValue uniqueStoredProcedureName = new UniqueValue();
     UniqueValue uniqueOperationName = new UniqueValue();
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     UniqueValue uniqueQuerySummary = new UniqueValue();
     for (String rawQueryText : rawQueryTexts) {
-      SqlQuery sanitizedStatement =
+      SqlQuery sanitizedQuery =
           withSummary
               ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
               : SqlQuerySanitizerUtil.sanitize(rawQueryText);
-      String collectionName = sanitizedStatement.getCollectionName();
+      String collectionName = sanitizedQuery.getCollectionName();
       uniqueCollectionName.set(collectionName);
-      String storedProcedureName = sanitizedStatement.getStoredProcedureName();
+      String storedProcedureName = sanitizedQuery.getStoredProcedureName();
       uniqueStoredProcedureName.set(storedProcedureName);
-      String operationName = sanitizedStatement.getOperationName();
+      String operationName = sanitizedQuery.getOperationName();
       uniqueOperationName.set(operationName);
-      uniqueQueryTexts.add(
-          statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
-      uniqueQuerySummary.set(sanitizedStatement.getQuerySummary());
+      uniqueQueryTexts.add(querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
+      uniqueQuerySummary.set(sanitizedQuery.getQuerySummary());
     }
 
     String operationName = uniqueOperationName.getValue();

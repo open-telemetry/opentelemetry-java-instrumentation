@@ -140,17 +140,17 @@ public class InfluxDbImplInstrumentation implements TypeInstrumentation {
               // write data by UDP protocol, in this way, can't get database name.
               : arg0 instanceof Integer ? "" : String.valueOf(arg0);
 
-      String operation;
+      String operationName;
       if ("createDatabase".equals(methodName)) {
-        operation = "CREATE DATABASE";
+        operationName = "CREATE DATABASE";
       } else if ("deleteDatabase".equals(methodName)) {
-        operation = "DROP DATABASE";
+        operationName = "DROP DATABASE";
       } else {
-        operation = "WRITE";
+        operationName = "WRITE";
       }
 
       InfluxDbRequest influxDbRequest =
-          InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operation, null);
+          InfluxDbRequest.create(httpUrl.host(), httpUrl.port(), database, operationName, null);
 
       if (!instrumenter().shouldStart(parentContext, influxDbRequest)) {
         return null;

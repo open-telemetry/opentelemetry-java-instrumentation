@@ -19,12 +19,12 @@ public abstract class InfluxDbRequest {
       SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static InfluxDbRequest create(
-      String host, int port, String dbName, String operation, String sql) {
+      String host, int port, String namespace, String operationName, String sql) {
     SqlQuery sqlQuery = SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
     SqlQuery sqlQueryWithSummary =
         SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
     return new AutoValue_InfluxDbRequest(
-        host, port, dbName, operation, sqlQuery, sqlQueryWithSummary);
+        host, port, namespace, operationName, sqlQuery, sqlQueryWithSummary);
   }
 
   public abstract String getHost();
