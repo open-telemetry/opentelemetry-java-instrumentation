@@ -74,14 +74,14 @@ class RmiTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("rmi.app.Greeter/hello")
+                    span.hasName("rmi.app.Greeter")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Greeter")),
                 span ->
-                    span.hasName("rmi.app.Server/hello")
+                    span.hasName("rmi.app.Server")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
@@ -126,7 +126,7 @@ class RmiTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("rmi.app.Greeter/exceptional")
+                    span.hasName("rmi.app.Greeter")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasEventsSatisfyingExactly(
@@ -142,7 +142,7 @@ class RmiTest {
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Greeter")),
                 span ->
-                    span.hasName("rmi.app.Server/exceptional")
+                    span.hasName("rmi.app.Server")
                         .hasKind(SpanKind.SERVER)
                         .hasEventsSatisfyingExactly(
                             event ->

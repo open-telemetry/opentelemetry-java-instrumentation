@@ -157,7 +157,7 @@ class SpringRmiTest {
           assertions.add(span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent());
           assertions.add(
               span ->
-                  span.hasName("springrmi.app.SpringRmiGreeter/hello")
+                  span.hasName("springrmi.app.SpringRmiGreeter")
                       .hasKind(SpanKind.CLIENT)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfying(
@@ -166,7 +166,7 @@ class SpringRmiTest {
           if (testSource == TestSource.RMI) {
             assertions.add(
                 span ->
-                    span.hasName(testSource.remoteClassName + "/hello")
+                    span.hasName(testSource.remoteClassName)
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
@@ -206,7 +206,7 @@ class SpringRmiTest {
                                           val -> val.isInstanceOf(String.class)))));
           assertions.add(
               span ->
-                  span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
+                  span.hasName("springrmi.app.SpringRmiGreeter")
                       .hasKind(SpanKind.CLIENT)
                       .hasStatus(StatusData.error())
                       .hasParent(trace.getSpan(0))
@@ -226,7 +226,7 @@ class SpringRmiTest {
           if (testSource == TestSource.RMI) {
             assertions.add(
                 span ->
-                    span.hasName(testSource.remoteClassName + "/exceptional")
+                    span.hasName(testSource.remoteClassName)
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.error())
