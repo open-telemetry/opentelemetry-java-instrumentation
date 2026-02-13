@@ -29,13 +29,6 @@ enum VertxSqlClientAttributesGetter
     return null;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(VertxSqlClientRequest request) {
-    return request.getUser();
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(VertxSqlClientRequest request) {

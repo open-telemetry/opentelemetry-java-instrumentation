@@ -43,28 +43,6 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   String getDbNamespace(REQUEST request);
 
-  /**
-   * Returns the database user name. This is only used for old semantic conventions.
-   *
-   * @deprecated There is no replacement at this time.
-   */
-  @Deprecated
-  @Nullable
-  default String getUser(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * Returns the database connection string. This is only used for old semantic conventions.
-   *
-   * @deprecated There is no replacement at this time.
-   */
-  @Deprecated
-  @Nullable
-  default String getConnectionString(REQUEST request) {
-    return null;
-  }
-
   // TODO: make this required to implement
   @Nullable
   default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {

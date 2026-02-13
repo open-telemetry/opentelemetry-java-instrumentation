@@ -239,12 +239,6 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
     delegate.setAsciiStream(parameterIndex, x, length);
   }
 
-  @Override
-  @Deprecated
-  public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-    delegate.setUnicodeStream(parameterIndex, x, length);
-  }
-
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {

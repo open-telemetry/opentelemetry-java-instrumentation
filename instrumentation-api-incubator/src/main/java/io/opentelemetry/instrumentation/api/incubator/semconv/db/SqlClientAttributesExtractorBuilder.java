@@ -27,17 +27,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated not needed anymore since the new semantic conventions always use db.collection.name
-   */
-  @CanIgnoreReturnValue
-  @Deprecated
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
-      AttributeKey<String> oldSemconvTableAttribute) {
-    this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
-    return this;
-  }
-
-  /**
    * Sets whether the {@code db.query.text} attribute extracted by the constructed {@link
    * SqlClientAttributesExtractor} should be sanitized. If set to {@code true}, all parameters that
    * can potentially contain sensitive information will be masked. Enabled by default.
@@ -47,16 +36,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
       boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
-  }
-
-  /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
   }
 
   /**
