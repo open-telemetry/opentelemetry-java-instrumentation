@@ -29,10 +29,6 @@ public final class RuntimeMetricsConfigUtil {
       return null;
     }
 
-    if (config.getBoolean("emit_experimental_telemetry/development", false)) {
-      builder.emitExperimentalTelemetry();
-    }
-
     if (config.getBoolean("capture_gc_cause", false)) {
       builder.captureGcCause();
     }

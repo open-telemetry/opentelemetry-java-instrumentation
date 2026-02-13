@@ -14,9 +14,8 @@ import java.util.List;
  * any time.
  */
 public class JmxRuntimeMetricsFactory {
-  @SuppressWarnings({"CatchingUnchecked", "deprecation"}) // ExperimentalXxx classes are deprecated
   public static List<AutoCloseable> buildObservables(
-      OpenTelemetry openTelemetry, boolean emitExperimentalTelemetry, boolean captureGcCause) {
+      OpenTelemetry openTelemetry, boolean captureGcCause) {
     // Set up metrics gathered by JMX
     List<AutoCloseable> observables = new ArrayList<>();
     observables.addAll(Classes.registerObservers(openTelemetry));
@@ -24,12 +23,6 @@ public class JmxRuntimeMetricsFactory {
     observables.addAll(GarbageCollector.registerObservers(openTelemetry, captureGcCause));
     observables.addAll(MemoryPools.registerObservers(openTelemetry));
     observables.addAll(Threads.registerObservers(openTelemetry));
-    if (emitExperimentalTelemetry) {
-      observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
-      observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
-      observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
-      observables.addAll(ExperimentalFileDescriptor.registerObservers(openTelemetry));
-    }
     return observables;
   }
 

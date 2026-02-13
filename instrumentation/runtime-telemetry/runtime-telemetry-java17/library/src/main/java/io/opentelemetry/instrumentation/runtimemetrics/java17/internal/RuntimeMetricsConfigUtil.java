@@ -42,11 +42,6 @@ public final class RuntimeMetricsConfigUtil {
     }
 
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
-        .getBoolean("emit_experimental_telemetry/development", false)) {
-      builder.emitExperimentalTelemetry();
-    }
-
-    if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
         .getBoolean("capture_gc_cause", false)) {
       builder.captureGcCause();
     }
