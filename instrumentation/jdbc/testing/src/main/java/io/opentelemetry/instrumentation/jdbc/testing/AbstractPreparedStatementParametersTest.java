@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
 import org.apache.derby.jdbc.EmbeddedDriver;
+import org.h2.Driver;
 import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,14 +59,14 @@ public abstract class AbstractPreparedStatementParametersTest {
     return connection;
   }
 
-  private static final String dbName = "jdbcUnitTest";
-  private static final String dbNameLower = dbName.toLowerCase(Locale.ROOT);
+  private static final String databaseName = "jdbcUnitTest";
+  private static final String databaseNameLower = databaseName.toLowerCase(Locale.ROOT);
 
   private static final Map<String, String> jdbcUrls =
       ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + dbName,
-          "derby", "jdbc:derby:memory:" + dbName,
-          "hsqldb", "jdbc:hsqldb:mem:" + dbName);
+          "h2", "jdbc:h2:mem:" + databaseName,
+          "derby", "jdbc:derby:memory:" + databaseName,
+          "hsqldb", "jdbc:hsqldb:mem:" + databaseName);
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
 
@@ -83,11 +84,11 @@ public abstract class AbstractPreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            new Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + databaseNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -624,7 +625,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
+                                equalTo(maybeStable(DB_NAME), databaseNameLower),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
                                     DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),

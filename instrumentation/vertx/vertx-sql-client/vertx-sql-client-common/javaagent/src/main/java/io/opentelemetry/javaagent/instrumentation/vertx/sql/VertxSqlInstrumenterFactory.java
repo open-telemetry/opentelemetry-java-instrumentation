@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -29,15 +29,14 @@ public final class VertxSqlInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
-                    .setStatementSanitizationEnabled(
-                        AgentCommonConfig.get().isStatementSanitizationEnabled())
+                    .setQuerySanitizationEnabled(
+                        AgentCommonConfig.get().isQuerySanitizationEnabled())
                     .build())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    VertxSqlClientNetAttributesGetter.INSTANCE,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                ServicePeerAttributesExtractor.create(
+                    VertxSqlClientNetAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

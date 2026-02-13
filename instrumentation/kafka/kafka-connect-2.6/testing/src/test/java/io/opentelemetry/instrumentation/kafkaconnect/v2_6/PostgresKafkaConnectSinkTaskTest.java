@@ -63,7 +63,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
 
   private static final String POSTGRES_NETWORK_ALIAS = "postgres";
-  private static final String DB_NAME = "test";
+  private static final String DATABASE_NAME = "test";
   private static final String DB_USERNAME = "postgres";
   private static final String DB_PASSWORD = "password";
   private static final String DB_TABLE_PERSON = "person";
@@ -80,7 +80,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             .withNetwork(network)
             .withNetworkAliases(POSTGRES_NETWORK_ALIAS)
             .withInitScript("postgres-setup.sql")
-            .withDatabaseName(DB_NAME)
+            .withDatabaseName(DATABASE_NAME)
             .withUsername(DB_USERNAME)
             .withPassword(DB_PASSWORD)
             .withStartupTimeout(Duration.ofMinutes(5));
@@ -333,7 +333,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             Locale.ROOT,
             "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF",
             POSTGRES_NETWORK_ALIAS,
-            DB_NAME));
+            DATABASE_NAME));
     configMap.put("connection.user", DB_USERNAME);
     configMap.put("connection.password", DB_PASSWORD);
     configMap.put("topics", topicName);
@@ -374,7 +374,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             Locale.ROOT,
             "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF",
             POSTGRES_NETWORK_ALIAS,
-            DB_NAME));
+            DATABASE_NAME));
     configMap.put("connection.user", DB_USERNAME);
     configMap.put("connection.password", DB_PASSWORD);
     // Configure multiple topics separated by commas

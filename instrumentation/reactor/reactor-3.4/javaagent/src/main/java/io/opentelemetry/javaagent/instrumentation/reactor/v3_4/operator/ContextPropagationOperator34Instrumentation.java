@@ -21,6 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import reactor.util.context.ContextView;
 
 public class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
   @Override
@@ -52,7 +53,7 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static Context methodExit(
-        @Advice.Argument(0) reactor.util.context.ContextView reactorContext,
+        @Advice.Argument(0) ContextView reactorContext,
         @Advice.Argument(1) Context defaultContext) {
 
       io.opentelemetry.context.Context agentContext =

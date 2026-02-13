@@ -21,12 +21,13 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> RPC_SERVICE = AttributeKey.stringKey("rpc.service");
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
 
-  private final RpcAttributesGetter<REQUEST> getter;
+  private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
 
-  RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 
+  @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     internalSet(attributes, RPC_SYSTEM, getter.getSystem(request));

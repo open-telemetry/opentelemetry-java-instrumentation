@@ -52,44 +52,14 @@ public final class RatpackServerTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /**
-   * Returns a {@link Handler} to support Ratpack Registry binding.
-   *
-   * @deprecated Use {@link #createHandler()} instead.
-   */
-  @Deprecated
-  public Handler getHandler() {
-    return createHandler();
-  }
-
   /** Creates a new {@link Handler} to support Ratpack Registry binding. */
   public Handler createHandler() {
     return new OpenTelemetryServerHandler(instrumenter);
   }
 
-  /**
-   * Returns {@link ExecInterceptor} instance to support Ratpack Registry binding.
-   *
-   * @deprecated Use {@link #createExecInterceptor()} instead.
-   */
-  @Deprecated
-  public ExecInterceptor getExecInterceptor() {
-    return createExecInterceptor();
-  }
-
   /** Creates an {@link ExecInterceptor} instance to support Ratpack Registry binding. */
   public ExecInterceptor createExecInterceptor() {
     return OpenTelemetryExecInterceptor.INSTANCE;
-  }
-
-  /**
-   * Returns {@link ExecInitializer} instance to support Ratpack Registry binding.
-   *
-   * @deprecated Use {@link #createExecInitializer()} instead.
-   */
-  @Deprecated
-  public ExecInitializer getExecInitializer() {
-    return createExecInitializer();
   }
 
   /** Creates an {@link ExecInitializer} instance to support Ratpack Registry binding. */

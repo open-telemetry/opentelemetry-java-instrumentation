@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import application.io.opentelemetry.context.Context;
+import application.io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -76,8 +77,7 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static CoroutineContext enter(
-        @Advice.Argument(0)
-            application.io.opentelemetry.context.ImplicitContextKeyed implicitContextKeyed) {
+        @Advice.Argument(0) ImplicitContextKeyed implicitContextKeyed) {
       if (implicitContextKeyed != null) {
         Context applicationContext = Context.current().with(implicitContextKeyed);
         io.opentelemetry.context.Context agentContext =

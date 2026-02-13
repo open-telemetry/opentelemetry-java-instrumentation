@@ -22,7 +22,7 @@ public final class MongoInstrumentationSingletons {
           "io.opentelemetry.mongo-3.1",
           DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "mongo")
               .get("statement_sanitizer")
-              .getBoolean("enabled", AgentCommonConfig.get().isStatementSanitizationEnabled()));
+              .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()));
 
   public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
 

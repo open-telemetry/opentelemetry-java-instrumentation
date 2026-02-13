@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo>,
         ExtractQuerySummaryMarker {
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String CASSANDRA = "cassandra";
 
   @Override

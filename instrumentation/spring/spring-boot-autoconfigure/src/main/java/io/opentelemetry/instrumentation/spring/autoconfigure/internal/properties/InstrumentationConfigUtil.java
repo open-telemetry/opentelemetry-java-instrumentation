@@ -43,7 +43,7 @@ public final class InstrumentationConfigUtil {
     return new CommonConfig(openTelemetry);
   }
 
-  public static boolean isStatementSanitizationEnabled(
+  public static boolean isQuerySanitizationEnabled(
       OpenTelemetry openTelemetry, String instrumentationName) {
     DeclarativeConfigProperties instrumentationConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);

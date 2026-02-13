@@ -17,8 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RpcSpanNameExtractorTest {
 
-  @Mock RpcAttributesGetter<RpcRequest> getter;
+  @Mock RpcAttributesGetter<RpcRequest, Void> getter;
 
+  @SuppressWarnings("deprecation") // testing deprecated method
   @Test
   void normal() {
     RpcRequest request = new RpcRequest();
@@ -30,6 +31,7 @@ class RpcSpanNameExtractorTest {
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated method
   @Test
   void serviceNull() {
     RpcRequest request = new RpcRequest();

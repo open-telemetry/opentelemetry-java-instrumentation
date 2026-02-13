@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
-  private static final String GENERAL_PEER_SERVICE_MAPPING = "general.peer.service_mapping";
+  private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -183,8 +183,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (GENERAL_PEER_SERVICE_MAPPING.equals(fullPath)) {
-      return PeerServiceMapping.getList(configProperties);
+    if (JAVA_COMMON_SERVICE_PEER_MAPPING.equals(fullPath)) {
+      return ServicePeerMapping.getList(configProperties);
     }
     return null;
   }

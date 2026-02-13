@@ -18,7 +18,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public abstract class JedisRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static JedisRequest create(
       Connection connection, ProtocolCommand command, List<byte[]> args) {

@@ -8,7 +8,12 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 
+/**
+ * @deprecated Use {@link SqlQuery} instead. This class will be removed in a future release.
+ */
+@Deprecated
 @AutoValue
+@AutoValue.CopyAnnotations
 public abstract class SqlStatementInfo {
 
   private static final String SQL_CALL = "CALL";

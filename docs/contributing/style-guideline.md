@@ -2,7 +2,9 @@
 
 We follow the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
 
-## Auto-formatting
+## Code Formatting
+
+### Auto-formatting
 
 The build will fail if the source code is not formatted according to the google java style.
 
@@ -25,7 +27,7 @@ Running
 
 runs the formatting verification task only.
 
-### Pre-commit hook
+#### Pre-commit hook
 
 To completely delegate code style formatting to the machine,
 there is a pre-commit hook setup to verify formatting before committing.
@@ -35,14 +37,14 @@ It can be activated with this command:
 git config core.hooksPath .githooks
 ```
 
-### Editorconfig
+#### Editorconfig
 
 As additional convenience for IntelliJ users, we provide an `.editorconfig`
 file. IntelliJ will automatically use it to adjust its code formatting settings.
 It does not support all required rules, so you still have to run
 `spotlessApply` from time to time.
 
-## Additional checks
+### Additional checks
 
 The build uses checkstyle to verify some parts of the Google Java Style Guide that cannot be handled
 by auto-formatting.
@@ -53,27 +55,42 @@ To run these checks locally:
 ./gradlew checkstyleMain checkstyleTest
 ```
 
-## Static imports
+### Static imports
 
-We use static imports for many common types of operations. However, not all static methods or
-constants are necessarily good candidates for a static import. The following list is a
-rough guideline of what are commonly accepted static imports:
+Consider statically importing the following commonly used methods and constants:
 
-- Test assertions (JUnit and AssertJ)
-- Mocking/stubbing in tests (with Mockito)
-- Collections helpers (such as `singletonList()` and `Collectors.toList()`)
-- ByteBuddy `ElementMatchers` (for building instrumentation modules)
-- Immutable constants (where clearly named)
-- Singleton instances (especially where clearly named and hopefully immutable)
-- `tracer()` methods that expose tracer singleton instances
-- Semantic convention attribute keys used in tests
+- **Test methods**
+  - `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*`
+  - `org.assertj.core.api.Assertions.*`
+  - `org.mockito.Mockito.*`
+  - `org.mockito.ArgumentMatchers.*`
+- **Utility methods**
+  - `io.opentelemetry.api.common.AttributeKey.*`
+  - `java.util.Arrays` - `asList`, `stream`
+  - `java.util.Collections` - `singleton*`, `empty*`, `unmodifiable*`, `synchronized*`, `checked*`
+  - `java.util.Objects` - `requireNonNull`
+  - `java.util.function.Function` - `identity`
+  - `java.util.stream.Collectors.*`
+- **Utility constants**
+  - `java.util.Locale.*`
+  - `java.util.concurrent.TimeUnit.*`
+  - `java.util.logging.Level.*`
+  - `java.nio.charset.StandardCharsets.*`
+- **ByteBuddy**
+  - `net.bytebuddy.matcher.ElementMatchers.*`
+  - `io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.*`
+- **OpenTelemetry semantic convention constants**
+  - All constants under `io.opentelemetry.semconv.**`, except for
+    `io.opentelemetry.semconv.SchemaUrls.*` constants
 
 Some of these are enforced by checkstyle rules:
 
 - Look for `RegexpSinglelineJava` in `checkstyle.xml`
 - Use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
 
-## Ordering of class contents
+## Java Language Conventions
+
+### Ordering of class contents
 
 The following order is preferred:
 
@@ -90,30 +107,30 @@ the non-private methods that use it.
 In static utility classes (where all members are static), the private constructor
 (used to prevent construction) should be ordered after methods instead of before methods.
 
-## `final` keyword usage
+### `final` keyword usage
 
-Public classes should be declared `final` where possible.
+Public non-internal non-test classes should be declared `final` where possible.
 
-Methods should only be declared `final` if they are in non-final public classes.
+Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
 Fields should be declared `final` where possible.
 
 Method parameters and local variables should never be declared `final`.
 
-## `@Nullable` annotation usage
+### `@Nullable` annotation usage
 
-**Note: this section is aspirational, as opposed to a reflection of the current codebase.**
+**Note: This section is aspirational and may not reflect the current codebase.**
 
-All parameters and fields which can be `null` should be annotated with `@Nullable`
+Annotate all parameters and fields that can be `null` with `@Nullable`
 (specifically `javax.annotation.Nullable`, which is included by the
-`otel.java-conventions` gradle plugin as a `compileOnly` dependency).
+`otel.java-conventions` Gradle plugin as a `compileOnly` dependency).
 
-There is no need to use `@NonNull`, as this is the default.
+`@NonNull` is unnecessary as it is the default.
 
-Public APIs should still defensively check for `null` parameters, even if the parameter is not
-annotated with `@Nullable`. Internal APIs do not need to defensively check for `null` parameters.
+**Defensive programming**: Public APIs should still check for `null` parameters even if not
+annotated with `@Nullable`. Internal APIs do not need these checks.
 
-To help enforce `@Nullable` annotation usage, the `otel.nullaway-conventions` gradle plugin
+To help enforce `@Nullable` annotation usage, the `otel.nullaway-conventions` Gradle plugin
 should be used in all modules to perform basic nullable usage validation:
 
 ```kotlin
@@ -122,24 +139,21 @@ plugins {
 }
 ```
 
-## java.util.Optional usage
+### `Optional` usage
 
 Following the reasoning from [Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12),
-usage of `java.util.Optional` is kept to a minimum in this project.
+`java.util.Optional` usage is kept to a minimum.
 
-It is ok to use `Optional` in places where it does not leak into public API signatures.
+- `Optional` shouldn't appear in public API signatures
+- Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
 
-Also, avoid `Optional` usage on the hot path (instrumentation code), unless the instrumented library
-itself uses it.
+## Performance
 
-## Hot path constraints
+Avoid allocations on the hot path (instrumentation code) whenever possible. This includes `Iterator`
+allocations from collections; note that `for (SomeType t : plainJavaArray)` does not allocate an
+iterator object.
 
-Avoid allocations whenever possible on the hot path (instrumentation code).
-This includes `Iterator` allocations from collections; note that
-`for(SomeType t : plainJavaArray)` does not allocate an iterator object.
-Non-allocating stream API usage on the hot path is acceptable but may not
-fit the surrounding code style; this is a judgment call. Note that
-some stream APIs make it much more difficult to allocate efficiently
-(e.g., `collect` with presized sink data structures involves
-convoluted `Supplier` code, or lambdas passed to `forEach` might be
-capturing/allocating lambdas).
+Non-allocating Stream API usage on the hot path is acceptable but may not fit the surrounding code
+style; this is a judgment call. Some Stream APIs make efficient allocation difficult (e.g.,
+`collect` with pre-sized sink data structures involves convoluted `Supplier` code, or lambdas passed
+to `forEach` may be capturing/allocating lambdas).

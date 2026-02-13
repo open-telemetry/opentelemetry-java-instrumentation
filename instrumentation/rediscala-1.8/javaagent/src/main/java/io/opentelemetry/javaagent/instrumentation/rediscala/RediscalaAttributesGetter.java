@@ -14,10 +14,9 @@ import redis.RedisCommand;
 final class RediscalaAttributesGetter
     implements DbClientAttributesGetter<RedisCommand<?, ?>, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(RedisCommand<?, ?> redisCommand) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override

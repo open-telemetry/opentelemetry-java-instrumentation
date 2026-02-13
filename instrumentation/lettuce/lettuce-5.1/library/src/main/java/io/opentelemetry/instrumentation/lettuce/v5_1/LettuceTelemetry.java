@@ -37,7 +37,7 @@ public final class LettuceTelemetry {
 
   LettuceTelemetry(
       OpenTelemetry openTelemetry,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean encodingEventsEnabled,
       OperationListener metrics) {
     this.metrics = metrics;
@@ -47,7 +47,7 @@ public final class LettuceTelemetry {
       tracerBuilder.setInstrumentationVersion(version);
     }
     tracer = tracerBuilder.build();
-    sanitizer = RedisCommandSanitizer.create(statementSanitizationEnabled);
+    sanitizer = RedisCommandSanitizer.create(querySanitizationEnabled);
     this.encodingEventsEnabled = encodingEventsEnabled;
   }
 

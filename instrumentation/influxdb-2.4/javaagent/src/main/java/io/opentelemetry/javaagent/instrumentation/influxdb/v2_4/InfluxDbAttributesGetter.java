@@ -13,11 +13,11 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbQueryText(InfluxDbRequest request) {
-    if (request.getSqlStatementInfoWithSummary() != null) {
-      return request.getSqlStatementInfoWithSummary().getQueryText();
+    if (request.getSqlQueryWithSummary() != null) {
+      return request.getSqlQueryWithSummary().getQueryText();
     }
-    if (request.getSqlStatementInfo() != null) {
-      return request.getSqlStatementInfo().getQueryText();
+    if (request.getSqlQuery() != null) {
+      return request.getSqlQuery().getQueryText();
     }
     return null;
   }
@@ -28,8 +28,8 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     if (request.getOperationName() != null) {
       return request.getOperationName();
     }
-    if (request.getSqlStatementInfo() != null) {
-      return request.getSqlStatementInfo().getOperationName();
+    if (request.getSqlQuery() != null) {
+      return request.getSqlQuery().getOperationName();
     }
     return null;
   }
@@ -37,8 +37,8 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbQuerySummary(InfluxDbRequest request) {
-    if (request.getSqlStatementInfoWithSummary() != null) {
-      return request.getSqlStatementInfoWithSummary().getQuerySummary();
+    if (request.getSqlQueryWithSummary() != null) {
+      return request.getSqlQueryWithSummary().getQuerySummary();
     }
     return null;
   }
