@@ -32,9 +32,7 @@ public class TracingRequestHandler extends RequestHandler2 {
             DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk")
                 .getBoolean("experimental_span_attributes/development", false))
         .setMessagingReceiveTelemetryEnabled(
-            messaging
-                .get("receive_telemetry/development")
-                .getBoolean("enabled", false))
+            messaging.get("receive_telemetry/development").getBoolean("enabled", false))
         .setCapturedHeaders(
             messaging.getScalarList("capture_headers/development", String.class, emptyList()))
         .build()
