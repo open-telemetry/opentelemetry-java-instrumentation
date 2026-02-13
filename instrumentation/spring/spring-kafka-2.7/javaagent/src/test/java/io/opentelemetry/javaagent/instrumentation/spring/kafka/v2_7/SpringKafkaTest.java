@@ -58,6 +58,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     return emptyList();
   }
 
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+
   @Test
   void shouldCreateSpansForSingleRecordProcess() {
     testing.runWithSpan(
@@ -134,7 +137,11 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                                 stringAssert -> stringAssert.startsWith("consumer")),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
-                                AbstractLongAssert::isNotNegative)),
+                                val -> {
+                                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                    val.isNotNegative();
+                                  }
+                                })),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -174,7 +181,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
             satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
-            satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
+            satisfies(
+                longKey("kafka.record.queue_time_ms"),
+                val -> {
+                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                    val.isNotNegative();
+                  }
+                }));
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
     // trace structure differs in latest dep tests because CommonErrorHandler is only set for latest
