@@ -26,10 +26,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-@SuppressWarnings("deprecation") // until ExperimentalMemoryPools is renamed
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class ExperimentalMemoryPoolsTest {
+class MemoryInitTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -57,7 +56,7 @@ class ExperimentalMemoryPoolsTest {
   void registerObservers() {
     when(heapPoolUsage.getInit()).thenReturn(11L);
     when(nonHeapUsage.getInit()).thenReturn(15L);
-    ExperimentalMemoryPools.registerObservers(testing.getOpenTelemetry(), beans);
+    MemoryInit.registerObservers(testing.getOpenTelemetry(), beans);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

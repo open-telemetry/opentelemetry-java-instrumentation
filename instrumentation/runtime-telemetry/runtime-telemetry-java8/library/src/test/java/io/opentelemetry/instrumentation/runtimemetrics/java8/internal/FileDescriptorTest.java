@@ -22,9 +22,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@SuppressWarnings("deprecation") // until ExperimentalFileDescriptor is renamed
 @ExtendWith(MockitoExtension.class)
-class ExperimentalFileDescriptorTest {
+class FileDescriptorTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -44,7 +43,7 @@ class ExperimentalFileDescriptorTest {
   // verify that mock is called with the correct value
   void registerObservers() {
     when(osBean.getOpenFileDescriptorCount()).thenReturn(42L);
-    ExperimentalFileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
+    FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
@@ -64,7 +63,7 @@ class ExperimentalFileDescriptorTest {
   // Verify that no metrics are emitted with non-zero values
   void registerObservers_NegativeValue() {
     when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L);
-    ExperimentalFileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
+    FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
