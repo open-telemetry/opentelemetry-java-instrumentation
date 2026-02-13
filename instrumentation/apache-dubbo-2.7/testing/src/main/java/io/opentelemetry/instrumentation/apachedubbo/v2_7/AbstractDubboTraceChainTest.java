@@ -177,7 +177,7 @@ public abstract class AbstractDubboTraceChainTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                        span.hasName("org.apache.dubbo.rpc.service.GenericService")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -199,7 +199,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
-                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
@@ -212,7 +212,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
                     span ->
-                        span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                        span.hasName("org.apache.dubbo.rpc.service.GenericService")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
@@ -234,7 +234,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
-                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfying(
@@ -372,7 +372,7 @@ public abstract class AbstractDubboTraceChainTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                        span.hasName("org.apache.dubbo.rpc.service.GenericService")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -394,7 +394,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
-                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
