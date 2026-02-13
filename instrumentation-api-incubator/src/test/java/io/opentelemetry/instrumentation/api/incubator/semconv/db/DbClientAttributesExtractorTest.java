@@ -31,9 +31,21 @@ class DbClientAttributesExtractorTest {
       return map.get("db.system");
     }
 
+    @Deprecated
+    @Override
+    public String getUser(Map<String, String> map) {
+      return map.get("db.user");
+    }
+
     @Override
     public String getDbNamespace(Map<String, String> map) {
       return map.get("db.namespace");
+    }
+
+    @Deprecated
+    @Override
+    public String getConnectionString(Map<String, String> map) {
+      return map.get("db.connection_string");
     }
 
     @Override
@@ -58,7 +70,9 @@ class DbClientAttributesExtractorTest {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
+    request.put("db.user", "username");
     request.put("db.namespace", "potatoes");
+    request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.query.text", "SELECT * FROM potato");
     request.put("db.query_summary", "SELECT potato");
     request.put("db.operation.name", "SELECT");
@@ -81,7 +95,9 @@ class DbClientAttributesExtractorTest {
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
               entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
+              entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
@@ -92,7 +108,9 @@ class DbClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {

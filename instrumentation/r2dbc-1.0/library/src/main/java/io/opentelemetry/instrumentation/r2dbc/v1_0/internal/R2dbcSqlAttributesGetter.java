@@ -26,10 +26,24 @@ public enum R2dbcSqlAttributesGetter
     return request.getSystem();
   }
 
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getUser(DbExecution request) {
+    return request.getUser();
+  }
+
   @Override
   @Nullable
   public String getDbNamespace(DbExecution request) {
     return request.getName();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getConnectionString(DbExecution request) {
+    return request.getConnectionString();
   }
 
   @Override

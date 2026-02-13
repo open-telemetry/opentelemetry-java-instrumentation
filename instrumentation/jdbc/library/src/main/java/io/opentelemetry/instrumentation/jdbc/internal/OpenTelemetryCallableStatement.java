@@ -563,6 +563,13 @@ class OpenTelemetryCallableStatement<S extends CallableStatement>
     return delegate.getBigDecimal(parameterIndex);
   }
 
+  @SuppressWarnings({"UngroupedOverloads", "deprecation"}) // implements deprecated interface method
+  @Override
+  @Deprecated
+  public BigDecimal getBigDecimal(int parameterIndex, int scale) throws SQLException {
+    return delegate.getBigDecimal(parameterIndex, scale);
+  }
+
   @Override
   public RowId getRowId(int parameterIndex) throws SQLException {
     return delegate.getRowId(parameterIndex);

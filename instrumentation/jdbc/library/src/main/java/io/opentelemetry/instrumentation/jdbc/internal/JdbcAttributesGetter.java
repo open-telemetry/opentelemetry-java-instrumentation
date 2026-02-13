@@ -28,11 +28,25 @@ public final class JdbcAttributesGetter
     return request.getDbInfo().getSystem();
   }
 
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  @Override
+  public String getUser(DbRequest request) {
+    return request.getDbInfo().getUser();
+  }
+
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  @Override
+  public String getConnectionString(DbRequest request) {
+    return request.getDbInfo().getShortUrl();
   }
 
   @Override

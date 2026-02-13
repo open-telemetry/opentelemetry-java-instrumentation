@@ -24,6 +24,13 @@ public enum VertxRedisClientAttributesGetter
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getUser(VertxRedisClientRequest request) {
+    return request.getUser();
+  }
+
   @Override
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
@@ -31,6 +38,13 @@ public enum VertxRedisClientAttributesGetter
       return String.valueOf(request.getDatabaseIndex());
     }
     return null;
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getConnectionString(VertxRedisClientRequest request) {
+    return request.getConnectionString();
   }
 
   @Override
