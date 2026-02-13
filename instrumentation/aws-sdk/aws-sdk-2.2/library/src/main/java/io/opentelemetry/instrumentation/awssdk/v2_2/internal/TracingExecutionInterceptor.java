@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
 import software.amazon.awssdk.core.SdkRequest;
@@ -153,8 +154,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     // Ignore presign request. These requests don't run all interceptor methods and the span created
     // here would never be ended and scope closed.
-    if (executionAttributes.getAttribute(
-            software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute.PRESIGNER_EXPIRATION)
+    if (executionAttributes.getAttribute(AwsSignerExecutionAttribute.PRESIGNER_EXPIRATION)
         != null) {
       return request;
     }

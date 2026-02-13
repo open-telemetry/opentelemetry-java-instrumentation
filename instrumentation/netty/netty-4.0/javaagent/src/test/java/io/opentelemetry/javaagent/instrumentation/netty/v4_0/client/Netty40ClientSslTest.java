@@ -47,6 +47,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -229,7 +230,7 @@ class Netty40ClientSslTest {
 
                 SSLContext sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, null, null);
-                javax.net.ssl.SSLEngine sslEngine = sslContext.createSSLEngine();
+                SSLEngine sslEngine = sslContext.createSSLEngine();
                 sslEngine.setUseClientMode(true);
                 sslEngine.setEnabledProtocols(enabledProtocols.toArray(new String[0]));
                 sslEngine.setEnabledCipherSuites(SUPPORTED_CIPHERS);

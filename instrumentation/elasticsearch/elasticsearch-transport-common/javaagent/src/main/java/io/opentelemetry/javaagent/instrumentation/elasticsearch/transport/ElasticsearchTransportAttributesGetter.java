@@ -13,10 +13,9 @@ import org.elasticsearch.action.ActionResponse;
 final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(ElasticTransportRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
   }
 
   @Override

@@ -9,20 +9,40 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
+/**
+ * @deprecated Use {@link
+ *     io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor}
+ *     instead.
+ */
+@Deprecated
 public interface PeerServiceResolver {
 
-  public boolean isEmpty();
+  boolean isEmpty();
 
   @Nullable
-  public String resolveService(String host, @Nullable Integer port, Supplier<String> pathSupplier);
+  String resolveService(String host, @Nullable Integer port, Supplier<String> pathSupplier);
 
   static PeerServiceResolver create(Map<String, String> mapping) {
-    return new PeerServiceResolverImpl(mapping);
+    ServicePeerResolver delegate = new ServicePeerResolver(mapping);
+    return new PeerServiceResolver() {
+      @Override
+      public boolean isEmpty() {
+        return delegate.isEmpty();
+      }
+
+      @Override
+      @Nullable
+      public String resolveService(
+          String host, @Nullable Integer port, Supplier<String> pathSupplier) {
+        return delegate.resolveServiceName(host, port, pathSupplier);
+      }
+    };
   }
 
   static PeerServiceResolver create(OpenTelemetry openTelemetry) {
@@ -40,6 +60,6 @@ public interface PeerServiceResolver {
               }
             });
 
-    return new PeerServiceResolverImpl(peerServiceMap);
+    return create(peerServiceMap);
   }
 }

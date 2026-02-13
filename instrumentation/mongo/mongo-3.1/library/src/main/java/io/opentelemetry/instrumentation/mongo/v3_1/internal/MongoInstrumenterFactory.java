@@ -26,24 +26,22 @@ public final class MongoInstrumenterFactory {
       new MongoAttributesExtractor();
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      String instrumentationName,
-      boolean statementSanitizationEnabled) {
+      OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
         instrumentationName,
-        statementSanitizationEnabled,
+        querySanitizationEnabled,
         DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
   }
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
 
     MongoDbAttributesGetter dbAttributesGetter =
-        new MongoDbAttributesGetter(statementSanitizationEnabled, maxNormalizedQueryLength);
+        new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
         new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
 
