@@ -63,21 +63,22 @@ class CamelTest extends TargetSystemTest {
             attributeWithAnyValue("camel.route"),
             attributeWithAnyValue("camel.processor"),
             attributeWithAnyValue("camel.destination")
-                .presentWhen((attributes) ->
-                  // For processor MBeans, Destination is present only for destination-aware processors
-                  // (processors that send to an endpoint), and from Camel 4.16.0+.
-                  // This includes processors like: to, toD, wireTap, enrich, pollEnrich, poll, dynamicRouter.
-                  Optional
-                      .of(attributes.get("camel.processor"))
-                      .filter((processorId) -> processorId.startsWith("to"))
-                      .isPresent()
-                )
-        );
+                .presentWhen(
+                    (attributes) ->
+                        // Destination is present only for destination-aware processors MBeans
+                        // (processors that send to an endpoint), and from Camel 4.16.0+.
+                        // This includes processors like: to, toD, wireTap, enrich, pollEnrich,
+                        // poll, dynamicRouter.
+                        Optional.of(attributes.get("camel.processor"))
+                            .filter((processorId) -> processorId.startsWith("to"))
+                            .isPresent()));
 
     AttributeMatcherGroup threadPoolAttributes =
         attributeGroup(
             attributeWithAnyValue("camel.context"),
-            attributeWithAnyValue("camel.route").optional(), // This attribute is only present for route's thread pools, but there is no way to detect it upfront
+            // This attribute is only present for route's thread pools, but there is no way to
+            // detect it upfront
+            attributeWithAnyValue("camel.route").optional(),
             attributeWithAnyValue("camel.pool_id"));
 
     return MetricsVerifier.create()
