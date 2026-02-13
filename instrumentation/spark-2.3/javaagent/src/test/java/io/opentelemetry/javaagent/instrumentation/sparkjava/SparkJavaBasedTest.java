@@ -19,8 +19,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -58,8 +57,8 @@ class SparkJavaBasedTest {
     AggregatedHttpResponse response = client.get("/param/asdf1234").aggregate().join();
     String content = response.contentUtf8();
 
-    assertNotEquals(port, 0);
-    assertEquals(content, "Hello asdf1234");
+    assertThat(0).isNotEqualTo(port);
+    assertThat("Hello asdf1234").isEqualTo(content);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

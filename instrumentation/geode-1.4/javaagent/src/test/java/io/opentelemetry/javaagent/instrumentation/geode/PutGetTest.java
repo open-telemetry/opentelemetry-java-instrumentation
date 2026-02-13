@@ -15,8 +15,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -76,7 +75,7 @@ class PutGetTest {
               region.put(key, value);
               return region.get(key);
             });
-    assertEquals(value, cacheValue);
+    assertThat(cacheValue).isEqualTo(value);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -114,7 +113,7 @@ class PutGetTest {
           region.put(key, value);
           region.remove(key);
         });
-    assertEquals(0, region.size());
+    assertThat(region.size()).isEqualTo(0);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -153,7 +152,7 @@ class PutGetTest {
               region.put(key, value);
               return region.query("SELECT * FROM /test-region");
             });
-    assertEquals(1, cacheValue.size());
+    assertThat(cacheValue.size()).isEqualTo(1);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -193,7 +192,7 @@ class PutGetTest {
               region.put(key, value);
               return region.existsValue("SELECT * FROM /test-region");
             });
-    assertTrue(cacheValue);
+    assertThat(cacheValue).isTrue();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -234,7 +233,7 @@ class PutGetTest {
               return region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'");
             });
 
-    assertEquals(value, results.asList().get(0));
+    assertThat(results.asList().get(0)).isEqualTo(value);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

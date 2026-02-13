@@ -10,7 +10,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -38,10 +37,11 @@ class ContextBridgeTest {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
         () -> {
-          assertNotNull(Span.fromContextOrNull(Context.current()));
-          assertNotNull(LocalRootSpan.fromContextOrNull(Context.current()));
+          assertThat(Span.fromContextOrNull(Context.current())).isNotNull();
+          assertThat(LocalRootSpan.fromContextOrNull(Context.current())).isNotNull();
           testing.runWithSpan(
-              "internal", () -> assertNotNull(LocalRootSpan.fromContextOrNull(Context.current())));
+              "internal",
+              () -> assertThat(LocalRootSpan.fromContextOrNull(Context.current())).isNotNull());
         });
   }
 
@@ -50,7 +50,7 @@ class ContextBridgeTest {
     AgentSpanTesting.runWithAllSpanKeys(
         "parent",
         () -> {
-          assertNotNull(Span.fromContextOrNull(Context.current()));
+          assertThat(Span.fromContextOrNull(Context.current())).isNotNull();
 
           List<SpanKey> spanKeys =
               Arrays.asList(
@@ -69,13 +69,15 @@ class ContextBridgeTest {
                   SpanKey.CONSUMER_RECEIVE,
                   SpanKey.CONSUMER_PROCESS);
 
-          spanKeys.forEach(spanKey -> assertNotNull(spanKey.fromContextOrNull(Context.current())));
+          spanKeys.forEach(
+              spanKey -> assertThat(spanKey.fromContextOrNull(Context.current())).isNotNull());
 
           testing.runWithSpan(
               "internal",
               () ->
                   spanKeys.forEach(
-                      spanKey -> assertNotNull(spanKey.fromContextOrNull(Context.current()))));
+                      spanKey ->
+                          assertThat(spanKey.fromContextOrNull(Context.current())).isNotNull()));
         });
   }
 
