@@ -33,7 +33,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
 import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,15 +63,10 @@ public final class InstrumentationModuleInstaller {
     this.instrumentation = instrumentation;
   }
 
-  // Need to call deprecated API for backward compatibility with modules that haven't migrated
-  @SuppressWarnings("deprecation")
   AgentBuilder install(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     if (!isInstrumentationEnabled(
-        instrumentationModule.instrumentationNames(),
-        instrumentationModule.defaultEnabled(config))) {
+        instrumentationModule.instrumentationNames(), instrumentationModule.defaultEnabled())) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;

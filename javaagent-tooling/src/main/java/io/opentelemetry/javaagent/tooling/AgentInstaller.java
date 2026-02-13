@@ -173,7 +173,7 @@ public class AgentInstaller {
     }
 
     agentBuilder = agentBuilder.with(new ClassLoadListener());
-    agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
+    agentBuilder = configureIgnoredTypes(extensionClassLoader, agentBuilder);
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class, extensionClassLoader)) {
@@ -288,14 +288,12 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated
-  @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
-      ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
+      ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
+      configurer.configure(builder);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();

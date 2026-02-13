@@ -40,8 +40,7 @@ public class InstrumentationLoader implements AgentExtension {
             });
       }
       try {
-        agentBuilder =
-            instrumentationModuleInstaller.install(instrumentationModule, agentBuilder, config);
+        agentBuilder = instrumentationModuleInstaller.install(instrumentationModule, agentBuilder);
         numberOfLoadedModules++;
       } catch (Exception | LinkageError e) {
         logger.log(
