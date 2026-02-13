@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import static java.util.logging.Level.FINE;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -83,6 +85,25 @@ public final class ApacheHttpClientRequest {
       return Integer.toString(protocolVersion.getMajor());
     }
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
+  }
+
+  @Nullable
+  String getServerAddress() {
+    return uri == null ? null : uri.getHost();
+  }
+
+  @Nullable
+  Integer getServerPort() {
+    return uri == null ? null : uri.getPort();
+  }
+
+  @Nullable
+  InetSocketAddress getNetworkPeerAddress() {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 
   @Nullable
