@@ -149,6 +149,19 @@ Following the reasoning from
 - `Optional` shouldn't appear in public API signatures
 - Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
 
+## Tooling conventions
+
+### AssertJ
+
+Prefer AssertJ assertions over JUnit assertions (assertEquals, assertTrue, etc.) for better
+error messages.
+
+### JUnit
+
+Test classes and test methods should generally be package-protected (no explicit visibility
+modifier) rather than `public`. This follows the principle of minimal necessary visibility and is
+sufficient for JUnit to discover and execute tests.
+
 ## Performance
 
 Avoid allocations on the hot path (instrumentation code) whenever possible. This includes `Iterator`
