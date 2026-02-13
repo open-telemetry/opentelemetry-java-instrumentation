@@ -38,7 +38,6 @@ class RpcServerMetricsTest {
         Attributes.builder()
             .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
             .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
-            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
             .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
             .build();
 
@@ -46,7 +45,6 @@ class RpcServerMetricsTest {
         Attributes.builder()
             .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
             .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
-            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
             .build();
 
     Attributes responseAttributes1 =
@@ -103,9 +101,6 @@ class RpcServerMetricsTest {
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
                                             equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
@@ -131,9 +126,6 @@ class RpcServerMetricsTest {
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
                                             equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
@@ -159,9 +151,6 @@ class RpcServerMetricsTest {
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
                                             equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
@@ -191,9 +180,6 @@ class RpcServerMetricsTest {
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
                                                 "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
