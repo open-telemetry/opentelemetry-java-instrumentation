@@ -71,15 +71,4 @@ public final class NettyClientTelemetry {
   public static void setParentContext(Channel channel, Context parentContext) {
     channel.attr(AttributeKeys.CLIENT_PARENT_CONTEXT).set(parentContext);
   }
-
-  /**
-   * Propagates the {@link Context} to the {@link Channel}. Must be called before each HTTP request
-   * on the channel.
-   *
-   * @deprecated Use {@link #setParentContext(Channel, Context)} instead.
-   */
-  @Deprecated
-  public static void setChannelContext(Channel channel, Context context) {
-    setParentContext(channel, context);
-  }
 }

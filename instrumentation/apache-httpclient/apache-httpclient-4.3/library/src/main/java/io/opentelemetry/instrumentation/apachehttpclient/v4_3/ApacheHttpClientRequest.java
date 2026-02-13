@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import static java.util.logging.Level.FINE;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -44,14 +42,6 @@ public final class ApacheHttpClientRequest {
   /** Returns the actual {@link HttpRequest} being executed by the client. */
   public HttpRequest getRequest() {
     return delegate;
-  }
-
-  /**
-   * @deprecated use {@link #getRequest()} instead.
-   */
-  @Deprecated
-  public HttpRequest getDelegate() {
-    return getRequest();
   }
 
   List<String> getHeader(String name) {
@@ -95,26 +85,6 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
-  @Nullable
-  public String getServerAddress() {
-    return uri == null ? null : uri.getHost();
-  }
-
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
-  @Nullable
-  public Integer getServerPort() {
-    return uri == null ? null : uri.getPort();
-  }
-
   @Nullable
   private static URI getUri(HttpRequest httpRequest) {
     try {
@@ -141,19 +111,5 @@ public final class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
-  }
-
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
-  @Nullable
-  public InetSocketAddress getNetworkPeerAddress() {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }

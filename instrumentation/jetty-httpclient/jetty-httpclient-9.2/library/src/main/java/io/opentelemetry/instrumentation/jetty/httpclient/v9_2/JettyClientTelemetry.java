@@ -33,41 +33,6 @@ public final class JettyClientTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /**
-   * Returns an instrumented HTTP client.
-   *
-   * @deprecated Use {@link #createHttpClient()} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient() {
-    return createHttpClient();
-  }
-
-  /**
-   * Returns a new {@link HttpClient} with the specified SSL context factory and tracing configured.
-   *
-   * @param sslContextFactory the SSL context factory to use for HTTPS support
-   * @deprecated Use {@link #createHttpClient(SslContextFactory)} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient(SslContextFactory sslContextFactory) {
-    return createHttpClient(sslContextFactory);
-  }
-
-  /**
-   * Returns a new {@link HttpClient} with the specified transport and SSL context factory and
-   * tracing configured.
-   *
-   * @param httpClientTransport the HTTP client transport to use
-   * @param sslContextFactory the SSL context factory to use
-   * @deprecated Use {@link #createHttpClient(HttpClientTransport, SslContextFactory)} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient(
-      HttpClientTransport httpClientTransport, SslContextFactory sslContextFactory) {
-    return createHttpClient(httpClientTransport, sslContextFactory);
-  }
-
   /** Returns an instrumented HTTP client. */
   public HttpClient createHttpClient() {
     return new TracingHttpClient(instrumenter);
