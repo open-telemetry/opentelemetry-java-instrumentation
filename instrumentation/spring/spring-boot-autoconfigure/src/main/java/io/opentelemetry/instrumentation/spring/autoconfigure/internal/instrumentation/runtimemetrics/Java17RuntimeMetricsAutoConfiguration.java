@@ -54,5 +54,4 @@ public class Java17RuntimeMetricsAutoConfiguration {
         RuntimeMetricsConfigUtil.configure(
             RuntimeMetrics.builder(openTelemetry), openTelemetry, true);
   }
-
 }

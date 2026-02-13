@@ -38,18 +38,14 @@ public class EarlyConfig {
 
       List<String> enabled =
           environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.enabled",
-              List.class,
-              emptyList());
+              "otel.distribution.spring_starter.instrumentation.enabled", List.class, emptyList());
       if (enabled.contains(snakeCase)) {
         return true;
       }
 
       List<String> disabled =
           environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.disabled",
-              List.class,
-              emptyList());
+              "otel.distribution.spring_starter.instrumentation.disabled", List.class, emptyList());
       if (disabled.contains(snakeCase)) {
         return false;
       }
