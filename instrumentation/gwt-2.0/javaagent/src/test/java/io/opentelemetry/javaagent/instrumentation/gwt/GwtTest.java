@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.gwt;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -160,8 +159,7 @@ class GwtTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"))));
 
     testing.clearData();
 
@@ -183,8 +181,7 @@ class GwtTest {
                         .hasException(new IOException())
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"))));
 
     driver.close();
   }

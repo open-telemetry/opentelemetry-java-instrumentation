@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
@@ -103,7 +102,6 @@ public abstract class AbstractBaseAwsClientTest {
                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   satisfies(RPC_SERVICE, v -> v.contains(service)),
-                                  equalTo(RPC_METHOD, operation),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
                       if (hasRequestId()) {

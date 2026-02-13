@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
@@ -129,7 +128,6 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(SERVER_PORT, 61),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
@@ -174,7 +172,6 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));

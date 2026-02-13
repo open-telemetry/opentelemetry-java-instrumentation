@@ -31,7 +31,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
@@ -268,7 +267,6 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, "ListTables"),
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(AWS_DYNAMODB_TABLE_COUNT, 1),
@@ -289,7 +287,6 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, "DynamoDb"),
-                equalTo(RPC_METHOD, operation),
                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),

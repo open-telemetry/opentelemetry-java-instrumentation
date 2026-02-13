@@ -20,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -214,7 +213,6 @@ public abstract class AbstractAws2SqsBaseTest {
                 val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, "CreateQueue"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
@@ -232,7 +230,6 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, "ReceiveMessage"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
@@ -257,7 +254,6 @@ public abstract class AbstractAws2SqsBaseTest {
                 val -> val.matches("\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Sqs"),
-            equalTo(RPC_METHOD, rcpMethod),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),

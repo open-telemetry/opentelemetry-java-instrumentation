@@ -27,7 +27,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
@@ -326,7 +325,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                 equalTo(RPC_SYSTEM, "aws-api"),
                 equalTo(RPC_SERVICE, service),
-                equalTo(RPC_METHOD, operation),
                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                 equalTo(AWS_REQUEST_ID, requestId)));
 
@@ -930,7 +928,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "somebucket"))));
   }

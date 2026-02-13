@@ -23,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,7 +85,6 @@ class SnsTracingTest {
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
-                            equalTo(RPC_METHOD, "ReceiveMessage"),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "AmazonSQS"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),

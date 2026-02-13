@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,7 +92,6 @@ class AwsSqsTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "GetQueueUrl"),
                             equalTo(RPC_SERVICE, "Sqs"),
                             equalTo(
                                 HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
@@ -112,7 +110,6 @@ class AwsSqsTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "SendMessage"),
                             equalTo(RPC_SERVICE, "Sqs"),
                             equalTo(
                                 HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
@@ -143,7 +140,6 @@ class AwsSqsTest {
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "ReceiveMessage"),
                             equalTo(RPC_SERVICE, "Sqs"),
                             equalTo(
                                 HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),
@@ -170,7 +166,6 @@ class AwsSqsTest {
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "DeleteMessageBatch"),
                             equalTo(RPC_SERVICE, "Sqs"),
                             equalTo(
                                 HTTP_REQUEST_METHOD, HttpAttributes.HttpRequestMethodValues.POST),

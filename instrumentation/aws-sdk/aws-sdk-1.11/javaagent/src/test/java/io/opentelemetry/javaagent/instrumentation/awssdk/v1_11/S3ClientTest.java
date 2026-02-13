@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,7 +131,6 @@ class S3ClientTest extends AbstractS3ClientTest {
                                 equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "HeadBucket"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));

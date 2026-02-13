@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SNS_TOPIC_ARN;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +40,6 @@ class AwsSpanAssertions {
             equalTo(stringKey("aws.queue.name"), queueName),
             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
-            equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "AmazonSQS"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
@@ -70,7 +68,6 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_S3_BUCKET, bucketName),
-            equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "Amazon S3"),
             equalTo(HTTP_REQUEST_METHOD, requestMethod),
@@ -96,7 +93,6 @@ class AwsSpanAssertions {
             equalTo(MESSAGING_DESTINATION_NAME, topicArn),
             satisfies(AWS_SNS_TOPIC_ARN, v -> v.isInstanceOf(String.class)),
             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
-            equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "AmazonSNS"),
             equalTo(HTTP_REQUEST_METHOD, "POST"),

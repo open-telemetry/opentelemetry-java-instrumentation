@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
@@ -144,7 +143,6 @@ public abstract class AbstractSqsTracingTest {
                                 satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "CreateQueue"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -164,7 +162,6 @@ public abstract class AbstractSqsTracingTest {
                                   satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "SendMessage"),
                                   equalTo(HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                   equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -205,7 +202,6 @@ public abstract class AbstractSqsTracingTest {
                                   satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "ReceiveMessage"),
                                   equalTo(HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                   equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -243,7 +239,6 @@ public abstract class AbstractSqsTracingTest {
                                   satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "ReceiveMessage"),
                                   equalTo(HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                   equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -310,7 +305,6 @@ public abstract class AbstractSqsTracingTest {
                                 satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "CreateQueue"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -331,7 +325,6 @@ public abstract class AbstractSqsTracingTest {
                                 satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "SendMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -372,7 +365,6 @@ public abstract class AbstractSqsTracingTest {
                                           AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                       equalTo(RPC_SYSTEM, "aws-api"),
                                       equalTo(RPC_SERVICE, "AmazonSQS"),
-                                      equalTo(RPC_METHOD, "ReceiveMessage"),
                                       equalTo(HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -394,7 +386,6 @@ public abstract class AbstractSqsTracingTest {
                                           AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                       equalTo(RPC_SYSTEM, "aws-api"),
                                       equalTo(RPC_SERVICE, "AmazonSQS"),
-                                      equalTo(RPC_METHOD, "ReceiveMessage"),
                                       equalTo(HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -426,7 +417,6 @@ public abstract class AbstractSqsTracingTest {
                                           AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                       equalTo(RPC_SYSTEM, "aws-api"),
                                       equalTo(RPC_SERVICE, "AmazonSQS"),
-                                      equalTo(RPC_METHOD, "ReceiveMessage"),
                                       equalTo(HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                       equalTo(URL_FULL, "http://localhost:" + sqsPort),

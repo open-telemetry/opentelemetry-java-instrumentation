@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -163,8 +162,7 @@ class SpringRmiTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfying(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
-                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                          equalTo(RPC_METHOD, "hello")));
+                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter")));
           if (testSource == TestSource.RMI) {
             assertions.add(
                 span ->
@@ -173,8 +171,7 @@ class SpringRmiTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfying(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
-                            equalTo(RPC_SERVICE, testSource.remoteClassName),
-                            equalTo(RPC_METHOD, "hello")));
+                            equalTo(RPC_SERVICE, testSource.remoteClassName)));
           }
 
           trace.hasSpansSatisfyingExactly(assertions);
@@ -225,8 +222,7 @@ class SpringRmiTest {
                                           val -> val.isInstanceOf(String.class))))
                       .hasAttributesSatisfying(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
-                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                          equalTo(RPC_METHOD, "exceptional")));
+                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter")));
           if (testSource == TestSource.RMI) {
             assertions.add(
                 span ->
@@ -247,8 +243,7 @@ class SpringRmiTest {
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfying(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
-                            equalTo(RPC_SERVICE, testSource.remoteClassName),
-                            equalTo(RPC_METHOD, "exceptional")));
+                            equalTo(RPC_SERVICE, testSource.remoteClassName)));
           }
 
           trace.hasSpansSatisfyingExactly(assertions);

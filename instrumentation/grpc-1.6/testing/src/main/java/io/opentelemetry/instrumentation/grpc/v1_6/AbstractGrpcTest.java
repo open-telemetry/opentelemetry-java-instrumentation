@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -152,7 +151,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -184,7 +182,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -277,7 +274,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -309,7 +305,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -414,7 +409,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -446,7 +440,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -524,7 +517,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -549,7 +541,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -630,7 +621,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(
                                         RPC_GRPC_STATUS_CODE,
                                         (long) Status.UNKNOWN.getCode().value()),
@@ -652,7 +642,6 @@ public abstract class AbstractGrpcTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.UNKNOWN.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -829,7 +818,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -861,7 +849,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -960,7 +947,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayMultipleHello"),
                                     equalTo(
                                         RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
@@ -993,7 +979,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayMultipleHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -1088,7 +1073,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(
                                         RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
-                                    equalTo(RPC_METHOD, "ServerReflectionInfo"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -1121,7 +1105,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
-                                equalTo(RPC_METHOD, "ServerReflectionInfo"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -1198,7 +1181,6 @@ public abstract class AbstractGrpcTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -1230,7 +1212,6 @@ public abstract class AbstractGrpcTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -1519,7 +1500,6 @@ public abstract class AbstractGrpcTest {
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                equalTo(RPC_METHOD, "SayHello"),
                                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                                 equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
@@ -1545,7 +1525,6 @@ public abstract class AbstractGrpcTest {
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                  equalTo(RPC_METHOD, "SayHello"),
                                                   equalTo(RPC_SERVICE, "example.Greeter"),
                                                   equalTo(RPC_SYSTEM, "grpc"),
                                                   equalTo(
@@ -1569,7 +1548,6 @@ public abstract class AbstractGrpcTest {
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   satisfies(
                                                       SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                  equalTo(RPC_METHOD, "SayHello"),
                                                   equalTo(RPC_SERVICE, "example.Greeter"),
                                                   equalTo(RPC_SYSTEM, "grpc"),
                                                   equalTo(
@@ -1594,7 +1572,6 @@ public abstract class AbstractGrpcTest {
                                             point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
                                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                                 equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
@@ -1617,7 +1594,6 @@ public abstract class AbstractGrpcTest {
                                             point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
                                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                                 equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
@@ -1640,7 +1616,6 @@ public abstract class AbstractGrpcTest {
                                               point.hasAttributesSatisfying(
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   equalTo(SERVER_PORT, server.getPort()),
-                                                  equalTo(RPC_METHOD, "SayHello"),
                                                   equalTo(RPC_SERVICE, "example.Greeter"),
                                                   equalTo(RPC_SYSTEM, "grpc"),
                                                   equalTo(

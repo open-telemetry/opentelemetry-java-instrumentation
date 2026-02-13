@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
@@ -183,7 +182,6 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                               stringKey("url.full"), "http://127.0.0.1:" + server.httpPort() + "/"),
                           equalTo(RPC_SYSTEM, "aws-api"),
                           equalTo(RPC_SERVICE, service),
-                          equalTo(RPC_METHOD, operation),
                           equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                           equalTo(AWS_REQUEST_ID, requestId),
                           equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),

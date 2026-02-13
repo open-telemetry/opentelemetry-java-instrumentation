@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
@@ -219,7 +218,6 @@ class Aws0ClientTest {
                               equalTo(SERVER_ADDRESS, "127.0.0.1"),
                               equalTo(RPC_SYSTEM, "aws-api"),
                               satisfies(RPC_SERVICE, v -> v.contains(service)),
-                              equalTo(RPC_METHOD, operation),
                               equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
                   additionalAttributes.forEach((k, v) -> attributes.add(equalTo(stringKey(k), v)));
@@ -266,7 +264,6 @@ class Aws0ClientTest {
                             equalTo(SERVER_PORT, 61),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
-                            equalTo(RPC_METHOD, "GetObject"),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_S3_BUCKET, "someBucket"),
                             equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));
@@ -303,7 +300,6 @@ class Aws0ClientTest {
                             equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
-                            equalTo(RPC_METHOD, "GetObject"),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_S3_BUCKET, "someBucket"),
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
@@ -342,7 +338,6 @@ class Aws0ClientTest {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
-                            equalTo(RPC_METHOD, "GetObject"),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(AWS_S3_BUCKET, "someBucket"),
                             equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));

@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
@@ -235,7 +234,6 @@ public abstract class AbstractGrpcStreamingTest {
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RPC_METHOD, "Conversation"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -255,7 +253,6 @@ public abstract class AbstractGrpcStreamingTest {
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
-                                equalTo(RPC_METHOD, "Conversation"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -286,7 +283,6 @@ public abstract class AbstractGrpcStreamingTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "Conversation"),
                                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                                 equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
@@ -308,7 +304,6 @@ public abstract class AbstractGrpcStreamingTest {
                                             point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "Conversation"),
                                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                                 equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(

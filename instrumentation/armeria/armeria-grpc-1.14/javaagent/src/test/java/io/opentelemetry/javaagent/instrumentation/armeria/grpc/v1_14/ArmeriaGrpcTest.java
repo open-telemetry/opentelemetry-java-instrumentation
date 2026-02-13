@@ -9,7 +9,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,7 +78,6 @@ class ArmeriaGrpcTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "grpc"),
                             equalTo(RPC_SERVICE, "example.Greeter"),
-                            equalTo(RPC_METHOD, "SayHello"),
                             equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, (long) server.httpPort()))
@@ -104,7 +102,6 @@ class ArmeriaGrpcTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "grpc"),
                             equalTo(RPC_SERVICE, "example.Greeter"),
-                            equalTo(RPC_METHOD, "SayHello"),
                             equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))

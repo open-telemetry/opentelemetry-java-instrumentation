@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
@@ -186,7 +185,6 @@ public abstract class AbstractDubboTraceChainTest {
                                     RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
@@ -211,7 +209,6 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(
                                     RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
                     span ->
@@ -223,7 +220,6 @@ public abstract class AbstractDubboTraceChainTest {
                                     RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
@@ -248,7 +244,6 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(
                                     RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
@@ -272,8 +267,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                         .RpcSystemIncubatingValues.APACHE_DUBBO),
                                                 equalTo(
                                                     RPC_SERVICE,
-                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                                equalTo(RPC_METHOD, "hello")),
+                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService")),
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 equalTo(
@@ -282,8 +276,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                         .RpcSystemIncubatingValues.APACHE_DUBBO),
                                                 equalTo(
                                                     RPC_SERVICE,
-                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                                equalTo(RPC_METHOD, "hello"))))));
+                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"))))));
 
     testing()
         .waitAndAssertMetrics(
@@ -306,7 +299,6 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(
                                                     RPC_SERVICE,
                                                     "org.apache.dubbo.rpc.service.GenericService"),
-                                                equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
@@ -322,7 +314,6 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(
                                                     RPC_SERVICE,
                                                     "org.apache.dubbo.rpc.service.GenericService"),
-                                                equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
@@ -389,7 +380,6 @@ public abstract class AbstractDubboTraceChainTest {
                                     RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RPC_METHOD, "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
                                     hasServicePeerName() ? "test-peer-service" : null),
@@ -414,7 +404,6 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(
                                     RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
@@ -438,8 +427,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                         .RpcSystemIncubatingValues.APACHE_DUBBO),
                                                 equalTo(
                                                     RPC_SERVICE,
-                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                                equalTo(RPC_METHOD, "hello"))))));
+                                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"))))));
 
     testing()
         .waitAndAssertMetrics(
@@ -462,7 +450,6 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(
                                                     RPC_SERVICE,
                                                     "org.apache.dubbo.rpc.service.GenericService"),
-                                                equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),

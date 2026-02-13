@@ -23,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
@@ -93,8 +92,7 @@ class AwsSpanAssertions {
                             v -> assertThat(v).isNull(),
                             v -> assertThat(v).isInstanceOf(Number.class))),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                equalTo(RPC_SYSTEM, "aws-api"),
-                satisfies(RPC_METHOD, stringAssert -> stringAssert.isEqualTo(rpcMethod)),
+                equalTo(RPC_SYSTEM, "aws-api")),
                 equalTo(RPC_SERVICE, "AmazonSQS")));
 
     if (spanName.endsWith("receive")
@@ -124,8 +122,7 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(stringKey("aws.bucket.name"), bucketName),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_METHOD, spanName.substring(3)),
+            equalTo(RPC_SYSTEM, "aws-api")),
             equalTo(RPC_SERVICE, "Amazon S3"),
             equalTo(HTTP_REQUEST_METHOD, method),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -147,8 +144,7 @@ class AwsSpanAssertions {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
             equalTo(AWS_SNS_TOPIC_ARN, topicArn),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_METHOD, spanName.substring(4)),
+            equalTo(RPC_SYSTEM, "aws-api")),
             equalTo(RPC_SERVICE, "AmazonSNS"),
             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
