@@ -17,18 +17,17 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
- * {@link ContextStorage} which stores the {@link Context} in the user's application inside the
- * {@link Context} in the agent. This allows for context interaction to be maintained between the
- * app and agent.
+ * ContextStorage which stores the Context in the user's application inside the Context in the
+ * agent. This allows for context interaction to be maintained between the app and agent.
  *
  * <p>This storage allows for implicit parenting of context to exist between the agent and
  * application by storing the concrete application context in the agent context and returning a
  * wrapper which accesses into this stored concrete context.
  *
  * <p>This storage also makes sure that OpenTelemetry objects are shared within the context. To do
- * this, it recognizes the keys for OpenTelemetry objects (e.g, {@link Span}, {@link Baggage}) and
- * always stores and retrieves them from the agent context, even when accessed from the application.
- * All other accesses are to the concrete application context.
+ * this, it recognizes the keys for OpenTelemetry objects (e.g, Span, Baggage) and always stores and
+ * retrieves them from the agent context, even when accessed from the application. All other
+ * accesses are to the concrete application context.
  */
 // Annotation doesn't work on some fields due to fully qualified name (no clue why it matters...)
 @SuppressWarnings("FieldMissingNullable")
