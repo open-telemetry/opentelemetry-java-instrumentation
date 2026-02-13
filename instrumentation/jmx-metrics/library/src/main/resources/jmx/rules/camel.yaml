@@ -113,7 +113,6 @@ rules:
     prefix: camel.route.
     metricAttribute:
       camel.context: param(context)
-      camel.version: beanattr(CamelVersion)
       camel.route: beanattr(RouteId)
     mapping:
       # camel.route.exchange.count
@@ -207,7 +206,6 @@ rules:
     prefix: camel.processor.
     metricAttribute:
       camel.context: param(context)
-      camel.version: beanattr(CamelVersion)
       camel.route: beanattr(RouteId)
       camel.processor: beanattr(ProcessorId)
       camel.destination: beanattr(Destination)
@@ -303,7 +301,6 @@ rules:
     prefix: camel.threadpool.
     metricAttribute:
       camel.context: param(context)
-      camel.version: beanattr(CamelVersion)
       camel.route: beanattr(RouteId)
       camel.pool_id: beanattr(Id)
     mapping:
