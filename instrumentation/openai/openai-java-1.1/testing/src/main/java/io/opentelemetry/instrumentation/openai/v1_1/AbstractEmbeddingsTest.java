@@ -109,7 +109,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                                     assertThat(v)
                                                         .isEqualTo(singletonList("base64"))))))));
     if (emitExceptionAsLogs()) {
-      SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+      SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();
       getTesting().waitAndAssertLogRecords(log -> log.hasSpanContext(spanCtx));
     }
     getTesting()

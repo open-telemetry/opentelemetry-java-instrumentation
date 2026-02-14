@@ -926,7 +926,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                             equalTo(GEN_AI_OPERATION_NAME, "chat"),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
-    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+    SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();
 
     if (emitExceptionAsLogs()) {
       getTesting()
@@ -1645,7 +1645,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                             equalTo(GEN_AI_OPERATION_NAME, "chat"),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
-    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+    SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();
 
     if (emitExceptionAsLogs()) {
       getTesting()

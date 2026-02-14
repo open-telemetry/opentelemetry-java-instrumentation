@@ -190,7 +190,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
 
     if (emitExceptionAsLogs()) {
-      SpanContext spanCtx = testing().waitForTraces(1).get(0).get(0).getSpanContext();
+      SpanContext spanCtx = testing().spans().get(0).getSpanContext();
       testing().waitAndAssertLogRecords(log -> log.hasSpanContext(spanCtx));
     }
   }
