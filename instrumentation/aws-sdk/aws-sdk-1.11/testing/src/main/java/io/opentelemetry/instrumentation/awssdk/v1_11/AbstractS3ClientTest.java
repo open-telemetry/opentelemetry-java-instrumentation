@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -31,6 +32,7 @@ import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
@@ -134,6 +136,11 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+
+    if (emitExceptionAsLogs()) {
+      SpanContext spanCtx = testing().waitForTraces(1).get(0).get(0).getSpanContext();
+      testing().waitAndAssertLogRecords(log -> log.hasSpanContext(spanCtx));
+    }
   }
 
   @Test
@@ -181,5 +188,10 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+
+    if (emitExceptionAsLogs()) {
+      SpanContext spanCtx = testing().waitForTraces(1).get(0).get(0).getSpanContext();
+      testing().waitAndAssertLogRecords(log -> log.hasSpanContext(spanCtx));
+    }
   }
 }
