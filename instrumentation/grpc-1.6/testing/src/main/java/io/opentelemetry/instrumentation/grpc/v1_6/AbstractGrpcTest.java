@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -565,7 +566,7 @@ public abstract class AbstractGrpcTest {
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  if (status.getCause() == null) {
+                                  if (status.getCause() == null || emitExceptionAsLogs()) {
                                     assertThat(events).hasSize(1);
                                   } else {
                                     assertThat(events).hasSize(2);
@@ -661,14 +662,18 @@ public abstract class AbstractGrpcTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
-                                  assertThat(events).hasSize(2);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  span.hasException(status.asRuntimeException());
+                                  if (emitExceptionAsLogs()) {
+                                    assertThat(events).hasSize(1);
+                                  } else {
+                                    assertThat(events).hasSize(2);
+                                    span.hasException(status.asRuntimeException());
+                                  }
                                 })));
 
     assertMetrics(server, Status.Code.UNKNOWN);
@@ -967,7 +972,6 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
-                                  assertThat(events).hasSize(3);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
@@ -979,7 +983,12 @@ public abstract class AbstractGrpcTest {
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  span.hasException(thrown);
+                                  if (emitExceptionAsLogs()) {
+                                    assertThat(events).hasSize(2);
+                                  } else {
+                                    assertThat(events).hasSize(3);
+                                    span.hasException(thrown);
+                                  }
                                 }),
                     span ->
                         span.hasName("example.Greeter/SayMultipleHello")

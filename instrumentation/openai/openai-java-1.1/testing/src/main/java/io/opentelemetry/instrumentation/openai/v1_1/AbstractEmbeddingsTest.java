@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -238,24 +239,27 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span ->
-                            span.hasName("embeddings text-embedding-3-small")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasException(thrown)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    // Newer versions of the library populate base64 when unset by
-                                    // the user.
-                                    satisfies(
-                                        GEN_AI_REQUEST_ENCODING_FORMATS,
-                                        val ->
-                                            val.satisfiesAnyOf(
-                                                v -> assertThat(v).isNull(),
-                                                v ->
-                                                    assertThat(v)
-                                                        .isEqualTo(singletonList("base64"))))))));
+                        span -> {
+                          span.hasName("embeddings text-embedding-3-small")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                  equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                  equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                  // Newer versions of the library populate base64 when unset by
+                                  // the user.
+                                  satisfies(
+                                      GEN_AI_REQUEST_ENCODING_FORMATS,
+                                      val ->
+                                          val.satisfiesAnyOf(
+                                              v -> assertThat(v).isNull(),
+                                              v ->
+                                                  assertThat(v)
+                                                      .isEqualTo(singletonList("base64")))));
+                          if (emitExceptionAsSpanEvents()) {
+                            span.hasException(thrown);
+                          }
+                        })));
 
     getTesting()
         .waitAndAssertMetrics(

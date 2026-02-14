@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -894,13 +895,12 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(thrown)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
+                    span -> {
+                      span.hasName("S3.GetObject")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
                                 // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
                                 // hostname with the bucket name in case the bucket name is a valid
                                 // DNS label, even in the case that we are using an endpoint
@@ -932,7 +932,11 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "somebucket"))));
+                                equalTo(AWS_S3_BUCKET, "somebucket"));
+                      if (emitExceptionAsSpanEvents()) {
+                        span.hasException(thrown);
+                      }
+                    }));
   }
 
   // regression test for

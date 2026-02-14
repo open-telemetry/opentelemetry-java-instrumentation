@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -192,63 +193,72 @@ class SpringRmiTest {
         trace -> {
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
           assertions.add(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasStatus(StatusData.error())
-                      .hasNoParent()
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("exception")
-                                  .hasAttributesSatisfying(
-                                      equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                      satisfies(
-                                          EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class)))));
+              span -> {
+                span.hasName("parent")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasNoParent();
+                if (emitExceptionAsSpanEvents()) {
+                  span.hasEventsSatisfyingExactly(
+                      event ->
+                          event
+                              .hasName("exception")
+                              .hasAttributesSatisfying(
+                                  equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                  equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE,
+                                      val -> val.isInstanceOf(String.class))));
+                }
+              });
           assertions.add(
-              span ->
-                  span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasStatus(StatusData.error())
-                      .hasParent(trace.getSpan(0))
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("exception")
-                                  .hasAttributesSatisfying(
-                                      equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                      satisfies(
-                                          EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfying(
-                          equalTo(RPC_SYSTEM, "spring_rmi"),
-                          equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                          equalTo(RPC_METHOD, "exceptional")));
+              span -> {
+                span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfying(
+                        equalTo(RPC_SYSTEM, "spring_rmi"),
+                        equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
+                        equalTo(RPC_METHOD, "exceptional"));
+                if (emitExceptionAsSpanEvents()) {
+                  span.hasEventsSatisfyingExactly(
+                      event ->
+                          event
+                              .hasName("exception")
+                              .hasAttributesSatisfying(
+                                  equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                  equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE,
+                                      val -> val.isInstanceOf(String.class))));
+                }
+              });
           if (testSource == TestSource.RMI) {
             assertions.add(
-                span ->
-                    span.hasName(testSource.remoteClassName + "/exceptional")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfying(
-                                        equalTo(
-                                            EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfying(
-                            equalTo(RPC_SYSTEM, testSource.serverSystem),
-                            equalTo(RPC_SERVICE, testSource.remoteClassName),
-                            equalTo(RPC_METHOD, "exceptional")));
+                span -> {
+                  span.hasName(testSource.remoteClassName + "/exceptional")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(1))
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfying(
+                          equalTo(RPC_SYSTEM, testSource.serverSystem),
+                          equalTo(RPC_SERVICE, testSource.remoteClassName),
+                          equalTo(RPC_METHOD, "exceptional"));
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfying(
+                                    equalTo(
+                                        EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                    equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        val -> val.isInstanceOf(String.class))));
+                  }
+                });
           }
 
           trace.hasSpansSatisfyingExactly(assertions);

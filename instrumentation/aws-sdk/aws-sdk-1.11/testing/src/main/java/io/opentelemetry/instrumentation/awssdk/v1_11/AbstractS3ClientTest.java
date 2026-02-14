@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -116,23 +117,26 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(caught)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, "http://127.0.0.1:" + UNUSABLE_PORT),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, 61),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+                    span -> {
+                      span.hasName("S3.GetObject")
+                          .hasKind(CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(URL_FULL, "http://127.0.0.1:" + UNUSABLE_PORT),
+                              equalTo(HTTP_REQUEST_METHOD, "GET"),
+                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                              equalTo(SERVER_PORT, 61),
+                              equalTo(RPC_SYSTEM, "aws-api"),
+                              equalTo(RPC_SERVICE, "Amazon S3"),
+                              equalTo(RPC_METHOD, "GetObject"),
+                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                              equalTo(AWS_S3_BUCKET, "someBucket"),
+                              equalTo(ERROR_TYPE, SdkClientException.class.getName()));
+                      if (emitExceptionAsSpanEvents()) {
+                        span.hasException(caught);
+                      }
+                    }));
   }
 
   @Test
@@ -159,24 +163,27 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasNoParent()
-                            .hasException(
-                                new SdkClientException(
-                                    "Unable to execute HTTP request: Request did not complete before the request timeout configuration."))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, server.httpUri().toString()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+                    span -> {
+                      span.hasName("S3.GetObject")
+                          .hasKind(CLIENT)
+                          .hasStatus(StatusData.error())
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(URL_FULL, server.httpUri().toString()),
+                              equalTo(HTTP_REQUEST_METHOD, "GET"),
+                              equalTo(SERVER_PORT, server.httpPort()),
+                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                              equalTo(RPC_SYSTEM, "aws-api"),
+                              equalTo(RPC_SERVICE, "Amazon S3"),
+                              equalTo(RPC_METHOD, "GetObject"),
+                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                              equalTo(AWS_S3_BUCKET, "someBucket"),
+                              equalTo(ERROR_TYPE, SdkClientException.class.getName()));
+                      if (emitExceptionAsSpanEvents()) {
+                        span.hasException(
+                            new SdkClientException(
+                                "Unable to execute HTTP request: Request did not complete before the request timeout configuration."));
+                      }
+                    }));
   }
 }

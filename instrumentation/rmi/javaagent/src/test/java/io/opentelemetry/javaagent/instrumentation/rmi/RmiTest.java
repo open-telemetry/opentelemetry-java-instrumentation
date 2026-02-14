@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -132,15 +133,22 @@ class RmiTest {
                     span.hasName("rmi.app.Greeter/exceptional")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
+                        .hasEventsSatisfying(
+                            events -> {
+                              if (emitExceptionAsSpanEvents()) {
+                                assertThat(events).hasSize(1);
+                                assertThat(events.get(0))
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
+                                            EXCEPTION_TYPE,
+                                            thrown.getClass().getCanonicalName()),
                                         equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+                              } else {
+                                assertThat(events).isEmpty();
+                              }
+                            })
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Greeter"),
@@ -148,15 +156,22 @@ class RmiTest {
                 span ->
                     span.hasName("rmi.app.Server/exceptional")
                         .hasKind(SpanKind.SERVER)
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
+                        .hasEventsSatisfying(
+                            events -> {
+                              if (emitExceptionAsSpanEvents()) {
+                                assertThat(events).hasSize(1);
+                                assertThat(events.get(0))
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
+                                            EXCEPTION_TYPE,
+                                            thrown.getClass().getCanonicalName()),
                                         equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+                              } else {
+                                assertThat(events).isEmpty();
+                              }
+                            })
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Server"),
