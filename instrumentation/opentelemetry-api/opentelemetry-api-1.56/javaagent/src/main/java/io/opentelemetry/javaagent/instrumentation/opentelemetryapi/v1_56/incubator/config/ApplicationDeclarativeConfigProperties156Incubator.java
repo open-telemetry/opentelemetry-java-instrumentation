@@ -5,21 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config;
 
-import application.io.opentelemetry.api.incubator.config.DeclarativeConfigException;
-import application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import application.io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public final class ApplicationDeclarativeConfigProperties156Incubator
-    implements DeclarativeConfigProperties {
-  private final io.opentelemetry.api.incubator.config.DeclarativeConfigProperties
-      instrumentationConfig;
+    implements application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties {
+  private final DeclarativeConfigProperties instrumentationConfig;
 
   public ApplicationDeclarativeConfigProperties156Incubator(
-      io.opentelemetry.api.incubator.config.DeclarativeConfigProperties instrumentationConfig) {
+      DeclarativeConfigProperties instrumentationConfig) {
     this.instrumentationConfig = instrumentationConfig;
   }
 
@@ -91,16 +88,17 @@ public final class ApplicationDeclarativeConfigProperties156Incubator
 
   @Nullable
   @Override
-  public DeclarativeConfigProperties getStructured(String name) {
-    io.opentelemetry.api.incubator.config.DeclarativeConfigProperties config =
-        instrumentationConfig.getStructured(name);
+  public application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties
+      getStructured(String name) {
+    DeclarativeConfigProperties config = instrumentationConfig.getStructured(name);
     return config == null ? null : new ApplicationDeclarativeConfigProperties156Incubator(config);
   }
 
   @Nullable
   @Override
-  public List<DeclarativeConfigProperties> getStructuredList(String name) {
-    List<io.opentelemetry.api.incubator.config.DeclarativeConfigProperties> structuredList =
+  public List<application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties>
+      getStructuredList(String name) {
+    List<DeclarativeConfigProperties> structuredList =
         instrumentationConfig.getStructuredList(name);
     if (structuredList == null) {
       return null;
@@ -117,8 +115,8 @@ public final class ApplicationDeclarativeConfigProperties156Incubator
   }
 
   @Override
-  public ComponentLoader getComponentLoader() {
-    throw new DeclarativeConfigException(
+  public application.io.opentelemetry.common.ComponentLoader getComponentLoader() {
+    throw new application.io.opentelemetry.api.incubator.config.DeclarativeConfigException(
         "getComponentLoader is not supported in application code. "
             + "It is only used to set up the OpenTelemetry SDK in the agent.");
   }

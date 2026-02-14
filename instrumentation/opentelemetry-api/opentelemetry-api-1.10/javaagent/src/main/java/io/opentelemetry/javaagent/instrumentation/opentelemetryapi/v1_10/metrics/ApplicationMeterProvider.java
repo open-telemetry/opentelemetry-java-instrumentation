@@ -5,25 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.MeterBuilder;
-import application.io.opentelemetry.api.metrics.MeterProvider;
+import io.opentelemetry.api.metrics.MeterProvider;
 
 // Our convention for accessing agent packages.
-@SuppressWarnings("UnnecessarilyFullyQualified")
-public class ApplicationMeterProvider implements MeterProvider {
+public class ApplicationMeterProvider
+    implements application.io.opentelemetry.api.metrics.MeterProvider {
 
   private final ApplicationMeterFactory meterFactory;
-  private final io.opentelemetry.api.metrics.MeterProvider agentMeterProvider;
+  private final MeterProvider agentMeterProvider;
 
   public ApplicationMeterProvider(
-      ApplicationMeterFactory meterFactory,
-      io.opentelemetry.api.metrics.MeterProvider agentMeterProvider) {
+      ApplicationMeterFactory meterFactory, MeterProvider agentMeterProvider) {
     this.meterFactory = meterFactory;
     this.agentMeterProvider = agentMeterProvider;
   }
 
   @Override
-  public MeterBuilder meterBuilder(String instrumentationName) {
+  public application.io.opentelemetry.api.metrics.MeterBuilder meterBuilder(
+      String instrumentationName) {
     return new ApplicationMeterBuilder(
         meterFactory, agentMeterProvider.meterBuilder(instrumentationName));
   }

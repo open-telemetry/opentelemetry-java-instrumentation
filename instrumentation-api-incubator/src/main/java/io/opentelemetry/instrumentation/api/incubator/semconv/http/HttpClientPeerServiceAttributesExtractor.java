@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -26,8 +27,7 @@ public final class HttpClientPeerServiceAttributesExtractor {
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver
-          peerServiceResolver) {
+      PeerServiceResolver peerServiceResolver) {
     return HttpClientServicePeerAttributesExtractor.create(
         attributesGetter, ServicePeerResolver.fromPeerServiceResolver(peerServiceResolver));
   }

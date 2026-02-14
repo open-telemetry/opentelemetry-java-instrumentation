@@ -5,17 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.metrics.LongHistogram;
-import application.io.opentelemetry.context.Context;
+import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationLongHistogram implements LongHistogram {
+public class ApplicationLongHistogram
+    implements application.io.opentelemetry.api.metrics.LongHistogram {
 
-  private final io.opentelemetry.api.metrics.LongHistogram agentHistogram;
+  private final LongHistogram agentHistogram;
 
-  protected ApplicationLongHistogram(io.opentelemetry.api.metrics.LongHistogram agentHistogram) {
+  protected ApplicationLongHistogram(LongHistogram agentHistogram) {
     this.agentHistogram = agentHistogram;
   }
 
@@ -25,12 +24,16 @@ public class ApplicationLongHistogram implements LongHistogram {
   }
 
   @Override
-  public void record(long value, Attributes applicationAttributes) {
+  public void record(
+      long value, application.io.opentelemetry.api.common.Attributes applicationAttributes) {
     agentHistogram.record(value, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
-  public void record(long value, Attributes applicationAttributes, Context applicationContext) {
+  public void record(
+      long value,
+      application.io.opentelemetry.api.common.Attributes applicationAttributes,
+      application.io.opentelemetry.context.Context applicationContext) {
     agentHistogram.record(
         value,
         Bridging.toAgent(applicationAttributes),

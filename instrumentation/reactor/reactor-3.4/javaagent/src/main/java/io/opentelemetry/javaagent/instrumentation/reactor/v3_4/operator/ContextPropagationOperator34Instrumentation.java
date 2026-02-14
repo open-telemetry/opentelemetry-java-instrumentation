@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import application.io.opentelemetry.context.Context;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -52,11 +52,11 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static Context methodExit(
+    public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) ContextView reactorContext,
-        @Advice.Argument(1) Context defaultContext) {
+        @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
 
-      io.opentelemetry.context.Context agentContext =
+      Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
       if (agentContext == null) {
         return defaultContext;

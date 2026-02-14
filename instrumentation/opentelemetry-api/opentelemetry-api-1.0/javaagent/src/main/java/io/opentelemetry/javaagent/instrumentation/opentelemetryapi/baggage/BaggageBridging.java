@@ -5,33 +5,35 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage;
 
-import application.io.opentelemetry.api.baggage.Baggage;
-import application.io.opentelemetry.api.baggage.BaggageBuilder;
-import application.io.opentelemetry.api.baggage.BaggageEntryMetadata;
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.baggage.BaggageBuilder;
+import io.opentelemetry.api.baggage.BaggageEntryMetadata;
 
 public final class BaggageBridging {
 
-  public static Baggage toApplication(io.opentelemetry.api.baggage.Baggage agentBaggage) {
-    BaggageBuilder applicationBaggageBuilder = Baggage.builder();
+  public static application.io.opentelemetry.api.baggage.Baggage toApplication(
+      Baggage agentBaggage) {
+    application.io.opentelemetry.api.baggage.BaggageBuilder applicationBaggageBuilder =
+        application.io.opentelemetry.api.baggage.Baggage.builder();
     agentBaggage.forEach(
         (key, entry) ->
             applicationBaggageBuilder.put(
                 key,
                 entry.getValue(),
-                BaggageEntryMetadata.create(entry.getMetadata().getValue())));
+                application.io.opentelemetry.api.baggage.BaggageEntryMetadata.create(
+                    entry.getMetadata().getValue())));
     return applicationBaggageBuilder.build();
   }
 
-  public static io.opentelemetry.api.baggage.Baggage toAgent(Baggage applicationBaggage) {
-    io.opentelemetry.api.baggage.BaggageBuilder agentBaggageBuilder =
-        io.opentelemetry.api.baggage.Baggage.builder();
+  public static Baggage toAgent(
+      application.io.opentelemetry.api.baggage.Baggage applicationBaggage) {
+    BaggageBuilder agentBaggageBuilder = Baggage.builder();
     applicationBaggage.forEach(
         (key, entry) ->
             agentBaggageBuilder.put(
                 key,
                 entry.getValue(),
-                io.opentelemetry.api.baggage.BaggageEntryMetadata.create(
-                    entry.getMetadata().getValue())));
+                BaggageEntryMetadata.create(entry.getMetadata().getValue())));
     return agentBaggageBuilder.build();
   }
 
