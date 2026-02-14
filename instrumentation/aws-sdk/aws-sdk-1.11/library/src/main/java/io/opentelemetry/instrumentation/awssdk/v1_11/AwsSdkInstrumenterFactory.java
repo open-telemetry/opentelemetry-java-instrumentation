@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static java.util.Collections.emptyList;
-
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.OpenTelemetry;
@@ -88,7 +86,7 @@ final class AwsSdkInstrumenterFactory {
         spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        emptyList(),
+        builder -> Experimental.setExceptionEventName(builder, "rpc.client.call.exception"),
         true);
   }
 
@@ -208,22 +206,6 @@ final class AwsSdkInstrumenterFactory {
           Experimental.setExceptionEventName(builder, "db.client.operation.exception");
         },
         true);
-  }
-
-  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      SpanNameExtractor<REQUEST> spanNameExtractor,
-      SpanKindExtractor<REQUEST> spanKindExtractor,
-      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributeExtractors,
-      List<AttributesExtractor<REQUEST, RESPONSE>> additionalAttributeExtractors,
-      boolean enabled) {
-    return createInstrumenter(
-        openTelemetry,
-        spanNameExtractor,
-        spanKindExtractor,
-        attributeExtractors,
-        builder -> builder.addAttributesExtractors(additionalAttributeExtractors),
-        enabled);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(

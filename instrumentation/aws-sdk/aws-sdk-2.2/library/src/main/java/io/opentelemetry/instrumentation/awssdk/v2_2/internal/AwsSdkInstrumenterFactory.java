@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
@@ -105,7 +103,7 @@ public final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory::spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        emptyList(),
+        builder -> Experimental.setExceptionEventName(builder, "rpc.client.call.exception"),
         true);
   }
 
@@ -250,23 +248,6 @@ public final class AwsSdkInstrumenterFactory {
 
   public Logger eventLogger() {
     return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
-  }
-
-  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      SpanNameExtractor<REQUEST> spanNameExtractor,
-      SpanKindExtractor<REQUEST> spanKindExtractor,
-      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributeExtractors,
-      List<AttributesExtractor<REQUEST, RESPONSE>> additionalAttributeExtractors,
-      boolean enabled) {
-
-    return createInstrumenter(
-        openTelemetry,
-        spanNameExtractor,
-        spanKindExtractor,
-        attributeExtractors,
-        builder -> builder.addAttributesExtractors(additionalAttributeExtractors),
-        enabled);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
