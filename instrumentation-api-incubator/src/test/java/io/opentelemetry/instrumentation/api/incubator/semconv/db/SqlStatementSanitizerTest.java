@@ -555,6 +555,10 @@ class SqlStatementSanitizerTest {
         Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "TAblE", "SELECT TAblE")),
         Arguments.of("select next value in hibernate_sequence", expect("SELECT", null, "SELECT")),
 
+        // EXPLAIN - preserved as prefix command in summary
+        Arguments.of(
+            "EXPLAIN SELECT * FROM users", expect("SELECT", "users", "EXPLAIN SELECT users")),
+
         // hibernate/jpa
         Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
