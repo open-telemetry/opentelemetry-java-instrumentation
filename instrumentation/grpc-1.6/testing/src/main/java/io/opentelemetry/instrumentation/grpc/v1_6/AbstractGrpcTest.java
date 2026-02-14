@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
-import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -568,7 +569,7 @@ public abstract class AbstractGrpcTest {
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  if (status.getCause() == null || emitExceptionAsLogs()) {
+                                  if (status.getCause() == null || !emitExceptionAsSpanEvents()) {
                                     assertThat(events).hasSize(1);
                                   } else {
                                     assertThat(events).hasSize(2);
@@ -590,8 +591,7 @@ public abstract class AbstractGrpcTest {
                               ExceptionAttributes.EXCEPTION_MESSAGE,
                               status.getCause().getMessage()),
                           satisfies(
-                              ExceptionAttributes.EXCEPTION_STACKTRACE,
-                              val -> val.isNotNull())));
+                              ExceptionAttributes.EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
 
     assertMetrics(server, status.getCode());
@@ -688,7 +688,7 @@ public abstract class AbstractGrpcTest {
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  if (emitExceptionAsLogs()) {
+                                  if (!emitExceptionAsSpanEvents()) {
                                     assertThat(events).hasSize(1);
                                   } else {
                                     assertThat(events).hasSize(2);
@@ -710,8 +710,7 @@ public abstract class AbstractGrpcTest {
                               ExceptionAttributes.EXCEPTION_MESSAGE,
                               status.asRuntimeException().getMessage()),
                           satisfies(
-                              ExceptionAttributes.EXCEPTION_STACKTRACE,
-                              val -> val.isNotNull())));
+                              ExceptionAttributes.EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
 
     assertMetrics(server, Status.Code.UNKNOWN);
@@ -1021,7 +1020,7 @@ public abstract class AbstractGrpcTest {
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
-                                  if (emitExceptionAsLogs()) {
+                                  if (!emitExceptionAsSpanEvents()) {
                                     assertThat(events).hasSize(2);
                                   } else {
                                     assertThat(events).hasSize(3);
@@ -1070,14 +1069,10 @@ public abstract class AbstractGrpcTest {
                   log.hasSeverity(Severity.WARN)
                       .hasEventName("rpc.client.call.exception")
                       .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              ExceptionAttributes.EXCEPTION_TYPE,
-                              thrown.getClass().getName()),
-                          equalTo(
-                              ExceptionAttributes.EXCEPTION_MESSAGE, thrown.getMessage()),
+                          equalTo(ExceptionAttributes.EXCEPTION_TYPE, thrown.getClass().getName()),
+                          equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, thrown.getMessage()),
                           satisfies(
-                              ExceptionAttributes.EXCEPTION_STACKTRACE,
-                              val -> val.isNotNull())));
+                              ExceptionAttributes.EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
   }
 

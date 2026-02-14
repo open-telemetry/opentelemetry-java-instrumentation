@@ -792,10 +792,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   protected SpanDataAssert assertControllerSpan(SpanDataAssert span, Throwable expectedException) {
     span.hasName("controller").hasKind(SpanKind.INTERNAL);
     if (expectedException != null) {
-      span.hasStatus(StatusData.error());
-      if (emitExceptionAsSpanEvents()) {
-        span.hasException(expectedException);
-      }
+      span.hasStatus(StatusData.error())
+          .hasException(emitExceptionAsSpanEvents() ? expectedException : null);
     }
     return span;
   }
@@ -891,9 +889,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
 
     if (endpoint == EXCEPTION && options.hasExceptionOnServerSpan.test(endpoint)) {
-      if (emitExceptionAsSpanEvents()) {
-        span.hasException(options.expectedException);
-      }
+      span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null);
     }
 
     span.hasAttributesSatisfying(

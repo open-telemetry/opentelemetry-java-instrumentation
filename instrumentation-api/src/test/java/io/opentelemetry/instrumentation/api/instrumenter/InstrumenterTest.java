@@ -242,12 +242,10 @@ class InstrumenterTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("span").hasStatus(StatusData.error());
-                      if (emitExceptionAsSpanEvents()) {
-                        span.hasException(error);
-                      }
-                    }));
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
@@ -368,12 +366,10 @@ class InstrumenterTest {
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("span").hasStatus(StatusData.error());
-                      if (emitExceptionAsSpanEvents()) {
-                        span.hasException(error);
-                      }
-                    }));
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
