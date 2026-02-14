@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -194,10 +195,12 @@ final class AwsSdkInstrumenterFactory {
         spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder ->
-            builder
-                .addAttributesExtractor(new DynamoDbAttributesExtractor())
-                .addOperationMetrics(DbClientMetrics.get()),
+        builder -> {
+          builder
+              .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addOperationMetrics(DbClientMetrics.get());
+          Experimental.setExceptionEventName(builder, "db.client.operation.exception");
+        },
         true);
   }
 

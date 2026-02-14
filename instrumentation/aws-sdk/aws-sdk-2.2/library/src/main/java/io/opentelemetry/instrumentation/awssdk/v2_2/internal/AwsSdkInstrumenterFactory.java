@@ -223,10 +223,12 @@ public final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory::spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder ->
-            builder
-                .addAttributesExtractor(new DynamoDbAttributesExtractor())
-                .addOperationMetrics(DbClientMetrics.get()),
+        builder -> {
+          builder
+              .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addOperationMetrics(DbClientMetrics.get());
+          Experimental.setExceptionEventName(builder, "db.client.operation.exception");
+        },
         true);
   }
 
