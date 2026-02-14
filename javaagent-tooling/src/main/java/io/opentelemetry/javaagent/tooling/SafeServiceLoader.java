@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 public final class SafeServiceLoader {
 
@@ -82,6 +83,7 @@ public final class SafeServiceLoader {
       }
     }
 
+    @Nullable
     @Override
     public T next() {
       // jdk8 throws UnsupportedClassVersionError in next()

@@ -261,13 +261,16 @@ public class AgentInstaller {
 
     VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
         VirtualFieldImplementationInstallerFactory.getInstance();
-    for (EarlyInstrumentationModule earlyInstrumentationModule :
-        loadOrdered(EarlyInstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
+    if (extensionsClassLoader != null) {
+      for (EarlyInstrumentationModule earlyInstrumentationModule :
+          loadOrdered(EarlyInstrumentationModule.class, extensionsClassLoader)) {
 
-      VirtualFieldImplementationInstaller contextProvider =
-          virtualFieldInstallerFactory.create(
-              earlyInstrumentationModule.getInstrumentationModule());
-      extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
+        VirtualFieldImplementationInstaller contextProvider =
+            virtualFieldInstallerFactory.create(
+                earlyInstrumentationModule.getInstrumentationModule());
+        extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
+      }
     }
 
     agentBuilder = AgentBuilderUtil.optimize(extendableAgentBuilder);
@@ -275,7 +278,7 @@ public class AgentInstaller {
   }
 
   private static void setBootstrapPackages(
-      ConfigProperties config, ClassLoader extensionClassLoader) {
+      @Nullable ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer :
         load(BootstrapPackagesConfigurer.class, extensionClassLoader)) {
@@ -291,7 +294,9 @@ public class AgentInstaller {
   // Need to call deprecated API for backward compatibility with extensions that haven't migrated
   @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
-      ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
+      @Nullable ConfigProperties config,
+      ClassLoader extensionClassLoader,
+      AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
