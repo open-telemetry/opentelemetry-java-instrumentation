@@ -74,11 +74,6 @@ public class ServicePeerResolver {
             });
   }
 
-  @SuppressWarnings("deprecation") // used by deprecated PeerServiceResolver
-  public ServicePeerResolver(Map<String, String> servicePeerNameMapping) {
-    servicePeerNameMapping.forEach((peer, serviceName) -> addMapping(peer, serviceName, null));
-  }
-
   private void addMapping(
       String peer, @Nullable String serviceName, @Nullable String serviceNamespace) {
     if (serviceName == null && serviceNamespace == null) {
@@ -127,14 +122,6 @@ public class ServicePeerResolver {
     }
   }
 
-  // TODO: remove this method when deprecated PeerServiceResolver is removed
-  @Nullable
-  public String resolveServiceName(
-      String host, @Nullable Integer port, Supplier<String> pathSupplier) {
-    ServicePeer peer = resolveServicePeer(host, port, pathSupplier);
-    return peer != null ? peer.name : null;
-  }
-
   @Nullable
   ServicePeer resolveServicePeer(
       String host, @Nullable Integer port, Supplier<String> pathSupplier) {
@@ -147,26 +134,6 @@ public class ServicePeerResolver {
         .max((o1, o2) -> matcherComparator.compare(o1.getKey(), o2.getKey()))
         .map(Map.Entry::getValue)
         .orElse(null);
-  }
-
-  // TODO: remove this method when deprecated PeerServiceResolver is removed
-  @SuppressWarnings("deprecation") // bridges deprecated PeerServiceResolver
-  public static ServicePeerResolver fromPeerServiceResolver(
-      io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver resolver) {
-    return new ServicePeerResolver(new HashMap<>()) {
-      @Override
-      public boolean isEmpty() {
-        return resolver.isEmpty();
-      }
-
-      @Override
-      @Nullable
-      ServicePeer resolveServicePeer(
-          String host, @Nullable Integer port, Supplier<String> pathSupplier) {
-        String serviceName = resolver.resolveService(host, port, pathSupplier);
-        return serviceName != null ? new ServicePeer(serviceName, null) : null;
-      }
-    };
   }
 
   @AutoValue
