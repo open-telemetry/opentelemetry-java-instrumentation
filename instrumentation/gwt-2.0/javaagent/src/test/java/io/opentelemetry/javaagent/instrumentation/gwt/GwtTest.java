@@ -145,8 +145,8 @@ class GwtTest {
 
     // click a button to trigger calling java code
     driver.findElement(By.className("greeting.button")).click();
-    assertThat("Hello, Otel")
-        .isEqualTo(driver.findElement(By.className("message.received")).getText());
+    assertThat(driver.findElement(By.className("message.received")).getText())
+        .isEqualTo("Hello, Otel");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -168,7 +168,7 @@ class GwtTest {
 
     // click a button to trigger calling java code
     driver.findElement(By.className("error.button")).click();
-    assertThat("Error").isEqualTo(driver.findElement(By.className("error.received")).getText());
+    assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
 
     testing.waitAndAssertTraces(
         trace ->

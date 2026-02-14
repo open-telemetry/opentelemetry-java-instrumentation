@@ -73,9 +73,9 @@ class Log4j1MdcTest {
 
     assertThat(events.size()).isEqualTo(3);
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(span1.getSpanContext().getTraceId()).isEqualTo(events.get(0).getMDC("trace_id"));
-    assertThat(span1.getSpanContext().getSpanId()).isEqualTo(events.get(0).getMDC("span_id"));
-    assertThat("01").isEqualTo(events.get(0).getMDC("trace_flags"));
+    assertThat(events.get(0).getMDC("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
+    assertThat(events.get(0).getMDC("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
+    assertThat(events.get(0).getMDC("trace_flags")).isEqualTo("01");
 
     assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
     assertThat(events.get(1).getMDC("trace_id")).isNull();
@@ -85,9 +85,9 @@ class Log4j1MdcTest {
     assertThat(events.get(2).getMessage()).isEqualTo("log message 3");
     // this explicit getMDCCopy() call here is to make sure that whole instrumentation is tested
     events.get(2).getMDCCopy();
-    assertThat(span2.getSpanContext().getTraceId()).isEqualTo(events.get(2).getMDC("trace_id"));
-    assertThat(span2.getSpanContext().getSpanId()).isEqualTo(events.get(2).getMDC("span_id"));
-    assertThat("01").isEqualTo(events.get(2).getMDC("trace_flags"));
+    assertThat(events.get(2).getMDC("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
+    assertThat(events.get(2).getMDC("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
+    assertThat(events.get(2).getMDC("trace_flags")).isEqualTo("01");
   }
 
   @Test

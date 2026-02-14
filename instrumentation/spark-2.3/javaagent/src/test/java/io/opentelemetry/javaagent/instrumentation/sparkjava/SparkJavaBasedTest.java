@@ -57,8 +57,8 @@ class SparkJavaBasedTest {
     AggregatedHttpResponse response = client.get("/param/asdf1234").aggregate().join();
     String content = response.contentUtf8();
 
-    assertThat(0).isNotEqualTo(port);
-    assertThat("Hello asdf1234").isEqualTo(content);
+    assertThat(port).isNotEqualTo(0);
+    assertThat(content).isEqualTo("Hello asdf1234");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

@@ -220,7 +220,7 @@ public abstract class AbstractSpringJpaTest<
 
     setFirstName(customer, "Bill");
     repo.save(customer);
-    assertThat(savedId).isEqualTo(id(customer));
+    assertThat(id(customer)).isEqualTo(savedId);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

@@ -151,7 +151,7 @@ class SpringRmiTest {
   void clientCallCreatesSpans(TestSource testSource) throws RemoteException {
     SpringRmiGreeter client = testSource.appContext.getBean(SpringRmiGreeter.class);
     String response = testing.runWithSpan("parent", () -> client.hello("Test Name"));
-    assertThat("Hello Test Name").isEqualTo(response);
+    assertThat(response).isEqualTo("Hello Test Name");
     testing.waitAndAssertTraces(
         trace -> {
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
