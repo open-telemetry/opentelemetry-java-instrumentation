@@ -233,7 +233,7 @@ class HttpClientAttributesExtractorTest {
     request.put("urlFull", url);
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter()).build();
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), request);
