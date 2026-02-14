@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -22,6 +24,17 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
+  }
+
+  /**
+   * @deprecated new semantic conventions always use db.collection.name
+   */
+  @CanIgnoreReturnValue
+  @Deprecated // to be removed in 3.0
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
+      AttributeKey<String> oldSemconvTableAttribute) {
+    this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
+    return this;
   }
 
   /**

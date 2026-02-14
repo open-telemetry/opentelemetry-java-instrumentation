@@ -14,9 +14,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.junit.jupiter.api.Named.named;
@@ -144,7 +144,7 @@ class CassandraClientTest {
                                   maybeStable(DB_OPERATION),
                                   emitStableDatabaseSemconv() ? null : parameter.operation),
                               equalTo(
-                                  maybeStable(DB_SQL_TABLE),
+                                  maybeStable(DB_CASSANDRA_TABLE),
                                   emitStableDatabaseSemconv() ? null : parameter.table))));
     } else {
       testing.waitAndAssertTraces(
@@ -169,7 +169,7 @@ class CassandraClientTest {
                                   maybeStable(DB_OPERATION),
                                   emitStableDatabaseSemconv() ? null : parameter.operation),
                               equalTo(
-                                  maybeStable(DB_SQL_TABLE),
+                                  maybeStable(DB_CASSANDRA_TABLE),
                                   emitStableDatabaseSemconv() ? null : parameter.table))));
     }
 
@@ -239,7 +239,7 @@ class CassandraClientTest {
                                   maybeStable(DB_OPERATION),
                                   emitStableDatabaseSemconv() ? null : parameter.operation),
                               equalTo(
-                                  maybeStable(DB_SQL_TABLE),
+                                  maybeStable(DB_CASSANDRA_TABLE),
                                   emitStableDatabaseSemconv() ? null : parameter.table)),
                   span ->
                       span.hasName("callbackListener")
@@ -269,7 +269,7 @@ class CassandraClientTest {
                                   maybeStable(DB_OPERATION),
                                   emitStableDatabaseSemconv() ? null : parameter.operation),
                               equalTo(
-                                  maybeStable(DB_SQL_TABLE),
+                                  maybeStable(DB_CASSANDRA_TABLE),
                                   emitStableDatabaseSemconv() ? null : parameter.table)),
                   span ->
                       span.hasName("callbackListener")

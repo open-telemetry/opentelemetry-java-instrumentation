@@ -21,7 +21,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class DbClientAttributesExtractorTest {
 
   static final class TestAttributesGetter
@@ -65,6 +64,7 @@ class DbClientAttributesExtractorTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
   @Test
   void shouldExtractAllAvailableAttributes() {
     // given

@@ -239,7 +239,6 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
     delegate.setAsciiStream(parameterIndex, x, length);
   }
 
-  @SuppressWarnings("deprecation") // implements deprecated interface method
   @Override
   @Deprecated
   public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
