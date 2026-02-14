@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.tooling.ignore;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 
@@ -22,17 +20,15 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 @AutoService(IgnoredTypesConfigurer.class)
 public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
+  // We set this system property when running the agent with unit tests to allow verifying that we
+  // don't ignore libraries that we actually attempt to instrument. It means either the list is
+  // wrong or a type matcher is.
+  private static final String ADDITIONAL_LIBRARY_IGNORES_ENABLED =
+      "otel.javaagent.testing.additional-library-ignores.enabled";
+
   @Override
   public void configure(IgnoredTypesBuilder builder) {
-    // We set this system property when running the agent with unit tests to allow verifying that we
-    // don't ignore libraries that we actually attempt to instrument. It means either the list is
-    // wrong or a type matcher is.
-    boolean enabled =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
-            .get("testing")
-            .get("additional_library_ignores")
-            .getBoolean("enabled", true);
-    if (enabled) {
+    if (!"false".equals(System.getProperty(ADDITIONAL_LIBRARY_IGNORES_ENABLED))) {
       configureInternal(builder);
     }
   }
