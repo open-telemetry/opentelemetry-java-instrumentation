@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,12 +51,14 @@ public final class JmsInstrumenterFactory {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PUBLISH;
 
-    return Instrumenter.<MessageWithDestination, Void>builder(
-            openTelemetry,
-            instrumentationName,
-            MessagingSpanNameExtractor.create(getter, operation))
-        .addAttributesExtractor(createMessagingAttributesExtractor(operation))
-        .buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
+    InstrumenterBuilder<MessageWithDestination, Void> builder =
+        Instrumenter.<MessageWithDestination, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+    Experimental.setExceptionEventName(builder, "messaging.client.operation.exception");
+    return builder.buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerReceiveInstrumenter() {
@@ -74,6 +77,7 @@ public final class JmsInstrumenterFactory {
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
     }
+    Experimental.setExceptionEventName(builder, "messaging.client.operation.exception");
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -88,6 +92,7 @@ public final class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+    Experimental.setExceptionEventName(builder, "messaging.process.exception");
     if (canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(

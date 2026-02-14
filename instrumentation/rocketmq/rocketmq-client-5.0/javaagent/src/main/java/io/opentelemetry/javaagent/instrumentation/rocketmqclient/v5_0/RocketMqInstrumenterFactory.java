@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -45,6 +46,7 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(RocketMqProducerAttributeExtractor.INSTANCE);
+    Experimental.setExceptionEventName(instrumenterBuilder, "messaging.client.operation.exception");
     return instrumenterBuilder.buildProducerInstrumenter(MessageMapSetter.INSTANCE);
   }
 
@@ -65,6 +67,7 @@ final class RocketMqInstrumenterFactory {
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(RocketMqConsumerReceiveAttributeExtractor.INSTANCE);
+    Experimental.setExceptionEventName(instrumenterBuilder, "messaging.client.operation.exception");
     return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -95,6 +98,7 @@ final class RocketMqInstrumenterFactory {
                   }
                 });
 
+    Experimental.setExceptionEventName(instrumenterBuilder, "messaging.process.exception");
     if (receiveInstrumentationEnabled) {
       SpanLinksExtractor<MessageView> spanLinksExtractor =
           new PropagatorBasedSpanLinksExtractor<>(

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.util.List;
 
 /**
@@ -22,17 +23,19 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
-    return Instrumenter.<NatsRequest, NatsRequest>builder(
-            openTelemetry,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(
-                NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH))
-        .addAttributesExtractor(
-            MessagingAttributesExtractor.builder(
-                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH)
-                .setCapturedHeaders(capturedHeaders)
-                .build())
-        .buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
+    InstrumenterBuilder<NatsRequest, NatsRequest> producerBuilder =
+        Instrumenter.<NatsRequest, NatsRequest>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(
+                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH))
+            .addAttributesExtractor(
+                MessagingAttributesExtractor.builder(
+                        NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH)
+                    .setCapturedHeaders(capturedHeaders)
+                    .build());
+    Experimental.setExceptionEventName(producerBuilder, "messaging.client.operation.exception");
+    return producerBuilder.buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
@@ -49,6 +52,7 @@ public final class NatsInstrumenterFactory {
                     .setCapturedHeaders(capturedHeaders)
                     .build());
 
+    Experimental.setExceptionEventName(builder, "messaging.process.exception");
     return builder.buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
   }
 
