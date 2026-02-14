@@ -61,7 +61,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   /**
    * Sets whether the query parameters should be captured as span attributes named {@code
-   * db.query.parameter.<key>}. Enabling this option disables the statement sanitization. Disabled
+   * db.query.parameter.<key>}. Enabling this option disables the query sanitization. Disabled
    * by default.
    *
    * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
