@@ -61,7 +61,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return event.getDatabaseName();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getConnectionString(CommandStartedEvent event) {

@@ -26,7 +26,7 @@ public enum R2dbcSqlAttributesGetter
     return request.getSystem();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getUser(DbExecution request) {
@@ -39,7 +39,7 @@ public enum R2dbcSqlAttributesGetter
     return request.getName();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getConnectionString(DbExecution request) {

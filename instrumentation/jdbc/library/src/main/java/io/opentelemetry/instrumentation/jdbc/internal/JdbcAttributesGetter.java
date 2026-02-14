@@ -28,7 +28,7 @@ public final class JdbcAttributesGetter
     return request.getDbInfo().getSystem();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getUser(DbRequest request) {
@@ -42,7 +42,7 @@ public final class JdbcAttributesGetter
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getConnectionString(DbRequest request) {

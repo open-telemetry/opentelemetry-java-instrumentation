@@ -27,10 +27,10 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated not needed anymore since the new semantic conventions always use db.collection.name
+   * @deprecated new semantic conventions always use db.collection.name
    */
   @CanIgnoreReturnValue
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
       AttributeKey<String> oldSemconvTableAttribute) {
     this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
@@ -47,16 +47,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
       boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
-  }
-
-  /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
   }
 
   /**
