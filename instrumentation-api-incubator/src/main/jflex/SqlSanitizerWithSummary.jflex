@@ -890,6 +890,15 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "EXPLAIN" {
+          // EXPLAIN is a prefix command - append to summary but don't set an operation,
+          // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
+          if (!insideComment && operation == none) {
+            appendOperationToSummary("EXPLAIN");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "CONNECT" {
           appendCurrentFragment();
           // sanitize SAP HANA CONNECT statement
