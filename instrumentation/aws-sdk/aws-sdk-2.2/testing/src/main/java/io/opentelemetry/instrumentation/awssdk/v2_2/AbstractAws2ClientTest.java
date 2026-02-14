@@ -932,11 +932,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "somebucket"));
-                      if (emitExceptionAsSpanEvents()) {
-                        span.hasException(thrown);
-                      }
-                    }));
+                                equalTo(AWS_S3_BUCKET, "somebucket")))
+                      .hasException(emitExceptionAsSpanEvents() ? thrown : null)));
   }
 
   // regression test for

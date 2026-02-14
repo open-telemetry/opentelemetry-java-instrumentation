@@ -902,15 +902,12 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span -> {
-                          span.hasAttributesSatisfyingExactly(
-                              equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                              equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                              equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL));
-                          if (emitExceptionAsSpanEvents()) {
-                            span.hasException(thrown);
-                          }
-                        })));
+                        span ->
+                            span.hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1624,15 +1621,12 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span -> {
-                          span.hasAttributesSatisfyingExactly(
-                              equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                              equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                              equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL));
-                          if (emitExceptionAsSpanEvents()) {
-                            span.hasException(thrown);
-                          }
-                        })));
+                        span ->
+                            span.hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
 
     getTesting()
         .waitAndAssertMetrics(

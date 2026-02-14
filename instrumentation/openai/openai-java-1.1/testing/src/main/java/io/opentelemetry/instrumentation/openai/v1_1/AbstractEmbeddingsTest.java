@@ -239,27 +239,24 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     maybeWithTransportSpan(
-                        span -> {
-                          span.hasName("embeddings text-embedding-3-small")
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                  equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                  equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                  // Newer versions of the library populate base64 when unset by
-                                  // the user.
-                                  satisfies(
-                                      GEN_AI_REQUEST_ENCODING_FORMATS,
-                                      val ->
-                                          val.satisfiesAnyOf(
-                                              v -> assertThat(v).isNull(),
-                                              v ->
-                                                  assertThat(v)
-                                                      .isEqualTo(singletonList("base64")))));
-                          if (emitExceptionAsSpanEvents()) {
-                            span.hasException(thrown);
-                          }
-                        })));
+                        span ->
+                            span.hasName("embeddings text-embedding-3-small")
+                                .hasKind(SpanKind.CLIENT)
+                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    // Newer versions of the library populate base64 when unset by
+                                    // the user.
+                                    satisfies(
+                                        GEN_AI_REQUEST_ENCODING_FORMATS,
+                                        val ->
+                                            val.satisfiesAnyOf(
+                                                v -> assertThat(v).isNull(),
+                                                v ->
+                                                    assertThat(v)
+                                                        .isEqualTo(singletonList("base64"))))))));
 
     getTesting()
         .waitAndAssertMetrics(
