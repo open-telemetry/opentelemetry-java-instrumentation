@@ -9,6 +9,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY;
@@ -61,6 +64,7 @@ import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -937,7 +941,14 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                           equalTo(EVENT_NAME, "gen_ai.user.message"))
                       .hasSpanContext(spanCtx)
                       .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-              log -> log.hasSpanContext(spanCtx));
+              log ->
+                  log.hasSpanContext(spanCtx)
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("gen_ai.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     } else {
       getTesting()
           .waitAndAssertLogRecords(
@@ -1656,7 +1667,14 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                           equalTo(EVENT_NAME, "gen_ai.user.message"))
                       .hasSpanContext(spanCtx)
                       .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
-              log -> log.hasSpanContext(spanCtx));
+              log ->
+                  log.hasSpanContext(spanCtx)
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("gen_ai.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     } else {
       getTesting()
           .waitAndAssertLogRecords(

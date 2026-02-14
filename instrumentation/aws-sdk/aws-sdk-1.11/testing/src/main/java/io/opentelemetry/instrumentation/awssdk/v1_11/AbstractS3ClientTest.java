@@ -11,7 +11,11 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -31,6 +35,7 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -139,7 +144,16 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
 
     if (emitExceptionAsLogs()) {
       SpanContext spanCtx = testing().waitForTraces(1).get(0).get(0).getSpanContext();
-      testing().waitAndAssertLogRecords(log -> log.hasSpanContext(spanCtx));
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSpanContext(spanCtx)
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, caught.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, caught.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
   }
 
@@ -191,7 +205,18 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
 
     if (emitExceptionAsLogs()) {
       SpanContext spanCtx = testing().spans().get(0).getSpanContext();
-      testing().waitAndAssertLogRecords(log -> log.hasSpanContext(spanCtx));
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSpanContext(spanCtx)
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, SdkClientException.class.getName()),
+                          equalTo(
+                              EXCEPTION_MESSAGE,
+                              "Unable to execute HTTP request: Request did not complete before the request timeout configuration."),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
   }
 }
