@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -117,7 +116,10 @@ final class AwsSdkInstrumenterFactory {
         MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysConsumer(),
         toSqsRequestExtractors(attributesExtractors()),
-        singletonList(messagingAttributeExtractor),
+        builder -> {
+          builder.addAttributesExtractor(messagingAttributeExtractor);
+          Experimental.setExceptionEventName(builder, "messaging.client.operation.exception");
+        },
         messagingReceiveInstrumentationEnabled);
   }
 
@@ -143,6 +145,7 @@ final class AwsSdkInstrumenterFactory {
             spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
           });
     }
+    Experimental.setExceptionEventName(builder, "messaging.process.exception");
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -185,7 +188,10 @@ final class AwsSdkInstrumenterFactory {
         MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
-        singletonList(messagingAttributeExtractor),
+        builder -> {
+          builder.addAttributesExtractor(messagingAttributeExtractor);
+          Experimental.setExceptionEventName(builder, "messaging.client.operation.exception");
+        },
         true);
   }
 
