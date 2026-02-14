@@ -21,7 +21,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -362,9 +361,9 @@ class SessionTest extends AbstractHibernateTest {
                 span -> assertClientSpan(span, trace.getSpan(6), "DELETE")));
 
     if (ExperimentalTestHelper.isEnabled) {
-      assertNotEquals(sessionId1.get(), sessionId2.get());
-      assertNotEquals(sessionId2.get(), sessionId3.get());
-      assertNotEquals(sessionId1.get(), sessionId3.get());
+      assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
+      assertThat(sessionId3.get()).isNotEqualTo(sessionId2.get());
+      assertThat(sessionId3.get()).isNotEqualTo(sessionId1.get());
     }
   }
 

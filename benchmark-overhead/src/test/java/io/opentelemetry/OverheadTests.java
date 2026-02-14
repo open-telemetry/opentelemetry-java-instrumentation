@@ -5,7 +5,7 @@
 
 package io.opentelemetry;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import io.opentelemetry.agents.Agent;

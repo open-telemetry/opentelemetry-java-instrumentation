@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -88,7 +87,7 @@ class UnitConverterTest {
     Number actualValue = converter.convert(1.5);
 
     // Then
-    assertEquals(5400.0, actualValue);
+    assertThat(actualValue).isEqualTo(5400.0);
   }
 
   @ParameterizedTest

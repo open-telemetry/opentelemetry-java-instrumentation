@@ -17,7 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -151,7 +151,7 @@ public abstract class AbstractVertxKafkaTest {
                   sendRecord(record, result -> sent.countDown());
                 }
               });
-      assertTrue(sent.await(30, TimeUnit.SECONDS));
+      assertThat(sent.await(30, TimeUnit.SECONDS)).isTrue();
 
       kafkaConsumer.resume();
       BatchRecordsHandler.waitForMessages();

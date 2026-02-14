@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SE
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -55,7 +54,7 @@ class HttpClientPeerServiceAttributesExtractorTest {
     underTest.onEnd(attributes, context, "request", "response", null);
 
     // then
-    assertTrue(attributes.build().isEmpty());
+    assertThat(attributes.build().isEmpty()).isTrue();
   }
 
   @Test
@@ -81,8 +80,8 @@ class HttpClientPeerServiceAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, "request", "response", null);
 
     // then
-    assertTrue(startAttributes.build().isEmpty());
-    assertTrue(endAttributes.build().isEmpty());
+    assertThat(startAttributes.build().isEmpty()).isTrue();
+    assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
   @Test
