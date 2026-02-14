@@ -35,10 +35,7 @@ public class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RES
     }
     scope.close();
 
-    if (throwable == null) {
-      throwable = AppServerBridge.getException(context);
-    }
-
+    throwable = AppServerBridge.getException(context, throwable);
     ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
     if (throwable != null || mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, requestContext, responseContext, throwable);

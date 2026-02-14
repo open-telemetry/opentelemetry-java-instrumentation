@@ -35,9 +35,7 @@ public class UndertowHelper {
   }
 
   public void end(Context context, HttpServerExchange exchange, @Nullable Throwable error) {
-    if (error == null) {
-      error = AppServerBridge.getException(context);
-    }
+    error = AppServerBridge.getException(context, error);
 
     instrumenter.end(context, exchange, exchange, error);
   }

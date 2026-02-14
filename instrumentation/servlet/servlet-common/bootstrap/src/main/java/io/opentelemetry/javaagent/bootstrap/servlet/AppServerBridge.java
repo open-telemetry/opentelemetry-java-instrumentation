@@ -36,7 +36,7 @@ public class AppServerBridge {
    * @param exception exception that happened during servlet invocation
    */
   public static void recordException(Context context, Throwable exception) {
-    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
+    AppServerBridge appServerBridge = context.get(CONTEXT_KEY);
     if (appServerBridge != null && appServerBridge.servletShouldRecordException) {
       appServerBridge.exception = exception;
     }
@@ -46,15 +46,21 @@ public class AppServerBridge {
    * Get exception that happened during servlet invocation.
    *
    * @param context server context
+   * @param error exception that happened during server span, may be null. If this parameter is not
+   *     null, it will be returned by this method. If it is null, then exception recorded by servlet
    * @return exception that happened during servlet invocation
    */
   @Nullable
-  public static Throwable getException(Context context) {
-    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
+  public static Throwable getException(Context context, @Nullable Throwable error) {
+    Throwable result = null;
+    AppServerBridge appServerBridge = context.get(CONTEXT_KEY);
     if (appServerBridge != null) {
-      return appServerBridge.exception;
+      result = appServerBridge.exception;
+      // clear the stored exception after reading it
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16129
+      appServerBridge.exception = null;
     }
-    return null;
+    return error != null ? error : result;
   }
 
   /**
@@ -65,7 +71,7 @@ public class AppServerBridge {
    * @return true when servlet attributes should be captured
    */
   public static boolean captureServletAttributes(Context context) {
-    AppServerBridge appServerBridge = context.get(AppServerBridge.CONTEXT_KEY);
+    AppServerBridge appServerBridge = context.get(CONTEXT_KEY);
     if (appServerBridge != null) {
       boolean result = appServerBridge.captureServletAttributes;
       appServerBridge.captureServletAttributes = false;
@@ -95,7 +101,7 @@ public class AppServerBridge {
     /**
      * Use on servers where exceptions thrown during servlet invocation are not propagated to the
      * method where server span is closed. Recorded exception can be retrieved by calling {@link
-     * #getException(Context)}
+     * #getException(Context,Throwable)}
      *
      * @return this builder.
      */

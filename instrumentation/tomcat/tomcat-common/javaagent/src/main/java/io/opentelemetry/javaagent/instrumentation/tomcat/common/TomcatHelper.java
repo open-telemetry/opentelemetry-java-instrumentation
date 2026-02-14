@@ -45,10 +45,7 @@ public class TomcatHelper<REQUEST, RESPONSE> {
     }
     scope.close();
 
-    if (throwable == null) {
-      throwable = AppServerBridge.getException(context);
-    }
-
+    throwable = AppServerBridge.getException(context, throwable);
     if (throwable != null || servletHelper.mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, request, response, throwable);
     }
