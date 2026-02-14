@@ -54,12 +54,14 @@ import io.grpc.reflection.v1alpha.ServerReflectionResponse;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -574,6 +576,24 @@ public abstract class AbstractGrpcTest {
                                   }
                                 })));
 
+    if (emitExceptionAsLogs() && status.getCause() != null) {
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSeverity(Severity.ERROR)
+                      .hasEventName("rpc.server.call.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_TYPE,
+                              status.getCause().getClass().getName()),
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_MESSAGE,
+                              status.getCause().getMessage()),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_STACKTRACE,
+                              val -> val.isNotNull())));
+    }
+
     assertMetrics(server, status.getCode());
   }
 
@@ -675,6 +695,24 @@ public abstract class AbstractGrpcTest {
                                     span.hasException(status.asRuntimeException());
                                   }
                                 })));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSeverity(Severity.ERROR)
+                      .hasEventName("rpc.server.call.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_TYPE,
+                              status.asRuntimeException().getClass().getName()),
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_MESSAGE,
+                              status.asRuntimeException().getMessage()),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_STACKTRACE,
+                              val -> val.isNotNull())));
+    }
 
     assertMetrics(server, Status.Code.UNKNOWN);
   }
@@ -1025,6 +1063,22 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
                                             equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_TYPE,
+                              thrown.getClass().getName()),
+                          equalTo(
+                              ExceptionAttributes.EXCEPTION_MESSAGE, thrown.getMessage()),
+                          satisfies(
+                              ExceptionAttributes.EXCEPTION_STACKTRACE,
+                              val -> val.isNotNull())));
+    }
   }
 
   @Test

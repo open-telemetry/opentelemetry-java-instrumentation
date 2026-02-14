@@ -901,12 +901,13 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("S3.GetObject")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasStatus(StatusData.error())
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
+                    span ->
+                        span.hasName("S3.GetObject")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
                                 // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
                                 // hostname with the bucket name in case the bucket name is a valid
                                 // DNS label, even in the case that we are using an endpoint
@@ -938,8 +939,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(AWS_S3_BUCKET, "somebucket")))
-                      .hasException(emitExceptionAsSpanEvents() ? thrown : null)));
+                                equalTo(AWS_S3_BUCKET, "somebucket"))));
 
     if (emitExceptionAsLogs()) {
       SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -113,19 +114,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                                 v ->
                                                     assertThat(v)
                                                         .isEqualTo(singletonList("base64"))))))));
-    if (emitExceptionAsLogs()) {
-      SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();
-      getTesting()
-          .waitAndAssertLogRecords(
-              log ->
-                  log.hasSpanContext(spanCtx)
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("gen_ai.client.operation.exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
-                          equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
-    }
+
     getTesting()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -274,6 +263,19 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                                 v ->
                                                     assertThat(v)
                                                         .isEqualTo(singletonList("base64"))))))));
+    if (emitExceptionAsLogs()) {
+      SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSpanContext(spanCtx)
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("gen_ai.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
 
     getTesting()
         .waitAndAssertMetrics(
