@@ -39,12 +39,18 @@ tasks {
   val testExperimental by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-
     jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testExceptionSignalLogs)
   }
 }

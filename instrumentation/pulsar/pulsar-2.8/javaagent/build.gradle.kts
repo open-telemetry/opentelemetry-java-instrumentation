@@ -47,6 +47,13 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
   test {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
@@ -55,7 +62,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testExperimental)
+    dependsOn(testReceiveSpanDisabled, testExperimental, testExceptionSignalLogs)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {

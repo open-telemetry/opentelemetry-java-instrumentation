@@ -47,12 +47,18 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv, testExceptionSignalLogs)
   }
 }

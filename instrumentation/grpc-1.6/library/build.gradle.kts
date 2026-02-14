@@ -24,6 +24,16 @@ tasks {
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
   }
+
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
 }
 
 if (!(findProperty("testLatestDeps") as Boolean)) {
