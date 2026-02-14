@@ -1,5 +1,5 @@
 [tools]
-lychee = "0.23.0"
+lychee = "0.22.0"
 markdownlint-cli2 = "0.20.0"
 
 [settings]
