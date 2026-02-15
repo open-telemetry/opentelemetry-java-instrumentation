@@ -11,7 +11,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
@@ -26,7 +28,7 @@ public final class CassandraSingletons {
   static {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<CassandraRequest, ExecutionInfo> builder =
         Instrumenter.<CassandraRequest, ExecutionInfo>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -38,8 +40,9 @@ public final class CassandraSingletons {
                         AgentCommonConfig.get().isQuerySanitizationEnabled())
                     .build())
             .addAttributesExtractor(new CassandraAttributesExtractor())
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventName(builder, "db.client.operation.exception");
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<CassandraRequest, ExecutionInfo> instrumenter() {

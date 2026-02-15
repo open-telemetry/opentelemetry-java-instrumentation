@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -121,29 +122,32 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.type"),
-                                            "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.message"),
-                                            expectedMessage),
-                                        satisfies(
-                                            AttributeKey.stringKey("exception.stacktrace"),
-                                            val -> val.isNotNull())))));
+                span -> {
+                  span.hasName("CONNECT")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, host),
+                          equalTo(SERVER_PORT, incorrectPort),
+                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                          equalTo(maybeStablePeerService(), "test-peer-service"));
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(
+                                        AttributeKey.stringKey("exception.type"),
+                                        "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
+                                    equalTo(
+                                        AttributeKey.stringKey("exception.message"),
+                                        expectedMessage),
+                                    satisfies(
+                                        AttributeKey.stringKey("exception.stacktrace"),
+                                        val -> val.isNotNull())));
+                  }
+                }));
   }
 
   @Test

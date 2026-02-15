@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
@@ -132,6 +133,8 @@ public final class DubboTelemetryBuilder {
           AttributesExtractor.constant(PEER_SERVICE, peerService));
     }
 
+    Experimental.setExceptionEventName(serverInstrumenterBuilder, "rpc.server.call.exception");
+    Experimental.setExceptionEventName(clientInstrumenterBuilder, "rpc.client.call.exception");
     return new DubboTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE),
         clientInstrumenterBuilder.buildClientInstrumenter(DubboHeadersSetter.INSTANCE));

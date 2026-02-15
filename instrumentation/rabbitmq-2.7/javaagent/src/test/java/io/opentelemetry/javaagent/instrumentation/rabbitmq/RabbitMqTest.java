@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -743,15 +744,17 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   private static void verifyException(SpanDataAssert span, Throwable exception, String errorMsg) {
-    span.hasStatus(StatusData.error())
-        .hasEventsSatisfying(
-            events ->
-                assertThat(events.get(0))
-                    .hasName("exception")
-                    .hasAttributesSatisfying(
-                        equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
-                        equalTo(EXCEPTION_MESSAGE, errorMsg),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+    span.hasStatus(StatusData.error());
+    if (emitExceptionAsSpanEvents()) {
+      span.hasEventsSatisfying(
+          events ->
+              assertThat(events.get(0))
+                  .hasName("exception")
+                  .hasAttributesSatisfying(
+                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, errorMsg),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+    }
   }
 
   private static void verifyParentAndLink(

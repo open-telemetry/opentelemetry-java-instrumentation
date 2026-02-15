@@ -25,3 +25,15 @@ tasks.withType<Test>().configureEach {
   // used for experimental attributes test assertion logic which looks for this property
   jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
 }
+
+tasks {
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
+}

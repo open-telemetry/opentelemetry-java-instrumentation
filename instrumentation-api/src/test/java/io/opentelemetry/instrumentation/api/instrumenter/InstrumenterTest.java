@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyMap;
@@ -14,6 +16,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
@@ -30,11 +33,14 @@ import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -228,14 +234,29 @@ class InstrumenterTest {
     Context context = instrumenter.start(Context.root(), REQUEST);
     assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
 
-    instrumenter.end(context, REQUEST, RESPONSE, new IllegalStateException("test"));
+    IllegalStateException error = new IllegalStateException("test");
+    instrumenter.end(context, REQUEST, RESPONSE, error);
 
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("span").hasStatus(StatusData.error())));
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
+
+    if (emitExceptionAsLogs()) {
+      List<LogRecordData> logs = otelTesting.getLogRecords();
+      assertThat(logs).hasSize(1);
+      LogRecordData log = logs.get(0);
+      assertThat(log.getSeverity()).isEqualTo(Severity.ERROR);
+      assertThat(log.getAttributes().get(ExceptionAttributes.EXCEPTION_TYPE))
+          .isEqualTo("java.lang.IllegalStateException");
+      assertThat(log.getAttributes().get(ExceptionAttributes.EXCEPTION_MESSAGE)).isEqualTo("test");
+      assertThat(log.getAttributes().get(ExceptionAttributes.EXCEPTION_STACKTRACE)).isNotNull();
+    }
   }
 
   @Test
@@ -337,14 +358,29 @@ class InstrumenterTest {
     assertThat(spanContext.isValid()).isTrue();
     assertThat(request).containsKey("traceparent");
 
-    instrumenter.end(context, request, RESPONSE, new IllegalStateException("test"));
+    IllegalStateException error = new IllegalStateException("test");
+    instrumenter.end(context, request, RESPONSE, error);
 
     otelTesting
         .assertTraces()
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("span").hasStatus(StatusData.error())));
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
+
+    if (emitExceptionAsLogs()) {
+      List<LogRecordData> logs = otelTesting.getLogRecords();
+      assertThat(logs).hasSize(1);
+      LogRecordData log = logs.get(0);
+      assertThat(log.getSeverity()).isEqualTo(Severity.WARN);
+      assertThat(log.getAttributes().get(ExceptionAttributes.EXCEPTION_TYPE))
+          .isEqualTo("java.lang.IllegalStateException");
+      assertThat(log.getAttributes().get(ExceptionAttributes.EXCEPTION_MESSAGE)).isEqualTo("test");
+      assertThat(log.getAttributes().get(ExceptionAttributes.EXCEPTION_STACKTRACE)).isNotNull();
+    }
   }
 
   @Test

@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageO
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.springframework.amqp.core.Message;
 
@@ -23,7 +25,7 @@ public final class SpringRabbitSingletons {
     SpringRabbitMessageAttributesGetter getter = SpringRabbitMessageAttributesGetter.INSTANCE;
     MessageOperation operation = MessageOperation.PROCESS;
 
-    INSTRUMENTER =
+    InstrumenterBuilder<Message, Void> builder =
         Instrumenter.<Message, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -31,8 +33,9 @@ public final class SpringRabbitSingletons {
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operation)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-                    .build())
-            .buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
+                    .build());
+    Experimental.setExceptionEventName(builder, "messaging.process.exception");
+    INSTRUMENTER = builder.buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
   }
 
   public static Instrumenter<Message, Void> instrumenter() {

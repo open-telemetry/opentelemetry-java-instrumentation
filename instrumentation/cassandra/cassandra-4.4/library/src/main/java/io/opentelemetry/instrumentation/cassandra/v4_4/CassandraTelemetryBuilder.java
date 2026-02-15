@@ -13,7 +13,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 
 /** A builder of {@link CassandraTelemetry}. */
 public class CassandraTelemetryBuilder {
@@ -65,15 +67,19 @@ public class CassandraTelemetryBuilder {
       OpenTelemetry openTelemetry, boolean querySanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();
 
-    return Instrumenter.<CassandraRequest, ExecutionInfo>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(attributesGetter)
-                .setTableAttribute(DB_CASSANDRA_TABLE)
-                .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .build())
-        .addAttributesExtractor(new CassandraAttributesExtractor())
-        .addOperationMetrics(DbClientMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<CassandraRequest, ExecutionInfo> builder =
+        Instrumenter.<CassandraRequest, ExecutionInfo>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(attributesGetter))
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(attributesGetter)
+                    .setTableAttribute(DB_CASSANDRA_TABLE)
+                    .setQuerySanitizationEnabled(querySanitizationEnabled)
+                    .build())
+            .addAttributesExtractor(new CassandraAttributesExtractor())
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventName(builder, "db.client.operation.exception");
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

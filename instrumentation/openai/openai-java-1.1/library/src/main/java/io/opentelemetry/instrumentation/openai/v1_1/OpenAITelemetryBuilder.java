@@ -16,7 +16,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 
 /** A builder of {@link OpenAITelemetry}. */
 @SuppressWarnings("IdentifierName") // Want to match library's convention
@@ -47,24 +49,28 @@ public final class OpenAITelemetryBuilder {
    * Returns a new {@link OpenAITelemetry} with the settings of this {@link OpenAITelemetryBuilder}.
    */
   public OpenAITelemetry build() {
-    Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter =
+    InstrumenterBuilder<ChatCompletionCreateParams, ChatCompletion> chatBuilder =
         Instrumenter.<ChatCompletionCreateParams, ChatCompletion>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(ChatAttributesGetter.INSTANCE))
             .addAttributesExtractor(GenAiAttributesExtractor.create(ChatAttributesGetter.INSTANCE))
-            .addOperationMetrics(GenAiClientMetrics.get())
-            .buildInstrumenter();
+            .addOperationMetrics(GenAiClientMetrics.get());
+    Experimental.setExceptionEventName(chatBuilder, "gen_ai.client.operation.exception");
+    Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter =
+        chatBuilder.buildInstrumenter();
 
-    Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter =
+    InstrumenterBuilder<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsBuilder =
         Instrumenter.<EmbeddingCreateParams, CreateEmbeddingResponse>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(EmbeddingAttributesGetter.INSTANCE))
             .addAttributesExtractor(
                 GenAiAttributesExtractor.create(EmbeddingAttributesGetter.INSTANCE))
-            .addOperationMetrics(GenAiClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(GenAiClientMetrics.get());
+    Experimental.setExceptionEventName(embeddingsBuilder, "gen_ai.client.operation.exception");
+    Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter =
+        embeddingsBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
     return new OpenAITelemetry(

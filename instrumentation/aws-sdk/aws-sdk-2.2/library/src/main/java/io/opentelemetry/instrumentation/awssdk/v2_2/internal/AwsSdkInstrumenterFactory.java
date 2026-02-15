@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
@@ -28,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,7 +103,7 @@ public final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory::spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        emptyList(),
+        builder -> Experimental.setExceptionEventName(builder, "rpc.client.call.exception"),
         true);
   }
 
@@ -139,7 +137,10 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysConsumer(),
         toSqsRequestExtractors(consumerAttributesExtractors()),
-        singletonList(messagingAttributeExtractor),
+        builder -> {
+          builder.addAttributesExtractor(messagingAttributeExtractor);
+          Experimental.setExceptionEventName(builder, "messaging.client.operation.exception");
+        },
         messagingReceiveInstrumentationEnabled);
   }
 
@@ -164,6 +165,7 @@ public final class AwsSdkInstrumenterFactory {
             spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
           });
     }
+    Experimental.setExceptionEventName(builder, "messaging.process.exception");
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -206,7 +208,10 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
-        singletonList(messagingAttributeExtractor),
+        builder -> {
+          builder.addAttributesExtractor(messagingAttributeExtractor);
+          Experimental.setExceptionEventName(builder, "messaging.client.operation.exception");
+        },
         true);
   }
 
@@ -216,10 +221,12 @@ public final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory::spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder ->
-            builder
-                .addAttributesExtractor(new DynamoDbAttributesExtractor())
-                .addOperationMetrics(DbClientMetrics.get()),
+        builder -> {
+          builder
+              .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addOperationMetrics(DbClientMetrics.get());
+          Experimental.setExceptionEventName(builder, "db.client.operation.exception");
+        },
         true);
   }
 
@@ -229,33 +236,18 @@ public final class AwsSdkInstrumenterFactory {
         GenAiSpanNameExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE),
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder ->
-            builder
-                .addAttributesExtractor(
-                    GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
-                .addOperationMetrics(GenAiClientMetrics.get()),
+        builder -> {
+          builder
+              .addAttributesExtractor(
+                  GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
+              .addOperationMetrics(GenAiClientMetrics.get());
+          Experimental.setExceptionEventName(builder, "gen_ai.client.operation.exception");
+        },
         true);
   }
 
   public Logger eventLogger() {
     return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
-  }
-
-  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      SpanNameExtractor<REQUEST> spanNameExtractor,
-      SpanKindExtractor<REQUEST> spanKindExtractor,
-      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributeExtractors,
-      List<AttributesExtractor<REQUEST, RESPONSE>> additionalAttributeExtractors,
-      boolean enabled) {
-
-    return createInstrumenter(
-        openTelemetry,
-        spanNameExtractor,
-        spanKindExtractor,
-        attributeExtractors,
-        builder -> builder.addAttributesExtractors(additionalAttributeExtractors),
-        enabled);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(

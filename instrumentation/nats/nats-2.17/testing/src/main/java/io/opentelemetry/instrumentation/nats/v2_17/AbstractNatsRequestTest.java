@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -363,7 +364,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                         span.hasName("sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
-                            .hasException(exception)
+                            .hasException(emitExceptionAsSpanEvents() ? exception : null)
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("publish", "sub", clientId))));
   }
