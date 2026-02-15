@@ -6,18 +6,24 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import com.google.auto.value.AutoValue;
+import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.MemcachedNode;
 
 @AutoValue
 public abstract class SpymemcachedRequest {
 
-  public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
-    return new AutoValue_SpymemcachedRequest(connection, queryText);
+  public static SpymemcachedRequest create(
+      MemcachedConnection connection, String queryText, @Nullable MemcachedNode handlingNode) {
+    return new AutoValue_SpymemcachedRequest(connection, queryText, handlingNode);
   }
 
   public abstract MemcachedConnection getConnection();
 
   public abstract String getQueryText();
+
+  @Nullable
+  public abstract MemcachedNode getHandlingNode();
 
   public String getOperationName() {
     String queryText = getQueryText();
