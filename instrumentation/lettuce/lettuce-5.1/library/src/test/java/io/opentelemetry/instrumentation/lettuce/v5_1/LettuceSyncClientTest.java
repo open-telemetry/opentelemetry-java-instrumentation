@@ -28,7 +28,7 @@ class LettuceSyncClientTest extends AbstractLettuceSyncClientTest {
                 LettuceTelemetry.builder(testing().getOpenTelemetry())
                     .setEncodingSpanEventsEnabled(true)
                     .build()
-                    .newTracing())
+                    .createTracing())
             .build(),
         uri);
   }

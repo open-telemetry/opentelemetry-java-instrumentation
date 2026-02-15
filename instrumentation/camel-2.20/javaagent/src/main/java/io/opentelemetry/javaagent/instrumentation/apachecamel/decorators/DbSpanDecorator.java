@@ -24,7 +24,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
@@ -32,13 +33,14 @@ import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final SqlQuerySanitizer sanitizer =
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   private final String component;
   private final String system;
@@ -66,33 +68,24 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  // visible for testing
-  String getStatement(Exchange exchange, Endpoint endpoint) {
+  @Nullable
+  private String getRawQueryText(Exchange exchange) {
     switch (component) {
       case "cql":
         Object cqlObj = exchange.getIn().getHeader("CamelCqlQuery");
-        if (cqlObj != null) {
-          return sanitizer.sanitize(cqlObj.toString()).getFullStatement();
-        }
-        return null;
+        return cqlObj != null ? cqlObj.toString() : null;
       case "jdbc":
         Object body = exchange.getIn().getBody();
-        if (body instanceof String) {
-          return sanitizer.sanitize((String) body).getFullStatement();
-        }
-        return null;
+        return body instanceof String ? (String) body : null;
       case "sql":
         Object sqlquery = exchange.getIn().getHeader("CamelSqlQuery");
-        if (sqlquery instanceof String) {
-          return sanitizer.sanitize((String) sqlquery).getFullStatement();
-        }
-        return null;
+        return sqlquery instanceof String ? (String) sqlquery : null;
       default:
         return null;
     }
   }
 
-  private String getDbName(Endpoint endpoint) {
+  private String getDbNamespace(Endpoint endpoint) {
     switch (component) {
       case "mongodb":
         Map<String, String> mongoParameters = toQueryParameters(endpoint.getEndpointUri());
@@ -131,22 +124,37 @@ class DbSpanDecorator extends BaseSpanDecorator {
     if (SemconvStability.emitOldDatabaseSemconv()) {
       attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
     }
-    String statement = getStatement(exchange, endpoint);
-    if (statement != null) {
+
+    setQueryAttributes(attributes, exchange);
+
+    String namespace = getDbNamespace(endpoint);
+    if (namespace != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_QUERY_TEXT, statement);
+        attributes.put(DbAttributes.DB_NAMESPACE, namespace);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
+        attributes.put(DbIncubatingAttributes.DB_NAME, namespace);
       }
     }
-    String dbName = getDbName(endpoint);
-    if (dbName != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_NAMESPACE, dbName);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
+    String rawQueryText = getRawQueryText(exchange);
+    if (rawQueryText != null) {
+      SqlQuery sqlQuery =
+          SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
+      SqlQuery sqlQueryWithSummary =
+          SemconvStability.emitStableDatabaseSemconv()
+              ? sanitizer.sanitizeWithSummary(rawQueryText)
+              : null;
+
+      if (sqlQueryWithSummary != null) {
+        attributes.put(DbAttributes.DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
+        attributes.put(DbAttributes.DB_QUERY_SUMMARY, sqlQueryWithSummary.getQuerySummary());
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      if (sqlQuery != null) {
+        attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlQuery.getQueryText());
       }
     }
   }

@@ -1,3 +1,4 @@
+display_name: Spring Boot Resource Detector
 description: >
   This instrumentation automatically detects the `service.name` and `service.version` for Spring
   Boot applications and sets them as resource attributes.
@@ -12,3 +13,5 @@ description: >
     - Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
     - Check for --spring.application.name program argument via sun.java.command system property
 library_link: https://spring.io/projects/spring-boot
+features:
+  - RESOURCE_DETECTOR

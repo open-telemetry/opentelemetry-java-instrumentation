@@ -29,7 +29,7 @@ final class ElasticsearchDbAttributesGetter
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());
 
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String ELASTICSEARCH = "elasticsearch";
 
   private final boolean captureSearchQuery;
@@ -82,7 +82,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
     return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
   }
 }

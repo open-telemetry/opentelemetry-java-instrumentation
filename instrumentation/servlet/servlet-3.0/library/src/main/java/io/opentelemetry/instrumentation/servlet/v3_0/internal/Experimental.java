@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v3_0.internal;
 
 import io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder;
+import java.util.Collection;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -26,6 +27,16 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
 
+  @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, Collection<String>>
+      setCapturedRequestParameters;
+
+  /**
+   * Sets whether experimental HTTP telemetry should be emitted.
+   *
+   * @param builder the telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       ServletTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {
@@ -33,6 +44,14 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether to add {@code trace_id} and {@code span_id} as a request attribute.
+   *
+   * @param builder the telemetry builder
+   * @param addTraceIdRequestAttribute {@code true} to add trace ID and span ID as request
+   *     attributes
+   * @see javax.servlet.ServletRequest#setAttribute(String, Object)
+   */
   public static void addTraceIdRequestAttribute(
       ServletTelemetryBuilder builder, boolean addTraceIdRequestAttribute) {
     if (setAddTraceIdRequestAttribute != null) {
@@ -40,10 +59,33 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether to capture the {@code enduser.id} span attribute.
+   *
+   * @param builder the telemetry builder
+   * @param captureEnduserId {@code true} to capture {@code enduser.id}
+   */
   public static void setCaptureEnduserId(
       ServletTelemetryBuilder builder, boolean captureEnduserId) {
     if (setCaptureEnduserId != null) {
       setCaptureEnduserId.accept(builder, captureEnduserId);
+    }
+  }
+
+  /**
+   * Sets the request parameters to be captured as span attributes.
+   *
+   * <p>Request parameters will be captured as attributes with the format {@code
+   * servlet.request.parameter.<name>}.
+   *
+   * @param builder the telemetry builder
+   * @param capturedRequestParameters request parameter names to capture
+   * @see javax.servlet.ServletRequest#getParameterValues(String)
+   */
+  public static void setCapturedRequestParameters(
+      ServletTelemetryBuilder builder, Collection<String> capturedRequestParameters) {
+    if (setCapturedRequestParameters != null) {
+      setCapturedRequestParameters.accept(builder, capturedRequestParameters);
     }
   }
 
@@ -60,6 +102,11 @@ public final class Experimental {
   public static void internalSetCaptureEnduserId(
       BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId) {
     Experimental.setCaptureEnduserId = setCaptureEnduserId;
+  }
+
+  public static void internalSetCapturedRequestParameters(
+      BiConsumer<ServletTelemetryBuilder, Collection<String>> setCapturedRequestParameters) {
+    Experimental.setCapturedRequestParameters = setCapturedRequestParameters;
   }
 
   private Experimental() {}

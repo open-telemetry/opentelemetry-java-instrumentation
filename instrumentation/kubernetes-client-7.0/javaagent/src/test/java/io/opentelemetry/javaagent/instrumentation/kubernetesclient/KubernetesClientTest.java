@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -15,7 +16,6 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.kubernetes.client.openapi.ApiCallback;
@@ -40,6 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class KubernetesClientTest {
 
   private static final String TEST_USER_AGENT = "test-user-agent";
@@ -100,7 +101,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -160,7 +161,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
@@ -215,7 +216,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -277,7 +278,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),

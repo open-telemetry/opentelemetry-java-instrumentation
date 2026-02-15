@@ -85,7 +85,7 @@ public class AgentInstaller {
   // too much javaagent users can file a bug, force sync execution by setting this property to true
   // and continue using the javaagent
   private static final String FORCE_SYNCHRONOUS_AGENT_LISTENERS_CONFIG =
-      "force-synchronous-agent-listeners/development";
+      "force_synchronous_agent_listeners/development";
 
   private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
       "otel.javaagent.testing.strict-context-stressor-millis";
@@ -99,7 +99,7 @@ public class AgentInstaller {
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {
-      io.opentelemetry.context.ContextStorage.addWrapper(
+      ContextStorage.addWrapper(
           storage -> new StrictContextStressor(storage, strictContextStressorMillis));
     }
 
@@ -295,12 +295,7 @@ public class AgentInstaller {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      try {
-        configurer.configure(builder);
-      } catch (UnsupportedOperationException e) {
-        // fall back to the deprecated method
-        configurer.configure(builder, config);
-      }
+      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();

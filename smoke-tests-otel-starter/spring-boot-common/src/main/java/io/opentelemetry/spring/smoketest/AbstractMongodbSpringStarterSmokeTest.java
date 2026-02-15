@@ -38,6 +38,6 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
                         .hasAttribute(
                             maybeStable(DbIncubatingAttributes.DB_SYSTEM),
                             stableDbSystemName(
-                                DbIncubatingAttributes.DbSystemIncubatingValues.MONGODB))));
+                                DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB))));
   }
 }

@@ -29,9 +29,7 @@ public final class SupportabilityMetrics {
   private final ConcurrentMap<String, AtomicLong> counters = new ConcurrentHashMap<>();
 
   private static final SupportabilityMetrics INSTANCE =
-      new SupportabilityMetrics(
-              ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false), logger::fine)
-          .start();
+      new SupportabilityMetrics(DebugUtil.isAgentDebugEnabled(), logger::fine).start();
 
   public static SupportabilityMetrics instance() {
     return INSTANCE;
@@ -122,8 +120,10 @@ public final class SupportabilityMetrics {
    * any time.
    */
   public static final class CounterNames {
-    public static final String SQL_STATEMENT_SANITIZER_CACHE_MISS =
-        "SqlStatementSanitizer cache miss";
+    public static final String SQL_SANITIZER_CACHE_MISS =
+        SemconvStability.emitStableDatabaseSemconv()
+            ? "sql sanitizer cache miss"
+            : "SqlStatementSanitizer cache miss";
 
     private CounterNames() {}
   }

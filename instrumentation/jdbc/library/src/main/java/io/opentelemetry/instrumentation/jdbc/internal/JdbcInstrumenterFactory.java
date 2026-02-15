@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
         .getBoolean(
@@ -44,7 +45,8 @@ public final class JdbcInstrumenterFactory {
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean captureQueryParameters) {
-    boolean statementSanitizationEnabled =
+    @SuppressWarnings("deprecation") // using deprecated config property
+    boolean querySanitizationEnabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
             .get("database")
             .get("statement_sanitizer")
@@ -53,23 +55,23 @@ public final class JdbcInstrumenterFactory {
                 ConfigPropertiesUtil.getBoolean(
                     "otel.instrumentation.common.db-statement-sanitizer.enabled", true));
     return createStatementInstrumenter(
-        openTelemetry, emptyList(), true, statementSanitizationEnabled, captureQueryParameters);
+        openTelemetry, emptyList(), true, querySanitizationEnabled, captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       boolean enabled,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     return createStatementInstrumenter(
-        openTelemetry, emptyList(), enabled, statementSanitizationEnabled, captureQueryParameters);
+        openTelemetry, emptyList(), enabled, querySanitizationEnabled, captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
@@ -77,7 +79,7 @@ public final class JdbcInstrumenterFactory {
             DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractors(extractors)
@@ -99,6 +101,7 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
+    @SuppressWarnings("deprecation") // using deprecated config property
     boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
             .get("transaction/development")
@@ -119,7 +122,7 @@ public final class JdbcInstrumenterFactory {
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
+            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperationName)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)

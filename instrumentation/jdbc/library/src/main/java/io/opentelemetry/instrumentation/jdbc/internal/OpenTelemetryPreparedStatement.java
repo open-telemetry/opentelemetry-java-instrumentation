@@ -429,12 +429,12 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
-    DbRequest request = DbRequest.create(dbInfo, sql, null, parameters);
+    DbRequest request = DbRequest.create(dbInfo, sql, null, parameters, true);
     return wrapCall(request, callable);
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request = DbRequest.create(dbInfo, query, batchSize, parameters);
+    DbRequest request = DbRequest.create(dbInfo, query, batchSize, parameters, true);
     return wrapCall(request, callable);
   }
 

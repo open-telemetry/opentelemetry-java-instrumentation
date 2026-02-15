@@ -49,12 +49,12 @@ public class ApacheHttpClientConfiguration {
 
   // creates a new http client builder for constructing http clients with opentelemetry instrumentation
   public HttpClientBuilder createBuilder() {
-    return ApacheHttpClientTelemetry.builder(openTelemetry).build().newHttpClientBuilder();
+    return ApacheHttpClientTelemetry.builder(openTelemetry).build().createHttpClientBuilder();
   }
 
   // creates a new http client with opentelemetry instrumentation
   public HttpClient newHttpClient() {
-    return ApacheHttpClientTelemetry.builder(openTelemetry).build().newHttpClient();
+    return ApacheHttpClientTelemetry.builder(openTelemetry).build().createHttpClient();
   }
 }
 ```

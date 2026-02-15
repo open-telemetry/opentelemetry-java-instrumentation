@@ -18,8 +18,6 @@ dependencies {
 
   // ensure no cross interference
   testInstrumentation(project(":instrumentation:java-util-logging:javaagent"))
-
-  testImplementation("org.awaitility:awaitility")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

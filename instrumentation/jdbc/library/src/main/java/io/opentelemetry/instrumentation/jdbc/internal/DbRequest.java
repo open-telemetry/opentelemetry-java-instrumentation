@@ -30,90 +30,107 @@ public abstract class DbRequest {
   public static DbRequest create(
       PreparedStatement statement, Map<String, String> preparedStatementParameters) {
     return create(
-        statement, JdbcData.preparedStatement.get(statement), preparedStatementParameters);
+        statement,
+        JdbcData.preparedStatement.get(statement),
+        null,
+        preparedStatementParameters,
+        true);
   }
 
   @Nullable
-  public static DbRequest create(Statement statement, String dbStatementString) {
-    return create(statement, dbStatementString, null, emptyMap());
-  }
-
-  @Nullable
-  private static DbRequest create(
-      Statement statement,
-      String dbStatementString,
-      Map<String, String> preparedStatementParameters) {
-    return create(statement, dbStatementString, null, preparedStatementParameters);
+  public static DbRequest create(Statement statement, String dbQueryString) {
+    return create(statement, dbQueryString, null, emptyMap(), false);
   }
 
   @Nullable
   public static DbRequest create(
       Statement statement,
-      String dbStatementString,
+      String dbQueryString,
       Long batchSize,
-      Map<String, String> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters,
+      boolean parameterizedQuery) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
     return create(
-        extractDbInfo(connection), dbStatementString, batchSize, preparedStatementParameters);
+        extractDbInfo(connection),
+        dbQueryString,
+        batchSize,
+        preparedStatementParameters,
+        parameterizedQuery);
   }
 
   public static DbRequest create(
-      Statement statement, Collection<String> queryTexts, Long batchSize) {
+      Statement statement,
+      Collection<String> queryTexts,
+      Long batchSize,
+      boolean parameterizedQuery) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
-    return create(extractDbInfo(connection), queryTexts, batchSize, emptyMap());
+    return create(extractDbInfo(connection), queryTexts, batchSize, emptyMap(), parameterizedQuery);
   }
 
-  public static DbRequest create(DbInfo dbInfo, String queryText) {
-    return create(dbInfo, queryText, null, emptyMap());
+  public static DbRequest create(DbInfo dbInfo, String queryText, boolean parameterizedQuery) {
+    return create(dbInfo, queryText, null, emptyMap(), parameterizedQuery);
   }
 
   public static DbRequest create(
       DbInfo dbInfo,
       String queryText,
       Long batchSize,
-      Map<String, String> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters,
+      boolean parameterizedQuery) {
     return create(
-        dbInfo, Collections.singletonList(queryText), batchSize, preparedStatementParameters);
+        dbInfo,
+        Collections.singletonList(queryText),
+        batchSize,
+        preparedStatementParameters,
+        parameterizedQuery);
   }
 
   public static DbRequest create(
       DbInfo dbInfo,
       Collection<String> queryTexts,
       Long batchSize,
-      Map<String, String> preparedStatementParameters) {
-    return create(dbInfo, queryTexts, batchSize, null, preparedStatementParameters);
+      Map<String, String> preparedStatementParameters,
+      boolean parameterizedQuery) {
+    return create(
+        dbInfo, queryTexts, batchSize, null, preparedStatementParameters, parameterizedQuery);
   }
 
   private static DbRequest create(
       DbInfo dbInfo,
       Collection<String> queryTexts,
       Long batchSize,
-      String operation,
-      Map<String, String> preparedStatementParameters) {
+      String operationName,
+      Map<String, String> preparedStatementParameters,
+      boolean parameterizedQuery) {
     return new AutoValue_DbRequest(
-        dbInfo, queryTexts, batchSize, operation, preparedStatementParameters);
+        dbInfo,
+        queryTexts,
+        batchSize,
+        operationName,
+        preparedStatementParameters,
+        parameterizedQuery);
   }
 
   @Nullable
-  public static DbRequest createTransaction(Connection connection, String operation) {
+  public static DbRequest createTransaction(Connection connection, String operationName) {
     Connection realConnection = JdbcUtils.unwrapConnection(connection);
     if (realConnection == null) {
       return null;
     }
 
-    return createTransaction(JdbcUtils.extractDbInfo(realConnection), operation);
+    return createTransaction(JdbcUtils.extractDbInfo(realConnection), operationName);
   }
 
-  public static DbRequest createTransaction(DbInfo dbInfo, String operation) {
-    return create(dbInfo, Collections.emptyList(), null, operation, emptyMap());
+  public static DbRequest createTransaction(DbInfo dbInfo, String operationName) {
+    return create(dbInfo, Collections.emptyList(), null, operationName, emptyMap(), false);
   }
 
   public abstract DbInfo getDbInfo();
@@ -125,7 +142,9 @@ public abstract class DbRequest {
 
   // used for transaction instrumentation
   @Nullable
-  public abstract String getOperation();
+  public abstract String getOperationName();
 
   public abstract Map<String, String> getPreparedStatementParameters();
+
+  public abstract boolean isParameterizedQuery();
 }
