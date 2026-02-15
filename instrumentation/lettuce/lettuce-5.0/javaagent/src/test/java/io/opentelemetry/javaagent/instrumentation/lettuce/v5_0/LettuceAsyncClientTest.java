@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
@@ -159,29 +160,32 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.type"),
-                                            "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.message"),
-                                            expectedMessage),
-                                        satisfies(
-                                            AttributeKey.stringKey("exception.stacktrace"),
-                                            val -> val.isNotNull())))));
+                span -> {
+                  span.hasName("CONNECT")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, host),
+                          equalTo(SERVER_PORT, incorrectPort),
+                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                          equalTo(maybeStablePeerService(), "test-peer-service"));
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(
+                                        AttributeKey.stringKey("exception.type"),
+                                        "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
+                                    equalTo(
+                                        AttributeKey.stringKey("exception.message"),
+                                        expectedMessage),
+                                    satisfies(
+                                        AttributeKey.stringKey("exception.stacktrace"),
+                                        val -> val.isNotNull())));
+                  }
+                }));
   }
 
   @Test
@@ -440,7 +444,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("DEL")
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("TestException"))
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalStateException("TestException")
+                                : null)
                         .hasAttributesSatisfyingExactly(assertions)));
   }
 
