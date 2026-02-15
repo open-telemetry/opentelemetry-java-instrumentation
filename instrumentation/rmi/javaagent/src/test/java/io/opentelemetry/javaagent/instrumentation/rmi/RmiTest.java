@@ -163,6 +163,12 @@ class RmiTest {
                   .hasAttributesSatisfyingExactly(
                       equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
                       equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                       satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     }
   }

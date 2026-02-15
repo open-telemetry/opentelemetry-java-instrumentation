@@ -244,12 +244,24 @@ class SpringRmiTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(EXCEPTION_TYPE, error.getClass().getName()),
                         equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+            log ->
+                log.hasSeverity(Severity.WARN)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                         satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
       } else {
         testing.waitAndAssertLogRecords(
             log ->
                 log.hasSeverity(Severity.WARN)
                     .hasEventName("rpc.client.call.exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+            log ->
+                log.hasSeverity(Severity.WARN)
                     .hasAttributesSatisfyingExactly(
                         equalTo(EXCEPTION_TYPE, error.getClass().getName()),
                         equalTo(EXCEPTION_MESSAGE, error.getMessage()),
