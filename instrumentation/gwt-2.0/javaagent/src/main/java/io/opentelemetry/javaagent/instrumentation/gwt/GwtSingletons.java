@@ -22,6 +22,9 @@ public final class GwtSingletons {
   public static final ContextKey<Boolean> RPC_CONTEXT_KEY =
       ContextKey.named("opentelemetry-gwt-rpc-context-key");
 
+  public static final ContextKey<Throwable[]> RPC_THROWABLE_KEY =
+      ContextKey.named("opentelemetry-gwt-rpc-throwable");
+
   private static final Instrumenter<Method, Void> INSTRUMENTER;
 
   static {
