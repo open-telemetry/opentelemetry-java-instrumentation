@@ -350,9 +350,9 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                   new ArrayList<>(
                       Arrays.asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("RANDOMKEY"))
-                            .hasKind(SpanKind.CLIENT)
+                          span ->
+                              span.hasName(spanName("RANDOMKEY"))
+                                  .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(

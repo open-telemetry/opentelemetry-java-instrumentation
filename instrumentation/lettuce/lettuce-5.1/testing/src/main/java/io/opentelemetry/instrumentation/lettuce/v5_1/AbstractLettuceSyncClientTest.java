@@ -527,7 +527,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
-                      span.hasName(spanName("SHUTDOWN", host, containerConnection.port)).hasKind(SpanKind.CLIENT);
+                      span.hasName(spanName("SHUTDOWN", host, containerConnection.port))
+                          .hasKind(SpanKind.CLIENT);
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event in addition to encode events

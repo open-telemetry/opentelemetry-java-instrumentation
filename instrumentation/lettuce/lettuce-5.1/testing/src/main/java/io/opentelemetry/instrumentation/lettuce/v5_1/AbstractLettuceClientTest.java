@@ -102,7 +102,7 @@ public abstract class AbstractLettuceClientTest {
             event -> event.hasName("redis.encode.start"),
             event -> event.hasName("redis.encode.end"));
   }
-  
+
   protected static String spanName(String operation) {
     return spanName(operation, host, port);
   }
