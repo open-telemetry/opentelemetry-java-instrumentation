@@ -160,7 +160,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -205,7 +205,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                       Arrays.asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
-                              span.hasName("GET")
+                              span.hasName(spanName("GET"))
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
@@ -284,7 +284,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                       Arrays.asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
-                              span.hasName("GET")
+                              span.hasName(spanName("GET"))
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
@@ -350,9 +350,9 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                   new ArrayList<>(
                       Arrays.asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                          span ->
-                              span.hasName("RANDOMKEY")
-                                  .hasKind(SpanKind.CLIENT)
+                    span ->
+                        span.hasName(spanName("RANDOMKEY"))
+                            .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
@@ -412,7 +412,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("HMSET")
+                        span.hasName(spanName("HMSET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
@@ -430,7 +430,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("HGETALL")
+                        span.hasName(spanName("HGETALL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(

@@ -130,7 +130,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -173,7 +173,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -200,7 +200,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -227,7 +227,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("RANDOMKEY")
+                        span.hasName(spanName("RANDOMKEY"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -265,7 +265,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("LPUSH")
+                        span.hasName(spanName("LPUSH", host, containerConnection.port))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -292,7 +292,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("HMSET")
+                        span.hasName(spanName("HMSET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -321,7 +321,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("HGETALL")
+                        span.hasName(spanName("HGETALL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -359,7 +359,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("EVAL")
+                        span.hasName(spanName("EVAL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -388,7 +388,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("MSET")
+                        span.hasName(spanName("MSET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
@@ -417,7 +417,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraErrorAttributes(
@@ -435,7 +435,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraErrorAttributes(
@@ -454,7 +454,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraErrorAttributes(
@@ -474,7 +474,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("DEBUG")
+                          span.hasName(spanName("DEBUG", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -492,7 +492,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("DEBUG")
+                          span.hasName(spanName("DEBUG", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -527,7 +527,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
-                      span.hasName("SHUTDOWN").hasKind(SpanKind.CLIENT);
+                      span.hasName(spanName("SHUTDOWN", host, containerConnection.port)).hasKind(SpanKind.CLIENT);
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event in addition to encode events

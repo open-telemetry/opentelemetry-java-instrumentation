@@ -96,7 +96,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -140,7 +140,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -189,7 +189,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -227,7 +227,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("RANDOMKEY")
+                        span.hasName(spanName("RANDOMKEY"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
@@ -251,7 +251,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("COMMAND")
+                        span.hasName(spanName("COMMAND"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
@@ -295,7 +295,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -310,7 +310,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -339,7 +339,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -354,7 +354,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

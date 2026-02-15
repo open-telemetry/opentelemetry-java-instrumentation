@@ -74,7 +74,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraErrorAttributes(
@@ -92,7 +92,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraErrorAttributes(
@@ -111,7 +111,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraErrorAttributes(
@@ -131,7 +131,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("AUTH")
+                          span.hasName(spanName("AUTH"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -151,7 +151,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("AUTH")
+                          span.hasName(spanName("AUTH"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(

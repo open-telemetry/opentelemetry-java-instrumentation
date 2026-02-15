@@ -56,7 +56,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -71,7 +71,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
