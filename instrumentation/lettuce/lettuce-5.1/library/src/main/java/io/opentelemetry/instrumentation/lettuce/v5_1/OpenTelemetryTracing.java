@@ -303,6 +303,9 @@ final class OpenTelemetryTracing implements Tracing {
     public synchronized void finish() {
       if (context != null) {
         instrumenter.end(context, request, response, error);
+        // Null out context to prevent double-ending if both the onComplete callback and Lettuce's
+        // direct finish() call execute.
+        context = null;
       }
     }
   }

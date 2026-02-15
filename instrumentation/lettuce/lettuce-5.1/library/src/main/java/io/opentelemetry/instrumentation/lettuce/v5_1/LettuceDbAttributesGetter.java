@@ -41,6 +41,20 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
+  public String getServerAddress(LettuceRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getHostString() : null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(LettuceRequest request) {
+    InetSocketAddress address = request.getAddress();
+    return address != null ? address.getPort() : null;
+  }
+
+  @Nullable
+  @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       LettuceRequest request, @Nullable LettuceResponse unused) {
     return request.getAddress();
