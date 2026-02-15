@@ -79,6 +79,8 @@ libraries:
           type: STRING
         - name: url.query
           type: STRING
+        - name: url.query
+          type: VALUE
         - name: url.scheme
           type: STRING
         - name: user_agent.original
@@ -3297,7 +3299,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3370,7 +3372,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3434,7 +3436,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3499,7 +3501,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -4721,6 +4723,8 @@ libraries:
           type: STRING
         - name: url.query
           type: STRING
+        - name: url.query
+          type: VALUE
         - name: url.scheme
           type: STRING
         - name: user_agent.original
@@ -9671,7 +9675,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9715,7 +9719,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9759,7 +9763,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13702,6 +13706,10 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
   scope:
     name: io.opentelemetry.opentelemetry-api-1.57
+- name: opentelemetry-api-1.59
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.59
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.59
 - name: opentelemetry-extension-kotlin-1.0
   description: |
     Our Kotlin coroutine instrumentation relies on a shaded copy of the opentelemetry-extension-kotlin library. This can cause conflicts when the application itself also uses opentelemetry-extension-kotlin, because the shaded and unshaded versions store the OpenTelemetry context under different keys. To resolve this issue, this instrumentation modifies the application's copy of opentelemetry-extension-kotlin so that it delegates to the shaded version bundled within the agent.
