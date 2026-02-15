@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -73,32 +74,36 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
                                           "CLIENT SETINFO lib-name Lettuce")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -106,16 +111,18 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
+                                  addExtraErrorAttributes(
+                                      "io.lettuce.core.RedisCommandExecutionException",
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -124,7 +131,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("AUTH")
+                          span.hasName(spanName("AUTH"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -134,6 +141,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "AUTH"),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
@@ -143,7 +151,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("AUTH")
+                          span.hasName(spanName("AUTH"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -153,6 +161,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_OPERATION), "AUTH"),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
