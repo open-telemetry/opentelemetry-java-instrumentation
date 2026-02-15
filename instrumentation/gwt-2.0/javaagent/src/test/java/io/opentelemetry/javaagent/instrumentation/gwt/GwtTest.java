@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -180,7 +181,7 @@ class GwtTest {
                     span.hasName("test.gwt.shared.MessageService/sendMessage")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
-                        .hasException(new IOException())
+                        .hasException(emitExceptionAsSpanEvents() ? new IOException() : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "gwt"),
                             equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
