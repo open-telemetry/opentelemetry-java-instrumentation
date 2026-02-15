@@ -105,7 +105,6 @@ tasks {
 
     into(file(layout.buildDirectory.dir("testapp/web")))
   }
-
 }
 
 tasks.withType<Test>().configureEach {
