@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -27,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -254,34 +257,49 @@ class SpymemcachedTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("get")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            CheckedOperationTimeoutException.class.getName()),
-                                        equalTo(
-                                            EXCEPTION_MESSAGE,
-                                            "Operation timed out. - failing node: "
-                                                + memcachedAddress),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                ERROR_TYPE,
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? "net.spy.memcached.internal.CheckedOperationTimeoutException"
-                                    : null),
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"))));
+                span -> {
+                  span.hasName("get")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              ERROR_TYPE,
+                              SemconvStability.emitStableDatabaseSemconv()
+                                  ? "net.spy.memcached.internal.CheckedOperationTimeoutException"
+                                  : null),
+                          equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                          equalTo(maybeStable(DB_OPERATION), "get"));
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(
+                                        EXCEPTION_TYPE,
+                                        CheckedOperationTimeoutException.class.getName()),
+                                    equalTo(
+                                        EXCEPTION_MESSAGE,
+                                        "Operation timed out. - failing node: " + memcachedAddress),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        val -> val.isInstanceOf(String.class))));
+                  }
+                }));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("db.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, CheckedOperationTimeoutException.class.getName()),
+                      equalTo(
+                          EXCEPTION_MESSAGE,
+                          "Operation timed out. - failing node: " + memcachedAddress),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   @Test
@@ -853,7 +871,9 @@ class SpymemcachedTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(
-                            new IllegalArgumentException("Key is too long (maxlen = 250)"))
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalArgumentException("Key is too long (maxlen = 250)")
+                                : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 ERROR_TYPE,
@@ -862,6 +882,17 @@ class SpymemcachedTest {
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "decr"))));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("db.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, IllegalArgumentException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Key is too long (maxlen = 250)"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   @Test
@@ -938,7 +969,9 @@ class SpymemcachedTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(
-                            new IllegalArgumentException("Key is too long (maxlen = 250)"))
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalArgumentException("Key is too long (maxlen = 250)")
+                                : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 ERROR_TYPE,
@@ -947,6 +980,17 @@ class SpymemcachedTest {
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "incr"))));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("db.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, IllegalArgumentException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Key is too long (maxlen = 250)"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   private static String key(String k) {
