@@ -99,17 +99,24 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private final ConfigProperties configProperties;
   private final List<String> path;
+  private final Map<String, String> mappings;
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
+    return createInstrumentationConfig(configProperties, SPECIAL_MAPPINGS);
+  }
+
+  public static DeclarativeConfigProperties createInstrumentationConfig(
+      ConfigProperties configProperties, Map<String, String> mappings) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, Collections.emptyList());
+        configProperties, Collections.emptyList(), mappings);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path) {
+      ConfigProperties configProperties, List<String> path, Map<String, String> mappings) {
     this.configProperties = configProperties;
     this.path = path;
+    this.mappings = mappings;
   }
 
   @Nullable
@@ -151,7 +158,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       if (duration != null) {
         return duration.toMillis();
       }
-      // If discovery delay has not been configured, have a peek at the metric export interval.
+      // If discovery delay has not been configured, have a peek at the metric export
+      // interval.
       // It makes sense for both of these values to be similar.
       Duration fallback = configProperties.getDuration("otel.metric.export.interval");
       if (fallback != null) {
@@ -179,7 +187,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   public DeclarativeConfigProperties getStructured(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, newPath);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, newPath, mappings);
   }
 
   @Nullable
@@ -221,7 +230,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     String fullPath = pathWithName(name);
 
     // Check explicit property mappings first
-    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
+    String mappedKey = mappings.get(fullPath);
     if (mappedKey != null) {
       return mappedKey;
     }

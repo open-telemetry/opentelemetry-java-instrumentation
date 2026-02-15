@@ -48,6 +48,7 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
+@Deprecated
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";

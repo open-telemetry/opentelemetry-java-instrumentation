@@ -22,7 +22,10 @@ import javax.annotation.Nullable;
 /**
  * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
  * values for properties.
+ *
+ * @deprecated Use {@link ConfigPropertiesBackedConfigProvider#builder()} instead.
  */
+@Deprecated
 public class DeclarativeConfigPropertiesBridgeBuilder {
   /**
    * order is important here, so we use LinkedHashMap - see {@link #addMapping(String, String)} for
