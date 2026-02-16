@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Group of attribute matchers */
@@ -14,6 +15,7 @@ public class AttributeMatcherGroup {
 
   // stored as a Map for easy lookup by name
   private final Map<String, AttributeMatcher> matchers;
+  private Predicate<Map<String, String>> predicate;
 
   /**
    * Constructor for a set of attribute matchers
@@ -33,6 +35,10 @@ public class AttributeMatcherGroup {
    * @return {@literal true} when the attributes match all attributes from this group
    */
   public boolean matches(Map<String, String> attributes) {
+    if (!isApplicableFor(attributes)) {
+      return false;
+    }
+
     if (attributes.size() != matchers.size()) {
       return false;
     }
@@ -53,8 +59,20 @@ public class AttributeMatcherGroup {
     return true;
   }
 
+  public AttributeMatcherGroup applicableWhen(Predicate<Map<String, String>> predicate) {
+    this.predicate = predicate;
+    return this;
+  }
+
   @Override
   public String toString() {
     return matchers.values().toString();
+  }
+
+  public boolean isApplicableFor(Map<String, String> attributes) {
+    if (predicate == null) {
+      return true;
+    }
+    return predicate.test(attributes);
   }
 }

@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGro
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -67,10 +68,16 @@ class CamelTest extends TargetSystemTest {
     // dynamicRouter), and from Camel 4.16.0+.
     AttributeMatcherGroup destinationAwareProcessorAttributes =
         attributeGroup(
-            attributeWithAnyValue("camel.context"),
-            attributeWithAnyValue("camel.route"),
-            attributeWithAnyValue("camel.processor"),
-            attributeWithAnyValue("camel.destination"));
+                attributeWithAnyValue("camel.context"),
+                attributeWithAnyValue("camel.route"),
+                attributeWithAnyValue("camel.processor"),
+                attributeWithAnyValue("camel.destination"))
+            .applicableWhen(
+                (attributes) ->
+                    Optional.of(attributes.get("camel.processor"))
+                        // Test application uses only "to" destination-aware processor
+                        .filter((processorId) -> processorId.startsWith("to"))
+                        .isPresent());
 
     AttributeMatcherGroup threadPoolAttributes =
         attributeGroup(
