@@ -119,24 +119,36 @@ public abstract class AbstractGrpcStreamingTest {
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel).withWaitForReady();
 
+    AtomicBoolean onNextCalled = new AtomicBoolean();
     StreamObserver<Helloworld.Response> observer2 =
-        client.conversation(
-            new StreamObserver<Helloworld.Response>() {
-              @Override
-              public void onNext(Helloworld.Response value) {
-                clientReceived.add(value.getMessage());
-              }
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    client.conversation(
+                        new StreamObserver<Helloworld.Response>() {
+                          @Override
+                          public void onNext(Helloworld.Response value) {
+                            // we create span only for the first onNext to simplify asserting spans
+                            if (onNextCalled.compareAndSet(false, true)) {
+                              testing()
+                                  .runWithSpan(
+                                      "clientOnNext", () -> clientReceived.add(value.getMessage()));
+                            } else {
+                              clientReceived.add(value.getMessage());
+                            }
+                          }
 
-              @Override
-              public void onError(Throwable t) {
-                error.set(t);
-              }
+                          @Override
+                          public void onError(Throwable t) {
+                            error.set(t);
+                          }
 
-              @Override
-              public void onCompleted() {
-                latch.countDown();
-              }
-            });
+                          @Override
+                          public void onCompleted() {
+                            latch.countDown();
+                          }
+                        }));
 
     for (int i = 1; i <= clientMessageCount; i++) {
       Helloworld.Response message =
@@ -221,10 +233,11 @@ public abstract class AbstractGrpcStreamingTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
                                     experimentalSatisfies(
@@ -246,7 +259,7 @@ public abstract class AbstractGrpcStreamingTest {
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
+                            .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 experimentalSatisfies(
                                     GRPC_RECEIVED_MESSAGE_COUNT,
@@ -270,7 +283,11 @@ public abstract class AbstractGrpcStreamingTest {
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(toArray(serverEvents)))));
+                                        .satisfiesExactlyInAnyOrder(toArray(serverEvents))),
+                    span ->
+                        span.hasName("clientOnNext")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",

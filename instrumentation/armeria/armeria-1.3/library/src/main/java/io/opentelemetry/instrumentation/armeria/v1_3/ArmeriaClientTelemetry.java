@@ -31,16 +31,6 @@ public final class ArmeriaClientTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /**
-   * Returns a decorator for instrumenting Armeria clients.
-   *
-   * @deprecated Use {@link #createDecorator()} instead.
-   */
-  @Deprecated
-  public Function<? super HttpClient, ? extends HttpClient> newDecorator() {
-    return createDecorator();
-  }
-
   /** Returns a decorator for instrumenting Armeria clients. */
   public Function<HttpClient, HttpClient> createDecorator() {
     return client -> new OpenTelemetryClient(client, instrumenter);

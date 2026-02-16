@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,12 +14,10 @@ class InstrumentationProxyHelperTest {
 
   @Test
   void wrongType() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> InstrumentationProxyHelper.unwrapIfNeeded("", Integer.class));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> InstrumentationProxyHelper.unwrapIfNeeded(proxy(""), Integer.class));
+    assertThatThrownBy(() -> InstrumentationProxyHelper.unwrapIfNeeded("", Integer.class))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> InstrumentationProxyHelper.unwrapIfNeeded(proxy(""), Integer.class))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

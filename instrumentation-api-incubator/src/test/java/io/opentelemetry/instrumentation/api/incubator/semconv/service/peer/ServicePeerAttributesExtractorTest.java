@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -54,7 +53,7 @@ class ServicePeerAttributesExtractorTest {
     underTest.onEnd(attributes, context, "request", "response", null);
 
     // then
-    assertTrue(attributes.build().isEmpty());
+    assertThat(attributes.build().isEmpty()).isTrue();
   }
 
   @Test
@@ -76,8 +75,8 @@ class ServicePeerAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, "request", "response", null);
 
     // then
-    assertTrue(startAttributes.build().isEmpty());
-    assertTrue(endAttributes.build().isEmpty());
+    assertThat(startAttributes.build().isEmpty()).isTrue();
+    assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
   @Test

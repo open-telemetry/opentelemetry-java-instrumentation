@@ -104,13 +104,14 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha")
+  testImplementation("org.assertj:assertj-core:3.27.7")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.29")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.32")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
