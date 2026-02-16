@@ -43,11 +43,13 @@ public class AppServerBridge {
   }
 
   /**
-   * Get exception that happened during servlet invocation.
+   * Get exception that happened during servlet invocation. This method can be called only once as
+   * it resets the stored exception to null after reading it.
    *
    * @param context server context
    * @param error exception that happened during server span, may be null. If this parameter is not
-   *     null, it will be returned by this method. If it is null, then exception recorded by servlet
+   *     null, it will be returned by this method. If it is null, then the exception recorded by
+   *     servlet will be returned.
    * @return exception that happened during servlet invocation
    */
   @Nullable
