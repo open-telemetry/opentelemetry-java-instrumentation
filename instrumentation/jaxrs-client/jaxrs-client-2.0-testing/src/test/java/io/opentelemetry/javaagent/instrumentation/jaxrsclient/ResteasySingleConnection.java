@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -37,7 +39,7 @@ class ResteasySingleConnection implements SingleConnection {
 
   @Override
   public int doRequest(String path, Map<String, String> headers) throws ExecutionException {
-    String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
+    String requestId = requireNonNull(headers.get(REQUEST_ID_HEADER));
 
     URI uri;
     try {

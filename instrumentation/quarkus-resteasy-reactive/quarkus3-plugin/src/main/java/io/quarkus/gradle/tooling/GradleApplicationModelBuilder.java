@@ -21,6 +21,7 @@
  */
 
 package io.quarkus.gradle.tooling;
+import static java.util.Objects.requireNonNull;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -222,7 +223,7 @@ public class GradleApplicationModelBuilder implements ParameterizedToolingModelB
         } else {
           projectDep = project.getRootProject().findProject(projectComponentIdentifier.getProjectPath());
         }
-        Objects.requireNonNull(projectDep, "project " + projectComponentIdentifier.getProjectPath() + " should exist");
+        requireNonNull(projectDep, "project " + projectComponentIdentifier.getProjectPath() + " should exist");
         SourceSetContainer sourceSets = projectDep.getExtensions().getByType(SourceSetContainer.class);
 
         SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
