@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
-import java.util.Map;
-import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /** Implements functionality of matching data point attributes. */
 public class AttributeMatcher {
   private final String attributeName;
   @Nullable private final String attributeValue;
-  @Nullable private Predicate<Map<String, String>> attributePresencePredicate;
 
   /**
    * Create instance used to match data point attribute with any value.
@@ -60,21 +57,5 @@ public class AttributeMatcher {
    */
   boolean matchesValue(String value) {
     return attributeValue == null || attributeValue.equals(value);
-  }
-
-  public AttributeMatcher presentWhen(Predicate<Map<String, String>> attributePresencePredicate) {
-    this.attributePresencePredicate = attributePresencePredicate;
-    return this;
-  }
-
-  public AttributeMatcher optional() {
-    return presentWhen((attributes) -> false);
-  }
-
-  public boolean isApplicableFor(Map<String, String> attributes) {
-    if (attributePresencePredicate == null) {
-      return true;
-    }
-    return attributePresencePredicate.test(attributes);
   }
 }

@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGro
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -61,24 +60,27 @@ class CamelTest extends TargetSystemTest {
         attributeGroup(
             attributeWithAnyValue("camel.context"),
             attributeWithAnyValue("camel.route"),
+            attributeWithAnyValue("camel.processor"));
+
+    // camel.destination attribute is present only in destination-aware processors MBeans
+    // (processors that send to an endpoint, like: to, toD, wireTap, enrich, pollEnrich, poll,
+    // dynamicRouter), and from Camel 4.16.0+.
+    AttributeMatcherGroup destinationAwareProcessorAttributes =
+        attributeGroup(
+            attributeWithAnyValue("camel.context"),
+            attributeWithAnyValue("camel.route"),
             attributeWithAnyValue("camel.processor"),
-            attributeWithAnyValue("camel.destination")
-                .presentWhen(
-                    (attributes) ->
-                        // Destination is present only for destination-aware processors MBeans
-                        // (processors that send to an endpoint), and from Camel 4.16.0+.
-                        // This includes processors like: to, toD, wireTap, enrich, pollEnrich,
-                        // poll, dynamicRouter.
-                        Optional.of(attributes.get("camel.processor"))
-                            .filter((processorId) -> processorId.startsWith("to"))
-                            .isPresent()));
+            attributeWithAnyValue("camel.destination"));
 
     AttributeMatcherGroup threadPoolAttributes =
         attributeGroup(
+            attributeWithAnyValue("camel.context"), attributeWithAnyValue("camel.pool_id"));
+
+    // camel.route attribute is only present for route's thread pools
+    AttributeMatcherGroup routeRelatedThreadPoolAttributes =
+        attributeGroup(
             attributeWithAnyValue("camel.context"),
-            // This attribute is only present for route's thread pools, but there is no way to
-            // detect it upfront
-            attributeWithAnyValue("camel.route").optional(),
+            attributeWithAnyValue("camel.route"),
             attributeWithAnyValue("camel.pool_id"));
 
     return MetricsVerifier.create()
@@ -345,7 +347,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.completed",
             metric ->
@@ -354,7 +357,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.failed.count",
             metric ->
@@ -363,7 +367,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.failed.handled",
             metric ->
@@ -372,7 +377,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.inflight",
             metric ->
@@ -381,7 +387,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges currently transiting the processor.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.redelivered.count",
             metric ->
@@ -390,7 +397,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.redelivered.external",
             metric ->
@@ -399,7 +407,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.processing.duration.max",
             metric ->
@@ -408,7 +417,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the longest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.")
                     .hasUnit("s")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.processing.duration.mean",
             metric ->
@@ -417,7 +427,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the mean processing time, in milliseconds, for all exchanges processed since processor start-up or the last reset operation.")
                     .hasUnit("s")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.processing.duration.min",
             metric ->
@@ -426,7 +437,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the shortest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.")
                     .hasUnit("s")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.processing.duration.last",
             metric ->
@@ -435,7 +447,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the time, in milliseconds, it took the selected processor to process the last exchange.")
                     .hasUnit("s")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.processing.duration.last_delta",
             metric ->
@@ -444,7 +457,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the selected processor.")
                     .hasUnit("s")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         .add(
             "camel.processor.exchange.processing.duration.sum",
             metric ->
@@ -453,7 +467,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total processing time, in milliseconds, to process all exchanges since start-up or the last reset operation.")
                     .hasUnit("s")
-                    .hasDataPointsWithAttributes(processorAttributes))
+                    .hasDataPointsWithAttributes(
+                        processorAttributes, destinationAwareProcessorAttributes))
         // threadpool metrics
         .add(
             "camel.threadpool.task.count",
@@ -463,7 +478,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The approximate total number of tasks that have ever been scheduled for execution.")
                     .hasUnit("{task}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes))
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
             "camel.threadpool.task.active",
             metric ->
@@ -472,7 +488,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The approximate number of threads that are actively executing tasks.")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes))
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
             "camel.threadpool.task.completed",
             metric ->
@@ -481,7 +498,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.")
                     .hasUnit("{task}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes))
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
             "camel.threadpool.pool.size.current",
             metric ->
@@ -489,7 +507,8 @@ class CamelTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDescription("The current number of threads in the pool.")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes))
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
             "camel.threadpool.pool.size.max",
             metric ->
@@ -498,7 +517,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The largest number of threads that have ever simultaneously been in the pool.")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes))
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
             "camel.threadpool.pool.core.size",
             metric ->
@@ -507,7 +527,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The number of threads that are always kept in the pool, even if they are idle.")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes))
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
             "camel.threadpool.task.queue.size",
             metric ->
@@ -515,6 +536,7 @@ class CamelTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDescription("The number of Tasks in the Task Queue.")
                     .hasUnit("{task}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes));
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes));
   }
 }

@@ -33,6 +33,10 @@ public class AttributeMatcherGroup {
    * @return {@literal true} when the attributes match all attributes from this group
    */
   public boolean matches(Map<String, String> attributes) {
+    if (attributes.size() != matchers.size()) {
+      return false;
+    }
+
     for (Map.Entry<String, String> entry : attributes.entrySet()) {
       AttributeMatcher matcher = matchers.get(entry.getKey());
       if (matcher == null) {
@@ -40,7 +44,7 @@ public class AttributeMatcherGroup {
         return false;
       }
 
-      if (matcher.isApplicableFor(attributes) && !matcher.matchesValue(entry.getValue())) {
+      if (!matcher.matchesValue(entry.getValue())) {
         // value does not match: unexpected value
         return false;
       }
