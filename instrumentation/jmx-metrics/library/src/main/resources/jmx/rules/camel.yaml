@@ -322,6 +322,12 @@ rules:
         type: counter
         unit: "{task}"
         desc: The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
+      # camel.threadpool.task.queue.size
+      TaskQueueSize:
+        metric: task.queue.size
+        type: updowncounter
+        unit: "{task}"
+        desc:  The number of Tasks in the Task Queue.
       # camel.threadpool.pool.size.current
       PoolSize:
         metric: pool.size.current
@@ -340,9 +346,3 @@ rules:
         type: updowncounter
         unit: "{thread}"
         desc: The number of threads that are always kept in the pool, even if they are idle.
-      # camel.threadpool.task.queue.size
-      TaskQueueSize:
-        metric: task.queue.size
-        type: updowncounter
-        unit: "{task}"
-        desc:  The number of Tasks in the Task Queue.
