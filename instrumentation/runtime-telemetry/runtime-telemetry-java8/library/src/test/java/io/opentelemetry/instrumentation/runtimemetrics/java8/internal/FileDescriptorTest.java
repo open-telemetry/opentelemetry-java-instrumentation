@@ -43,8 +43,7 @@ class ExperimentalFileDescriptorTest {
   // verify that mock is called with the correct value
   void registerObservers() {
     when(osBean.getOpenFileDescriptorCount()).thenReturn(42L);
-    when(osBean.getMaxFileDescriptorCount()).thenReturn(100L);
-    ExperimentalFileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
+    FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
@@ -69,8 +68,8 @@ class ExperimentalFileDescriptorTest {
   // Verify that no metrics are emitted with non-zero values
   void registerObservers_NegativeValue() {
     when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L);
-    when(osBean.getMaxFileDescriptorCount()).thenReturn(-1L);
-    ExperimentalFileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
+    FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
+
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         metric ->
