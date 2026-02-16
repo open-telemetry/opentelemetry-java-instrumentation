@@ -56,15 +56,6 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
-  /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    return setQuerySanitizationEnabled(enabled);
-  }
-
   /** Configures whether spans are created for JDBC Transactions. Disabled by default. */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setTransactionInstrumenterEnabled(boolean enabled) {
