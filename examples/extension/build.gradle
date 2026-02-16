@@ -104,6 +104,7 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha")
+  testImplementation("org.assertj:assertj-core:3.27.3")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
