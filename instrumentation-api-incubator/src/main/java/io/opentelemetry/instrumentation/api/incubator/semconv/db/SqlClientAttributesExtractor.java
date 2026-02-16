@@ -72,7 +72,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean captureQueryParameters) {
     this.getter = getter;
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
-    // capturing query parameters disables statement sanitization
+    // capturing query parameters disables query sanitization
     this.querySanitizationEnabled = !captureQueryParameters && querySanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
     internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
