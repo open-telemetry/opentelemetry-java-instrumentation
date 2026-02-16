@@ -21,6 +21,7 @@
  */
 
 package io.quarkus.gradle.tooling;
+
 import static java.util.Objects.requireNonNull;
 
 import java.io.BufferedReader;
