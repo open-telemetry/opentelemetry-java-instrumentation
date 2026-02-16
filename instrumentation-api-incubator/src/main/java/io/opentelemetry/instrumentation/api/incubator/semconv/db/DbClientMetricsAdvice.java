@@ -9,7 +9,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -22,11 +24,34 @@ final class DbClientMetricsAdvice {
       unmodifiableList(
           asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
 
+  static final List<Long> RETURNED_ROWS_BUCKETS =
+      unmodifiableList(asList(10L, 50L, 100L, 250L, 500L, 1000L, 2000L, 5000L, 10000L));
+
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder)
+        .setAttributesAdvice(
+            asList(
+                DbAttributes.DB_SYSTEM_NAME,
+                DbAttributes.DB_COLLECTION_NAME,
+                DbAttributes.DB_NAMESPACE,
+                DbAttributes.DB_OPERATION_NAME,
+                DbAttributes.DB_QUERY_SUMMARY,
+                DbAttributes.DB_RESPONSE_STATUS_CODE,
+                ErrorAttributes.ERROR_TYPE,
+                NetworkAttributes.NETWORK_PEER_ADDRESS,
+                NetworkAttributes.NETWORK_PEER_PORT,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
+  }
+
+  static void applyReturnedRowsAdvice(LongHistogramBuilder builder) {
+    if (!(builder instanceof ExtendedLongHistogramBuilder)) {
+      return;
+    }
+    ((ExtendedLongHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
                 DbAttributes.DB_SYSTEM_NAME,

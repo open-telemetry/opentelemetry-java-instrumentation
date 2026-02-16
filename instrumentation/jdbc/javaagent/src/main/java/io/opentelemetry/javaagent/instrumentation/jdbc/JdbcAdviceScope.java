@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.sta
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import java.sql.PreparedStatement;
@@ -91,6 +92,10 @@ public class JdbcAdviceScope {
   }
 
   public void end(@Nullable Throwable throwable) {
+    end(null, throwable);
+  }
+
+  public void end(@Nullable Object result, @Nullable Throwable throwable) {
     if (callDepth.decrementAndGet() > 0) {
       return;
     }
@@ -98,6 +103,49 @@ public class JdbcAdviceScope {
       return;
     }
     scope.close();
-    statementInstrumenter().end(context, request, null, throwable);
+    DbResponse response = createDbResponse(result);
+    statementInstrumenter().end(context, request, response, throwable);
+  }
+
+  private static DbResponse createDbResponse(@Nullable Object result) {
+    if (!JdbcSingletons.CAPTURE_ROW_COUNT || result == null) {
+      return DbResponse.create(null);
+    }
+
+    Long rowCount = extractRowCount(result);
+    if (rowCount != null && rowCount > JdbcSingletons.ROW_COUNT_LIMIT) {
+      return DbResponse.create(null);
+    }
+    return DbResponse.create(rowCount);
+  }
+
+  private static Long extractRowCount(Object result) {
+    if (result instanceof Integer) {
+      return ((Integer) result).longValue();
+    }
+    if (result instanceof Long) {
+      return (Long) result;
+    }
+    if (result instanceof int[]) {
+      int[] counts = (int[]) result;
+      long sum = 0;
+      for (int count : counts) {
+        if (count >= 0) {
+          sum += count;
+        }
+      }
+      return sum;
+    }
+    if (result instanceof long[]) {
+      long[] counts = (long[]) result;
+      long sum = 0;
+      for (long count : counts) {
+        if (count >= 0) {
+          sum += count;
+        }
+      }
+      return sum;
+    }
+    return null;
   }
 }

@@ -50,6 +50,12 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
+  // Incubating attribute for db.response.returned_rows
+  private static final class DbIncubatingAttributes {
+    private static final AttributeKey<Long> DB_RESPONSE_RETURNED_ROWS =
+        AttributeKey.longKey("db.response.returned_rows");
+  }
+
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
@@ -152,6 +158,12 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       if (error != null || response != null) {
         internalSet(
             attributes, DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
+      }
+      if (response != null) {
+        Long returnedRows = getter.getDbResponseReturnedRows(response);
+        if (returnedRows != null) {
+          internalSet(attributes, DbIncubatingAttributes.DB_RESPONSE_RETURNED_ROWS, returnedRows);
+        }
       }
     }
   }

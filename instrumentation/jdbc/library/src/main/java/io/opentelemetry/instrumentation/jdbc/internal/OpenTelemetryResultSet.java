@@ -33,22 +33,38 @@ class OpenTelemetryResultSet implements ResultSet {
 
   private final ResultSet delegate;
   private final Statement statement;
+  private final boolean captureRowCount;
+  private final long rowCountLimit;
+  private long rowCount;
 
-  private OpenTelemetryResultSet(ResultSet delegate, Statement statement) {
+  private OpenTelemetryResultSet(
+      ResultSet delegate, Statement statement, boolean captureRowCount, long rowCountLimit) {
     this.delegate = delegate;
     this.statement = statement;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
+    this.rowCount = 0;
   }
 
-  public static ResultSet wrap(ResultSet delegate, Statement statement) {
+  public static ResultSet wrap(
+      ResultSet delegate, Statement statement, boolean captureRowCount, long rowCountLimit) {
     if (delegate == null) {
       return null;
     }
-    return new OpenTelemetryResultSet(delegate, statement);
+    return new OpenTelemetryResultSet(delegate, statement, captureRowCount, rowCountLimit);
   }
 
   @Override
   public boolean next() throws SQLException {
-    return delegate.next();
+    boolean hasNext = delegate.next();
+    if (hasNext && captureRowCount && rowCount < rowCountLimit) {
+      rowCount++;
+    }
+    return hasNext;
+  }
+
+  long getRowCount() {
+    return rowCount;
   }
 
   @Override
