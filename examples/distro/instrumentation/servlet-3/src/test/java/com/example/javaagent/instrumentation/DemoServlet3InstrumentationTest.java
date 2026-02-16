@@ -5,8 +5,7 @@
 
 package com.example.javaagent.instrumentation;
 
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -76,17 +75,16 @@ class DemoServlet3InstrumentationTest {
     var response = httpClient.newCall(request).execute();
 
     // then
-    assertEquals(200, response.code());
-    assertEquals("result", response.body().string());
+    assertThat(response.code()).isEqualTo(200);
+    assertThat(response.body().string()).isEqualTo("result");
 
-    assertThat(instrumentation.waitForTraces(1))
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
+    instrumentation.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
 
     var traceId = instrumentation.spans().get(0).getTraceId();
-    assertEquals(traceId, response.header("X-server-id"));
+    assertThat(response.header("X-server-id")).isEqualTo(traceId);
   }
 
   public static class TestServlet extends HttpServlet {

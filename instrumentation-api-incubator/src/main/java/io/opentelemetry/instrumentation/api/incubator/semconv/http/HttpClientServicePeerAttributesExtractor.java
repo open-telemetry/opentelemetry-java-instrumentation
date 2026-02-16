@@ -28,16 +28,16 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
 
   private final AddressAndPortExtractor<REQUEST> addressAndPortExtractor;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
-  private final ServicePeerResolver peerServiceResolver;
+  private final ServicePeerResolver servicePeerResolver;
 
   // visible for tests
   HttpClientServicePeerAttributesExtractor(
       AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      ServicePeerResolver peerServiceResolver) {
+      ServicePeerResolver servicePeerResolver) {
     this.addressAndPortExtractor = addressAndPortExtractor;
     this.attributesGetter = attributesGetter;
-    this.peerServiceResolver = peerServiceResolver;
+    this.servicePeerResolver = servicePeerResolver;
   }
 
   /**
@@ -67,15 +67,15 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
   @Deprecated
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      ServicePeerResolver peerServiceResolver) {
-    if (peerServiceResolver.isEmpty()) {
+      ServicePeerResolver servicePeerResolver) {
+    if (servicePeerResolver.isEmpty()) {
       return new EmptyAttributesExtractor<>();
     }
     AddressAndPortExtractor<REQUEST> addressAndPortExtractor =
         new ServerAddressAndPortExtractor<>(
             attributesGetter, new HostAddressAndPortExtractor<>(attributesGetter));
     return new HttpClientServicePeerAttributesExtractor<>(
-        addressAndPortExtractor, attributesGetter, peerServiceResolver);
+        addressAndPortExtractor, attributesGetter, servicePeerResolver);
   }
 
   @Override
@@ -95,7 +95,7 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    peerServiceResolver.resolve(
+    servicePeerResolver.resolve(
         host,
         addressAndPort.getPort(),
         () -> getUrlPath(attributesGetter, request),

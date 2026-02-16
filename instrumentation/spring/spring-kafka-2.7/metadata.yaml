@@ -1,5 +1,7 @@
 description: This instrumentation enables consumer messaging spans for Spring Kafka listeners.
 library_link: https://spring.io/projects/spring-kafka
+semantic_conventions:
+  - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >
@@ -12,6 +14,6 @@ configurations:
     type: list
     default: ''
   - name: otel.instrumentation.kafka.experimental-span-attributes
-    description: Enables capturing experimental span attribute `kafka.record.queue_time_ms`
+    description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
     type: boolean
     default: false

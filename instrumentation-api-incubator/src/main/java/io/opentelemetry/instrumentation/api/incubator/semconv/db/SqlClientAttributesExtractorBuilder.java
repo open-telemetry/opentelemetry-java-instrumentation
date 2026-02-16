@@ -27,10 +27,10 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated not needed anymore since the new semantic conventions always use db.collection.name
+   * @deprecated new semantic conventions always use db.collection.name
    */
   @CanIgnoreReturnValue
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
       AttributeKey<String> oldSemconvTableAttribute) {
     this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
@@ -50,19 +50,9 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
-  }
-
-  /**
    * Sets whether the query parameters should be captured as span attributes named {@code
-   * db.query.parameter.<key>}. Enabling this option disables the statement sanitization. Disabled
-   * by default.
+   * db.query.parameter.<key>}. Enabling this option disables the query sanitization. Disabled by
+   * default.
    *
    * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
    * personally identifiable information or protected health info.

@@ -38,7 +38,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.47.0"
-val byteBuddyVersion = "1.18.4"
+val byteBuddyVersion = "1.18.5"
 val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -80,7 +80,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.14.2",
+  "org.junit.jupiter:junit-jupiter-api:5.14.3",
 
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
@@ -117,7 +117,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.5",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.16"
 )
 
 javaPlatform {

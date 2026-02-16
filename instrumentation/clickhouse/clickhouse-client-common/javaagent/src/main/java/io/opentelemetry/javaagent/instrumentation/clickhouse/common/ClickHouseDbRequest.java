@@ -19,11 +19,11 @@ public abstract class ClickHouseDbRequest {
       SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static ClickHouseDbRequest create(
-      @Nullable String host, @Nullable Integer port, @Nullable String dbName, String sql) {
+      @Nullable String host, @Nullable Integer port, @Nullable String namespace, String sql) {
     SqlQuery sqlQuery = SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
     SqlQuery sqlQueryWithSummary =
         SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
-    return new AutoValue_ClickHouseDbRequest(host, port, dbName, sqlQuery, sqlQueryWithSummary);
+    return new AutoValue_ClickHouseDbRequest(host, port, namespace, sqlQuery, sqlQueryWithSummary);
   }
 
   @Nullable

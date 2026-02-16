@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * Helper class for sanitizing sql that keeps sanitization results in {@link InstrumenterContext} so
- * that each statement would be sanitized only once for given {@link Instrumenter} call.
+ * that each query would be sanitized only once for given {@link Instrumenter} call.
  */
 class SqlQuerySanitizerUtil {
   private static final SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);

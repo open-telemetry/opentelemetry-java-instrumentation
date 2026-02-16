@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -46,7 +46,7 @@ class ChannelFutureTest {
 
     channel.close().await(5, TimeUnit.SECONDS);
 
-    assertEquals(0, counter.get());
+    assertThat(counter.get()).isEqualTo(0);
   }
 
   private static GenericFutureListener<Future<Void>> newListener(AtomicInteger counter) {

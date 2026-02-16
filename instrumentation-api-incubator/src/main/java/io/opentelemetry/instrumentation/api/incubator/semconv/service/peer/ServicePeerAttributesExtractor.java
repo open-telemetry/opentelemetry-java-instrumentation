@@ -22,13 +22,13 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final ServerAttributesGetter<REQUEST> attributesGetter;
-  private final ServicePeerResolver peerServiceResolver;
+  private final ServicePeerResolver servicePeerResolver;
 
   // visible for tests
   ServicePeerAttributesExtractor(
-      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver peerServiceResolver) {
+      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver servicePeerResolver) {
     this.attributesGetter = attributesGetter;
-    this.peerServiceResolver = peerServiceResolver;
+    this.servicePeerResolver = servicePeerResolver;
   }
 
   /**
@@ -56,11 +56,11 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
    */
   @Deprecated
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver peerServiceResolver) {
-    if (peerServiceResolver.isEmpty()) {
+      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver servicePeerResolver) {
+    if (servicePeerResolver.isEmpty()) {
       return new EmptyAttributesExtractor<>();
     }
-    return new ServicePeerAttributesExtractor<>(attributesGetter, peerServiceResolver);
+    return new ServicePeerAttributesExtractor<>(attributesGetter, servicePeerResolver);
   }
 
   @Override
@@ -79,7 +79,7 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
       return;
     }
 
-    peerServiceResolver.resolve(
+    servicePeerResolver.resolve(
         serverAddress, attributesGetter.getServerPort(request), () -> null, attributes::put);
   }
 

@@ -17,18 +17,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // testing deprecated SqlStatementSanitizer and SqlStatementInfo
-class SqlStatementSanitizerTest {
+class SqlQuerySanitizerTest {
 
-  private static final SqlStatementSanitizer SANITIZER = SqlStatementSanitizer.create(true);
+  private static final SqlQuerySanitizer SANITIZER = SqlQuerySanitizer.create(true);
 
-  private static SqlStatementInfo sanitize(String sql) {
+  private static SqlQuery sanitize(String sql) {
     return emitStableDatabaseSemconv()
         ? SANITIZER.sanitizeWithSummary(sql)
         : SANITIZER.sanitize(sql);
   }
 
-  private static SqlStatementInfo sanitize(String sql, SqlDialect dialect) {
+  private static SqlQuery sanitize(String sql, SqlDialect dialect) {
     return emitStableDatabaseSemconv()
         ? SANITIZER.sanitizeWithSummary(sql, dialect)
         : SANITIZER.sanitize(sql, dialect);
@@ -37,7 +36,7 @@ class SqlStatementSanitizerTest {
   @ParameterizedTest
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
-    SqlStatementInfo result = sanitize(original);
+    SqlQuery result = sanitize(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -49,7 +48,7 @@ class SqlStatementSanitizerTest {
   @ParameterizedTest
   @MethodSource("couchbaseArgs")
   void normalizeCouchbase(String original, String expected, String expectedQuerySummary) {
-    SqlStatementInfo result = sanitize(original, SqlDialect.COUCHBASE);
+    SqlQuery result = sanitize(original, SqlDialect.COUCHBASE);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -60,9 +59,9 @@ class SqlStatementSanitizerTest {
 
   @ParameterizedTest
   @MethodSource("simplifyArgs")
-  void simplifySql(String original, Function<String, SqlStatementInfo> expectedFunction) {
-    SqlStatementInfo result = sanitize(original);
-    SqlStatementInfo expected = expectedFunction.apply(original);
+  void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
+    SqlQuery result = sanitize(original);
+    SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getOperationName()).isNull();
@@ -79,7 +78,7 @@ class SqlStatementSanitizerTest {
   @ParameterizedTest
   @MethodSource("sensitiveArgs")
   void sanitizeSensitive(String original, String expected, String expectedQuerySummary) {
-    SqlStatementInfo result = sanitize(original);
+    SqlQuery result = sanitize(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -114,7 +113,7 @@ class SqlStatementSanitizerTest {
 
     String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
 
-    SqlStatementInfo result = sanitize(query);
+    SqlQuery result = sanitize(query);
 
     assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
     if (emitStableDatabaseSemconv()) {
@@ -130,10 +129,9 @@ class SqlStatementSanitizerTest {
 
   @ParameterizedTest
   @MethodSource("ddlArgs")
-  void checkDdlOperationStatementsAreOk(
-      String actual, Function<String, SqlStatementInfo> expectFunc) {
-    SqlStatementInfo result = sanitize(actual);
-    SqlStatementInfo expected = expectFunc.apply(actual);
+  void checkDdlOperationStatementsAreOk(String actual, Function<String, SqlQuery> expectFunc) {
+    SqlQuery result = sanitize(actual);
+    SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getOperationName()).isNull();
@@ -150,7 +148,7 @@ class SqlStatementSanitizerTest {
   @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
-    SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
+    SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
     for (int i = 0; i < 10000; i++) {
       assertThat(sanitizer.sanitize(s)).isNotNull();
       s += "'";
@@ -163,7 +161,7 @@ class SqlStatementSanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
+    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s);
     assertThat(result.getQueryText()).isEqualTo("?");
   }
 
@@ -173,7 +171,7 @@ class SqlStatementSanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
+    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s);
     assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
@@ -183,7 +181,7 @@ class SqlStatementSanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-    SqlStatementInfo result = sanitize(s.toString());
+    SqlQuery result = sanitize(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
     if (emitStableDatabaseSemconv()) {
@@ -201,42 +199,40 @@ class SqlStatementSanitizerTest {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt(Character.MAX_VALUE));
       }
-      SqlStatementSanitizer.create(true).sanitize(sb.toString());
+      SqlQuerySanitizer.create(true).sanitize(sb.toString());
     }
   }
 
   @Test
-  public void longInStatementDoesntCauseStackOverflow() {
+  void longInStatementDoesntCauseStackOverflow() {
     StringBuilder s = new StringBuilder("select col from table where col in (");
     for (int i = 0; i < 10000; i++) {
       s.append("?,");
     }
     s.append("?)");
 
-    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getQueryText();
+    String sanitized = SqlQuerySanitizer.create(true).sanitize(s.toString()).getQueryText();
 
     assertThat(sanitized).isEqualTo("select col from table where col in (?)");
   }
 
   @Test
-  public void largeStatementCached() {
-    // test that short statement is cached
-    String shortStatement = "SELECT * FROM TABLE WHERE FIELD = 1234";
-    String sanitizedShort =
-        SqlStatementSanitizer.create(true).sanitize(shortStatement).getQueryText();
+  void largeQueryCached() {
+    // test that short query is cached
+    String shortQuery = "SELECT * FROM TABLE WHERE FIELD = 1234";
+    String sanitizedShort = SqlQuerySanitizer.create(true).sanitize(shortQuery).getQueryText();
     assertThat(sanitizedShort).doesNotContain("1234");
-    assertThat(SqlStatementSanitizer.isCached(shortStatement)).isTrue();
+    assertThat(SqlQuerySanitizer.isCached(shortQuery)).isTrue();
 
-    // test that large statement is not cached
+    // test that large query is not cached
     StringBuffer s = new StringBuffer();
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-    String largeStatement = s.toString();
-    String sanitizedLarge =
-        SqlStatementSanitizer.create(true).sanitize(largeStatement).getQueryText();
+    String largeQuery = s.toString();
+    String sanitizedLarge = SqlQuerySanitizer.create(true).sanitize(largeQuery).getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
-    assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
+    assertThat(SqlQuerySanitizer.isCached(largeQuery)).isFalse();
   }
 
   @Test
@@ -251,7 +247,7 @@ class SqlStatementSanitizerTest {
       sql.append("very_long_table_name_").append(i);
     }
     String result =
-        SqlStatementSanitizer.create(true).sanitizeWithSummary(sql.toString()).getQuerySummary();
+        SqlQuerySanitizer.create(true).sanitizeWithSummary(sql.toString()).getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)
         .isEqualTo(
@@ -416,36 +412,36 @@ class SqlStatementSanitizerTest {
             "SELECT TABLE"));
   }
 
-  private static Function<String, SqlStatementInfo> expect(
+  private static Function<String, SqlQuery> expect(
       String operation, String collectionName, String querySummary) {
     return sql ->
         emitStableDatabaseSemconv()
-            ? SqlStatementInfo.createWithSummary(sql, null, querySummary)
-            : SqlStatementInfo.create(sql, operation, collectionName);
+            ? SqlQuery.createWithSummary(sql, null, querySummary)
+            : SqlQuery.create(sql, operation, collectionName);
   }
 
-  private static Function<String, SqlStatementInfo> expect(
+  private static Function<String, SqlQuery> expect(
       String sql, String operation, String collectionName, String querySummary) {
     return ignored ->
         emitStableDatabaseSemconv()
-            ? SqlStatementInfo.createWithSummary(sql, null, querySummary)
-            : SqlStatementInfo.create(sql, operation, collectionName);
+            ? SqlQuery.createWithSummary(sql, null, querySummary)
+            : SqlQuery.create(sql, operation, collectionName);
   }
 
-  private static Function<String, SqlStatementInfo> expectStoredProcedure(
+  private static Function<String, SqlQuery> expectStoredProcedure(
       String operation, String storedProcedureName, String querySummary) {
     return sql ->
         emitStableDatabaseSemconv()
-            ? SqlStatementInfo.createWithSummary(sql, storedProcedureName, querySummary)
-            : SqlStatementInfo.create(sql, operation, storedProcedureName);
+            ? SqlQuery.createWithSummary(sql, storedProcedureName, querySummary)
+            : SqlQuery.create(sql, operation, storedProcedureName);
   }
 
-  private static Function<String, SqlStatementInfo> expectStoredProcedure(
+  private static Function<String, SqlQuery> expectStoredProcedure(
       String sql, String operation, String storedProcedureName, String querySummary) {
     return ignored ->
         emitStableDatabaseSemconv()
-            ? SqlStatementInfo.createWithSummary(sql, storedProcedureName, querySummary)
-            : SqlStatementInfo.create(sql, operation, storedProcedureName);
+            ? SqlQuery.createWithSummary(sql, storedProcedureName, querySummary)
+            : SqlQuery.create(sql, operation, storedProcedureName);
   }
 
   private static Stream<Arguments> simplifyArgs() {
@@ -840,7 +836,51 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "SHOW CREATE TABLE users",
             expect("SHOW CREATE TABLE users", "CREATE TABLE", "users", "SHOW")),
-        Arguments.of("SHOW DATABASES", expect("SHOW DATABASES", null, null, "SHOW")));
+        Arguments.of("SHOW DATABASES", expect("SHOW DATABASES", null, null, "SHOW")),
+
+        // SQL keywords used as identifiers (table names)
+        // Note: old semconv path (collectionName) doesn't handle keywords as identifiers
+        Arguments.of(
+            "SELECT * FROM insert WHERE x = 1",
+            expect("SELECT * FROM insert WHERE x = ?", "SELECT", "WHERE", "SELECT insert")),
+        Arguments.of("SELECT * FROM update", expect("SELECT", null, "SELECT update")),
+        Arguments.of("SELECT * FROM delete", expect("SELECT", null, "SELECT delete")),
+        Arguments.of("SELECT * FROM call", expect("SELECT", null, "SELECT call")),
+        Arguments.of("SELECT * FROM merge", expect("SELECT", null, "SELECT merge")),
+        Arguments.of("SELECT * FROM create", expect("SELECT", null, "SELECT create")),
+        Arguments.of("SELECT * FROM drop", expect("SELECT", null, "SELECT drop")),
+        Arguments.of("SELECT * FROM alter", expect("SELECT", null, "SELECT alter")),
+        Arguments.of("SELECT * FROM exec", expect("SELECT", "exec", "SELECT exec")),
+        Arguments.of("SELECT * FROM execute", expect("SELECT", "execute", "SELECT execute")),
+
+        // SQL keywords used as column names
+        Arguments.of(
+            "SELECT insert, update FROM mytable", expect("SELECT", "mytable", "SELECT mytable")),
+
+        // SQL keywords used as table aliases
+        Arguments.of("SELECT * FROM mytable insert", expect("SELECT", "mytable", "SELECT mytable")),
+        Arguments.of(
+            "SELECT * FROM mytable AS update", expect("SELECT", "mytable", "SELECT mytable")),
+
+        // CTEs (Common Table Expressions) - CTE names are filtered from query summary
+        Arguments.of(
+            "WITH cte AS (SELECT a FROM b) SELECT * FROM cte",
+            expect("SELECT", null, "SELECT b SELECT")),
+        Arguments.of(
+            "WITH cte AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM cte",
+            expect(
+                "WITH cte AS (VALUES (?, ?), (?, ?)) SELECT * FROM cte",
+                "SELECT",
+                "cte",
+                "SELECT")),
+        // Multiple CTEs - CTE references filtered in main query
+        Arguments.of(
+            "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM t2) SELECT * FROM a JOIN b ON a.id = b.id",
+            expect("SELECT", null, "SELECT t1 SELECT t2 SELECT")),
+        // Recursive CTE - self-reference filtered in CTE body and main query
+        Arguments.of(
+            "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
+            expect("SELECT", null, "SELECT t SELECT t SELECT")));
   }
 
   private static Stream<Arguments> ddlArgs() {

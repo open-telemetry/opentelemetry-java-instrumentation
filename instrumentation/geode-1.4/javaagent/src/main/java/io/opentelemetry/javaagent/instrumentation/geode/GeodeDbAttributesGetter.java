@@ -17,10 +17,9 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   private static final SqlQuerySanitizer sanitizer =
       SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(GeodeRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.GEODE;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
   }
 
   @Override

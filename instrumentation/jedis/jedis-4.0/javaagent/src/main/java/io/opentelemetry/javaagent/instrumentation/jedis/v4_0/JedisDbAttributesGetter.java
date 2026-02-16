@@ -13,10 +13,9 @@ import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override

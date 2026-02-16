@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
-import org.junit.jupiter.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -15,8 +16,8 @@ class LogbackMissingTest {
   @Test
   void applicationStartsWhenLogbackIsMissing() {
     // verify that logback is not present
-    Assertions.assertThrows(
-        ClassNotFoundException.class, () -> Class.forName("ch.qos.logback.core.Appender"));
+    assertThatThrownBy(() -> Class.forName("ch.qos.logback.core.Appender"))
+        .isInstanceOf(ClassNotFoundException.class);
 
     SpringApplication app = new SpringApplication(OpenTelemetryAppenderAutoConfiguration.class);
     try (ConfigurableApplicationContext ignore = app.run()) {

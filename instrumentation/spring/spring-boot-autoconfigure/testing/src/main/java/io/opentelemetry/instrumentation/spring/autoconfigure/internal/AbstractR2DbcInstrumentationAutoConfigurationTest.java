@@ -28,7 +28,7 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void statementSanitizerEnabledByDefault() {
+  void querySanitizerEnabledByDefault() {
     contextRunner.run(
         context -> {
           DatabaseClient client = context.getBean(DatabaseClient.class);
