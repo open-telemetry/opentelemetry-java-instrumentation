@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import graphql.execution.ResultPath;
 import io.opentelemetry.context.Context;
@@ -26,7 +26,7 @@ class OpenTelemetryInstrumentationStateTest {
     state.setContext(context);
 
     // Assert
-    assertEquals(context, state.getParentContextForPath(ResultPath.rootPath()));
+    assertThat(state.getParentContextForPath(ResultPath.rootPath())).isEqualTo(context);
   }
 
   @Test
@@ -40,7 +40,7 @@ class OpenTelemetryInstrumentationStateTest {
     state.setContextForPath(ResultPath.rootPath(), context);
 
     // Assert
-    assertEquals(context, state.getContext());
+    assertThat(state.getContext()).isEqualTo(context);
   }
 
   @Test
@@ -58,7 +58,7 @@ class OpenTelemetryInstrumentationStateTest {
     }
 
     // Assert
-    assertEquals(context, result);
+    assertThat(result).isEqualTo(context);
   }
 
   @Test
@@ -76,7 +76,7 @@ class OpenTelemetryInstrumentationStateTest {
     }
 
     // Assert
-    assertEquals(context, result);
+    assertThat(result).isEqualTo(context);
   }
 
   @Test
@@ -92,7 +92,7 @@ class OpenTelemetryInstrumentationStateTest {
     Context result = state.getParentContextForPath(ResultPath.rootPath());
 
     // Assert
-    assertEquals(context, result);
+    assertThat(result).isEqualTo(context);
   }
 
   @Test
@@ -112,7 +112,7 @@ class OpenTelemetryInstrumentationStateTest {
     }
 
     // Assert
-    assertEquals(context, result);
+    assertThat(result).isEqualTo(context);
   }
 
   @Test
@@ -130,7 +130,7 @@ class OpenTelemetryInstrumentationStateTest {
     Context result = state.getParentContextForPath(resultPath);
 
     // Assert
-    assertEquals(context, result);
+    assertThat(result).isEqualTo(context);
   }
 
   @Test
@@ -150,6 +150,6 @@ class OpenTelemetryInstrumentationStateTest {
             ResultPath.parse("/segment1/segment2/segment3/segment4/segment5"));
 
     // Assert
-    assertEquals(childContext, result);
+    assertThat(result).isEqualTo(childContext);
   }
 }
