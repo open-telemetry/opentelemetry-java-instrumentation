@@ -49,7 +49,7 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
-  /** Configures whether JDBC Statements are sanitized. Enabled by default. */
+  /** Configures whether JDBC queries are sanitized. Enabled by default. */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
     this.querySanitizationEnabled = enabled;
@@ -65,7 +65,7 @@ public final class JdbcTelemetryBuilder {
 
   /**
    * Configures whether parameters are captured for JDBC Statements. Enabling this option disables
-   * the statement sanitization. Disabled by default.
+   * the query sanitization. Disabled by default.
    *
    * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
    * personally identifiable information or protected health info.
