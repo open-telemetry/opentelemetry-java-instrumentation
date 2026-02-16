@@ -117,7 +117,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.5",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.16"
 )
 
 javaPlatform {
