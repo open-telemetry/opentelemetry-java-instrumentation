@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.semconv.ClientAttributes;
 
@@ -29,9 +27,9 @@ public final class InternalClientAttributesExtractor<REQUEST> {
     AddressAndPort clientAddressAndPort = addressAndPortExtractor.extract(request);
 
     if (clientAddressAndPort.address != null) {
-      internalSet(attributes, ClientAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
+      attributes.put(ClientAttributes.CLIENT_ADDRESS, clientAddressAndPort.address);
       if (capturePort && clientAddressAndPort.port != null && clientAddressAndPort.port > 0) {
-        internalSet(attributes, ClientAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
+        attributes.put(ClientAttributes.CLIENT_PORT, (long) clientAddressAndPort.port);
       }
     }
   }
