@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.internal.OtelEncodingUtils;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -56,7 +57,7 @@ final class CgroupV1ContainerIdExtractor {
           .findFirst()
           .orElse(Optional.empty());
     } catch (Exception e) {
-      logger.log(Level.WARNING, "Unable to read file", e);
+      logger.log(WARNING, "Unable to read file", e);
     }
     return Optional.empty();
   }

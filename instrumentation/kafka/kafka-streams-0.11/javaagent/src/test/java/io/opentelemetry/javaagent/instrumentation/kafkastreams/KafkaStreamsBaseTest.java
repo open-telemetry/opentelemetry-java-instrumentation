@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
@@ -15,7 +16,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
@@ -167,8 +167,7 @@ abstract class KafkaStreamsBaseTest {
 
   static Context getContext(Headers headers) {
     String traceparent =
-        new String(
-            headers.headers("traceparent").iterator().next().value(), StandardCharsets.UTF_8);
+        new String(headers.headers("traceparent").iterator().next().value(), UTF_8);
     return W3CTraceContextPropagator.getInstance()
         .extract(
             Context.root(),
