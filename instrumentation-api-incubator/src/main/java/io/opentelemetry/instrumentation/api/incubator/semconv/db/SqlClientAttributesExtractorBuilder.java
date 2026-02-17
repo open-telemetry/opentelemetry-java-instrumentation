@@ -57,8 +57,8 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * will be automatically switched.
    */
   @CanIgnoreReturnValue
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE>
-      setQuerySanitizationAnsiQuotes(boolean querySanitizationAnsiQuotes) {
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setQuerySanitizationAnsiQuotes(
+      boolean querySanitizationAnsiQuotes) {
     this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
     return this;
   }

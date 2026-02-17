@@ -36,8 +36,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *
    * @see SqlQuery#getOperationName() used to extract {@code <db.operation>}.
    * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
-   * @see SqlQuery#getCollectionName() used to extract {@code <db.table>} or stored procedure
-   *     name.
+   * @see SqlQuery#getCollectionName() used to extract {@code <db.table>} or stored procedure name.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST, ?> getter, SqlDialect sqlDialect) {

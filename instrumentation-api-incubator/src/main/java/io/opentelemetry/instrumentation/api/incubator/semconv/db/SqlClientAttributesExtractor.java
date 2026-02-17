@@ -119,7 +119,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
-            MultiQuery.analyzeWithSummary(getter.getRawQueryTexts(request), dialect, shouldSanitize);
+            MultiQuery.analyzeWithSummary(
+                getter.getRawQueryTexts(request), dialect, shouldSanitize);
         attributes.put(DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         attributes.put(DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());
