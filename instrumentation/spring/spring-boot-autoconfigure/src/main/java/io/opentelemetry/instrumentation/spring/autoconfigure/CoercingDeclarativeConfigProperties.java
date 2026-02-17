@@ -28,7 +28,10 @@ final class CoercingDeclarativeConfigProperties implements DeclarativeConfigProp
     this.delegate = delegate;
   }
 
-  static DeclarativeConfigProperties wrap(DeclarativeConfigProperties delegate) {
+  static DeclarativeConfigProperties wrap(@Nullable DeclarativeConfigProperties delegate) {
+    if (delegate == null) {
+      return DeclarativeConfigProperties.empty();
+    }
     if (delegate instanceof CoercingDeclarativeConfigProperties) {
       return delegate;
     }

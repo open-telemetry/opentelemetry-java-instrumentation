@@ -10,6 +10,7 @@ import static java.util.Objects.requireNonNull;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -169,8 +170,10 @@ public class OpenTelemetryAutoConfiguration {
                 model, new OpenTelemetrySdkComponentLoader(applicationContext));
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
-        ConfigProvider sdkConfigProvider = ((ExtendedOpenTelemetry) sdk).getConfigProvider();
-        return new SpringOpenTelemetrySdk(sdk, SpringConfigProvider.create(sdkConfigProvider));
+        DeclarativeConfigProperties instrumentationConfig =
+            ((ExtendedOpenTelemetry) sdk).getConfigProvider().getInstrumentationConfig();
+        return new SpringOpenTelemetrySdk(
+            sdk, () -> CoercingDeclarativeConfigProperties.wrap(instrumentationConfig));
       }
 
       /**
