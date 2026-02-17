@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.ClientInterceptor;
 import io.grpc.ServerInterceptor;
+import io.grpc.ServerStreamTracer;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -60,5 +61,15 @@ public final class GrpcTelemetry {
   public ServerInterceptor createServerInterceptor() {
     return new TracingServerInterceptor(
         serverInstrumenter, captureExperimentalSpanAttributes, emitMessageEvents);
+  }
+
+  /**
+   * Returns a new {@link ServerStreamTracer.Factory} for use with methods like {@link
+   * io.grpc.ServerBuilder#addStreamTracerFactory(ServerStreamTracer.Factory)}. This enables
+   * creating server spans for requests to unregistered services, which are not seen by server
+   * interceptors. Should be used together with {@link #createServerInterceptor()}.
+   */
+  public ServerStreamTracer.Factory createServerStreamTracerFactory() {
+    return new TracingServerStreamTracerFactory(serverInstrumenter, propagators);
   }
 }

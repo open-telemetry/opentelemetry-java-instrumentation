@@ -44,12 +44,14 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
-    return server.intercept(
+    GrpcTelemetry telemetry =
         GrpcTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedServerRequestMetadata(
                 Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
-            .build()
-            .createServerInterceptor());
+            .build();
+    return server
+        .intercept(telemetry.createServerInterceptor())
+        .addStreamTracerFactory(telemetry.createServerStreamTracerFactory());
   }
 
   @Override
