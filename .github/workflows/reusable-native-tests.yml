@@ -23,15 +23,15 @@ jobs:
           - 22
           - 23
           - 24
+      fail-fast: false
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
-      - uses: graalvm/setup-graalvm@dec5790292b7b36d7ad368abe856887749c6c520 # v1.4.3.1
+      - uses: graalvm/setup-graalvm@54b4f5a65c1a84b2fdfdc2078fe43df32819e4b1 # v1.4.5.1
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}
-          components: "native-image"
       - name: Running test
         env:
           DOCKER_COMPOSE_TEST: "true"

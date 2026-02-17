@@ -12,7 +12,7 @@ otelJava {
 }
 
 dependencies {
-  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.5.8")
+  jmhImplementation("org.springframework.boot:spring-boot-starter-web:4.0.2")
 }
 
 tasks {
@@ -22,7 +22,7 @@ tasks {
   //   error: plug-in not found: ErrorProne
   withType<JavaCompile>().configureEach {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

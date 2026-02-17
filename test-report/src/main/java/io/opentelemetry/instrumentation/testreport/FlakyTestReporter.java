@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testreport;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.FileVisitResult.CONTINUE;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -18,7 +19,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,13 +67,19 @@ public class FlakyTestReporter {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       return builder.parse(testReport.toFile());
     } catch (Exception exception) {
-      throw new IllegalStateException("failed to parse test report " + testReport, exception);
+      System.err.println("Failed to parse test report " + testReport);
+      exception.printStackTrace();
+      return null;
     }
   }
 
   @SuppressWarnings("JavaTimeDefaultTimeZone")
   private void scanTestFile(Path testReport) {
     Document doc = parse(testReport);
+    if (doc == null) {
+      return;
+    }
+
     doc.getDocumentElement().normalize();
     testCount += Integer.parseInt(doc.getDocumentElement().getAttribute("tests"));
     skippedCount += Integer.parseInt(doc.getDocumentElement().getAttribute("skipped"));
@@ -258,8 +264,7 @@ public class FlakyTestReporter {
 
     NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(
-                new ByteArrayInputStream(accessKey.getBytes(StandardCharsets.UTF_8)))
+        GoogleCredentials.fromStream(new ByteArrayInputStream(accessKey.getBytes(UTF_8)))
             .createScoped(Collections.singletonList(SheetsScopes.SPREADSHEETS));
     Sheets service =
         new Sheets.Builder(

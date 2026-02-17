@@ -45,7 +45,7 @@ public final class R2dbcInstrumenterBuilder {
 
   public Instrumenter<DbExecution, Void> build(
       UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean ansiQuotes) {
     SpanNameExtractor<DbExecution> spanNameExtractor =
         spanNameExtractorTransformer.apply(
@@ -57,7 +57,7 @@ public final class R2dbcInstrumenterBuilder {
             openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .setSetStatementSanitizationAnsiQuotes(ansiQuotes)
                 .build())
         .addAttributesExtractors(additionalExtractors)

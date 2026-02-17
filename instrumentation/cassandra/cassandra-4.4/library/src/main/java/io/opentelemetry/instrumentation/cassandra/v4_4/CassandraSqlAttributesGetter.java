@@ -19,11 +19,11 @@ import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String CASSANDRA = "cassandra";
 
   @Override
-  public String getDbSystem(CassandraRequest request) {
+  public String getDbSystemName(CassandraRequest request) {
     return CASSANDRA;
   }
 
@@ -55,5 +55,10 @@ final class CassandraSqlAttributesGetter
       return (InetSocketAddress) endPoint.resolve();
     }
     return null;
+  }
+
+  @Override
+  public boolean isParameterizedQuery(CassandraRequest request) {
+    return request.isParameterizedQuery();
   }
 }

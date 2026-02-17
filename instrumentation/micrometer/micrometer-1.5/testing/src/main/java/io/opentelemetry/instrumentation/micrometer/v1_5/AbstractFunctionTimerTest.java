@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Metrics;
@@ -15,7 +17,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,13 +44,13 @@ public abstract class AbstractFunctionTimerTest {
                 timerObj,
                 TestTimer::getCount,
                 TestTimer::getTotalTimeNanos,
-                TimeUnit.NANOSECONDS)
+                NANOSECONDS)
             .description("This is a test function timer")
             .tags("tag", "value")
             .register(Metrics.globalRegistry);
 
     // when
-    timerObj.add(42, TimeUnit.SECONDS);
+    timerObj.add(42, SECONDS);
 
     // then
     testing()
@@ -123,7 +124,7 @@ public abstract class AbstractFunctionTimerTest {
                     assertThat(Thread.currentThread().getContextClassLoader()).isEqualTo(dummy);
                     return timerObj.getTotalTimeNanos();
                   },
-                  TimeUnit.NANOSECONDS)
+                  NANOSECONDS)
               .description("This is a test function timer")
               .tags("tag", "value")
               .register(Metrics.globalRegistry);
@@ -132,7 +133,7 @@ public abstract class AbstractFunctionTimerTest {
     }
 
     // when
-    timerObj.add(42, TimeUnit.SECONDS);
+    timerObj.add(42, SECONDS);
 
     // then
     testing()
@@ -190,11 +191,11 @@ public abstract class AbstractFunctionTimerTest {
             timerObj,
             TestTimer::getCount,
             TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
+            NANOSECONDS)
         .register(Metrics.globalRegistry);
 
     // when
-    timerObj.add(1_234_000, TimeUnit.NANOSECONDS);
+    timerObj.add(1_234_000, NANOSECONDS);
 
     // then
     testing()
@@ -223,7 +224,7 @@ public abstract class AbstractFunctionTimerTest {
             timerObj,
             TestTimer::getCount,
             TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
+            NANOSECONDS)
         .tags("tag", "1")
         .register(Metrics.globalRegistry);
     FunctionTimer.builder(
@@ -231,13 +232,13 @@ public abstract class AbstractFunctionTimerTest {
             anotherTimerObj,
             TestTimer::getCount,
             TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
+            NANOSECONDS)
         .tags("tag", "2")
         .register(Metrics.globalRegistry);
 
     // when
-    timerObj.add(12, TimeUnit.SECONDS);
-    anotherTimerObj.add(42, TimeUnit.SECONDS);
+    timerObj.add(12, SECONDS);
+    anotherTimerObj.add(42, SECONDS);
 
     // then
     testing()

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
+import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -24,8 +25,8 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
                 String.format(
                     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-%s",
                     jdk, TestImageVersions.PLAY_VERSION))
-        .waitStrategy(
-            new TargetWaitStrategy.Log(java.time.Duration.ofMinutes(1), ".*Listening for HTTP.*"));
+        .env("OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED", "true")
+        .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening for HTTP.*"));
   }
 
   @ParameterizedTest

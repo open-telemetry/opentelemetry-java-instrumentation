@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.r2dbc;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -28,8 +27,7 @@ public class R2dbcInstrumentationAutoConfiguration {
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   static R2dbcInstrumentingPostProcessor r2dbcInstrumentingPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<InstrumentationConfig> configProvider) {
-    return new R2dbcInstrumentingPostProcessor(openTelemetryProvider, configProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new R2dbcInstrumentingPostProcessor(openTelemetryProvider);
   }
 }

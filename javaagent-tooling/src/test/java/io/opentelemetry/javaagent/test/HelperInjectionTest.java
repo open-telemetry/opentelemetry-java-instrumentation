@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.Utils;
-import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -104,9 +103,7 @@ class HelperInjectionTest {
   void helpersInjectedOnBootstrapClassloader() throws Exception {
     ByteBuddyAgent.install();
     AgentInstaller.installBytebuddyAgent(
-        ByteBuddyAgent.getInstrumentation(),
-        this.getClass().getClassLoader(),
-        EarlyInitAgentConfig.create());
+        ByteBuddyAgent.getInstrumentation(), this.getClass().getClassLoader());
 
     String helperClassName = HelperInjectionTest.class.getPackage().getName() + ".HelperClass";
     HelperInjector injector =

@@ -15,10 +15,11 @@ val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] =
 tasks {
   withType<JavaCompile>().configureEach {
     with(options) {
+      compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
       errorprone {
         if (disableErrorProne) {
           logger.warn("Errorprone has been disabled. Build may not result in a valid PR build.")
-          isEnabled.set(false)
+          enabled.set(false)
         }
 
         disableWarningsInGeneratedCode.set(true)
@@ -123,6 +124,7 @@ tasks {
         disable("NonFinalStaticField")
 
         // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToClass")
         disable("AddNullMarkedToPackageInfo")
 
         if (testLatestDeps) {
@@ -130,6 +132,13 @@ tasks {
           // version. Disable rules that suggest using new language features.
           disable("StatementSwitchToExpressionSwitch")
           disable("PatternMatchingInstanceof")
+          // Disable our custom deprecation check since newer library versions
+          // may deprecate APIs that weren't deprecated before.
+          //
+          // Except for the custom-checks project to avoid "not a valid checker name" error.
+          if (!project.name.equals("custom-checks")) {
+            disable("OtelDeprecatedApiUsage")
+          }
         }
 
         if (name.contains("Jmh") || name.contains("Test")) {

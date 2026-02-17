@@ -6,8 +6,13 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -16,8 +21,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -38,6 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -153,7 +159,7 @@ public abstract class AbstractR2dbcStatementTest {
               Mono.from(connectionFactory.create())
                   .flatMapMany(
                       connection ->
-                          Mono.from(connection.createStatement(parameter.statement).execute())
+                          Mono.from(connection.createStatement(parameter.queryText).execute())
                               // Subscribe to the Statement.execute()
                               .flatMapMany(result -> result.map((row, metadata) -> ""))
                               .concatWith(Mono.from(connection.close()).cast(String.class)))
@@ -179,10 +185,19 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_SYSTEM), parameter.system),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                                equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
-                                equalTo(PEER_SERVICE, "test-peer-service"),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv()
+                                        ? parameter.getQuerySummary()
+                                        : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : parameter.operation),
+                                equalTo(
+                                    maybeStable(DB_SQL_TABLE),
+                                    emitStableDatabaseSemconv() ? null : parameter.table),
+                                equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -203,7 +218,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT 3",
                                 "SELECT ?",
-                                "SELECT " + DB,
+                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB,
                                 null,
                                 "SELECT"))),
                     Arguments.of(
@@ -213,7 +228,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                "CREATE TABLE " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "CREATE TABLE person"
+                                    : "CREATE TABLE " + DB + ".person",
                                 "person",
                                 "CREATE TABLE"))),
                     Arguments.of(
@@ -223,7 +240,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                "INSERT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT person"
+                                    : "INSERT " + DB + ".person",
                                 "person",
                                 "INSERT"))),
                     Arguments.of(
@@ -233,33 +252,78 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
-                                "SELECT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT person"
+                                    : "SELECT " + DB + ".person",
                                 "person",
                                 "SELECT")))));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  void testMetrics() {
+    DbSystemProps props = SYSTEMS.get(MARIADB.system);
+    startContainer(props);
+    ConnectionFactory connectionFactory =
+        createProxyConnectionFactory(
+            ConnectionFactoryOptions.builder()
+                .option(DRIVER, props.system)
+                .option(HOST, container.getHost())
+                .option(PORT, port)
+                .option(USER, USER_DB)
+                .option(PASSWORD, PW_DB)
+                .option(DATABASE, DB)
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
+                .build());
+
+    Mono.from(connectionFactory.create())
+        .flatMapMany(
+            connection ->
+                Mono.from(connection.createStatement("SELECT 3").execute())
+                    .flatMapMany(result -> result.map((row, metadata) -> ""))
+                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .blockLast(Duration.ofMinutes(1));
+
+    assertDurationMetric(
+        getTesting(),
+        "io.opentelemetry.r2dbc-1.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        emitStableDatabaseSemconv() ? DB_QUERY_SUMMARY : DB_OPERATION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   private static class Parameter {
 
     final String system;
-    final String statement;
-    final String expectedStatement;
+    final String queryText;
+    final String expectedQueryText;
     final String spanName;
     final String table;
     final String operation;
 
     Parameter(
         String system,
-        String statement,
-        String expectedStatement,
+        String queryText,
+        String expectedQueryText,
         String spanName,
         String table,
         String operation) {
       this.system = system;
-      this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.queryText = queryText;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.table = table;
       this.operation = operation;
+    }
+
+    String getQuerySummary() {
+      if (!emitStableDatabaseSemconv()) {
+        return null;
+      }
+      // spanName contains the expected query summary for stable semconv
+      return spanName;
     }
   }
 

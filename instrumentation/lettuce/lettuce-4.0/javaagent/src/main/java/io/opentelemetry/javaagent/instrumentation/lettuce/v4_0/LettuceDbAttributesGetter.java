@@ -13,10 +13,9 @@ import javax.annotation.Nullable;
 final class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<RedisCommand<?, ?, ?>, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+  public String getDbSystemName(RedisCommand<?, ?, ?> request) {
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override

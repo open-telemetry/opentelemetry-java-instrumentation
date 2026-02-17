@@ -19,13 +19,13 @@ class GrpcStreamingTest extends AbstractGrpcStreamingTest {
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     return server.intercept(
-        GrpcTelemetry.create(testing.getOpenTelemetry()).newServerInterceptor());
+        GrpcTelemetry.create(testing.getOpenTelemetry()).createServerInterceptor());
   }
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     return client.intercept(
-        GrpcTelemetry.create(testing.getOpenTelemetry()).newClientInterceptor());
+        GrpcTelemetry.create(testing.getOpenTelemetry()).createClientInterceptor());
   }
 
   @Override

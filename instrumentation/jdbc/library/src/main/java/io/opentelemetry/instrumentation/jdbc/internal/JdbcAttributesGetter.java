@@ -22,11 +22,11 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getDbSystem(DbRequest request) {
+  public String getDbSystemName(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getUser(DbRequest request) {
@@ -40,7 +40,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getConnectionString(DbRequest request) {
@@ -53,13 +53,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public Long getBatchSize(DbRequest request) {
+  public Long getDbOperationBatchSize(DbRequest request) {
     return request.getBatchSize();
   }
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }
@@ -67,8 +67,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public Map<String, String> getQueryParameters(DbRequest request) {
+  public Map<String, String> getDbQueryParameters(DbRequest request) {
     return request.getPreparedStatementParameters();
+  }
+
+  @Override
+  public boolean isParameterizedQuery(DbRequest request) {
+    return request.isParameterizedQuery();
   }
 
   @Nullable

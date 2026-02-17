@@ -9,8 +9,8 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.RuntimeMetricsConfigUtil;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
@@ -25,7 +25,9 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
 
     RuntimeMetrics runtimeMetrics =
         RuntimeMetricsConfigUtil.configure(
-            RuntimeMetrics.builder(GlobalOpenTelemetry.get()), AgentInstrumentationConfig.get());
+            RuntimeMetrics.builder(GlobalOpenTelemetry.get()),
+            GlobalOpenTelemetry.get(),
+            AgentConfig.instrumentationMode());
     if (runtimeMetrics != null) {
       Runtime.getRuntime()
           .addShutdownHook(

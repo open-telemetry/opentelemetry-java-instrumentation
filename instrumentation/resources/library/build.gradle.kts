@@ -15,8 +15,6 @@ dependencies {
   compileOnly("com.google.auto.service:auto-service-annotations")
   testCompileOnly("com.google.auto.service:auto-service-annotations")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
-
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
 }
 
 for (version in mrJarVersions) {

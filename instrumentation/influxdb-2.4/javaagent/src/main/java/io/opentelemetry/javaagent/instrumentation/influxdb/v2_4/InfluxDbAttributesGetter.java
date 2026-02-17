@@ -13,27 +13,45 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbQueryText(InfluxDbRequest request) {
-    return request.getSqlStatementInfo().getFullStatement();
+    if (request.getSqlQueryWithSummary() != null) {
+      return request.getSqlQueryWithSummary().getQueryText();
+    }
+    if (request.getSqlQuery() != null) {
+      return request.getSqlQuery().getQueryText();
+    }
+    return null;
   }
 
   @Nullable
   @Override
   public String getDbOperationName(InfluxDbRequest request) {
-    if (request.getOperation() != null) {
-      return request.getOperation();
+    if (request.getOperationName() != null) {
+      return request.getOperationName();
     }
-    return request.getSqlStatementInfo().getOperation();
+    if (request.getSqlQuery() != null) {
+      return request.getSqlQuery().getOperationName();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getDbQuerySummary(InfluxDbRequest request) {
+    if (request.getSqlQueryWithSummary() != null) {
+      return request.getSqlQueryWithSummary().getQuerySummary();
+    }
+    return null;
   }
 
   @Override
-  public String getDbSystem(InfluxDbRequest request) {
+  public String getDbSystemName(InfluxDbRequest request) {
     return "influxdb";
   }
 
   @Nullable
   @Override
   public String getDbNamespace(InfluxDbRequest request) {
-    String dbName = request.getDbName();
-    return "".equals(dbName) ? null : dbName;
+    String namespace = request.getNamespace();
+    return "".equals(namespace) ? null : namespace;
   }
 }

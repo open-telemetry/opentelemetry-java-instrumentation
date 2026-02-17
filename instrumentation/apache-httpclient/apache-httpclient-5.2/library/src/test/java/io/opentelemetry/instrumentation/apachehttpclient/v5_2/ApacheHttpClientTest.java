@@ -37,7 +37,7 @@ class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
             .setCapturedResponseHeaders(
                 Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build()
-            .newHttpClientBuilder();
+            .createHttpClientBuilder();
     builder.setDefaultRequestConfig(RequestConfig.custom().setMaxRedirects(2).build());
 
     ConnectionConfig.Builder connectionConfigBuilder =

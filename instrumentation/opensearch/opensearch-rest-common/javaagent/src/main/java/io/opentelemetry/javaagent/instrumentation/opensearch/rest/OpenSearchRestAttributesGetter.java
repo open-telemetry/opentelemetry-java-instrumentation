@@ -14,10 +14,9 @@ import javax.annotation.Nullable;
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(OpenSearchRestRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
+  public String getDbSystemName(OpenSearchRestRequest request) {
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
   }
 
   @Override
@@ -29,7 +28,7 @@ final class OpenSearchRestAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
-    return request.getMethod() + " " + request.getOperation();
+    return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
@@ -40,7 +39,7 @@ final class OpenSearchRestAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(
+  public String getDbResponseStatusCode(
       @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
     return response != null ? dbResponseStatusCode(response.getStatusCode()) : null;
   }

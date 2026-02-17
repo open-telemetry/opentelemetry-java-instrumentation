@@ -16,7 +16,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_simpleProperties() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("resource.service.name", "my-service");
     flatProps.put("traces.exporter", "otlp");
 
@@ -55,7 +55,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_arrayProperties() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("instrumentation.java.list[0]", "one");
     flatProps.put("instrumentation.java.list[1]", "two");
     flatProps.put("instrumentation.java.list[2]", "three");
@@ -89,7 +89,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_mixedPropertiesAndArrays() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("resource.service.name", "test-service");
     flatProps.put("resource.attributes[0]", "key1=value1");
     flatProps.put("resource.attributes[1]", "key2=value2");
@@ -124,7 +124,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_emptyMap() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
 
@@ -133,7 +133,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_singleLevelProperty() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("enabled", "true");
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
@@ -143,7 +143,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_arrayWithGaps() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("list[0]", "first");
     flatProps.put("list[2]", "third");
 
@@ -161,7 +161,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_deeplyNestedProperties() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("a.b.c.d.e", "deep-value");
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
@@ -183,7 +183,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_nestedArrays() {
-    Map<String, String> flatProps = new HashMap<>();
+    Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("outer[0].inner[0]", "value1");
     flatProps.put("outer[0].inner[1]", "value2");
     flatProps.put("outer[1].inner[0]", "value3");

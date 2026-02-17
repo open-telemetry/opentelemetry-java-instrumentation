@@ -24,11 +24,11 @@ enum VertxSqlClientAttributesGetter
       createResponseStatusExtractors();
 
   @Override
-  public String getDbSystem(VertxSqlClientRequest request) {
+  public String getDbSystemName(VertxSqlClientRequest request) {
     return null;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getUser(VertxSqlClientRequest request) {
@@ -60,7 +60,7 @@ enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     for (Function<Exception, String> extractor : responseStatusExtractors) {
       String status = extractor.apply((Exception) error);
       if (status != null) {
@@ -68,6 +68,11 @@ enum VertxSqlClientAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  public boolean isParameterizedQuery(VertxSqlClientRequest request) {
+    return request.isParameterizedQuery();
   }
 
   private static List<Function<Exception, String>> createResponseStatusExtractors() {

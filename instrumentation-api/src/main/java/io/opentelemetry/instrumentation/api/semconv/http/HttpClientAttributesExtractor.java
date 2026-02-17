@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -82,7 +80,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     internalServerExtractor.onStart(attributes, request);
 
     String fullUrl = stripSensitiveData(getter.getUrlFull(request));
-    internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+    attributes.put(UrlAttributes.URL_FULL, fullUrl);
 
     int resendCount = resendCountIncrementer.applyAsInt(parentContext);
     if (resendCount > 0) {

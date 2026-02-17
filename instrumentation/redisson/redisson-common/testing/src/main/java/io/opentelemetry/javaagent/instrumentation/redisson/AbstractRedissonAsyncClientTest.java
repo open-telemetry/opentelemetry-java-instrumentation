@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -111,7 +113,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   void futureSet() throws ExecutionException, InterruptedException, TimeoutException {
     RBucket<String> keyObject = redisson.getBucket("foo");
     RFuture<Void> future = keyObject.setAsync("bar");
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
@@ -143,7 +145,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     testing.runWithSpan("callback", () -> {});
                   });
             });
-    result.toCompletableFuture().get(30, TimeUnit.SECONDS);
+    result.toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "SADD", "callback"),
@@ -187,7 +189,7 @@ public abstract class AbstractRedissonAsyncClientTest {
     return executorService
         .getClass()
         .getMethod("schedule", Callable.class, long.class, TimeUnit.class)
-        .invoke(executorService, new MyCallable(), 0, TimeUnit.SECONDS);
+        .invoke(executorService, new MyCallable(), 0, SECONDS);
   }
 
   @Test
@@ -217,7 +219,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     testing.runWithSpan("callback", () -> {});
                   });
             });
-    result.toCompletableFuture().get(30, TimeUnit.SECONDS);
+    result.toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", "SADD", "callback"),
@@ -225,7 +227,7 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),

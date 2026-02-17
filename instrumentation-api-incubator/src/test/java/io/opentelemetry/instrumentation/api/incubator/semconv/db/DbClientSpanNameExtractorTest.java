@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -20,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
+
   @Mock SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
 
   @Test
@@ -37,11 +40,12 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT database.table", spanName);
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database.table");
   }
 
   @Test
-  void shouldSkipDbNameIfTableAlreadyHasDbNamePrefix() {
+  void shouldSkipNamespaceIfTableAlreadyHasNamespacePrefix() {
     // given
     DbRequest dbRequest = new DbRequest();
 
@@ -55,7 +59,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT another.table", spanName);
+    assertThat(spanName).isEqualTo("SELECT another.table");
   }
 
   @Test
@@ -72,7 +76,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT table", spanName);
+    assertThat(spanName).isEqualTo("SELECT table");
   }
 
   @Test
@@ -89,7 +93,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT database", spanName);
+    assertThat(spanName).isEqualTo("SELECT database");
   }
 
   @Test
@@ -105,11 +109,11 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT", spanName);
+    assertThat(spanName).isEqualTo("SELECT");
   }
 
   @Test
-  void shouldExtractDbName() {
+  void shouldExtractNamespace() {
     // given
     DbRequest dbRequest = new DbRequest();
 
@@ -121,7 +125,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("database", spanName);
+    assertThat(spanName).isEqualTo("database");
   }
 
   @Test
@@ -135,7 +139,28 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("DB Query", spanName);
+    assertThat(spanName).isEqualTo("DB Query");
+  }
+
+  @Test
+  void shouldUseQuerySummaryWhenAvailable() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    // Needs to be lenient because not called during this test under old semconv mode
+    lenient().when(dbAttributesGetter.getDbQuerySummary(dbRequest)).thenReturn("SELECT users");
+    // Needs to be lenient because not called during this test under new semconv mode
+    lenient().when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("SELECT");
+    lenient().when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT users" : "SELECT database");
   }
 
   @Test
@@ -153,9 +178,9 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals(
-        SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT database.table" : "database",
-        spanName);
+    assertThat(spanName)
+        .isEqualTo(
+            SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
   }
 
   @Test
@@ -167,7 +192,7 @@ class DbClientSpanNameExtractorTest {
         .thenReturn(singleton("INSERT INTO table VALUES(?)"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      when(sqlAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
+      when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(2L);
     }
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
@@ -176,11 +201,11 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals(
-        SemconvStability.emitStableDatabaseSemconv()
-            ? "BATCH INSERT database.table"
-            : "INSERT database.table",
-        spanName);
+    assertThat(spanName)
+        .isEqualTo(
+            SemconvStability.emitStableDatabaseSemconv()
+                ? "BATCH INSERT table"
+                : "INSERT database.table");
   }
 
   static class DbRequest {}

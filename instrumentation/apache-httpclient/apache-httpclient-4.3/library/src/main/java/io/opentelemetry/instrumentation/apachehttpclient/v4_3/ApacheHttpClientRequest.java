@@ -42,7 +42,7 @@ public final class ApacheHttpClientRequest {
   }
 
   /** Returns the actual {@link HttpRequest} being executed by the client. */
-  public HttpRequest getDelegate() {
+  public HttpRequest getRequest() {
     return delegate;
   }
 
@@ -88,13 +88,22 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
-  public String getServerAddress() {
+  String getServerAddress() {
     return uri == null ? null : uri.getHost();
   }
 
   @Nullable
-  public Integer getServerPort() {
+  Integer getServerPort() {
     return uri == null ? null : uri.getPort();
+  }
+
+  @Nullable
+  InetSocketAddress getNetworkPeerAddress() {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 
   @Nullable
@@ -123,14 +132,5 @@ public final class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
-  }
-
-  @Nullable
-  public InetSocketAddress getNetworkPeerAddress() {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }

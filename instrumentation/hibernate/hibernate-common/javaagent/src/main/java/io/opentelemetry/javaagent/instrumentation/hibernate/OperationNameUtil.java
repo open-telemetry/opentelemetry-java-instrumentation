@@ -5,25 +5,47 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 public final class OperationNameUtil {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final String FALLBACK_SPAN_NAME = "hibernate";
 
-  public static String getOperationNameForQuery(String query) {
+  private static final SqlQuerySanitizer sanitizer =
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+
+  // query could be HQL or SQL
+  public static String getOperationNameForQuery(@Nullable String query) {
+    if (emitStableDatabaseSemconv()) {
+      if (query != null) {
+        SqlQuery info = sanitizer.sanitizeWithSummary(query);
+        String summary = info.getQuerySummary();
+        if (summary != null) {
+          return summary;
+        }
+      }
+      return FALLBACK_SPAN_NAME;
+    }
+    return getOperationNameForQueryOldSemconv(query);
+  }
+
+  private static String getOperationNameForQueryOldSemconv(@Nullable String query) {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlStatementInfo info = sanitizer.sanitize(query);
-    if (info.getOperation() != null) {
-      operation = info.getOperation();
-      if (info.getMainIdentifier() != null) {
-        operation += " " + info.getMainIdentifier();
+    SqlQuery info = sanitizer.sanitize(query);
+    if (info.getOperationName() != null) {
+      operation = info.getOperationName();
+      if (info.getCollectionName() != null) {
+        operation += " " + info.getCollectionName();
+      } else if (info.getStoredProcedureName() != null) {
+        operation += " " + info.getStoredProcedureName();
       }
     }
     return operation;

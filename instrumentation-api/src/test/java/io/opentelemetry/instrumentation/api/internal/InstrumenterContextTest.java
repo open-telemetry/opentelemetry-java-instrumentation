@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -35,7 +35,7 @@ class InstrumenterContextTest {
     SqlClientAttributesGetter<Object, Void> getter =
         new SqlClientAttributesGetter<Object, Void>() {
           @Override
-          public String getDbSystem(Object o) {
+          public String getDbSystemName(Object o) {
             return "testdb";
           }
 
@@ -58,17 +58,17 @@ class InstrumenterContextTest {
 
     assertThat(InstrumenterContext.get()).isEmpty();
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
-    // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
+    // verify that sanitized query was cached, see SqlQuerySanitizerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
-    Map<Object, SqlStatementInfo> sanitizedMap =
-        (Map<Object, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
+    Map<Object, SqlQuery> sanitizedMap =
+        (Map<Object, SqlQuery>) InstrumenterContext.get().get("sanitized-sql-map");
     assertThat(sanitizedMap).hasSize(1);
     Object key = sanitizedMap.keySet().iterator().next();
     assertThat(key.toString()).contains(testQuery);
 
     // replace cached sanitization result to verify it is used
     sanitizedMap.put(
-        key, SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+        key, SqlQuery.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);

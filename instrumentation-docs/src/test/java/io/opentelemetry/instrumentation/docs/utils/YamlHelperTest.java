@@ -20,14 +20,11 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassificat
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationFeature;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +35,6 @@ class YamlHelperTest {
   @Test
   void testPrintInstrumentationList() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> targetVersions1 = new HashMap<>();
-    targetVersions1.put(
-        InstrumentationType.JAVAAGENT,
-        new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
 
     InstrumentationMetadata springMetadata =
         new InstrumentationMetadata.Builder()
@@ -68,23 +61,19 @@ class YamlHelperTest {
                     .build())
             .namespace("spring")
             .group("spring")
-            .targetVersions(targetVersions1)
+            .targetVersions(Set.of("org.springframework:spring-web:[6.0.0,)"))
             .metadata(springMetadata)
             .minJavaVersion(11)
             .build());
 
-    Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
-
-    targetVersions2.put(
-        InstrumentationType.LIBRARY,
-        new HashSet<>(List.of("org.apache.struts:struts2-core:2.1.0")));
     modules.add(
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/struts/struts-2.3")
             .instrumentationName("struts-2.3")
             .namespace("struts")
+            .targetVersions(Set.of("org.apache.struts:struts2-core:2.1.0"))
+            .hasStandaloneLibrary(true)
             .group("struts")
-            .targetVersions(targetVersions2)
             .build());
 
     StringWriter stringWriter = new StringWriter();
@@ -112,17 +101,16 @@ class YamlHelperTest {
                   attributes:
                     instrumentation.type: library
                     version.major: 6
-                target_versions:
-                  javaagent:
-                  - org.springframework:spring-web:[6.0.0,)
+                javaagent_target_versions:
+                - org.springframework:spring-web:[6.0.0,)
               struts:
               - name: struts-2.3
                 source_path: instrumentation/struts/struts-2.3
                 scope:
                   name: io.opentelemetry.struts-2.3
-                target_versions:
-                  library:
-                  - org.apache.struts:struts2-core:2.1.0
+                has_standalone_library: true
+                javaagent_target_versions:
+                - org.apache.struts:struts2-core:2.1.0
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
@@ -131,8 +119,6 @@ class YamlHelperTest {
   @Test
   void testGenerateInstrumentationYamlSeparatesClassifications() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> springTargetVersions =
-        Map.of(InstrumentationType.JAVAAGENT, Set.of("org.springframework:spring-web:[6.0.0,)"));
 
     InstrumentationMetadata springMetadata =
         new InstrumentationMetadata.Builder()
@@ -158,7 +144,7 @@ class YamlHelperTest {
             .instrumentationName("spring-web-6.0")
             .namespace("spring")
             .group("spring")
-            .targetVersions(springTargetVersions)
+            .targetVersions(Set.of("org.springframework:spring-web:[6.0.0,)"))
             .metadata(springMetadata)
             .minJavaVersion(11)
             .build());
@@ -175,7 +161,6 @@ class YamlHelperTest {
             .namespace("internal")
             .group("internal")
             .metadata(internalMetadata)
-            .targetVersions(new HashMap<>())
             .build());
 
     InstrumentationMetadata customMetadata =
@@ -183,19 +168,12 @@ class YamlHelperTest {
             .classification(InstrumentationClassification.CUSTOM.name())
             .build();
 
-    Map<InstrumentationType, Set<String>> externalAnnotationsVersions =
-        Map.of(
-            InstrumentationType.JAVAAGENT,
-            Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"));
-
     modules.add(
-        new InstrumentationModule.Builder()
+        new InstrumentationModule.Builder("opentelemetry-external-annotations")
             .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
-            .instrumentationName("opentelemetry-external-annotations")
-            .namespace("opentelemetry-external-annotations")
-            .group("opentelemetry-external-annotations")
             .metadata(customMetadata)
-            .targetVersions(externalAnnotationsVersions)
+            .targetVersions(
+                Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"))
             .build());
 
     StringWriter stringWriter = new StringWriter();
@@ -220,9 +198,8 @@ class YamlHelperTest {
                 minimum_java_version: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
-                target_versions:
-                  javaagent:
-                  - org.springframework:spring-web:[6.0.0,)
+                javaagent_target_versions:
+                - org.springframework:spring-web:[6.0.0,)
                 configurations:
                 - name: otel.instrumentation.spring-web-6.0.enabled
                   description: Enables or disables Spring Web 6.0 instrumentation.
@@ -238,9 +215,8 @@ class YamlHelperTest {
               source_path: instrumentation/opentelemetry-external-annotations-1.0
               scope:
                 name: io.opentelemetry.opentelemetry-external-annotations
-              target_versions:
-                javaagent:
-                - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
+              javaagent_target_versions:
+              - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
@@ -367,7 +343,6 @@ class YamlHelperTest {
   @Test
   void testMetricsParsing() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
 
     EmittedMetrics.Metric metric =
         new EmittedMetrics.Metric(
@@ -382,15 +357,13 @@ class YamlHelperTest {
                 new TelemetryAttribute("server.address", "STRING"),
                 new TelemetryAttribute("server.port", "LONG")));
 
-    targetVersions.put(
-        InstrumentationType.LIBRARY, new HashSet<>(List.of("org.apache.mylib:mylib-core:2.3.0")));
     modules.add(
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/mylib/mylib-core-2.3")
             .instrumentationName("mylib-2.3")
             .namespace("mylib")
             .group("mylib")
-            .targetVersions(targetVersions)
+            .targetVersions(Set.of("org.apache.mylib:mylib-core:2.3.0"))
             .metrics(Map.of("default", List.of(metric)))
             .build());
 
@@ -408,9 +381,8 @@ class YamlHelperTest {
             source_path: instrumentation/mylib/mylib-core-2.3
             scope:
               name: io.opentelemetry.mylib-2.3
-            target_versions:
-              library:
-              - org.apache.mylib:mylib-core:2.3.0
+            javaagent_target_versions:
+            - org.apache.mylib:mylib-core:2.3.0
             telemetry:
             - when: default
               metrics:
@@ -437,7 +409,6 @@ class YamlHelperTest {
   @Test
   void testSpanParsing() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
 
     EmittedSpans.Span span =
         new EmittedSpans.Span(
@@ -449,15 +420,13 @@ class YamlHelperTest {
                 new TelemetryAttribute("server.address", "STRING"),
                 new TelemetryAttribute("server.port", "LONG")));
 
-    targetVersions.put(
-        InstrumentationType.LIBRARY, new HashSet<>(List.of("org.apache.mylib:mylib-core:2.3.0")));
     modules.add(
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/mylib/mylib-core-2.3")
             .instrumentationName("mylib-2.3")
             .namespace("mylib")
+            .hasStandaloneLibrary(true)
             .group("mylib")
-            .targetVersions(targetVersions)
             .spans(Map.of("default", List.of(span)))
             .build());
 
@@ -475,9 +444,7 @@ class YamlHelperTest {
             source_path: instrumentation/mylib/mylib-core-2.3
             scope:
               name: io.opentelemetry.mylib-2.3
-            target_versions:
-              library:
-              - org.apache.mylib:mylib-core:2.3.0
+            has_standalone_library: true
             telemetry:
             - when: default
               spans:
@@ -564,9 +531,8 @@ class YamlHelperTest {
   @Test
   void testYamlGenerationWithLibraryLink() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
-    targetVersions.put(
-        InstrumentationType.JAVAAGENT, new HashSet<>(List.of("com.example:test-library:[1.0.0,)")));
+
+    Set<String> targetVersions = Set.of("com.example:test-library:[1.0.0,)");
 
     InstrumentationMetadata metadataWithLink =
         new InstrumentationMetadata.Builder()
@@ -618,9 +584,8 @@ class YamlHelperTest {
                 source_path: instrumentation/other-lib/other-lib-1.0
                 scope:
                   name: io.opentelemetry.other-lib-1.0
-                target_versions:
-                  javaagent:
-                  - com.example:test-library:[1.0.0,)
+                javaagent_target_versions:
+                - com.example:test-library:[1.0.0,)
               test-lib:
               - name: test-lib-1.0
                 description: Test library instrumentation with link
@@ -628,9 +593,86 @@ class YamlHelperTest {
                 source_path: instrumentation/test-lib/test-lib-1.0
                 scope:
                   name: io.opentelemetry.test-lib-1.0
-                target_versions:
-                  javaagent:
-                  - com.example:test-library:[1.0.0,)
+                javaagent_target_versions:
+                - com.example:test-library:[1.0.0,)
+            """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testInstrumentationsSortedBySemanticVersion() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    InstrumentationMetadata metadata =
+        new InstrumentationMetadata.Builder()
+            .classification(InstrumentationClassification.LIBRARY.name())
+            .build();
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.57")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.57")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.10")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.10")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.56")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.56")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-1.9")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-1.9")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    modules.add(
+        new InstrumentationModule.Builder("opentelemetry-api-2.0")
+            .srcPath("instrumentation/opentelemetry-api/opentelemetry-api-2.0")
+            .group("opentelemetry-api")
+            .metadata(metadata)
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+            libraries:
+              opentelemetry-api:
+              - name: opentelemetry-api-1.9
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.9
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.9
+              - name: opentelemetry-api-1.10
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.10
+              - name: opentelemetry-api-1.56
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.56
+              - name: opentelemetry-api-1.57
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-1.57
+              - name: opentelemetry-api-2.0
+                source_path: instrumentation/opentelemetry-api/opentelemetry-api-2.0
+                scope:
+                  name: io.opentelemetry.opentelemetry-api-2.0
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -31,8 +33,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -57,8 +59,17 @@ import org.testcontainers.pulsar.PulsarContainer;
 import org.testcontainers.utility.DockerImageName;
 
 abstract class AbstractPulsarClientTest {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.pulsar.experimental-span-attributes");
+
+  @Nullable
+  static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+  }
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractPulsarClientTest.class);
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:2.8.0");
@@ -76,8 +87,6 @@ abstract class AbstractPulsarClientTest {
   static String brokerHost;
   static int brokerPort;
 
-  private static final AttributeKey<String> MESSAGE_TYPE =
-      AttributeKey.stringKey("messaging.pulsar.message.type");
   static final double[] DURATION_BUCKETS =
       new double[] {
         0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0
@@ -177,6 +186,8 @@ abstract class AbstractPulsarClientTest {
 
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
+            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
+            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -261,7 +272,7 @@ abstract class AbstractPulsarClientTest {
                           }
                         }));
 
-    assertThat(result.get(1, TimeUnit.MINUTES).size()).isEqualTo(1);
+    assertThat(result.get(1, MINUTES).size()).isEqualTo(1);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(
@@ -291,58 +302,70 @@ abstract class AbstractPulsarClientTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))));
 
-    assertThat(testing.metrics())
-        .satisfiesExactlyInAnyOrder(
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.receive.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.receive.messages")
-                    .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfying(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost)))));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.receive.duration",
+        metrics ->
+            metrics.satisfiesExactlyInAnyOrder(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Measures the duration of receive operation.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfying(
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(SERVER_PORT, brokerPort),
+                                                equalTo(SERVER_ADDRESS, brokerHost))
+                                            .hasBucketBoundaries(DURATION_BUCKETS)))));
+
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.publish.duration",
+        metrics ->
+            metrics.satisfiesExactlyInAnyOrder(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Measures the duration of publish operation.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfying(
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(SERVER_PORT, brokerPort),
+                                                equalTo(SERVER_ADDRESS, brokerHost))
+                                            .hasBucketBoundaries(DURATION_BUCKETS)))));
+
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.receive.messages",
+        metrics ->
+            metrics.satisfiesExactlyInAnyOrder(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription("Measures the number of received messages.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfying(
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(SERVER_PORT, brokerPort),
+                                                equalTo(SERVER_ADDRESS, brokerHost))))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -358,7 +381,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_OPERATION, "publish"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
-                equalTo(MESSAGE_TYPE, "normal")));
+                equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
 
     if (testHeaders) {
       assertions.add(

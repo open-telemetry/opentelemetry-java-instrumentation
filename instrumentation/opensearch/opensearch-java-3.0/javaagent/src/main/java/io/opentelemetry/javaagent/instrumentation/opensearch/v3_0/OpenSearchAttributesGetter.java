@@ -13,7 +13,7 @@ final class OpenSearchAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRequest, Void> {
 
   @Override
-  public String getDbSystem(OpenSearchRequest request) {
+  public String getDbSystemName(OpenSearchRequest request) {
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
   }
 
@@ -26,7 +26,7 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRequest request) {
-    return request.getMethod() + " " + request.getOperation();
+    return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
@@ -37,7 +37,7 @@ final class OpenSearchAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     return null; // Response status is handled by HTTP instrumentation
   }
 }

@@ -27,6 +27,6 @@ class OkHttp3Test extends AbstractOkHttp3Test {
         .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
         .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
         .build()
-        .newCallFactory(clientBuilder.build());
+        .createCallFactory(clientBuilder.build());
   }
 }

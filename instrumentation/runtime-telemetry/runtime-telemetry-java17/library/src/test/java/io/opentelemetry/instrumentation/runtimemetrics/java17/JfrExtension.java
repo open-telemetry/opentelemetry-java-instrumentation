@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -14,7 +15,6 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.Assumptions;
@@ -51,7 +51,7 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     runtimeMetrics = builder.build();
     RuntimeMetrics.JfrRuntimeMetrics jfrRuntimeMetrics = runtimeMetrics.getJfrRuntimeMetrics();
     if (jfrRuntimeMetrics != null) {
-      jfrRuntimeMetrics.getStartUpLatch().await(30, TimeUnit.SECONDS);
+      jfrRuntimeMetrics.getStartUpLatch().await(30, SECONDS);
     }
   }
 

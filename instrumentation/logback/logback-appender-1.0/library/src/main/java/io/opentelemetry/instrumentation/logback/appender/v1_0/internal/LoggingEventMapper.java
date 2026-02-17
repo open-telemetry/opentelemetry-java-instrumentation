@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -35,7 +36,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -84,6 +84,7 @@ public final class LoggingEventMapper {
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
+  private final boolean captureTemplate;
   private final boolean captureArguments;
   private final boolean captureLogstashMarkerAttributes;
   private final boolean captureLogstashStructuredArguments;
@@ -96,6 +97,7 @@ public final class LoggingEventMapper {
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
+    this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
@@ -133,7 +135,7 @@ public final class LoggingEventMapper {
       setTimestampFromInstant(builder, loggingEvent);
     } else {
       long timestamp = loggingEvent.getTimeStamp();
-      builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+      builder.setTimestamp(timestamp, MILLISECONDS);
     }
 
     // level
@@ -215,10 +217,16 @@ public final class LoggingEventMapper {
       captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
+    if (captureTemplate
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      captureTemplate(builder, loggingEvent);
+    }
+
     if (captureArguments
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
-      captureArguments(builder, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+      captureArguments(builder, loggingEvent.getArgumentArray());
     }
 
     if (supportsLogstashMarkers && captureLogstashMarkerAttributes) {
@@ -265,8 +273,11 @@ public final class LoggingEventMapper {
     }
   }
 
-  void captureArguments(LogRecordBuilder builder, String message, Object[] arguments) {
-    builder.setAttribute(LOG_BODY_TEMPLATE, message);
+  private static void captureTemplate(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    builder.setAttribute(LOG_BODY_TEMPLATE, loggingEvent.getMessage());
+  }
+
+  private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
         LOG_BODY_PARAMETERS,
         Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
@@ -679,6 +690,7 @@ public final class LoggingEventMapper {
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
+    private boolean captureTemplate;
     private boolean captureArguments;
     private boolean captureLogstashMarkerAttributes;
     private boolean captureLogstashStructuredArguments;
@@ -723,19 +735,15 @@ public final class LoggingEventMapper {
     }
 
     @CanIgnoreReturnValue
-    public Builder setCaptureArguments(boolean captureArguments) {
-      this.captureArguments = captureArguments;
+    public Builder setCaptureTemplate(boolean captureTemplate) {
+      this.captureTemplate = captureTemplate;
       return this;
     }
 
-    /**
-     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-     *     deprecated and will be removed in a future release.
-     */
-    @Deprecated
     @CanIgnoreReturnValue
-    public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-      return setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
+    public Builder setCaptureArguments(boolean captureArguments) {
+      this.captureArguments = captureArguments;
+      return this;
     }
 
     @CanIgnoreReturnValue

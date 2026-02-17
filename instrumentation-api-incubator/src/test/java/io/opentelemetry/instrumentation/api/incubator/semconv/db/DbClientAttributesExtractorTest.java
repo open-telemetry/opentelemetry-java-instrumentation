@@ -26,7 +26,7 @@ class DbClientAttributesExtractorTest {
   static final class TestAttributesGetter
       implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
-    public String getDbSystem(Map<String, String> map) {
+    public String getDbSystemName(Map<String, String> map) {
       return map.get("db.system");
     }
 
@@ -38,7 +38,7 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbNamespace(Map<String, String> map) {
-      return map.get("db.name");
+      return map.get("db.namespace");
     }
 
     @Deprecated
@@ -49,7 +49,7 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbQueryText(Map<String, String> map) {
-      return map.get("db.statement");
+      return map.get("db.query.text");
     }
 
     @Nullable
@@ -60,7 +60,7 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbOperationName(Map<String, String> map) {
-      return map.get("db.operation");
+      return map.get("db.operation.name");
     }
   }
 
@@ -71,11 +71,11 @@ class DbClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
     request.put("db.user", "username");
-    request.put("db.name", "potatoes");
+    request.put("db.namespace", "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");
-    request.put("db.statement", "SELECT * FROM potato");
+    request.put("db.query.text", "SELECT * FROM potato");
     request.put("db.query_summary", "SELECT potato");
-    request.put("db.operation", "SELECT");
+    request.put("db.operation.name", "SELECT");
 
     Context context = Context.root();
 

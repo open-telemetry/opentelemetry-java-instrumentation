@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -31,7 +33,6 @@ import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
@@ -47,7 +48,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -1005,7 +1005,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             method,
             uri,
             // the time that server waits before completing the response
-            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(1))));
+            Collections.singletonMap("delay", String.valueOf(SECONDS.toMillis(1))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1019,9 +1019,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           SpanData span = trace.getSpan(0);
           // make sure the span is at least as long as the delay we set when sending the request
-          assertThat(
-                  span.getEndEpochNanos() - span.getStartEpochNanos()
-                      >= TimeUnit.SECONDS.toNanos(1))
+          assertThat(span.getEndEpochNanos() - span.getStartEpochNanos() >= SECONDS.toNanos(1))
               .describedAs("Span duration should be at least 1s")
               .isTrue();
         });
@@ -1040,7 +1038,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             uri,
             // the time that server waits before completing the response, we expect the response
             // headers to arrive much sooner
-            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(2))));
+            Collections.singletonMap("delay", String.valueOf(SECONDS.toMillis(2))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1054,14 +1052,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           SpanData span = trace.getSpan(0);
           // verify that the span length is less than the delay used to complete the response body
-          assertThat(
-                  span.getEndEpochNanos() - span.getStartEpochNanos()
-                      <= TimeUnit.SECONDS.toNanos(2))
+          assertThat(span.getEndEpochNanos() - span.getStartEpochNanos() <= SECONDS.toNanos(2))
               .describedAs("Span duration should be less than 2s")
               .isTrue();
         });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
@@ -1073,16 +1070,16 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              // Check for peer.service when running with javaagent instrumentation
+              // Check for service.peer.name when running with javaagent instrumentation
               String distroName =
                   span.actual()
                       .getResource()
                       .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
               if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
-                if (expectedPeerService != null) {
+                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
+                if (expectedServicePeerName != null) {
                   assertThat(attrs)
-                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
+                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
                 }
               }
 

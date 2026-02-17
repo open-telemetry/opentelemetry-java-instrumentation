@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.HistogramAdviceUtil.setExplicitBucketsIfConfigured;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;
@@ -23,12 +24,14 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
-final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
+final class OpenTelemetryTimer extends AbstractTimer
+    implements RemovableMeter, OpenTelemetryInstrument {
 
   private final Measurements measurements;
   private final TimeWindowMax max;
@@ -95,7 +98,7 @@ final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
       double time = TimeUtils.nanosToUnit(nanos, baseTimeUnit);
       otelHistogram.record(time, attributes);
       measurements.record(nanos);
-      max.record(nanos, TimeUnit.NANOSECONDS);
+      max.record(nanos, NANOSECONDS);
     }
   }
 

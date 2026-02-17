@@ -9,7 +9,7 @@ import javax.annotation.Nullable;
 
 /** A global registry of {@link AsyncOperationEndStrategy} implementations. */
 public abstract class AsyncOperationEndStrategies {
-  private static volatile AsyncOperationEndStrategies instance;
+  @Nullable private static volatile AsyncOperationEndStrategies instance;
 
   /**
    * Sets the actual strategies' registry implementation. The javaagent uses weak references to make

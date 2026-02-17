@@ -177,8 +177,6 @@ val targets = mapOf(
   ),
 )
 
-val matrix = mutableListOf<String>()
-
 tasks {
   val buildLinuxTestImages by registering {
     group = "build"
@@ -190,16 +188,22 @@ tasks {
     description = "Builds all Windows Docker images for the test matrix"
   }
 
-  val pushMatrix by registering(DockerPushImage::class) {
-    mustRunAfter(buildLinuxTestImages)
-    mustRunAfter(buildWindowsTestImages)
+  val linuxImages = createDockerTasks(buildLinuxTestImages, false)
+  val windowsImages = createDockerTasks(buildWindowsTestImages, true)
+
+  val pushLinuxImages by registering(DockerPushImage::class) {
+    dependsOn(buildLinuxTestImages)
     group = "publishing"
-    description = "Push all Docker images for the test matrix"
-    images.set(matrix)
+    description = "Push Linux Docker images for the test matrix"
+    images.set(linuxImages)
   }
 
-  createDockerTasks(buildLinuxTestImages, false)
-  createDockerTasks(buildWindowsTestImages, true)
+  val pushWindowsImages by registering(DockerPushImage::class) {
+    dependsOn(buildWindowsTestImages)
+    group = "publishing"
+    description = "Push Windows Docker images for the test matrix"
+    images.set(windowsImages)
+  }
 
   val printSmokeTestsConfigurations by registering {
     doFirst {
@@ -256,10 +260,11 @@ fun configureImage(
     version = version.substringBefore("-")
   }
 
-  // Using separate build directory for different image
-  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"
   val platformSuffix = if (isWindows) "-windows" else ""
+
+  // Using separate build directory for different images
+  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject-$platformSuffix")
 
   val prepareTask = tasks.register<Copy>("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix") {
     val warTask = project(":smoke-tests:images:servlet:$warProject").tasks.named<War>("war")
@@ -285,20 +290,20 @@ fun configureImage(
       "openjdk:$jdk"
     } else if (isWindows) {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:46d804b1c8a658fd84b8f3b3f39a1739b0f0ffccf41a682cea4847982de3bd08"
-        "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:3b16568beff29ff623e7d72018cd6b08f4003964a342a907ad410a0b953f40e6"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk-windowsservercore-ltsc2022@sha256:7c9e423728d04540c0a30d68ca0922390665dfec20e012beb95861d80aa2dd70"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:45a3d356d018942a497b877633f19db401828ecb2a1de3cda635b98d08bfbaeb"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:556d727eb539fd9c6242e75d17e1a2bf59456ea8a37478cfbd6406ca6db0d2d1"
+        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
+        "11" -> "eclipse-temurin:11.0.30_7-jdk-windowsservercore-ltsc2022@sha256:c9427691ad6574152a9a5712df8f0cb4286aaa338ca9ba243107f0b52a5dfa66"
+        "17" -> "eclipse-temurin:17.0.18_8-jdk-windowsservercore-ltsc2022@sha256:f40141cdea36932804f722f33664695f3d630f264c2159c4f8fde033ac40a8d8"
+        "21" -> "eclipse-temurin:21.0.10_7-jdk-windowsservercore-ltsc2022@sha256:0fe161dd961fb138e6b419f8e3166920207daa81225790b05346c930da8c6574"
+        "25" -> "eclipse-temurin:25.0.2_10-jdk-windowsservercore-ltsc2022@sha256:a6c7695677fe92f8e1e74ef4cf3b369fae6c5bb6d9331c617fc7a026097ae4e3"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:b4e05de303ea02659ee17044d6b68caadfc462f1530f3a461482afee23379cdd"
-        "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:189ce1c8831fa5bdd801127dad99f68a17615f81f4aa839b1a4aae693261929a"
-        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:5a66a3ffd8728ed6c76eb4ec674c37991ac679927381f71774f5aa44cf420082"
-        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:ec2005c536f3661c6ef1253292c9c623e582186749a3ef2ed90903d1aaf74640"
-        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:adc4533ea69967c783ac2327dac7ff548fcf6401a7e595e723b414c0a7920eb2"
+        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
+        "11" -> "eclipse-temurin:11.0.30_7-jdk@sha256:1465f3753ea6eeb5486cca513d9300852369486b9c8592a72b51cf5df1eb3820"
+        "17" -> "eclipse-temurin:17.0.18_8-jdk@sha256:adbade6756453c296d97b002b9ac550cb2d50fe6582c2922cf831bee040d1f11"
+        "21" -> "eclipse-temurin:21.0.10_7-jdk@sha256:2dbb970461f444a3230facb0a34ca9f2e555150689f0d943c252a3785c905487"
+        "25" -> "eclipse-temurin:25.0.2_10-jdk@sha256:ddd55eda5ad0ef851a6c6b5169a83d6f9c9481449de77ae511a3118a3cf8fe91"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
@@ -308,11 +313,11 @@ fun configureImage(
       throw GradleException("Unexpected vm: $vm")
     } else {
       when (jdk) {
-        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:63bb8aad02000edbc5f90222a018862f546a0ac21ec01d6b31af6202083297e8"
-        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:a0910e6646e71de764f56ea19238719cb150ffabb46c0f9d3323e4cb697d59dc"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:ad9a76a79afef5f01b49d3a7487e017305cb76f7421cd88e9424ee1c96fe8c09"
-        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:bd69dbe68315b72ebfa0d708511176c3317dd0c500dc462e7041570983f14c49"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:58f8efd0e2b137c19e192a3d1a36e9efe070d6f59784bc4a84f551e6c148b35c"
+        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
+        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:585b847029767e61a55bd96aa48a7fa19add90bae21dd7bc44e3e5e88704cabc"
+        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:25a6619e04912d3a718dd75d0b6995d61f8602d2d78cb4be10624a1e60c01093"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }
@@ -357,9 +362,6 @@ fun configureImage(
     images.add(image)
     dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
     buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash, "imageHash" to serverImageHash))
-    doLast {
-      matrix.add(image)
-    }
   }
 
   parentTask.configure {
@@ -368,7 +370,7 @@ fun configureImage(
   return image
 }
 
-fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
+fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): Set<String> {
   val resultImages = mutableSetOf<String>()
   for ((server, matrices) in targets) {
     val smokeTestServer = findProperty("smokeTestServer")
@@ -397,4 +399,5 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
       }
     }
   }
+  return resultImages
 }

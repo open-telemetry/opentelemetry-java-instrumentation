@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -22,7 +22,7 @@ public final class VertxSqlInstrumenterFactory {
 
   public static Instrumenter<VertxSqlClientRequest, Void> createInstrumenter(
       String instrumentationName) {
-    boolean ansiQuotes = AgentCommonConfig.get().isStatementSanitizationAnsiQuotes();
+    boolean ansiQuotes = AgentCommonConfig.get().isQuerySanitizationAnsiQuotes();
     SpanNameExtractor<VertxSqlClientRequest> spanNameExtractor =
         DbClientSpanNameExtractor.create(
             VertxSqlClientAttributesGetter.INSTANCE,
@@ -33,16 +33,15 @@ public final class VertxSqlInstrumenterFactory {
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
-                    .setStatementSanitizationEnabled(
-                        AgentCommonConfig.get().isStatementSanitizationEnabled())
+                    .setQuerySanitizationEnabled(
+                        AgentCommonConfig.get().isQuerySanitizationEnabled())
                     .setSetStatementSanitizationAnsiQuotes(ansiQuotes)
                     .build())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    VertxSqlClientNetAttributesGetter.INSTANCE,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                ServicePeerAttributesExtractor.create(
+                    VertxSqlClientNetAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

@@ -5,19 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
+import static java.util.Collections.emptyList;
+import static java.util.logging.Level.SEVERE;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -28,17 +30,24 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    DeclarativeConfigProperties config =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
-    if (config.getBoolean("otel.jmx.enabled", true)) {
+    if (config.getBoolean("enabled", true)) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(config));
+              .beanDiscoveryDelay(
+                  Duration.ofMillis(
+                      config.get("discovery").getLong("delay", Duration.ofMinutes(1).toMillis())));
 
-      config.getList("otel.jmx.config").stream()
+      config.getScalarList("config", String.class, emptyList()).stream()
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
-      config.getList("otel.jmx.target.system").forEach(target -> addClasspathRules(target, jmx));
+
+      config
+          .get("target")
+          .getScalarList("system", String.class, emptyList())
+          .forEach(target -> addClasspathRules(target, jmx));
 
       jmx.build().start();
     }
@@ -49,7 +58,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(path);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(Level.SEVERE, "Error while loading JMX configuration from " + path, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from " + path, e);
     }
   }
 
@@ -61,19 +70,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(input);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(
-          Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
-  }
-
-  private static Duration beanDiscoveryDelay(ConfigProperties configProperties) {
-    Duration discoveryDelay = configProperties.getDuration("otel.jmx.discovery.delay");
-    if (discoveryDelay != null) {
-      return discoveryDelay;
-    }
-
-    // If discovery delay has not been configured, have a peek at the metric export interval.
-    // It makes sense for both of these values to be similar.
-    return configProperties.getDuration("otel.metric.export.interval", Duration.ofMinutes(1));
   }
 }

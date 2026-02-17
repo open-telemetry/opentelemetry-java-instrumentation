@@ -10,10 +10,9 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+  public String getDbSystemName(JedisRequest request) {
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override
@@ -23,11 +22,11 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbQueryText(JedisRequest request) {
-    return request.getStatement();
+    return request.getQueryText();
   }
 
   @Override
   public String getDbOperationName(JedisRequest request) {
-    return request.getOperation();
+    return request.getOperationName();
   }
 }

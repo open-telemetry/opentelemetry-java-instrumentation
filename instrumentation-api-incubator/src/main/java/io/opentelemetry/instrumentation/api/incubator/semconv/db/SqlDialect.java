@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-/** Enumeration of sql dialects that are handled differently by {@link SqlStatementSanitizer}. */
+/** Enumeration of sql dialects that are handled differently by {@link SqlQuerySanitizer}. */
 public enum SqlDialect {
   DEFAULT(false), // double quotes for string literals
   ANSI_QUOTES(true), // double quotes for identifiers, single quotes for string literals

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -23,7 +24,6 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class HttpClientExperimentalMetricsTest {
@@ -92,7 +92,7 @@ class HttpClientExperimentalMetricsTest {
                                 point ->
                                     point
                                         .hasSum(100 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
@@ -118,7 +118,7 @@ class HttpClientExperimentalMetricsTest {
                                 point ->
                                     point
                                         .hasSum(200 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
@@ -153,6 +153,6 @@ class HttpClientExperimentalMetricsTest {
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

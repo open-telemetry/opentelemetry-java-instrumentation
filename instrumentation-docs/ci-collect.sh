@@ -7,6 +7,15 @@ set -euo pipefail
 
 source "$(dirname "$0")/instrumentations.sh"
 
+# Configure Gradle flags based on DEBUG_LOGGING environment variable
+GRADLE_FLAGS=()
+if [[ "${DEBUG_LOGGING:-false}" != "true" ]]; then
+  GRADLE_FLAGS+=(--no-daemon --quiet)
+  echo "Running with reduced logging (set DEBUG_LOGGING=true to enable full output)"
+else
+  echo "Running with full debug logging enabled"
+fi
+
 # Collect standard and colima tasks (without testLatestDeps)
 ALL_TASKS=()
 for task in "${INSTRUMENTATIONS[@]}"; do
@@ -19,6 +28,7 @@ done
 echo "Processing standard instrumentations..."
 ./gradlew "${ALL_TASKS[@]}" \
   -PcollectMetadata=true \
+  "${GRADLE_FLAGS[@]}" \
   --rerun-tasks --continue
 
 # Collect and run tasks that need testLatestDeps
@@ -32,6 +42,7 @@ if [[ ${#LATEST_DEPS_TASKS[@]} -gt 0 ]]; then
   ./gradlew "${LATEST_DEPS_TASKS[@]}" \
     -PcollectMetadata=true \
     -PtestLatestDeps=true \
+    "${GRADLE_FLAGS[@]}" \
     --rerun-tasks --continue
 fi
 
