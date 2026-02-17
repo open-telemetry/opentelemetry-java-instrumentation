@@ -1093,13 +1093,13 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
-          if (dialect == SqlDialect.COUCHBASE) {
-            builder.append('?');
-          } else {
+          if (dialect.ansiQuotes()) {
             if (!insideComment) {
               operation.handleIdentifier();
             }
             appendCurrentFragment();
+          } else {
+            builder.append('?');
           }
           if (isOverLimit()) return YYEOF;
       }
