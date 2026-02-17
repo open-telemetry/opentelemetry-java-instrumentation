@@ -4,6 +4,7 @@
  */
 
 package io.opentelemetry;
+
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
