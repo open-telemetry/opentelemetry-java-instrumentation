@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.context.Context;
@@ -12,7 +13,6 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.AbstractAws2LambdaTest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
   }
 
   private static String base64ify(String json) {
-    return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+    return Base64.getEncoder().encodeToString(json.getBytes(UTF_8));
   }
 
   @Test
@@ -62,8 +62,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
         (InvokeRequest) LambdaImpl.modifyOrAddCustomContextHeader(request, context);
 
     String newClientContext = newRequest.clientContext();
-    newClientContext =
-        new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
+    newClientContext = new String(Base64.getDecoder().decode(newClientContext), UTF_8);
     assertThat(newClientContext.contains("traceparent")).isTrue();
   }
 
@@ -78,8 +77,7 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
         (InvokeRequest) LambdaImpl.modifyOrAddCustomContextHeader(request, context);
 
     String newClientContext = newRequest.clientContext();
-    newClientContext =
-        new String(Base64.getDecoder().decode(newClientContext), StandardCharsets.UTF_8);
+    newClientContext = new String(Base64.getDecoder().decode(newClientContext), UTF_8);
     assertThat(newClientContext.contains("traceparent")).isTrue();
     assertThat(newClientContext.contains("preExisting")).isTrue();
     assertThat(newClientContext.contains("otherStuff")).isTrue();
