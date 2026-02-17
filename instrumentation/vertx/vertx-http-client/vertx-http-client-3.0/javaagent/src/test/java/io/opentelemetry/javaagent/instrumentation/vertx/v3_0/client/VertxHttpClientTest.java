@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -27,7 +28,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
@@ -65,7 +65,7 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
       HttpClientRequest request, String method, URI uri, Map<String, String> headers)
       throws Exception {
     // Vertx doesn't seem to provide any synchronous API so bridge through a callback
-    return sendRequest(request).get(30, TimeUnit.SECONDS);
+    return sendRequest(request).get(30, SECONDS);
   }
 
   @Override

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.amazonaws.services.lambda.runtime.serialization.PojoSerializer;
 import com.amazonaws.services.lambda.runtime.serialization.events.LambdaEventSerializers;
 import com.amazonaws.services.lambda.runtime.serialization.factories.JacksonFactory;
@@ -14,7 +16,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -75,7 +76,7 @@ public final class SerializationUtil {
     PojoSerializer<T> serializer = getSerializer(obj.getClass());
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(DEFAULT_BUFFER_SIZE);
     serializer.toJson(obj, outputStream);
-    return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
+    return new String(outputStream.toByteArray(), UTF_8);
   }
 
   public static <T> byte[] toJsonData(T obj) {

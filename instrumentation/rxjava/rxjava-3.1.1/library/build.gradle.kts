@@ -9,7 +9,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=false")
-}

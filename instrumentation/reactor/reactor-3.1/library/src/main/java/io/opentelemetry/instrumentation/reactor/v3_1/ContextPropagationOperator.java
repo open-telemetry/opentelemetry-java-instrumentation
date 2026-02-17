@@ -23,6 +23,7 @@
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
 import static java.lang.invoke.MethodType.methodType;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -32,7 +33,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
@@ -44,6 +44,7 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.context.ContextView;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
 public final class ContextPropagationOperator {
@@ -145,7 +146,7 @@ public final class ContextPropagationOperator {
    */
   @NoMuzzle
   public static Context getOpenTelemetryContextFromContextView(
-      reactor.util.context.ContextView contextView, Context defaultTraceContext) {
+      ContextView contextView, Context defaultTraceContext) {
     return contextView.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
@@ -182,7 +183,7 @@ public final class ContextPropagationOperator {
     try {
       SCHEDULERS_HOOK_METHOD.invoke(key, function);
     } catch (Throwable throwable) {
-      logger.log(Level.WARNING, "Failed to install scheduler hook", throwable);
+      logger.log(WARNING, "Failed to install scheduler hook", throwable);
     }
   }
 

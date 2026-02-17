@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * any time.
  */
 public final class DbExecution {
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
   private final String system;
@@ -140,7 +140,7 @@ public final class DbExecution {
         + ", connectionString='"
         + connectionString
         + '\''
-        + ", rawStatement='"
+        + ", rawQueryText='"
         + rawQueryText
         + '\''
         + ", context="

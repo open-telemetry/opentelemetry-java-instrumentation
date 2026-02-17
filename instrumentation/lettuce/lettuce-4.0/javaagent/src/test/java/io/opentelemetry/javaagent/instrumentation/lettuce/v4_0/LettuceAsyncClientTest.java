@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -14,7 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -47,7 +48,6 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -140,8 +140,7 @@ class LettuceAsyncClientTest {
     testConnectionClient.setOptions(CLIENT_OPTIONS);
 
     StatefulRedisConnection<String, String> connection1 =
-        testConnectionClient.connect(
-            new Utf8StringCodec(), new RedisURI(host, port, 3, TimeUnit.SECONDS));
+        testConnectionClient.connect(new Utf8StringCodec(), new RedisURI(host, port, 3, SECONDS));
     cleanup.deferCleanup(connection1);
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
@@ -157,7 +156,7 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(PEER_SERVICE, "test-peer-service"))));
+                            equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
   @Test
@@ -170,7 +169,7 @@ class LettuceAsyncClientTest {
         catchException(
             () ->
                 testConnectionClient.connect(
-                    new Utf8StringCodec(), new RedisURI(host, incorrectPort, 3, TimeUnit.SECONDS)));
+                    new Utf8StringCodec(), new RedisURI(host, incorrectPort, 3, SECONDS)));
 
     assertThat(exception).isInstanceOf(RedisConnectionException.class);
 
@@ -186,14 +185,14 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(PEER_SERVICE, "test-peer-service"))));
+                            equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
   @Test
   void testSetCommandUsingFutureGetWithTimeout()
       throws ExecutionException, InterruptedException, TimeoutException {
     RedisFuture<String> redisFuture = asyncCommands.set("TESTSETKEY", "TESTSETVAL");
-    String res = redisFuture.get(3, TimeUnit.SECONDS);
+    String res = redisFuture.get(3, SECONDS);
 
     assertThat(res).isEqualTo("OK");
 

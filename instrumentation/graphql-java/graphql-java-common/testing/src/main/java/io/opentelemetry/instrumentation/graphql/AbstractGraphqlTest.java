@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -33,7 +34,6 @@ import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,8 +78,7 @@ public abstract class AbstractGraphqlTest {
 
     try (Reader reader =
         new InputStreamReader(
-            this.getClass().getClassLoader().getResourceAsStream("schema.graphqls"),
-            StandardCharsets.UTF_8)) {
+            this.getClass().getClassLoader().getResourceAsStream("schema.graphqls"), UTF_8)) {
       graphqlSchema = buildSchema(reader);
       GraphQL.Builder graphqlBuilder = GraphQL.newGraphQL(graphqlSchema);
       configure(graphqlBuilder);

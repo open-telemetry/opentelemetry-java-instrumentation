@@ -5,6 +5,13 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import static java.util.logging.Level.CONFIG;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
@@ -169,28 +176,28 @@ public class PatchLogger {
 
   public Level getLevel() {
     if (internalLogger.isLoggable(InternalLogger.Level.ERROR)) {
-      return Level.SEVERE;
+      return SEVERE;
     } else if (internalLogger.isLoggable(InternalLogger.Level.WARN)) {
-      return Level.WARNING;
+      return WARNING;
     } else if (internalLogger.isLoggable(InternalLogger.Level.INFO)) {
-      return Level.CONFIG;
+      return CONFIG;
     } else if (internalLogger.isLoggable(InternalLogger.Level.DEBUG)) {
-      return Level.FINE;
+      return FINE;
     } else if (internalLogger.isLoggable(InternalLogger.Level.TRACE)) {
-      return Level.FINEST;
+      return FINEST;
     } else {
       return Level.OFF;
     }
   }
 
   private static InternalLogger.Level toInternalLevel(Level level) {
-    if (level.intValue() >= Level.SEVERE.intValue()) {
+    if (level.intValue() >= SEVERE.intValue()) {
       return InternalLogger.Level.ERROR;
-    } else if (level.intValue() >= Level.WARNING.intValue()) {
+    } else if (level.intValue() >= WARNING.intValue()) {
       return InternalLogger.Level.WARN;
-    } else if (level.intValue() >= Level.CONFIG.intValue()) {
+    } else if (level.intValue() >= INFO.intValue()) {
       return InternalLogger.Level.INFO;
-    } else if (level.intValue() >= Level.FINE.intValue()) {
+    } else if (level.intValue() >= FINE.intValue()) {
       return InternalLogger.Level.DEBUG;
     } else {
       return InternalLogger.Level.TRACE;

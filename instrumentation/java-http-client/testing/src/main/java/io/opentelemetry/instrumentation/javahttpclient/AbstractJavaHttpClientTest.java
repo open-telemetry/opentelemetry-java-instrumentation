@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.javahttpclient;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -31,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -136,7 +136,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                   HttpRequest.newBuilder()
                       .uri(uri)
                       .method(method, HttpRequest.BodyPublishers.noBody())
-                      .header("delay", String.valueOf(TimeUnit.SECONDS.toMillis(5)))
+                      .header("delay", String.valueOf(SECONDS.toMillis(5)))
                       .build();
               return client
                   .sendAsync(request, HttpResponse.BodyHandlers.ofString())

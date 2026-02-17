@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import io.opentelemetry.api.trace.Span;
@@ -17,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A base class similar to {@link RequestStreamHandler} but will automatically trace invocations of
@@ -90,7 +91,7 @@ public abstract class TracingRequestStreamHandler implements RequestStreamHandle
       throw t;
     } finally {
       instrumenter.end(otelContext, request, null, error);
-      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, NANOSECONDS);
     }
   }
 

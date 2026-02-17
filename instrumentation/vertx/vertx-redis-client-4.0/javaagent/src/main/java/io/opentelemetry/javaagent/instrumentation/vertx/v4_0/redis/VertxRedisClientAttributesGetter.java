@@ -17,15 +17,14 @@ public enum VertxRedisClientAttributesGetter
   INSTANCE;
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(VertxRedisClientRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getUser(VertxRedisClientRequest request) {
@@ -41,7 +40,7 @@ public enum VertxRedisClientAttributesGetter
     return null;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getConnectionString(VertxRedisClientRequest request) {

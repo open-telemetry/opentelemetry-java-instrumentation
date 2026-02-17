@@ -13,7 +13,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   @Override
   public String getDbSystemName(JedisRequest request) {

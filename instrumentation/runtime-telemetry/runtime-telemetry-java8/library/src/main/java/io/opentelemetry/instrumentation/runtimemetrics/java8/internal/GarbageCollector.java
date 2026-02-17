@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import io.opentelemetry.api.OpenTelemetry;
@@ -21,7 +22,6 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.management.Notification;
@@ -43,7 +43,7 @@ public class GarbageCollector {
 
   private static final Logger logger = Logger.getLogger(GarbageCollector.class.getName());
 
-  private static final double MILLIS_PER_S = TimeUnit.SECONDS.toMillis(1);
+  private static final double MILLIS_PER_S = SECONDS.toMillis(1);
 
   public static final List<Double> GC_DURATION_BUCKETS =
       unmodifiableList(asList(0.01, 0.1, 1., 10.));
