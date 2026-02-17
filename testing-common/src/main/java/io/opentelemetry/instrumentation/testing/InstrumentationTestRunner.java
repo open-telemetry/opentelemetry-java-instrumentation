@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -36,7 +37,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -97,8 +97,7 @@ public abstract class InstrumentationTestRunner {
 
   public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
     try {
-      return TelemetryDataUtil.waitForTraces(
-          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
+      return TelemetryDataUtil.waitForTraces(this::getExportedSpans, numberOfTraces, 20, SECONDS);
     } catch (TimeoutException | InterruptedException e) {
       throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
     }

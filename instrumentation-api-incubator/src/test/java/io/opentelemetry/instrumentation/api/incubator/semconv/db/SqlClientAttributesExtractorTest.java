@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.DbAttributes;
@@ -31,7 +30,7 @@ import org.junit.jupiter.api.Test;
 class SqlClientAttributesExtractorTest {
 
   static class TestAttributesGetter
-      implements SqlClientAttributesGetter<Map<String, Object>, Void>, ExtractQuerySummaryMarker {
+      implements SqlClientAttributesGetter<Map<String, Object>, Void> {
 
     @Override
     public Collection<String> getRawQueryTexts(Map<String, Object> map) {

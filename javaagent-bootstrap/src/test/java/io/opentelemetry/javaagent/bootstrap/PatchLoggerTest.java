@@ -5,6 +5,13 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import static java.util.logging.Level.CONFIG;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -110,13 +117,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.log(Level.SEVERE, "ereves");
-    logger.log(Level.WARNING, "gninraw");
-    logger.log(Level.INFO, "ofni");
-    logger.log(Level.CONFIG, "gifnoc");
-    logger.log(Level.FINE, "enif");
-    logger.log(Level.FINER, "renif");
-    logger.log(Level.FINEST, "tsenif");
+    logger.log(SEVERE, "ereves");
+    logger.log(WARNING, "gninraw");
+    logger.log(INFO, "ofni");
+    logger.log(CONFIG, "gifnoc");
+    logger.log(FINE, "enif");
+    logger.log(FINER, "renif");
+    logger.log(FINEST, "tsenif");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -138,13 +145,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.log(Level.SEVERE, "ereves: {0}", "a");
-    logger.log(Level.WARNING, "gninraw: {0}", "b");
-    logger.log(Level.INFO, "ofni: {0}", "c");
-    logger.log(Level.CONFIG, "gifnoc: {0}", "d");
-    logger.log(Level.FINE, "enif: {0}", "e");
-    logger.log(Level.FINER, "renif: {0}", "f");
-    logger.log(Level.FINEST, "tsenif: {0}", "g");
+    logger.log(SEVERE, "ereves: {0}", "a");
+    logger.log(WARNING, "gninraw: {0}", "b");
+    logger.log(INFO, "ofni: {0}", "c");
+    logger.log(CONFIG, "gifnoc: {0}", "d");
+    logger.log(FINE, "enif: {0}", "e");
+    logger.log(FINER, "renif: {0}", "f");
+    logger.log(FINEST, "tsenif: {0}", "g");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -173,13 +180,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.log(Level.SEVERE, "ereves: {0},{1}", new Object[] {"a", "b"});
-    logger.log(Level.WARNING, "gninraw: {0},{1}", new Object[] {"b", "c"});
-    logger.log(Level.INFO, "ofni: {0},{1}", new Object[] {"c", "d"});
-    logger.log(Level.CONFIG, "gifnoc: {0},{1}", new Object[] {"d", "e"});
-    logger.log(Level.FINE, "enif: {0},{1}", new Object[] {"e", "f"});
-    logger.log(Level.FINER, "renif: {0},{1}", new Object[] {"f", "g"});
-    logger.log(Level.FINEST, "tsenif: {0},{1}", new Object[] {"g", "h"});
+    logger.log(SEVERE, "ereves: {0},{1}", new Object[] {"a", "b"});
+    logger.log(WARNING, "gninraw: {0},{1}", new Object[] {"b", "c"});
+    logger.log(INFO, "ofni: {0},{1}", new Object[] {"c", "d"});
+    logger.log(CONFIG, "gifnoc: {0},{1}", new Object[] {"d", "e"});
+    logger.log(FINE, "enif: {0},{1}", new Object[] {"e", "f"});
+    logger.log(FINER, "renif: {0},{1}", new Object[] {"f", "g"});
+    logger.log(FINEST, "tsenif: {0},{1}", new Object[] {"g", "h"});
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -214,13 +221,13 @@ class PatchLoggerTest {
     Throwable g = new Throwable();
 
     // when
-    logger.log(Level.SEVERE, "ereves", a);
-    logger.log(Level.WARNING, "gninraw", b);
-    logger.log(Level.INFO, "ofni", c);
-    logger.log(Level.CONFIG, "gifnoc", d);
-    logger.log(Level.FINE, "enif", e);
-    logger.log(Level.FINER, "renif", f);
-    logger.log(Level.FINEST, "tsenif", g);
+    logger.log(SEVERE, "ereves", a);
+    logger.log(WARNING, "gninraw", b);
+    logger.log(INFO, "ofni", c);
+    logger.log(CONFIG, "gifnoc", d);
+    logger.log(FINE, "enif", e);
+    logger.log(FINER, "renif", f);
+    logger.log(FINEST, "tsenif", g);
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -244,13 +251,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
-    assertThat(logger.isLoggable(Level.SEVERE)).isTrue();
-    assertThat(logger.isLoggable(Level.WARNING)).isTrue();
-    assertThat(logger.isLoggable(Level.INFO)).isTrue();
-    assertThat(logger.isLoggable(Level.CONFIG)).isTrue();
-    assertThat(logger.isLoggable(Level.FINE)).isTrue();
-    assertThat(logger.isLoggable(Level.FINER)).isTrue();
-    assertThat(logger.isLoggable(Level.FINEST)).isTrue();
+    assertThat(logger.isLoggable(SEVERE)).isTrue();
+    assertThat(logger.isLoggable(WARNING)).isTrue();
+    assertThat(logger.isLoggable(INFO)).isTrue();
+    assertThat(logger.isLoggable(CONFIG)).isTrue();
+    assertThat(logger.isLoggable(FINE)).isTrue();
+    assertThat(logger.isLoggable(FINER)).isTrue();
+    assertThat(logger.isLoggable(FINEST)).isTrue();
   }
 
   @Test
@@ -264,13 +271,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
-    assertThat(logger.isLoggable(Level.SEVERE)).isTrue();
-    assertThat(logger.isLoggable(Level.WARNING)).isTrue();
-    assertThat(logger.isLoggable(Level.INFO)).isFalse();
-    assertThat(logger.isLoggable(Level.CONFIG)).isFalse();
-    assertThat(logger.isLoggable(Level.FINE)).isFalse();
-    assertThat(logger.isLoggable(Level.FINER)).isFalse();
-    assertThat(logger.isLoggable(Level.FINEST)).isFalse();
+    assertThat(logger.isLoggable(SEVERE)).isTrue();
+    assertThat(logger.isLoggable(WARNING)).isTrue();
+    assertThat(logger.isLoggable(INFO)).isFalse();
+    assertThat(logger.isLoggable(CONFIG)).isFalse();
+    assertThat(logger.isLoggable(FINE)).isFalse();
+    assertThat(logger.isLoggable(FINER)).isFalse();
+    assertThat(logger.isLoggable(FINEST)).isFalse();
   }
 
   @Test
@@ -282,13 +289,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // then
-    assertThat(logger.isLoggable(Level.SEVERE)).isFalse();
-    assertThat(logger.isLoggable(Level.WARNING)).isFalse();
-    assertThat(logger.isLoggable(Level.INFO)).isFalse();
-    assertThat(logger.isLoggable(Level.CONFIG)).isFalse();
-    assertThat(logger.isLoggable(Level.FINE)).isFalse();
-    assertThat(logger.isLoggable(Level.FINER)).isFalse();
-    assertThat(logger.isLoggable(Level.FINEST)).isFalse();
+    assertThat(logger.isLoggable(SEVERE)).isFalse();
+    assertThat(logger.isLoggable(WARNING)).isFalse();
+    assertThat(logger.isLoggable(INFO)).isFalse();
+    assertThat(logger.isLoggable(CONFIG)).isFalse();
+    assertThat(logger.isLoggable(FINE)).isFalse();
+    assertThat(logger.isLoggable(FINER)).isFalse();
+    assertThat(logger.isLoggable(FINEST)).isFalse();
   }
 
   @Test
@@ -299,7 +306,7 @@ class PatchLoggerTest {
     // when
     PatchLogger logger = new PatchLogger(internalLogger);
     // then
-    assertThat(logger.getLevel()).isEqualTo(Level.SEVERE);
+    assertThat(logger.getLevel()).isEqualTo(SEVERE);
   }
 
   @Test
@@ -310,7 +317,7 @@ class PatchLoggerTest {
     // when
     PatchLogger logger = new PatchLogger(internalLogger);
     // then
-    assertThat(logger.getLevel()).isEqualTo(Level.WARNING);
+    assertThat(logger.getLevel()).isEqualTo(WARNING);
   }
 
   @Test
@@ -321,7 +328,7 @@ class PatchLoggerTest {
     // when
     PatchLogger logger = new PatchLogger(internalLogger);
     // then
-    assertThat(logger.getLevel()).isEqualTo(Level.CONFIG);
+    assertThat(logger.getLevel()).isEqualTo(CONFIG);
   }
 
   @Test
@@ -332,7 +339,7 @@ class PatchLoggerTest {
     // when
     PatchLogger logger = new PatchLogger(internalLogger);
     // then
-    assertThat(logger.getLevel()).isEqualTo(Level.FINE);
+    assertThat(logger.getLevel()).isEqualTo(FINE);
   }
 
   @Test
@@ -343,7 +350,7 @@ class PatchLoggerTest {
     // when
     PatchLogger logger = new PatchLogger(internalLogger);
     // then
-    assertThat(logger.getLevel()).isEqualTo(Level.FINEST);
+    assertThat(logger.getLevel()).isEqualTo(FINEST);
   }
 
   @Test
@@ -363,13 +370,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logp(Level.SEVERE, null, null, "ereves");
-    logger.logp(Level.WARNING, null, null, "gninraw");
-    logger.logp(Level.INFO, null, null, "ofni");
-    logger.logp(Level.CONFIG, null, null, "gifnoc");
-    logger.logp(Level.FINE, null, null, "enif");
-    logger.logp(Level.FINER, null, null, "renif");
-    logger.logp(Level.FINEST, null, null, "tsenif");
+    logger.logp(SEVERE, null, null, "ereves");
+    logger.logp(WARNING, null, null, "gninraw");
+    logger.logp(INFO, null, null, "ofni");
+    logger.logp(CONFIG, null, null, "gifnoc");
+    logger.logp(FINE, null, null, "enif");
+    logger.logp(FINER, null, null, "renif");
+    logger.logp(FINEST, null, null, "tsenif");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -391,13 +398,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logp(Level.SEVERE, null, null, "ereves: {0}", "a");
-    logger.logp(Level.WARNING, null, null, "gninraw: {0}", "b");
-    logger.logp(Level.INFO, null, null, "ofni: {0}", "c");
-    logger.logp(Level.CONFIG, null, null, "gifnoc: {0}", "d");
-    logger.logp(Level.FINE, null, null, "enif: {0}", "e");
-    logger.logp(Level.FINER, null, null, "renif: {0}", "f");
-    logger.logp(Level.FINEST, null, null, "tsenif: {0}", "g");
+    logger.logp(SEVERE, null, null, "ereves: {0}", "a");
+    logger.logp(WARNING, null, null, "gninraw: {0}", "b");
+    logger.logp(INFO, null, null, "ofni: {0}", "c");
+    logger.logp(CONFIG, null, null, "gifnoc: {0}", "d");
+    logger.logp(FINE, null, null, "enif: {0}", "e");
+    logger.logp(FINER, null, null, "renif: {0}", "f");
+    logger.logp(FINEST, null, null, "tsenif: {0}", "g");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -426,13 +433,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logp(Level.SEVERE, null, null, "ereves: {0},{1}", new Object[] {"a", "b"});
-    logger.logp(Level.WARNING, null, null, "gninraw: {0},{1}", new Object[] {"b", "c"});
-    logger.logp(Level.INFO, null, null, "ofni: {0},{1}", new Object[] {"c", "d"});
-    logger.logp(Level.CONFIG, null, null, "gifnoc: {0},{1}", new Object[] {"d", "e"});
-    logger.logp(Level.FINE, null, null, "enif: {0},{1}", new Object[] {"e", "f"});
-    logger.logp(Level.FINER, null, null, "renif: {0},{1}", new Object[] {"f", "g"});
-    logger.logp(Level.FINEST, null, null, "tsenif: {0},{1}", new Object[] {"g", "h"});
+    logger.logp(SEVERE, null, null, "ereves: {0},{1}", new Object[] {"a", "b"});
+    logger.logp(WARNING, null, null, "gninraw: {0},{1}", new Object[] {"b", "c"});
+    logger.logp(INFO, null, null, "ofni: {0},{1}", new Object[] {"c", "d"});
+    logger.logp(CONFIG, null, null, "gifnoc: {0},{1}", new Object[] {"d", "e"});
+    logger.logp(FINE, null, null, "enif: {0},{1}", new Object[] {"e", "f"});
+    logger.logp(FINER, null, null, "renif: {0},{1}", new Object[] {"f", "g"});
+    logger.logp(FINEST, null, null, "tsenif: {0},{1}", new Object[] {"g", "h"});
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -467,13 +474,13 @@ class PatchLoggerTest {
     Throwable g = new Throwable();
 
     // when
-    logger.logp(Level.SEVERE, null, null, "ereves", a);
-    logger.logp(Level.WARNING, null, null, "gninraw", b);
-    logger.logp(Level.INFO, null, null, "ofni", c);
-    logger.logp(Level.CONFIG, null, null, "gifnoc", d);
-    logger.logp(Level.FINE, null, null, "enif", e);
-    logger.logp(Level.FINER, null, null, "renif", f);
-    logger.logp(Level.FINEST, null, null, "tsenif", g);
+    logger.logp(SEVERE, null, null, "ereves", a);
+    logger.logp(WARNING, null, null, "gninraw", b);
+    logger.logp(INFO, null, null, "ofni", c);
+    logger.logp(CONFIG, null, null, "gifnoc", d);
+    logger.logp(FINE, null, null, "enif", e);
+    logger.logp(FINER, null, null, "renif", f);
+    logger.logp(FINEST, null, null, "tsenif", g);
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -494,13 +501,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logrb(Level.SEVERE, null, null, null, "ereves");
-    logger.logrb(Level.WARNING, null, null, null, "gninraw");
-    logger.logrb(Level.INFO, null, null, null, "ofni");
-    logger.logrb(Level.CONFIG, null, null, null, "gifnoc");
-    logger.logrb(Level.FINE, null, null, null, "enif");
-    logger.logrb(Level.FINER, null, null, null, "renif");
-    logger.logrb(Level.FINEST, null, null, null, "tsenif");
+    logger.logrb(SEVERE, null, null, null, "ereves");
+    logger.logrb(WARNING, null, null, null, "gninraw");
+    logger.logrb(INFO, null, null, null, "ofni");
+    logger.logrb(CONFIG, null, null, null, "gifnoc");
+    logger.logrb(FINE, null, null, null, "enif");
+    logger.logrb(FINER, null, null, null, "renif");
+    logger.logrb(FINEST, null, null, null, "tsenif");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -522,13 +529,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logrb(Level.SEVERE, null, null, null, "ereves: {0}", "a");
-    logger.logrb(Level.WARNING, null, null, null, "gninraw: {0}", "b");
-    logger.logrb(Level.INFO, null, null, null, "ofni: {0}", "c");
-    logger.logrb(Level.CONFIG, null, null, null, "gifnoc: {0}", "d");
-    logger.logrb(Level.FINE, null, null, null, "enif: {0}", "e");
-    logger.logrb(Level.FINER, null, null, null, "renif: {0}", "f");
-    logger.logrb(Level.FINEST, null, null, null, "tsenif: {0}", "g");
+    logger.logrb(SEVERE, null, null, null, "ereves: {0}", "a");
+    logger.logrb(WARNING, null, null, null, "gninraw: {0}", "b");
+    logger.logrb(INFO, null, null, null, "ofni: {0}", "c");
+    logger.logrb(CONFIG, null, null, null, "gifnoc: {0}", "d");
+    logger.logrb(FINE, null, null, null, "enif: {0}", "e");
+    logger.logrb(FINER, null, null, null, "renif: {0}", "f");
+    logger.logrb(FINEST, null, null, null, "tsenif: {0}", "g");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -557,17 +564,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logrb(
-        Level.SEVERE, null, null, (String) null, "ereves: {0},{1}", new Object[] {"a", "b"});
-    logger.logrb(
-        Level.WARNING, null, null, (String) null, "gninraw: {0},{1}", new Object[] {"b", "c"});
-    logger.logrb(Level.INFO, null, null, (String) null, "ofni: {0},{1}", new Object[] {"c", "d"});
-    logger.logrb(
-        Level.CONFIG, null, null, (String) null, "gifnoc: {0},{1}", new Object[] {"d", "e"});
-    logger.logrb(Level.FINE, null, null, (String) null, "enif: {0},{1}", new Object[] {"e", "f"});
-    logger.logrb(Level.FINER, null, null, (String) null, "renif: {0},{1}", new Object[] {"f", "g"});
-    logger.logrb(
-        Level.FINEST, null, null, (String) null, "tsenif: {0},{1}", new Object[] {"g", "h"});
+    logger.logrb(SEVERE, null, null, (String) null, "ereves: {0},{1}", new Object[] {"a", "b"});
+    logger.logrb(WARNING, null, null, (String) null, "gninraw: {0},{1}", new Object[] {"b", "c"});
+    logger.logrb(INFO, null, null, (String) null, "ofni: {0},{1}", new Object[] {"c", "d"});
+    logger.logrb(CONFIG, null, null, (String) null, "gifnoc: {0},{1}", new Object[] {"d", "e"});
+    logger.logrb(FINE, null, null, (String) null, "enif: {0},{1}", new Object[] {"e", "f"});
+    logger.logrb(FINER, null, null, (String) null, "renif: {0},{1}", new Object[] {"f", "g"});
+    logger.logrb(FINEST, null, null, (String) null, "tsenif: {0},{1}", new Object[] {"g", "h"});
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -596,13 +599,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logrb(Level.SEVERE, (String) null, null, null, "ereves: {0},{1}", "a", "b");
-    logger.logrb(Level.WARNING, (String) null, null, null, "gninraw: {0},{1}", "b", "c");
-    logger.logrb(Level.INFO, (String) null, null, null, "ofni: {0},{1}", "c", "d");
-    logger.logrb(Level.CONFIG, (String) null, null, null, "gifnoc: {0},{1}", "d", "e");
-    logger.logrb(Level.FINE, (String) null, null, null, "enif: {0},{1}", "e", "f");
-    logger.logrb(Level.FINER, (String) null, null, null, "renif: {0},{1}", "f", "g");
-    logger.logrb(Level.FINEST, (String) null, null, null, "tsenif: {0},{1}", "g", "h");
+    logger.logrb(SEVERE, (String) null, null, null, "ereves: {0},{1}", "a", "b");
+    logger.logrb(WARNING, (String) null, null, null, "gninraw: {0},{1}", "b", "c");
+    logger.logrb(INFO, (String) null, null, null, "ofni: {0},{1}", "c", "d");
+    logger.logrb(CONFIG, (String) null, null, null, "gifnoc: {0},{1}", "d", "e");
+    logger.logrb(FINE, (String) null, null, null, "enif: {0},{1}", "e", "f");
+    logger.logrb(FINER, (String) null, null, null, "renif: {0},{1}", "f", "g");
+    logger.logrb(FINEST, (String) null, null, null, "tsenif: {0},{1}", "g", "h");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -631,13 +634,13 @@ class PatchLoggerTest {
     PatchLogger logger = new PatchLogger(internalLogger);
 
     // when
-    logger.logrb(Level.SEVERE, (ResourceBundle) null, "ereves: {0},{1}", "a", "b");
-    logger.logrb(Level.WARNING, (ResourceBundle) null, "gninraw: {0},{1}", "b", "c");
-    logger.logrb(Level.INFO, (ResourceBundle) null, "ofni: {0},{1}", "c", "d");
-    logger.logrb(Level.CONFIG, (ResourceBundle) null, "gifnoc: {0},{1}", "d", "e");
-    logger.logrb(Level.FINE, (ResourceBundle) null, "enif: {0},{1}", "e", "f");
-    logger.logrb(Level.FINER, (ResourceBundle) null, "renif: {0},{1}", "f", "g");
-    logger.logrb(Level.FINEST, (ResourceBundle) null, "tsenif: {0},{1}", "g", "h");
+    logger.logrb(SEVERE, (ResourceBundle) null, "ereves: {0},{1}", "a", "b");
+    logger.logrb(WARNING, (ResourceBundle) null, "gninraw: {0},{1}", "b", "c");
+    logger.logrb(INFO, (ResourceBundle) null, "ofni: {0},{1}", "c", "d");
+    logger.logrb(CONFIG, (ResourceBundle) null, "gifnoc: {0},{1}", "d", "e");
+    logger.logrb(FINE, (ResourceBundle) null, "enif: {0},{1}", "e", "f");
+    logger.logrb(FINER, (ResourceBundle) null, "renif: {0},{1}", "f", "g");
+    logger.logrb(FINEST, (ResourceBundle) null, "tsenif: {0},{1}", "g", "h");
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -672,13 +675,13 @@ class PatchLoggerTest {
     Throwable g = new Throwable();
 
     // when
-    logger.logrb(Level.SEVERE, null, null, (String) null, "ereves", a);
-    logger.logrb(Level.WARNING, null, null, (String) null, "gninraw", b);
-    logger.logrb(Level.INFO, null, null, (String) null, "ofni", c);
-    logger.logrb(Level.CONFIG, null, null, (String) null, "gifnoc", d);
-    logger.logrb(Level.FINE, null, null, (String) null, "enif", e);
-    logger.logrb(Level.FINER, null, null, (String) null, "renif", f);
-    logger.logrb(Level.FINEST, null, null, (String) null, "tsenif", g);
+    logger.logrb(SEVERE, null, null, (String) null, "ereves", a);
+    logger.logrb(WARNING, null, null, (String) null, "gninraw", b);
+    logger.logrb(INFO, null, null, (String) null, "ofni", c);
+    logger.logrb(CONFIG, null, null, (String) null, "gifnoc", d);
+    logger.logrb(FINE, null, null, (String) null, "enif", e);
+    logger.logrb(FINER, null, null, (String) null, "renif", f);
+    logger.logrb(FINEST, null, null, (String) null, "tsenif", g);
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -706,13 +709,13 @@ class PatchLoggerTest {
     Throwable g = new Throwable();
 
     // when
-    logger.logrb(Level.SEVERE, null, null, (ResourceBundle) null, "ereves", a);
-    logger.logrb(Level.WARNING, null, null, (ResourceBundle) null, "gninraw", b);
-    logger.logrb(Level.INFO, null, null, (ResourceBundle) null, "ofni", c);
-    logger.logrb(Level.CONFIG, null, null, (ResourceBundle) null, "gifnoc", d);
-    logger.logrb(Level.FINE, null, null, (ResourceBundle) null, "enif", e);
-    logger.logrb(Level.FINER, null, null, (ResourceBundle) null, "renif", f);
-    logger.logrb(Level.FINEST, null, null, (ResourceBundle) null, "tsenif", g);
+    logger.logrb(SEVERE, null, null, (ResourceBundle) null, "ereves", a);
+    logger.logrb(WARNING, null, null, (ResourceBundle) null, "gninraw", b);
+    logger.logrb(INFO, null, null, (ResourceBundle) null, "ofni", c);
+    logger.logrb(CONFIG, null, null, (ResourceBundle) null, "gifnoc", d);
+    logger.logrb(FINE, null, null, (ResourceBundle) null, "enif", e);
+    logger.logrb(FINER, null, null, (ResourceBundle) null, "renif", f);
+    logger.logrb(FINEST, null, null, (ResourceBundle) null, "tsenif", g);
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);
@@ -740,13 +743,13 @@ class PatchLoggerTest {
     Throwable g = new Throwable();
 
     // when
-    logger.logrb(Level.SEVERE, null, null, (ResourceBundle) null, "ereves", a);
-    logger.logrb(Level.WARNING, null, null, (ResourceBundle) null, "gninraw", b);
-    logger.logrb(Level.INFO, null, null, (ResourceBundle) null, "ofni", c);
-    logger.logrb(Level.CONFIG, null, null, (ResourceBundle) null, "gifnoc", d);
-    logger.logrb(Level.FINE, null, null, (ResourceBundle) null, "enif", e);
-    logger.logrb(Level.FINER, null, null, (ResourceBundle) null, "renif", f);
-    logger.logrb(Level.FINEST, null, null, (ResourceBundle) null, "tsenif", g);
+    logger.logrb(SEVERE, null, null, (ResourceBundle) null, "ereves", a);
+    logger.logrb(WARNING, null, null, (ResourceBundle) null, "gninraw", b);
+    logger.logrb(INFO, null, null, (ResourceBundle) null, "ofni", c);
+    logger.logrb(CONFIG, null, null, (ResourceBundle) null, "gifnoc", d);
+    logger.logrb(FINE, null, null, (ResourceBundle) null, "enif", e);
+    logger.logrb(FINER, null, null, (ResourceBundle) null, "renif", f);
+    logger.logrb(FINEST, null, null, (ResourceBundle) null, "tsenif", g);
 
     // then
     InOrder inOrder = Mockito.inOrder(internalLogger);

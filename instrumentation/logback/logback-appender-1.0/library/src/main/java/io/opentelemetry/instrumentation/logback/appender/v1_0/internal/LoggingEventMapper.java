@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -35,7 +36,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -135,7 +135,7 @@ public final class LoggingEventMapper {
       setTimestampFromInstant(builder, loggingEvent);
     } else {
       long timestamp = loggingEvent.getTimeStamp();
-      builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+      builder.setTimestamp(timestamp, MILLISECONDS);
     }
 
     // level

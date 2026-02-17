@@ -30,6 +30,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -49,7 +50,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -594,7 +594,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                           .contentType(MediaType.PLAIN_TEXT_UTF_8)
                           .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
                           .build();
-                  return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
+                  return HttpResponse.of(headers, HttpData.of(UTF_8, content));
                 },
             (Function<SqsClient, Object>)
                 c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build())),
@@ -627,7 +627,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                           .contentType(MediaType.PLAIN_TEXT_UTF_8)
                           .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
                           .build();
-                  return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
+                  return HttpResponse.of(headers, HttpData.of(UTF_8, content));
                 },
             (Function<SqsClient, Object>)
                 c ->

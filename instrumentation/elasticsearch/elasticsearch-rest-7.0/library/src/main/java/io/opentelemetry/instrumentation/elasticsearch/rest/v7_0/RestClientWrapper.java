@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 
+import static net.bytebuddy.matcher.ElementMatchers.any;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -20,7 +22,6 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.apache.http.Header;
 import org.elasticsearch.client.Node;
 import org.elasticsearch.client.Request;
@@ -42,7 +43,7 @@ class RestClientWrapper {
         // are in a child class loader of RestClient's class loader and Instrumenter is not visible
         // for RestClient
         .defineField("instrumenterSupplier", Supplier.class, Visibility.PUBLIC)
-        .method(ElementMatchers.any())
+        .method(any())
         .intercept(
             InvocationHandlerAdapter.of(
                 (proxy, method, args) -> {

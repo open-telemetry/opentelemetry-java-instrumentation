@@ -14,7 +14,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collections;
 import java.util.List;
@@ -37,25 +36,24 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM_NAME, AWS_DYNAMODB);
+      attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM, DYNAMODB);
+      attributes.put(DB_SYSTEM, DYNAMODB);
     }
 
     String operation = getOperationName(request.getOriginalRequest());
     if (operation != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION_NAME, operation);
+        attributes.put(DB_OPERATION_NAME, operation);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION, operation);
+        attributes.put(DB_OPERATION, operation);
       }
     }
 
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
-    AttributesExtractorUtil.internalSet(
-        attributes, AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
+    attributes.put(AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
   }
 
   private static String getOperationName(Object request) {

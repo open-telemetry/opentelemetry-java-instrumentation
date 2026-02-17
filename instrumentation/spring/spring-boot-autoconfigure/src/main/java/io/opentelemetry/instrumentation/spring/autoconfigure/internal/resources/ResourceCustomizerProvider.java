@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectionModel;
@@ -12,7 +14,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Experi
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ResourceModel;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
             resource.withDetectionDevelopment(detectionModel);
           }
           List<ExperimentalResourceDetectorModel> detectors =
-              Objects.requireNonNull(detectionModel.getDetectors());
+              requireNonNull(detectionModel.getDetectors());
           Set<String> names =
               detectors.stream()
                   .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())

@@ -14,13 +14,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
@@ -86,7 +86,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
               .build()) {
 
         String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
-        byte[] body = "foobar".getBytes(StandardCharsets.UTF_8);
+        byte[] body = "foobar".getBytes(UTF_8);
         Message message =
             provider
                 .newMessageBuilder()

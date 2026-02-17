@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -14,7 +15,6 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -159,8 +159,7 @@ public final class HostIdResource {
     List<String> result = new ArrayList<>();
 
     try (BufferedReader processOutputReader =
-        new BufferedReader(
-            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8))) {
       String readLine;
 
       while ((readLine = processOutputReader.readLine()) != null) {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -30,7 +32,6 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -66,9 +67,9 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       OpenTelemetry openTelemetry,
       HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter,
       @Nullable TextMapGetter<REQUEST> headerGetter) {
-    this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
-    this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
-    this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
+    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
     httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(attributesGetter);
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpServerRouteBuilder = HttpServerRoute.builder(attributesGetter);
@@ -92,7 +93,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
         instrumentationName,
         openTelemetry,
         attributesGetter,
-        Objects.requireNonNull(headerGetter, "headerGetter"));
+        requireNonNull(headerGetter, "headerGetter"));
   }
 
   /**

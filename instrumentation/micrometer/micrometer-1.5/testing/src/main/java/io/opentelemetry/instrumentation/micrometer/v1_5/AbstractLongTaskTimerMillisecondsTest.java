@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 
@@ -75,7 +75,7 @@ public abstract class AbstractLongTaskTimerMillisecondsTest {
                                                                 .isPositive())))));
 
     // when
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
     sample.stop();
 
     // then

@@ -18,6 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -78,7 +79,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -503,10 +503,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             });
       }
 
-      countDownLatch.await(30, TimeUnit.SECONDS);
+      countDownLatch.await(30, SECONDS);
       assertHighConcurrency(count);
     } finally {
-      eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
+      eventLoopGroup.shutdownGracefully().await(10, SECONDS);
     }
   }
 
@@ -555,7 +555,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                               options.responseCodeOnNonStandardHttpMethod)
                           .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
     } finally {
-      eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
+      eventLoopGroup.shutdownGracefully().await(10, SECONDS);
     }
   }
 
@@ -613,7 +613,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     bootstrap
         .group(eventLoopGroup)
         .channel(NioSocketChannel.class)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) TimeUnit.SECONDS.toMillis(10))
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) SECONDS.toMillis(10))
         .handler(
             new ChannelInitializer<SocketChannel>() {
               @Override

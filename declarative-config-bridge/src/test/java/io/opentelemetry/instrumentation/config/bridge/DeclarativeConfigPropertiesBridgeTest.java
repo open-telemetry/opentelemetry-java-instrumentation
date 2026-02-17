@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -16,7 +17,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +38,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     emptyBridge =
         new DeclarativeConfigPropertiesBridgeBuilder()
             .buildFromInstrumentationConfig(
-                Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
+                requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
   private static ConfigProperties create(DeclarativeConfigPropertiesBridgeBuilder builder) {

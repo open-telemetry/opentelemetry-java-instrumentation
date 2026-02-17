@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.api.semconv.http.CapturedHttpHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.api.semconv.http.CapturedHttpHeadersUtil.requestAttributeKey;
@@ -60,16 +59,16 @@ abstract class HttpCommonAttributesExtractor<
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
     for (String name : capturedRequestHeaders) {
       List<String> values = getter.getHttpRequestHeader(request, name);
       if (!values.isEmpty()) {
-        internalSet(attributes, requestAttributeKey(name), values);
+        attributes.put(requestAttributeKey(name), values);
       }
     }
   }
@@ -86,13 +85,13 @@ abstract class HttpCommonAttributesExtractor<
     if (response != null) {
       statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
-        internalSet(attributes, HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
+        attributes.put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
       }
 
       for (String name : capturedResponseHeaders) {
         List<String> values = getter.getHttpResponseHeader(request, response, name);
         if (!values.isEmpty()) {
-          internalSet(attributes, responseAttributeKey(name), values);
+          attributes.put(responseAttributeKey(name), values);
         }
       }
     }
@@ -112,16 +111,16 @@ abstract class HttpCommonAttributesExtractor<
         errorType = _OTHER;
       }
     }
-    internalSet(attributes, ErrorAttributes.ERROR_TYPE, errorType);
+    attributes.put(ErrorAttributes.ERROR_TYPE, errorType);
 
     String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));
 
     if (protocolVersion != null) {
       if (!"http".equals(protocolName)) {
-        internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
+        attributes.put(NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       }
-      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      attributes.put(NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
   }
 

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.url.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -33,9 +31,9 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     String urlPath = getter.getUrlPath(request);
     String urlQuery = getter.getUrlQuery(request);
 
-    internalSet(attributes, UrlAttributes.URL_SCHEME, urlScheme);
-    internalSet(attributes, UrlAttributes.URL_PATH, urlPath);
-    internalSet(attributes, UrlAttributes.URL_QUERY, urlQuery);
+    attributes.put(UrlAttributes.URL_SCHEME, urlScheme);
+    attributes.put(UrlAttributes.URL_PATH, urlPath);
+    attributes.put(UrlAttributes.URL_QUERY, urlQuery);
   }
 
   @Nullable

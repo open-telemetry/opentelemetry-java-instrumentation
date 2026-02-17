@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
@@ -50,13 +48,13 @@ class HttpServerRouteTest {
     parentSpan.end();
 
     Context context = instrumenter.start(Context.root().with(parentSpan), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/get/:id", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/get/:id");
     assertThat(testing.getSpans())
         .satisfiesExactly(
             span -> assertThat(span).hasName("parent"),
@@ -74,13 +72,13 @@ class HttpServerRouteTest {
             .buildInstrumenter(s -> SpanKind.INTERNAL);
 
     Context context = testInstrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     testInstrumenter.end(context, "test", null, null);
 
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
     assertThat(testing.getSpans()).satisfiesExactly(span -> assertThat(span).hasName("test"));
   }
 
@@ -89,13 +87,13 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/get/:id", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/get/:id");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /get/:id"));
   }
@@ -105,14 +103,14 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route1");
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route2");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/route1", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/route1");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /route1"));
   }
@@ -122,14 +120,14 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, "/route1");
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route2");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/route1", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/route1");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /route1"));
   }
@@ -139,14 +137,14 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/route1");
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, "/route2");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/route2", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/route2");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /route2"));
   }
@@ -156,14 +154,14 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a/route");
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a/much/better/route");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/a/much/better/route", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/a/much/better/route");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /a/much/better/route"));
   }
@@ -173,14 +171,14 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("GET");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a/pretty/good/route");
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER_FILTER, "/a");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/a/pretty/good/route", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/a/pretty/good/route");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("GET /a/pretty/good/route"));
   }
@@ -190,13 +188,13 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn(null);
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/get/:id", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/get/:id");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("HTTP /get/:id"));
   }
@@ -206,13 +204,13 @@ class HttpServerRouteTest {
     when(getter.getHttpRequestMethod("test")).thenReturn("POST");
 
     Context context = instrumenter.start(Context.root(), "test");
-    assertNull(HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isNull();
 
     HttpServerRoute.update(context, HttpServerRouteSource.SERVER, "/get/:id");
 
     instrumenter.end(context, "test", null, null);
 
-    assertEquals("/get/:id", HttpServerRoute.get(context));
+    assertThat(HttpServerRoute.get(context)).isEqualTo("/get/:id");
     assertThat(testing.getSpans())
         .satisfiesExactly(span -> assertThat(span).hasName("HTTP /get/:id"));
   }

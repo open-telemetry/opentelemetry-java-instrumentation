@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -356,9 +357,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
       builder.setTimestamp(
-          TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
-              + timestamp.getNanoOfMillisecond(),
-          TimeUnit.NANOSECONDS);
+          MILLISECONDS.toNanos(timestamp.getEpochMillisecond()) + timestamp.getNanoOfMillisecond(),
+          NANOSECONDS);
     }
     builder.emit();
   }

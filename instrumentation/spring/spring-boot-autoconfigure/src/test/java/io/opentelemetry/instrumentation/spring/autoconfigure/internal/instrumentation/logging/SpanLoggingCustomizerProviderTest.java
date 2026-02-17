@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -50,8 +50,7 @@ class SpanLoggingCustomizerProviderTest {
 
     OpenTelemetryConfigurationModel model =
         applyCustomizer(
-            DeclarativeConfiguration.parse(
-                new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8))),
+            DeclarativeConfiguration.parse(new ByteArrayInputStream(yaml.getBytes(UTF_8))),
             new DeclarativeConfigLoggingExporterAutoConfiguration.SpanLoggingCustomizerProvider());
 
     String console = "ConsoleExporterModel";

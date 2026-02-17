@@ -44,15 +44,6 @@ public class CassandraTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public CassandraTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    return setQuerySanitizationEnabled(enabled);
-  }
-
-  /**
    * Returns a new {@link CassandraTelemetry} with the settings of this {@link
    * CassandraTelemetryBuilder}.
    */

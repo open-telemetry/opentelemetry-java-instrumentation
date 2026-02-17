@@ -237,7 +237,7 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
   "spring:spring-jms:spring-jms-2.0:javaagent:test"
   "spring:spring-kafka-2.7:javaagent:test"
-  "spring:spring-kafka-2.7:javaagent:testNoReceiveTelemetry"
+  "spring:spring-kafka-2.7:javaagent:testExperimental"
   "spring:spring-pulsar-1.0:javaagent:test"
   "spring:spring-rabbit-1.0:javaagent:test"
   "spring:spring-rmi-4.0:javaagent:test"

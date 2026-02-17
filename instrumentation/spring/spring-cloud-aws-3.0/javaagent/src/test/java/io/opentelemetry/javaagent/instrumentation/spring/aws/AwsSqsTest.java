@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -31,7 +32,6 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
@@ -80,7 +80,7 @@ class AwsSqsTest {
 
     testing.runWithSpan("parent", () -> sqsTemplate.send("test-queue", messageContent));
 
-    String result = messageFuture.get(10, TimeUnit.SECONDS);
+    String result = messageFuture.get(10, SECONDS);
     assertThat(result).isEqualTo(messageContent);
 
     testing.waitAndAssertTraces(

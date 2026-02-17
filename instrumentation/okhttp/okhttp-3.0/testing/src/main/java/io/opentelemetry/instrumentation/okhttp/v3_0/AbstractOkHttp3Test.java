@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,7 +20,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
@@ -42,13 +42,12 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
 
   protected OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
     OkHttpClient.Builder builder =
-        new OkHttpClient.Builder()
-            .connectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        new OkHttpClient.Builder().connectTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
     if (withReadTimeout) {
       builder
           // don't want retries on time outs
           .retryOnConnectionFailure(false)
-          .readTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+          .readTimeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     }
     return builder;
   }

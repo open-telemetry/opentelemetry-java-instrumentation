@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.context.propagation.TextMapSetter;
-import java.nio.charset.StandardCharsets;
 import org.apache.kafka.common.header.Headers;
 
 /**
@@ -18,6 +19,6 @@ public enum KafkaHeadersSetter implements TextMapSetter<Headers> {
 
   @Override
   public void set(Headers headers, String key, String value) {
-    headers.remove(key).add(key, value.getBytes(StandardCharsets.UTF_8));
+    headers.remove(key).add(key, value.getBytes(UTF_8));
   }
 }

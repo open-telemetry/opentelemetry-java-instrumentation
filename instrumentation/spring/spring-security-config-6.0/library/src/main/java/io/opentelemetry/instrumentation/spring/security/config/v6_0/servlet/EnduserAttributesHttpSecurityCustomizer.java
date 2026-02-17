@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
-import java.util.Objects;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
@@ -22,7 +23,7 @@ public class EnduserAttributesHttpSecurityCustomizer implements Customizer<HttpS
   private final EnduserAttributesCapturer capturer;
 
   public EnduserAttributesHttpSecurityCustomizer(EnduserAttributesCapturer capturer) {
-    this.capturer = Objects.requireNonNull(capturer, "capturer must not be null");
+    this.capturer = requireNonNull(capturer, "capturer must not be null");
   }
 
   @Override

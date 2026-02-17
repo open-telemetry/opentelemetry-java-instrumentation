@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -27,12 +27,12 @@ class LegacyServerSpanContextBridgeTest {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
         () -> {
-          assertNotNull(Span.current());
-          assertNotNull(ServerSpan.fromContextOrNull(Context.current()));
+          assertThat(Span.current()).isNotNull();
+          assertThat(ServerSpan.fromContextOrNull(Context.current())).isNotNull();
 
           Span internalSpan = tracer.spanBuilder("internal").startSpan();
           try (Scope ignored = internalSpan.makeCurrent()) {
-            assertNotNull(ServerSpan.fromContextOrNull(Context.current()));
+            assertThat(ServerSpan.fromContextOrNull(Context.current())).isNotNull();
           } finally {
             internalSpan.end();
           }

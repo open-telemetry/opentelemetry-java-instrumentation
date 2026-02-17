@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,9 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -144,9 +144,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Message message =
         testing.runWithSpan(
@@ -183,9 +181,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(CALL_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Call call =
         testing.runWithSpan(
@@ -342,7 +338,7 @@ class TwilioClientTest {
                       .createAsync(realTwilioRestClient);
 
               try {
-                return future.get(10, TimeUnit.SECONDS);
+                return future.get(10, SECONDS);
               } finally {
                 Thread.sleep(1000);
               }
@@ -373,9 +369,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                500));
+            new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(UTF_8)), 500));
 
     assertThatThrownBy(
             () ->
@@ -410,9 +404,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Message message =
         Message.creator(
@@ -444,9 +436,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                200));
+            new Response(new ByteArrayInputStream(MESSAGE_RESPONSE_BODY.getBytes(UTF_8)), 200));
 
     Message message =
         testing.runWithSpan(
@@ -460,7 +450,7 @@ class TwilioClientTest {
                       .createAsync(twilioRestClient);
 
               try {
-                return future.get(10, TimeUnit.SECONDS);
+                return future.get(10, SECONDS);
               } finally {
                 Thread.sleep(1000);
               }
@@ -492,9 +482,7 @@ class TwilioClientTest {
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
-            new Response(
-                new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
-                500));
+            new Response(new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(UTF_8)), 500));
 
     assertThatThrownBy(
             () ->
@@ -509,7 +497,7 @@ class TwilioClientTest {
                               .createAsync(twilioRestClient);
 
                       try {
-                        return future.get(10, TimeUnit.SECONDS);
+                        return future.get(10, SECONDS);
                       } finally {
                         Thread.sleep(1000);
                       }
@@ -535,8 +523,7 @@ class TwilioClientTest {
   private static CloseableHttpResponse mockResponse(String body, int statusCode)
       throws IOException {
     HttpEntity httpEntity = mock(HttpEntity.class);
-    when(httpEntity.getContent())
-        .thenReturn(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
+    when(httpEntity.getContent()).thenReturn(new ByteArrayInputStream(body.getBytes(UTF_8)));
     when(httpEntity.isRepeatable()).thenReturn(true);
 
     StatusLine statusLine = mock(StatusLine.class);

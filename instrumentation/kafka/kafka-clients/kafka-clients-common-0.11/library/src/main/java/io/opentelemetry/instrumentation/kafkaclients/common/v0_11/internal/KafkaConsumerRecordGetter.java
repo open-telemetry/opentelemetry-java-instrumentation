@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -34,14 +35,14 @@ enum KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
     if (value == null) {
       return null;
     }
-    return new String(value, StandardCharsets.UTF_8);
+    return new String(value, UTF_8);
   }
 
   @Override
   public Iterator<String> getAll(@Nullable KafkaProcessRequest carrier, String key) {
     return StreamSupport.stream(carrier.getRecord().headers().headers(key).spliterator(), false)
         .filter(header -> header.value() != null)
-        .map(header -> new String(header.value(), StandardCharsets.UTF_8))
+        .map(header -> new String(header.value(), UTF_8))
         .iterator();
   }
 }

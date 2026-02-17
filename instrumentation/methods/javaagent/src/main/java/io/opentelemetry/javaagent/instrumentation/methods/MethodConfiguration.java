@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -21,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,7 +64,7 @@ public class MethodConfiguration {
       DeclarativeConfigProperties config) {
     String clazz = config.getString("class");
     if (isNullOrEmpty(clazz)) {
-      logger.log(Level.WARNING, "Invalid methods configuration - class name missing: {0}", config);
+      logger.log(WARNING, "Invalid methods configuration - class name missing: {0}", config);
       return Stream.empty();
     }
 
@@ -72,8 +72,7 @@ public class MethodConfiguration {
     for (DeclarativeConfigProperties method : config.getStructuredList("methods", emptyList())) {
       String methodName = method.getString("name");
       if (isNullOrEmpty(methodName)) {
-        logger.log(
-            Level.WARNING, "Invalid methods configuration - method name missing: {0}", method);
+        logger.log(WARNING, "Invalid methods configuration - method name missing: {0}", method);
         continue;
       }
       String spanKind = method.getString("span_kind", "INTERNAL");
@@ -84,14 +83,14 @@ public class MethodConfiguration {
             .add(methodName);
       } catch (IllegalArgumentException e) {
         logger.log(
-            Level.WARNING,
+            WARNING,
             "Invalid methods configuration - unknown span_kind: {0} for method: {1}",
             new Object[] {spanKind, methodName});
       }
     }
 
     if (methodNames.isEmpty()) {
-      logger.log(Level.WARNING, "Invalid methods configuration - no methods defined: {0}", config);
+      logger.log(WARNING, "Invalid methods configuration - no methods defined: {0}", config);
       return Stream.empty();
     }
 

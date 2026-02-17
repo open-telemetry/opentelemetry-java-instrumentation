@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rxjava.v2_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -33,7 +34,6 @@ import io.reactivex.schedulers.Schedulers;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -137,7 +137,7 @@ public abstract class AbstractRxJava2Test {
   void delayedMaybe() {
     int result =
         createParentSpan(
-            () -> Maybe.just(3).delay(100, TimeUnit.MILLISECONDS).map(this::addOne).blockingGet());
+            () -> Maybe.just(3).delay(100, MILLISECONDS).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(4);
     testing()
         .waitAndAssertTraces(
@@ -156,9 +156,9 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(
             () ->
                 Maybe.just(4)
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
                     .blockingGet());
     assertThat(result).isEqualTo(6);
@@ -238,7 +238,7 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(
             () ->
                 Flowable.fromIterable(asList(7, 8))
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
@@ -264,9 +264,9 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(
             () ->
                 Flowable.fromIterable(asList(8, 9))
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
@@ -383,7 +383,7 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(
             () ->
                 FlowablePublish.just(0)
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
                     .toList()
                     .blockingGet());
@@ -405,7 +405,7 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(
             () ->
                 ObservablePublish.just(0)
-                    .delay(100, TimeUnit.MILLISECONDS)
+                    .delay(100, MILLISECONDS)
                     .map(this::addOne)
                     .toList()
                     .blockingGet());

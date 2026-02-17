@@ -19,9 +19,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@SuppressWarnings("deprecation") // until ExperimentalCpu is renamed
 @ExtendWith(MockitoExtension.class)
-class ExperimentalCpuTest {
+class SystemCpuTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -33,7 +32,7 @@ class ExperimentalCpuTest {
     when(osBean.getSystemLoadAverage()).thenReturn(2.2);
     Supplier<Double> systemCpuUtilization = () -> 0.11;
 
-    ExperimentalCpu.registerObservers(testing.getOpenTelemetry(), osBean, systemCpuUtilization);
+    SystemCpu.registerObservers(testing.getOpenTelemetry(), osBean, systemCpuUtilization);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

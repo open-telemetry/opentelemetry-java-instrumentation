@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -17,7 +18,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaTelemetryBuilder {
@@ -36,7 +36,7 @@ public final class KafkaTelemetryBuilder {
   private boolean messagingReceiveInstrumentationEnabled = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = Objects.requireNonNull(openTelemetry);
+    this.openTelemetry = requireNonNull(openTelemetry);
   }
 
   @CanIgnoreReturnValue

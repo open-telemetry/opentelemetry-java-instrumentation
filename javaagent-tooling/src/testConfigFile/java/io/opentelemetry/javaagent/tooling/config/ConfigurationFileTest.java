@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -81,8 +81,7 @@ class ConfigurationFileTest {
 
   private String createFile(String name, String contents) throws IOException {
     File file = new File(tmpDir, name);
-    try (Writer writer =
-        new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
+    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), UTF_8)) {
       writer.write(contents);
     }
     return file.getAbsolutePath();

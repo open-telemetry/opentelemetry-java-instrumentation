@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -82,7 +83,7 @@ enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaPro
   public List<String> getMessageHeader(KafkaProcessRequest request, String name) {
     return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
         .filter(header -> header.value() != null)
-        .map(header -> new String(header.value(), StandardCharsets.UTF_8))
+        .map(header -> new String(header.value(), UTF_8))
         .collect(Collectors.toList());
   }
 }

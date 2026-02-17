@@ -8,11 +8,12 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 
@@ -31,9 +32,9 @@ public abstract class AbstractTimerMillisecondsTest {
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(1, TimeUnit.SECONDS);
-    timer.record(10, TimeUnit.SECONDS);
-    timer.record(12_345, TimeUnit.MILLISECONDS);
+    timer.record(1, SECONDS);
+    timer.record(10, SECONDS);
+    timer.record(12_345, MILLISECONDS);
 
     // then
     testing()
@@ -75,7 +76,7 @@ public abstract class AbstractTimerMillisecondsTest {
     // when
     Metrics.globalRegistry.remove(timer);
     testing().clearData();
-    timer.record(12, TimeUnit.SECONDS);
+    timer.record(12, SECONDS);
 
     // then
     testing()

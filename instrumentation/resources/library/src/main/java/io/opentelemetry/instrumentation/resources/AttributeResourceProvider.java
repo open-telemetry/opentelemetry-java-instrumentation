@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -15,7 +17,6 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -39,7 +40,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"}) // we lose generic types when storing in map
     public <T> AttributeBuilder add(AttributeKey<T> key, Function<D, Optional<T>> getter) {
-      attributeGetters.put((AttributeKey) key, Objects.requireNonNull((Function) getter));
+      attributeGetters.put((AttributeKey) key, requireNonNull((Function) getter));
       return this;
     }
   }

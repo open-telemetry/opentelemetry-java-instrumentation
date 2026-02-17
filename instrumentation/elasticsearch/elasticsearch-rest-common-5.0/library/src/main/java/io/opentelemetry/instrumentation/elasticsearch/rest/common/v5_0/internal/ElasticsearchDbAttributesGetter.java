@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -62,8 +62,7 @@ final class ElasticsearchDbAttributesGetter
       // Retrieve HTTP body for search-type Elasticsearch requests when CAPTURE_SEARCH_QUERY is
       // enabled.
       try {
-        return new BufferedReader(
-                new InputStreamReader(httpEntity.getContent(), StandardCharsets.UTF_8))
+        return new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))
             .lines()
             .collect(Collectors.joining());
       } catch (IOException e) {

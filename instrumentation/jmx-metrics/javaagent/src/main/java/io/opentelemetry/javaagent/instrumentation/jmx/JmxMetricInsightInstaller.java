@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.SEVERE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -19,7 +20,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -58,7 +58,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(path);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(Level.SEVERE, "Error while loading JMX configuration from " + path, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from " + path, e);
     }
   }
 
@@ -70,8 +70,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(input);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(
-          Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
   }
 }

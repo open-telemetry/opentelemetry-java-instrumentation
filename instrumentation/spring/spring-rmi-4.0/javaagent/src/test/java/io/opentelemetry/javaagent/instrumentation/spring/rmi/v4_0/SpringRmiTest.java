@@ -13,8 +13,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -151,7 +151,7 @@ class SpringRmiTest {
   void clientCallCreatesSpans(TestSource testSource) throws RemoteException {
     SpringRmiGreeter client = testSource.appContext.getBean(SpringRmiGreeter.class);
     String response = testing.runWithSpan("parent", () -> client.hello("Test Name"));
-    assertEquals(response, "Hello Test Name");
+    assertThat(response).isEqualTo("Hello Test Name");
     testing.waitAndAssertTraces(
         trace -> {
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
@@ -185,9 +185,8 @@ class SpringRmiTest {
   @EnumSource(TestSource.class)
   void throwsException(TestSource testSource) {
     SpringRmiGreeter client = testSource.appContext.getBean(SpringRmiGreeter.class);
-    Throwable error =
-        assertThrows(
-            testSource.expectedException, () -> testing.runWithSpan("parent", client::exceptional));
+    Throwable error = catchThrowable(() -> testing.runWithSpan("parent", client::exceptional));
+    assertThat(error).isInstanceOf(testSource.expectedException);
     testing.waitAndAssertTraces(
         trace -> {
           List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();

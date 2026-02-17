@@ -172,7 +172,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
           Attributes attributes = Attributes.of(MESSAGE_TYPE, RECEIVED, MESSAGE_ID, messageId);
           Span.fromContext(context).addEvent("message", attributes);
         }
-        try (Scope ignored = context.makeCurrent()) {
+        try (Scope ignored = parentContext.makeCurrent()) {
           delegate().onMessage(message);
         }
       }
@@ -195,7 +195,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onReady() {
-        try (Scope ignored = context.makeCurrent()) {
+        try (Scope ignored = parentContext.makeCurrent()) {
           delegate().onReady();
         }
       }
