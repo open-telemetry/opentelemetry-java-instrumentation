@@ -63,14 +63,14 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry,
       boolean enabled,
       boolean querySanitizationEnabled,
-      boolean statementSanitizationAnsiQuotes,
+      boolean querySanitizationAnsiQuotes,
       boolean captureQueryParameters) {
     return createStatementInstrumenter(
         openTelemetry,
         emptyList(),
         enabled,
         querySanitizationEnabled,
-        statementSanitizationAnsiQuotes,
+        querySanitizationAnsiQuotes,
         captureQueryParameters);
   }
 
@@ -79,18 +79,18 @@ public final class JdbcInstrumenterFactory {
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled,
       boolean querySanitizationEnabled,
-      boolean statementSanitizationAnsiQuotes,
+      boolean querySanitizationAnsiQuotes,
       boolean captureQueryParameters) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             DbClientSpanNameExtractor.create(
                 JdbcAttributesGetter.INSTANCE,
-                statementSanitizationAnsiQuotes ? SqlDialect.ANSI_QUOTES : SqlDialect.DEFAULT))
+                querySanitizationAnsiQuotes ? SqlDialect.ANSI_QUOTES : SqlDialect.DEFAULT))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
                 .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .setSetStatementSanitizationAnsiQuotes(statementSanitizationAnsiQuotes)
+                .setQuerySanitizationAnsiQuotes(querySanitizationAnsiQuotes)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractors(extractors)

@@ -35,7 +35,7 @@ public final class VertxSqlInstrumenterFactory {
                 SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
                     .setQuerySanitizationEnabled(
                         AgentCommonConfig.get().isQuerySanitizationEnabled())
-                    .setSetStatementSanitizationAnsiQuotes(ansiQuotes)
+                    .setQuerySanitizationAnsiQuotes(ansiQuotes)
                     .build())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))

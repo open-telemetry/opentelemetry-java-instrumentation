@@ -20,7 +20,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean querySanitizationEnabled = true;
-  boolean setStatementSanitizationAnsiQuotes = false;
+  boolean querySanitizationAnsiQuotes = false;
   boolean captureQueryParameters = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -58,8 +58,8 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE>
-      setSetStatementSanitizationAnsiQuotes(boolean setStatementSanitizationAnsiQuotes) {
-    this.setStatementSanitizationAnsiQuotes = setStatementSanitizationAnsiQuotes;
+      setQuerySanitizationAnsiQuotes(boolean querySanitizationAnsiQuotes) {
+    this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
     return this;
   }
 
@@ -87,7 +87,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
         getter,
         oldSemconvTableAttribute,
         querySanitizationEnabled,
-        setStatementSanitizationAnsiQuotes,
+        querySanitizationAnsiQuotes,
         captureQueryParameters);
   }
 }

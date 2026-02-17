@@ -25,7 +25,7 @@ public final class JdbcTelemetryBuilder {
   private boolean querySanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
-  private boolean statementSanitizationAnsiQuotes = false;
+  private boolean querySanitizationAnsiQuotes = false;
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
 
   static {
@@ -64,9 +64,9 @@ public final class JdbcTelemetryBuilder {
    * will be automatically switched.
    */
   @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setStatementSanitizationAnsiQuotes(
-      boolean statementSanitizationAnsiQuotes) {
-    this.statementSanitizationAnsiQuotes = statementSanitizationAnsiQuotes;
+  public JdbcTelemetryBuilder setQuerySanitizationAnsiQuotes(
+      boolean querySanitizationAnsiQuotes) {
+    this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
     return this;
   }
 
@@ -100,7 +100,7 @@ public final class JdbcTelemetryBuilder {
             openTelemetry,
             statementInstrumenterEnabled,
             querySanitizationEnabled,
-            statementSanitizationAnsiQuotes,
+            querySanitizationAnsiQuotes,
             captureQueryParameters);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(

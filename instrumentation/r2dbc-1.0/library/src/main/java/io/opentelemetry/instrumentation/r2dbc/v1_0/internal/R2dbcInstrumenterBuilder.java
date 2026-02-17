@@ -58,7 +58,7 @@ public final class R2dbcInstrumenterBuilder {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
                 .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .setSetStatementSanitizationAnsiQuotes(ansiQuotes)
+                .setQuerySanitizationAnsiQuotes(ansiQuotes)
                 .build())
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(DbClientMetrics.get())
