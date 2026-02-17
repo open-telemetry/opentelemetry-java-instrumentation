@@ -5,18 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.handlingNodeThreadLocal;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.semconv.ServerAttributes;
-import java.net.InetSocketAddress;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import net.spy.memcached.MemcachedNode;
 
 public abstract class CompletionListener<T> {
 
@@ -29,12 +25,16 @@ public abstract class CompletionListener<T> {
   private static final String HIT = "hit";
   private static final String MISS = "miss";
 
-  private final Context context;
   private final SpymemcachedRequest request;
+  private final Context context;
 
   protected CompletionListener(Context parentContext, SpymemcachedRequest request) {
     this.request = request;
     context = instrumenter().start(parentContext, request);
+  }
+
+  public Context getContext() {
+    return context;
   }
 
   protected void closeAsyncSpan(T future) {
@@ -68,18 +68,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(Throwable thrown) {
-    setServerAttributes(Span.fromContext(context));
     instrumenter().end(context, request, null, thrown);
-  }
-
-  private static void setServerAttributes(Span span) {
-    MemcachedNode handlingNode = handlingNodeThreadLocal.get();
-    handlingNodeThreadLocal.remove();
-    if (handlingNode != null && handlingNode.getSocketAddress() instanceof InetSocketAddress) {
-      InetSocketAddress host = (InetSocketAddress) handlingNode.getSocketAddress();
-      span.setAttribute(ServerAttributes.SERVER_ADDRESS, host.getHostString());
-      span.setAttribute(ServerAttributes.SERVER_PORT, host.getPort());
-    }
   }
 
   protected abstract void processResult(Span span, T future)
@@ -89,5 +78,9 @@ public abstract class CompletionListener<T> {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
     }
+  }
+
+  public void done(Throwable thrown) {
+    closeSyncSpan(thrown);
   }
 }

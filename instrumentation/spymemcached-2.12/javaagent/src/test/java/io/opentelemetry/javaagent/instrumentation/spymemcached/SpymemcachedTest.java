@@ -934,9 +934,7 @@ class SpymemcachedTest {
                                     ? "java.lang.IllegalArgumentException"
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "decr"),
-                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(maybeStable(DB_OPERATION), "decr"))));
   }
 
   @Test
@@ -1027,9 +1025,7 @@ class SpymemcachedTest {
                                     ? "java.lang.IllegalArgumentException"
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(maybeStable(DB_OPERATION), "incr"))));
   }
 
   private static String key(String k) {

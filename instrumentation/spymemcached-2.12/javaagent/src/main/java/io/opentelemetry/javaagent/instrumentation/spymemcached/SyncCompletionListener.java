@@ -24,7 +24,7 @@ public class SyncCompletionListener extends CompletionListener<Void> {
   @Nullable
   public static SyncCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, null);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
@@ -34,9 +34,5 @@ public class SyncCompletionListener extends CompletionListener<Void> {
   @Override
   protected void processResult(Span span, Void future) {
     logger.severe("processResult was called on SyncCompletionListener. This should never happen.");
-  }
-
-  public void done(Throwable thrown) {
-    closeSyncSpan(thrown);
   }
 }
