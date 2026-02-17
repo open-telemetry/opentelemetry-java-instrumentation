@@ -481,7 +481,6 @@ This version of JMX Metric Insight has a number of limitations.
 - All MBeans which are described by the specified ObjectNames in a single rule must be registered with the same MBeanServer instance.
 - While MBeanServers and MBeans can be created dynamically by the application, it is assumed that they will live indefinitely. Their disappearance may not be recognized properly, and may lead to some memory leaks.
 
-
 ## JMX metrics definitions recommendations
 
 The goals of pre-defined metrics-definitions are:
