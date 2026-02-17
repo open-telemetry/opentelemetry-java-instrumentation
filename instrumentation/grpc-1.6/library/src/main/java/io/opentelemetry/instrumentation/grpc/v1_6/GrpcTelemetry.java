@@ -14,6 +14,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -95,12 +96,15 @@ public final class GrpcTelemetry {
     if (interceptWithTargetMethod != null && interceptorFactoryClass != null) {
       try {
         Object factory =
-            java.lang.reflect.Proxy.newProxyInstance(
+            Proxy.newProxyInstance(
                 ManagedChannelBuilder.class.getClassLoader(),
                 new Class<?>[] {interceptorFactoryClass},
                 (proxy, method, args) -> {
-                  String target = (String) args[0];
-                  return newTracingClientInterceptor(target);
+                  if ("newInterceptor".equals(method.getName())) {
+                    String target = (String) args[0];
+                    return newTracingClientInterceptor(target);
+                  }
+                  return null;
                 });
         interceptWithTargetMethod.invoke(null, builder, factory);
         return;
