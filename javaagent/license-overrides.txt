@@ -1,0 +1,2 @@
+# opentelemetry-sdk-trace jar includes META-INF/maven/org.jctools/jctools-core Hopefully this will get removed in the next release and we won't need these overrides
+io.opentelemetry:opentelemetry-sdk-trace:1.59.0|https://github.com/open-telemetry/opentelemetry-java|Apache License, Version 2.0|https://www.apache.org/licenses/LICENSE-2.0
