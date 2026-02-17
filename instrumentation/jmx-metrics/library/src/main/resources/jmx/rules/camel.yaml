@@ -7,8 +7,6 @@ rules:
     prefix: camel.context.
     metricAttribute:
       camel.context: param(context)
-      camel.version: beanattr(CamelVersion)
-      camel.class_resolver: beanattr(PackageScanClassResolver)
     mapping:
       # camel.context.route.started
       StartedRoutes:
@@ -302,7 +300,7 @@ rules:
     metricAttribute:
       camel.context: param(context)
       camel.route: beanattr(RouteId)
-      camel.pool_id: beanattr(Id)
+      camel.threadpool.name: beanattr(Id)
     mapping:
       # camel.threadpool.task.count
       TaskCount:

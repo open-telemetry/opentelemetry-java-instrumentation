@@ -15,7 +15,7 @@ public class AttributeMatcherGroup {
 
   // stored as a Map for easy lookup by name
   private final Map<String, AttributeMatcher> matchers;
-  private Predicate<Map<String, String>> predicate;
+  private Predicate<Map<String, String>> applicabilityPredicate;
 
   /**
    * Constructor for a set of attribute matchers
@@ -59,20 +59,47 @@ public class AttributeMatcherGroup {
     return true;
   }
 
+  /**
+   * Define a predicate that is evaluated to detect if this group of attribute matchers is
+   * applicable for given set of metric attributes. Some metrics may contain optional attributes. In
+   * such a case it is common to define few attribute matcher groups that validate possible
+   * attribute sets. In the following example let's consider metric with 3 possible attributes: A,
+   * B, C. A and B are always present, C is optional. Two attribute matcher groups should be
+   * created:
+   *
+   * <ol>
+   *   <li>group validating A and B
+   *   <li>group validating A, B and C
+   * </ol>
+   *
+   * To improve validation reliability it is necessary to define applicability predicate wherever
+   * possible.
+   *
+   * @param predicate a predicate function with parameter holding map of metric attributes
+   * @return this instance
+   * @see #isApplicableFor
+   */
   public AttributeMatcherGroup applicableWhen(Predicate<Map<String, String>> predicate) {
-    this.predicate = predicate;
+    applicabilityPredicate = predicate;
     return this;
+  }
+
+  /**
+   * Evaluate applica
+   *
+   * @param attributes a map holding attributes of verified metric
+   * @return predicate evaluation result or <code>true</code> if predicate is not defined
+   * @see #applicableWhen
+   */
+  public boolean isApplicableFor(Map<String, String> attributes) {
+    if (applicabilityPredicate == null) {
+      return true;
+    }
+    return applicabilityPredicate.test(attributes);
   }
 
   @Override
   public String toString() {
     return matchers.values().toString();
-  }
-
-  public boolean isApplicableFor(Map<String, String> attributes) {
-    if (predicate == null) {
-      return true;
-    }
-    return predicate.test(attributes);
   }
 }

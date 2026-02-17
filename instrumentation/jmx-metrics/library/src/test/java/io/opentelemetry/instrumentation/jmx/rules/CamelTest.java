@@ -32,7 +32,7 @@ class CamelTest extends TargetSystemTest {
     GenericContainer<?> target =
         new GenericContainer<>("eclipse-temurin:17.0.18_8-jre")
             .withCommand(String.format("java %s -jar /camel_test.jar", String.join(" ", jvmArgs)))
-            .withExposedPorts(8080)
+            .withExposedPorts(8080) // This port is used only to detect container start
             .waitingFor(Wait.forListeningPort());
 
     copyAgentToTarget(target);
@@ -48,10 +48,7 @@ class CamelTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     AttributeMatcherGroup contextAttributes =
-        attributeGroup(
-            attributeWithAnyValue("camel.context"),
-            attributeWithAnyValue("camel.version"),
-            attributeWithAnyValue("camel.class_resolver"));
+        attributeGroup(attributeWithAnyValue("camel.context"));
 
     AttributeMatcherGroup routeAttributes =
         attributeGroup(
@@ -81,14 +78,14 @@ class CamelTest extends TargetSystemTest {
 
     AttributeMatcherGroup threadPoolAttributes =
         attributeGroup(
-            attributeWithAnyValue("camel.context"), attributeWithAnyValue("camel.pool_id"));
+            attributeWithAnyValue("camel.context"), attributeWithAnyValue("camel.threadpool.name"));
 
     // camel.route attribute is only present for route's thread pools
     AttributeMatcherGroup routeRelatedThreadPoolAttributes =
         attributeGroup(
             attributeWithAnyValue("camel.context"),
             attributeWithAnyValue("camel.route"),
-            attributeWithAnyValue("camel.pool_id"));
+            attributeWithAnyValue("camel.threadpool.name"));
 
     return MetricsVerifier.create()
         // context metrics
