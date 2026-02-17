@@ -56,7 +56,7 @@ public class OpenTelemetryNatsConnection {
   }
 
   public Connection newConnection(Options.Builder options) throws IOException, InterruptedException {
-    return telemetry.newConnection(options.build(), Nats::connect);
+    return telemetry.createConnection(options.build(), Nats::connect);
   }
 
 }

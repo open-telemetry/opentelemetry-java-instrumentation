@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -48,7 +49,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * An implementation of {@link InstrumentationTestRunner} that initializes OpenTelemetry SDK and
@@ -141,7 +141,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   @Override
   public void clearAllExportedData() {
     // Flush meter provider to remove any lingering measurements
-    openTelemetrySdk.getSdkMeterProvider().forceFlush().join(10, TimeUnit.SECONDS);
+    openTelemetrySdk.getSdkMeterProvider().forceFlush().join(10, SECONDS);
     testSpanExporter.reset();
     testMetricExporter.reset();
     testLogRecordExporter.reset();
@@ -164,7 +164,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
 
   @Override
   public List<MetricData> getExportedMetrics() {
-    metricReader.forceFlush().join(10, TimeUnit.SECONDS);
+    metricReader.forceFlush().join(10, SECONDS);
     return testMetricExporter.getFinishedMetricItems();
   }
 

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import static io.opentelemetry.sdk.internal.ScopeConfiguratorBuilder.nameEquals;
+import static io.opentelemetry.sdk.common.internal.ScopeConfiguratorBuilder.nameEquals;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;

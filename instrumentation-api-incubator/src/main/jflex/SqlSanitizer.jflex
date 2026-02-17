@@ -18,11 +18,14 @@ import java.util.regex.Pattern;
 %unicode
 %ignorecase
 
+%state DOLLAR_STRING
+
 COMMA                = ","
 OPEN_PAREN           = "("
 CLOSE_PAREN          = ")"
 OPEN_COMMENT         = "/*"
 CLOSE_COMMENT        = "*/"
+LINE_COMMENT         = "--" [^\r\n]*
 UNQUOTED_IDENTIFIER  = ([:letter:] | "_") ([:letter:] | [0-9] | "_")*
 IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR}
 // We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
@@ -34,12 +37,13 @@ HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
 DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
 DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
+DOLLAR_TAG_START     = "$" {UNQUOTED_IDENTIFIER} "$"
 BACKTICK_QUOTED_STR  = "`" [^`]* "`"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
+  static SqlQuery sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
@@ -53,7 +57,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlQuery.create(null, null, null);
     }
   }
 
@@ -65,6 +69,7 @@ WHITESPACE           = [ \t\r\n]+
   private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
+  private String dollarTag = null;
 
   private void appendCurrentFragment() {
     builder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
@@ -164,8 +169,8 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    SqlQuery getResult(String fullStatement) {
+      return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
   }
 
@@ -195,9 +200,9 @@ WHITESPACE           = [ \t\r\n]+
       return true;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
+    SqlQuery getResult(String fullStatement) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
       }
       return super.getResult(fullStatement);
     }
@@ -206,8 +211,8 @@ WHITESPACE           = [ \t\r\n]+
   private static class NoOp extends Operation {
     static final Operation INSTANCE = new NoOp();
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
+    SqlQuery getResult(String fullStatement) {
+      return SqlQuery.create(fullStatement, null, null);
     }
   }
 
@@ -321,42 +326,30 @@ WHITESPACE           = [ \t\r\n]+
     }
   }
 
-  private class Update extends Operation {
+  /** Operation that extracts the first identifier as the main identifier. */
+  private class SimpleOperation extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
       return true;
     }
   }
 
-  private class Call extends Operation {
-    boolean handleIdentifier() {
-      mainIdentifier = readIdentifierName();
-      return true;
-    }
+  private class Update extends SimpleOperation {}
 
+  private class Merge extends SimpleOperation {}
+
+  private class Call extends SimpleOperation {
     boolean handleNext() {
       mainIdentifier = null;
       return true;
     }
   }
 
-  private class Merge extends Operation {
-    boolean handleIdentifier() {
-      mainIdentifier = readIdentifierName();
-      return true;
-    }
-  }
+  private class Create extends DdlOperation {}
+  private class Drop extends DdlOperation {}
+  private class Alter extends DdlOperation {}
 
-  private class Create extends DdlOperation {
-  }
-
-  private class Drop extends DdlOperation {
-  }
-
-  private class Alter extends DdlOperation {
-  }
-
-  private SqlStatementInfo getResult() {
+  private SqlQuery getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
     }
@@ -554,6 +547,12 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
+  {LINE_COMMENT} {
+          // Line comment - append as-is, don't process keywords or sanitize literals
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
   // here is where the actual sanitization happens
   {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
           builder.append('?');
@@ -580,6 +579,12 @@ WHITESPACE           = [ \t\r\n]+
         if (isOverLimit()) return YYEOF;
     }
 
+  {DOLLAR_TAG_START} {
+          // Start of a tagged dollar-quoted string like $tag$...$tag$
+          dollarTag = yytext();
+          yybegin(DOLLAR_STRING);
+      }
+
   {WHITESPACE} {
           builder.append(' ');
           if (isOverLimit()) return YYEOF;
@@ -587,5 +592,32 @@ WHITESPACE           = [ \t\r\n]+
   [^] {
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
+      }
+}
+
+<DOLLAR_STRING> {
+  {DOLLAR_TAG_START} {
+          // Check if this is the closing tag
+          if (yytext().equals(dollarTag)) {
+            builder.append('?');
+            dollarTag = null;
+            yybegin(YYINITIAL);
+            if (isOverLimit()) return YYEOF;
+          }
+          // else: different tag, continue consuming
+      }
+
+  "$" {
+          // Single dollar sign, not part of a tag - continue consuming
+      }
+
+  [^$]+ {
+          // Consume non-dollar characters
+      }
+
+  <<EOF>> {
+          // Unterminated dollar-quoted string - output what we have as ?
+          builder.append('?');
+          return YYEOF;
       }
 }

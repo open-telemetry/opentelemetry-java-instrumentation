@@ -64,6 +64,8 @@ public final class InstrumentationModuleInstaller {
     this.instrumentation = instrumentation;
   }
 
+  // Need to call deprecated API for backward compatibility with modules that haven't migrated
+  @SuppressWarnings("deprecation")
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
@@ -77,16 +79,14 @@ public final class InstrumentationModuleInstaller {
     }
 
     if (instrumentationModule.isIndyModule()) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder, config);
+      return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder, config);
+      return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
   private AgentBuilder installIndyModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -118,7 +118,7 @@ public final class InstrumentationModuleInstaller {
           .injectClasses(injectedClassesCollector);
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
         cl -> {
@@ -170,9 +170,7 @@ public final class InstrumentationModuleInstaller {
   }
 
   private AgentBuilder installInjectingModule(
-      InstrumentationModule instrumentationModule,
-      AgentBuilder parentAgentBuilder,
-      ConfigProperties config) {
+      InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
     HelperResourceBuilderImpl helperResourceBuilder = new HelperResourceBuilderImpl();
@@ -189,7 +187,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule, config);
+    MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),

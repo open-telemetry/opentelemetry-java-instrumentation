@@ -15,11 +15,15 @@ import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private int clientId;
 
@@ -44,7 +48,7 @@ public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
                   NatsMessage.builder().subject("sub").headers(headers).data("x").build();
               connection.publish(message);
             });
-    connection.closeDispatcher(dispatcher);
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // then
     testing()

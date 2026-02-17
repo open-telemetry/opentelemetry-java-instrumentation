@@ -14,7 +14,11 @@ import javax.annotation.Nullable;
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
+ *
+ * @deprecated allows library configuration via system properties and environment variables, which
+ *     will be removed in 3.0.
  */
+@Deprecated
 public final class ConfigPropertiesUtil {
 
   /**

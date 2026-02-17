@@ -19,6 +19,12 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<OkHttpTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
 
+  /**
+   * Sets whether experimental HTTP telemetry should be emitted.
+   *
+   * @param builder the telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       OkHttpTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {

@@ -38,6 +38,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractBaseAwsClientTest {
   protected abstract InstrumentationExtension testing();
 

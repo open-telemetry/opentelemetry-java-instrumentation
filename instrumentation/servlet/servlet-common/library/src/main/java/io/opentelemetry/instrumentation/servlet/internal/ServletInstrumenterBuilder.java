@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean propagateOperationListenersToOnEnd;
   private boolean captureExperimentalAttributes;
   private boolean captureEnduserId;
-  private final List<String> captureRequestParameters = new ArrayList<>();
+  private List<String> captureRequestParameters = new ArrayList<>();
 
   private final DefaultHttpServerInstrumenterBuilder<
           ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
@@ -95,9 +96,9 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public ServletInstrumenterBuilder<REQUEST, RESPONSE> captureRequestParameters(
-      List<String> captureRequestParameters) {
-    this.captureRequestParameters.addAll(captureRequestParameters);
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureRequestParameters(
+      Collection<String> captureRequestParameters) {
+    this.captureRequestParameters = new ArrayList<>(captureRequestParameters);
     return this;
   }
 

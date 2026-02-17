@@ -5,8 +5,10 @@ plugins {
 }
 
 dependencies {
-  library("com.squareup.okhttp3:okhttp:3.0.0")
+  compileOnly(project(":muzzle"))
+  compileOnly("com.squareup.okhttp3:okhttp:3.11.0")
 
+  testLibrary("com.squareup.okhttp3:okhttp:3.0.0")
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }
 
@@ -32,5 +34,15 @@ testing {
 tasks {
   check {
     dependsOn(testing.suites)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

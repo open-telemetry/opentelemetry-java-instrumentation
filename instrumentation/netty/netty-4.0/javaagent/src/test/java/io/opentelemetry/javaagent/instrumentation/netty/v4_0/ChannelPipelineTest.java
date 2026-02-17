@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -46,7 +43,7 @@ class ChannelPipelineTest {
 
   @NotNull
   private static Constructor<?> getConstructor() throws NoSuchMethodException {
-    assertNotNull(defaultChannelPipelineClass);
+    assertThat(defaultChannelPipelineClass).isNotNull();
     Constructor<?> constructor = defaultChannelPipelineClass.getDeclaredConstructor(Channel.class);
     constructor.setAccessible(true);
     return constructor;
@@ -63,19 +60,21 @@ class ChannelPipelineTest {
     HttpClientCodec handler = new HttpClientCodec();
 
     // no handlers initially except the default one
-    assertTrue(
-        channelPipeline.first() == null
-            || "io.netty.channel.DefaultChannelPipeline$TailHandler"
-                .equals(channelPipeline.first().getClass().getName()));
-    assertNull(channelPipeline.last());
-    assertEquals(0, channelPipeline.toMap().size());
+    assertThat(
+            channelPipeline.first() == null
+                || "io.netty.channel.DefaultChannelPipeline$TailHandler"
+                    .equals(channelPipeline.first().getClass().getName()))
+        .isTrue();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     // add handler
     channelPipeline.addLast("http", handler);
-    assertEquals(handler, channelPipeline.first());
+    assertThat(channelPipeline.first()).isEqualTo(handler);
     // our handler was also added
-    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
-    assertEquals(1, channelPipeline.toMap().size());
+    assertThat(channelPipeline.last().getClass().getSimpleName())
+        .isEqualTo("HttpClientTracingHandler");
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
     if ("by instance".equals(testName)) {
       channelPipeline.remove(handler);
@@ -88,12 +87,13 @@ class ChannelPipelineTest {
     }
 
     // removing handler also removes our handler
-    assertTrue(
-        channelPipeline.first() == null
-            || "io.netty.channel.DefaultChannelPipeline$TailHandler"
-                .equals(channelPipeline.first().getClass().getName()));
-    assertNull(channelPipeline.last());
-    assertEquals(0, channelPipeline.toMap().size());
+    assertThat(
+            channelPipeline.first() == null
+                || "io.netty.channel.DefaultChannelPipeline$TailHandler"
+                    .equals(channelPipeline.first().getClass().getName()))
+        .isTrue();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
   }
 
   // regression test for
@@ -106,19 +106,20 @@ class ChannelPipelineTest {
     HttpClientCodec httpHandler = new HttpClientCodec();
 
     // no handlers initially except the default one
-    assertTrue(
-        channelPipeline.first() == null
-            || "io.netty.channel.DefaultChannelPipeline$TailHandler"
-                .equals(channelPipeline.first().getClass().getName()));
-    assertNull(channelPipeline.last());
-    assertEquals(0, channelPipeline.toMap().size());
+    assertThat(
+            channelPipeline.first() == null
+                || "io.netty.channel.DefaultChannelPipeline$TailHandler"
+                    .equals(channelPipeline.first().getClass().getName()))
+        .isTrue();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addFirst("test", noopHandler);
 
     // only the noop handler
-    assertEquals(noopHandler, channelPipeline.first());
-    assertEquals(1, channelPipeline.toMap().size());
+    assertThat(channelPipeline.first()).isEqualTo(noopHandler);
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
     if ("by instance".equals(desc)) {
       channelPipeline.replace(noopHandler, "http", httpHandler);
@@ -129,15 +130,16 @@ class ChannelPipelineTest {
     }
 
     // noop handler was removed; http and instrumentation handlers were added
-    assertEquals(httpHandler, channelPipeline.first());
-    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
-    assertEquals(1, channelPipeline.toMap().size());
+    assertThat(channelPipeline.first()).isEqualTo(httpHandler);
+    assertThat(channelPipeline.last().getClass().getSimpleName())
+        .isEqualTo("HttpClientTracingHandler");
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
     NoopChannelHandler anotherNoopHandler = new NoopChannelHandler();
     channelPipeline.replace("http", "test", anotherNoopHandler);
 
     // http and instrumentation handlers were removed; noop handler was added
-    assertEquals(anotherNoopHandler, channelPipeline.first());
+    assertThat(channelPipeline.first()).isEqualTo(anotherNoopHandler);
   }
 
   // regression test for
@@ -149,41 +151,44 @@ class ChannelPipelineTest {
     HttpClientCodec httpHandler = new HttpClientCodec();
 
     // no handlers initially
-    assertTrue(
-        channelPipeline.first() == null
-            || "io.netty.channel.DefaultChannelPipeline$TailHandler"
-                .equals(channelPipeline.first().getClass().getName()));
-    assertNull(channelPipeline.last());
-    assertEquals(0, channelPipeline.toMap().size());
+    assertThat(
+            channelPipeline.first() == null
+                || "io.netty.channel.DefaultChannelPipeline$TailHandler"
+                    .equals(channelPipeline.first().getClass().getName()))
+        .isTrue();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     // Add http and instrumentation handlers
     channelPipeline.addLast("http", httpHandler);
-    assertEquals(channelPipeline.first(), httpHandler);
-    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
-    assertEquals(1, channelPipeline.toMap().size());
+    assertThat(httpHandler).isEqualTo(channelPipeline.first());
+    assertThat(channelPipeline.last().getClass().getSimpleName())
+        .isEqualTo("HttpClientTracingHandler");
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
     NoopChannelHandler noopHandler = new NoopChannelHandler();
     channelPipeline.addAfter("http", "noop", noopHandler);
 
     // instrumentation handler is between http and noop handlers
-    assertEquals(channelPipeline.first(), httpHandler);
-    assertEquals(channelPipeline.last(), noopHandler);
-    assertEquals(2, channelPipeline.toMap().size());
+    assertThat(httpHandler).isEqualTo(channelPipeline.first());
+    assertThat(noopHandler).isEqualTo(channelPipeline.last());
+    assertThat(channelPipeline.toMap().size()).isEqualTo(2);
 
     // http and instrumentation handlers will remain when last handler is removed
     {
       ChannelHandler removed = channelPipeline.removeLast();
-      assertEquals(noopHandler, removed);
-      assertEquals(channelPipeline.first(), httpHandler);
-      assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
-      assertEquals(1, channelPipeline.toMap().size());
+      assertThat(removed).isEqualTo(noopHandler);
+      assertThat(httpHandler).isEqualTo(channelPipeline.first());
+      assertThat(channelPipeline.last().getClass().getSimpleName())
+          .isEqualTo("HttpClientTracingHandler");
+      assertThat(channelPipeline.toMap().size()).isEqualTo(1);
     }
 
     // there is no handler in pipeline when last handler is removed
     {
       ChannelHandler removed = channelPipeline.removeLast();
-      assertEquals(httpHandler, removed);
-      assertEquals(0, channelPipeline.toMap().size());
+      assertThat(removed).isEqualTo(httpHandler);
+      assertThat(channelPipeline.toMap().size()).isEqualTo(0);
     }
   }
 
@@ -196,22 +201,24 @@ class ChannelPipelineTest {
     HttpClientCodec httpHandler = new HttpClientCodec();
 
     // no handlers initially
-    assertTrue(
-        channelPipeline.first() == null
-            || "io.netty.channel.DefaultChannelPipeline$TailHandler"
-                .equals(channelPipeline.first().getClass().getName()));
-    assertNull(channelPipeline.last());
-    assertEquals(0, channelPipeline.toMap().size());
+    assertThat(
+            channelPipeline.first() == null
+                || "io.netty.channel.DefaultChannelPipeline$TailHandler"
+                    .equals(channelPipeline.first().getClass().getName()))
+        .isTrue();
+    assertThat(channelPipeline.last()).isNull();
+    assertThat(channelPipeline.toMap().size()).isEqualTo(0);
 
     // add handler
     channelPipeline.addLast("http", httpHandler);
-    assertEquals(httpHandler, channelPipeline.first());
+    assertThat(channelPipeline.first()).isEqualTo(httpHandler);
 
     // our handler was also added
-    assertEquals("HttpClientTracingHandler", channelPipeline.last().getClass().getSimpleName());
+    assertThat(channelPipeline.last().getClass().getSimpleName())
+        .isEqualTo("HttpClientTracingHandler");
 
     // our handler is not in handlers map
-    assertEquals(1, channelPipeline.toMap().size());
+    assertThat(channelPipeline.toMap().size()).isEqualTo(1);
 
     // our handler is not in handlers iterator
     List<ChannelHandler> list = new ArrayList<>();
@@ -221,7 +228,7 @@ class ChannelPipelineTest {
             entry -> {
               list.add(entry.getValue());
             });
-    assertEquals(1, list.size());
+    assertThat(list.size()).isEqualTo(1);
   }
 
   private static class NoopChannelHandler extends ChannelHandlerAdapter {}

@@ -89,11 +89,6 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     )
   }
 
-  @Deprecated("Use spanNameExtractor(UnaryOperator) instead", ReplaceWith("spanNameExtractor(spanNameExtractorTransformer::apply)"))
-  fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<ApplicationRequest>, SpanNameExtractor<ApplicationRequest>>) {
-    spanNameExtractor(spanNameExtractorTransformer::apply)
-  }
-
   fun spanNameExtractor(spanNameExtractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
     builder.setSpanNameExtractorCustomizer(spanNameExtractor)
   }

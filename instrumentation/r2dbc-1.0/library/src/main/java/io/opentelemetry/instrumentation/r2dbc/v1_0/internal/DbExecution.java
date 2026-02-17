@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * any time.
  */
 public final class DbExecution {
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
   private final String system;
@@ -35,6 +35,7 @@ public final class DbExecution {
   private final Integer port;
   private final String connectionString;
   private final String rawQueryText;
+  private final boolean parameterizedQuery;
 
   private Context context;
 
@@ -73,6 +74,9 @@ public final class DbExecution {
                 query ->
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
             .collect(Collectors.joining(";\n"));
+    this.parameterizedQuery =
+        queryInfo.getQueries().stream()
+            .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
@@ -104,6 +108,10 @@ public final class DbExecution {
     return rawQueryText;
   }
 
+  public boolean isParameterizedQuery() {
+    return parameterizedQuery;
+  }
+
   public Context getContext() {
     return context;
   }
@@ -132,7 +140,7 @@ public final class DbExecution {
         + ", connectionString='"
         + connectionString
         + '\''
-        + ", rawStatement='"
+        + ", rawQueryText='"
         + rawQueryText
         + '\''
         + ", context="

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -192,9 +192,10 @@ public final class RedisCommandSanitizer {
     // Server
     // CONFIG SET can set any property, including the master password
     sanitizers.put("CONFIG", keepTwoArgs);
+    // ACL SETUSER can contain passwords (prefixed with '>') or password hashes (prefixed with '#')
+    sanitizers.put("ACL", keepOneArg);
     for (String command :
         asList(
-            "ACL",
             "BGREWRITEAOF",
             "BGSAVE",
             "COMMAND",
@@ -349,18 +350,18 @@ public final class RedisCommandSanitizer {
     SANITIZERS = unmodifiableMap(sanitizers);
   }
 
-  public static RedisCommandSanitizer create(boolean statementSanitizationEnabled) {
-    return new RedisCommandSanitizer(statementSanitizationEnabled);
+  public static RedisCommandSanitizer create(boolean querySanitizationEnabled) {
+    return new RedisCommandSanitizer(querySanitizationEnabled);
   }
 
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
 
-  private RedisCommandSanitizer(boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  private RedisCommandSanitizer(boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
   public String sanitize(String command, List<?> args) {
-    if (!statementSanitizationEnabled) {
+    if (!querySanitizationEnabled) {
       return KeepAllArgs.INSTANCE.sanitize(command, args);
     }
     return SANITIZERS
@@ -464,7 +465,7 @@ public final class RedisCommandSanitizer {
 
   static String argToString(Object arg) {
     if (arg instanceof byte[]) {
-      return new String((byte[]) arg, StandardCharsets.UTF_8);
+      return new String((byte[]) arg, UTF_8);
     } else {
       return String.valueOf(arg);
     }

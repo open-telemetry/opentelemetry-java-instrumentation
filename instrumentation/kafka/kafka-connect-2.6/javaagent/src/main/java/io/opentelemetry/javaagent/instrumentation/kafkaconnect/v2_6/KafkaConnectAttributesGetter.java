@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -93,7 +93,7 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
   private static String convertHeaderValue(Header header) {
     Object value = header.value();
     if (value instanceof byte[]) {
-      return new String((byte[]) value, StandardCharsets.UTF_8);
+      return new String((byte[]) value, UTF_8);
     }
     return value.toString();
   }

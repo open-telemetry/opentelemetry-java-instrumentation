@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import java.util.function.Function;
 
 /**
@@ -43,11 +43,11 @@ public final class InstrumentationConfigUtil {
     return new CommonConfig(openTelemetry);
   }
 
-  public static boolean isStatementSanitizationEnabled(
+  public static boolean isQuerySanitizationEnabled(
       OpenTelemetry openTelemetry, String instrumentationName) {
-    ExtendedDeclarativeConfigProperties instrumentationConfig =
+    DeclarativeConfigProperties instrumentationConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName);
-    ExtendedDeclarativeConfigProperties commonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
     return instrumentationConfig
         .get("statement_sanitizer")

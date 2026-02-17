@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -20,7 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
@@ -34,7 +35,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
@@ -119,7 +119,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -161,7 +161,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
@@ -195,7 +195,7 @@ class ElasticsearchClientTest {
                               countDownLatch.countDown();
                             })));
     //noinspection ResultOfMethodCallIgnored
-    countDownLatch.await(10, TimeUnit.SECONDS);
+    countDownLatch.await(10, SECONDS);
 
     assertThat(request.getResponse().version().number()).isEqualTo("7.17.28");
 
@@ -223,7 +223,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

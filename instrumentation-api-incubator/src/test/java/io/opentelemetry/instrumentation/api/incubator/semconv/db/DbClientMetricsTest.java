@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
@@ -23,7 +24,6 @@ import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class DbClientMetricsTest {
@@ -47,6 +47,7 @@ class DbClientMetricsTest {
             .put(DbAttributes.DB_COLLECTION_NAME, "table")
             .put(DbAttributes.DB_NAMESPACE, "potatoes")
             .put(DbAttributes.DB_OPERATION_NAME, "SELECT")
+            .put(DbAttributes.DB_QUERY_SUMMARY, "SELECT table")
             .put(ServerAttributes.SERVER_ADDRESS, "localhost")
             .put(ServerAttributes.SERVER_PORT, 1234)
             .build();
@@ -93,6 +94,7 @@ class DbClientMetricsTest {
                                             equalTo(DbAttributes.DB_NAMESPACE, "potatoes"),
                                             equalTo(DbAttributes.DB_OPERATION_NAME, "SELECT"),
                                             equalTo(DbAttributes.DB_COLLECTION_NAME, "table"),
+                                            equalTo(DbAttributes.DB_QUERY_SUMMARY, "SELECT table"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                             equalTo(ServerAttributes.SERVER_PORT, 1234),
                                             equalTo(DbAttributes.DB_RESPONSE_STATUS_CODE, "200"),
@@ -109,6 +111,6 @@ class DbClientMetricsTest {
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

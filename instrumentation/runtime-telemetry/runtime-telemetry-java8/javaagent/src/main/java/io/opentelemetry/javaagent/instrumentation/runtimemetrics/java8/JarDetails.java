@@ -21,6 +21,7 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
@@ -158,10 +159,9 @@ class JarDetails {
       return null;
     }
 
-    java.util.jar.Attributes mainAttributes = manifest.getMainAttributes();
-    String name = mainAttributes.getValue(java.util.jar.Attributes.Name.IMPLEMENTATION_TITLE);
-    String description =
-        mainAttributes.getValue(java.util.jar.Attributes.Name.IMPLEMENTATION_VENDOR);
+    Attributes mainAttributes = manifest.getMainAttributes();
+    String name = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
+    String description = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VENDOR);
 
     String packageDescription = name;
     if (description != null && !description.isEmpty()) {

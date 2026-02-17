@@ -31,8 +31,7 @@ class OtlpProtocolPropertiesSupplierTest {
   void keepUserOtlpProtocolConfiguration() {
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(
-            this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(
@@ -44,8 +43,7 @@ class OtlpProtocolPropertiesSupplierTest {
   void defaultHttpProtobufOtlpProtocolConfiguration() {
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(
-            this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(

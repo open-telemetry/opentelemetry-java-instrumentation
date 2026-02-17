@@ -21,8 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -46,10 +45,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -119,7 +118,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     GetResponse response =
         testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
 
-    assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
+    assertThat(new String(response.getBody(), Charset.defaultCharset())).isEqualTo("Hello, world!");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
@@ -175,7 +174,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     GetResponse response =
         testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
 
-    assertEquals("Hello, world!", new String(response.getBody(), Charset.defaultCharset()));
+    assertThat(new String(response.getBody(), Charset.defaultCharset())).isEqualTo("Hello, world!");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
@@ -285,9 +284,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.waitAndAssertTraces(traceAssertions);
 
-    assertEquals(messageCount, deliveries.size());
+    assertThat(deliveries.size()).isEqualTo(messageCount);
     for (int i = 1; i <= messageCount; i++) {
-      assertEquals("msg " + i, deliveries.get(i - 1));
+      assertThat(deliveries.get(i - 1)).isEqualTo("msg " + i);
     }
   }
 
@@ -353,7 +352,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       callback.accept(channel);
     } catch (RuntimeException re) {
       thrown = re.getCause();
-      assertTrue(thrown.getClass().getName().contains(accessor.getString(1)));
+      assertThat(thrown.getClass().getName().contains(accessor.getString(1))).isTrue();
     }
 
     Throwable finalThrown = thrown;
@@ -395,7 +394,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         testing.runWithSpan(
             "consumer parent", () -> (String) template.receiveAndConvert(queue.getName()));
 
-    assertEquals("foo", message);
+    assertThat(message).isEqualTo("foo");
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
@@ -440,7 +439,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void captureMessageHeaderAsSpanAttributes() throws IOException, InterruptedException {
     String queueName = channel.queueDeclare().getQueue();
-    Map<String, Object> headers = new java.util.HashMap<>();
+    Map<String, Object> headers = new HashMap<>();
     headers.put("Test_Message_Header", "test");
     AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().headers(headers).build();
     channel.basicPublish(
@@ -460,9 +459,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         };
 
     channel.basicConsume(queueName, callback);
-    assertTrue(latch.await(10, TimeUnit.SECONDS));
+    assertThat(latch.await(10, SECONDS)).isTrue();
 
-    assertEquals("Hello, world!", deliveries.get(0));
+    assertThat(deliveries.get(0)).isEqualTo("Hello, world!");
 
     testing.waitAndAssertTraces(
         trace ->

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
@@ -18,7 +20,6 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
@@ -272,6 +273,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (operationListeners == null) {
       operationListeners = this.operationListeners;
     }
+
+    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
+    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
+
     if (operationListeners.length != 0) {
       if (operationListenerAttributesExtractors.length != 0) {
         UnsafeAttributes operationAttributes = new UnsafeAttributes();
@@ -289,9 +294,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
       }
     }
 
-    SpanStatusBuilder spanStatusBuilder = new SpanStatusBuilderImpl(span);
-    spanStatusExtractor.extract(spanStatusBuilder, request, response, error);
-
     if (endTime != null) {
       span.end(endTime);
     } else {
@@ -303,7 +305,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     if (time == null) {
       return System.nanoTime();
     }
-    return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
+    return SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
 
   static {

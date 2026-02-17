@@ -30,6 +30,6 @@ class SqsTracingTest extends AbstractSqsTracingTest {
             .setMessagingReceiveTelemetryEnabled(true)
             .setCapturedHeaders(singletonList("Test-Message-Header"))
             .build()
-            .newRequestHandler());
+            .createRequestHandler());
   }
 }

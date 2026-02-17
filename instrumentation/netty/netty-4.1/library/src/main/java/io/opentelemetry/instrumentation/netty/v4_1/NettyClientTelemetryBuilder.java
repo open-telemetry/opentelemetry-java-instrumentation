@@ -11,8 +11,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
@@ -20,10 +21,10 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 
-/** A builder of {@link NettyClientTelemetry}. */
+/** Builder for {@link NettyClientTelemetry}. */
 public final class NettyClientTelemetryBuilder {
 
-  private final DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder;
+  private final DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder;
   private boolean emitExperimentalHttpClientEvents = false;
 
   static {
@@ -40,9 +41,9 @@ public final class NettyClientTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes.
+   * Configures HTTP request headers to capture as span attributes.
    *
-   * @param capturedRequestHeaders A list of HTTP header names.
+   * @param capturedRequestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedRequestHeaders(
@@ -52,9 +53,9 @@ public final class NettyClientTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes.
+   * Configures HTTP response headers to capture as span attributes.
    *
-   * @param capturedResponseHeaders A list of HTTP header names.
+   * @param capturedResponseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedResponseHeaders(
@@ -64,27 +65,26 @@ public final class NettyClientTelemetryBuilder {
   }
 
   /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<NettyRequest, HttpResponse> attributesExtractor) {
-    builder.addAttributesExtractor(attributesExtractor);
+    builder.addAttributesExtractor(new AttributesExtractorAdapter(attributesExtractor));
     return this;
   }
 
   /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   * Configures recognized HTTP request methods.
    *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * <p>By default, recognizes methods from <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
    *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
+   * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
-   * @param knownMethods A set of recognized HTTP request methods.
+   * @param knownMethods HTTP request methods to recognize.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
@@ -93,30 +93,17 @@ public final class NettyClientTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public NettyClientTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorTransformer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
-  }
-
-  /**
-   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
-   * one.
-   */
+  /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorCustomizer) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
+    builder.setSpanNameExtractorCustomizer(
+        InstrumenterUtil.convertSpanNameExtractor(
+            spanNameExtractorCustomizer, NettyRequest::delegate, NettyRequest::create));
     return this;
   }
 
-  /** Returns a new {@link NettyClientTelemetry} with the given configuration. */
+  /** Returns a new instance with the configured settings. */
   public NettyClientTelemetry build() {
     return new NettyClientTelemetry(
         new NettyClientInstrumenterFactory(

@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
@@ -45,7 +45,7 @@ public final class ReactorNettySingletons {
             new ReactorNettyHttpClientAttributesGetter(),
             HttpClientRequestHeadersSetter.INSTANCE);
 
-    DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder =
+    DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder =
         NettyClientInstrumenterBuilderFactory.create(
                 INSTRUMENTATION_NAME, GlobalOpenTelemetry.get())
             .configure(AgentCommonConfig.get());
@@ -57,8 +57,7 @@ public final class ReactorNettySingletons {
                 : NettyConnectionInstrumentationFlag.DISABLED,
             NettyConnectionInstrumentationFlag.DISABLED);
     CONNECTION_INSTRUMENTER =
-        instrumenterFactory.createConnectionInstrumenter(
-            AgentCommonConfig.get().getPeerServiceResolver());
+        instrumenterFactory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
   }
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {

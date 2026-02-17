@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import io.opentelemetry.instrumentation.api.internal.Initializer;
+
 /**
  * Holder for {@link LambdaTransformer} used by the instrumentation. Calling transform on this
  * transformer processes given bytes the same way as they would be processed during loading of the
@@ -28,6 +30,7 @@ public final class LambdaTransformerHolder {
    *
    * @param transformer transformer
    */
+  @Initializer
   public static void setLambdaTransformer(LambdaTransformer transformer) {
     lambdaTransformer = transformer;
   }

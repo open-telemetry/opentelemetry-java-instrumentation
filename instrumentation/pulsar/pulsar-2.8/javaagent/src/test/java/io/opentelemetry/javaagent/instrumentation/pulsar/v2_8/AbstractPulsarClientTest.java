@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -32,7 +33,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -186,6 +186,8 @@ abstract class AbstractPulsarClientTest {
 
     assertThat(testing.metrics())
         .satisfiesExactlyInAnyOrder(
+            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
+            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -270,7 +272,7 @@ abstract class AbstractPulsarClientTest {
                           }
                         }));
 
-    assertThat(result.get(1, TimeUnit.MINUTES).size()).isEqualTo(1);
+    assertThat(result.get(1, MINUTES).size()).isEqualTo(1);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertTraces(

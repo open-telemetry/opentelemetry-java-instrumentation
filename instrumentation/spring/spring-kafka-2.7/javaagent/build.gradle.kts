@@ -34,7 +34,6 @@ dependencies {
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
@@ -59,8 +58,6 @@ testing {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-
-            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -72,18 +69,24 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
   test {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimental)
   }
 }
 

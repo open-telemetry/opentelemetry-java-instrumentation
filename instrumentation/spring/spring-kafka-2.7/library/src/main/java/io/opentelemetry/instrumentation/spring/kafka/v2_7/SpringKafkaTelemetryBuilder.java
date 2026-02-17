@@ -56,16 +56,6 @@ public final class SpringKafkaTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setMessagingReceiveTelemetryEnabled(boolean)} instead.
-   */
-  @CanIgnoreReturnValue
-  @Deprecated
-  public SpringKafkaTelemetryBuilder setMessagingReceiveInstrumentationEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    return setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
-  }
-
-  /**
    * Returns a new {@link SpringKafkaTelemetry} with the settings of this {@link
    * SpringKafkaTelemetryBuilder}.
    */

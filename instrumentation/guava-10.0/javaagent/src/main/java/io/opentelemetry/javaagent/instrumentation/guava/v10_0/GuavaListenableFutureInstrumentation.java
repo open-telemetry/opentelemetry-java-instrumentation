@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -19,7 +20,6 @@ import java.util.concurrent.Executor;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class GuavaListenableFutureInstrumentation implements TypeInstrumentation {
   @Override
@@ -32,7 +32,7 @@ public class GuavaListenableFutureInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         isConstructor(), this.getClass().getName() + "$AbstractFutureAdvice");
     transformer.applyAdviceToMethod(
-        named("addListener").and(ElementMatchers.takesArguments(Runnable.class, Executor.class)),
+        named("addListener").and(takesArguments(Runnable.class, Executor.class)),
         this.getClass().getName() + "$AddListenerAdvice");
   }
 

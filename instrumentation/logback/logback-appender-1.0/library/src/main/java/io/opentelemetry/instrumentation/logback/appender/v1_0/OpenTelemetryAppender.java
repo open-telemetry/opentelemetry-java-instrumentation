@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -64,7 +65,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return;
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+    for (Logger logger : loggerContext.getLoggerList()) {
       logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
     }
   }
@@ -196,18 +197,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureArguments(boolean captureArguments) {
     this.captureArguments = captureArguments;
-  }
-
-  /**
-   * Sets whether the Logstash attributes should be set to logs.
-   *
-   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
-   * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-   *     deprecated and will be removed in a future release.
-   */
-  @Deprecated
-  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
   }
 
   /** Sets whether the Logstash marker attributes should be captured. */

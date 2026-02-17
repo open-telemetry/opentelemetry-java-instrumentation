@@ -1,3 +1,4 @@
+display_name: Spring Boot Actuator Autoconfigure
 disabled_by_default: true
 description: >
   This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from

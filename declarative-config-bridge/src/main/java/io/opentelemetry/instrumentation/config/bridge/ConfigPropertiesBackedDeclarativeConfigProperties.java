@@ -10,6 +10,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
-  private static final String GENERAL_PEER_SERVICE_MAPPING = "general.peer.service_mapping";
+  private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final String AGENT_INSTRUMENTATION_MODE = "java.agent.instrumentation_mode";
   private static final String SPRING_STARTER_INSTRUMENTATION_MODE =
@@ -93,8 +94,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     // jmx properties don't have an "instrumentation" segment
     SPECIAL_MAPPINGS.put("java.jmx.enabled", "otel.jmx.enabled");
     SPECIAL_MAPPINGS.put("java.jmx.config", "otel.jmx.config");
-    SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
-    SPECIAL_MAPPINGS.put("java.jmx.target_system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
   }
 
   private final ConfigProperties configProperties;
@@ -144,6 +144,22 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public Long getLong(String name) {
+    String fullPath = pathWithName(name);
+
+    if (fullPath.equals("java.jmx.discovery.delay")) {
+      Duration duration = configProperties.getDuration("otel.jmx.discovery.delay");
+      if (duration != null) {
+        return duration.toMillis();
+      }
+      // If discovery delay has not been configured, have a peek at the metric export interval.
+      // It makes sense for both of these values to be similar.
+      Duration fallback = configProperties.getDuration("otel.metric.export.interval");
+      if (fallback != null) {
+        return fallback.toMillis();
+      }
+      return null;
+    }
+
     return configProperties.getLong(resolvePropertyKey(name));
   }
 
@@ -184,8 +200,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (GENERAL_PEER_SERVICE_MAPPING.equals(fullPath)) {
-      return PeerServiceMapping.getList(configProperties);
+    if (JAVA_COMMON_SERVICE_PEER_MAPPING.equals(fullPath)) {
+      return ServicePeerMapping.getList(configProperties);
     }
     return null;
   }

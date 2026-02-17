@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
@@ -13,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import jdk.jfr.EventSettings;
@@ -75,7 +76,7 @@ public final class RuntimeMetrics implements AutoCloseable {
   @Override
   public void close() {
     if (!isClosed.compareAndSet(false, true)) {
-      logger.log(Level.WARNING, "RuntimeMetrics is already closed");
+      logger.log(WARNING, "RuntimeMetrics is already closed");
       return;
     }
     if (jfrRuntimeMetrics != null) {
@@ -156,13 +157,11 @@ public final class RuntimeMetrics implements AutoCloseable {
 
     private static boolean isJfrAvailable() {
       try {
-        Class.forName("jdk.jfr.FlightRecorder");
-        // UnsatisfiedLinkError or ClassNotFoundException
-      } catch (Exception e) {
+        return FlightRecorder.isAvailable();
+      } catch (Throwable e) {
+        // NoClassDefFoundError, UnsatisfiedLinkError (native images), or other issues
         return false;
       }
-
-      return FlightRecorder.isAvailable();
     }
   }
 }

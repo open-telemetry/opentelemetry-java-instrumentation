@@ -6,11 +6,6 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,10 +25,10 @@ public class JmxRuntimeMetricsFactory {
     observables.addAll(MemoryPools.registerObservers(openTelemetry));
     observables.addAll(Threads.registerObservers(openTelemetry));
     if (emitExperimentalTelemetry) {
-      observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
-      observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
-      observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
-      observables.addAll(ExperimentalFileDescriptor.registerObservers(openTelemetry));
+      observables.addAll(BufferPools.registerObservers(openTelemetry));
+      observables.addAll(SystemCpu.registerObservers(openTelemetry));
+      observables.addAll(MemoryInit.registerObservers(openTelemetry));
+      observables.addAll(FileDescriptor.registerObservers(openTelemetry));
     }
     return observables;
   }

@@ -27,7 +27,7 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
             .setCapturedResponseHeaders(
                 Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build()
-            .newDecorator());
+            .createDecorator());
   }
 
   @Override

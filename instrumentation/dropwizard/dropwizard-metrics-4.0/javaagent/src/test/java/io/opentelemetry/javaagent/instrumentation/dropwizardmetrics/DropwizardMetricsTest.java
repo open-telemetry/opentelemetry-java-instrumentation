@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
@@ -14,7 +17,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -35,12 +37,12 @@ class DropwizardMetricsTest {
     AtomicLong value = new AtomicLong(42);
 
     // when
-    metricRegistry.gauge("test.gauge", () -> value::get);
+    metricRegistry.gauge("test'gauge", () -> value::get);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.gauge",
+        "testgauge",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -49,14 +51,14 @@ class DropwizardMetricsTest {
                             g -> g.hasPointsSatisfying(point -> point.hasValue(42)))));
 
     // when
-    metricRegistry.remove("test.gauge");
+    metricRegistry.remove("test'gauge");
     Thread.sleep(100); // give time for any inflight metric export to be received
     testing.clearData();
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.gauge", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testgauge", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -65,7 +67,7 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Counter counter = metricRegistry.counter("test.counter");
+    Counter counter = metricRegistry.counter("test@counter");
     counter.inc();
     counter.inc(11);
     counter.dec(5);
@@ -73,7 +75,7 @@ class DropwizardMetricsTest {
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.counter",
+        "testcounter",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -85,13 +87,13 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.counter");
+    metricRegistry.remove("test@counter");
     counter.inc(123);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.counter", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testcounter", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -100,14 +102,14 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Histogram histogram = metricRegistry.histogram("test.histogram");
+    Histogram histogram = metricRegistry.histogram("test!histogram");
     histogram.update(12);
     histogram.update(30);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.histogram",
+        "testhistogram",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -119,13 +121,13 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.histogram");
+    metricRegistry.remove("test!histogram");
     histogram.update(100);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.histogram", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testhistogram", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -134,14 +136,14 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Meter meter = metricRegistry.meter("test.meter");
+    Meter meter = metricRegistry.meter("test meter");
     meter.mark();
     meter.mark(11);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.meter",
+        "testmeter",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -153,13 +155,13 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.meter");
+    metricRegistry.remove("test meter");
     meter.mark();
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.meter", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testmeter", AbstractIterableAssert::isEmpty);
   }
 
   @Test
@@ -169,14 +171,14 @@ class DropwizardMetricsTest {
     MetricRegistry metricRegistry = new MetricRegistry();
 
     // when
-    Timer timer = metricRegistry.timer("test.timer");
-    timer.update(1, TimeUnit.MILLISECONDS);
-    timer.update(234_000, TimeUnit.NANOSECONDS);
+    Timer timer = metricRegistry.timer("test#timer");
+    timer.update(1, MILLISECONDS);
+    timer.update(234_000, NANOSECONDS);
 
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
-        "test.timer",
+        "testtimer",
         metrics ->
             metrics.anySatisfy(
                 metric ->
@@ -189,12 +191,12 @@ class DropwizardMetricsTest {
     testing.clearData();
 
     // when
-    metricRegistry.remove("test.timer");
-    timer.update(12, TimeUnit.SECONDS);
+    metricRegistry.remove("test#timer");
+    timer.update(12, SECONDS);
 
     // then
     Thread.sleep(100); // interval of the test metrics exporter
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.timer", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME, "testtimer", AbstractIterableAssert::isEmpty);
   }
 }

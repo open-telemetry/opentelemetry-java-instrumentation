@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -23,6 +24,8 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.semconv.AttributeKeyTemplate;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -44,19 +47,33 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("db.connection_string");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
+      AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
+  private final boolean captureQueryParameters;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
-    return new DbClientAttributesExtractor<>(getter);
+    return new DbClientAttributesExtractor<>(getter, false);
   }
 
-  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
+  /**
+   * Returns a new {@link DbClientAttributesExtractorBuilder} that can be used to configure the
+   * database client attributes extractor.
+   */
+  public static <REQUEST, RESPONSE> DbClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
+    return new DbClientAttributesExtractorBuilder<>(getter);
+  }
+
+  DbClientAttributesExtractor(
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter, boolean captureQueryParameters) {
     this.getter = getter;
+    this.captureQueryParameters = captureQueryParameters;
     internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
@@ -64,7 +81,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    onStartCommon(attributes, getter, request);
+    onStartCommon(attributes, getter, request, captureQueryParameters);
     serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
@@ -72,7 +89,11 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   static <REQUEST, RESPONSE> void onStartCommon(
       AttributesBuilder attributes,
       DbClientAttributesGetter<REQUEST, RESPONSE> getter,
-      REQUEST request) {
+      REQUEST request,
+      boolean captureQueryParameters) {
+    Long batchSize = getter.getDbOperationBatchSize(request);
+    boolean isBatch = batchSize != null && batchSize > 1;
+
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(
           attributes,
@@ -82,6 +103,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
       internalSet(attributes, DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
+      if (isBatch) {
+        internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
+      }
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_SYSTEM, getter.getDbSystemName(request));
@@ -90,6 +114,18 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
+    }
+
+    // Query parameters are an incubating feature and work with both old and new semconv
+    if (captureQueryParameters && !isBatch) {
+      Map<String, String> queryParameters = getter.getDbQueryParameters(request);
+      if (queryParameters != null && !queryParameters.isEmpty()) {
+        for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
+          String key = entry.getKey();
+          String value = entry.getValue();
+          internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
+        }
+      }
     }
   }
 
@@ -115,7 +151,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       }
       if (error != null || response != null) {
         internalSet(
-            attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatusCode(response, error));
+            attributes, DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
       }
     }
   }

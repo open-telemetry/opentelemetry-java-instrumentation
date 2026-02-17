@@ -17,7 +17,7 @@ public abstract class OpenSearchRequest {
 
   public abstract String getMethod();
 
-  public abstract String getOperation();
+  public abstract String getEndpoint();
 
   @Nullable
   public abstract String getBody();

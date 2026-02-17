@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -108,37 +109,54 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testGeneralPeerServiceMapping() {
+  void testJavaCommonServicePeerMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.peer-service-mapping", "old-name=new-name");
+        createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");
 
-    assertThat(
-            config
-                .getStructured("general")
-                .getStructured("peer")
-                .getStructuredList("service_mapping"))
-        .isNotNull();
+    List<DeclarativeConfigProperties> mappings =
+        config
+            .getStructured("java")
+            .getStructured("common")
+            .getStructuredList("service_peer_mapping");
+    assertThat(mappings).isNotNull().hasSize(1);
+    assertThat(mappings.get(0).getString("peer")).isEqualTo("1.2.3.4");
+    assertThat(mappings.get(0).getString("service_name")).isEqualTo("FooService");
+    // service_namespace is not supported in flat config
+    assertThat(mappings.get(0).getString("service_namespace")).isNull();
   }
 
   @Test
   void testGetInt() {
-    DeclarativeConfigProperties config = createConfig("otel.jmx.discovery.delay", "5000");
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.aws-lambda.flush-timeout", "5000");
 
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("jmx")
-                .getStructured("discovery")
-                .getInt("delay"))
+    assertThat(config.getStructured("java").getStructured("aws_lambda").getInt("flush_timeout"))
         .isEqualTo(5000);
   }
 
   @Test
   void testGetLong() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.aws-lambda.flush-timeout", "30000");
+    assertThat(
+            createConfig("otel.instrumentation.aws-lambda.flush-timeout", "30000")
+                .getStructured("java")
+                .getStructured("aws_lambda")
+                .getLong("flush_timeout"))
+        .isEqualTo(30000L);
 
-    assertThat(config.getStructured("java").getStructured("aws_lambda").getLong("flush_timeout"))
+    // special case: duration string
+    assertThat(
+            createConfig("otel.jmx.discovery.delay", "30s")
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
+        .isEqualTo(30000L);
+    assertThat(
+            createConfig("otel.metric.export.interval", "30s")
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
         .isEqualTo(30000L);
   }
 
