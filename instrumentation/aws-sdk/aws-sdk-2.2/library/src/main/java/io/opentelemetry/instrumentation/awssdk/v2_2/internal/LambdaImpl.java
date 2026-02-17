@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -63,8 +64,7 @@ final class LambdaImpl {
     String clientContextString = request.clientContext();
     String clientContextJsonString = "{}";
     if (clientContextString != null && !clientContextString.isEmpty()) {
-      clientContextJsonString =
-          new String(Base64.getDecoder().decode(clientContextString), StandardCharsets.UTF_8);
+      clientContextJsonString = new String(Base64.getDecoder().decode(clientContextString), UTF_8);
     }
     JsonNode jsonNode = JsonNode.parser().parse(clientContextJsonString);
     if (!jsonNode.isObject()) {
@@ -90,7 +90,7 @@ final class LambdaImpl {
     String newJson = jsonNode.toString();
 
     // turn it back into a base64 string
-    String newJson64 = Base64.getEncoder().encodeToString(newJson.getBytes(StandardCharsets.UTF_8));
+    String newJson64 = Base64.getEncoder().encodeToString(newJson.getBytes(UTF_8));
     // check it for length (err on the safe side with >=)
     if (newJson64.length() >= MAX_CLIENT_CONTEXT_LENGTH) {
       return null;

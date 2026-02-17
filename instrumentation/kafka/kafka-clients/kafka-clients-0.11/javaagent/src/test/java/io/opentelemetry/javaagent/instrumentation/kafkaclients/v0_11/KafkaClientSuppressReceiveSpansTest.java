@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -12,7 +13,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -39,12 +39,8 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
           producerRecord
               .headers()
               // adding baggage header in w3c baggage format
-              .add(
-                  "baggage",
-                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8))
-              .add(
-                  "baggage",
-                  "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
+              .add("baggage", "test-baggage-key-1=test-baggage-value-1".getBytes(UTF_8))
+              .add("baggage", "test-baggage-key-2=test-baggage-value-2".getBytes(UTF_8));
           producer.send(
               producerRecord,
               (meta, ex) -> {

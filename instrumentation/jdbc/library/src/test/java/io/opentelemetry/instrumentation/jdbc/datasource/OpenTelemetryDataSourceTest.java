@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONN
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -103,10 +102,10 @@ class OpenTelemetryDataSourceTest {
 
   private static void assertDbInfo(DbInfo dbInfo) {
     assertThat(dbInfo.getSystem()).isEqualTo("postgresql");
-    assertNull(dbInfo.getSubtype());
+    assertThat(dbInfo.getSubtype()).isNull();
     assertThat(dbInfo.getShortUrl()).isEqualTo("postgresql://127.0.0.1:5432");
-    assertNull(dbInfo.getUser());
-    assertNull(dbInfo.getName());
+    assertThat(dbInfo.getUser()).isNull();
+    assertThat(dbInfo.getName()).isNull();
     assertThat(dbInfo.getDb()).isEqualTo("dbname");
     assertThat(dbInfo.getHost()).isEqualTo("127.0.0.1");
     assertThat(dbInfo.getPort()).isEqualTo(5432);

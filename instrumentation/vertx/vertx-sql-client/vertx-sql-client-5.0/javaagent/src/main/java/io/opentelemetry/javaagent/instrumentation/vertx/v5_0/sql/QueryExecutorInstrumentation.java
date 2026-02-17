@@ -79,7 +79,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         // The parameter we need are in different positions, we are not going to have separate
-        // advices for all of them. The method gets the statement either as String or
+        // advices for all of them. The method gets the query either as String or
         // PreparedStatement, use the first argument that is either of these. PromiseInternal is
         // always at the end of the argument list.
         String sql = null;
