@@ -17,9 +17,7 @@ class MultiQuery {
   @Nullable private final String querySummary;
 
   private MultiQuery(
-      @Nullable String storedProcedureName,
-      Set<String> queryTexts,
-      @Nullable String querySummary) {
+      @Nullable String storedProcedureName, Set<String> queryTexts, @Nullable String querySummary) {
     this.storedProcedureName = storedProcedureName;
     this.queryTexts = queryTexts;
     this.querySummary = querySummary;
