@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.logging.Level.WARNING;
+
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -15,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -122,7 +123,7 @@ class BeanFinder {
         try {
           allObjectNames.addAll(connection.queryNames(pattern, beans.getQueryExp()));
         } catch (IOException e) {
-          logger.log(Level.WARNING, "IO error while resolving mbean", e);
+          logger.log(WARNING, "IO error while resolving mbean", e);
         }
       }
 
