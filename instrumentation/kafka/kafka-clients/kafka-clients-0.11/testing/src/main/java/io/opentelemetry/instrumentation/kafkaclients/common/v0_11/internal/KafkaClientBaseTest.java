@@ -18,12 +18,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -250,9 +250,7 @@ public abstract class KafkaClientBaseTest {
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
     } else {
-      assertions.add(
-          equalTo(
-              MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(StandardCharsets.UTF_8).length));
+      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
     }
     if (testHeaders) {
       assertions.add(

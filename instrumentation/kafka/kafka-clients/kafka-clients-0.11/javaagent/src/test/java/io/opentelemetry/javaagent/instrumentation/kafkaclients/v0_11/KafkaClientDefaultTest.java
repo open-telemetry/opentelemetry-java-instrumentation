@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.ListIterator;
@@ -48,9 +48,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           ProducerRecord<Integer, String> producerRecord =
               new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
           if (testHeaders) {
-            producerRecord
-                .headers()
-                .add("Test-Message-Header", "test".getBytes(StandardCharsets.UTF_8));
+            producerRecord.headers().add("Test-Message-Header", "test".getBytes(UTF_8));
           }
           producer
               .send(

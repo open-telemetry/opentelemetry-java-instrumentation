@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -19,7 +20,6 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -251,8 +251,7 @@ public class IntegrationTestUtils {
     @Override
     public void run() {
       try {
-        BufferedReader reader =
-            new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
         String line = null;
         while ((line = reader.readLine()) != null) {
           if (print) {
