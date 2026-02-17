@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 // This test is put in the io.opentelemetry.instrumentation.jmx.engine package
 // because it needs to access package-private methods from a number of classes.
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
@@ -20,7 +21,6 @@ import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import javax.management.MBeanAttributeInfo;
@@ -601,7 +601,7 @@ class RuleParserTest {
   }
 
   private static JmxConfig parseConf(String s) {
-    InputStream is = new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+    InputStream is = new ByteArrayInputStream(s.getBytes(UTF_8));
     JmxConfig jmxConfig = parser.loadConfig(is);
     assertThat(jmxConfig).isNotNull();
 
