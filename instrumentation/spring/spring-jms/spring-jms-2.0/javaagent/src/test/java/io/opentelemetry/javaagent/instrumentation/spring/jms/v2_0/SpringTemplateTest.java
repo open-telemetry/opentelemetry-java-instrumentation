@@ -6,11 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
-<<<<<<< static-import-require-non-null
 import static java.util.Objects.requireNonNull;
-=======
 import static java.util.concurrent.TimeUnit.SECONDS;
->>>>>>> main
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
@@ -20,11 +17,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Collections;
-<<<<<<< static-import-require-non-null
-import java.util.concurrent.TimeUnit;
-=======
-import java.util.Objects;
->>>>>>> main
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
 import javax.jms.JMSException;

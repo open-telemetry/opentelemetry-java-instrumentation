@@ -5,11 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
-<<<<<<< static-import-require-non-null
 import static java.util.Objects.requireNonNull;
-=======
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
->>>>>>> main
 
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
