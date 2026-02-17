@@ -419,7 +419,11 @@ project.afterEvaluate {
 licenseReport {
   outputDir = rootProject.layout.projectDirectory.dir("licenses").asFile.absolutePath
 
-  renderers = arrayOf(InventoryMarkdownReportRenderer())
+  renderers = arrayOf(InventoryMarkdownReportRenderer(
+    "licenses.md",
+    "OpenTelemetry java instrumentation agent",
+    File("$projectDir/license-overrides.txt")
+  ))
 
   configurations = arrayOf(licenseReportDependencies.name)
 

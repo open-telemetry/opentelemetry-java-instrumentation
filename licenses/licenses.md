@@ -1,5 +1,5 @@
 
-# javaagent
+# OpenTelemetry java instrumentation agent
 ## Dependency License Report
 
 ## Apache License, Version 2.0
@@ -154,8 +154,8 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **35** **Group:** `io.opentelemetry` **Name:** `opentelemetry-sdk-trace` **Version:** `1.59.0`
-> - **POM Project URL**: [https://github.com/JCTools](https://github.com/JCTools)
-> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+> - **Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
+> - **License URL**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 
 **36** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.53.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
