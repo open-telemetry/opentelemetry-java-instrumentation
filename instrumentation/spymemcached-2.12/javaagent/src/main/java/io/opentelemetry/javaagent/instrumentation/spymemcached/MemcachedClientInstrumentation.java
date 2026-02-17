@@ -157,6 +157,8 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
+      // when throwable is set then future is always null as it is the return value of the
+      // instrumented method
       if (future == null) {
         listener.done(throwable);
       } else {

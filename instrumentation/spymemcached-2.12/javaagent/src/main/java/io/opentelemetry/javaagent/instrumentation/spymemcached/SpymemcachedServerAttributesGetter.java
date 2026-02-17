@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class SpymemcachedNetworkAttributesGetter
+final class SpymemcachedServerAttributesGetter
     implements ServerAttributesGetter<SpymemcachedRequest> {
 
   @Nullable
