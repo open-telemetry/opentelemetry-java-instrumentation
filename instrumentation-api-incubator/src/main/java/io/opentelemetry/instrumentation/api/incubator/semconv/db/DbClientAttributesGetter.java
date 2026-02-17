@@ -48,7 +48,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    *
    * @deprecated There is no replacement at this time.
    */
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   default String getUser(REQUEST request) {
     return null;
@@ -59,7 +59,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    *
    * @deprecated There is no replacement at this time.
    */
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   default String getConnectionString(REQUEST request) {
     return null;

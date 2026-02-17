@@ -7,11 +7,10 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
@@ -24,8 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
 
-  @Mock(extraInterfaces = ExtractQuerySummaryMarker.class)
-  SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
+  @Mock SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
 
   @Test
   void shouldExtractFullSpanName() {
@@ -42,7 +40,8 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database.table", spanName);
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database.table");
   }
 
   @Test
@@ -60,7 +59,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT another.table", spanName);
+    assertThat(spanName).isEqualTo("SELECT another.table");
   }
 
   @Test
@@ -77,7 +76,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT table", spanName);
+    assertThat(spanName).isEqualTo("SELECT table");
   }
 
   @Test
@@ -94,7 +93,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT database", spanName);
+    assertThat(spanName).isEqualTo("SELECT database");
   }
 
   @Test
@@ -110,7 +109,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("SELECT", spanName);
+    assertThat(spanName).isEqualTo("SELECT");
   }
 
   @Test
@@ -126,7 +125,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("database", spanName);
+    assertThat(spanName).isEqualTo("database");
   }
 
   @Test
@@ -140,7 +139,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals("DB Query", spanName);
+    assertThat(spanName).isEqualTo("DB Query");
   }
 
   @Test
@@ -160,7 +159,8 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals(emitStableDatabaseSemconv() ? "SELECT users" : "SELECT database", spanName);
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT users" : "SELECT database");
   }
 
   @Test
@@ -178,8 +178,9 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals(
-        SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database", spanName);
+    assertThat(spanName)
+        .isEqualTo(
+            SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
   }
 
   @Test
@@ -200,11 +201,11 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertEquals(
-        SemconvStability.emitStableDatabaseSemconv()
-            ? "BATCH INSERT table"
-            : "INSERT database.table",
-        spanName);
+    assertThat(spanName)
+        .isEqualTo(
+            SemconvStability.emitStableDatabaseSemconv()
+                ? "BATCH INSERT table"
+                : "INSERT database.table");
   }
 
   static class DbRequest {}

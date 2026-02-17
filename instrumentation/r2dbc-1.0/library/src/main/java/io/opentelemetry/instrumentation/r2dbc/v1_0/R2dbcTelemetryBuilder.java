@@ -53,27 +53,6 @@ public final class R2dbcTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public R2dbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    return setQuerySanitizationEnabled(enabled);
-  }
-
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public R2dbcTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractor) {
-    return setSpanNameExtractorCustomizer(spanNameExtractor);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */

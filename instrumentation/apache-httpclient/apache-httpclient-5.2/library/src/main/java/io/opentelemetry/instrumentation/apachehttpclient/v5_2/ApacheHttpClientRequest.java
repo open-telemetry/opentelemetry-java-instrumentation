@@ -36,14 +36,6 @@ public final class ApacheHttpClientRequest {
     return delegate;
   }
 
-  /**
-   * @deprecated use {@link #getRequest()} instead.
-   */
-  @Deprecated
-  public HttpRequest getDelegate() {
-    return getRequest();
-  }
-
   String getMethod() {
     return delegate.getMethod();
   }

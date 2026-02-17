@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.MediaType;
@@ -25,7 +26,6 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -39,9 +39,9 @@ class OkHttp2Test extends AbstractHttpClientTest<Request> {
 
   @BeforeAll
   void setup() {
-    client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-    clientWithReadTimeout.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-    clientWithReadTimeout.setReadTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
+    clientWithReadTimeout.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
+    clientWithReadTimeout.setReadTimeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
   }
 
   @Override

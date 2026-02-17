@@ -40,23 +40,9 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
    */
   // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
   // via openTelemetry.getConfigProvider()
-  @SuppressWarnings("deprecation") // delegating to deprecated method for now
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       ServerAttributesGetter<REQUEST> attributesGetter, OpenTelemetry openTelemetry) {
-    return create(attributesGetter, new ServicePeerResolver(openTelemetry));
-  }
-
-  /**
-   * This method is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
-   *
-   * <p>This method only exists to bridge the deprecated {@code PeerServiceAttributesExtractor}.
-   *
-   * @deprecated Use {@link #create(ServerAttributesGetter, OpenTelemetry)} instead.
-   */
-  @Deprecated
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver servicePeerResolver) {
+    ServicePeerResolver servicePeerResolver = new ServicePeerResolver(openTelemetry);
     if (servicePeerResolver.isEmpty()) {
       return new EmptyAttributesExtractor<>();
     }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +73,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
             + "},"
             + "\"body\" : \"hello\""
             + "}";
-    InputStream input = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+    InputStream input = new ByteArrayInputStream(content.getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
 
     TracingRequestStreamWrapper wrapper =
@@ -106,7 +106,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
             + "},"
             + "\"body\" : \"bye\""
             + "}";
-    InputStream input = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+    InputStream input = new ByteArrayInputStream(content.getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
 
     TracingRequestStreamWrapper wrapper =
@@ -154,8 +154,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
           break;
         }
       }
-      BufferedWriter writer =
-          new BufferedWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8));
+      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
       if (body.equals("hello")) {
         writer.write("world");
         writer.flush();

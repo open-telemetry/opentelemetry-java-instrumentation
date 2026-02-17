@@ -9,8 +9,9 @@ dependencies {
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha")
   testImplementation("io.opentelemetry:opentelemetry-api")
+  testImplementation("org.assertj:assertj-core:3.27.7")
 
-  testImplementation("ch.qos.logback:logback-classic:1.5.29")
+  testImplementation("ch.qos.logback:logback-classic:1.5.32")
 }
 
 tasks.test {

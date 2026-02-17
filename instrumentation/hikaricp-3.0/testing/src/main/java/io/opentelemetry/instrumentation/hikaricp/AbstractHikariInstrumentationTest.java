@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.hikaricp;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
@@ -60,7 +60,7 @@ public abstract class AbstractHikariInstrumentationTest {
 
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
     hikariConnection.close();
 
     // then
@@ -118,7 +118,7 @@ public abstract class AbstractHikariInstrumentationTest {
 
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
     hikariConnection.close();
 
     // then
@@ -140,7 +140,7 @@ public abstract class AbstractHikariInstrumentationTest {
     when(dataSourceMock.getConnection())
         .then(
             invocation -> {
-              TimeUnit.MILLISECONDS.sleep(2_000);
+              MILLISECONDS.sleep(2_000);
               throw new SQLException("timed out!");
             });
 
