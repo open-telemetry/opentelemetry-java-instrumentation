@@ -29,7 +29,8 @@ public final class R2dbcSingletons {
             .setQuerySanitizationAnsiQuotes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
                     .get("statement_sanitizer")
-                    .getBoolean("ansi_quotes", AgentCommonConfig.get().isQuerySanitizationAnsiQuotes()))
+                    .getBoolean(
+                        "ansi_quotes", AgentCommonConfig.get().isQuerySanitizationAnsiQuotes()))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
                     R2dbcSqlAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()));

@@ -64,8 +64,7 @@ public final class JdbcTelemetryBuilder {
    * will be automatically switched.
    */
   @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setQuerySanitizationAnsiQuotes(
-      boolean querySanitizationAnsiQuotes) {
+  public JdbcTelemetryBuilder setQuerySanitizationAnsiQuotes(boolean querySanitizationAnsiQuotes) {
     this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
     return this;
   }

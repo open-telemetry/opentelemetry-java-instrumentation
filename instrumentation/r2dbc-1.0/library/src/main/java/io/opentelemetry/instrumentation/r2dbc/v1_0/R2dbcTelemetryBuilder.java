@@ -60,8 +60,7 @@ public final class R2dbcTelemetryBuilder {
    * will be automatically switched.
    */
   @CanIgnoreReturnValue
-  public R2dbcTelemetryBuilder setQuerySanitizationAnsiQuotes(
-      boolean querySanitizationAnsiQuotes) {
+  public R2dbcTelemetryBuilder setQuerySanitizationAnsiQuotes(boolean querySanitizationAnsiQuotes) {
     this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
     return this;
   }
@@ -83,9 +82,7 @@ public final class R2dbcTelemetryBuilder {
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
         instrumenterBuilder.build(
-            spanNameExtractorCustomizer,
-            querySanitizationEnabled,
-            querySanitizationAnsiQuotes),
+            spanNameExtractorCustomizer, querySanitizationEnabled, querySanitizationAnsiQuotes),
         sqlCommenterBuilder.build());
   }
 }
