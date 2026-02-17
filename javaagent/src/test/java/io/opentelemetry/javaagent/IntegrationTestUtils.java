@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -207,7 +210,7 @@ public class IntegrationTestUtils {
     outputGobbler.start();
     errorGobbler.start();
 
-    waitFor(process, 30, TimeUnit.SECONDS);
+    waitFor(process, 30, SECONDS);
 
     outputGobbler.join();
     errorGobbler.join();
@@ -226,7 +229,7 @@ public class IntegrationTestUtils {
         return;
       } catch (IllegalThreadStateException ex) {
         if (rem > 0) {
-          Thread.sleep(Math.min(TimeUnit.NANOSECONDS.toMillis(rem) + 1, 100));
+          Thread.sleep(Math.min(NANOSECONDS.toMillis(rem) + 1, 100));
         }
       }
       rem = unit.toNanos(timeout) - (System.nanoTime() - startTime);

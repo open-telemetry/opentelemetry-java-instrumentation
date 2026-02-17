@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.HistogramAdviceUtil.setExplicitBucketsIfConfigured;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import io.micrometer.core.instrument.AbstractTimer;
 import io.micrometer.core.instrument.Clock;
@@ -97,7 +98,7 @@ final class OpenTelemetryTimer extends AbstractTimer
       double time = TimeUtils.nanosToUnit(nanos, baseTimeUnit);
       otelHistogram.record(time, attributes);
       measurements.record(nanos);
-      max.record(nanos, TimeUnit.NANOSECONDS);
+      max.record(nanos, NANOSECONDS);
     }
   }
 

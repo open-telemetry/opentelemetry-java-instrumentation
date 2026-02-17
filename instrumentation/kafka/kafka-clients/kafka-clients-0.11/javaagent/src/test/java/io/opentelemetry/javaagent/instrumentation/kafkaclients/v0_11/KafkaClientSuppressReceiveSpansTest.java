@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -16,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -96,7 +96,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
   @Test
   void testPassThroughTombstone()
       throws ExecutionException, InterruptedException, TimeoutException {
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
@@ -127,9 +127,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
   void testRecordsWithTopicPartitionKafkaConsume()
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
-    producer
-        .send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting))
-        .get(5, TimeUnit.SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
 
     testing.waitForTraces(1);
 

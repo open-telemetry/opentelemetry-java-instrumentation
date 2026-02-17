@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
@@ -20,7 +21,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -62,7 +62,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       testing.runWithSpan("producer exception: " + ex, () -> {});
                     }
                   })
-              .get(5, TimeUnit.SECONDS);
+              .get(5, SECONDS);
         });
 
     awaitUntilConsumerIsReady();
@@ -116,7 +116,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   @Test
   void testPassThroughTombstone()
       throws ExecutionException, InterruptedException, TimeoutException {
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
@@ -161,9 +161,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
-    producer
-        .send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting))
-        .get(5, TimeUnit.SECONDS);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, partition, null, greeting)).get(5, SECONDS);
 
     testing.waitForTraces(1);
 
@@ -237,7 +235,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       testing.runWithSpan("producer exception: " + ex, () -> {});
                     }
                   })
-              .get(5, TimeUnit.SECONDS);
+              .get(5, SECONDS);
         });
 
     awaitUntilConsumerIsReady();

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
@@ -17,7 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -72,7 +72,7 @@ class ApplicationLoggerInstrumentationTest {
               }
             });
 
-    process.waitFor(10, TimeUnit.SECONDS);
+    process.waitFor(10, SECONDS);
     return output.join();
   }
 }

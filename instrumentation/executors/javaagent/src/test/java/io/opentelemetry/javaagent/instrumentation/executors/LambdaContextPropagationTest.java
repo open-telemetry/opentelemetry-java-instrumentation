@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.baggage.Baggage;
@@ -16,7 +17,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class LambdaContextPropagationTest {
     }
 
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.SECONDS);
+    executor.awaitTermination(30, SECONDS);
 
     assertThat(failureCounter).hasValue(0);
   }
@@ -63,7 +63,7 @@ class LambdaContextPropagationTest {
     }
 
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.SECONDS);
+    executor.awaitTermination(30, SECONDS);
 
     assertThat(failureCounter).hasValue(0);
   }
@@ -80,7 +80,7 @@ class LambdaContextPropagationTest {
     }
 
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.SECONDS);
+    executor.awaitTermination(30, SECONDS);
 
     assertThat(failureCounter).hasValue(0);
   }
@@ -102,7 +102,7 @@ class LambdaContextPropagationTest {
     }
 
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.SECONDS);
+    executor.awaitTermination(30, SECONDS);
 
     assertThat(failureCounter).hasValue(0);
   }
@@ -128,7 +128,7 @@ class LambdaContextPropagationTest {
     }
 
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.SECONDS);
+    executor.awaitTermination(30, SECONDS);
 
     assertThat(failureCounter).hasValue(0);
   }
@@ -150,7 +150,7 @@ class LambdaContextPropagationTest {
     }
 
     executor.shutdown();
-    executor.awaitTermination(30, TimeUnit.SECONDS);
+    executor.awaitTermination(30, SECONDS);
 
     assertThat(failureCounter).hasValue(0);
   }

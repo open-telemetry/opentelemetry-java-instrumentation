@@ -5,10 +5,11 @@
 
 package io.opentelemetry.testing;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -44,7 +45,7 @@ public class BatchRecordListener {
   }
 
   public static void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, TimeUnit.SECONDS);
+    messageReceived.await(30, SECONDS);
   }
 
   public static int getLastBatchSize() {

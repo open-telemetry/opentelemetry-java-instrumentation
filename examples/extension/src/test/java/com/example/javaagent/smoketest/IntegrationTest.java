@@ -4,6 +4,8 @@
  */
 
 package com.example.javaagent.smoketest;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -197,7 +199,7 @@ abstract class IntegrationTest {
 
   private String waitForContent() throws IOException, InterruptedException {
     long previousSize = 0;
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
+    long deadline = System.currentTimeMillis() + SECONDS.toMillis(30);
     String content = "[]";
     while (System.currentTimeMillis() < deadline) {
 
@@ -217,7 +219,7 @@ abstract class IntegrationTest {
       }
       previousSize = content.length();
       System.out.printf("Current content size %d%n", previousSize);
-      TimeUnit.MILLISECONDS.sleep(500);
+      MILLISECONDS.sleep(500);
     }
 
     return content;

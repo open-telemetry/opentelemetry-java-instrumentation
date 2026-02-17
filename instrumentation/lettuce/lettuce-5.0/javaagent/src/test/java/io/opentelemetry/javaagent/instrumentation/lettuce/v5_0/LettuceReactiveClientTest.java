@@ -15,6 +15,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.RedisClient;
@@ -27,7 +28,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
@@ -86,7 +86,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     testing.runWithSpan(
         "parent", () -> reactiveCommands.set("TESTSETKEY", "TESTSETVAL").subscribe(consumer));
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("OK");
+    assertThat(future.get(10, SECONDS)).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -119,7 +119,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
               future.complete(res);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
+    assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -157,7 +157,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                           }));
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(defaultVal);
+    assertThat(future.get(10, SECONDS)).isEqualTo(defaultVal);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -189,7 +189,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
               future.complete(res);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTKEY");
+    assertThat(future.get(10, SECONDS)).isEqualTo("TESTKEY");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
