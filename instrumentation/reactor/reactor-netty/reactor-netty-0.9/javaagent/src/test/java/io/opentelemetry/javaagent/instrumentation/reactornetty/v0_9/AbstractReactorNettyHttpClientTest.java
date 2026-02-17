@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -30,7 +31,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -166,7 +166,7 @@ abstract class AbstractReactorNettyHttpClientTest
                     })
                 .block());
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     testing.waitAndAssertTraces(
         trace -> {

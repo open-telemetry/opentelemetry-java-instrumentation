@@ -38,16 +38,6 @@ public final class MongoTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public MongoTelemetryBuilder setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
-  }
-
-  /**
    * Sets the max length of recorded queries after normalization. Defaults to {@value
    * DEFAULT_MAX_NORMALIZED_QUERY_LENGTH}.
    */

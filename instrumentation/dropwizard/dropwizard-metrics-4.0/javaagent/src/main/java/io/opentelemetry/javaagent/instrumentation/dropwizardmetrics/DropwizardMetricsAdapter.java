@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.logging.Level.WARNING;
+
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
@@ -20,8 +23,6 @@ import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -29,7 +30,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   private static final Logger logger = Logger.getLogger(DropwizardMetricsAdapter.class.getName());
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_MS = MILLISECONDS.toNanos(1);
   private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9._/-]");
 
   private static final VirtualField<Counter, LongUpDownCounter> otelUpDownCounterField =
@@ -70,8 +71,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
    */
   private static String sanitizeInstrumentName(String name) {
     if (name == null || name.isEmpty()) {
-      logger.log(
-          Level.WARNING, "Dropwizard metric name is null or empty, skipping instrument creation");
+      logger.log(WARNING, "Dropwizard metric name is null or empty, skipping instrument creation");
       return null;
     }
 
@@ -80,7 +80,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
     if (sanitized.isEmpty()) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' contains no valid characters after sanitization, skipping instrument creation",
           name);
       return null;
@@ -89,7 +89,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Ensure the name starts with a letter
     if (!Character.isLetter(sanitized.charAt(0))) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' does not start with a letter after sanitization, skipping instrument creation",
           name);
       return null;
@@ -98,7 +98,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Ensure max length of 255 characters (OpenTelemetry specification limit)
     if (sanitized.length() > 255) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' exceeds 255 character limit, truncating to ''{1}''",
           new Object[] {name, sanitized.substring(0, 255)});
       sanitized = sanitized.substring(0, 255);
@@ -107,7 +107,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
     // Log if sanitization changed the name
     if (!sanitized.equals(name)) {
       logger.log(
-          Level.WARNING,
+          WARNING,
           "Dropwizard metric name ''{0}'' has been sanitized to ''{1}''",
           new Object[] {name, sanitized});
     }

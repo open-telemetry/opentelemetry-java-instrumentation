@@ -140,7 +140,7 @@ public final class DbExecution {
         + ", connectionString='"
         + connectionString
         + '\''
-        + ", rawStatement='"
+        + ", rawQueryText='"
         + rawQueryText
         + '\''
         + ", context="

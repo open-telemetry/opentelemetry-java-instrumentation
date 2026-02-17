@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
@@ -19,7 +20,6 @@ import io.opentelemetry.context.Scope;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1750,7 +1750,7 @@ public final class BedrockRuntimeImpl {
     SdkJsonGenerator generator = new SdkJsonGenerator(JSON_FACTORY, "application/json");
     DocumentTypeJsonMarshaller marshaller = new DocumentTypeJsonMarshaller(generator);
     document.accept(marshaller);
-    return new String(generator.getBytes(), StandardCharsets.UTF_8);
+    return new String(generator.getBytes(), UTF_8);
   }
 
   private static Document deserializeDocument(String json) {

@@ -11,6 +11,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -52,20 +56,12 @@ class JavaUtilLoggingTest {
   @MethodSource("provideParameters")
   public void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
-    test(Level.FINE, Logger::fine, withParam, logException, withParent, null, null, null);
+    test(FINE, Logger::fine, withParam, logException, withParent, null, null, null);
+    testing.clearData();
+    test(INFO, Logger::info, withParam, logException, withParent, "abc", Severity.INFO, "INFO");
     testing.clearData();
     test(
-        Level.INFO,
-        Logger::info,
-        withParam,
-        logException,
-        withParent,
-        "abc",
-        Severity.INFO,
-        "INFO");
-    testing.clearData();
-    test(
-        Level.WARNING,
+        WARNING,
         Logger::warning,
         withParam,
         logException,
@@ -75,7 +71,7 @@ class JavaUtilLoggingTest {
         "WARNING");
     testing.clearData();
     test(
-        Level.SEVERE,
+        SEVERE,
         Logger::severe,
         withParam,
         logException,

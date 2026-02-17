@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
@@ -23,7 +24,6 @@ import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class DbClientMetricsTest {
@@ -111,6 +111,6 @@ class DbClientMetricsTest {
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

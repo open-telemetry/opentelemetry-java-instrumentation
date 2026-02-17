@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -19,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -73,7 +73,7 @@ class TomcatClassloadingTest {
     Path tmpFile = Files.createTempFile("hello", "tmp");
     tmpFile.toFile().deleteOnExit();
 
-    Files.write(tmpFile, "hello".getBytes(StandardCharsets.UTF_8));
+    Files.write(tmpFile, "hello".getBytes(UTF_8));
     URL url = tmpFile.toUri().toURL();
     HelperResources.register(classloader, "hello.txt", Collections.singletonList(url));
 
@@ -90,7 +90,7 @@ class TomcatClassloadingTest {
     assertThat(inputStream).isNotNull();
 
     String text =
-        new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        new BufferedReader(new InputStreamReader(inputStream, UTF_8))
             .lines()
             .collect(Collectors.joining("\n"));
 

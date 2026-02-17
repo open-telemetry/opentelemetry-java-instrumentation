@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GR
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -114,29 +114,41 @@ public abstract class AbstractGrpcStreamingTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel).withWaitForReady();
 
+    AtomicBoolean onNextCalled = new AtomicBoolean();
     StreamObserver<Helloworld.Response> observer2 =
-        client.conversation(
-            new StreamObserver<Helloworld.Response>() {
-              @Override
-              public void onNext(Helloworld.Response value) {
-                clientReceived.add(value.getMessage());
-              }
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    client.conversation(
+                        new StreamObserver<Helloworld.Response>() {
+                          @Override
+                          public void onNext(Helloworld.Response value) {
+                            // we create span only for the first onNext to simplify asserting spans
+                            if (onNextCalled.compareAndSet(false, true)) {
+                              testing()
+                                  .runWithSpan(
+                                      "clientOnNext", () -> clientReceived.add(value.getMessage()));
+                            } else {
+                              clientReceived.add(value.getMessage());
+                            }
+                          }
 
-              @Override
-              public void onError(Throwable t) {
-                error.set(t);
-              }
+                          @Override
+                          public void onError(Throwable t) {
+                            error.set(t);
+                          }
 
-              @Override
-              public void onCompleted() {
-                latch.countDown();
-              }
-            });
+                          @Override
+                          public void onCompleted() {
+                            latch.countDown();
+                          }
+                        }));
 
     for (int i = 1; i <= clientMessageCount; i++) {
       Helloworld.Response message =
@@ -145,7 +157,7 @@ public abstract class AbstractGrpcStreamingTest {
     }
     observer2.onCompleted();
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     assertThat(error).hasValue(null);
     assertThat(serverReceived)
@@ -221,10 +233,11 @@ public abstract class AbstractGrpcStreamingTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
                                     experimentalSatisfies(
@@ -246,7 +259,7 @@ public abstract class AbstractGrpcStreamingTest {
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
+                            .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 experimentalSatisfies(
                                     GRPC_RECEIVED_MESSAGE_COUNT,
@@ -270,7 +283,11 @@ public abstract class AbstractGrpcStreamingTest {
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(toArray(serverEvents)))));
+                                        .satisfiesExactlyInAnyOrder(toArray(serverEvents))),
+                    span ->
+                        span.hasName("clientOnNext")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -355,7 +372,7 @@ public abstract class AbstractGrpcStreamingTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel).withWaitForReady();
@@ -379,7 +396,7 @@ public abstract class AbstractGrpcStreamingTest {
     observer2.onNext(message);
     observer2.onCompleted();
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     // server span should end after child span
     assertThat(serverSpanRecording).isTrue();

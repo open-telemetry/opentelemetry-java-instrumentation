@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUt
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -22,7 +23,6 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -89,8 +89,8 @@ final class ApiGatewayProxyAttributesExtractor
       boolean first = true;
       for (Map.Entry<String, String> entry :
           emptyIfNull(request.getQueryStringParameters()).entrySet()) {
-        String key = URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8.name());
-        String value = URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8.name());
+        String key = URLEncoder.encode(entry.getKey(), UTF_8.name());
+        String value = URLEncoder.encode(entry.getValue(), UTF_8.name());
         str.append(first ? '?' : '&').append(key).append('=').append(value);
         first = false;
       }
