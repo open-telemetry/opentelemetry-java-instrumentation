@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jul;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.logging.Level.CONFIG;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;
@@ -23,7 +24,6 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -77,7 +77,7 @@ public final class JavaUtilLoggingHelper {
     // time
     // TODO (trask) use getInstant() for more precision on Java 9
     long timestamp = logRecord.getMillis();
-    builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+    builder.setTimestamp(timestamp, MILLISECONDS);
 
     // level
     Level level = logRecord.getLevel();

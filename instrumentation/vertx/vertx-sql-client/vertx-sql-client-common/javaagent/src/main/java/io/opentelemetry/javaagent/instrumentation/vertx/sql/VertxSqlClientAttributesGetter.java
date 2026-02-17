@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -18,7 +17,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 enum VertxSqlClientAttributesGetter
-    implements SqlClientAttributesGetter<VertxSqlClientRequest, Void>, ExtractQuerySummaryMarker {
+    implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
   INSTANCE;
 
   private static final List<Function<Exception, String>> responseStatusExtractors =

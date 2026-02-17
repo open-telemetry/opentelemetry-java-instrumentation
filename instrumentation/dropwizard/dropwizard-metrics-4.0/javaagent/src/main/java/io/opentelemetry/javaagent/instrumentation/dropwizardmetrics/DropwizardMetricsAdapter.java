@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.logging.Level.WARNING;
 
 import com.codahale.metrics.Counter;
@@ -22,7 +23,6 @@ import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -30,7 +30,7 @@ public final class DropwizardMetricsAdapter implements MetricRegistryListener {
 
   private static final Logger logger = Logger.getLogger(DropwizardMetricsAdapter.class.getName());
 
-  private static final double NANOS_PER_MS = TimeUnit.MILLISECONDS.toNanos(1);
+  private static final double NANOS_PER_MS = MILLISECONDS.toNanos(1);
   private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9._/-]");
 
   private static final VirtualField<Counter, LongUpDownCounter> otelUpDownCounterField =

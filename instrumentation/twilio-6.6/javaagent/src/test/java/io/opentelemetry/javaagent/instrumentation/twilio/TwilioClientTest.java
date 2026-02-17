@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +36,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -338,7 +338,7 @@ class TwilioClientTest {
                       .createAsync(realTwilioRestClient);
 
               try {
-                return future.get(10, TimeUnit.SECONDS);
+                return future.get(10, SECONDS);
               } finally {
                 Thread.sleep(1000);
               }
@@ -450,7 +450,7 @@ class TwilioClientTest {
                       .createAsync(twilioRestClient);
 
               try {
-                return future.get(10, TimeUnit.SECONDS);
+                return future.get(10, SECONDS);
               } finally {
                 Thread.sleep(1000);
               }
@@ -497,7 +497,7 @@ class TwilioClientTest {
                               .createAsync(twilioRestClient);
 
                       try {
-                        return future.get(10, TimeUnit.SECONDS);
+                        return future.get(10, SECONDS);
                       } finally {
                         Thread.sleep(1000);
                       }

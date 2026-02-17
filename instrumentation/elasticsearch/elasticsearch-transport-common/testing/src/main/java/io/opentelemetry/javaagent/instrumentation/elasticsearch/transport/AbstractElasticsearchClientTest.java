@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractElasticsearchClientTest {
 
-  protected static final long TIMEOUT = TimeUnit.SECONDS.toMillis(10);
+  protected static final long TIMEOUT = SECONDS.toMillis(10);
 
   protected static final AttributeKey<String> ELASTICSEARCH_ACTION =
       AttributeKey.stringKey("elasticsearch.action");
@@ -130,7 +131,7 @@ abstract class AbstractElasticsearchClientTest {
 
     RESPONSE get() {
       try {
-        latch.await(1, TimeUnit.MINUTES);
+        latch.await(1, MINUTES);
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
       }

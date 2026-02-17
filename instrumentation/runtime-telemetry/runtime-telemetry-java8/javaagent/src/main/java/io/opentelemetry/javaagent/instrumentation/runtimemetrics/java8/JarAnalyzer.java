@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8;
 import static io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8.JarDetails.EAR_EXTENSION;
 import static io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8.JarDetails.JAR_EXTENSION;
 import static io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8.JarDetails.WAR_EXTENSION;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
@@ -33,7 +34,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -180,7 +180,7 @@ final class JarAnalyzer implements ClassFileTransformer {
             Thread.sleep(100);
             continue;
           }
-          archiveUrl = toProcess.poll(100, TimeUnit.MILLISECONDS);
+          archiveUrl = toProcess.poll(100, MILLISECONDS);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }

@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.within;
 
 import io.micrometer.core.instrument.Metrics;
@@ -16,7 +19,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
@@ -38,7 +40,7 @@ public abstract class AbstractTimerTest {
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(42, TimeUnit.SECONDS);
+    timer.record(42, SECONDS);
 
     // then
     testing()
@@ -85,7 +87,7 @@ public abstract class AbstractTimerTest {
     // when
     Metrics.globalRegistry.remove(timer);
     testing().clearData();
-    timer.record(12, TimeUnit.SECONDS);
+    timer.record(12, SECONDS);
 
     // then
     testing()
@@ -98,7 +100,7 @@ public abstract class AbstractTimerTest {
     Timer timer = Timer.builder("testNanoTimer").register(Metrics.globalRegistry);
 
     // when
-    timer.record(1_234_000, TimeUnit.NANOSECONDS);
+    timer.record(1_234_000, NANOSECONDS);
 
     // then
     testing()
@@ -151,10 +153,10 @@ public abstract class AbstractTimerTest {
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(500, TimeUnit.MILLISECONDS);
-    timer.record(5, TimeUnit.SECONDS);
-    timer.record(50, TimeUnit.SECONDS);
-    timer.record(500, TimeUnit.SECONDS);
+    timer.record(500, MILLISECONDS);
+    timer.record(5, SECONDS);
+    timer.record(50, SECONDS);
+    timer.record(500, SECONDS);
 
     // then
     testing()

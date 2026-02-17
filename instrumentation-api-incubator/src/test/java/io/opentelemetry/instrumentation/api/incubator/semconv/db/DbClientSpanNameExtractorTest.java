@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
@@ -24,8 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
 
-  @Mock(extraInterfaces = ExtractQuerySummaryMarker.class)
-  SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
+  @Mock SqlClientAttributesGetter<DbRequest, Void> sqlAttributesGetter;
 
   @Test
   void shouldExtractFullSpanName() {

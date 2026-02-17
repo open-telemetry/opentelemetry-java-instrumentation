@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+<<<<<<< static-import-require-non-null
 import static java.util.Objects.requireNonNull;
+=======
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+>>>>>>> main
 
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
@@ -15,7 +19,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -32,7 +35,7 @@ class ResteasySingleConnection implements SingleConnection {
     this.port = port;
     this.client =
         new ResteasyClientBuilder()
-            .establishConnectionTimeout(5000, TimeUnit.MILLISECONDS)
+            .establishConnectionTimeout(5000, MILLISECONDS)
             .connectionPoolSize(1)
             .build();
   }
