@@ -134,7 +134,6 @@ public class ServicePeerResolver {
         .orElse(null);
   }
 
-
   @AutoValue
   abstract static class ServiceMatcher {
 
