@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsFirst;
+import static java.util.logging.Level.WARNING;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -21,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -58,14 +58,12 @@ public class ServicePeerResolver {
               String serviceNamespace = entry.getString("service_namespace");
               if (peer == null) {
                 logger.log(
-                    Level.WARNING,
-                    "Invalid service_peer_mapping entry - peer is required: {0}",
-                    entry);
+                    WARNING, "Invalid service_peer_mapping entry - peer is required: {0}", entry);
                 return;
               }
               if (serviceName == null && serviceNamespace == null) {
                 logger.log(
-                    Level.WARNING,
+                    WARNING,
                     "Invalid service_peer_mapping entry - at least one of service_name or service_namespace is required: {0}",
                     entry);
                 return;
