@@ -30,9 +30,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@SuppressWarnings("deprecation") // until ExperimentalBufferPools is renamed
 @ExtendWith(MockitoExtension.class)
-class ExperimentalBufferPoolsTest {
+class BufferPoolsTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -53,7 +52,7 @@ class ExperimentalBufferPoolsTest {
     when(bufferPoolBean.getTotalCapacity()).thenReturn(11L);
     when(bufferPoolBean.getCount()).thenReturn(12L);
 
-    ExperimentalBufferPools.registerObservers(testing.getOpenTelemetry(), beans);
+    BufferPools.registerObservers(testing.getOpenTelemetry(), beans);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
@@ -118,7 +117,7 @@ class ExperimentalBufferPoolsTest {
   void callback_Records() {
     when(bufferPoolBean.getMemoryUsed()).thenReturn(1L);
     Consumer<ObservableLongMeasurement> callback =
-        ExperimentalBufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
+        BufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
     callback.accept(measurement);
     verify(measurement)
         .record(1, Attributes.builder().put("jvm.buffer.pool.name", "buffer_pool_1").build());
@@ -128,7 +127,7 @@ class ExperimentalBufferPoolsTest {
   void callback_SkipRecord() {
     when(bufferPoolBean.getMemoryUsed()).thenReturn(-1L);
     Consumer<ObservableLongMeasurement> callback =
-        ExperimentalBufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
+        BufferPools.callback(beans, BufferPoolMXBean::getMemoryUsed);
     callback.accept(measurement);
     verify(measurement, never()).record(eq(-1), any());
   }

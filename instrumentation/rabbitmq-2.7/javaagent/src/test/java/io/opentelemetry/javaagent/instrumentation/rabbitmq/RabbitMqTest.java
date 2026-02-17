@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -48,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -459,7 +459,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         };
 
     channel.basicConsume(queueName, callback);
-    assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+    assertThat(latch.await(10, SECONDS)).isTrue();
 
     assertThat(deliveries.get(0)).isEqualTo("Hello, world!");
 

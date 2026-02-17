@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.channel.ChannelHandler;
@@ -16,7 +17,6 @@ import io.netty.util.concurrent.GenericProgressiveFutureListener;
 import io.netty.util.concurrent.ProgressiveFuture;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class ChannelFutureTest {
     channel.closeFuture().addListener(listener3);
     channel.closeFuture().removeListeners(listener2, listener3);
 
-    channel.close().await(5, TimeUnit.SECONDS);
+    channel.close().await(5, SECONDS);
 
     assertThat(counter.get()).isEqualTo(0);
   }
