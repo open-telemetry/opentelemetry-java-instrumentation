@@ -162,16 +162,16 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   @Override
   public Integer getInt(String name) {
     Object value = simpleEntries.get(name);
-    if (value == null) {
-      return null;
-    }
     if (value instanceof Integer) {
       return (Integer) value;
     }
     if (value instanceof Long) {
       return ((Long) value).intValue();
     }
-    return Integer.parseInt(value.toString());
+    if (value instanceof String) {
+      return Integer.parseInt((String) value);
+    }
+    return null;
   }
 
   @Nullable
@@ -240,41 +240,41 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static Boolean booleanOrNull(@Nullable Object value) {
-    if (value == null) {
-      return null;
-    }
     if (value instanceof Boolean) {
       return (Boolean) value;
     }
-    return Boolean.parseBoolean(value.toString());
+    if (value instanceof String) {
+      return Boolean.parseBoolean((String) value);
+    }
+    return null;
   }
 
   @Nullable
   private static Long longOrNull(@Nullable Object value) {
-    if (value == null) {
-      return null;
-    }
     if (value instanceof Integer) {
       return ((Integer) value).longValue();
     }
     if (value instanceof Long) {
       return (Long) value;
     }
-    return Long.parseLong(value.toString());
+    if (value instanceof String) {
+      return Long.parseLong((String) value);
+    }
+    return null;
   }
 
   @Nullable
   private static Double doubleOrNull(@Nullable Object value) {
-    if (value == null) {
-      return null;
-    }
     if (value instanceof Float) {
       return ((Float) value).doubleValue();
     }
     if (value instanceof Double) {
       return (Double) value;
     }
-    return Double.parseDouble(value.toString());
+    if (value instanceof String) {
+      return Double.parseDouble((String) value);
+    }
+    return null;
   }
 
   @Nullable
