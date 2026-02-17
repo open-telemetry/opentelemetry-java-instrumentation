@@ -6,8 +6,8 @@
 package org.springframework.web.servlet.v6_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
-import static java.util.logging.Level.FINE;
 import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
