@@ -157,11 +157,9 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      if (future == null || throwable != null) {
+      if (future == null) {
         listener.done(throwable);
-      }
-
-      if (future != null) {
+      } else {
         handler.addListener(future, listener);
       }
     }

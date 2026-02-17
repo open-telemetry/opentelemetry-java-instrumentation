@@ -11,8 +11,7 @@ import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class SpymemcachedNetworkAttributesGetter
-    implements ServerAttributesGetter<SpymemcachedRequest>,
-        NetworkAttributesGetter<SpymemcachedRequest, Object> {
+    implements ServerAttributesGetter<SpymemcachedRequest> {
 
   @Nullable
   @Override
