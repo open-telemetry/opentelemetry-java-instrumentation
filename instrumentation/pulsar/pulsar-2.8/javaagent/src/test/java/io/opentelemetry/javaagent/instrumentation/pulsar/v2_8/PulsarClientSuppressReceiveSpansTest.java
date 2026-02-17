@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.trace.SpanKind;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
@@ -44,7 +44,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -128,7 +128,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    result.get(1, TimeUnit.MINUTES);
+    result.get(1, MINUTES);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -169,7 +169,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    Message<String> receivedMsg = consumer.receive(1, TimeUnit.MINUTES);
+    Message<String> receivedMsg = consumer.receive(1, MINUTES);
     consumer.acknowledge(receivedMsg);
 
     testing.waitAndAssertTraces(
@@ -217,7 +217,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             "parent",
             () -> producer.newMessage().value(msg).property("Test-Message-Header", "test").send());
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -262,7 +262,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     String msg = "test";
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -308,7 +308,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                     })
             .subscribe();
 
-    latch.await(1, TimeUnit.MINUTES);
+    latch.await(1, MINUTES);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent1", "parent2"),

@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -26,7 +27,6 @@ import io.vertx.core.Vertx;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
 import org.junit.jupiter.api.AfterAll;
@@ -148,7 +148,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -171,7 +171,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -194,7 +194,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -217,7 +217,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -243,7 +243,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -269,7 +269,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }

@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -116,7 +116,7 @@ abstract class AbstractJms1Test {
     testing.runWithSpan("producer parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();
@@ -195,7 +195,7 @@ abstract class AbstractJms1Test {
     testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();

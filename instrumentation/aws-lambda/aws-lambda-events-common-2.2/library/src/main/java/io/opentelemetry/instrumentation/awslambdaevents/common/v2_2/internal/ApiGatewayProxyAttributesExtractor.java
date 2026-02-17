@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
@@ -54,10 +53,10 @@ final class ApiGatewayProxyAttributesExtractor
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String method = request.getHttpMethod();
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
@@ -66,7 +65,7 @@ final class ApiGatewayProxyAttributesExtractor
       attributes.put(USER_AGENT_ORIGINAL, userAgent);
     }
 
-    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(request, headers));
+    attributes.put(UrlAttributes.URL_FULL, getHttpUrl(request, headers));
   }
 
   private static String getHttpUrl(

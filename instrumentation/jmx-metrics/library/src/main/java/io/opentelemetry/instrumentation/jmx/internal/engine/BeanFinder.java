@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.logging.Level.WARNING;
 
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.management.MBeanServerConnection;
@@ -71,7 +71,7 @@ class BeanFinder {
           ManagementFactory.getPlatformMBeanServer();
         },
         discoveryDelay,
-        TimeUnit.MILLISECONDS);
+        MILLISECONDS);
 
     exec.schedule(
         new Runnable() {
@@ -80,11 +80,11 @@ class BeanFinder {
             refreshState(connections);
             // Use discoveryDelay as the increment for the actual delay
             delay = Math.min(delay + discoveryDelay, maxDelay);
-            exec.schedule(this, delay, TimeUnit.MILLISECONDS);
+            exec.schedule(this, delay, MILLISECONDS);
           }
         },
         delay,
-        TimeUnit.MILLISECONDS);
+        MILLISECONDS);
   }
 
   /**
