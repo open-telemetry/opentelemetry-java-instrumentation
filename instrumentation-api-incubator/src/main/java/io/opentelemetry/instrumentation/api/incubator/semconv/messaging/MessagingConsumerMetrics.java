@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
@@ -21,7 +22,6 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * metrics</a>.
  */
 public final class MessagingConsumerMetrics implements OperationListener {
-  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
+  private static final double NANOS_PER_S = SECONDS.toNanos(1);
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =

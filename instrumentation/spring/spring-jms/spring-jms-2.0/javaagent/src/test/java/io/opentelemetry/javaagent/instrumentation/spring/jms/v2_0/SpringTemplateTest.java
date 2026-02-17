@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
@@ -16,7 +17,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -99,7 +99,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     session.run();
 
     template = new JmsTemplate(connectionFactory);
-    template.setReceiveTimeout(TimeUnit.SECONDS.toMillis(10));
+    template.setReceiveTimeout(SECONDS.toMillis(10));
   }
 
   @AfterAll

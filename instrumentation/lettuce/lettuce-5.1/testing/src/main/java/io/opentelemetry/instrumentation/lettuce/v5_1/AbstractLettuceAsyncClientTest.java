@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -149,7 +149,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   void testSetCommandUsingFutureGetWithTimeout() throws Exception {
     RedisFuture<String> redisFuture =
         testing().runWithSpan("parent", () -> asyncCommands.set("TESTSETKEY", "TESTSETVAL"));
-    String res = redisFuture.get(3, TimeUnit.SECONDS);
+    String res = redisFuture.get(3, SECONDS);
 
     assertThat(res).isEqualTo("OK");
 
@@ -193,7 +193,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               redisFuture.thenAccept(consumer);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
+    assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
     testing()
         .waitAndAssertTraces(
@@ -271,7 +271,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               redisFuture.handleAsync(firstStage).thenApply(secondStage);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(successStr);
+    assertThat(future.get(10, SECONDS)).isEqualTo(successStr);
 
     testing()
         .waitAndAssertTraces(
@@ -337,7 +337,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               redisFuture.whenCompleteAsync(biConsumer);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isNotNull();
+    assertThat(future.get(10, SECONDS)).isNotNull();
 
     testing()
         .waitAndAssertTraces(
@@ -400,7 +400,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           return null;
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(testHashMap);
+    assertThat(future.get(10, SECONDS)).isEqualTo(testHashMap);
 
     testing()
         .waitAndAssertTraces(
