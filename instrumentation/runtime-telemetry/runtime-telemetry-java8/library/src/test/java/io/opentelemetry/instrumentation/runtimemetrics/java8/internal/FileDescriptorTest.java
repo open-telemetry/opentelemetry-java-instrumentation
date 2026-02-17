@@ -42,6 +42,7 @@ class FileDescriptorTest {
   // verify that mock is called with the correct value
   void registerObservers() {
     when(osBean.getOpenFileDescriptorCount()).thenReturn(42L);
+    when(osBean.getMaxFileDescriptorCount()).thenReturn(100L);
     FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
 
     testing.waitAndAssertMetrics(
