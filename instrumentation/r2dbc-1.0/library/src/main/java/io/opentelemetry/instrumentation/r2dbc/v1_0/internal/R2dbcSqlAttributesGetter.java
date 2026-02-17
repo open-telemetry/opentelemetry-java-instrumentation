@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.r2dbc.spi.R2dbcException;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -18,7 +17,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public enum R2dbcSqlAttributesGetter
-    implements SqlClientAttributesGetter<DbExecution, Void>, ExtractQuerySummaryMarker {
+    implements SqlClientAttributesGetter<DbExecution, Void> {
   INSTANCE;
 
   @Override

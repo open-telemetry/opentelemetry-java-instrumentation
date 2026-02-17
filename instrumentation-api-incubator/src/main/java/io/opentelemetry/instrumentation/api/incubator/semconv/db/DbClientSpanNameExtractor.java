@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
@@ -187,10 +186,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedQuery =
-            getter instanceof ExtractQuerySummaryMarker
-                ? SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText)
-                : SqlQuerySanitizerUtil.sanitize(rawQueryText);
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText);
         boolean batch = isBatch(request);
         String querySummary = sanitizedQuery.getQuerySummary();
         if (querySummary != null) {
@@ -208,10 +204,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             sanitizedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery =
-          getter instanceof ExtractQuerySummaryMarker
-              ? MultiQuery.analyzeWithSummary(rawQueryTexts, false)
-              : MultiQuery.analyze(rawQueryTexts, false);
+      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, false);
       String querySummary = multiQuery.getQuerySummary();
       if (querySummary != null) {
         return querySummary;

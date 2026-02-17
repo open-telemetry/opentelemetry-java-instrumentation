@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -18,7 +17,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class JdbcAttributesGetter
-    implements SqlClientAttributesGetter<DbRequest, Void>, ExtractQuerySummaryMarker {
+    implements SqlClientAttributesGetter<DbRequest, Void> {
 
   public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
 
