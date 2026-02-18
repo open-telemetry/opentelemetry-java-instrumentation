@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ID;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -103,7 +103,7 @@ class HostIdResourceTest {
     if (expectedValue == null) {
       that.isEmpty();
     } else {
-      that.containsEntry(HostIncubatingAttributes.HOST_ID, expectedValue);
+      that.containsEntry(HOST_ID, expectedValue);
     }
   }
 

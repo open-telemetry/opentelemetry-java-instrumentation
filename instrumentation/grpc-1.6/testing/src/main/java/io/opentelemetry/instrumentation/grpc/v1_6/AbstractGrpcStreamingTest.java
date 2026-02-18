@@ -17,6 +17,8 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
@@ -39,7 +41,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.trace.data.EventData;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -187,9 +188,8 @@ public abstract class AbstractGrpcStreamingTest {
                       attrs ->
                           assertThat(attrs)
                               .hasSize(2)
-                              .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT")
-                              .containsEntry(
-                                  MessageIncubatingAttributes.MESSAGE_ID, clientMessageId)));
+                              .containsEntry(MESSAGE_TYPE, "SENT")
+                              .containsEntry(MESSAGE_ID, clientMessageId)));
       serverEvents.add(
           event ->
               assertThat(event)
@@ -198,9 +198,8 @@ public abstract class AbstractGrpcStreamingTest {
                       attrs ->
                           assertThat(attrs)
                               .hasSize(2)
-                              .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED")
-                              .containsEntry(
-                                  MessageIncubatingAttributes.MESSAGE_ID, clientMessageId)));
+                              .containsEntry(MESSAGE_TYPE, "RECEIVED")
+                              .containsEntry(MESSAGE_ID, clientMessageId)));
 
       for (long j = 0; j < serverMessageCount; j++) {
         long serverMessageId = i * serverMessageCount + j + 1;
@@ -212,9 +211,8 @@ public abstract class AbstractGrpcStreamingTest {
                         attrs ->
                             assertThat(attrs)
                                 .hasSize(2)
-                                .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED")
-                                .containsEntry(
-                                    MessageIncubatingAttributes.MESSAGE_ID, serverMessageId)));
+                                .containsEntry(MESSAGE_TYPE, "RECEIVED")
+                                .containsEntry(MESSAGE_ID, serverMessageId)));
         serverEvents.add(
             event ->
                 assertThat(event)
@@ -223,9 +221,8 @@ public abstract class AbstractGrpcStreamingTest {
                         attrs ->
                             assertThat(attrs)
                                 .hasSize(2)
-                                .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT")
-                                .containsEntry(
-                                    MessageIncubatingAttributes.MESSAGE_ID, serverMessageId)));
+                                .containsEntry(MESSAGE_TYPE, "SENT")
+                                .containsEntry(MESSAGE_ID, serverMessageId)));
       }
     }
 
