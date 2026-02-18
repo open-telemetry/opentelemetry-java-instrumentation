@@ -65,7 +65,7 @@ class JdbcRowCountDisabledTest {
                 span ->
                     span.hasName(
                             SemconvStability.emitStableDatabaseSemconv()
-                                ? "SELECT"
+                                ? "SELECT test_table"
                                 : "SELECT testdisabled.test_table")
                         .satisfies(
                             s ->
