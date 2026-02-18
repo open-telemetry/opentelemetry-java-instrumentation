@@ -67,61 +67,43 @@ final class CoercingDeclarativeConfigProperties implements DeclarativeConfigProp
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    Boolean value = delegate.getBoolean(name);
-    if (value != null) {
-      return value;
-    }
-    // Spring may store it as a String
+    // Try getString first to avoid triggering a warning in YamlDeclarativeConfigProperties
+    // when the value is stored as a String instead of Boolean.
     String str = delegate.getString(name);
     if (str != null) {
       return Boolean.parseBoolean(str);
     }
-    return null;
+    return delegate.getBoolean(name);
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
-    Integer value = delegate.getInt(name);
-    if (value != null) {
-      return value;
-    }
-    // Spring may store it as a String
     String str = delegate.getString(name);
     if (str != null) {
       return Integer.parseInt(str);
     }
-    return null;
+    return delegate.getInt(name);
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    Long value = delegate.getLong(name);
-    if (value != null) {
-      return value;
-    }
-    // Spring may store it as a String
     String str = delegate.getString(name);
     if (str != null) {
       return Long.parseLong(str);
     }
-    return null;
+    return delegate.getLong(name);
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    Double value = delegate.getDouble(name);
-    if (value != null) {
-      return value;
-    }
-    // Spring may store it as a String
     String str = delegate.getString(name);
     if (str != null) {
       return Double.parseDouble(str);
     }
-    return null;
+    return delegate.getDouble(name);
   }
 
   @Nullable
