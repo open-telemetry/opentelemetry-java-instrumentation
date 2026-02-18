@@ -210,8 +210,7 @@ final class JarAnalyzer implements ClassFileTransformer {
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
     } catch (IOException e) {
-      JarAnalyzer.logger.log(
-          WARNING, "Error reading package for archive URL: " + archiveUrl, e);
+      JarAnalyzer.logger.log(WARNING, "Error reading package for archive URL: " + archiveUrl, e);
       return;
     }
     AttributesBuilder builder = Attributes.builder();
