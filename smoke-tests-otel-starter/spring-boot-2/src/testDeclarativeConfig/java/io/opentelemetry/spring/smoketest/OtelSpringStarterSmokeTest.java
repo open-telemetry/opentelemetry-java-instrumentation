@@ -6,12 +6,13 @@
 package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_INSTANCE_ID;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServiceAttributes;
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,24 +57,22 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                                 r.hasAttribute(
                                     // to make sure the declarative config is picked up
                                     // in application.yaml
-                                    ServiceAttributes.SERVICE_NAME,
-                                    "declarative-config-spring-boot-2")),
+                                    SERVICE_NAME, "declarative-config-spring-boot-2")),
                 span ->
                     span.hasKind(SpanKind.SERVER)
                         .hasResourceSatisfying(
                             r ->
                                 r.hasAttribute(
-                                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME,
-                                        "opentelemetry-spring-boot-starter")
+                                        TELEMETRY_DISTRO_NAME, "opentelemetry-spring-boot-starter")
                                     .hasAttribute(
                                         satisfies(
-                                            TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
+                                            TELEMETRY_DISTRO_VERSION,
                                             AbstractCharSequenceAssert::isNotBlank))
                                     .hasAttribute(
                                         satisfies(
-                                            ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
+                                            SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                        .hasAttribute(HTTP_ROUTE, "/ping"),
                 AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }
