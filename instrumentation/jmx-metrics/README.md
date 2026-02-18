@@ -505,6 +505,10 @@ To contribute to pre-defined metrics definitions or extend them through custom c
   - `request.duration.max`
   - `request.duration.sum` (for the cumulative value, prefer "sum" over "total" for consistency)
   - `request.duration.last` (for the last request duration)
-  - For those pre-aggregated metrics, the metric type should be `gauge` as the metric can't be aggregated automatically without knowledge of the pre-aggregation encoded in the name (to aggregate min and max, you'll have to compute min and max), also trying to aggregate mean values is likely to produce a meaningless result.
+  - For those pre-aggregated metrics:
+    - if pre-aggregation is `sum`, the metric type should be `counter` as metric can be aggregated
+    - otherwise, the metric type should be `gauge` as the metric can't be aggregated automatically:
+      - without knowledge of the metric pre-aggregation (encoded in name), for example: min and max.
+      - it will likely produce meaningless results: mean of mean, or mean across multiple instances.
 - when a metric represents an upper limit of a resource, use the `.limit` suffix, for example:
   - `threadpool.thread.limit` to represent the upper limit of `threadpool.thread.count`
