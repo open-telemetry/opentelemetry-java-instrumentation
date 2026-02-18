@@ -34,7 +34,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
   private DbClientSpanNameExtractor() {}
 
-  protected String computeSpanName(
+  private static String computeSpanName(
       @Nullable String namespace,
       @Nullable String operationName,
       @Nullable String collectionName,
@@ -81,7 +81,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *   <li>{server.address:server.port}
    * </ol>
    */
-  protected String computeSpanNameStable(
+  private static <REQUEST> String computeSpanNameStable(
       DbClientAttributesGetter<REQUEST, ?> getter,
       REQUEST request,
       @Nullable String operation,
