@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.Attributes;
@@ -72,7 +74,7 @@ import io.opentelemetry.testing.internal.proto.trace.v1.Status;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -89,6 +91,8 @@ public class TelemetryConverter {
   // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
   // class is missing
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
+  private static final Value<?> EMPTY_VALUE = computeEmptyValue();
   private static final boolean hasExtendedLogRecordData =
       classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
   private static final boolean hasExtendedAttributes =
@@ -301,7 +305,7 @@ public class TelemetryConverter {
         TestLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
             .setSpanContext(
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
@@ -327,7 +331,7 @@ public class TelemetryConverter {
         TestExtendedLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
             .setSpanContext(
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
@@ -348,6 +352,11 @@ public class TelemetryConverter {
   }
 
   private static Value<?> getBodyValue(AnyValue value) {
+    Value<?> result = anyValueToValue(value);
+    return Objects.equals(result, EMPTY_VALUE) ? null : result;
+  }
+
+  private static Value<?> anyValueToValue(AnyValue value) {
     switch (value.getValueCase()) {
       case STRING_VALUE:
         return Value.of(value.getStringValue());
@@ -361,7 +370,7 @@ public class TelemetryConverter {
         ArrayValue array = value.getArrayValue();
         List<Value<?>> convertedValues = new ArrayList<>();
         for (int i = 0; i < array.getValuesCount(); i++) {
-          convertedValues.add(getBodyValue(array.getValues(i)));
+          convertedValues.add(anyValueToValue(array.getValues(i)));
         }
         return Value.of(convertedValues);
       case KVLIST_VALUE:
@@ -372,13 +381,13 @@ public class TelemetryConverter {
           KeyValue keyValue = keyValueList.getValues(i);
           convertedKeyValueList[i] =
               io.opentelemetry.api.common.KeyValue.of(
-                  keyValue.getKey(), getBodyValue(keyValue.getValue()));
+                  keyValue.getKey(), anyValueToValue(keyValue.getValue()));
         }
         return Value.of(convertedKeyValueList);
       case BYTES_VALUE:
         return Value.of(value.getBytesValue().toByteArray());
       case VALUE_NOT_SET:
-        return null;
+        return EMPTY_VALUE;
     }
     throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
@@ -511,8 +520,12 @@ public class TelemetryConverter {
           break;
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
-          if (array.getValuesCount() != 0) {
-            switch (array.getValues(0).getValueCase()) {
+          AnyValue.ValueCase arrayType = homogeneousArrayType(array);
+          if (arrayType == null) {
+            // Heterogeneous arrays, arrays with complex types, or empty arrays
+            converted.put(valueKey(key), anyValueToValue(value));
+          } else {
+            switch (arrayType) {
               case STRING_VALUE:
                 converted.put(
                     stringArrayKey(key),
@@ -533,21 +546,23 @@ public class TelemetryConverter {
                     doubleArrayKey(key),
                     array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
                 break;
-              case VALUE_NOT_SET:
-                break;
               default:
-                throw new IllegalStateException(
-                    "Unexpected attribute: " + array.getValues(0).getValueCase());
+                // homogeneousArrayType only returns primitive types, this case won't be reached
+                throw new AssertionError("Unexpected array type: " + arrayType);
             }
           }
+          break;
+        case BYTES_VALUE:
+          converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
           break;
         case KVLIST_VALUE:
           converted.put(key, fromProtoExtended(value.getKvlistValue().getValuesList()));
           break;
         case VALUE_NOT_SET:
+          if (EMPTY_VALUE != null) {
+            converted.put(valueKey(key), EMPTY_VALUE);
+          }
           break;
-        default:
-          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
     return converted.build();
@@ -573,8 +588,12 @@ public class TelemetryConverter {
           break;
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
-          if (array.getValuesCount() != 0) {
-            switch (array.getValues(0).getValueCase()) {
+          AnyValue.ValueCase arrayType = homogeneousArrayType(array);
+          if (arrayType == null) {
+            // Heterogeneous arrays, arrays with complex types, or empty arrays
+            converted.put(valueKey(key), anyValueToValue(value));
+          } else {
+            switch (arrayType) {
               case STRING_VALUE:
                 converted.put(
                     stringArrayKey(key),
@@ -595,18 +614,23 @@ public class TelemetryConverter {
                     doubleArrayKey(key),
                     array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
                 break;
-              case VALUE_NOT_SET:
-                break;
               default:
-                throw new IllegalStateException(
-                    "Unexpected attribute: " + array.getValues(0).getValueCase());
+                // homogeneousArrayType only returns primitive types, this case won't be reached
+                throw new AssertionError("Unexpected array type: " + arrayType);
             }
           }
           break;
-        case VALUE_NOT_SET:
+        case BYTES_VALUE:
+          converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
           break;
-        default:
-          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
+        case KVLIST_VALUE:
+          converted.put(valueKey(key), anyValueToValue(value));
+          break;
+        case VALUE_NOT_SET:
+          if (EMPTY_VALUE != null) {
+            converted.put(valueKey(key), EMPTY_VALUE);
+          }
+          break;
       }
     }
     return converted.build();
@@ -652,6 +676,32 @@ public class TelemetryConverter {
       }
     }
     throw new IllegalArgumentException("Unexpected SeverityNumber: " + proto);
+  }
+
+  /**
+   * Returns the homogeneous primitive type of the array if all elements have the same primitive
+   * type (STRING, BOOL, INT, DOUBLE), or null if the array is heterogeneous or contains complex
+   * types.
+   */
+  private static AnyValue.ValueCase homogeneousArrayType(ArrayValue array) {
+    if (array.getValuesCount() == 0) {
+      return null;
+    }
+    AnyValue.ValueCase firstType = array.getValues(0).getValueCase();
+    // Only primitive types can form homogeneous arrays
+    if (firstType != AnyValue.ValueCase.STRING_VALUE
+        && firstType != AnyValue.ValueCase.BOOL_VALUE
+        && firstType != AnyValue.ValueCase.INT_VALUE
+        && firstType != AnyValue.ValueCase.DOUBLE_VALUE) {
+      return null;
+    }
+    // Check all elements have the same type
+    for (int i = 1; i < array.getValuesCount(); i++) {
+      if (array.getValues(i).getValueCase() != firstType) {
+        return null;
+      }
+    }
+    return firstType;
   }
 
   private static TraceState extractTraceState(String traceStateHeader) {
@@ -710,6 +760,19 @@ public class TelemetryConverter {
       return true;
     } catch (ClassNotFoundException e) {
       return false;
+    }
+  }
+
+  // Unchecked cast is safe because Value.empty() returns Value<?>
+  @SuppressWarnings("unchecked")
+  private static Value<?> computeEmptyValue() {
+    if (!canUseValue) {
+      return null;
+    }
+    try {
+      return (Value<?>) Value.class.getMethod("empty").invoke(null);
+    } catch (Exception e) {
+      return null;
     }
   }
 

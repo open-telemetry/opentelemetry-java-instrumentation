@@ -8,6 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8;
 import static io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8.JarDetails.EAR_EXTENSION;
 import static io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8.JarDetails.JAR_EXTENSION;
 import static io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8.JarDetails.WAR_EXTENSION;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,7 +20,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
-import io.opentelemetry.sdk.internal.DaemonThreadFactory;
+import io.opentelemetry.sdk.common.internal.DaemonThreadFactory;
+import io.opentelemetry.sdk.common.internal.RateLimiter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -29,8 +34,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -108,7 +111,7 @@ final class JarAnalyzer implements ClassFileTransformer {
     try {
       locationUri = archiveUrl.toURI();
     } catch (URISyntaxException e) {
-      logger.log(Level.WARNING, "Unable to get URI for code location URL: " + archiveUrl, e);
+      logger.log(WARNING, "Unable to get URI for code location URL: " + archiveUrl, e);
       return;
     }
 
@@ -116,18 +119,18 @@ final class JarAnalyzer implements ClassFileTransformer {
       return;
     }
     if ("jrt".equals(archiveUrl.getProtocol())) {
-      logger.log(Level.FINEST, "Skipping processing for java runtime module: {0}", archiveUrl);
+      logger.log(FINEST, "Skipping processing for java runtime module: {0}", archiveUrl);
       return;
     }
     String file = archiveUrl.getFile();
     if (file.endsWith("/")) {
-      logger.log(Level.FINEST, "Skipping processing non-archive code location: {0}", archiveUrl);
+      logger.log(FINEST, "Skipping processing non-archive code location: {0}", archiveUrl);
       return;
     }
     if (!file.endsWith(JAR_EXTENSION)
         && !file.endsWith(WAR_EXTENSION)
         && !file.endsWith(EAR_EXTENSION)) {
-      logger.log(Level.INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
+      logger.log(INFO, "Skipping processing unrecognized code location: {0}", archiveUrl);
       return;
     }
 
@@ -143,7 +146,7 @@ final class JarAnalyzer implements ClassFileTransformer {
           archiveUrl = archiveFile.toURI().toURL();
         }
       } catch (Exception e) {
-        logger.log(Level.WARNING, "Unable to normalize location URL: " + archiveUrl, e);
+        logger.log(WARNING, "Unable to normalize location URL: " + archiveUrl, e);
       }
     }
 
@@ -155,15 +158,13 @@ final class JarAnalyzer implements ClassFileTransformer {
 
     private final ExtendedLogRecordBuilder eventLogger;
     private final BlockingQueue<URL> toProcess;
-    private final io.opentelemetry.sdk.internal.RateLimiter rateLimiter;
+    private final RateLimiter rateLimiter;
 
     private Worker(
         ExtendedLogRecordBuilder eventLogger, BlockingQueue<URL> toProcess, int jarsPerSecond) {
       this.eventLogger = eventLogger;
       this.toProcess = toProcess;
-      this.rateLimiter =
-          new io.opentelemetry.sdk.internal.RateLimiter(
-              jarsPerSecond, jarsPerSecond, Clock.getDefault());
+      this.rateLimiter = new RateLimiter(jarsPerSecond, jarsPerSecond, Clock.getDefault());
     }
 
     /**
@@ -179,7 +180,7 @@ final class JarAnalyzer implements ClassFileTransformer {
             Thread.sleep(100);
             continue;
           }
-          archiveUrl = toProcess.poll(100, TimeUnit.MILLISECONDS);
+          archiveUrl = toProcess.poll(100, MILLISECONDS);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
         }
@@ -191,7 +192,7 @@ final class JarAnalyzer implements ClassFileTransformer {
           // events
           processUrl(eventLogger, archiveUrl);
         } catch (Throwable e) {
-          logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
+          logger.log(WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
         }
       }
       logger.warning("JarAnalyzer stopped");
@@ -207,7 +208,7 @@ final class JarAnalyzer implements ClassFileTransformer {
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
     } catch (IOException e) {
-      logger.log(Level.WARNING, "Error reading package for archive URL: " + archiveUrl, e);
+      logger.log(WARNING, "Error reading package for archive URL: " + archiveUrl, e);
       return;
     }
     AttributesBuilder builder = Attributes.builder();

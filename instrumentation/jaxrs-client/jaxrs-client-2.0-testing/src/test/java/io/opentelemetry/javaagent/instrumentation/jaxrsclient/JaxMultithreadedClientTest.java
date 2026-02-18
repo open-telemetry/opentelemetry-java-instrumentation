@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -16,7 +17,6 @@ import io.opentelemetry.testing.internal.armeria.server.ServerBuilder;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Client;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.jupiter.api.AfterAll;
@@ -83,6 +83,6 @@ class JaxMultithreadedClientTest {
           .start();
     }
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
   }
 }

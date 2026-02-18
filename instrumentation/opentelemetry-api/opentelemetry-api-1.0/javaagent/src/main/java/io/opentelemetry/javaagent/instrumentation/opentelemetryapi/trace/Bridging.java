@@ -15,6 +15,7 @@ import application.io.opentelemetry.api.trace.SpanKind;
 import application.io.opentelemetry.api.trace.StatusCode;
 import application.io.opentelemetry.api.trace.TraceState;
 import application.io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -113,7 +114,11 @@ public class Bridging {
         (key, value) -> {
           io.opentelemetry.api.common.AttributeKey agentKey = toAgent(key);
           if (agentKey != null) {
-            agentAttributes.put(agentKey, value);
+            if (key.getType().name().equals("VALUE")) {
+              agentAttributes.put(agentKey, ValueBridging.toAgent(value));
+            } else {
+              agentAttributes.put(agentKey, value);
+            }
           }
         });
     return agentAttributes.build();
@@ -140,9 +145,13 @@ public class Bridging {
         return io.opentelemetry.api.common.AttributeKey.longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
         return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
+      default:
+        if (applicationKey.getType().name().equals("VALUE")) {
+          return io.opentelemetry.api.common.AttributeKey.valueKey(applicationKey.getKey());
+        }
+        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
+        return null;
     }
-    logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
-    return null;
   }
 
   public static List<io.opentelemetry.api.common.AttributeKey<?>> toAgent(

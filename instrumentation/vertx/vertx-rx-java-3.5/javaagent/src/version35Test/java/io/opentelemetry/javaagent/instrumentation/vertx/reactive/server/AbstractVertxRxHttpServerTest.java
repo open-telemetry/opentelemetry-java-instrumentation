@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -14,7 +16,6 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.reactivex.core.AbstractVerticle;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vertx> {
   static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
@@ -40,7 +41,7 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
           future.complete(null);
         });
 
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
     return server;
   }
 

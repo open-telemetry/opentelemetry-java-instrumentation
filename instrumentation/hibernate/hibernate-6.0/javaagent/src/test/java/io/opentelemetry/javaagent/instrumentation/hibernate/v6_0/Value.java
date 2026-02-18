@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NamedQuery;
 
 @SuppressWarnings({
@@ -31,7 +32,7 @@ public class Value {
 
   @Id
   @GeneratedValue(generator = "increment")
-  @org.hibernate.annotations.GenericGenerator(name = "increment", strategy = "increment")
+  @GenericGenerator(name = "increment", strategy = "increment")
   public Long getId() {
     return id;
   }

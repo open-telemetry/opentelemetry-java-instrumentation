@@ -110,7 +110,7 @@ See [IntelliJ setup and troubleshooting](docs/contributing/intellij-setup-and-tr
 
 ## Style guide
 
-See [Style guide](docs/contributing/style-guideline.md)
+See [Style guide](docs/contributing/style-guide.md)
 
 ## Running the tests
 

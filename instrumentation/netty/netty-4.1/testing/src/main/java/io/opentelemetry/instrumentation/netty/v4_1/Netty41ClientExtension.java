@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.CONNECTION_TIMEOUT;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.READ_TIMEOUT;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -22,7 +24,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -82,8 +83,7 @@ public class Netty41ClientExtension implements BeforeAllCallback, AfterAllCallba
                   pipeline.addLast(sslContext.newHandler(socketChannel.alloc(), "localhost", -1));
                 }
                 if (readTimeout) {
-                  pipeline.addLast(
-                      new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+                  pipeline.addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS));
                 }
                 pipeline.addLast(new HttpClientCodec());
                 channelPipelineConfigurer.accept(pipeline);
@@ -95,7 +95,7 @@ public class Netty41ClientExtension implements BeforeAllCallback, AfterAllCallba
   @Override
   public void afterAll(ExtensionContext context) throws InterruptedException {
     if (eventLoopGroup != null) {
-      eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
+      eventLoopGroup.shutdownGracefully().await(10, SECONDS);
     }
   }
 

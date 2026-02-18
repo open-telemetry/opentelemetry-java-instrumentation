@@ -13,7 +13,7 @@ final class CassandraSingletons {
 
   static final CassandraTelemetry telemetry =
       CassandraTelemetry.builder(GlobalOpenTelemetry.get())
-          .setStatementSanitizationEnabled(AgentCommonConfig.get().isStatementSanitizationEnabled())
+          .setQuerySanitizationEnabled(AgentCommonConfig.get().isQuerySanitizationEnabled())
           .build();
 
   private CassandraSingletons() {}

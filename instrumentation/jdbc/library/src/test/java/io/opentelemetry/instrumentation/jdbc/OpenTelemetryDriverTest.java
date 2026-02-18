@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.jdbc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -42,9 +39,9 @@ class OpenTelemetryDriverTest {
 
     // From JDBC 4.0 (Java SE 6), the driver can be auto-registered from the java.sql.Driver file
     // contained in the META-INF.services folder
-    assertTrue(OpenTelemetryDriver.isRegistered());
+    assertThat(OpenTelemetryDriver.isRegistered()).isTrue();
 
-    assertTrue(hasOpenTelemetryDriver(drivers));
+    assertThat(hasOpenTelemetryDriver(drivers)).isTrue();
   }
 
   private static boolean hasOpenTelemetryDriver(Enumeration<Driver> drivers) {
@@ -117,7 +114,7 @@ class OpenTelemetryDriverTest {
   @Test
   void verifyConnectionWithNotAcceptedUrl() throws SQLException {
     Connection connection = OpenTelemetryDriver.INSTANCE.connect("abc:xyz", null);
-    assertNull(connection);
+    assertThat(connection).isNull();
   }
 
   @DisplayName("verify add driver candidate")
@@ -270,10 +267,9 @@ class OpenTelemetryDriverTest {
   @DisplayName("verify get property info with null url")
   @Test
   void verifyGetPropertyInfoWithNullUrl() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(null, null),
-        "url is required");
+    assertThatThrownBy(() -> OpenTelemetryDriver.INSTANCE.getPropertyInfo(null, null))
+        .describedAs("url is required")
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @DisplayName("verify get property info with empty url")
