@@ -31,12 +31,15 @@ import java.time.Instant;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
 import org.apache.log4j.spi.LocationInfo;
 
 public final class LogEventMapper {
+
+  private static final Logger logger = Logger.getLogger(LogEventMapper.class.getName());
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
@@ -47,6 +50,7 @@ public final class LogEventMapper {
   private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
+  @Deprecated // removing support for MDC-based event name since it's not scoped narrowly
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
@@ -74,6 +78,10 @@ public final class LogEventMapper {
             .collect(toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    if (captureEventName) {
+      logger.warning(
+          "The capture-event-name setting is deprecated and will be removed in a future version.");
+    }
   }
 
   boolean captureCodeAttributes =
