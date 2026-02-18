@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.util.Collection;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /** Group of attribute matchers */
 public class AttributeMatcherGroup {
@@ -22,8 +23,7 @@ public class AttributeMatcherGroup {
    * @throws IllegalStateException if there is any duplicate key
    */
   AttributeMatcherGroup(Collection<AttributeMatcher> matchers) {
-    this.matchers =
-        matchers.stream().collect(Collectors.toMap(AttributeMatcher::getAttributeName, m -> m));
+    this.matchers = matchers.stream().collect(toMap(AttributeMatcher::getAttributeName, m -> m));
   }
 
   /**

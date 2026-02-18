@@ -7,6 +7,7 @@ package com.example.javaagent.smoketest;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import okhttp3.OkHttpClient;
@@ -168,7 +168,7 @@ abstract class SmokeTest {
               }
               return builder.build();
             })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private String waitForContent() throws IOException, InterruptedException {

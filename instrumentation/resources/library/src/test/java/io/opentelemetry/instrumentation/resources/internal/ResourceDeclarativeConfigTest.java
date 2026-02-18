@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.resources.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,7 +18,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
@@ -58,7 +58,7 @@ class ResourceDeclarativeConfigTest {
               Set<String> attributeKeys =
                   resource.getAttributes().asMap().keySet().stream()
                       .map(AttributeKey::getKey)
-                      .collect(Collectors.toSet());
+                      .collect(toSet());
               // ContainerResourceComponentProvider - no container attributes reliably provided
               // HostIdResourceComponentProvider - host.id attribute not reliably provided
               // HostResourceComponentProvider

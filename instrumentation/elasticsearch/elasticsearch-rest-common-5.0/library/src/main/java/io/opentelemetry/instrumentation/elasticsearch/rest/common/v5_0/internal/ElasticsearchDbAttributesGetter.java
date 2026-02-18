@@ -8,13 +8,13 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Response;
@@ -64,7 +64,7 @@ final class ElasticsearchDbAttributesGetter
       try {
         return new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))
             .lines()
-            .collect(Collectors.joining());
+            .collect(joining());
       } catch (IOException e) {
         logger.log(FINE, "Failed reading HTTP body content.", e);
       }

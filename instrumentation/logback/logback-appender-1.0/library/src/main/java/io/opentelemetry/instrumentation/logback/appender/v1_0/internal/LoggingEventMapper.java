@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -37,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -279,8 +279,7 @@ public final class LoggingEventMapper {
 
   private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
-        LOG_BODY_PARAMETERS,
-        Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
+        LOG_BODY_PARAMETERS, Arrays.stream(arguments).map(String::valueOf).collect(toList()));
   }
 
   private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
