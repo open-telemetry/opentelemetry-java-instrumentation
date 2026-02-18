@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -15,7 +16,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AbstractAwsLambdaTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import lambdainternal.AwsLambdaLegacyInternalRequestHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -72,7 +72,7 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   private static final class TestRequestHandler implements RequestHandler<String, String> {

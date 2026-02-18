@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ARCH;
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
-import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 
 class HostResourceTest {
@@ -22,7 +23,7 @@ class HostResourceTest {
 
     // then
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(attributes.get(HostIncubatingAttributes.HOST_NAME)).isNotBlank();
-    assertThat(attributes.get(HostIncubatingAttributes.HOST_ARCH)).isNotBlank();
+    assertThat(attributes.get(HOST_NAME)).isNotBlank();
+    assertThat(attributes.get(HOST_ARCH)).isNotBlank();
   }
 }

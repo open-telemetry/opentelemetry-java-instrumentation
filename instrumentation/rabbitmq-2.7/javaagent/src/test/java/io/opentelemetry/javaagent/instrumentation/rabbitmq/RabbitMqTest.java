@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -39,7 +40,6 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -649,7 +649,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           span.hasAttributesSatisfying(
               equalTo(stringKey("rabbitmq.command"), "basic.publish"),
               satisfies(
-                  MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                  MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                   val ->
                       val.satisfiesAnyOf(
                           v -> assertThat(v).isNull(),
@@ -698,7 +698,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         equalTo(MESSAGING_SYSTEM, "rabbitmq"),
         satisfies(MESSAGING_DESTINATION_NAME, val -> val.isIn(exchange, null)),
         satisfies(
-            MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+            MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
             val ->
                 val.satisfiesAnyOf(
                     v -> assertThat(v).isNull(),
