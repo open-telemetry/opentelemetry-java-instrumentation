@@ -505,7 +505,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
-            "camel.threadpool.pool.size.current",
+            "camel.threadpool.thread.count",
             metric ->
                 metric
                     .isUpDownCounter()
@@ -514,7 +514,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
-            "camel.threadpool.pool.size.max",
+            "camel.threadpool.thread.max",
             metric ->
                 metric
                     .isGauge()
@@ -524,7 +524,16 @@ class CamelTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(
                         threadPoolAttributes, routeRelatedThreadPoolAttributes))
         .add(
-            "camel.threadpool.pool.core.size",
+            "camel.threadpool.thread.limit.upper",
+            metric ->
+                metric
+                    .isUpDownCounter()
+                    .hasDescription("The maximum possible number of threads in the pool.")
+                    .hasUnit("{thread}")
+                    .hasDataPointsWithAttributes(
+                        threadPoolAttributes, routeRelatedThreadPoolAttributes))
+        .add(
+            "camel.threadpool.thread.limit.lower",
             metric ->
                 metric
                     .isUpDownCounter()

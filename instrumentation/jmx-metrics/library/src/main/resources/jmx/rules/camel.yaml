@@ -326,21 +326,27 @@ rules:
         type: updowncounter
         unit: "{task}"
         desc:  The number of Tasks in the Task Queue.
-      # camel.threadpool.pool.size.current
+      # camel.threadpool.thread.count
       PoolSize:
-        metric: pool.size.current
+        metric: thread.count
         type: updowncounter
         unit: "{thread}"
         desc: The current number of threads in the pool.
-      # camel.threadpool.pool.size.max
+      # camel.threadpool.thread.max
       LargestPoolSize:
-        metric: pool.size.max
+        metric: thread.max
         type: gauge
         unit: "{thread}"
         desc: The largest number of threads that have ever simultaneously been in the pool.
-      # camel.threadpool.pool.core.size
+      # camel.threadpool.thread.limit.upper
+      MaximumPoolSize:
+        metric: thread.limit.upper
+        type: updowncounter
+        unit: "{thread}"
+        desc: The maximum possible number of threads in the pool.
+      # camel.threadpool.thread.limit.lower
       CorePoolSize:
-        metric: pool.core.size
+        metric: thread.limit.lower
         type: updowncounter
         unit: "{thread}"
         desc: The number of threads that are always kept in the pool, even if they are idle.
