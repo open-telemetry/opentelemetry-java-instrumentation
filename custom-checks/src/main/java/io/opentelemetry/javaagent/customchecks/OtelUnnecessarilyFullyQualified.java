@@ -30,6 +30,7 @@ import static com.google.errorprone.util.ASTHelpers.getType;
 import static com.google.errorprone.util.ASTHelpers.isGeneratedConstructor;
 import static com.google.errorprone.util.FindIdentifiers.findIdent;
 import static com.sun.tools.javac.code.Kinds.KindSelector.VAL_TYP;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toCollection;
 
 import com.google.auto.service.AutoService;
@@ -331,7 +332,7 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
       if (EXEMPTED_NAMES.contains(nameString)) {
         continue;
       }
-      List<TreePath> pathsToFix = Objects.requireNonNull(getOnlyElement(types.values()));
+      List<TreePath> pathsToFix = requireNonNull(getOnlyElement(types.values()));
       Set<Symbol> meaningAtUsageSites =
           pathsToFix.stream()
               .map(path -> findIdent(nameString, state.withPath(path), VAL_TYP))
@@ -344,7 +345,7 @@ public final class OtelUnnecessarilyFullyQualified extends BugChecker
       // Only add the import if any of the usage sites don't already resolve to this type.
       if (meaningAtUsageSites.stream().anyMatch(Objects::isNull)) {
         fixBuilder.addImport(
-            Objects.requireNonNull(getOnlyElement(types.keySet())).getQualifiedName().toString());
+            requireNonNull(getOnlyElement(types.keySet())).getQualifiedName().toString());
       }
       for (TreePath path : pathsToFix) {
         fixBuilder.replace(path.getLeaf(), nameString);
