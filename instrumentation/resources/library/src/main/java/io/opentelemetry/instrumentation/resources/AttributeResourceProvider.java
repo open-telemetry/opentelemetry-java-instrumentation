@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
@@ -20,7 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * An easier alternative to {@link io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider}, which
@@ -60,7 +60,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
     filteredKeys =
         attributeGetters.keySet().stream()
             .filter(key -> shouldUpdate(config, existing, key, resourceAttributes))
-            .collect(Collectors.toSet());
+            .collect(toSet());
     return !filteredKeys.isEmpty();
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -18,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.DynamicTest;
@@ -68,7 +68,7 @@ class HostIdResourceTest {
 
                       assertHostId(testCase.expectedValue, hostIdResource);
                     }))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @TestFactory
@@ -93,7 +93,7 @@ class HostIdResourceTest {
 
                       assertHostId(testCase.expectedValue, hostIdResource);
                     }))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {

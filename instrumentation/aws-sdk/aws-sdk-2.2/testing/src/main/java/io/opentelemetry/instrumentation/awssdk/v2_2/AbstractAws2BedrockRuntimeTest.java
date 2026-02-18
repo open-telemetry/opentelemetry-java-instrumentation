@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.AWS_BEDROCK;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -37,7 +38,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -809,7 +809,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
     }
 
     List<ToolUseBlock> toolUses =
-        responseChunksTools.stream().map(ToolUseBlock.Builder::build).collect(Collectors.toList());
+        responseChunksTools.stream().map(ToolUseBlock.Builder::build).collect(toList());
 
     String seattleToolUseId0 = "";
     String sanFranciscoToolUseId0 = "";

@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.docs;
 
 import static java.util.Locale.Category.FORMAT;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -19,7 +22,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeMap;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class DocGeneratorApplication {
 
@@ -88,16 +90,14 @@ public class DocGeneratorApplication {
 
   private static String getClassificationStats(List<InstrumentationModule> modules) {
     return modules.stream()
-        .collect(
-            Collectors.groupingBy(
-                m -> m.getMetadata().getClassification(), TreeMap::new, Collectors.toList()))
+        .collect(groupingBy(m -> m.getMetadata().getClassification(), TreeMap::new, toList()))
         .entrySet()
         .stream()
         .map(
             entry ->
                 String.format(
                     Locale.getDefault(FORMAT), "\t%s: %d", entry.getKey(), entry.getValue().size()))
-        .collect(Collectors.joining("\n"));
+        .collect(joining("\n"));
   }
 
   private static String getPercentage(String label, long numerator, long denominator) {
@@ -115,7 +115,7 @@ public class DocGeneratorApplication {
         .map(InstrumentationModule::getInstrumentationName)
         .sorted()
         .map(name -> "- [ ] " + name)
-        .collect(Collectors.joining("\n"));
+        .collect(joining("\n"));
   }
 
   @SuppressWarnings("unused") // temporary helper method used for project tracking
@@ -132,7 +132,7 @@ public class DocGeneratorApplication {
               String checkbox = hasDescription ? "- [x] " : "- [ ] ";
               return checkbox + module.getInstrumentationName();
             })
-        .collect(Collectors.joining("\n"));
+        .collect(joining("\n"));
   }
 
   @SuppressWarnings("unused") // temporary helper method used for project tracking
@@ -149,7 +149,7 @@ public class DocGeneratorApplication {
               String checkbox = hasDescription ? "- [x] " : "- [ ] ";
               return checkbox + module.getInstrumentationName();
             })
-        .collect(Collectors.joining("\n"));
+        .collect(joining("\n"));
   }
 
   private DocGeneratorApplication() {}

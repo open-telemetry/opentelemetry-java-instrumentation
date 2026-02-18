@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config;
 
+import static java.util.stream.Collectors.toList;
+
 import application.io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import application.io.opentelemetry.common.ComponentLoader;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public final class ApplicationDeclarativeConfigProperties156Incubator
@@ -108,7 +109,7 @@ public final class ApplicationDeclarativeConfigProperties156Incubator
 
     return structuredList.stream()
         .map(e -> new ApplicationDeclarativeConfigProperties156Incubator(e))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

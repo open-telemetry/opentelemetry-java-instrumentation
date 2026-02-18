@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -27,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -75,15 +78,15 @@ public class YamlHelper {
                         .getClassification()
                         .equals(InstrumentationClassification.LIBRARY))
             .collect(
-                Collectors.groupingBy(
+                groupingBy(
                     InstrumentationModule::getGroup,
                     TreeMap::new,
-                    Collectors.collectingAndThen(
-                        Collectors.toList(),
+                    collectingAndThen(
+                        toList(),
                         modules ->
                             modules.stream()
                                 .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
-                                .collect(Collectors.toList()))));
+                                .collect(toList()))));
 
     Map<String, Object> output = new TreeMap<>();
     libraryInstrumentations.forEach(
@@ -211,7 +214,7 @@ public class YamlHelper {
         List<String> conventionNames =
             module.getMetadata().getSemanticConventions().stream()
                 .map(Enum::name)
-                .collect(Collectors.toList());
+                .collect(toList());
         moduleMap.put("semantic_conventions", conventionNames);
       }
       if (module.getMetadata().getLibraryLink() != null) {
@@ -222,9 +225,7 @@ public class YamlHelper {
       }
       if (!module.getMetadata().getFeatures().isEmpty()) {
         List<String> functionNames =
-            module.getMetadata().getFeatures().stream()
-                .map(Enum::name)
-                .collect(Collectors.toList());
+            module.getMetadata().getFeatures().stream().map(Enum::name).collect(toList());
         moduleMap.put("features", functionNames);
       }
     }

@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.stream.Collectors.toList;
+
 import io.grpc.Metadata;
 import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
@@ -73,6 +74,6 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status>
       return Collections.emptyList();
     }
 
-    return StreamSupport.stream(values.spliterator(), false).collect(Collectors.toList());
+    return StreamSupport.stream(values.spliterator(), false).collect(toList());
   }
 }
