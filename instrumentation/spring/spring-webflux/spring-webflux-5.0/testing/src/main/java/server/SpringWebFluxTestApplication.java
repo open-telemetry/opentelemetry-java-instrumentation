@@ -5,6 +5,7 @@
 
 package server;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -13,7 +14,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -76,7 +76,7 @@ public class SpringWebFluxTestApplication {
             GET("/slow"),
             request -> {
               try {
-                slowRequestLatch.await(10, TimeUnit.SECONDS);
+                slowRequestLatch.await(10, SECONDS);
               } catch (InterruptedException e) {
                 throw new IllegalStateException(e);
               }

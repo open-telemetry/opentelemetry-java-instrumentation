@@ -7,6 +7,15 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -17,12 +26,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class RpcServerMetricsTest {
 
   @Test
@@ -35,34 +41,34 @@ class RpcServerMetricsTest {
 
     Attributes requestAttributes1 =
         Attributes.builder()
-            .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
-            .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
-            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
+            .put(RPC_SYSTEM, "grpc")
+            .put(RPC_SERVICE, "myservice.EchoService")
+            .put(RPC_METHOD, "exampleMethod")
             .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
             .build();
 
     Attributes requestAttributes2 =
         Attributes.builder()
-            .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
-            .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
-            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
+            .put(RPC_SYSTEM, "grpc")
+            .put(RPC_SERVICE, "myservice.EchoService")
+            .put(RPC_METHOD, "exampleMethod")
             .build();
 
     Attributes responseAttributes1 =
         Attributes.builder()
-            .put(ServerAttributes.SERVER_ADDRESS, "example.com")
-            .put(ServerAttributes.SERVER_PORT, 8080)
-            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
-            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
-            .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(SERVER_ADDRESS, "example.com")
+            .put(SERVER_PORT, 8080)
+            .put(NETWORK_LOCAL_ADDRESS, "127.0.0.1")
+            .put(NETWORK_TRANSPORT, "tcp")
+            .put(NETWORK_TYPE, "ipv4")
             .put(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20)
             .build();
 
     Attributes responseAttributes2 =
         Attributes.builder()
-            .put(ServerAttributes.SERVER_PORT, 8080)
-            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
-            .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
+            .put(SERVER_PORT, 8080)
+            .put(NETWORK_LOCAL_ADDRESS, "127.0.0.1")
+            .put(NETWORK_TRANSPORT, "tcp")
             .build();
 
     Context parent =
@@ -98,17 +104,13 @@ class RpcServerMetricsTest {
                                     point
                                         .hasSum(150 /* millis */)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_SERVICE,
-                                                "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
-                                            equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
-                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
-                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
+                                            equalTo(RPC_SYSTEM, "grpc"),
+                                            equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                            equalTo(RPC_METHOD, "exampleMethod"),
+                                            equalTo(SERVER_ADDRESS, "example.com"),
+                                            equalTo(SERVER_PORT, 8080),
+                                            equalTo(NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -126,17 +128,13 @@ class RpcServerMetricsTest {
                                     point
                                         .hasSum(20 /* bytes */)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_SERVICE,
-                                                "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
-                                            equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
-                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
-                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
+                                            equalTo(RPC_SYSTEM, "grpc"),
+                                            equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                            equalTo(RPC_METHOD, "exampleMethod"),
+                                            equalTo(SERVER_ADDRESS, "example.com"),
+                                            equalTo(SERVER_PORT, 8080),
+                                            equalTo(NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -154,17 +152,13 @@ class RpcServerMetricsTest {
                                     point
                                         .hasSum(10 /* bytes */)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_SERVICE,
-                                                "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
-                                            equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
-                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
-                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
+                                            equalTo(RPC_SYSTEM, "grpc"),
+                                            equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                            equalTo(RPC_METHOD, "exampleMethod"),
+                                            equalTo(SERVER_ADDRESS, "example.com"),
+                                            equalTo(SERVER_PORT, 8080),
+                                            equalTo(NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -186,18 +180,14 @@ class RpcServerMetricsTest {
                                     point
                                         .hasSum(150 /* millis */)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_SERVICE,
-                                                "myservice.EchoService"),
-                                            equalTo(
-                                                RpcIncubatingAttributes.RPC_METHOD,
-                                                "exampleMethod"),
-                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
-                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
+                                            equalTo(RPC_SYSTEM, "grpc"),
+                                            equalTo(RPC_SERVICE, "myservice.EchoService"),
+                                            equalTo(RPC_METHOD, "exampleMethod"),
+                                            equalTo(SERVER_PORT, 8080),
+                                            equalTo(NETWORK_TRANSPORT, "tcp")))));
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

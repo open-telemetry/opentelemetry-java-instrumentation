@@ -12,51 +12,34 @@ import javax.annotation.Nullable;
 
 class MultiQuery {
 
-  @Nullable private final String collectionName;
   @Nullable private final String storedProcedureName;
-  @Nullable private final String operationName;
   private final Set<String> queryTexts;
+  @Nullable private final String querySummary;
 
   private MultiQuery(
-      @Nullable String collectionName,
-      @Nullable String storedProcedureName,
-      @Nullable String operationName,
-      Set<String> queryTexts) {
-    this.collectionName = collectionName;
+      @Nullable String storedProcedureName, Set<String> queryTexts, @Nullable String querySummary) {
     this.storedProcedureName = storedProcedureName;
-    this.operationName = operationName;
     this.queryTexts = queryTexts;
+    this.querySummary = querySummary;
   }
 
-  static MultiQuery analyze(
-      Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
-    UniqueValue uniqueCollectionName = new UniqueValue();
+  static MultiQuery analyzeWithSummary(
+      Collection<String> rawQueryTexts, boolean querySanitizationEnabled) {
     UniqueValue uniqueStoredProcedureName = new UniqueValue();
-    UniqueValue uniqueOperationName = new UniqueValue();
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
+    UniqueValue uniqueQuerySummary = new UniqueValue();
     for (String rawQueryText : rawQueryTexts) {
-      SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
-      String collectionName = sanitizedStatement.getCollectionName();
-      uniqueCollectionName.set(collectionName);
-      String storedProcedureName = sanitizedStatement.getStoredProcedureName();
-      uniqueStoredProcedureName.set(storedProcedureName);
-      String operationName = sanitizedStatement.getOperationName();
-      uniqueOperationName.set(operationName);
-      uniqueQueryTexts.add(
-          statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
+      SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText);
+      uniqueStoredProcedureName.set(sanitizedQuery.getStoredProcedureName());
+      uniqueQueryTexts.add(querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
+      uniqueQuerySummary.set(sanitizedQuery.getQuerySummary());
     }
 
-    String operationName = uniqueOperationName.getValue();
+    String querySummary = uniqueQuerySummary.getValue();
     return new MultiQuery(
-        uniqueCollectionName.getValue(),
         uniqueStoredProcedureName.getValue(),
-        operationName == null ? "BATCH" : "BATCH " + operationName,
-        uniqueQueryTexts);
-  }
-
-  @Nullable
-  public String getCollectionName() {
-    return collectionName;
+        uniqueQueryTexts,
+        querySummary == null ? "BATCH" : "BATCH " + querySummary);
   }
 
   @Nullable
@@ -64,39 +47,13 @@ class MultiQuery {
     return storedProcedureName;
   }
 
-  /**
-   * @deprecated Use {@link #getCollectionName()} or {@link #getStoredProcedureName()} instead.
-   */
-  @Deprecated
   @Nullable
-  public String getMainIdentifier() {
-    return collectionName != null ? collectionName : storedProcedureName;
-  }
-
-  @Nullable
-  public String getOperationName() {
-    return operationName;
-  }
-
-  /**
-   * @deprecated Use {@link #getOperationName()} instead.
-   */
-  @Deprecated
-  @Nullable
-  public String getOperation() {
-    return getOperationName();
+  public String getQuerySummary() {
+    return querySummary;
   }
 
   public Set<String> getQueryTexts() {
     return queryTexts;
-  }
-
-  /**
-   * @deprecated Use {@link #getQueryTexts()} instead.
-   */
-  @Deprecated
-  public Set<String> getStatements() {
-    return getQueryTexts();
   }
 
   private static class UniqueValue {

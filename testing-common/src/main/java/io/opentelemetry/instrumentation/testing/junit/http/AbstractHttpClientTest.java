@@ -5,12 +5,32 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
+import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -24,16 +44,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SchemaUrls;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -47,10 +58,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -151,7 +160,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span ->
                     assertClientSpan(span, uri, HttpConstants._OTHER, responseCode, null)
                         .hasNoParent()
-                        .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                        .hasAttribute(HTTP_REQUEST_METHOD_ORIGINAL, method)));
   }
 
   @ParameterizedTest
@@ -275,7 +284,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -315,7 +324,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -374,10 +383,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
-              .collect(Collectors.toList()));
+              .collect(toList()));
     } else {
       testing.waitAndAssertTraces(
           trace -> {
@@ -421,7 +430,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     if (options.isLowLevelInstrumentation()) {
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(HttpAttributes.HTTP_REQUEST_RESEND_COUNT),
+          comparingRootSpanAttribute(HTTP_REQUEST_RESEND_COUNT),
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -1005,7 +1014,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             method,
             uri,
             // the time that server waits before completing the response
-            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(1))));
+            Collections.singletonMap("delay", String.valueOf(SECONDS.toMillis(1))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1019,9 +1028,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           SpanData span = trace.getSpan(0);
           // make sure the span is at least as long as the delay we set when sending the request
-          assertThat(
-                  span.getEndEpochNanos() - span.getStartEpochNanos()
-                      >= TimeUnit.SECONDS.toNanos(1))
+          assertThat(span.getEndEpochNanos() - span.getStartEpochNanos() >= SECONDS.toNanos(1))
               .describedAs("Span duration should be at least 1s")
               .isTrue();
         });
@@ -1040,7 +1047,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             uri,
             // the time that server waits before completing the response, we expect the response
             // headers to arrive much sooner
-            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(2))));
+            Collections.singletonMap("delay", String.valueOf(SECONDS.toMillis(2))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1054,14 +1061,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           SpanData span = trace.getSpan(0);
           // verify that the span length is less than the delay used to complete the response body
-          assertThat(
-                  span.getEndEpochNanos() - span.getStartEpochNanos()
-                      <= TimeUnit.SECONDS.toNanos(2))
+          assertThat(span.getEndEpochNanos() - span.getStartEpochNanos() <= SECONDS.toNanos(2))
               .describedAs("Span duration should be less than 2s")
               .isTrue();
         });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
@@ -1073,98 +1079,90 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              // Check for peer.service when running with javaagent instrumentation
-              String distroName =
-                  span.actual()
-                      .getResource()
-                      .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
+              // Check for service.peer.name when running with javaagent instrumentation
+              String distroName = span.actual().getResource().getAttribute(TELEMETRY_DISTRO_NAME);
               if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
-                if (expectedPeerService != null) {
+                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
+                if (expectedServicePeerName != null) {
                   assertThat(attrs)
-                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
+                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
                 }
               }
 
               // we're opting out of these attributes in the new semconv
               assertThat(attrs)
-                  .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
-                  .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
-                  .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
-              if (httpClientAttributes.contains(NetworkAttributes.NETWORK_PROTOCOL_VERSION)) {
+                  .doesNotContainKey(NETWORK_TRANSPORT)
+                  .doesNotContainKey(NETWORK_TYPE)
+                  .doesNotContainKey(NETWORK_PROTOCOL_NAME);
+              if (httpClientAttributes.contains(NETWORK_PROTOCOL_VERSION)) {
                 assertThat(attrs)
                     .containsEntry(
-                        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                        options.getHttpProtocolVersion().apply(uri));
+                        NETWORK_PROTOCOL_VERSION, options.getHttpProtocolVersion().apply(uri));
               }
 
-              if (httpClientAttributes.contains(ServerAttributes.SERVER_ADDRESS)) {
-                assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, uri.getHost());
+              if (httpClientAttributes.contains(SERVER_ADDRESS)) {
+                assertThat(attrs).containsEntry(SERVER_ADDRESS, uri.getHost());
               }
-              if (httpClientAttributes.contains(ServerAttributes.SERVER_PORT)) {
+              if (httpClientAttributes.contains(SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  if (attrs.get(ServerAttributes.SERVER_PORT) != null) {
+                  if (attrs.get(SERVER_PORT) != null) {
                     int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                    assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, effectivePort);
+                    assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
                   }
                   // alternatively, peer port is not emitted -- and that's fine too
                 } else {
-                  assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, uriPort);
+                  assertThat(attrs).containsEntry(SERVER_PORT, uriPort);
                 }
               }
 
               if (uri.getPort() != PortUtils.UNUSABLE_PORT && !uri.getHost().equals("192.0.2.1")) {
                 // TODO: Move to test knob rather than always treating as optional
-                if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
+                if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
                   assertThat(attrs)
                       .hasEntrySatisfying(
-                          NetworkAttributes.NETWORK_PEER_ADDRESS,
+                          NETWORK_PEER_ADDRESS,
                           addr -> assertThat(addr).isIn("127.0.0.1", "0:0:0:0:0:0:0:1"));
                 }
-                if (attrs.get(NetworkAttributes.NETWORK_PEER_PORT) != null) {
+                if (attrs.get(NETWORK_PEER_PORT) != null) {
                   assertThat(attrs)
                       .containsEntry(
-                          NetworkAttributes.NETWORK_PEER_PORT,
+                          NETWORK_PEER_PORT,
                           Objects.equals(uri.getScheme(), "https")
                               ? server.httpsPort()
                               : server.httpPort());
                 }
               }
 
-              if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
-                assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
+              if (httpClientAttributes.contains(URL_FULL)) {
+                assertThat(attrs).containsEntry(URL_FULL, uri.toString());
               }
               String expectedUrlTemplate = options.getExpectedUrlTemplateMapper().apply(uri);
               if (expectedUrlTemplate != null) {
-                assertThat(attrs)
-                    .containsEntry(UrlIncubatingAttributes.URL_TEMPLATE, expectedUrlTemplate);
+                assertThat(attrs).containsEntry(URL_TEMPLATE, expectedUrlTemplate);
               }
-              if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
-                assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
+              if (httpClientAttributes.contains(HTTP_REQUEST_METHOD)) {
+                assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
               }
 
               // opt-in, not collected by default
-              assertThat(attrs).doesNotContainKey(UserAgentAttributes.USER_AGENT_ORIGINAL);
+              assertThat(attrs).doesNotContainKey(USER_AGENT_ORIGINAL);
 
               if (responseCode != null) {
-                assertThat(attrs)
-                    .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
+                assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, (long) responseCode);
                 if (responseCode >= 400) {
-                  assertThat(attrs)
-                      .containsEntry(ErrorAttributes.ERROR_TYPE, String.valueOf(responseCode));
+                  assertThat(attrs).containsEntry(ERROR_TYPE, String.valueOf(responseCode));
                 }
               } else {
-                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_RESPONSE_STATUS_CODE);
+                assertThat(attrs).doesNotContainKey(HTTP_RESPONSE_STATUS_CODE);
                 // TODO: add more detailed assertions, per url
-                assertThat(attrs).containsKey(ErrorAttributes.ERROR_TYPE);
+                assertThat(attrs).containsKey(ERROR_TYPE);
               }
 
               if (resendCount != null) {
-                assertThat(attrs)
-                    .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
+                assertThat(attrs).containsEntry(HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
-                assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
+                assertThat(attrs).doesNotContainKey(HTTP_REQUEST_RESEND_COUNT);
               }
             })
         .satisfies(

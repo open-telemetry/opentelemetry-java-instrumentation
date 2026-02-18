@@ -19,6 +19,7 @@ import java.net.http.HttpResponse;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 
+/** Builder for {@link JavaHttpClientTelemetry}. */
 public final class JavaHttpClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;

@@ -34,7 +34,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
   private DbClientSpanNameExtractor() {}
 
-  protected String computeSpanName(
+  private static String computeSpanName(
       @Nullable String namespace,
       @Nullable String operationName,
       @Nullable String collectionName,
@@ -81,7 +81,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *   <li>{server.address:server.port}
    * </ol>
    */
-  protected String computeSpanNameStable(
+  private static <REQUEST> String computeSpanNameStable(
       DbClientAttributesGetter<REQUEST, ?> getter,
       REQUEST request,
       @Nullable String operation,
@@ -136,11 +136,16 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String namespace = getter.getDbNamespace(request);
-      String operationName = getter.getDbOperationName(request);
       if (SemconvStability.emitStableDatabaseSemconv()) {
+        String querySummary = getter.getDbQuerySummary(request);
+        if (querySummary != null) {
+          return querySummary;
+        }
+        String operationName = getter.getDbOperationName(request);
         return computeSpanNameStable(getter, request, operationName, null, null);
       }
+      String namespace = getter.getDbNamespace(request);
+      String operationName = getter.getDbOperationName(request);
       return computeSpanName(namespace, operationName, null, null);
     }
   }
@@ -170,42 +175,38 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
-        SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
         return computeSpanName(
             namespace,
-            sanitizedStatement.getOperationName(),
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            sanitizedQuery.getOperationName(),
+            sanitizedQuery.getCollectionName(),
+            sanitizedQuery.getStoredProcedureName());
       }
 
       if (rawQueryTexts.size() == 1) {
-        SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
-        String operationName = sanitizedStatement.getOperationName();
-        if (isBatch(request)) {
-          operationName = "BATCH " + operationName;
+        String rawQueryText = rawQueryTexts.iterator().next();
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText);
+        boolean batch = isBatch(request);
+        String querySummary = sanitizedQuery.getQuerySummary();
+        if (querySummary != null) {
+          return batch ? "BATCH " + querySummary : querySummary;
         }
         return computeSpanNameStable(
-            getter,
-            request,
-            operationName,
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            getter, request, batch ? "BATCH" : null, null, sanitizedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
+      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, false);
+      String querySummary = multiQuery.getQuerySummary();
+      if (querySummary != null) {
+        return querySummary;
+      }
       return computeSpanNameStable(
-          getter,
-          request,
-          multiQuery.getOperationName(),
-          multiQuery.getCollectionName(),
-          multiQuery.getStoredProcedureName());
+          getter, request, null, null, multiQuery.getStoredProcedureName());
     }
 
     private boolean isBatch(REQUEST request) {
-      Long batchSize = getter.getBatchSize(request);
+      Long batchSize = getter.getDbOperationBatchSize(request);
       return batchSize != null && batchSize > 1;
     }
   }

@@ -45,14 +45,13 @@ public class ServerInstrumentation implements TypeInstrumentation {
     }
   }
 
-  public static class SetupFunction
-      implements Function1<AbstractKtorServerTelemetryBuilder, kotlin.Unit> {
+  public static class SetupFunction implements Function1<AbstractKtorServerTelemetryBuilder, Unit> {
 
     @Override
     public Unit invoke(AbstractKtorServerTelemetryBuilder builder) {
       builder.setOpenTelemetry(GlobalOpenTelemetry.get());
       KtorBuilderUtil.serverBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
-      return kotlin.Unit.INSTANCE;
+      return Unit.INSTANCE;
     }
   }
 }

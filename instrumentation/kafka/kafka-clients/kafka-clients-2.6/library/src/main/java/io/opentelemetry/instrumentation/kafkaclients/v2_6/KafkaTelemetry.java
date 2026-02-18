@@ -75,16 +75,6 @@ public final class KafkaTelemetry {
     return new KafkaTelemetryBuilder(openTelemetry);
   }
 
-  // this method can be removed when the deprecated TracingProducerInterceptor is removed
-  KafkaProducerTelemetry getProducerTelemetry() {
-    return producerTelemetry;
-  }
-
-  // this method can be removed when the deprecated TracingProducerInterceptor is removed
-  KafkaConsumerTelemetry getConsumerTelemetry() {
-    return consumerTelemetry;
-  }
-
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
   @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {

@@ -154,7 +154,7 @@ class ElasticJobTest {
             regCenter,
             job,
             JobConfiguration.newBuilder("simpleElasticJob", 2)
-                .cron("0/30 * * * * ?")
+                .cron("0/15 * * * * ?")
                 .shardingItemParameters("0=A,1=B")
                 .build());
 

@@ -20,10 +20,9 @@ import javax.annotation.Nullable;
 final class CassandraSqlAttributesGetter
     implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(CassandraRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.CASSANDRA;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
   }
 
   @Override
@@ -52,5 +51,10 @@ final class CassandraSqlAttributesGetter
     // at least in the only current EndPoint implementation (DefaultEndPoint)
     SocketAddress address = coordinator.getEndPoint().resolve();
     return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+  }
+
+  @Override
+  public boolean isParameterizedQuery(CassandraRequest request) {
+    return request.isParameterizedQuery();
   }
 }

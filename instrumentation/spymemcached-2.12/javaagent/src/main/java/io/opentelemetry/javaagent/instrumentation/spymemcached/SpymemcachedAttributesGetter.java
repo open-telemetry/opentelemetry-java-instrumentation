@@ -22,7 +22,6 @@ public class SpymemcachedAttributesGetter
     return null;
   }
 
-  @Deprecated
   @Override
   @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
@@ -32,6 +31,6 @@ public class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
-    return spymemcachedRequest.dbOperation();
+    return spymemcachedRequest.getOperationName();
   }
 }

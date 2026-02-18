@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,10 +23,10 @@ enum TransactionAttributeExtractor implements AttributesExtractor<DbRequest, Voi
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DbRequest request) {
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_OPERATION, request.getOperation());
+      attributes.put(DB_OPERATION, request.getOperationName());
     }
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(attributes, DB_OPERATION_NAME, request.getOperation());
+      attributes.put(DB_OPERATION_NAME, request.getOperationName());
     }
   }
 

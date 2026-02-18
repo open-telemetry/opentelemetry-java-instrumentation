@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -23,7 +25,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
-  private TimeUnit baseTimeUnit = TimeUnit.SECONDS;
+  private TimeUnit baseTimeUnit = SECONDS;
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
 
@@ -85,7 +87,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
    */
   public MeterRegistry build() {
     // prometheus mode overrides any unit settings with SECONDS
-    TimeUnit baseTimeUnit = prometheusMode ? TimeUnit.SECONDS : this.baseTimeUnit;
+    TimeUnit baseTimeUnit = prometheusMode ? SECONDS : this.baseTimeUnit;
     NamingConvention namingConvention =
         prometheusMode ? PrometheusModeNamingConvention.INSTANCE : NamingConvention.identity;
     DistributionStatisticConfigModifier modifier =

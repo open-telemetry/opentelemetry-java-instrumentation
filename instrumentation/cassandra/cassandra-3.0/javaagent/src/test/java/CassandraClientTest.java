@@ -7,7 +7,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -96,14 +96,17 @@ class CassandraClientTest {
   void syncTest(Parameter parameter) {
     Session session = cluster.connect(parameter.keyspace);
 
-    session.execute(parameter.statement);
+    session.execute(parameter.queryText);
 
     if (parameter.keyspace != null) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                      span.hasName(
+                              emitStableDatabaseSemconv()
+                                  ? "USE " + parameter.keyspace
+                                  : "DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -113,7 +116,12 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace))),
+                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv()
+                                      ? "USE " + parameter.keyspace
+                                      : null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -128,9 +136,16 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null),
+                              equalTo(
+                                  maybeStable(DB_OPERATION),
+                                  emitStableDatabaseSemconv() ? null : parameter.operation),
+                              equalTo(
+                                  maybeStable(DB_CASSANDRA_TABLE),
+                                  emitStableDatabaseSemconv() ? null : parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -146,9 +161,16 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null),
+                              equalTo(
+                                  maybeStable(DB_OPERATION),
+                                  emitStableDatabaseSemconv() ? null : parameter.operation),
+                              equalTo(
+                                  maybeStable(DB_CASSANDRA_TABLE),
+                                  emitStableDatabaseSemconv() ? null : parameter.table))));
     }
 
     session.close();
@@ -164,7 +186,7 @@ class CassandraClientTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          ResultSetFuture future = session.executeAsync(parameter.statement);
+          ResultSetFuture future = session.executeAsync(parameter.queryText);
           future.addListener(
               () -> testing.runWithSpan("callbackListener", () -> callbackExecuted.set(true)),
               executor);
@@ -175,7 +197,10 @@ class CassandraClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                      span.hasName(
+                              emitStableDatabaseSemconv()
+                                  ? "USE " + parameter.keyspace
+                                  : "DB Query")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
@@ -185,7 +210,12 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace))),
+                              equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv()
+                                      ? "USE " + parameter.keyspace
+                                      : null))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -201,9 +231,16 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null),
+                              equalTo(
+                                  maybeStable(DB_OPERATION),
+                                  emitStableDatabaseSemconv() ? null : parameter.operation),
+                              equalTo(
+                                  maybeStable(DB_CASSANDRA_TABLE),
+                                  emitStableDatabaseSemconv() ? null : parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -224,9 +261,16 @@ class CassandraClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
-                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                              equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null),
+                              equalTo(
+                                  maybeStable(DB_OPERATION),
+                                  emitStableDatabaseSemconv() ? null : parameter.operation),
+                              equalTo(
+                                  maybeStable(DB_CASSANDRA_TABLE),
+                                  emitStableDatabaseSemconv() ? null : parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -246,7 +290,7 @@ class CassandraClientTest {
         testing,
         "io.opentelemetry.cassandra-3.0",
         DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
+        DB_QUERY_SUMMARY,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
@@ -264,7 +308,7 @@ class CassandraClientTest {
                     null,
                     "DROP KEYSPACE IF EXISTS sync_test",
                     "DROP KEYSPACE IF EXISTS sync_test",
-                    "DROP",
+                    emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP",
                     "DROP",
                     null))),
         Arguments.of(
@@ -274,7 +318,7 @@ class CassandraClientTest {
                     null,
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE sync_test WITH REPLICATION = {?:?, ?:?}",
-                    "CREATE",
+                    emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
                     "CREATE",
                     null))),
         Arguments.of(
@@ -318,7 +362,7 @@ class CassandraClientTest {
                     null,
                     "DROP KEYSPACE IF EXISTS async_test",
                     "DROP KEYSPACE IF EXISTS async_test",
-                    "DROP",
+                    emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP",
                     "DROP",
                     null))),
         Arguments.of(
@@ -328,7 +372,7 @@ class CassandraClientTest {
                     null,
                     "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE async_test WITH REPLICATION = {?:?, ?:?}",
-                    "CREATE",
+                    emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
                     "CREATE",
                     null))),
         Arguments.of(
@@ -365,22 +409,22 @@ class CassandraClientTest {
 
   private static class Parameter {
     final String keyspace;
-    final String statement;
-    final String expectedStatement;
+    final String queryText;
+    final String expectedQueryText;
     final String spanName;
     final String operation;
     final String table;
 
     Parameter(
         String keyspace,
-        String statement,
-        String expectedStatement,
+        String queryText,
+        String expectedQueryText,
         String spanName,
         String operation,
         String table) {
       this.keyspace = keyspace;
-      this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.queryText = queryText;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;

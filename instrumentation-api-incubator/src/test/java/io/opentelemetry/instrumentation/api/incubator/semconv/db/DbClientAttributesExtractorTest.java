@@ -6,6 +6,17 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
@@ -13,8 +24,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.DbAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +47,7 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbNamespace(Map<String, String> map) {
-      return map.get("db.name");
+      return map.get("db.namespace");
     }
 
     @Deprecated
@@ -49,7 +58,7 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbQueryText(Map<String, String> map) {
-      return map.get("db.statement");
+      return map.get("db.query.text");
     }
 
     @Nullable
@@ -60,22 +69,22 @@ class DbClientAttributesExtractorTest {
 
     @Override
     public String getDbOperationName(Map<String, String> map) {
-      return map.get("db.operation");
+      return map.get("db.operation.name");
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void shouldExtractAllAvailableAttributes() {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("db.system", "myDb");
     request.put("db.user", "username");
-    request.put("db.name", "potatoes");
+    request.put("db.namespace", "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");
-    request.put("db.statement", "SELECT * FROM potato");
+    request.put("db.query.text", "SELECT * FROM potato");
     request.put("db.query_summary", "SELECT potato");
-    request.put("db.operation", "SELECT");
+    request.put("db.operation.name", "SELECT");
 
     Context context = Context.root();
 
@@ -93,34 +102,34 @@ class DbClientAttributesExtractorTest {
     if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-              entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
-              entry(DbIncubatingAttributes.DB_USER, "username"),
-              entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
-              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT potato"),
-              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DB_SYSTEM, "myDb"),
+              entry(DB_SYSTEM_NAME, "myDb"),
+              entry(DB_USER, "username"),
+              entry(DB_NAME, "potatoes"),
+              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
+              entry(DB_STATEMENT, "SELECT * FROM potato"),
+              entry(DB_OPERATION, "SELECT"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DB_QUERY_SUMMARY, "SELECT potato"),
+              entry(DB_OPERATION_NAME, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-              entry(DbIncubatingAttributes.DB_USER, "username"),
-              entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
-              entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
-              entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"));
+              entry(DB_SYSTEM, "myDb"),
+              entry(DB_USER, "username"),
+              entry(DB_NAME, "potatoes"),
+              entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
+              entry(DB_STATEMENT, "SELECT * FROM potato"),
+              entry(DB_OPERATION, "SELECT"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
-              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT potato"),
-              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DB_SYSTEM_NAME, "myDb"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DB_QUERY_SUMMARY, "SELECT potato"),
+              entry(DB_OPERATION_NAME, "SELECT"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();

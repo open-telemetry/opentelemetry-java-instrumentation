@@ -35,25 +35,8 @@ public final class JavaHttpClientTelemetry {
     this.headersSetter = headersSetter;
   }
 
-  /**
-   * Returns an instrumented {@link HttpClient} wrapping the provided client.
-   *
-   * @param client the HttpClient to wrap
-   * @return an instrumented HttpClient
-   */
-  public HttpClient createHttpClient(HttpClient client) {
+  /** Returns a new instrumented {@link HttpClient} that wraps the provided client. */
+  public HttpClient wrap(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
-  }
-
-  /**
-   * Returns an instrumented {@link HttpClient} wrapping the provided client.
-   *
-   * @param client the HttpClient to wrap
-   * @return an instrumented HttpClient
-   * @deprecated Use {@link #createHttpClient(HttpClient)} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient(HttpClient client) {
-    return createHttpClient(client);
   }
 }

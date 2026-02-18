@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v2_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -16,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -25,7 +27,6 @@ import io.vertx.core.Vertx;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.stage.Stage;
 import org.junit.jupiter.api.AfterAll;
@@ -147,7 +148,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -170,7 +171,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -193,7 +194,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -216,7 +217,7 @@ public abstract class AbstractHibernateReactiveTest {
                               .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                         })
                     .toCompletableFuture())
-        .get(30, TimeUnit.SECONDS);
+        .get(30, SECONDS);
 
     assertTrace();
   }
@@ -242,7 +243,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -268,7 +269,7 @@ public abstract class AbstractHibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -303,11 +304,18 @@ public abstract class AbstractHibernateReactiveTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(stringKey("peer.service"), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

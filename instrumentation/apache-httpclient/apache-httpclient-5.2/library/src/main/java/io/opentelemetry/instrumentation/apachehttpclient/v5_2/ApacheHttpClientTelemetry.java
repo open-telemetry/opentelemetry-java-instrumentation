@@ -21,10 +21,7 @@ public final class ApacheHttpClientTelemetry {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link ApacheHttpClientTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static ApacheHttpClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ApacheHttpClientTelemetryBuilder(openTelemetry);
   }
@@ -44,16 +41,6 @@ public final class ApacheHttpClientTelemetry {
     return createHttpClientBuilder().build();
   }
 
-  /**
-   * Returns an instrumented HTTP client.
-   *
-   * @deprecated Use {@link #createHttpClient()} instead.
-   */
-  @Deprecated
-  public CloseableHttpClient newHttpClient() {
-    return createHttpClient();
-  }
-
   /** Returns a builder for creating an instrumented HTTP client. */
   public HttpClientBuilder createHttpClientBuilder() {
     return HttpClientBuilder.create()
@@ -61,15 +48,5 @@ public final class ApacheHttpClientTelemetry {
             ChainElement.PROTOCOL.name(),
             "OtelExecChainHandler",
             new OtelExecChainHandler(instrumenter, propagators));
-  }
-
-  /**
-   * Returns a builder for creating an instrumented HTTP client.
-   *
-   * @deprecated Use {@link #createHttpClientBuilder()} instead.
-   */
-  @Deprecated
-  public HttpClientBuilder newHttpClientBuilder() {
-    return createHttpClientBuilder();
   }
 }

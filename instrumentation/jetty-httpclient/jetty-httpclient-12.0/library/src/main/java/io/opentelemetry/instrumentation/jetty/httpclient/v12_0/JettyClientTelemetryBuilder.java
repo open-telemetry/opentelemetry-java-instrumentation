@@ -15,16 +15,13 @@ import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.Experime
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
-import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+/** Builder for {@link JettyClientTelemetry}. */
 public final class JettyClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
-  private HttpClientTransport httpClientTransport;
-  private SslContextFactory.Client sslContextFactory;
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
@@ -33,31 +30,6 @@ public final class JettyClientTelemetryBuilder {
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
-  }
-
-  /**
-   * @deprecated Use {@link JettyClientTelemetry#newHttpClient(HttpClientTransport)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setHttpClientTransport(
-      HttpClientTransport httpClientTransport) {
-    this.httpClientTransport = httpClientTransport;
-    return this;
-  }
-
-  /**
-   * @deprecated Use {@link
-   *     org.eclipse.jetty.client.HttpClient#setSslContextFactory(SslContextFactory.Client)} on the
-   *     HttpClient returned by {@link JettyClientTelemetry#newHttpClient()} or {@link
-   *     JettyClientTelemetry#newHttpClient(HttpClientTransport)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setSslContextFactory(
-      SslContextFactory.Client sslContextFactory) {
-    this.sslContextFactory = sslContextFactory;
-    return this;
   }
 
   /**
@@ -123,9 +95,6 @@ public final class JettyClientTelemetryBuilder {
   /** Returns a new instance with the configured settings. */
   public JettyClientTelemetry build() {
     var instrumenter = builder.build();
-    TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(instrumenter, sslContextFactory, httpClientTransport);
-
-    return new JettyClientTelemetry(tracingHttpClient, instrumenter);
+    return new JettyClientTelemetry(instrumenter);
   }
 }

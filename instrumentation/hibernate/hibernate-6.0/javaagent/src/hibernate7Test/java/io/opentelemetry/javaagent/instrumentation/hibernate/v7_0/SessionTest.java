@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -17,11 +20,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -187,9 +191,9 @@ class SessionTest extends AbstractHibernateTest {
                         .hasStatus(StatusData.error())
                         .hasException(new UnknownEntityTypeException("java.lang.Long"))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                            experimentalSatisfies(
+                                HIBERNATE_SESSION_ID,
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -271,8 +275,15 @@ class SessionTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value")),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -359,9 +370,11 @@ class SessionTest extends AbstractHibernateTest {
                         span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
                 span -> assertClientSpan(span, trace.getSpan(6), "INSERT")));
 
-    assertNotEquals(sessionId1.get(), sessionId2.get());
-    assertNotEquals(sessionId2.get(), sessionId3.get());
-    assertNotEquals(sessionId1.get(), sessionId3.get());
+    if (ExperimentalTestHelper.isEnabled) {
+      assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
+      assertThat(sessionId3.get()).isNotEqualTo(sessionId2.get());
+      assertThat(sessionId3.get()).isNotEqualTo(sessionId1.get());
+    }
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
@@ -709,9 +722,8 @@ class SessionTest extends AbstractHibernateTest {
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                AttributeKey.stringKey("hibernate.session_id"),
-                val -> val.isInstanceOf(String.class)));
+            experimentalSatisfies(
+                HIBERNATE_SESSION_ID, val -> assertThat(val).isInstanceOf(String.class)));
   }
 
   private static SpanDataAssert assertSpanWithSessionId(
@@ -720,7 +732,8 @@ class SessionTest extends AbstractHibernateTest {
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("hibernate.session_id"), sessionId));
+            experimentalSatisfies(
+                HIBERNATE_SESSION_ID, val -> assertThat(val).isEqualTo(sessionId)));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -733,14 +746,32 @@ class SessionTest extends AbstractHibernateTest {
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-            satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
+            satisfies(
+                DB_QUERY_SUMMARY,
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isInstanceOf(String.class);
+                  } else {
+                    val.isNull();
+                  }
+                }),
+            satisfies(
+                maybeStable(DB_OPERATION),
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isNull();
+                  } else {
+                    val.isInstanceOf(String.class);
+                  }
+                }),
+            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String verb) {
-    return span.hasName(verb.concat(" db1.Value"))
+    return span.hasName(
+            emitStableDatabaseSemconv() ? verb.concat(" Value") : verb.concat(" db1.Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -751,7 +782,8 @@ class SessionTest extends AbstractHibernateTest {
             satisfies(
                 maybeStable(DB_STATEMENT),
                 stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),
-            equalTo(maybeStable(DB_OPERATION), verb),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
+            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
+            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
   }
 }

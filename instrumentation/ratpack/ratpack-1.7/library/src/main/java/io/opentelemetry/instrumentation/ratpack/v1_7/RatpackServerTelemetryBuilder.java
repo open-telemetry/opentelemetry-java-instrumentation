@@ -18,7 +18,7 @@ import java.util.function.UnaryOperator;
 import ratpack.http.Request;
 import ratpack.http.Response;
 
-/** A builder for {@link RatpackServerTelemetry}. */
+/** Builder for {@link RatpackServerTelemetry}. */
 public final class RatpackServerTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
@@ -35,8 +35,8 @@ public final class RatpackServerTelemetryBuilder {
   }
 
   /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder addAttributesExtractor(
@@ -46,9 +46,9 @@ public final class RatpackServerTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP server request headers that will be captured as span attributes.
+   * Configures HTTP request headers to capture as span attributes.
    *
-   * @param requestHeaders A list of HTTP header names.
+   * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setCapturedRequestHeaders(
@@ -58,9 +58,9 @@ public final class RatpackServerTelemetryBuilder {
   }
 
   /**
-   * Configures the HTTP server response headers that will be captured as span attributes.
+   * Configures HTTP response headers to capture as span attributes.
    *
-   * @param responseHeaders A list of HTTP header names.
+   * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setCapturedResponseHeaders(
@@ -70,16 +70,15 @@ public final class RatpackServerTelemetryBuilder {
   }
 
   /**
-   * Configures the instrumentation to recognize an alternative set of HTTP request methods.
+   * Configures recognized HTTP request methods.
    *
-   * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * <p>By default, recognizes methods from <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
    *
-   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
-   * not supplement it.
+   * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
-   * @param knownMethods A set of recognized HTTP request methods.
+   * @param knownMethods HTTP request methods to recognize.
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
@@ -88,10 +87,7 @@ public final class RatpackServerTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
-   * one.
-   */
+  /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorCustomizer) {
@@ -99,7 +95,7 @@ public final class RatpackServerTelemetryBuilder {
     return this;
   }
 
-  /** Returns a new {@link RatpackServerTelemetry} with the configuration of this builder. */
+  /** Returns a new instance with the configured settings. */
   public RatpackServerTelemetry build() {
     return new RatpackServerTelemetry(builder.build());
   }

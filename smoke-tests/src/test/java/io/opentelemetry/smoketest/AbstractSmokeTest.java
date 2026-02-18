@@ -5,6 +5,8 @@
 
 package io.opentelemetry.smoketest;
 
+import static java.util.stream.Collectors.toSet;
+
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -14,7 +16,6 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -105,6 +106,6 @@ public abstract class AbstractSmokeTest<T> implements TelemetryRetrieverProvider
   }
 
   public Set<String> getSpanTraceIds() {
-    return testing.spans().stream().map(SpanData::getTraceId).collect(Collectors.toSet());
+    return testing.spans().stream().map(SpanData::getTraceId).collect(toSet());
   }
 }

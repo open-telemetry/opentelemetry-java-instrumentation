@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 
-public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod> {
+public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod, Void> {
   INSTANCE;
 
   @Override
@@ -21,6 +21,7 @@ public enum ServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod
     return classAndMethod.declaringClass().getName();
   }
 
+  @Deprecated
   @Override
   public String getMethod(ClassAndMethod classAndMethod) {
     return classAndMethod.methodName();

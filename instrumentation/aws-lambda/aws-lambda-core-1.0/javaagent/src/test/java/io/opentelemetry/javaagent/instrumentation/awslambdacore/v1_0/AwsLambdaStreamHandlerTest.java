@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -16,7 +18,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -26,7 +27,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ class AwsLambdaStreamHandlerTest {
 
   @Test
   void handlerTraced() throws Exception {
-    InputStream input = new ByteArrayInputStream("hello\n".getBytes(StandardCharsets.UTF_8));
+    InputStream input = new ByteArrayInputStream("hello\n".getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
     RequestStreamHandlerTestImpl handler = new RequestStreamHandlerTestImpl();
     handler.handleRequest(input, output, context);
@@ -67,13 +67,12 @@ class AwsLambdaStreamHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
   void handlerTracedWithException() {
-    InputStream input = new ByteArrayInputStream("bye\n".getBytes(StandardCharsets.UTF_8));
+    InputStream input = new ByteArrayInputStream("bye\n".getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
     RequestStreamHandlerTestImpl handler = new RequestStreamHandlerTestImpl();
 
@@ -88,18 +87,15 @@ class AwsLambdaStreamHandlerTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   static final class RequestStreamHandlerTestImpl implements RequestStreamHandler {
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {
-      BufferedReader reader =
-          new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-      BufferedWriter writer =
-          new BufferedWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(input, UTF_8));
+      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
       String line = reader.readLine();
       if (line.equals("hello")) {
         writer.write("world");
