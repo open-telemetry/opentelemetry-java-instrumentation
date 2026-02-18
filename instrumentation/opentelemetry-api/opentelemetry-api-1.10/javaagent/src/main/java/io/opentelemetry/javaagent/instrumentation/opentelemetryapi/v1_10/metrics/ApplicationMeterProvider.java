@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 
 import io.opentelemetry.api.metrics.MeterProvider;
 
-// Our convention for accessing agent packages.
 public class ApplicationMeterProvider
     implements application.io.opentelemetry.api.metrics.MeterProvider {
 

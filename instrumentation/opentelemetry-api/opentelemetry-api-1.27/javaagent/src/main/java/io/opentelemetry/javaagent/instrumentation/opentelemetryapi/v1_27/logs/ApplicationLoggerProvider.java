@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
 import io.opentelemetry.api.logs.LoggerProvider;
 
-// Our convention for accessing agent packages.
 public class ApplicationLoggerProvider
     implements application.io.opentelemetry.api.logs.LoggerProvider {
 
