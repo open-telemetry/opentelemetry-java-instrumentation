@@ -497,7 +497,7 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - namespace metric names and metric attributes with the target system as prefix.
 - metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit, using unit conversion if needed.
 - metric name should not be the prefix of another metric, for example `request.duration` and `request.duration.last` should be avoided.
-- when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by the backend, for example
+- when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by a backend, for example
   - `threadpool.thread.count`
 - when a metric is not exposed as "current value" and only exposed in JMX as aggregate values, capture those aggregate values with `.{aggregation}` suffix, examples:
   - `request.duration.mean` (prefer "mean" over "average" for consistency)
@@ -512,3 +512,6 @@ To contribute to pre-defined metrics definitions or extend them through custom c
       - it will likely produce meaningless results: mean of mean, or mean across multiple instances.
 - when a metric represents an upper limit of a resource, use the `.limit` suffix, for example:
   - `threadpool.thread.limit` to represent the upper limit of `threadpool.thread.count`
+- when metrics represent an upper and lower bounds or a resource, use the `.limit.upper` and `.limit.lower`suffixes, for example:
+  - `pool.limit.upper` to represent the upper limit of the pool size (maximum capacity)
+  - `pool.limit.lower` to represent the minimum number of threads that should be kept in the pool, even if there is no load.
