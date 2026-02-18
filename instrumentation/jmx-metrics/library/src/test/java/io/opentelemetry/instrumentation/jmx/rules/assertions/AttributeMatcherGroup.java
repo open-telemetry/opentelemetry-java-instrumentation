@@ -72,8 +72,8 @@ public class AttributeMatcherGroup {
    *   <li>group validating A, B and C
    * </ol>
    *
-   * To improve validation reliability it is necessary to define applicability predicate wherever
-   * possible.
+   * <p>To improve validation reliability it is strongly recommended to define applicability
+   * predicate wherever possible.
    *
    * @param predicate a predicate function with parameter holding map of metric attributes
    * @return this instance
