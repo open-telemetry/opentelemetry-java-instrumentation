@@ -96,6 +96,32 @@ class LogEventMapperTest {
   }
 
   @Test
+  void testCaptureOtelEventNameFromContextData() {
+    // given
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            singletonList("key1"),
+            true);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("otel.event.name", "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setEventName("MyEventName");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
   void testCaptureMapMessageDisabled() {
     // given
     LogEventMapper<Map<String, String>> mapper =

@@ -41,9 +41,13 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+
+  @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
+  private static final AttributeKey<String> OTEL_EVENT_NAME = AttributeKey.stringKey("otel.event.name");
 
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
@@ -79,12 +83,18 @@ public final class LogEventMapper<T> {
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
-    // If captureEventName is enabled, ensure "event.name" is in the list that we loop over
-    if (captureEventName
-        && !captureAllContextDataAttributes
-        && !captureContextDataAttributes.contains("event.name")) {
-      captureContextDataAttributes = new ArrayList<>(captureContextDataAttributes);
-      captureContextDataAttributes.add("event.name");
+    // If captureEventName is enabled, ensure event-name keys are in the list that we loop over.
+    if (captureEventName && !captureAllContextDataAttributes) {
+      if (!captureContextDataAttributes.contains("event.name")
+          || !captureContextDataAttributes.contains(OTEL_EVENT_NAME_KEY)) {
+        captureContextDataAttributes = new ArrayList<>(captureContextDataAttributes);
+        if (!captureContextDataAttributes.contains("event.name")) {
+          captureContextDataAttributes.add("event.name");
+        }
+        if (!captureContextDataAttributes.contains(OTEL_EVENT_NAME_KEY)) {
+          captureContextDataAttributes.add(OTEL_EVENT_NAME_KEY);
+        }
+      }
     }
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureEventName = captureEventName;
@@ -195,6 +205,11 @@ public final class LogEventMapper<T> {
       builder.setBody(body);
     }
 
+    String eventName = mapMessage.get(OTEL_EVENT_NAME_KEY);
+    if (eventName != null && !eventName.isEmpty()) {
+      builder.setEventName(eventName);
+    }
+
     if (captureMapMessageAttributes) {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage
@@ -202,6 +217,7 @@ public final class LogEventMapper<T> {
           .forEach(
               (key, value) -> {
                 if (value != null
+                    && !key.equals(OTEL_EVENT_NAME_KEY)
                     && (!checkSpecialMapMessageAttribute
                         || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
@@ -229,7 +245,7 @@ public final class LogEventMapper<T> {
   private void setAttributeOrEventName(
       LogRecordBuilder builder, AttributeKey<String> key, Object value) {
     if (value != null) {
-      if (captureEventName && key.equals(EVENT_NAME)) {
+      if (captureEventName && (key.equals(EVENT_NAME) || key.equals(OTEL_EVENT_NAME))) {
         builder.setEventName(value.toString());
       } else {
         builder.setAttribute(key, value.toString());

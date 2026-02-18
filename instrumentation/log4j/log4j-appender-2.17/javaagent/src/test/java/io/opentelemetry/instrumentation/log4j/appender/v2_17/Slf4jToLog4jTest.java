@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Arrays.asList;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
@@ -24,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -171,6 +173,43 @@ class Slf4jToLog4jTest {
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasAttributesSatisfyingExactly(attributeAsserts));
+  }
+
+  @Test
+  void testSlf4j2BridgeOtelEventNameKeyValue() throws Exception {
+    assumeTrue(Boolean.getBoolean("testLatestDeps"));
+
+    logWithKeyValuesViaSlf4j2Bridge();
+
+    List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
+    attributeAsserts.addAll(
+        codeFunctionAssertions(Slf4jToLog4jTest.class, "logWithKeyValuesViaSlf4j2Bridge"));
+    attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+    attributeAsserts.add(equalTo(stringKey("key1"), "val1"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("log message 1")
+                .hasEventName("MyEventName")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(attributeAsserts));
+  }
+
+  private static void logWithKeyValuesViaSlf4j2Bridge() throws Exception {
+    Method atInfo = logger.getClass().getMethod("atInfo");
+    Object builder = atInfo.invoke(logger);
+
+    Method setMessage = builder.getClass().getMethod("setMessage", String.class);
+    Method addKeyValue = builder.getClass().getMethod("addKeyValue", String.class, Object.class);
+    Method log = builder.getClass().getMethod("log");
+
+    setMessage.invoke(builder, "log message 1");
+    addKeyValue.invoke(builder, "otel.event.name", "MyEventName");
+    addKeyValue.invoke(builder, "key1", "val1");
+    log.invoke(builder);
   }
 
   private static void performLogging(
