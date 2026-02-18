@@ -5,11 +5,23 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_DESCRIPTION;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.AIX;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.DARWIN;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.DRAGONFLYBSD;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.FREEBSD;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.HPUX;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.LINUX;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.NETBSD;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.OPENBSD;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.SOLARIS;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.ZOS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
-import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
@@ -20,9 +32,8 @@ class OsResourceTest {
   void linux() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.LINUX);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(LINUX);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -30,9 +41,8 @@ class OsResourceTest {
   void macos() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.DARWIN);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(DARWIN);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -40,9 +50,8 @@ class OsResourceTest {
   void windows() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(WINDOWS);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -50,9 +59,8 @@ class OsResourceTest {
   void freebsd() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.FREEBSD);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(FREEBSD);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -60,9 +68,8 @@ class OsResourceTest {
   void netbsd() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.NETBSD);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(NETBSD);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -70,9 +77,8 @@ class OsResourceTest {
   void openbsd() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.OPENBSD);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(OPENBSD);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -80,9 +86,8 @@ class OsResourceTest {
   void dragonflybsd() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.DRAGONFLYBSD);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(DRAGONFLYBSD);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -90,9 +95,8 @@ class OsResourceTest {
   void hpux() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.HPUX);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(HPUX);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -100,9 +104,8 @@ class OsResourceTest {
   void aix() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.AIX);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(AIX);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -110,9 +113,8 @@ class OsResourceTest {
   void solaris() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.SOLARIS);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(SOLARIS);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -120,9 +122,8 @@ class OsResourceTest {
   void zos() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.ZOS);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(ZOS);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 
   @Test
@@ -130,7 +131,7 @@ class OsResourceTest {
   void unknown() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE)).isNull();
-    assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_TYPE)).isNull();
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
   }
 }

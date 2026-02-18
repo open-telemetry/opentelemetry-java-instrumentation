@@ -11,6 +11,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.SEVERE;
@@ -21,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.annotation.Nullable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -116,12 +117,8 @@ class JavaUtilLoggingTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(
-                    ThreadIncubatingAttributes.THREAD_NAME,
-                    experimental(Thread.currentThread().getName())),
-                equalTo(
-                    ThreadIncubatingAttributes.THREAD_ID,
-                    experimental(Thread.currentThread().getId())),
+                equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
+                equalTo(THREAD_ID, experimental(Thread.currentThread().getId())),
                 equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
@@ -129,12 +126,8 @@ class JavaUtilLoggingTest {
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(
-                    ThreadIncubatingAttributes.THREAD_NAME,
-                    experimental(Thread.currentThread().getName())),
-                equalTo(
-                    ThreadIncubatingAttributes.THREAD_ID,
-                    experimental(Thread.currentThread().getId())));
+                equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
+                equalTo(THREAD_ID, experimental(Thread.currentThread().getId())));
       }
 
       if (withParent) {
