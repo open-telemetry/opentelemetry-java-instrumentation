@@ -50,7 +50,8 @@ public class ApplicationLongCounterBuilder implements LongCounterBuilder {
   public ObservableLongCounter buildWithCallback(
       Consumer<ObservableLongMeasurement> applicationCallback) {
     return new ApplicationObservableLongCounter(
-        agentBuilder.buildWithCallback(
+        CallbackAnchor.anchor(
+            agentBuilder::buildWithCallback,
             agentMeasurement ->
                 applicationCallback.accept(
                     new ApplicationObservableLongMeasurement(agentMeasurement))));

@@ -50,7 +50,8 @@ public class ApplicationLongUpDownCounterBuilder implements LongUpDownCounterBui
   public ObservableLongUpDownCounter buildWithCallback(
       Consumer<ObservableLongMeasurement> applicationCallback) {
     return new ApplicationObservableLongUpDownCounter(
-        agentBuilder.buildWithCallback(
+        CallbackAnchor.anchor(
+            agentBuilder::buildWithCallback,
             agentMeasurement ->
                 applicationCallback.accept(
                     new ApplicationObservableLongMeasurement(agentMeasurement))));

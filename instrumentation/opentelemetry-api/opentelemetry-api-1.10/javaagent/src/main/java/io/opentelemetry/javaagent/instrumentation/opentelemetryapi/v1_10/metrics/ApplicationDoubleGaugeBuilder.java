@@ -44,7 +44,8 @@ public class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
   public ObservableDoubleGauge buildWithCallback(
       Consumer<ObservableDoubleMeasurement> applicationCallback) {
     return new ApplicationObservableDoubleGauge(
-        agentBuilder.buildWithCallback(
+        CallbackAnchor.anchor(
+            agentBuilder::buildWithCallback,
             agentMeasurement ->
                 applicationCallback.accept(
                     new ApplicationObservableDoubleMeasurement(agentMeasurement))));

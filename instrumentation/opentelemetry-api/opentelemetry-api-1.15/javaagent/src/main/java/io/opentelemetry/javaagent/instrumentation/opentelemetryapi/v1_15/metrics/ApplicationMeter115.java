@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metric
 import application.io.opentelemetry.api.metrics.BatchCallback;
 import application.io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeter;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.CallbackAnchor;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ObservableMeasurementWrapper;
 
 public class ApplicationMeter115 extends ApplicationMeter {
@@ -25,8 +26,11 @@ public class ApplicationMeter115 extends ApplicationMeter {
       ObservableMeasurement observableMeasurement,
       ObservableMeasurement... additionalMeasurements) {
     return new ApplicationBatchCallback(
-        agentMeter.batchCallback(
-            callback, unwrap(observableMeasurement), unwrap(additionalMeasurements)));
+        CallbackAnchor.anchorBatch(
+            weak ->
+                agentMeter.batchCallback(
+                    weak, unwrap(observableMeasurement), unwrap(additionalMeasurements)),
+            callback));
   }
 
   private static io.opentelemetry.api.metrics.ObservableMeasurement unwrap(

@@ -44,7 +44,8 @@ public class ApplicationDoubleCounterBuilder implements DoubleCounterBuilder {
   public ObservableDoubleCounter buildWithCallback(
       Consumer<ObservableDoubleMeasurement> applicationCallback) {
     return new ApplicationObservableDoubleCounter(
-        agentBuilder.buildWithCallback(
+        CallbackAnchor.anchor(
+            agentBuilder::buildWithCallback,
             agentMeasurement ->
                 applicationCallback.accept(
                     new ApplicationObservableDoubleMeasurement(agentMeasurement))));

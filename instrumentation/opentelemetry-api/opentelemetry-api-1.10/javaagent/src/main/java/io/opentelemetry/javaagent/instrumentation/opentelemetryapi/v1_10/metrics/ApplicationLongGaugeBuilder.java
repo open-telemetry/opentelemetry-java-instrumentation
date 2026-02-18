@@ -38,7 +38,8 @@ public class ApplicationLongGaugeBuilder implements LongGaugeBuilder {
   public ObservableLongGauge buildWithCallback(
       Consumer<ObservableLongMeasurement> applicationCallback) {
     return new ApplicationObservableLongGauge(
-        agentBuilder.buildWithCallback(
+        CallbackAnchor.anchor(
+            agentBuilder::buildWithCallback,
             agentMeasurement ->
                 applicationCallback.accept(
                     new ApplicationObservableLongMeasurement(agentMeasurement))));
