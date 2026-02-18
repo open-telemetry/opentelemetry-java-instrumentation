@@ -85,10 +85,13 @@ public class AttributeMatcherGroup {
   }
 
   /**
-   * Evaluate applica
+   * Evaluate applicability of the attribute matcher group for provided metric attributes.
+   * Evaluation is performed by testing the predicate configured with {@link #applicableWhen}
+   * method. If {@link #applicableWhen} was not called to configure the predicate then this method
+   * will always return <code>true</code>
    *
    * @param attributes a map holding attributes of verified metric
-   * @return predicate evaluation result or <code>true</code> if predicate is not defined
+   * @return predicate evaluation result, or <code>true</code> if predicate is not defined
    * @see #applicableWhen
    */
   public boolean isApplicableFor(Map<String, String> attributes) {
