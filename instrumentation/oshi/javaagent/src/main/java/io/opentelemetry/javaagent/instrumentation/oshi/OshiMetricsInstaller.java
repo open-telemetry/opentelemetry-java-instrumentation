@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.AgentListener;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.Method;
 
@@ -21,11 +20,8 @@ public class OshiMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    boolean enabled =
-        DeclarativeConfigUtil.getInstrumentationConfig(
-                autoConfiguredSdk.getOpenTelemetrySdk(), "oshi")
-            .getBoolean("enabled", AgentConfig.instrumentationMode().equals("default"));
-    if (!enabled) {
+    AgentDistributionConfig config = AgentDistributionConfig.get();
+    if (!config.isInstrumentationEnabled("oshi", config.isInstrumentationDefaultEnabled())) {
       return;
     }
 
