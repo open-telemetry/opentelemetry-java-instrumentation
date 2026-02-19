@@ -37,7 +37,7 @@ public final class LettuceTelemetry {
 
   LettuceTelemetry(
       OpenTelemetry openTelemetry,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       boolean encodingEventsEnabled,
       OperationListener metrics) {
     this.metrics = metrics;
@@ -47,7 +47,7 @@ public final class LettuceTelemetry {
       tracerBuilder.setInstrumentationVersion(version);
     }
     tracer = tracerBuilder.build();
-    sanitizer = RedisCommandSanitizer.create(statementSanitizationEnabled);
+    sanitizer = RedisCommandSanitizer.create(querySanitizationEnabled);
     this.encodingEventsEnabled = encodingEventsEnabled;
   }
 
@@ -57,16 +57,5 @@ public final class LettuceTelemetry {
    */
   public Tracing createTracing() {
     return new OpenTelemetryTracing(tracer, sanitizer, metrics, encodingEventsEnabled);
-  }
-
-  /**
-   * Returns a new {@link Tracing} which can be used with methods like {@link
-   * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
-   *
-   * @deprecated Use {@link #createTracing()} instead.
-   */
-  @Deprecated
-  public Tracing newTracing() {
-    return createTracing();
   }
 }

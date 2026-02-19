@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.jakarta;
 
+import static java.util.Objects.requireNonNull;
+
 import jakarta.faces.component.ActionSource2;
 import jakarta.faces.event.ActionEvent;
-import java.util.Objects;
 
 public class JsfRequest {
   private final String spanName;
@@ -17,7 +18,7 @@ public class JsfRequest {
   }
 
   public String spanName() {
-    return Objects.requireNonNull(spanName);
+    return requireNonNull(spanName);
   }
 
   public boolean shouldStartSpan() {

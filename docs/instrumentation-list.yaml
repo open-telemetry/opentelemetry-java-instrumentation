@@ -3297,7 +3297,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3370,7 +3370,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3434,7 +3434,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3499,7 +3499,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6036,7 +6036,7 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6066,9 +6066,9 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
+          type: STRING
+        - name: service.peer.name
           type: STRING
       - span_kind: INTERNAL
         attributes:
@@ -6120,7 +6120,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6144,12 +6144,12 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: jedis-3.0
     description: This instrumentation enables database client spans and database client
       metrics for Jedis Redis operations.
@@ -6195,7 +6195,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -6229,12 +6229,12 @@ libraries:
           type: LONG
         - name: network.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: jedis-4.0
     description: This instrumentation enables database client spans and database client
       metrics for Jedis Redis operations.
@@ -8023,7 +8023,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -8043,12 +8043,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: lettuce-5.0
     description: |
       This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
@@ -8117,7 +8117,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -8139,12 +8139,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: lettuce-5.1
     description: |
       This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
@@ -9671,7 +9671,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9715,7 +9715,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9759,7 +9759,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10815,7 +10815,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -10843,12 +10843,12 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   rabbitmq:
   - name: rabbitmq-2.7
     display_name: RabbitMQ
@@ -12060,8 +12060,9 @@ libraries:
     - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
-    description: This instrumentation enables spans for jobs run by the Spring Batch
-      framework.
+    display_name: Spring Batch
+    description: |
+      This instrumentation enables spans for Spring Batch job execution, including job, step, and chunk processing.
     library_link: https://spring.io/projects/spring-batch
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
@@ -12092,6 +12093,7 @@ libraries:
         - name: job.system
           type: STRING
   - name: spring-boot-actuator-autoconfigure-2.0
+    display_name: Spring Boot Actuator Autoconfigure
     description: |
       This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from Spring Boot Actuator. It does not produce telemetry on its own.
     library_link: https://spring.io/projects/spring-boot
@@ -12102,6 +12104,7 @@ libraries:
     javaagent_target_versions:
     - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
   - name: spring-boot-resources
+    display_name: Spring Boot Resource Detector
     description: |
       This instrumentation automatically detects the `service.name` and `service.version` for Spring Boot applications and sets them as resource attributes.
       It uses the following strategies (first successful wins):
@@ -12114,12 +12117,15 @@ libraries:
         - Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
         - Check for --spring.application.name program argument via sun.java.command system property
     library_link: https://spring.io/projects/spring-boot
+    features:
+    - RESOURCE_DETECTOR
     source_path: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
   - name: spring-cloud-aws-3.0
+    display_name: Spring Cloud AWS
     description: |
-      This instrumentation enhances tracing for Spring Cloud AWS. It augments the existing AWS SDK instrumentation by providing higher-level tracing for SQS operations, capturing details specific to Spring Cloud AWS SQS usage and linking them to the underlying AWS SDK traces.
+      This instrumentation enhances messaging span creation for Spring Cloud AWS SQS. It coordinates with the AWS SDK instrumentation to create spans at the appropriate points in Spring Cloud AWS message handling.
     library_link: https://spring.io/projects/spring-cloud-aws
     source_path: instrumentation/spring/spring-cloud-aws-3.0
     minimum_java_version: 17
@@ -12128,9 +12134,12 @@ libraries:
     javaagent_target_versions:
     - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
   - name: spring-cloud-gateway-2.0
+    display_name: Spring Cloud Gateway
     description: |
-      This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
+      This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate any telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
     library_link: https://github.com/spring-cloud/spring-cloud-gateway
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
     scope:
       name: io.opentelemetry.spring-cloud-gateway-2.0
@@ -12144,16 +12153,29 @@ libraries:
       type: boolean
       default: false
   - name: spring-cloud-gateway-webmvc-4.3
+    display_name: Spring Cloud Gateway Server WebMVC
+    description: |
+      This instrumentation enhances tracing for Spring Cloud Gateway Server WebMVC. It does not generate any telemetry on its own, but rather enriches existing traces produced by other instrumentations like Spring WebMVC with Spring Cloud Gateway-specific attributes.
+    library_link: https://github.com/spring-cloud/spring-cloud-gateway
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-webmvc-4.3
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-cloud-gateway-webmvc-4.3
     javaagent_target_versions:
     - org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:[4.3.0,)
+    configurations:
+    - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
+      description: |
+        Enables experimental `spring-cloud-gateway.route` attributes (e.g., `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
+      type: boolean
+      default: false
   - name: spring-core-2.0
+    display_name: Spring Core
     description: |
-      This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
+      This instrumentation provides context propagation for Spring Core asynchronous task execution, it does not emit any telemetry on its own.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/package-summary.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/spring/spring-core-2.0
     minimum_java_version: 17
     scope:
@@ -12161,8 +12183,9 @@ libraries:
     javaagent_target_versions:
     - org.springframework:spring-core:[2.0,]
   - name: spring-data-1.8
-    description: |
-      This instrumentation enhances tracing for Spring Data operations. It works in conjunction with other instrumentations, such as JDBC, to provide additional context and details for database interactions initiated through Spring Data.
+    display_name: Spring Data
+    description: This instrumentation enables spans for Spring Data repository method
+      invocations.
     library_link: https://spring.io/projects/spring-data
     source_path: instrumentation/spring/spring-data/spring-data-1.8
     scope:
@@ -12180,6 +12203,7 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: spring-integration-4.1
+    display_name: Spring Integration
     description: This instrumentation enables producer and consumer messaging spans
       for Spring Integration.
     library_link: https://spring.io/projects/spring-integration
@@ -12196,11 +12220,11 @@ libraries:
       type: boolean
       default: false
     - name: otel.instrumentation.spring-integration.global-channel-interceptor-patterns
-      description: An array of Spring channel name patterns that will be intercepted.
+      description: A list of Spring channel name patterns that will be intercepted.
       type: list
       default: '*'
     - name: otel.instrumentation.messaging.experimental.capture-headers
-      description: Allows configuring headers to capture as span attributes.
+      description: A comma-separated list of header names to capture as span attributes.
       type: list
       default: ''
     telemetry:
@@ -12221,8 +12245,11 @@ libraries:
         - name: messaging.operation
           type: STRING
   - name: spring-jms-2.0
-    description: This instrumentation enables the generation of consumer messaging
-      spans for Spring JMS.
+    display_name: Spring JMS
+    description: This instrumentation enables messaging spans for Spring JMS message
+      consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
     source_path: instrumentation/spring/spring-jms/spring-jms-2.0
     scope:
@@ -12253,8 +12280,11 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-jms-6.0
-    description: This instrumentation enables the generation of consumer messaging
-      spans for Spring JMS.
+    display_name: Spring JMS
+    description: This instrumentation enables messaging spans for Spring JMS message
+      consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
     source_path: instrumentation/spring/spring-jms/spring-jms-6.0
     minimum_java_version: 17
@@ -12288,6 +12318,8 @@ libraries:
   - name: spring-kafka-2.7
     description: This instrumentation enables consumer messaging spans for Spring
       Kafka listeners.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://spring.io/projects/spring-kafka
     source_path: instrumentation/spring/spring-kafka-2.7
     scope:
@@ -12306,7 +12338,7 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.kafka.experimental-span-attributes
-      description: Enables capturing experimental span attribute `kafka.record.queue_time_ms`
+      description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
       type: boolean
       default: false
     telemetry:
@@ -13308,7 +13340,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13344,12 +13376,12 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: vertx-rx-java-3.5
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
@@ -13383,7 +13415,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13411,12 +13443,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: vertx-sql-client-5.0
     source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
     minimum_java_version: 11
@@ -13445,7 +13477,7 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
+    - when: otel.semconv-stability.opt-in=database,service.peer
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -13473,12 +13505,12 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
-        - name: peer.service
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
           type: LONG
+        - name: service.peer.name
+          type: STRING
   - name: vertx-web-3.0
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:

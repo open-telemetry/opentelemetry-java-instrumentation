@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -19,7 +21,6 @@ import io.vertx.core.json.JsonObject;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -71,7 +72,7 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
           future.complete(null);
         });
 
-    future.get(30, TimeUnit.SECONDS);
+    future.get(30, SECONDS);
     return server;
   }
 

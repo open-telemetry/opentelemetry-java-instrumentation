@@ -64,6 +64,26 @@
       <property name="message"
                 value="Please statically import methods from Assertions (OpenTelemetryAssertions extends Assertions)"/>
     </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^(?!.*import).*\bObjects\.requireNonNull\b"/>
+      <property name="message" value="Please statically import Objects.requireNonNull"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^(?!.*import).*\bElementMatchers\.[a-z]"/>
+      <property name="message" value="Please statically import methods from ElementMatchers"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^(?!.*import).*\bAgentElementMatchers\.[a-z]"/>
+      <property name="message" value="Please statically import methods from AgentElementMatchers"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^(?!.*import).*\bTimeUnit\.[A-Z]"/>
+      <property name="message" value="Please statically import constants from TimeUnit"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format" value="^(?!.*import).*\bStandardCharsets\.[A-Z]"/>
+      <property name="message" value="Please statically import constants from StandardCharsets"/>
+    </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

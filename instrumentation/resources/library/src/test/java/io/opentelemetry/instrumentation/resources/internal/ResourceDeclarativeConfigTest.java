@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,9 +17,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
@@ -45,8 +45,7 @@ class ResourceDeclarativeConfigTest {
 
     boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
-        DeclarativeConfiguration.parseAndCreate(
-            new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
+        DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)));
     assertThat(openTelemetrySdk.getSdkTracerProvider())
         .extracting("sharedState.resource", as(InstanceOfAssertFactories.type(Resource.class)))
         .satisfies(
@@ -59,7 +58,7 @@ class ResourceDeclarativeConfigTest {
               Set<String> attributeKeys =
                   resource.getAttributes().asMap().keySet().stream()
                       .map(AttributeKey::getKey)
-                      .collect(Collectors.toSet());
+                      .collect(toSet());
               // ContainerResourceComponentProvider - no container attributes reliably provided
               // HostIdResourceComponentProvider - host.id attribute not reliably provided
               // HostResourceComponentProvider

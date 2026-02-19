@@ -26,7 +26,7 @@ import org.bson.json.JsonWriterSettings;
 
 class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent, Void> {
 
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String MONGODB = "mongodb";
 
   @Nullable private static final Method IS_TRUNCATED_METHOD;
@@ -40,12 +40,12 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
             .orElse(null);
   }
 
-  private final boolean statementSanitizationEnabled;
+  private final boolean querySanitizationEnabled;
   private final int maxNormalizedQueryLength;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
-  MongoDbAttributesGetter(boolean statementSanitizationEnabled, int maxNormalizedQueryLength) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.jsonWriterSettings = createJsonWriterSettings(maxNormalizedQueryLength);
   }
@@ -61,7 +61,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return event.getDatabaseName();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getConnectionString(CommandStartedEvent event) {
@@ -82,7 +82,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Override
   public String getDbQueryText(CommandStartedEvent event) {
-    return sanitizeStatement(event.getCommand());
+    return sanitizeQuery(event.getCommand());
   }
 
   @Override
@@ -100,7 +100,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
-  String sanitizeStatement(BsonDocument command) {
+  String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown
     // API incompatibilities, which we can't detect by Muzzle because we use reflection.
@@ -109,7 +109,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
             ? new JsonWriter(stringWriter, jsonWriterSettings)
             : new JsonWriter(stringWriter);
 
-    if (statementSanitizationEnabled) {
+    if (querySanitizationEnabled) {
       writeScrubbed(command, jsonWriter, /* isRoot= */ true);
     } else {
       new BsonDocumentCodec().encode(jsonWriter, command, EncoderContext.builder().build());

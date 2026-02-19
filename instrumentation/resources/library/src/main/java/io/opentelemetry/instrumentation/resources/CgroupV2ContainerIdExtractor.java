@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static java.util.Optional.empty;
+import static java.util.logging.Level.WARNING;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +50,7 @@ class CgroupV2ContainerIdExtractor {
     try {
       fileAsList = filesystem.lineList(V2_CGROUP_PATH);
     } catch (IOException e) {
-      logger.log(Level.WARNING, "Unable to read v2 cgroup path", e);
+      logger.log(WARNING, "Unable to read v2 cgroup path", e);
       return empty();
     }
 

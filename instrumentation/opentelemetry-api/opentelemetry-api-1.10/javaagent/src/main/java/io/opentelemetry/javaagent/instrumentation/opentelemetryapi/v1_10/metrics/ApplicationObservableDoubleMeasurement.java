@@ -5,18 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
 final class ApplicationObservableDoubleMeasurement
-    implements ObservableDoubleMeasurement,
-        ObservableMeasurementWrapper<io.opentelemetry.api.metrics.ObservableDoubleMeasurement> {
+    implements application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement,
+        ObservableMeasurementWrapper<ObservableDoubleMeasurement> {
 
-  private final io.opentelemetry.api.metrics.ObservableDoubleMeasurement agentMeasurement;
+  private final ObservableDoubleMeasurement agentMeasurement;
 
-  ApplicationObservableDoubleMeasurement(
-      io.opentelemetry.api.metrics.ObservableDoubleMeasurement agentMeasurement) {
+  ApplicationObservableDoubleMeasurement(ObservableDoubleMeasurement agentMeasurement) {
     this.agentMeasurement = agentMeasurement;
   }
 
@@ -26,12 +24,12 @@ final class ApplicationObservableDoubleMeasurement
   }
 
   @Override
-  public void record(double v, Attributes attributes) {
+  public void record(double v, application.io.opentelemetry.api.common.Attributes attributes) {
     agentMeasurement.record(v, Bridging.toAgent(attributes));
   }
 
   @Override
-  public io.opentelemetry.api.metrics.ObservableDoubleMeasurement unwrap() {
+  public ObservableDoubleMeasurement unwrap() {
     return agentMeasurement;
   }
 }

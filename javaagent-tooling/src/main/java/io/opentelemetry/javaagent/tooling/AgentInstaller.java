@@ -99,7 +99,7 @@ public class AgentInstaller {
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {
-      io.opentelemetry.context.ContextStorage.addWrapper(
+      ContextStorage.addWrapper(
           storage -> new StrictContextStressor(storage, strictContextStressorMillis));
     }
 

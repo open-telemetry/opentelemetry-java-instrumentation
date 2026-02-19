@@ -32,27 +32,6 @@ public final class JettyClientTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /**
-   * Returns an instrumented HTTP client.
-   *
-   * @deprecated Use {@link #createHttpClient()} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient() {
-    return createHttpClient();
-  }
-
-  /**
-   * Returns a new {@link HttpClient} with the specified transport and tracing configured.
-   *
-   * @param httpClientTransport the HTTP client transport to use
-   * @deprecated Use {@link #createHttpClient(HttpClientTransport)} instead.
-   */
-  @Deprecated
-  public HttpClient newHttpClient(HttpClientTransport httpClientTransport) {
-    return createHttpClient(httpClientTransport);
-  }
-
   /** Returns an instrumented HTTP client. */
   public HttpClient createHttpClient() {
     return new TracingHttpClient(instrumenter);

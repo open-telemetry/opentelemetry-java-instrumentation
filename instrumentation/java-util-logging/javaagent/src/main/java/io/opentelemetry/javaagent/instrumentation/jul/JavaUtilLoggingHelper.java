@@ -5,7 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.jul;
 
-import application.java.util.logging.Logger;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.logging.Level.CONFIG;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -15,7 +23,6 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -28,7 +35,7 @@ public final class JavaUtilLoggingHelper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "java_util_logging")
           .getBoolean("experimental_log_attributes/development", false);
 
-  public static void capture(Logger logger, LogRecord logRecord) {
+  public static void capture(application.java.util.logging.Logger logger, LogRecord logRecord) {
 
     if (!logger.isLoggable(logRecord.getLevel())) {
       // this is already checked in most cases, except if Logger.log(LogRecord) was called directly
@@ -69,7 +76,7 @@ public final class JavaUtilLoggingHelper {
     // time
     // TODO (trask) use getInstant() for more precision on Java 9
     long timestamp = logRecord.getMillis();
-    builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+    builder.setTimestamp(timestamp, MILLISECONDS);
 
     // level
     Level level = logRecord.getLevel();
@@ -101,25 +108,25 @@ public final class JavaUtilLoggingHelper {
 
   private static Severity levelToSeverity(Level level) {
     int lev = level.intValue();
-    if (lev <= Level.FINEST.intValue()) {
+    if (lev <= FINEST.intValue()) {
       return Severity.TRACE;
     }
-    if (lev <= Level.FINER.intValue()) {
+    if (lev <= FINER.intValue()) {
       return Severity.DEBUG;
     }
-    if (lev <= Level.FINE.intValue()) {
+    if (lev <= FINE.intValue()) {
       return Severity.DEBUG2;
     }
-    if (lev <= Level.CONFIG.intValue()) {
+    if (lev <= CONFIG.intValue()) {
       return Severity.DEBUG3;
     }
-    if (lev <= Level.INFO.intValue()) {
+    if (lev <= INFO.intValue()) {
       return Severity.INFO;
     }
-    if (lev <= Level.WARNING.intValue()) {
+    if (lev <= WARNING.intValue()) {
       return Severity.WARN;
     }
-    if (lev <= Level.SEVERE.intValue()) {
+    if (lev <= SEVERE.intValue()) {
       return Severity.ERROR;
     }
     return Severity.FATAL;

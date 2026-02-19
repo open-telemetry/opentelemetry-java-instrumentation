@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.pulsar.common.naming.TopicName;
@@ -97,6 +98,6 @@ enum PulsarBatchMessagingAttributesGetter
     return StreamSupport.stream(request.getMessages().spliterator(), false)
         .map(message -> message.getProperty(name))
         .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

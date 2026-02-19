@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -36,7 +37,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class HttpServerMetricsTest {
@@ -185,6 +185,6 @@ class HttpServerMetricsTest {
   }
 
   private static long nanos(int millis) {
-    return TimeUnit.MILLISECONDS.toNanos(millis);
+    return MILLISECONDS.toNanos(millis);
   }
 }

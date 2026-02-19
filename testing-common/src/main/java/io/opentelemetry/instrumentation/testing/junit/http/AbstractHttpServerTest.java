@@ -18,7 +18,27 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_PORT;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -38,14 +58,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.SchemaUrls;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -81,7 +94,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -507,10 +519,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             });
       }
 
-      countDownLatch.await(30, TimeUnit.SECONDS);
+      countDownLatch.await(30, SECONDS);
       assertHighConcurrency(count);
     } finally {
-      eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
+      eventLoopGroup.shutdownGracefully().await(10, SECONDS);
     }
   }
 
@@ -557,9 +569,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                               HttpConstants._OTHER,
                               SUCCESS,
                               options.responseCodeOnNonStandardHttpMethod)
-                          .hasAttribute(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method)));
+                          .hasAttribute(HTTP_REQUEST_METHOD_ORIGINAL, method)));
     } finally {
-      eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
+      eventLoopGroup.shutdownGracefully().await(10, SECONDS);
     }
   }
 
@@ -664,7 +676,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     bootstrap
         .group(eventLoopGroup)
         .channel(NioSocketChannel.class)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) TimeUnit.SECONDS.toMillis(10))
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) SECONDS.toMillis(10))
         .handler(
             new ChannelInitializer<SocketChannel>() {
               @Override
@@ -906,62 +918,59 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         attrs -> {
           // we're opting out of these attributes in the new semconv
           assertThat(attrs)
-              .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
-              .doesNotContainKey(NetworkAttributes.NETWORK_TYPE)
-              .doesNotContainKey(NetworkAttributes.NETWORK_PROTOCOL_NAME);
+              .doesNotContainKey(NETWORK_TRANSPORT)
+              .doesNotContainKey(NETWORK_TYPE)
+              .doesNotContainKey(NETWORK_PROTOCOL_NAME);
 
-          if (attrs.get(NetworkAttributes.NETWORK_PROTOCOL_VERSION) != null) {
+          if (attrs.get(NETWORK_PROTOCOL_VERSION) != null) {
             assertThat(attrs)
-                .containsEntry(
-                    NetworkAttributes.NETWORK_PROTOCOL_VERSION, options.useHttp2 ? "2" : "1.1");
+                .containsEntry(NETWORK_PROTOCOL_VERSION, options.useHttp2 ? "2" : "1.1");
           }
 
-          assertThat(attrs).containsEntry(ServerAttributes.SERVER_ADDRESS, "localhost");
+          assertThat(attrs).containsEntry(SERVER_ADDRESS, "localhost");
           // TODO: Move to test knob rather than always treating as optional
           // TODO: once httpAttributes test knob is used, verify default port values
-          if (attrs.get(ServerAttributes.SERVER_PORT) != null) {
-            assertThat(attrs).containsEntry(ServerAttributes.SERVER_PORT, port);
+          if (attrs.get(SERVER_PORT) != null) {
+            assertThat(attrs).containsEntry(SERVER_PORT, port);
           }
 
-          if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
+          if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
             assertThat(attrs)
-                .containsEntry(
-                    NetworkAttributes.NETWORK_PEER_ADDRESS, options.sockPeerAddr.apply(endpoint));
+                .containsEntry(NETWORK_PEER_ADDRESS, options.sockPeerAddr.apply(endpoint));
           }
-          if (attrs.get(NetworkAttributes.NETWORK_PEER_PORT) != null) {
+          if (attrs.get(NETWORK_PEER_PORT) != null) {
             assertThat(attrs)
                 .hasEntrySatisfying(
-                    NetworkAttributes.NETWORK_PEER_PORT,
+                    NETWORK_PEER_PORT,
                     value ->
                         assertThat(value)
                             .isInstanceOf(Long.class)
                             .isNotEqualTo(Long.valueOf(port)));
           }
 
-          assertThat(attrs).containsEntry(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP);
+          assertThat(attrs).containsEntry(CLIENT_ADDRESS, TEST_CLIENT_IP);
           // client.port is opt-in
-          assertThat(attrs).doesNotContainKey(ClientAttributes.CLIENT_PORT);
+          assertThat(attrs).doesNotContainKey(CLIENT_PORT);
 
-          assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
+          assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
 
-          assertThat(attrs).containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, statusCode);
+          assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
           if (statusCode >= 500) {
-            assertThat(attrs).containsEntry(ErrorAttributes.ERROR_TYPE, String.valueOf(statusCode));
+            assertThat(attrs).containsEntry(ERROR_TYPE, String.valueOf(statusCode));
           }
 
-          assertThat(attrs).containsEntry(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT);
+          assertThat(attrs).containsEntry(USER_AGENT_ORIGINAL, TEST_USER_AGENT);
 
-          assertThat(attrs).containsEntry(UrlAttributes.URL_SCHEME, "http");
+          assertThat(attrs).containsEntry(URL_SCHEME, "http");
           if (endpoint != INDEXED_CHILD) {
-            assertThat(attrs)
-                .containsEntry(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath());
+            assertThat(attrs).containsEntry(URL_PATH, endpoint.resolvePath(address).getPath());
             if (endpoint.getQuery() != null) {
-              assertThat(attrs).containsEntry(UrlAttributes.URL_QUERY, endpoint.getQuery());
+              assertThat(attrs).containsEntry(URL_QUERY, endpoint.getQuery());
             }
           }
 
-          if (httpAttributes.contains(HttpAttributes.HTTP_ROUTE) && expectedRoute != null) {
-            assertThat(attrs).containsEntry(HttpAttributes.HTTP_ROUTE, expectedRoute);
+          if (httpAttributes.contains(HTTP_ROUTE) && expectedRoute != null) {
+            assertThat(attrs).containsEntry(HTTP_ROUTE, expectedRoute);
           }
 
           if (endpoint == CAPTURE_HEADERS) {
@@ -989,8 +998,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String method = "GET";
     return assertServerSpan(span, method, endpoint, endpoint.status)
         .hasAttributesSatisfying(
-            equalTo(UrlAttributes.URL_PATH, endpoint.resolvePath(address).getPath()),
-            equalTo(UrlAttributes.URL_QUERY, "id=" + requestId));
+            equalTo(URL_PATH, endpoint.resolvePath(address).getPath()),
+            equalTo(URL_QUERY, "id=" + requestId));
   }
 
   @CanIgnoreReturnValue
@@ -1009,7 +1018,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   public final boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
-    return options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE);
+    return options.httpAttributes.apply(endpoint).contains(HTTP_ROUTE);
   }
 
   public final boolean hasHandlerSpan(ServerEndpoint endpoint) {

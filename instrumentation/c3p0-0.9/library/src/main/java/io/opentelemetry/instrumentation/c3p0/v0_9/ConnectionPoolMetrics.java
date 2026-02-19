@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.c3p0.v0_9;
 
+import static java.util.logging.Level.FINE;
+
 import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -14,7 +16,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoo
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -67,7 +68,7 @@ final class ConnectionPoolMetrics {
             pendingRequestsForConnection.record(
                 dataSource.getNumThreadsAwaitingCheckoutDefaultUser(), attributes);
           } catch (SQLException e) {
-            logger.log(Level.FINE, "Failed to get C3P0 datasource metric", e);
+            logger.log(FINE, "Failed to get C3P0 datasource metric", e);
           }
         },
         connections,

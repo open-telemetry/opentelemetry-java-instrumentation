@@ -58,8 +58,8 @@ tasks {
         // Suggests using Guava types for fields but we don't use Guava
         disable("ImmutableMemberCollection")
 
-        // Fully qualified names may be necessary when deprecating a class to avoid
-        // deprecation warning.
+        // Replaced by custom OtelUnnecessarilyFullyQualified check which handles
+        // application.* and other repo-specific conventions
         disable("UnnecessarilyFullyQualified")
 
         // TODO (trask) use animal sniffer
@@ -132,6 +132,13 @@ tasks {
           // version. Disable rules that suggest using new language features.
           disable("StatementSwitchToExpressionSwitch")
           disable("PatternMatchingInstanceof")
+          // Disable our custom deprecation check since newer library versions
+          // may deprecate APIs that weren't deprecated before.
+          //
+          // Except for the custom-checks project to avoid "not a valid checker name" error.
+          if (!project.name.equals("custom-checks")) {
+            disable("OtelDeprecatedApiUsage")
+          }
         }
 
         if (name.contains("Jmh") || name.contains("Test")) {

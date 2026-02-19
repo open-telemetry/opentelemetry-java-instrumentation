@@ -5,39 +5,40 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.incubator.metrics;
 
-import application.io.opentelemetry.api.common.AttributeKey;
-import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
-import application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogramBuilder;
 import java.util.List;
 
 final class ApplicationDoubleHistogramBuilder131 extends ApplicationDoubleHistogramBuilder
-    implements ExtendedDoubleHistogramBuilder {
+    implements application.io.opentelemetry.extension.incubator.metrics
+        .ExtendedDoubleHistogramBuilder {
 
-  private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;
+  private final DoubleHistogramBuilder agentBuilder;
 
-  ApplicationDoubleHistogramBuilder131(
-      io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder) {
+  ApplicationDoubleHistogramBuilder131(DoubleHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
   }
 
   @Override
-  public LongHistogramBuilder ofLongs() {
+  public application.io.opentelemetry.api.metrics.LongHistogramBuilder ofLongs() {
     return new ApplicationLongHistogramBuilder131(agentBuilder.ofLongs());
   }
 
   @Override
-  public ExtendedDoubleHistogramBuilder setExplicitBucketBoundariesAdvice(
-      List<Double> bucketBoundaries) {
+  public application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder
+      setExplicitBucketBoundariesAdvice(List<Double> bucketBoundaries) {
     agentBuilder.setExplicitBucketBoundariesAdvice(bucketBoundaries);
     return this;
   }
 
   @Override
-  public ExtendedDoubleHistogramBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder) agentBuilder)
+  public application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder
+      setAttributesAdvice(
+          List<application.io.opentelemetry.api.common.AttributeKey<?>> attributes) {
+    ((ExtendedDoubleHistogramBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

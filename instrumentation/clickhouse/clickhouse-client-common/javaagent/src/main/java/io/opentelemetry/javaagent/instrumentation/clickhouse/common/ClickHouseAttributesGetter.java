@@ -22,11 +22,11 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbQueryText(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfoWithSummary() != null) {
-      return request.getSqlStatementInfoWithSummary().getQueryText();
+    if (request.getSqlQueryWithSummary() != null) {
+      return request.getSqlQueryWithSummary().getQueryText();
     }
-    if (request.getSqlStatementInfo() != null) {
-      return request.getSqlStatementInfo().getQueryText();
+    if (request.getSqlQuery() != null) {
+      return request.getSqlQuery().getQueryText();
     }
     return null;
   }
@@ -34,8 +34,8 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbOperationName(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() != null) {
-      return request.getSqlStatementInfo().getOperationName();
+    if (request.getSqlQuery() != null) {
+      return request.getSqlQuery().getOperationName();
     }
     return null;
   }
@@ -43,16 +43,15 @@ final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getDbQuerySummary(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfoWithSummary() != null) {
-      return request.getSqlStatementInfoWithSummary().getQuerySummary();
+    if (request.getSqlQueryWithSummary() != null) {
+      return request.getSqlQueryWithSummary().getQuerySummary();
     }
     return null;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
   }
 
   @Nullable

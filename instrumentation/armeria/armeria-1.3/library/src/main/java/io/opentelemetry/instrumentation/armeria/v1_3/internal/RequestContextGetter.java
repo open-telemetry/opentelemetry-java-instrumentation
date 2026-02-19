@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
+import static java.util.stream.Collectors.toList;
+
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.netty.util.AsciiString;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
@@ -23,7 +24,7 @@ enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
     }
     return carrier.request().headers().names().stream()
         .map(AsciiString::toString)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
