@@ -176,7 +176,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the longest time, in milliseconds, to process an exchange since context start-up or the last reset operation.")
+                        "Indicates the longest time to process an exchange since context start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
@@ -185,7 +185,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the mean processing time, in milliseconds, for all exchanges processed since context start-up or the last reset operation.")
+                        "Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
@@ -194,7 +194,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the shortest time, in milliseconds, to process an exchange since context start-up or the last reset operation.")
+                        "Indicates the shortest time to process an exchange since context start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
@@ -203,7 +203,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the time, in milliseconds, it took to process the last exchange.")
+                        "Indicates the time it took to process the last exchange.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
@@ -212,7 +212,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the context.")
+                        "Indicates the difference of the Processing Time of the last two exchanges transited the context.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
@@ -221,7 +221,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total processing time, in milliseconds, to process all exchanges since context start-up or the last reset operation.")
+                        "Indicates the total processing time to process all exchanges since context start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         // route metrics
@@ -294,7 +294,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the longest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.")
+                        "Indicates the longest time to process an exchange since the route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
@@ -303,7 +303,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the mean processing time, in milliseconds, for all exchanges processed since the route start-up or the last reset operation.")
+                        "Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
@@ -312,7 +312,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the shortest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.")
+                        "Indicates the shortest time to process an exchange since the route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
@@ -321,7 +321,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the time, in milliseconds, it took the route to process the last exchange.")
+                        "Indicates the time it took the route to process the last exchange.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
@@ -330,7 +330,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the route.")
+                        "Indicates the difference of the Processing Time of the last two exchanges transited the route.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
@@ -339,7 +339,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total processing time, in milliseconds, of all exchanges the selected processed since route start-up or the last reset operation.")
+                        "Indicates the total processing time of all exchanges the selected processed since route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(routeAttributes))
         // processor metrics
@@ -419,7 +419,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the longest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.")
+                        "Indicates the longest time to process an exchange since processor start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
@@ -429,7 +429,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the mean processing time, in milliseconds, for all exchanges processed since processor start-up or the last reset operation.")
+                        "Indicates the mean processing time for all exchanges processed since processor start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
@@ -439,7 +439,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the shortest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.")
+                        "Indicates the shortest time to process an exchange since processor start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
@@ -449,7 +449,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the time, in milliseconds, it took the selected processor to process the last exchange.")
+                        "Indicates the time it took the selected processor to process the last exchange.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
@@ -459,7 +459,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isGauge()
                     .hasDescription(
-                        "Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the selected processor.")
+                        "Indicates the difference of the Processing Time of the last two exchanges transited the selected processor.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
@@ -469,7 +469,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total processing time, in milliseconds, to process all exchanges since start-up or the last reset operation.")
+                        "Indicates the total processing time to process all exchanges since start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))

@@ -68,42 +68,42 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the longest time, in milliseconds, to process an exchange since context start-up or the last reset operation.
+        desc: Indicates the longest time to process an exchange since context start-up or the last reset operation.
       # camel.context.exchange.processing.duration.mean
       MeanProcessingTime:
         metric: exchange.processing.duration.mean
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since context start-up or the last reset operation.
+        desc: Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.
       # camel.context.exchange.processing.duration.min
       MinProcessingTime:
         metric: exchange.processing.duration.min
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the shortest time, in milliseconds, to process an exchange since context start-up or the last reset operation.
+        desc: Indicates the shortest time to process an exchange since context start-up or the last reset operation.
       # camel.context.exchange.processing.duration.last
       LastProcessingTime:
         metric: exchange.processing.duration.last
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the time, in milliseconds, it took to process the last exchange.
+        desc: Indicates the time it took to process the last exchange.
       # camel.context.exchange.processing.duration.last_delta
       DeltaProcessingTime:
         metric: exchange.processing.duration.last_delta
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the context.
+        desc: Indicates the difference of the Processing Time of the last two exchanges transited the context.
       # camel.context.exchange.processing.duration.sum
       TotalProcessingTime:
         metric: exchange.processing.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
-        desc: Indicates the total processing time, in milliseconds, to process all exchanges since context start-up or the last reset operation.
+        desc: Indicates the total processing time to process all exchanges since context start-up or the last reset operation.
 
   # Route Level metrics
 
@@ -161,42 +161,42 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the longest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.
+        desc: Indicates the longest time to process an exchange since the route start-up or the last reset operation.
       # camel.route.exchange.processing.duration.mean
       MeanProcessingTime:
         metric: exchange.processing.duration.mean
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since the route start-up or the last reset operation.
+        desc: Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.
       # camel.route.exchange.processing.duration.min
       MinProcessingTime:
         metric: exchange.processing.duration.min
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the shortest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.
+        desc: Indicates the shortest time to process an exchange since the route start-up or the last reset operation.
       # camel.route.exchange.processing.duration.last
       LastProcessingTime:
         metric: exchange.processing.duration.last
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the time, in milliseconds, it took the route to process the last exchange.
+        desc: Indicates the time it took the route to process the last exchange.
       # camel.route.exchange.processing.duration.last_delta
       DeltaProcessingTime:
         metric: exchange.processing.duration.last_delta
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the route.
+        desc: Indicates the difference of the Processing Time of the last two exchanges transited the route.
       # camel.route.exchange.processing.duration.sum
       TotalProcessingTime:
         metric: exchange.processing.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
-        desc: Indicates the total processing time, in milliseconds, of all exchanges the selected processed since route start-up or the last reset operation.
+        desc: Indicates the total processing time of all exchanges the selected processed since route start-up or the last reset operation.
 
   # Processor Level Metrics
 
@@ -256,42 +256,42 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the longest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.
+        desc: Indicates the longest time to process an exchange since processor start-up or the last reset operation.
       # camel.processor.exchange.processing.duration.mean
       MeanProcessingTime:
         metric: exchange.processing.duration.mean
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since processor start-up or the last reset operation.
+        desc: Indicates the mean processing time for all exchanges processed since processor start-up or the last reset operation.
       # camel.processor.exchange.processing.duration.min
       MinProcessingTime:
         metric: exchange.processing.duration.min
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the shortest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.
+        desc: Indicates the shortest time to process an exchange since processor start-up or the last reset operation.
       # camel.processor.exchange.processing.duration.last
       LastProcessingTime:
         metric: exchange.processing.duration.last
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the time, in milliseconds, it took the selected processor to process the last exchange.
+        desc: Indicates the time it took the selected processor to process the last exchange.
       # camel.processor.exchange.processing.duration.last_delta
       DeltaProcessingTime:
         metric: exchange.processing.duration.last_delta
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the selected processor.
+        desc: Indicates the difference of the Processing Time of the last two exchanges transited the selected processor.
       # camel.processor.exchange.processing.duration.sum
       TotalProcessingTime:
         metric: exchange.processing.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
-        desc: Indicates the total processing time, in milliseconds, to process all exchanges since start-up or the last reset operation.
+        desc: Indicates the total processing time to process all exchanges since start-up or the last reset operation.
 
  # Thread Pools
 

@@ -7,15 +7,17 @@ package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /** Group of attribute matchers */
 public class AttributeMatcherGroup {
 
   // stored as a Map for easy lookup by name
   private final Map<String, AttributeMatcher> matchers;
-  private Predicate<Map<String, String>> applicabilityPredicate;
+  @Nullable private Predicate<Map<String, String>> applicabilityPredicate;
 
   /**
    * Constructor for a set of attribute matchers
@@ -80,6 +82,10 @@ public class AttributeMatcherGroup {
    * @see #isApplicableFor
    */
   public AttributeMatcherGroup applicableWhen(Predicate<Map<String, String>> predicate) {
+    Objects.requireNonNull(predicate, "predicate must not be null");
+    if  (applicabilityPredicate != null) {
+      throw  new IllegalStateException("applicability predicate is already set");
+    }
     applicabilityPredicate = predicate;
     return this;
   }
