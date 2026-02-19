@@ -5,7 +5,7 @@ plugins {
 group = "io.opentelemetry.instrumentation.jmx.cameltest"
 description = "Application used for Camel JMX metrics testing"
 
-val camelVersion = "4.17.0"
+val camelVersion = "4.18.0"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
