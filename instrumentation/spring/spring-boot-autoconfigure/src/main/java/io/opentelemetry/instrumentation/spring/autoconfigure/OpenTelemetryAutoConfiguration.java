@@ -171,9 +171,9 @@ public class OpenTelemetryAutoConfiguration {
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
         DeclarativeConfigProperties instrumentationConfig =
-            ((ExtendedOpenTelemetry) sdk).getConfigProvider().getInstrumentationConfig();
-        return new SpringOpenTelemetrySdk(
-            sdk, () -> CoercingDeclarativeConfigProperties.wrap(instrumentationConfig));
+            CoercingDeclarativeConfigProperties.wrap(
+                ((ExtendedOpenTelemetry) sdk).getConfigProvider().getInstrumentationConfig());
+        return new SpringOpenTelemetrySdk(sdk, () -> instrumentationConfig);
       }
 
       /**

@@ -41,27 +41,7 @@ final class CoercingDeclarativeConfigProperties implements DeclarativeConfigProp
   @Nullable
   @Override
   public String getString(String name) {
-    // The delegate may return null if the value is not a String.
-    // Try the delegate first, then fall back to coercion via getInt/getLong/getDouble/getBoolean.
-    String value = delegate.getString(name);
-    if (value != null) {
-      return value;
-    }
-    // The value might be stored as a non-string type in the delegate.
-    // Check other types and coerce to string.
-    Boolean boolVal = delegate.getBoolean(name);
-    if (boolVal != null) {
-      return boolVal.toString();
-    }
-    Long longVal = delegate.getLong(name);
-    if (longVal != null) {
-      return longVal.toString();
-    }
-    Double doubleVal = delegate.getDouble(name);
-    if (doubleVal != null) {
-      return doubleVal.toString();
-    }
-    return null;
+    return delegate.getString(name);
   }
 
   @Nullable

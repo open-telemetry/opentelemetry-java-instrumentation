@@ -99,11 +99,7 @@ class EmbeddedConfigFile {
       Map<String, String> flatProps) {
     Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
-    return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
-  }
-
-  static ObjectMapper getObjectMapper() {
-    return MAPPER;
+    return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
   /**
