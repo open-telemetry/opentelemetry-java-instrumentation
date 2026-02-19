@@ -1,0 +1,93 @@
+name: Auto-update static imports
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # weekly, Monday at 3:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Only one run at a time to avoid branch conflicts
+concurrency:
+  group: auto-update-static-imports
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # for git push to PR branch
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5.0.1
+
+      - name: Update static imports
+        run: .github/scripts/update-static-imports.sh
+
+      - name: Check for diff
+        id: diffcheck
+        run: |
+          if ! git diff --quiet; then
+            echo "has_diff=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_diff=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Use CLA approved bot
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Create pull request against main
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        env:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          message="Update static imports"
+          body="Update static imports."
+          branch="otelbot/update-static-imports"
+
+          git checkout -b $branch
+          git add -u
+          git commit -m "$message"
+          git push --force origin "$branch"
+
+          pr_exists=$(gh pr list --state open --head "$branch" --json url -q '.[0].url')
+          if [ -z "$pr_exists" ]; then
+            gh pr create --title "$message" \
+                         --body "$body" \
+                         --base main
+          else
+            echo "PR already exists: $pr_exists"
+          fi
+
+  workflow-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - update
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.update.result == 'success' }}
