@@ -18,7 +18,7 @@ public class ZioHttpInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ZioHttpInstrumentationModule() {
-    super("zio", "zio-http", "zio-http-3.0");
+    super("zio-http", "zio-http-3.0", "zio");
   }
 
   @Override

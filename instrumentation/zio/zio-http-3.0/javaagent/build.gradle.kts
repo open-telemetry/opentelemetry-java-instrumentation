@@ -34,6 +34,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   library("dev.zio:zio-http_$scalaVersion:$zioVersion")
   testCompileOnly("org.scala-lang:scala-library:2.12.20")
