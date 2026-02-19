@@ -71,7 +71,7 @@ class CamelTest extends TargetSystemTest {
                 attributeWithAnyValue("camel.destination"))
             .applicableWhen(
                 (attributes) ->
-                    Optional.of(attributes.get("camel.processor"))
+                    Optional.ofNullable(attributes.get("camel.processor"))
                         // Test application uses only "to" destination-aware processor
                         .filter((processorId) -> processorId.startsWith("to"))
                         .isPresent());
