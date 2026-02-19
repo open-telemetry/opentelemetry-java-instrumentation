@@ -103,13 +103,15 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return createInstrumentationConfig(configProperties, SPECIAL_MAPPINGS);
+    return createInstrumentationConfig(configProperties, Collections.emptyMap());
   }
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties, Map<String, String> mappings) {
+    Map<String, String> mergedMappings = new HashMap<>(SPECIAL_MAPPINGS);
+    mergedMappings.putAll(mappings);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, Collections.emptyList(), mappings);
+        configProperties, Collections.emptyList(), mergedMappings);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(

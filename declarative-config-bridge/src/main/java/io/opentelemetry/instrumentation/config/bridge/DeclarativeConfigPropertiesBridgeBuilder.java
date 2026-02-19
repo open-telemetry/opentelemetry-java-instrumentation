@@ -23,7 +23,8 @@ import javax.annotation.Nullable;
  * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
  * values for properties.
  *
- * @deprecated Use {@link ConfigPropertiesBackedConfigProvider#builder()} instead.
+ * @deprecated Use {@link ConfigPropertiesBackedConfigProvider#builder()} instead. Scheduled for
+ *     removal in 3.0.0, tracked in issue #16238.
  */
 @Deprecated
 public class DeclarativeConfigPropertiesBridgeBuilder {
