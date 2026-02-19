@@ -13,11 +13,9 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-// TODO : move to library ?
 public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper {
 
-  // TODO: make request size configurable
-  private static final int MAX_CAPACITY = 100;
+  private final int maxBufferSize;
 
   /**
    * Constructs a request object wrapping the given request.
@@ -25,8 +23,9 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
    * @param request the {@link HttpServletRequest} to be wrapped.
    * @throws IllegalArgumentException if the request is null
    */
-  public Servlet5BodyCaptureRequestWrapper(HttpServletRequest request) {
+  public Servlet5BodyCaptureRequestWrapper(HttpServletRequest request, int maxBufferSize) {
     super(request);
+    this.maxBufferSize = maxBufferSize;
   }
 
   @Override
@@ -35,8 +34,8 @@ public class Servlet5BodyCaptureRequestWrapper extends HttpServletRequestWrapper
     if (inputStream == null || inputStream.isFinished()) {
       return inputStream;
     }
-    ByteBuffer buffer = ByteBuffer.allocate(MAX_CAPACITY);
-    super.setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
+    ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
+    setAttribute(REQUEST_BODY_ATTRIBUTE, buffer);
     return new Servlet5BodyCaptureInputStreamWrapper(inputStream, buffer);
   }
 }

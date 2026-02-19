@@ -22,7 +22,6 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
-  // TODO: maybe we should move this to a dedicated helper class
   public static final AttributeKey<String> SPAN_BODY_ATTRIBUTE =
       AttributeKey.stringKey("http.request.body.text");
   public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";

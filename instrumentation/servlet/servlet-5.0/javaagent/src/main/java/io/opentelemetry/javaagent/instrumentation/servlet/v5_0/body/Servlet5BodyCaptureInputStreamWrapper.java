@@ -5,69 +5,45 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.body;
 
+import io.opentelemetry.instrumentation.servlet.internal.CaptureInputStream;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-// TODO : move to library ?
 public class Servlet5BodyCaptureInputStreamWrapper extends ServletInputStream {
 
-  private final ServletInputStream inputStream;
-  private final ByteBuffer buffer;
+  private final ServletInputStream delegate;
+  private final InputStream inputStream;
 
-  public Servlet5BodyCaptureInputStreamWrapper(ServletInputStream inputStream, ByteBuffer buffer) {
-    this.inputStream = inputStream;
-    this.buffer = buffer;
+  public Servlet5BodyCaptureInputStreamWrapper(ServletInputStream delegate, ByteBuffer buffer) {
+    this.delegate = delegate;
+    this.inputStream = new CaptureInputStream(delegate, buffer);
   }
 
   @Override
   public int read() throws IOException {
-    int read = inputStream.read();
-    if (read > 0 && buffer.hasRemaining()) {
-      buffer.put((byte) read);
-    }
-    return read;
-  }
-
-  @Override
-  public int read(byte[] b) throws IOException {
-    return read(b, 0, b.length);
+    return inputStream.read();
   }
 
   @Override
   public int read(byte[] b, int off, int len) throws IOException {
-    // TODO: handle exceptions by marking content as read
-    int read = inputStream.read(b, off, len);
-    if (read > 0) {
-      int length = Math.min(read, buffer.remaining());
-      buffer.put(b, off, length);
-    }
-    return read;
-  }
-
-  @Override
-  public int readLine(byte[] b, int off, int len) throws IOException {
-    int read = inputStream.readLine(b, off, len);
-    if (read > 0) {
-      int length = Math.min(read, buffer.remaining());
-      buffer.put(b, off, length);
-    }
-    return read;
+    return inputStream.read(b, off, len);
   }
 
   @Override
   public boolean isFinished() {
-    return inputStream.isFinished();
+    return delegate.isFinished();
   }
 
   @Override
   public boolean isReady() {
-    return inputStream.isReady();
+    return delegate.isReady();
   }
 
   @Override
   public void setReadListener(ReadListener readListener) {
-    inputStream.setReadListener(readListener);
+    delegate.setReadListener(readListener);
   }
 }

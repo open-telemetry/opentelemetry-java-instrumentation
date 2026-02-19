@@ -110,8 +110,10 @@ public class JakartaServletServiceAdvice {
         || !(servletResponse instanceof HttpServletResponse)) {
       return new Object[] {null, servletRequest, servletResponse};
     }
-    HttpServletRequest request =
-        new Servlet5BodyCaptureRequestWrapper((HttpServletRequest) servletRequest);
+
+    HttpServletRequest request = (HttpServletRequest) servletRequest;
+    request = helper().wrapForBodyCaptureIfNeeded(request, Servlet5BodyCaptureRequestWrapper::new);
+
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
     String snippet = getSnippetInjectionHelper().getSnippet();

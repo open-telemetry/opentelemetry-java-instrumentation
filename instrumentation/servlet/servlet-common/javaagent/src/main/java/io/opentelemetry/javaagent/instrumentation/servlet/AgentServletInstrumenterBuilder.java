@@ -32,9 +32,6 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private static final boolean CAPTURE_EXPERIMENTAL_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getBoolean("experimental_span_attributes/development", false);
-  private static final boolean CAPTURE_REQUEST_BODY =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getBoolean("capture_request_body/development", false);
 
   private AgentServletInstrumenterBuilder() {}
 
@@ -72,7 +69,7 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .setCaptureRequestParameters(CAPTURE_REQUEST_PARAMETERS)
             .setCaptureExperimentalAttributes(CAPTURE_EXPERIMENTAL_ATTRIBUTES)
             .setCaptureEnduserId(AgentCommonConfig.get().getEnduserConfig().isIdEnabled())
-            .setCaptureRequestBody(CAPTURE_REQUEST_BODY);
+            .setCaptureRequestBody(ServletHelper.captureRequestBodyEnabled());
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);
