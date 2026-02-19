@@ -83,8 +83,8 @@ public class AttributeMatcherGroup {
    */
   public AttributeMatcherGroup applicableWhen(Predicate<Map<String, String>> predicate) {
     Objects.requireNonNull(predicate, "predicate must not be null");
-    if  (applicabilityPredicate != null) {
-      throw  new IllegalStateException("applicability predicate is already set");
+    if (applicabilityPredicate != null) {
+      throw new IllegalStateException("applicability predicate is already set");
     }
     applicabilityPredicate = predicate;
     return this;

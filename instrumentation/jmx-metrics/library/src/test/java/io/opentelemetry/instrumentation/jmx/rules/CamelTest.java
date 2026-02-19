@@ -203,8 +203,7 @@ class CamelTest extends TargetSystemTest {
             metric ->
                 metric
                     .isGauge()
-                    .hasDescription(
-                        "Indicates the time it took to process the last exchange.")
+                    .hasDescription("Indicates the time it took to process the last exchange.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
