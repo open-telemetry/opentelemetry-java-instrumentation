@@ -113,7 +113,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Indicates the total number of exchanges, passed or failed, processed context start-up or the last reset operation.")
+                        "Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
