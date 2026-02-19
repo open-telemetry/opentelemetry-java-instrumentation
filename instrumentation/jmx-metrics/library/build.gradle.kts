@@ -20,7 +20,7 @@ tasks {
   test {
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val testAppTask = project(":instrumentation:jmx-metrics:testing-webapp").tasks.named<War>("war")
-    val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("bootJar")
+    val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("camelTestAppJar")
 
     dependsOn(shadowTask)
     dependsOn(testAppTask)

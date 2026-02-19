@@ -25,7 +25,7 @@ rules:
         metric: exchange.count
         type: counter
         unit: "{exchange}"
-        desc: Indicates the total number of exchanges, passed or failed, processed context start-up or the last reset operation.
+        desc: Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.
       # camel.context.exchange.completed
       ExchangesCompleted:
         metric: exchange.completed

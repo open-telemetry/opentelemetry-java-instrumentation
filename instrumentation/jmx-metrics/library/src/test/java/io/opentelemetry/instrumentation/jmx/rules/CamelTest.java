@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,8 +33,8 @@ class CamelTest extends TargetSystemTest {
     GenericContainer<?> target =
         new GenericContainer<>("eclipse-temurin:17.0.18_8-jre")
             .withCommand(String.format("java %s -jar /camel_test.jar", String.join(" ", jvmArgs)))
-            .withExposedPorts(8080) // This port is used only to detect container start
-            .waitingFor(Wait.forListeningPort());
+            .waitingFor(Wait.forLogMessage(".*Camel test application started.*", 1))
+            .withStartupTimeout(Duration.ofMinutes(1));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
