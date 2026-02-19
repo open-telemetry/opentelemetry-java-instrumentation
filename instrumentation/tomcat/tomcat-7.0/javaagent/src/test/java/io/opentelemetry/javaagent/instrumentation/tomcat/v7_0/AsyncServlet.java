@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -18,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
+import javax.servlet.ServletInputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -55,6 +57,13 @@ class AsyncServlet extends HttpServlet {
                   } else if (endpoint.equals(CAPTURE_HEADERS)) {
                     resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
                     resp.setStatus(endpoint.getStatus());
+                    resp.getWriter().print(endpoint.getBody());
+                  } else if (endpoint.equals(CAPTURE_BODY)) {
+                    // read body to trigger body capture
+                    ServletInputStream requestBody = req.getInputStream();
+                    while (!requestBody.isFinished()) {
+                      requestBody.read();
+                    }
                     resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(EXCEPTION)) {
                     resp.setStatus(endpoint.getStatus());

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -53,6 +54,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           NOT_FOUND,
           CAPTURE_HEADERS,
           CAPTURE_PARAMETERS,
+          CAPTURE_BODY,
           QUERY_PARAM,
           PATH_PARAM,
           AUTH_REQUIRED,
@@ -98,6 +100,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setContextPath("/app");
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
+    options.setTestRequestBodyCapture(true);
     options.setTestErrorBody(false);
 
     options.setHasResponseSpan(

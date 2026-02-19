@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,13 @@ class TestServlet extends HttpServlet {
               if (!"test value õäöü".equals(value)) {
                 throw new IllegalStateException(
                     "request parameter does not have expected value " + value);
+              }
+            }
+            if (serverEndpoint == ServerEndpoint.CAPTURE_BODY) {
+              // read body to trigger body capture
+              ServletInputStream requestBody = req.getInputStream();
+              while (!requestBody.isFinished()) {
+                requestBody.read();
               }
             }
             if (serverEndpoint == ServerEndpoint.INDEXED_CHILD) {
