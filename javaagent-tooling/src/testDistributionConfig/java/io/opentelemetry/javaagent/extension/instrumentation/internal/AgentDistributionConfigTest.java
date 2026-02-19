@@ -64,24 +64,24 @@ class AgentDistributionConfigTest {
   }
 
   @Test
-  void testDisabledTakesPriorityOverEnabled() {
+  void testInstrumentationEnabledOrderMatters() {
     // armeria is enabled, armeria_grpc is disabled
-    // most specific name (longest) should win regardless of iteration order
+    // first matching name wins (matches ConfigProperties behavior)
     AgentDistributionConfig config = AgentDistributionConfig.get();
 
-    // armeria-grpc should be disabled even though armeria is enabled
+    // armeria-grpc listed first: disabled wins
     assertThat(
             config.isInstrumentationEnabled(
                 Arrays.asList("armeria-grpc", "armeria-grpc-1.14", "armeria", "armeria-1.14"),
                 true))
         .isFalse();
 
-    // reversed order should produce the same result
+    // armeria listed first: enabled wins
     assertThat(
             config.isInstrumentationEnabled(
                 Arrays.asList("armeria", "armeria-1.14", "armeria-grpc", "armeria-grpc-1.14"),
                 true))
-        .isFalse();
+        .isTrue();
 
     // armeria alone should be enabled
     assertThat(

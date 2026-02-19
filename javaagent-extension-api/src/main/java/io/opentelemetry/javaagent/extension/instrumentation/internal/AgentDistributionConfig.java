@@ -114,8 +114,8 @@ public class AgentDistributionConfig {
    * Returns whether any of the given instrumentations is enabled, falling back to {@code
    * defaultEnabled} if none of the names are explicitly configured.
    *
-   * <p>Disabled takes priority over enabled: if any name matches the disabled list, the
-   * instrumentation is disabled regardless of the enabled list.
+   * <p>Names are checked in order; the first name found in either the disabled or enabled list
+   * wins. For any given name, disabled takes priority over enabled.
    *
    * @param names the instrumentation names to check
    * @param defaultEnabled the default to use if no name is explicitly configured
@@ -127,9 +127,6 @@ public class AgentDistributionConfig {
       if (instrumentation.getDisabled().contains(normalizedName)) {
         return false;
       }
-    }
-    for (String name : names) {
-      String normalizedName = name.replace('-', '_');
       if (instrumentation.getEnabled().contains(normalizedName)) {
         return true;
       }

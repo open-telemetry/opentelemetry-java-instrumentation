@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
@@ -14,6 +17,8 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionPropertyModel;
+import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
@@ -23,8 +28,27 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Distri
 public final class JavaagentDistributionAccessCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {
 
+  private static final Logger logger =
+      Logger.getLogger(JavaagentDistributionAccessCustomizerProvider.class.getName());
+
   private static final ObjectMapper MAPPER =
-      new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      new ObjectMapper()
+          .addHandler(
+              new DeserializationProblemHandler() {
+                @Override
+                public boolean handleUnknownProperty(
+                    DeserializationContext ctxt,
+                    JsonParser p,
+                    JsonDeserializer<?> deserializer,
+                    Object beanOrClass,
+                    String propertyName)
+                    throws IOException {
+                  logger.warning(
+                      "Unknown distribution.javaagent property: " + propertyName);
+                  p.skipChildren();
+                  return true;
+                }
+              });
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
