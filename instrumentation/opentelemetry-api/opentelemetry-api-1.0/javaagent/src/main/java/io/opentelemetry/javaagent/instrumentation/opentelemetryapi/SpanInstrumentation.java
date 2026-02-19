@@ -9,8 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import application.io.opentelemetry.api.trace.Span;
-import application.io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
@@ -43,9 +42,10 @@ public class SpanInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static Span methodExit(@Advice.Argument(0) SpanContext applicationSpanContext) {
-      return Bridging.toApplication(
-          io.opentelemetry.api.trace.Span.wrap(Bridging.toAgent(applicationSpanContext)));
+    public static application.io.opentelemetry.api.trace.Span methodExit(
+        @Advice.Argument(0)
+            application.io.opentelemetry.api.trace.SpanContext applicationSpanContext) {
+      return Bridging.toApplication(Span.wrap(Bridging.toAgent(applicationSpanContext)));
     }
   }
 }

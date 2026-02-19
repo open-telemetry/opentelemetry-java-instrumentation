@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
-import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
-import application.io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics.ApplicationLongUpDownCounterBuilder137;
 
 final class ApplicationLongUpDownCounterBuilder140Incubator
     extends ApplicationLongUpDownCounterBuilder137 {
 
-  private final io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder;
+  private final LongUpDownCounterBuilder agentBuilder;
 
   ApplicationLongUpDownCounterBuilder140Incubator(LongUpDownCounterBuilder agentBuilder) {
     super(agentBuilder);
@@ -21,12 +19,12 @@ final class ApplicationLongUpDownCounterBuilder140Incubator
   }
 
   @Override
-  public DoubleUpDownCounterBuilder ofDoubles() {
+  public application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder ofDoubles() {
     return new ApplicationDoubleUpDownCounterBuilder140Incubator(agentBuilder.ofDoubles());
   }
 
   @Override
-  public LongUpDownCounter build() {
+  public application.io.opentelemetry.api.metrics.LongUpDownCounter build() {
     return new ApplicationLongUpDownCounter140Incubator(agentBuilder.build());
   }
 }

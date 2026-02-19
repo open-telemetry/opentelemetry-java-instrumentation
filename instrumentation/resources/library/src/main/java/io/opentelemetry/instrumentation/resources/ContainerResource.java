@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.api.common.AttributeKey;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -111,7 +111,7 @@ public final class ContainerResource {
 
     List<String> lineList(Path path) throws IOException {
       try (Stream<String> lines = lines(path)) {
-        return lines.collect(Collectors.toList());
+        return lines.collect(toList());
       }
     }
   }

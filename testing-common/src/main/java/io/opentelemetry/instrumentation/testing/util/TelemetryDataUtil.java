@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing.util;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public final class TelemetryDataUtil {
 
@@ -49,7 +49,7 @@ public final class TelemetryDataUtil {
     List<List<SpanData>> traces =
         new ArrayList<>(
             spans.stream()
-                .collect(Collectors.groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
+                .collect(groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
                 .values());
     sortTraces(traces);
     for (int i = 0; i < traces.size(); i++) {
