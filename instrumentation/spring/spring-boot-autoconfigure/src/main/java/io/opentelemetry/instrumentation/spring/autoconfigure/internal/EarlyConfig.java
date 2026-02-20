@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Collections.emptyList;
 
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
 /**
@@ -30,22 +32,19 @@ public class EarlyConfig {
     return environment.getProperty("otel.file_format", String.class) != null;
   }
 
-  @SuppressWarnings("unchecked") // Spring's Environment.getProperty with List.class returns raw
   public static boolean isInstrumentationEnabled(
       Environment environment, String name, boolean enabledByDefault) {
     if (isDeclarativeConfig(environment)) {
       String snakeCase = name.replace('-', '_');
 
       List<String> disabled =
-          environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.disabled", List.class, emptyList());
+          bindList(environment, "otel.distribution.spring_starter.instrumentation.disabled");
       if (disabled.contains(snakeCase)) {
         return false;
       }
 
       List<String> enabled =
-          environment.getProperty(
-              "otel.distribution.spring_starter.instrumentation.enabled", List.class, emptyList());
+          bindList(environment, "otel.distribution.spring_starter.instrumentation.enabled");
       if (enabled.contains(snakeCase)) {
         return true;
       }
@@ -68,5 +67,16 @@ public class EarlyConfig {
     }
     return environment.getProperty(
         "otel.instrumentation.common.default-enabled", Boolean.class, true);
+  }
+
+  // Environment.getProperty(key, List.class) does not handle indexed properties (e.g.
+  // enabled[0]=spring_web); Binder handles both indexed and comma-separated list formats
+  private static List<String> bindList(Environment environment, String key) {
+    // Binder requires canonical property names (lowercase with hyphens, no underscores)
+    String canonicalKey = key.replace('_', '-');
+    return Binder.get(environment)
+        .bind(canonicalKey, String[].class)
+        .map(Arrays::asList)
+        .orElse(emptyList());
   }
 }
