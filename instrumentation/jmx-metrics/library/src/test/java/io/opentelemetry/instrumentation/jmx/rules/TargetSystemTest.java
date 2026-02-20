@@ -63,7 +63,7 @@ class TargetSystemTest {
 
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
-  private static Path testAppPath;
+  private static Path testWebAppPath;
 
   private static String otlpEndpoint;
 
@@ -78,10 +78,10 @@ class TargetSystemTest {
     otlpEndpoint = "http://host.testcontainers.internal:" + otlpServer.httpPort();
 
     TargetSystemTest.agentPath = getArtifactPath("io.opentelemetry.javaagent.path");
-    TargetSystemTest.testAppPath = getArtifactPath("io.opentelemetry.testapp.path");
+    TargetSystemTest.testWebAppPath = getArtifactPath("io.opentelemetry.testapp.path");
   }
 
-  private static Path getArtifactPath(String systemProperty) {
+  protected static Path getArtifactPath(String systemProperty) {
     String pathValue = System.getProperty(systemProperty);
     assertThat(pathValue).isNotNull();
     Path path = Paths.get(pathValue);
@@ -207,9 +207,14 @@ class TargetSystemTest {
     }
   }
 
+  protected static void copyTestAppToTarget(
+      Path from, GenericContainer<?> target, String targetPath) {
+    logger.info("copying test application {} to container {}", from, targetPath);
+    target.withCopyFileToContainer(MountableFile.forHostPath(from), targetPath);
+  }
+
   protected static void copyTestWebAppToTarget(GenericContainer<?> target, String targetPath) {
-    logger.info("copying test application {} to container {}", testAppPath, targetPath);
-    target.withCopyFileToContainer(MountableFile.forHostPath(testAppPath), targetPath);
+    copyTestAppToTarget(testWebAppPath, target, targetPath);
   }
 
   private static String yamlResourcePath(String yaml) {

@@ -112,6 +112,8 @@ public final class LogEventMapper<T> {
       Supplier<StackTraceElement> sourceSupplier,
       Context context) {
 
+    captureContextDataAttributes(builder, contextData);
+
     captureMessage(builder, message);
 
     if (captureMarkerAttribute) {
@@ -129,8 +131,6 @@ public final class LogEventMapper<T> {
     if (throwable != null) {
       setThrowable(builder, throwable);
     }
-
-    captureContextDataAttributes(builder, contextData);
 
     if (captureExperimentalAttributes) {
       builder.setAttribute(THREAD_NAME, threadName);
