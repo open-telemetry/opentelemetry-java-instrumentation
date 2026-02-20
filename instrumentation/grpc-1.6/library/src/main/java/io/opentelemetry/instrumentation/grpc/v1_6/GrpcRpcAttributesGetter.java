@@ -26,7 +26,7 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status>
   @Override
   @Nullable
   public String getService(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
+    String fullMethodName = request.getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {
       return null;
@@ -38,7 +38,7 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status>
   @Override
   @Nullable
   public String getMethod(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
+    String fullMethodName = request.getFullMethodName();
     int slashIndex = fullMethodName.lastIndexOf('/');
     if (slashIndex == -1) {
       return null;

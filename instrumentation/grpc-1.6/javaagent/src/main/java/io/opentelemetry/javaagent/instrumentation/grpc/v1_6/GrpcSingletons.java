@@ -12,6 +12,7 @@ import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
+import io.grpc.ServerStreamTracer;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -34,6 +35,8 @@ public final class GrpcSingletons {
   public static final ClientInterceptor CLIENT_INTERCEPTOR;
 
   public static final ServerInterceptor SERVER_INTERCEPTOR;
+
+  public static final ServerStreamTracer.Factory SERVER_STREAM_TRACER_FACTORY;
 
   private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
 
@@ -66,6 +69,7 @@ public final class GrpcSingletons {
 
     CLIENT_INTERCEPTOR = telemetry.createClientInterceptor();
     SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
+    SERVER_STREAM_TRACER_FACTORY = telemetry.createServerStreamTracerFactory();
   }
 
   public static Context.Storage getStorage() {

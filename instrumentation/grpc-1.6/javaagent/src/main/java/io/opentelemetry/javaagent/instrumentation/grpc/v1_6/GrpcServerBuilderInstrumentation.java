@@ -51,6 +51,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
       }
       if (!Boolean.TRUE.equals(SERVER_BUILDER_INSTRUMENTED.get(serverBuilder))) {
         serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
+        serverBuilder.addStreamTracerFactory(GrpcSingletons.SERVER_STREAM_TRACER_FACTORY);
         SERVER_BUILDER_INSTRUMENTED.set(serverBuilder, true);
       }
       return callDepth;

@@ -71,6 +71,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -666,6 +667,59 @@ public abstract class AbstractGrpcTest {
         arguments(Status.UNAVAILABLE.withDescription("some description")),
         arguments(Status.DATA_LOSS.withDescription("some description")),
         arguments(Status.NOT_FOUND.withDescription("some description")));
+  }
+
+  @Test
+  void unknownService() throws Exception {
+    // Create a server without GreeterService registered
+    Server server = configureServer(ServerBuilder.forPort(0)).build().start();
+    ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    assertThatThrownBy(() -> client.sayHello(request))
+        .isInstanceOfSatisfying(
+            StatusRuntimeException.class,
+            t -> assertThat(t.getStatus().getCode()).isEqualTo(Status.Code.UNIMPLEMENTED));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraClientAttributes(
+                                    experimentalSatisfies(
+                                        GRPC_RECEIVED_MESSAGE_COUNT,
+                                        v -> assertThat(v).isEqualTo(0)),
+                                    experimentalSatisfies(
+                                        GRPC_SENT_MESSAGE_COUNT,
+                                        v -> assertThat(v).isGreaterThan(0)),
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(
+                                        RPC_GRPC_STATUS_CODE,
+                                        (long) Status.Code.UNIMPLEMENTED.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort()))),
+                    span ->
+                        span.hasName("_OTHER")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(
+                                    RPC_GRPC_STATUS_CODE,
+                                    (long) Status.Code.UNIMPLEMENTED.value()))));
   }
 
   @Test
