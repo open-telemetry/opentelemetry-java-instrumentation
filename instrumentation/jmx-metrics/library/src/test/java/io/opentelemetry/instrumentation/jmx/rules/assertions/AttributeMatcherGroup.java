@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 
 import java.util.Collection;
@@ -82,7 +83,7 @@ public class AttributeMatcherGroup {
    * @see #isApplicableFor
    */
   public AttributeMatcherGroup applicableWhen(Predicate<Map<String, String>> predicate) {
-    Objects.requireNonNull(predicate, "predicate must not be null");
+    requireNonNull(predicate, "predicate must not be null");
     if (applicabilityPredicate != null) {
       throw new IllegalStateException("applicability predicate is already set");
     }
