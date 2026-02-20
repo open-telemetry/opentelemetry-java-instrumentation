@@ -31,6 +31,11 @@ import javax.annotation.Nullable;
  * <p>The entire class is a copy of <a
  * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/YamlDeclarativeConfigProperties.java">YamlDeclarativeConfigProperties</a>
  * with only minor modifications to type coercion logic.
+ *
+ * <p>TODO: Revisit after https://github.com/open-telemetry/opentelemetry-java/issues/8101 — if
+ * upstream {@code DeclarativeConfigProperties} exposes type introspection (e.g. {@code getType()} or
+ * {@code isString()}), this full copy can be replaced with a thin type-coercing decorator around
+ * {@code DeclarativeConfigProperties}.
  */
 final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
