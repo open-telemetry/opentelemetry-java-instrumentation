@@ -81,4 +81,10 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   default Map<String, String> getDbQueryParameters(REQUEST request) {
     return Collections.emptyMap();
   }
+
+  // TODO: make this required to implement
+  @Nullable
+  default Long getDbResponseReturnedRows(@Nullable RESPONSE response) {
+    return null;
+  }
 }

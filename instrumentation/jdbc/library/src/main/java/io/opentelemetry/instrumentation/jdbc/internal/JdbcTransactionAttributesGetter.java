@@ -13,13 +13,16 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * AttributesGetter for JDBC transaction operations (commit/rollback).
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-public final class JdbcAttributesGetter
-    implements SqlClientAttributesGetter<DbRequest, DbResponse> {
+public final class JdbcTransactionAttributesGetter
+    implements SqlClientAttributesGetter<DbRequest, Void> {
 
-  public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
+  public static final JdbcTransactionAttributesGetter INSTANCE =
+      new JdbcTransactionAttributesGetter();
 
   @Nullable
   @Override
@@ -60,17 +63,11 @@ public final class JdbcAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable DbResponse response, @Nullable Throwable error) {
+  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }
     return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getDbResponseReturnedRows(@Nullable DbResponse response) {
-    return response != null ? response.getReturnedRows() : null;
   }
 
   @Override
@@ -94,4 +91,6 @@ public final class JdbcAttributesGetter
   public Integer getServerPort(DbRequest request) {
     return request.getDbInfo().getPort();
   }
+
+  private JdbcTransactionAttributesGetter() {}
 }

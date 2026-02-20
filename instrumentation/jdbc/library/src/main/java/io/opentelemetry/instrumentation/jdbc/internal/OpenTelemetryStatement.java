@@ -40,8 +40,10 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final OpenTelemetryConnection connection;
   protected final DbInfo dbInfo;
   protected final String query;
-  protected final Instrumenter<DbRequest, Void> instrumenter;
+  protected final Instrumenter<DbRequest, DbResponse> instrumenter;
   protected final SqlCommenter sqlCommenter;
+  protected final boolean captureRowCount;
+  protected final long rowCountLimit;
 
   private final List<String> batchCommands = new ArrayList<>();
   protected long batchSize;
@@ -50,9 +52,19 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       S delegate,
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
-      Instrumenter<DbRequest, Void> instrumenter,
-      SqlCommenter sqlCommenter) {
-    this(delegate, connection, dbInfo, null, instrumenter, sqlCommenter);
+      Instrumenter<DbRequest, DbResponse> instrumenter,
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
+    this(
+        delegate,
+        connection,
+        dbInfo,
+        null,
+        instrumenter,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   OpenTelemetryStatement(
@@ -60,14 +72,18 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       String query,
-      Instrumenter<DbRequest, Void> instrumenter,
-      SqlCommenter sqlCommenter) {
+      Instrumenter<DbRequest, DbResponse> instrumenter,
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
     this.delegate = delegate;
     this.connection = connection;
     this.dbInfo = dbInfo;
     this.query = query;
     this.instrumenter = instrumenter;
     this.sqlCommenter = sqlCommenter;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
   }
 
   private String processQuery(String sql) {
@@ -77,7 +93,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     String processedSql = processQuery(sql);
-    return wrapCall(sql, () -> delegate.executeQuery(processedSql));
+    ResultSet resultSet = wrapCall(sql, () -> delegate.executeQuery(processedSql));
+    return OpenTelemetryResultSet.wrap(resultSet, this, captureRowCount, rowCountLimit);
   }
 
   @Override
@@ -196,7 +213,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    return OpenTelemetryResultSet.wrap(delegate.getResultSet(), this);
+    return OpenTelemetryResultSet.wrap(
+        delegate.getResultSet(), this, captureRowCount, rowCountLimit);
   }
 
   @Override
@@ -267,7 +285,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return OpenTelemetryResultSet.wrap(delegate.getGeneratedKeys(), this);
+    return OpenTelemetryResultSet.wrap(
+        delegate.getGeneratedKeys(), this, captureRowCount, rowCountLimit);
   }
 
   @Override
@@ -404,8 +423,58 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       this.instrumenter.end(context, request, null, t);
       throw t;
     }
-    this.instrumenter.end(context, request, null, null);
+    DbResponse response = createDbResponse(result);
+    this.instrumenter.end(context, request, response, null);
     return result;
+  }
+
+  private DbResponse createDbResponse(Object result) {
+    if (!captureRowCount) {
+      return DbResponse.create(null);
+    }
+
+    Long rowCount = extractRowCount(result);
+    if (rowCount != null && rowCount > rowCountLimit) {
+      return DbResponse.create(null);
+    }
+    return DbResponse.create(rowCount);
+  }
+
+  private static Long extractRowCount(Object result) {
+    if (result instanceof Integer) {
+      return ((Integer) result).longValue();
+    }
+    if (result instanceof Long) {
+      return (Long) result;
+    }
+    if (result instanceof int[]) {
+      int[] counts = (int[]) result;
+      long sum = 0;
+      for (int count : counts) {
+        if (count >= 0) {
+          sum += count;
+        }
+      }
+      return sum;
+    }
+    if (result instanceof long[]) {
+      long[] counts = (long[]) result;
+      long sum = 0;
+      for (long count : counts) {
+        if (count >= 0) {
+          sum += count;
+        }
+      }
+      return sum;
+    }
+    if (result instanceof ResultSet) {
+      ResultSet rs = (ResultSet) result;
+      if (rs instanceof OpenTelemetryResultSet) {
+        long count = ((OpenTelemetryResultSet) rs).getRowCount();
+        return count > 0 ? count : null;
+      }
+    }
+    return null;
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {

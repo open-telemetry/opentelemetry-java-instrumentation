@@ -16,8 +16,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcTransactionAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -29,21 +31,29 @@ import java.util.Collections;
 import javax.sql.DataSource;
 
 public final class JdbcSingletons {
-  private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
+  private static final Instrumenter<DbRequest, DbResponse> STATEMENT_INSTRUMENTER;
   private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
   private static final SqlCommenter SQL_COMMENTER = configureSqlCommenter();
   public static final boolean CAPTURE_QUERY_PARAMETERS;
+  public static final boolean CAPTURE_ROW_COUNT;
+  public static final long ROW_COUNT_LIMIT;
 
   static {
-    AttributesExtractor<DbRequest, Void> servicePeerExtractor =
+    AttributesExtractor<DbRequest, DbResponse> servicePeerExtractor =
         ServicePeerAttributesExtractor.create(
             JdbcAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
+    AttributesExtractor<DbRequest, Void> transactionServicePeerExtractor =
+        ServicePeerAttributesExtractor.create(
+            JdbcTransactionAttributesGetter.INSTANCE, GlobalOpenTelemetry.get());
 
     CAPTURE_QUERY_PARAMETERS =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
             .getBoolean("capture_query_parameters/development", false);
+
+    CAPTURE_ROW_COUNT = JdbcInstrumenterFactory.captureRowCount(GlobalOpenTelemetry.get());
+    ROW_COUNT_LIMIT = JdbcInstrumenterFactory.rowCountLimit(GlobalOpenTelemetry.get());
 
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(
@@ -58,7 +68,7 @@ public final class JdbcSingletons {
     TRANSACTION_INSTRUMENTER =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
-            Collections.singletonList(servicePeerExtractor),
+            Collections.singletonList(transactionServicePeerExtractor),
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("transaction/development")
                 .getBoolean("enabled", false));
@@ -68,7 +78,7 @@ public final class JdbcSingletons {
     return TRANSACTION_INSTRUMENTER;
   }
 
-  public static Instrumenter<DbRequest, Void> statementInstrumenter() {
+  public static Instrumenter<DbRequest, DbResponse> statementInstrumenter() {
     return STATEMENT_INSTRUMENTER;
   }
 
