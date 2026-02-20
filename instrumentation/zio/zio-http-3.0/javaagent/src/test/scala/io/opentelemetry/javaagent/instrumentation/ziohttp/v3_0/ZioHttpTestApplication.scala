@@ -18,21 +18,6 @@ object ZioHttpTestApplication extends ZIOAppDefault {
           Response.text(s"Hello $name")
       }
     )
-  // def run = Server.serve(routes).provide(Server.default)
-  // ZLayer.succeed(Server.Config.default.port(8080))
-
-  def start(port: Int): Unit = {
-    new Exception().printStackTrace()
-    this.port = port
-    run
-    /*
-    Server.serve(routes)
-      .flatMap { port =>
-        Console.printLine(s"Started on $port") *> ZIO.never
-      }
-      .provide(Server.defaultWithPort(port))
-     */
-  }
 
   var port = -1
   val started = new CountDownLatch(1)

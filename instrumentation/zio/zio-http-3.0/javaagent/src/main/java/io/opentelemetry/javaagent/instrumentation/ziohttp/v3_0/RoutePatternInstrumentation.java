@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.ziohttp.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,11 +28,12 @@ public class RoutePatternInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("$minus$greater")), getClass().getName() + "$TestAdvice");
+        isMethod().and(named("$minus$greater")).and(takesArgument(0, named("zio.http.Handler"))),
+        getClass().getName() + "$CreateRouteAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static final class TestAdvice {
+  public static final class CreateRouteAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
