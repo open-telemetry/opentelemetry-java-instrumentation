@@ -6,12 +6,10 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -46,6 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -170,10 +169,7 @@ public class OpenTelemetryAutoConfiguration {
                 model, new OpenTelemetrySdkComponentLoader(applicationContext));
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
-        DeclarativeConfigProperties instrumentationConfig =
-            CoercingDeclarativeConfigProperties.wrap(
-                ((ExtendedOpenTelemetry) sdk).getConfigProvider().getInstrumentationConfig());
-        return new SpringOpenTelemetrySdk(sdk, () -> instrumentationConfig);
+        return new SpringOpenTelemetrySdk(sdk, SpringConfigProvider.create(model));
       }
 
       /**
@@ -276,7 +272,7 @@ public class OpenTelemetryAutoConfiguration {
     public <T> Iterable<T> load(Class<T> spiClass) {
       List<T> spi = spiHelper.load(spiClass);
       List<T> beans =
-          applicationContext.getBeanProvider(spiClass).orderedStream().collect(toList());
+          applicationContext.getBeanProvider(spiClass).orderedStream().collect(Collectors.toList());
       spi.addAll(beans);
       return spi;
     }

@@ -102,6 +102,10 @@ class EmbeddedConfigFile {
     return MAPPER.convertValue(nested, OpenTelemetryConfigurationModel.class);
   }
 
+  static ObjectMapper getObjectMapper() {
+    return MAPPER;
+  }
+
   /**
    * Convert flat property map to nested structure. e.g. "otel.instrumentation.java.list[0]" = "one"
    * and "otel.instrumentation.java.list[1]" = "two" becomes: {otel: {instrumentation: {java: {list:
