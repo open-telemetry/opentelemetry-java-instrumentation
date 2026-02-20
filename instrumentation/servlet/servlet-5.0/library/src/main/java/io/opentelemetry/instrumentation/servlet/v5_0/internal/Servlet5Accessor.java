@@ -166,6 +166,11 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
     return throwable instanceof ServletException;
   }
 
+  @Override
+  public String getRequestContentEncoding(HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getCharacterEncoding();
+  }
+
   private static class Listener implements AsyncListener {
     private final ServletAsyncListener<HttpServletResponse> listener;
 
