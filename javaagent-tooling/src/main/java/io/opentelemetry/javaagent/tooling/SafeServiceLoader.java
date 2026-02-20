@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 public final class SafeServiceLoader {
 
@@ -35,9 +35,10 @@ public final class SafeServiceLoader {
     List<T> result = new ArrayList<>();
     ServiceLoader<T> services = ServiceLoader.load(serviceClass, classLoader);
     for (Iterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
-      T service = iterator.next();
-      if (service != null) {
-        result.add(service);
+      try {
+        result.add(iterator.next());
+      } catch (NoSuchElementException ignored) {
+        // UnsupportedClassVersionError was thrown and handled by SafeIterator
       }
     }
     return result;
@@ -83,7 +84,6 @@ public final class SafeServiceLoader {
       }
     }
 
-    @Nullable
     @Override
     public T next() {
       // jdk8 throws UnsupportedClassVersionError in next()
@@ -91,7 +91,7 @@ public final class SafeServiceLoader {
         return delegate.next();
       } catch (UnsupportedClassVersionError unsupportedClassVersionError) {
         handleUnsupportedClassVersionError(unsupportedClassVersionError);
-        return null;
+        throw new NoSuchElementException(unsupportedClassVersionError.getMessage());
       }
     }
   }

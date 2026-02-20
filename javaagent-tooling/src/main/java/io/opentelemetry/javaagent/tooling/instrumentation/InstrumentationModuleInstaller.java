@@ -41,7 +41,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,12 +57,12 @@ public final class InstrumentationModuleInstaller {
   public static final ElementMatcher.Junction<AnnotationSource> NOT_DECORATOR_MATCHER =
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
-  @Nullable private final Instrumentation instrumentation;
+  private final Instrumentation instrumentation;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
       VirtualFieldImplementationInstallerFactory.getInstance();
 
-  public InstrumentationModuleInstaller(@Nullable Instrumentation instrumentation) {
-    this.instrumentation = instrumentation;
+  public InstrumentationModuleInstaller(Instrumentation instrumentation) {
+    this.instrumentation = requireNonNull(instrumentation, "Instrumentation must not be null");
   }
 
   // Need to call deprecated API for backward compatibility with modules that haven't migrated
@@ -71,7 +70,7 @@ public final class InstrumentationModuleInstaller {
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
-      @Nullable ConfigProperties config) {
+      ConfigProperties config) {
     if (!isInstrumentationEnabled(
         instrumentationModule.instrumentationNames(),
         instrumentationModule.defaultEnabled(config))) {
@@ -142,7 +141,7 @@ public final class InstrumentationModuleInstaller {
             helperGenerator,
             helperResourceBuilder.getResources(),
             instrumentationModule.getClass().getClassLoader(),
-            requireNonNull(instrumentation, "Instrumentation must not be null"));
+            instrumentation);
 
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
@@ -193,14 +192,13 @@ public final class InstrumentationModuleInstaller {
     ClassLoader extensionsClassLoader =
         requireNonNull(
             Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
-    Instrumentation inst = requireNonNull(instrumentation, "Instrumentation must not be null");
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
             helperResourceBuilder.getResources(),
             extensionsClassLoader,
-            inst);
+            instrumentation);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
@@ -222,7 +220,8 @@ public final class InstrumentationModuleInstaller {
                           .jpmsModulesToOpen()
                           .forEach(
                               (javaModule, packages) -> {
-                                ModuleOpener.open(inst, javaModule, classLoader, packages);
+                                ModuleOpener.open(
+                                    instrumentation, javaModule, classLoader, packages);
                               });
                       openerRun.set(true);
                     }

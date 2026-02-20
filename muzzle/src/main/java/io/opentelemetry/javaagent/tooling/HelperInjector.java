@@ -222,13 +222,12 @@ public class HelperInjector implements Transformer {
 
   private void injectHelperResources(
       ClassLoader classLoader, Map<String, URL> additionalResources) {
-    if (helpersSource == null) {
-      return;
-    }
+    ClassLoader source =
+        requireNonNull(helpersSource, "helpersSource must not be null when injecting resources");
     for (HelperResource helperResource : helperResources) {
       List<URL> resources;
       try {
-        resources = Collections.list(helpersSource.getResources(helperResource.getAgentPath()));
+        resources = Collections.list(source.getResources(helperResource.getAgentPath()));
       } catch (IOException e) {
         logger.log(
             SEVERE,

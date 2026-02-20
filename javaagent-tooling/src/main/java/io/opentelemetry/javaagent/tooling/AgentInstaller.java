@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -161,7 +162,9 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProperties sdkConfig =
+        requireNonNull(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk), "SDK config must not be null");
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
@@ -261,16 +264,16 @@ public class AgentInstaller {
 
     VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
         VirtualFieldImplementationInstallerFactory.getInstance();
-    ClassLoader extensionsClassLoader = Utils.getExtensionsClassLoader();
-    if (extensionsClassLoader != null) {
-      for (EarlyInstrumentationModule earlyInstrumentationModule :
-          loadOrdered(EarlyInstrumentationModule.class, extensionsClassLoader)) {
+    ClassLoader extensionsClassLoader =
+        requireNonNull(
+            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
+    for (EarlyInstrumentationModule earlyInstrumentationModule :
+        loadOrdered(EarlyInstrumentationModule.class, extensionsClassLoader)) {
 
-        VirtualFieldImplementationInstaller contextProvider =
-            virtualFieldInstallerFactory.create(
-                earlyInstrumentationModule.getInstrumentationModule());
-        extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
-      }
+      VirtualFieldImplementationInstaller contextProvider =
+          virtualFieldInstallerFactory.create(
+              earlyInstrumentationModule.getInstrumentationModule());
+      extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
     }
 
     agentBuilder = AgentBuilderUtil.optimize(extendableAgentBuilder);
@@ -278,7 +281,7 @@ public class AgentInstaller {
   }
 
   private static void setBootstrapPackages(
-      @Nullable ConfigProperties config, ClassLoader extensionClassLoader) {
+      ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
     for (BootstrapPackagesConfigurer configurer :
         load(BootstrapPackagesConfigurer.class, extensionClassLoader)) {
@@ -294,13 +297,11 @@ public class AgentInstaller {
   // Need to call deprecated API for backward compatibility with extensions that haven't migrated
   @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
-      @Nullable ConfigProperties config,
-      ClassLoader extensionClassLoader,
-      AgentBuilder agentBuilder) {
+      ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
+      configurer.configure(builder, config);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();

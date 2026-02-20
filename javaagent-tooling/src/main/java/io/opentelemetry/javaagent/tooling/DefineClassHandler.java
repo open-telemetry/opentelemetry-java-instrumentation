@@ -86,9 +86,7 @@ public class DefineClassHandler implements Handler {
 
   @Override
   public void afterDefineClass(DefineClassContext context) {
-    if (context != null) {
-      context.exit();
-    }
+    context.exit();
   }
 
   /**
