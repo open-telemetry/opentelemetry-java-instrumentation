@@ -53,23 +53,21 @@ public final class JavaagentDistributionAccessCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
+          AgentDistributionConfig config = AgentDistributionConfig.create();
           DistributionModel distribution = model.getDistribution();
           if (distribution != null) {
             DistributionPropertyModel javaagent =
                 distribution.getAdditionalProperties().get("javaagent");
             if (javaagent != null) {
               try {
-                AgentDistributionConfig.set(
-                    MAPPER.convertValue(javaagent, AgentDistributionConfig.class));
+                config = MAPPER.convertValue(javaagent, AgentDistributionConfig.class);
               } catch (IllegalArgumentException e) {
                 logger.warning(
                     "Failed to parse distribution.javaagent configuration: " + e.getMessage());
               }
             }
           }
-          if (AgentDistributionConfig.getIfInitialized() == null) {
-            AgentDistributionConfig.set(AgentDistributionConfig.create());
-          }
+          AgentDistributionConfig.set(config);
           return model;
         });
   }

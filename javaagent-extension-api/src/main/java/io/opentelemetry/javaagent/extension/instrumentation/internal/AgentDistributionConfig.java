@@ -23,9 +23,9 @@ import java.util.Set;
  */
 public class AgentDistributionConfig {
   @SuppressWarnings("ConstantField") // needs to be mutable for @Initializer
-  private static volatile AgentDistributionConfig INSTANCE;
+  private static volatile AgentDistributionConfig INSTANCE = new AgentDistributionConfig();
 
-  private static volatile boolean initializationExpected;
+  private static volatile boolean initialized;
 
   @JsonProperty("indy/development")
   private final boolean indyEnabled;
@@ -46,31 +46,14 @@ public class AgentDistributionConfig {
   @JsonProperty("instrumentation")
   private final InstrumentationConfig instrumentation;
 
-  /**
-   * Called early in agent bootstrap to signal that {@link #set(AgentDistributionConfig)} is
-   * expected to be called. After this, {@link #get()} will throw if the config has not been
-   * initialized. When this has not been called (e.g. during Gradle byteBuddyJava build tasks),
-   * {@link #get()} returns a default instance instead.
-   */
-  public static void expectInitialization() {
-    initializationExpected = true;
-  }
-
   public static AgentDistributionConfig get() {
-    AgentDistributionConfig instance = INSTANCE;
-    if (instance == null) {
-      if (initializationExpected) {
-        throw new IllegalStateException("AgentDistributionConfig has not been initialized");
-      }
-      return new AgentDistributionConfig();
-    }
-    return instance;
+    return INSTANCE;
   }
 
   // Only used by tests
   public static void resetForTest() {
-    INSTANCE = null;
-    initializationExpected = false;
+    INSTANCE = new AgentDistributionConfig();
+    initialized = false;
   }
 
   /**
@@ -95,15 +78,11 @@ public class AgentDistributionConfig {
 
   @Initializer
   public static void set(AgentDistributionConfig distributionConfig) {
-    if (INSTANCE != null) {
+    if (initialized) {
       throw new IllegalStateException("AgentDistributionConfig has already been initialized");
     }
+    initialized = true;
     INSTANCE = distributionConfig;
-  }
-
-  /** Returns the current instance, or null if not yet initialized. */
-  public static AgentDistributionConfig getIfInitialized() {
-    return INSTANCE;
   }
 
   @JsonCreator

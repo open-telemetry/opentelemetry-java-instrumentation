@@ -57,7 +57,7 @@ class AgentDistributionConfigTest {
   }
 
   @Test
-  void testInstrumentationDisabled() {
+  void testUnknownInstrumentationUsesDefaultEnabled() {
     // An unknown instrumentation with defaultEnabled=true should be enabled
     AgentDistributionConfig config = AgentDistributionConfig.get();
     assertThat(config.isInstrumentationEnabled("unknown", true)).isTrue();
