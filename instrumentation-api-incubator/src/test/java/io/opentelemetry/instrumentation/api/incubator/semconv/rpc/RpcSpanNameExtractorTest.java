@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -26,15 +27,16 @@ class RpcSpanNameExtractorTest {
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    if (SemconvStability.emitStableRpcSemconv()) {
-      when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
-    } else {
-      when(getter.getService(request)).thenReturn("my.Service");
-      when(getter.getMethod(request)).thenReturn("Method");
-    }
+    lenient().when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
+    lenient().when(getter.getService(request)).thenReturn("my.Service");
+    lenient().when(getter.getMethod(request)).thenReturn("Method");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
+    if (SemconvStability.emitStableRpcSemconv()) {
+      assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
+    } else {
+      assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
+    }
   }
 
   @Test
@@ -60,18 +62,6 @@ class RpcSpanNameExtractorTest {
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
-  }
-
-  @Test
-  void rpcMethodSystemFallback() {
-    assumeTrue(SemconvStability.emitStableRpcSemconv());
-
-    RpcRequest request = new RpcRequest();
-
-    when(getter.getSystem(request)).thenReturn("system");
-
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("system");
   }
 
   @Test

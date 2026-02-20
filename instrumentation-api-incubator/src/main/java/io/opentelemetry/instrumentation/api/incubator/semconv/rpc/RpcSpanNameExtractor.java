@@ -34,10 +34,6 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
       if (method != null) {
         return method;
       }
-      String system = getter.getSystem(request);
-      if (system != null) {
-        return system;
-      }
       return "RPC request";
     }
 

@@ -29,36 +29,23 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   // use RPC_SYSTEM_NAME for stable semconv
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
 
-  static final AttributeKey<String> RPC_METHOD_ORIGINAL =
-      AttributeKey.stringKey("rpc.method_original");
-
   private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
 
   RpcCommonAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 
-  @SuppressWarnings("deprecation") // for getMethod()
+  @SuppressWarnings("deprecation") // for getSystem(), getMethod()
   @Override
   public final void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    String system = getter.getSystem(request);
 
     if (SemconvStability.emitStableRpcSemconv()) {
-      internalSet(
-          attributes,
-          RPC_SYSTEM_NAME,
-          system == null ? null : SemconvStability.stableRpcSystemName(system));
-      String method = getter.getRpcMethod(request);
-      if (getter.isPredefined(request)) {
-        internalSet(attributes, RPC_METHOD, method);
-      } else {
-        internalSet(attributes, RPC_METHOD_ORIGINAL, method);
-        internalSet(attributes, RPC_METHOD, "_OTHER");
-      }
+      internalSet(attributes, RPC_SYSTEM_NAME, getter.getRpcSystemName(request));
+      internalSet(attributes, RPC_METHOD, getter.getRpcMethod(request));
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {
-      internalSet(attributes, RPC_SYSTEM, system);
+      internalSet(attributes, RPC_SYSTEM, getter.getSystem(request));
       internalSet(attributes, RPC_SERVICE, getter.getService(request));
       if (!SemconvStability.emitStableRpcSemconv()) {
         // only set old rpc.method on spans when there's no clash with stable rpc.method

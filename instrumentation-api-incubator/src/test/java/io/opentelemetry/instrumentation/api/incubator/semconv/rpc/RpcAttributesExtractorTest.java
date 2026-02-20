@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.entry;
@@ -29,10 +28,9 @@ class RpcAttributesExtractorTest {
 
   private static class TestGetter implements RpcAttributesGetter<Map<String, String>, Void> {
 
-    private final boolean predefined;
-
-    private TestGetter(boolean predefined) {
-      this.predefined = predefined;
+    @Override
+    public String getRpcSystemName(Map<String, String> request) {
+      return "test";
     }
 
     @Override
@@ -68,31 +66,16 @@ class RpcAttributesExtractorTest {
         Map<String, String> request, @Nullable Void response, @Nullable Throwable error) {
       return request.get("errorType");
     }
-
-    @Override
-    public boolean isPredefined(Map<String, String> stringStringMap) {
-      return predefined;
-    }
   }
 
   @Test
   void server() {
-    testExtractor(RpcServerAttributesExtractor.create(new TestGetter(false)), "my.Service/Method");
-  }
-
-  @Test
-  void serverPredefined() {
-    testExtractor(RpcServerAttributesExtractor.create(new TestGetter(true)), null);
+    testExtractor(RpcServerAttributesExtractor.create(new TestGetter()));
   }
 
   @Test
   void client() {
-    testExtractor(RpcClientAttributesExtractor.create(new TestGetter(false)), "my.Service/Method");
-  }
-
-  @Test
-  void clientPredefined() {
-    testExtractor(RpcClientAttributesExtractor.create(new TestGetter(true)), null);
+    testExtractor(RpcClientAttributesExtractor.create(new TestGetter()));
   }
 
   // Stable semconv keys
@@ -107,7 +90,7 @@ class RpcAttributesExtractorTest {
   private static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
 
   private static void testExtractor(
-      AttributesExtractor<Map<String, String>, Void> extractor, @Nullable String originalMethod) {
+      AttributesExtractor<Map<String, String>, Void> extractor) {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");
@@ -122,12 +105,7 @@ class RpcAttributesExtractorTest {
 
     if (SemconvStability.emitStableRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
-      if (originalMethod != null) {
-        expectedEntries.add(entry(RPC_METHOD_ORIGINAL, originalMethod));
-        expectedEntries.add(entry(RPC_METHOD, "_OTHER"));
-      } else {
-        expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
-      }
+      expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
     }
 
     if (SemconvStability.emitOldRpcSemconv()) {
@@ -156,7 +134,7 @@ class RpcAttributesExtractorTest {
     request.put("errorType", "CANCELLED");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter(false));
+        RpcServerAttributesExtractor.create(new TestGetter());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -175,7 +153,7 @@ class RpcAttributesExtractorTest {
     request.put("method", "Method");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter(false));
+        RpcServerAttributesExtractor.create(new TestGetter());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
@@ -195,7 +173,7 @@ class RpcAttributesExtractorTest {
     request.put("method", "Method");
 
     AttributesExtractor<Map<String, String>, Void> extractor =
-        RpcServerAttributesExtractor.create(new TestGetter(false));
+        RpcServerAttributesExtractor.create(new TestGetter());
 
     Context context = Context.root();
     AttributesBuilder attributes = Attributes.builder();
