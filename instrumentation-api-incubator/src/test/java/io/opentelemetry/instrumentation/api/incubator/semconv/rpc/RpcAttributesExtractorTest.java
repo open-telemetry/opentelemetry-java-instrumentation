@@ -89,8 +89,7 @@ class RpcAttributesExtractorTest {
 
   private static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
 
-  private static void testExtractor(
-      AttributesExtractor<Map<String, String>, Void> extractor) {
+  private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");

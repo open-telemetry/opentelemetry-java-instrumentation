@@ -32,11 +32,7 @@ class RpcSpanNameExtractorTest {
     lenient().when(getter.getMethod(request)).thenReturn("Method");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    if (SemconvStability.emitStableRpcSemconv()) {
-      assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
-    } else {
-      assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
-    }
+    assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
   @Test

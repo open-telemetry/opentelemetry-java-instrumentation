@@ -29,7 +29,9 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
     return null;
   }
 
-  /** @deprecated Use {@link #getRpcSystemName(REQUEST)}. To be removed in 3.0. */
+  /**
+   * @deprecated Use {@link #getRpcSystemName(REQUEST)}. To be removed in 3.0.
+   */
   @Deprecated
   @Nullable
   String getSystem(REQUEST request);
@@ -84,5 +86,4 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
-
 }
