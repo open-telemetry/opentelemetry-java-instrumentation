@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -16,7 +18,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -128,8 +129,8 @@ public class GarbageCollector {
       String gcAction = notificationInfo.getGcAction();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
       AttributesBuilder builder = Attributes.builder();
-      builder.put(JvmAttributes.JVM_GC_NAME, gcName);
-      builder.put(JvmAttributes.JVM_GC_ACTION, gcAction);
+      builder.put(JVM_GC_NAME, gcName);
+      builder.put(JVM_GC_ACTION, gcAction);
       if (captureGcCause) {
         String gcCause = notificationInfo.getGcCause();
         builder.put(JVM_GC_CAUSE, gcCause);

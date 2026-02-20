@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitCommandI
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitInstrumenterHelper.helper;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.channelInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.receiveInstrumenter;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -37,7 +38,6 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -176,8 +176,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
         if (body != null) {
-          span.setAttribute(
-              MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
+          span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
