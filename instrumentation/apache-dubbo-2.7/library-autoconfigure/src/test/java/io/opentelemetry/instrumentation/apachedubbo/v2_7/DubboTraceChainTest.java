@@ -20,7 +20,7 @@ class DubboTraceChainTest extends AbstractDubboTraceChainTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
+  protected boolean hasServicePeerName() {
     return false;
   }
 }

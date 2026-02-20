@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -14,7 +15,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -62,7 +62,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       DeclarativeConfigProperties baseNode,
       Map<String, String> mappings,
       Map<String, Object> overrideValues) {
-    this.baseNode = Objects.requireNonNull(baseNode);
+    this.baseNode = requireNonNull(baseNode);
     this.mappings = mappings;
     this.overrideValues = overrideValues;
   }

@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -33,15 +34,15 @@ public final class ContextDataKeys {
     return new ContextDataKeys(
         logging.getString(
             "trace_id",
-            io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getString(
+            ConfigPropertiesUtil.getString(
                 "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID)),
         logging.getString(
             "span_id",
-            io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getString(
+            ConfigPropertiesUtil.getString(
                 "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID)),
         logging.getString(
             "trace_flags",
-            io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getString(
+            ConfigPropertiesUtil.getString(
                 "otel.instrumentation.common.logging.trace-flags",
                 LoggingContextConstants.TRACE_FLAGS)));
   }

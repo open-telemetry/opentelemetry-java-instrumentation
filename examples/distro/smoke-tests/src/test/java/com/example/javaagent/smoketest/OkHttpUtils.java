@@ -5,17 +5,17 @@
 
 package com.example.javaagent.smoketest;
 
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 import okhttp3.OkHttpClient;
 
 public class OkHttpUtils {
 
   static OkHttpClient.Builder clientBuilder() {
-    TimeUnit unit = TimeUnit.MINUTES;
     return new OkHttpClient.Builder()
-        .connectTimeout(1, unit)
-        .writeTimeout(1, unit)
-        .readTimeout(1, unit);
+        .connectTimeout(1, MINUTES)
+        .writeTimeout(1, MINUTES)
+        .readTimeout(1, MINUTES);
   }
 
   public static OkHttpClient client() {

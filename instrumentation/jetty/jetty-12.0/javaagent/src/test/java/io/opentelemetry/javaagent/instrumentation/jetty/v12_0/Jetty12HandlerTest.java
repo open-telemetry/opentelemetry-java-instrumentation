@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -25,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -95,31 +95,30 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
       throws IOException {
     if (SUCCESS.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
-      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+      response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else if (QUERY_PARAM.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
-      response.write(
-          true, StandardCharsets.UTF_8.encode(request.getHttpURI().getQuery()), Callback.NOOP);
+      response.write(true, UTF_8.encode(request.getHttpURI().getQuery()), Callback.NOOP);
     } else if (REDIRECT.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
       response.getHeaders().add("Location", "http://localhost:" + port + endpoint.getBody());
     } else if (ERROR.equals(endpoint)) {
       response.setStatus(endpoint.getStatus());
-      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+      response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else if (CAPTURE_HEADERS.equals(endpoint)) {
       response.getHeaders().add("X-Test-Response", request.getHeaders().get("X-Test-Request"));
       response.setStatus(endpoint.getStatus());
-      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+      response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else if (EXCEPTION.equals(endpoint)) {
       throw new IllegalStateException(endpoint.getBody());
     } else if (INDEXED_CHILD.equals(endpoint)) {
       INDEXED_CHILD.collectSpanAttributes(
           name -> Request.extractQueryParameters(request).getValue(name));
       response.setStatus(endpoint.getStatus());
-      response.write(true, StandardCharsets.UTF_8.encode(endpoint.getBody()), Callback.NOOP);
+      response.write(true, UTF_8.encode(endpoint.getBody()), Callback.NOOP);
     } else {
       response.setStatus(NOT_FOUND.getStatus());
-      response.write(true, StandardCharsets.UTF_8.encode(NOT_FOUND.getBody()), Callback.NOOP);
+      response.write(true, UTF_8.encode(NOT_FOUND.getBody()), Callback.NOOP);
     }
   }
 

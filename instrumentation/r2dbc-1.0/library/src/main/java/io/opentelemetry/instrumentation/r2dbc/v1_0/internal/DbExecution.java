@@ -11,6 +11,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.context.Context;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
@@ -18,14 +19,13 @@ import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class DbExecution {
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
   private final String system;
@@ -73,7 +73,7 @@ public final class DbExecution {
             .map(
                 query ->
                     R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
-            .collect(Collectors.joining(";\n"));
+            .collect(joining(";\n"));
     this.parameterizedQuery =
         queryInfo.getQueries().stream()
             .anyMatch(queryInfo1 -> !queryInfo1.getBindingsList().isEmpty());
@@ -140,7 +140,7 @@ public final class DbExecution {
         + ", connectionString='"
         + connectionString
         + '\''
-        + ", rawStatement='"
+        + ", rawQueryText='"
         + rawQueryText
         + '\''
         + ", context="

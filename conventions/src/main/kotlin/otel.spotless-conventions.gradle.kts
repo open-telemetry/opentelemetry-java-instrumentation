@@ -1,4 +1,5 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import io.opentelemetry.instrumentation.gradle.StaticImportFormatter
 
 plugins {
   id("com.diffplug.spotless")
@@ -6,6 +7,7 @@ plugins {
 
 spotless {
   java {
+    custom("staticImports", StaticImportFormatter())
     googleJavaFormat()
     licenseHeaderFile(
       rootProject.file("buildscripts/spotless.license.java"),

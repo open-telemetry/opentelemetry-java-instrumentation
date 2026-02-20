@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -42,8 +41,8 @@ public class ElasticsearchClientAttributeExtractor
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
     if (host != null) {
-      internalSet(attributes, ServerAttributes.SERVER_ADDRESS, host.getHostName());
-      internalSet(attributes, ServerAttributes.SERVER_PORT, (long) host.getPort());
+      attributes.put(ServerAttributes.SERVER_ADDRESS, host.getHostName());
+      attributes.put(ServerAttributes.SERVER_PORT, (long) host.getPort());
     }
   }
 
@@ -52,7 +51,7 @@ public class ElasticsearchClientAttributeExtractor
     uri = uri.startsWith("/") ? uri : "/" + uri;
     String fullUrl = response.getHost().toURI() + uri;
 
-    internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+    attributes.put(UrlAttributes.URL_FULL, fullUrl);
   }
 
   private static void setPathPartsAttributes(
@@ -68,7 +67,7 @@ public class ElasticsearchClientAttributeExtractor
           AttributeKey<String> attributeKey =
               pathPartKeysCache.computeIfAbsent(
                   key, k -> AttributeKey.stringKey(PATH_PARTS_ATTRIBUTE_PREFIX + k));
-          internalSet(attributes, attributeKey, value);
+          attributes.put(attributeKey, value);
         });
   }
 
@@ -77,10 +76,10 @@ public class ElasticsearchClientAttributeExtractor
       AttributesBuilder attributes, Context parentContext, ElasticsearchRestRequest request) {
     String method = request.getMethod();
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
     setPathPartsAttributes(attributes, request);
   }

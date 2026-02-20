@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter
-    implements DbClientAttributesGetter<ClickHouseDbRequest, Void> {
+    implements SqlClientAttributesGetter<ClickHouseDbRequest, Void> {
 
   private final Function<Throwable, String> errorCodeExtractor;
 
@@ -19,40 +21,14 @@ final class ClickHouseAttributesGetter
     this.errorCodeExtractor = errorCodeExtractor;
   }
 
-  @Nullable
   @Override
-  public String getDbQueryText(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfoWithSummary() != null) {
-      return request.getSqlStatementInfoWithSummary().getQueryText();
-    }
-    if (request.getSqlStatementInfo() != null) {
-      return request.getSqlStatementInfo().getQueryText();
-    }
-    return null;
+  public Collection<String> getRawQueryTexts(ClickHouseDbRequest request) {
+    return Collections.singletonList(request.getSql());
   }
 
-  @Nullable
-  @Override
-  public String getDbOperationName(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() != null) {
-      return request.getSqlStatementInfo().getOperationName();
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getDbQuerySummary(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfoWithSummary() != null) {
-      return request.getSqlStatementInfoWithSummary().getQuerySummary();
-    }
-    return null;
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
   }
 
   @Nullable
@@ -69,5 +45,15 @@ final class ClickHouseAttributesGetter
   @Override
   public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
+  }
+
+  @Override
+  public String getServerAddress(ClickHouseDbRequest request) {
+    return request.getHost();
+  }
+
+  @Override
+  public Integer getServerPort(ClickHouseDbRequest request) {
+    return request.getPort();
   }
 }

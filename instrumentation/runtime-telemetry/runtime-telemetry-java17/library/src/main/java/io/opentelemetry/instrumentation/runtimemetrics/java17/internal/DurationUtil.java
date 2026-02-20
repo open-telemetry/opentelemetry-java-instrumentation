@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class DurationUtil {
-  private static final double NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
+  private static final double NANOS_PER_SECOND = SECONDS.toNanos(1);
 
   /** Returns the duration as seconds, with fractional part included. */
   public static double toSeconds(Duration duration) {

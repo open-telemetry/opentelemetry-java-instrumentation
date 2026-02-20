@@ -2,6 +2,84 @@
 
 ## Unreleased
 
+## Version 2.25.0 (2026-02-13)
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Make Netty 4.1 library public API self-contained
+  ([#15981](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15981))
+- Remove previously deprecated methods
+  ([#15892](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15892),
+   [#15929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15929),
+   [#15943](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15943),
+   [#15944](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15944),
+   [#15945](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15945))
+
+### 🚫 Deprecations
+
+- Deprecated `getDelegate()`, `request()`, `channel()`, `remoteAddress()` in HTTP client request
+  wrapper classes in favor of `getRequest()`, `getChannel()`, `getRemoteAddress()` for consistency
+  ([#15942](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15942))
+- Deprecated `NettyClientTelemetry.setChannelContext()` in favor of `setParentContext()`
+  ([#16010](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16010))
+- Deprecated `new*` methods in favor of `create*` methods in Armeria and Jetty client
+  instrumentation (e.g., `newDecorator()` → `createDecorator()`,
+  `newHttpClient()` → `createHttpClient()`)
+  ([#16009](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16009))
+- Deprecated `NettyServerTelemetry.createResponseHandler()` and `createCombinedHandler()` overloads
+  that expose internal classes
+  ([#16011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16011))
+- Deprecated `RatpackServerTelemetry.getHandler()`, `getExecInterceptor()`, and
+  `getExecInitializer()` in favor of `createHandler()`, `createExecInterceptor()`, and
+  `createExecInitializer()`
+  ([#16013](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16013))
+- Deprecated `setPeerService()` in HTTP, gRPC, Dubbo, and Armeria instrumentation builders in favor
+  of `addAttributesExtractor()`
+  ([#16059](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16059))
+- Deprecated `RpcAttributesGetter.getMethod()` in favor of `getRpcMethod()` to support stable RPC
+  semantic conventions
+  ([#16121](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16121))
+- Deprecated `PeerServiceResolver`, `PeerServiceAttributesExtractor`, and
+  `HttpClientPeerServiceAttributesExtractor` in favor of renamed classes `ServicePeerResolver`,
+  `ServicePeerAttributesExtractor`, and `HttpClientServicePeerAttributesExtractor`
+  ([#16071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16071))
+- Deprecated `setStatementSanitizationEnabled()` in favor of `setQuerySanitizationEnabled()` across
+  database instrumentation builders (Cassandra, JDBC, Lettuce, Mongo, R2DBC)
+  ([#16133](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16133))
+- Deprecated individual runtime metric classes (`Classes`, `Cpu`, `GarbageCollector`,
+  `MemoryPools`, `Threads`) in favor of `RuntimeMetrics`
+  ([#16064](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16064))
+- Deprecated `SqlStatementInfo` in favor of `SqlQuery`, and `SqlStatementSanitizer` in favor of
+  `SqlQuerySanitizer`
+  ([#16074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16074))
+
+### 🌟 New library instrumentation
+
+- Servlet 5
+  ([#16033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16033))
+
+### 📈 Enhancements
+
+- Logback appender: add declarative config support
+  ([#15813](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15813))
+- OkHttp: avoid weak reference in library instrumentation
+  ([#15977](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15977))
+- HTTP clients: Enable query redaction by default in library instrumentations
+  ([#16096](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16096))
+- HttpURLConnection: mark as early instrumentation to ensure virtual fields are used
+  ([#16142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16142))
+
+### 🛠️ Bug fixes
+
+- Dropwizard metrics: Sanitize names where needed to comply with OpenTelemetry requirements
+  ([#15954](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15954))
+- Instrumentation API incubator: Fix span key mapping for MESSAGING_CONSUMER_PROCESS
+  ([#16001](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16001))
+- Couchbase: Fix local address occasionally missing
+  ([#16035](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16035))
+- Internal logging: Map jul config level to debug instead of info
+  ([#16141](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16141))
+
 ## Version 2.24.0 (2026-01-17)
 
 ### ⚠️ Breaking Changes

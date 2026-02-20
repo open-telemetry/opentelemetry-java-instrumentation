@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import application.io.opentelemetry.context.Context;
 import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -47,7 +46,8 @@ public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static boolean methodExit(@Advice.Argument(0) Context context) {
+    public static boolean methodExit(
+        @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
       return InstrumentationUtil.shouldSuppressInstrumentation(
           AgentContextStorage.getAgentContext(context));
     }
