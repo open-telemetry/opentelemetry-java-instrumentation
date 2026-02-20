@@ -35,6 +35,16 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "java.nio.charset.StandardCharsets",
         "[A-Z][A-Z_0-9]*"
       ),
+      Triple(
+        "ArgumentMatchers",
+        "org.mockito.ArgumentMatchers",
+        "[a-z][a-zA-Z0-9]*"
+      ),
+      Triple(
+        "Mockito",
+        "org.mockito.Mockito",
+        "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings"
+      ),
     )
 
     var content = input
