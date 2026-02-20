@@ -240,6 +240,9 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static Boolean booleanOrNull(@Nullable Object value) {
+    if (value instanceof Boolean) {
+      return (Boolean) value;
+    }
     if (value instanceof String) {
       return Boolean.parseBoolean((String) value);
     }
@@ -248,6 +251,12 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static Long longOrNull(@Nullable Object value) {
+    if (value instanceof Long) {
+      return (Long) value;
+    }
+    if (value instanceof Integer) {
+      return ((Integer) value).longValue();
+    }
     if (value instanceof String) {
       try {
         return Long.parseLong((String) value);
@@ -260,6 +269,9 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   private static Double doubleOrNull(@Nullable Object value) {
+    if (value instanceof Double) {
+      return (Double) value;
+    }
     if (value instanceof String) {
       try {
         return Double.parseDouble((String) value);
