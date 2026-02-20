@@ -16,12 +16,14 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class InstrumentationModuleInstallerTest {
 
+  @BeforeEach
   @AfterEach
   void tearDown() {
     AgentDistributionConfig.resetForTest();
