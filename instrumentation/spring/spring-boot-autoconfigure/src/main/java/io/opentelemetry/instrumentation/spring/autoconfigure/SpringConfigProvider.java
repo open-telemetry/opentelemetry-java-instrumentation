@@ -33,7 +33,7 @@ final class SpringConfigProvider implements ConfigProvider {
   }
 
   private static DeclarativeConfigProperties toConfigProperties(
-      Object model, ComponentLoader componentLoader) {
+      OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
     Map<String, Object> configurationMap =
         EmbeddedConfigFile.getObjectMapper()
             .convertValue(model, new TypeReference<Map<String, Object>>() {});
@@ -47,11 +47,12 @@ final class SpringConfigProvider implements ConfigProvider {
    * Create a {@link SpringConfigProvider} from the {@code model}.
    *
    * @param model the configuration model
+   * @param componentLoader the component loader
    * @return the {@link SpringConfigProvider}
    */
-  static SpringConfigProvider create(OpenTelemetryConfigurationModel model) {
-    return new SpringConfigProvider(
-        model, ComponentLoader.forClassLoader(SpringConfigProvider.class.getClassLoader()));
+  static SpringConfigProvider create(
+      OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
+    return new SpringConfigProvider(model, componentLoader);
   }
 
   @Override

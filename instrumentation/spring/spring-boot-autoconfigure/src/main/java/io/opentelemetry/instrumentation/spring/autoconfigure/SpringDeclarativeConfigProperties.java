@@ -120,7 +120,6 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     return object instanceof String
         || object instanceof Integer
         || object instanceof Long
-        || object instanceof Float
         || object instanceof Double
         || object instanceof Boolean;
   }
@@ -166,7 +165,11 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
       return (Integer) value;
     }
     if (value instanceof String) {
-      return Integer.parseInt((String) value);
+      try {
+        return Integer.parseInt((String) value);
+      } catch (NumberFormatException e) {
+        return null;
+      }
     }
     return null;
   }
@@ -246,7 +249,11 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   @Nullable
   private static Long longOrNull(@Nullable Object value) {
     if (value instanceof String) {
-      return Long.parseLong((String) value);
+      try {
+        return Long.parseLong((String) value);
+      } catch (NumberFormatException e) {
+        return null;
+      }
     }
     return null;
   }
@@ -254,7 +261,11 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   @Nullable
   private static Double doubleOrNull(@Nullable Object value) {
     if (value instanceof String) {
-      return Double.parseDouble((String) value);
+      try {
+        return Double.parseDouble((String) value);
+      } catch (NumberFormatException e) {
+        return null;
+      }
     }
     return null;
   }
