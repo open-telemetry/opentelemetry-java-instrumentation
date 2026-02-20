@@ -169,8 +169,7 @@ public class OpenTelemetryAutoConfiguration {
         OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader);
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
         logStart();
-        return new SpringOpenTelemetrySdk(
-            sdk, SpringConfigProvider.create(model, componentLoader));
+        return new SpringOpenTelemetrySdk(sdk, SpringConfigProvider.create(model, componentLoader));
       }
 
       /**
