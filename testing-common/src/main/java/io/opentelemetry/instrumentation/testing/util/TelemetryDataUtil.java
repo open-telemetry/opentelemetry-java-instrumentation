@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.testing.util;
 
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public final class TelemetryDataUtil {
 
@@ -47,7 +49,7 @@ public final class TelemetryDataUtil {
     List<List<SpanData>> traces =
         new ArrayList<>(
             spans.stream()
-                .collect(Collectors.groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
+                .collect(groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
                 .values());
     sortTraces(traces);
     for (int i = 0; i < traces.size(); i++) {
@@ -59,7 +61,7 @@ public final class TelemetryDataUtil {
 
   public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
+    return waitForTraces(supplier, number, 20, SECONDS);
   }
 
   public static List<List<SpanData>> waitForTraces(
@@ -106,7 +108,7 @@ public final class TelemetryDataUtil {
   }
 
   private static long elapsedSeconds(long startTime) {
-    return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
+    return NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
   // must be called under tracesLock

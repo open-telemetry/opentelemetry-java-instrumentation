@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -28,7 +29,7 @@ public class Cpu {
   // Visible for testing
   static final Cpu INSTANCE = new Cpu();
 
-  private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
+  private static final double NANOS_PER_S = SECONDS.toNanos(1);
 
   /** Register observers for java runtime CPU metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {

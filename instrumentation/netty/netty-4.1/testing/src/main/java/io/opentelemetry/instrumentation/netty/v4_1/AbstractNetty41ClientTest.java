@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -27,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
@@ -66,7 +67,7 @@ public abstract class AbstractNetty41ClientTest
     CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
     channel.writeAndFlush(defaultFullHttpRequest).get();
-    return result.get(20, TimeUnit.SECONDS);
+    return result.get(20, SECONDS);
   }
 
   @Override
@@ -93,7 +94,7 @@ public abstract class AbstractNetty41ClientTest
     CompletableFuture<Integer> result = new CompletableFuture<>();
     result.whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
     if (uri.toString().contains("/read-timeout")) {
-      ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+      ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS));
     }
     ch.pipeline().addLast(new ClientHandler(result));
     ch.writeAndFlush(defaultFullHttpRequest);
@@ -166,9 +167,7 @@ public abstract class AbstractNetty41ClientTest
     configureChannel(channel);
     CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
-    channel
-        .pipeline()
-        .addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    channel.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS));
     channel.writeAndFlush(request).get();
     Thread.sleep(1_000);
     channel.close();

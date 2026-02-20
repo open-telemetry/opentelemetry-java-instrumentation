@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testreport;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.FileVisitResult.CONTINUE;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -18,7 +19,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -264,8 +264,7 @@ public class FlakyTestReporter {
 
     NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(
-                new ByteArrayInputStream(accessKey.getBytes(StandardCharsets.UTF_8)))
+        GoogleCredentials.fromStream(new ByteArrayInputStream(accessKey.getBytes(UTF_8)))
             .createScoped(Collections.singletonList(SheetsScopes.SPREADSHEETS));
     Sheets service =
         new Sheets.Builder(

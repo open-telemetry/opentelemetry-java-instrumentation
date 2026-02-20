@@ -23,7 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -97,14 +96,14 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
+    attributes.put(UrlAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
 
     String method = getHttpMethod(exchange, endpoint);
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      attributes.put(HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
   }
 

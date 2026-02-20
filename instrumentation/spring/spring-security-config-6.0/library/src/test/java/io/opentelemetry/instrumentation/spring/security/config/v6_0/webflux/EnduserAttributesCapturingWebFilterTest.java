@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0.webflux;
 
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -74,8 +77,8 @@ class EnduserAttributesCapturingWebFilterTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasAttribute(EnduserIncubatingAttributes.ENDUSER_ID, "principal")
-                        .hasAttribute(EnduserIncubatingAttributes.ENDUSER_ROLE, "role1,role2")
-                        .hasAttribute(EnduserIncubatingAttributes.ENDUSER_SCOPE, "scope1,scope2")));
+                    span.hasAttribute(ENDUSER_ID, "principal")
+                        .hasAttribute(ENDUSER_ROLE, "role1,role2")
+                        .hasAttribute(ENDUSER_SCOPE, "scope1,scope2")));
   }
 }

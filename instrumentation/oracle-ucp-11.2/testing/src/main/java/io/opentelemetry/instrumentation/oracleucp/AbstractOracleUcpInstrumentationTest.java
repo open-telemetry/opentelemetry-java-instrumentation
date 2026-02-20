@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.oracleucp;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -15,7 +16,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
@@ -86,7 +86,7 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     // when
     Connection connection = connectionPool.getConnection();
     configure(connectionPool);
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
     connection.close();
 
     // then

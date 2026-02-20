@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
@@ -23,7 +22,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
 
 /** A builder of {@link DubboTelemetry}. */
@@ -31,11 +29,7 @@ public final class DubboTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dubbo-2.7";
 
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
-
   private final OpenTelemetry openTelemetry;
-  @Nullable private String peerService;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
   private UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer =
@@ -45,20 +39,6 @@ public final class DubboTelemetryBuilder {
 
   DubboTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  /**
-   * Sets the {@code peer.service} attribute for http client spans.
-   *
-   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead:
-   *     <pre>{@code
-   * builder.addAttributesExtractor(
-   *     AttributesExtractor.constant(AttributeKey.stringKey("peer.service"), "service-name"));
-   * }</pre>
-   */
-  @Deprecated
-  public void setPeerService(String peerService) {
-    this.peerService = peerService;
   }
 
   /**
@@ -126,11 +106,6 @@ public final class DubboTelemetryBuilder {
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
             .addOperationMetrics(RpcClientMetrics.get());
-
-    if (peerService != null) {
-      clientInstrumenterBuilder.addAttributesExtractor(
-          AttributesExtractor.constant(PEER_SERVICE, peerService));
-    }
 
     return new DubboTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE),

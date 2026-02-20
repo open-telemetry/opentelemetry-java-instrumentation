@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -38,7 +39,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.Collections;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -137,10 +137,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
-                                equalTo(
-                                    MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                        .AWS_SQS),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
@@ -164,10 +161,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
-                                equalTo(
-                                    MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                        .AWS_SQS),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
@@ -240,10 +234,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
-                                equalTo(
-                                    MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                        .AWS_SQS),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
@@ -267,10 +258,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
-                                equalTo(
-                                    MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                        .AWS_SQS),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(

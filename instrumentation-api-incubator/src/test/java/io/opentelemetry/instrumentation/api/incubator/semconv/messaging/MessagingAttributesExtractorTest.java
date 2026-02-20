@@ -6,6 +6,17 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,7 +24,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,27 +81,21 @@ class MessagingAttributesExtractorTest {
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
-    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "myQueue"));
-    expectedEntries.add(
-        entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
+    expectedEntries.add(entry(MESSAGING_SYSTEM, "myQueue"));
+    expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
-      expectedEntries.add(
-          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
+      expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPORARY, true));
     } else {
-      expectedEntries.add(
-          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE, expectedDestination));
+      expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, expectedDestination));
     }
     if (anonymous) {
-      expectedEntries.add(
-          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS, true));
+      expectedEntries.add(entry(MESSAGING_DESTINATION_ANONYMOUS, true));
     }
-    expectedEntries.add(
-        entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
-    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L));
-    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
+    expectedEntries.add(entry(MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
+    expectedEntries.add(entry(MESSAGING_MESSAGE_BODY_SIZE, 100L));
+    expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
     expectedEntries.add(entry(AttributeKey.stringKey("messaging.client_id"), "43"));
-    expectedEntries.add(
-        entry(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation.operationName()));
+    expectedEntries.add(entry(MESSAGING_OPERATION, operation.operationName()));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
@@ -99,9 +103,7 @@ class MessagingAttributesExtractorTest {
     assertThat(startAttributes.build()).containsOnly(expectedEntriesArr);
 
     assertThat(endAttributes.build())
-        .containsOnly(
-            entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "42"),
-            entry(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2L));
+        .containsOnly(entry(MESSAGING_MESSAGE_ID, "42"), entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L));
   }
 
   static Stream<Arguments> destinations() {

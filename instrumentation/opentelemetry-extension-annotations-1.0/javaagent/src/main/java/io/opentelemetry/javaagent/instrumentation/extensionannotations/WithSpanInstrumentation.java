@@ -38,7 +38,6 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class WithSpanInstrumentation implements TypeInstrumentation {
 
@@ -102,8 +101,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
                 GlobalOpenTelemetry.get(), "opentelemetry_extension_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> matcher =
-          isDeclaredBy(ElementMatchers.named(className));
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {

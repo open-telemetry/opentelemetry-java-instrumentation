@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -17,8 +20,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambd
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.io.IOException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,10 +70,10 @@ class AwsLambdaWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -96,10 +97,10 @@ class AwsLambdaWrapperTest {
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -121,10 +122,10 @@ class AwsLambdaWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -149,10 +150,10 @@ class AwsLambdaWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandlerString implements RequestHandler<String, String> {

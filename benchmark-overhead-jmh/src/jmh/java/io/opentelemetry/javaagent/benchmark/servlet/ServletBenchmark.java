@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.benchmark.servlet;
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+
 import io.opentelemetry.javaagent.benchmark.servlet.app.HelloWorldApplication;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -21,7 +22,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 
 @BenchmarkMode(Mode.SampleTime)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(MICROSECONDS)
 @State(Scope.Thread)
 public class ServletBenchmark {
 

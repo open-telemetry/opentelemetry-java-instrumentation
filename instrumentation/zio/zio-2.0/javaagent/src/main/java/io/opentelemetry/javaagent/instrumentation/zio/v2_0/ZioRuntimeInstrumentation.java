@@ -25,13 +25,12 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("defaultSupervisor")), getClass().getName() + "$DefaultSupervisor");
+        isMethod().and(named("defaultSupervisor")),
+        getClass().getName() + "$DefaultSupervisorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static final class DefaultSupervisor {
-
-    private DefaultSupervisor() {}
+  public static final class DefaultSupervisorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned

@@ -32,6 +32,4 @@ class ServerMetricsTest : AbstractKtorServerMetricsTest() {
   }
 
   override fun instrumentationName(): String = INSTRUMENTATION_NAME
-
-  override fun errorDuringSendSupported() = !java.lang.Boolean.getBoolean("testLatestDeps")
 }

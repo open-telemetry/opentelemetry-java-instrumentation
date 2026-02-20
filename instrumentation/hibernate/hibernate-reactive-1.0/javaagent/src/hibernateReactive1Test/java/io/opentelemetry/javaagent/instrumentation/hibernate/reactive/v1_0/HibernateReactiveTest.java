@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -25,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -81,7 +81,7 @@ class HibernateReactiveTest {
                 promise -> promise.complete(Persistence.createEntityManagerFactory("test-pu")))
             .toCompletionStage()
             .toCompletableFuture()
-            .get(30, TimeUnit.SECONDS);
+            .get(30, SECONDS);
 
     Value value = new Value("name");
     value.setId(1L);
@@ -153,7 +153,7 @@ class HibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, null, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -178,7 +178,7 @@ class HibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, null, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -203,7 +203,7 @@ class HibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, null, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -228,7 +228,7 @@ class HibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, null, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -254,7 +254,7 @@ class HibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }
@@ -280,7 +280,7 @@ class HibernateReactiveTest {
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
                         .whenComplete((value, throwable) -> complete(result, value, throwable))));
-    result.get(30, TimeUnit.SECONDS);
+    result.get(30, SECONDS);
 
     assertTrace();
   }

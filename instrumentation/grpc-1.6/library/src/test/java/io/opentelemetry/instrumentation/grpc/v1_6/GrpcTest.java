@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import example.GreeterGrpc;
@@ -26,7 +27,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -109,7 +109,7 @@ class GrpcTest extends AbstractGrpcTest {
                         .build()
                         .createClientInterceptor()));
 
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     Metadata extraMetadata = new Metadata();

@@ -16,10 +16,13 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -59,7 +62,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,7 +71,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -119,7 +120,7 @@ public abstract class AbstractGrpcTest {
         };
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
@@ -161,17 +162,13 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -196,17 +193,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L)))));
 
     assertMetrics(server, Status.Code.OK);
   }
@@ -227,7 +221,7 @@ public abstract class AbstractGrpcTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterFutureStub client = GreeterGrpc.newFutureStub(channel);
@@ -286,17 +280,13 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -321,17 +311,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -356,7 +343,7 @@ public abstract class AbstractGrpcTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
@@ -389,7 +376,7 @@ public abstract class AbstractGrpcTest {
                       }
                     }));
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     assertThat(error).hasValue(null);
     Helloworld.Response res = response.get();
@@ -423,17 +410,13 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -458,17 +441,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -490,7 +470,7 @@ public abstract class AbstractGrpcTest {
         };
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
@@ -533,9 +513,8 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -562,9 +541,8 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                          equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MESSAGE_ID, 1L));
                                   if (status.getCause() == null) {
                                     assertThat(events).hasSize(1);
                                   } else {
@@ -589,7 +567,7 @@ public abstract class AbstractGrpcTest {
         };
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
@@ -641,9 +619,8 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -665,9 +642,8 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                          equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MESSAGE_ID, 1L));
                                   span.hasException(status.asRuntimeException());
                                 })));
 
@@ -762,7 +738,7 @@ public abstract class AbstractGrpcTest {
                         }
                       }
                     }));
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
@@ -804,7 +780,7 @@ public abstract class AbstractGrpcTest {
                       }
                     }));
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     assertThat(error).hasValue(null);
     Helloworld.Response res = response.get();
@@ -838,17 +814,13 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -873,17 +845,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -900,7 +869,7 @@ public abstract class AbstractGrpcTest {
 
     Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
@@ -936,7 +905,7 @@ public abstract class AbstractGrpcTest {
                       }
                     }));
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     assertThat(error.get()).isNotNull();
 
@@ -971,14 +940,12 @@ public abstract class AbstractGrpcTest {
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                          equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L));
                                   assertThat(events.get(1))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
+                                          equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MESSAGE_ID, 1L));
                                   span.hasException(thrown);
                                 }),
                     span ->
@@ -1005,17 +972,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1025,7 +989,7 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     ServerReflectionGrpc.ServerReflectionStub client = ServerReflectionGrpc.newStub(channel);
@@ -1061,7 +1025,7 @@ public abstract class AbstractGrpcTest {
     request.onNext(serverReflectionRequest);
     request.onCompleted();
 
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     assertThat(error).hasValue(null);
     ServerReflectionResponse serverReflectionResponse = response.get();
@@ -1097,17 +1061,13 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName(
                                 "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
@@ -1133,17 +1093,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1169,7 +1126,7 @@ public abstract class AbstractGrpcTest {
     // Multiple calls to build on the same builder
     channelBuilder.build();
     ManagedChannel channel = channelBuilder.build();
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
@@ -1207,17 +1164,13 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1242,17 +1195,14 @@ public abstract class AbstractGrpcTest {
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE,
-                                                "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                            equalTo(MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                            equalTo(MESSAGE_TYPE, "SENT"),
+                                            equalTo(MESSAGE_ID, 1L)))));
   }
 
   // Regression test for
@@ -1278,7 +1228,7 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel backendChannel = createChannel(backend);
-    closer.add(() -> backendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> backendChannel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> backend.shutdownNow().awaitTermination());
     GreeterGrpc.GreeterBlockingStub backendStub = GreeterGrpc.newBlockingStub(backendChannel);
 
@@ -1318,7 +1268,7 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel frontendChannel = createChannel(frontend);
-    closer.add(() -> frontendChannel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> frontendChannel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> frontend.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub frontendStub = GreeterGrpc.newBlockingStub(frontendChannel);
@@ -1331,7 +1281,7 @@ public abstract class AbstractGrpcTest {
     // for the two cases due to lack of context propagation in the library case, but that isn't what
     // we're testing here.
 
-    clientCallDone.await(10, TimeUnit.SECONDS);
+    clientCallDone.await(10, SECONDS);
 
     assertThat(error).hasValue(null);
   }
@@ -1359,7 +1309,7 @@ public abstract class AbstractGrpcTest {
                             context.addListener(
                                 context1 -> cancelCalled.set(true), MoreExecutors.directExecutor());
                             try {
-                              cancelLatch.await(10, TimeUnit.SECONDS);
+                              cancelLatch.await(10, SECONDS);
                             } catch (InterruptedException e) {
                               Thread.currentThread().interrupt();
                             }
@@ -1373,14 +1323,14 @@ public abstract class AbstractGrpcTest {
             .build()
             .start();
     ManagedChannel channel = createChannel(server);
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterFutureStub client = GreeterGrpc.newFutureStub(channel);
     ListenableFuture<Helloworld.Response> future =
         client.sayHello(Helloworld.Request.newBuilder().setName("test").build());
 
-    startLatch.await(10, TimeUnit.SECONDS);
+    startLatch.await(10, SECONDS);
     future.cancel(false);
     cancelLatch.countDown();
 

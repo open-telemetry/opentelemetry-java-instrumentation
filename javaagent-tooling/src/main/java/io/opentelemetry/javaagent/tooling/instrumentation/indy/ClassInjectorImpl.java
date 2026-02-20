@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
@@ -14,7 +16,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.pool.TypePool;
@@ -36,7 +37,7 @@ public class ClassInjectorImpl implements ClassInjector {
   public List<HelperClassDefinition> getClassesToInject(ClassLoader instrumentedCl) {
     return classesToInject.stream()
         .map(generator -> generator.apply(instrumentedCl))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

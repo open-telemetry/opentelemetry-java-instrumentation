@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,7 +15,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -27,7 +28,7 @@ public record FileManager(String rootDir) {
       return walk.filter(Files::isDirectory)
           .filter(dir -> isValidInstrumentationPath(dir.toString()))
           .map(dir -> parseInstrumentationPath(dir.toString()))
-          .collect(Collectors.toList());
+          .collect(toList());
     }
   }
 
@@ -86,7 +87,7 @@ public record FileManager(String rootDir) {
                   path.getFileName().toString().equals("build.gradle.kts")
                       && !path.toString().contains("/testing/"))
           .map(Path::toString)
-          .collect(Collectors.toList());
+          .collect(toList());
     } catch (IOException e) {
       logger.severe("Error traversing directory: " + e.getMessage());
       return new ArrayList<>();

@@ -26,7 +26,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 No targets are enabled by default. The supported target environments are listed below.
 
 - [activemq](library/activemq.md)
-- [camel](javaagent/camel.md)
+- [camel](library/camel.md)
 - [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
 - [tomcat](library/tomcat.md)

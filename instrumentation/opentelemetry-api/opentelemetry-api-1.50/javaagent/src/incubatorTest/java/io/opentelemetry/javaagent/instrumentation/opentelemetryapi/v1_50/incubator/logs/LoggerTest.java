@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -28,7 +29,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import io.opentelemetry.sdk.trace.IdGenerator;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +73,7 @@ class LoggerTest {
     ((ExtendedLogger) logger)
         .logRecordBuilder()
         .setEventName("eventName")
-        .setTimestamp(1, TimeUnit.SECONDS)
+        .setTimestamp(1, SECONDS)
         .setTimestamp(Instant.now())
         .setContext(Context.current().with(Span.wrap(spanContext)))
         .setSeverity(Severity.DEBUG)

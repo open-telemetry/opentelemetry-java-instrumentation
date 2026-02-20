@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.UNIT_BUFFERS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -37,7 +37,7 @@ class BufferMetricTest {
   @Test
   void shouldHaveJfrLoadedClassesCountEvents() {
     ByteBuffer buffer = ByteBuffer.allocateDirect(10000);
-    buffer.put("test".getBytes(StandardCharsets.UTF_8));
+    buffer.put("test".getBytes(UTF_8));
 
     AttributeKey<String> attrBufferPool = AttributeKey.stringKey("jvm.buffer.pool.name");
     Attributes directBuffer = Attributes.of(attrBufferPool, "direct");

@@ -84,16 +84,12 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
     server.stop(0, 10, TimeUnit.SECONDS)
   }
 
-  open fun errorDuringSendSupported() = true
-
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/15303
   // verify that active requests are counted correctly when there is a send error
   @ParameterizedTest
   @MethodSource("provideArguments")
   fun testActiveRequestsMetric(endpoint: ServerEndpoint) {
-    assumeTrue("errorDuringSend" != endpoint.name() || errorDuringSendSupported())
-
     val request = AggregatedHttpRequest.of(HttpMethod.valueOf("GET"), resolveAddress(endpoint))
     try {
       client.execute(request).aggregate().join()

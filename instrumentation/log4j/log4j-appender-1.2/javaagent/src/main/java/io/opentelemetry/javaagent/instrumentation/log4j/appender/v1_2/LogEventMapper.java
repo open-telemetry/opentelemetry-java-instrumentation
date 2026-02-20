@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -25,7 +26,6 @@ import java.time.Instant;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
@@ -66,7 +66,7 @@ public final class LogEventMapper {
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     this.captureMdcAttributes =
         captureMdcAttributes.stream()
-            .collect(Collectors.toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));
+            .collect(toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }

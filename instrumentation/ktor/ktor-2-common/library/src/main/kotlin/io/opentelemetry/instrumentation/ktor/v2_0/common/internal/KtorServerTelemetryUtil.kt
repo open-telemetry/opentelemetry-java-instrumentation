@@ -61,15 +61,23 @@ object KtorServerTelemetryUtil {
       }
     }
 
-    on(ResponseSent) { call ->
-      if (call.attributes.contains(processedKey)) {
-        return@on
-      }
-
+    val postSendPhase = PipelinePhase("OpenTelemetryPostSend")
+    application.sendPipeline.insertPhaseAfter(ApplicationSendPipeline.After, postSendPhase)
+    application.sendPipeline.intercept(postSendPhase) {
       val context = call.attributes.getOrNull(contextKey)
-      if (context != null) {
-        tracer.end(context, call, call.attributes.getOrNull(errorKey))
-        call.attributes.put(processedKey, Unit)
+      if (context != null && !call.attributes.contains(processedKey)) {
+        var error: Throwable? = call.attributes.getOrNull(errorKey)
+        try {
+          proceed()
+        } catch (t: Throwable) {
+          error = t
+          throw t
+        } finally {
+          tracer.end(context, call, error)
+          call.attributes.put(processedKey, Unit)
+        }
+      } else {
+        proceed()
       }
     }
   }

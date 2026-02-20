@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
@@ -13,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
   @AfterAll
   void shutdown() throws InterruptedException {
     executor.shutdown();
-    executor.awaitTermination(10, TimeUnit.SECONDS);
+    executor.awaitTermination(10, SECONDS);
   }
 
   @Test
@@ -65,7 +66,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
 
   @Test
   void invokeAllWithTimeout() {
-    executeTwoTasks(task -> executor.invokeAll(Collections.singleton(task), 10, TimeUnit.SECONDS));
+    executeTwoTasks(task -> executor.invokeAll(Collections.singleton(task), 10, SECONDS));
   }
 
   @Test
@@ -75,7 +76,7 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
 
   @Test
   void invokeAnyWithTimeout() {
-    executeTwoTasks(task -> executor.invokeAny(Collections.singleton(task), 10, TimeUnit.SECONDS));
+    executeTwoTasks(task -> executor.invokeAny(Collections.singleton(task), 10, SECONDS));
   }
 
   @Test

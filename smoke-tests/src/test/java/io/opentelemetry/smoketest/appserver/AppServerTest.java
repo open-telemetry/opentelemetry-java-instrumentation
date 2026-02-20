@@ -7,9 +7,14 @@ package io.opentelemetry.smoketest.appserver;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.LINUX;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -17,10 +22,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.smoketest.AbstractSmokeTest;
 import io.opentelemetry.smoketest.TestContainerManager;
 import io.opentelemetry.smoketest.TestImageVersions;
@@ -107,10 +108,10 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
                     assertSpan(span)
                         .hasName("GET")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttribute(UrlAttributes.URL_FULL, "http://localhost:8080/app/headers"),
+                        .hasAttribute(URL_FULL, "http://localhost:8080/app/headers"),
                 span ->
                     assertServerSpan(span, "/app/headers")
-                        .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")));
+                        .hasAttribute(CLIENT_ADDRESS, "127.0.0.1")));
 
     // trace id is present in the HTTP headers as reported by the called endpoint
     assertThat(responseBody).contains(getSpanTraceIds().iterator().next());
@@ -225,16 +226,15 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
             resource ->
                 resource
                     .hasAttribute(OS_TYPE, getExpectedOsType())
-                    .hasAttribute(
-                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION, getAgentVersion()))
-        .hasAttribute(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
+                    .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion()))
+        .hasAttribute(NETWORK_PROTOCOL_VERSION, "1.1");
   }
 
   private SpanDataAssert assertServerSpan(SpanDataAssert span, String path) {
     return assertSpan(span)
         .hasName(getSpanName(path))
         .hasKind(SpanKind.SERVER)
-        .hasAttribute(UrlAttributes.URL_PATH, path);
+        .hasAttribute(URL_PATH, path);
   }
 
   private static void getAndAssertServerSpan(Consumer<SpanDataAssert> assertion) {

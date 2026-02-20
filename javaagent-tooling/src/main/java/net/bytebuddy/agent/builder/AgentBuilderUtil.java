@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Default.Transformation;
@@ -146,7 +145,7 @@ public class AgentBuilderUtil {
           getDelegateMatcher((AgentBuilder.RawMatcher.ForElementMatchers) matcher);
       Result result = inspect(elementMatcher);
       if (result == null && logger.isLoggable(FINE) && shouldLog(elementMatcher)) {
-        logger.log(Level.FINE, "Could not decompose matcher {0}", elementMatcher);
+        logger.log(FINE, "Could not decompose matcher {0}", elementMatcher);
       }
       return result;
     }

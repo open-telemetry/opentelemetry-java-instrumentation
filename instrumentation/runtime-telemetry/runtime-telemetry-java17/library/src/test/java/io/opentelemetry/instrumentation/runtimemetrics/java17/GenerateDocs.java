@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
+import static java.util.logging.Level.WARNING;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -20,7 +21,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -38,7 +38,7 @@ public class GenerateDocs {
 
   public static void main(String[] args) throws Exception {
     // Suppress info level logs
-    Logger.getLogger(RuntimeMetrics.class.getName()).setLevel(Level.WARNING);
+    Logger.getLogger(RuntimeMetrics.class.getName()).setLevel(WARNING);
 
     String jfrReadmePath = System.getProperty(JFR_README_PATH_KEY);
     if (jfrReadmePath == null) {

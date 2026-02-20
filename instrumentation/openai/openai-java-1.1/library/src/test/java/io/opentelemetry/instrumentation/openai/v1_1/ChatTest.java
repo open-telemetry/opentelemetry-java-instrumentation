@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.openai.client.OpenAIClient;
@@ -42,7 +43,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -600,7 +600,7 @@ class ChatTest extends AbstractChatTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "Atlantic Ocean.";
     assertThat(fullMessage).isEqualTo(content);

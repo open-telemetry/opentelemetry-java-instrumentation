@@ -11,6 +11,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -20,7 +22,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -148,11 +149,8 @@ class JbossLogmanagerTest {
             List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(
                     Arrays.asList(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId())));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -219,9 +217,8 @@ class JbossLogmanagerTest {
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("key1"), "val1"),
                     equalTo(AttributeKey.stringKey("key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId())));
   }
 
   @FunctionalInterface

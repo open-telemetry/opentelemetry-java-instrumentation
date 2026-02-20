@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
@@ -23,7 +24,7 @@ enum PekkoHttpServerHeaders implements TextMapGetter<HttpRequest> {
   public Iterable<String> keys(HttpRequest httpRequest) {
     return StreamSupport.stream(httpRequest.getHeaders().spliterator(), false)
         .map(HttpHeader::lowercaseName)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

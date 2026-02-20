@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationValue;
@@ -64,7 +65,7 @@ public class ForceDynamicallyTypedAssignReturnedFactory implements Advice.PostPr
       List<? extends AnnotationDescription> declaredAnnotations) {
     return declaredAnnotations.stream()
         .map(ForceDynamicallyTypedAssignReturnedFactory::forceDynamicTyping)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static AnnotationDescription forceDynamicTyping(AnnotationDescription anno) {

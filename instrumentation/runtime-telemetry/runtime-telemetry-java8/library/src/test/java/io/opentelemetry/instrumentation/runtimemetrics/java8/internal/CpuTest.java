@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class CpuTest {
   @Test
   void registerObservers() {
     IntSupplier availableProcessors = () -> 8;
-    Supplier<Long> processCpuTime = () -> TimeUnit.SECONDS.toNanos(42);
+    Supplier<Long> processCpuTime = () -> SECONDS.toNanos(42);
     Supplier<Double> processCpuUtilization = () -> 0.05;
 
     Cpu.INSTANCE.registerObservers(

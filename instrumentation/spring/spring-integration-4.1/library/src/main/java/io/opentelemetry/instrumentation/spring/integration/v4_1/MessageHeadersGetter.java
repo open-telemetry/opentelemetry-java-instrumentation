@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -46,7 +47,7 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
       return null;
     }
     if (headerValue instanceof byte[]) {
-      return new String((byte[]) headerValue, StandardCharsets.UTF_8);
+      return new String((byte[]) headerValue, UTF_8);
     }
     return headerValue.toString();
   }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static java.util.logging.Level.FINE;
+
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -21,7 +23,6 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.ServerAttributes;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -166,7 +167,7 @@ final class CassandraAttributesExtractor
         object = proxyAddressField.get(sniEndPoint);
       } catch (Exception e) {
         logger.log(
-            Level.FINE,
+            FINE,
             "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
             e);
       }

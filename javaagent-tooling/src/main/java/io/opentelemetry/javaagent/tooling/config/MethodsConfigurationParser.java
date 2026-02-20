@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Collections;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public final class MethodsConfigurationParser {
 
@@ -55,7 +55,7 @@ public final class MethodsConfigurationParser {
                 return className != null && !className.isEmpty();
               })
           .collect(
-              Collectors.toMap(
+              toMap(
                   entry -> entry.getString("class"),
                   entry ->
                       new HashSet<>(entry.getScalarList("methods", String.class, emptyList()))));

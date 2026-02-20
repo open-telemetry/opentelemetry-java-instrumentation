@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.filter;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -123,10 +124,7 @@ public class FilteredAppConfig implements WebMvcConfigurer {
       @Override
       protected void writeInternal(
           Map<String, Object> stringObjectMap, HttpOutputMessage outputMessage) throws IOException {
-        StreamUtils.copy(
-            (String) stringObjectMap.get("message"),
-            StandardCharsets.UTF_8,
-            outputMessage.getBody());
+        StreamUtils.copy((String) stringObjectMap.get("message"), UTF_8, outputMessage.getBody());
       }
     };
   }

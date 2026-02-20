@@ -7,12 +7,14 @@ package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.semconv.ServiceAttributes;
-import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -42,23 +44,16 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /greeting")
-                        .hasAttribute(
-                            satisfies(ThreadIncubatingAttributes.THREAD_ID, a -> a.isNotNull()))
-                        .hasAttribute(
-                            satisfies(ThreadIncubatingAttributes.THREAD_NAME, a -> a.isNotBlank()))
+                        .hasAttribute(satisfies(THREAD_ID, a -> a.isNotNull()))
+                        .hasAttribute(satisfies(THREAD_NAME, a -> a.isNotBlank()))
                         .hasResourceSatisfying(
                             resource ->
                                 resource
-                                    .hasAttribute(
-                                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                        getAgentVersion())
-                                    .hasAttribute(
-                                        satisfies(
-                                            OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
+                                    .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
+                                    .hasAttribute(satisfies(OS_TYPE, a -> a.isNotNull()))
                                     .hasAttribute(AttributeKey.stringKey("foo"), "bar")
-                                    .hasAttribute(
-                                        ServiceAttributes.SERVICE_NAME, "otel-spring-test-app")
-                                    .hasAttribute(ServiceAttributes.SERVICE_VERSION, "1.2.3")),
+                                    .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
+                                    .hasAttribute(SERVICE_VERSION, "1.2.3")),
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup

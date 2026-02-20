@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.stream.Collectors.toMap;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -147,7 +148,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     Map<String, BytecodeWithUrl> classesToInject =
         getClassesToInject(module).stream()
             .collect(
-                Collectors.toMap(
+                toMap(
                     className -> className,
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);

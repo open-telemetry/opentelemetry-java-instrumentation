@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONN
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -24,7 +25,6 @@ import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -637,7 +637,7 @@ public abstract class AbstractPreparedStatementParametersTest {
                                     maybeStable(DB_SQL_TABLE),
                                     emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_QUERY_SUMMARY,
+                                    DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? spanName : null),
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),

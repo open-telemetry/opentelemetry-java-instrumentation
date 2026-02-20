@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -12,8 +15,6 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.DbAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.stream.Stream;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -117,11 +118,11 @@ class SanitizationTest {
     Attributes attributes = attributesBuilder.build();
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      assertThat(attributes.get(DbAttributes.DB_QUERY_TEXT)).isEqualTo(expectedQueryText);
-      assertThat(attributes.get(DbAttributes.DB_QUERY_SUMMARY)).isEqualTo(expectedSummary);
+      assertThat(attributes.get(DB_QUERY_TEXT)).isEqualTo(expectedQueryText);
+      assertThat(attributes.get(DB_QUERY_SUMMARY)).isEqualTo(expectedSummary);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(attributes.get(DbIncubatingAttributes.DB_STATEMENT)).isEqualTo(expectedQueryText);
+      assertThat(attributes.get(DB_STATEMENT)).isEqualTo(expectedQueryText);
     }
   }
 }

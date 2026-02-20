@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +40,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -63,7 +63,7 @@ class InstrumentationCustomizerTest {
                   entry("req2", "req2_value"),
                   entry("req2_2", "req2_2_value"),
                   entry("req3", "req3_value"))
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+              .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   private static final Map<String, String> RESPONSE =
       Collections.unmodifiableMap(
@@ -72,7 +72,7 @@ class InstrumentationCustomizerTest {
                   entry("resp2", "resp2_value"),
                   entry("resp2_2", "resp2_2_value"),
                   entry("resp3", "resp3_value"))
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+              .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   @Mock private OperationListener operationListener;
   @Mock private ContextCustomizer<Object> contextCustomizer;

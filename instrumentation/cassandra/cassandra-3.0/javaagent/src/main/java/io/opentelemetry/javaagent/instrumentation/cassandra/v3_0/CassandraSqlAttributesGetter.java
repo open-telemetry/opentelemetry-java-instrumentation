@@ -9,15 +9,13 @@ import static java.util.Collections.singleton;
 
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter
-    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo>,
-        ExtractQuerySummaryMarker {
+    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
 
   @Override
   public String getDbSystemName(CassandraRequest request) {

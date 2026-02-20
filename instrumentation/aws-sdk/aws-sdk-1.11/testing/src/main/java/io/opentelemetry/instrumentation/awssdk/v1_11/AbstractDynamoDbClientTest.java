@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
 import static java.util.Collections.singletonList;
 
@@ -23,7 +24,6 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -56,9 +56,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         Arrays.asList(
             equalTo(
                 maybeStable(DB_SYSTEM),
-                SemconvStability.emitStableDatabaseSemconv()
-                    ? AWS_DYNAMODB
-                    : DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB),
+                SemconvStability.emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
             equalTo(maybeStable(DB_OPERATION), "CreateTable"),
             equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
 

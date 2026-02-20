@@ -6,12 +6,12 @@
 package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes.CONTAINER_ID;
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
+import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 
-import io.opentelemetry.semconv.ServiceAttributes;
-import io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -43,21 +43,11 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
                     span.hasResourceSatisfying(
                         resource ->
                             resource
+                                .hasAttribute(SERVICE_NAME, "declarative-config-smoke-test")
+                                .hasAttribute(satisfies(CONTAINER_ID, v -> v.isNotBlank()))
                                 .hasAttribute(
-                                    ServiceAttributes.SERVICE_NAME, "declarative-config-smoke-test")
-                                .hasAttribute(
-                                    satisfies(
-                                        ContainerIncubatingAttributes.CONTAINER_ID,
-                                        v -> v.isNotBlank()))
-                                .hasAttribute(
-                                    satisfies(
-                                        ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH,
-                                        v -> v.isNotBlank()))
-                                .hasAttribute(
-                                    satisfies(
-                                        HostIncubatingAttributes.HOST_NAME, v -> v.isNotBlank()))
-                                .hasAttribute(
-                                    TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME,
-                                    "opentelemetry-javaagent"))));
+                                    satisfies(PROCESS_EXECUTABLE_PATH, v -> v.isNotBlank()))
+                                .hasAttribute(satisfies(HOST_NAME, v -> v.isNotBlank()))
+                                .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent"))));
   }
 }

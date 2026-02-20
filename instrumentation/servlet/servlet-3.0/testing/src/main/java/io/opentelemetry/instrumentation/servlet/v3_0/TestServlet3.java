@@ -16,12 +16,12 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
@@ -87,7 +87,7 @@ public class TestServlet3 {
               resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
               resp.setContentLength(endpoint.getBody().length());
-              byte[] body = endpoint.getBody().getBytes(StandardCharsets.UTF_8);
+              byte[] body = endpoint.getBody().getBytes(UTF_8);
               resp.getOutputStream().write(body, 0, body.length);
             }
             return null;

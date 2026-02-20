@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.tooling.muzzle.references;
 
 import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeFlags;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.ReferenceMergeUtil.mergeSet;
+import static java.util.stream.Collectors.joining;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.objectweb.asm.Type;
@@ -91,11 +91,11 @@ public final class MethodRef {
   public String toString() {
     Type methodType = Type.getMethodType(getDescriptor());
     String returnType = methodType.getReturnType().getClassName();
-    String modifiers = flags.stream().map(Flag::toString).collect(Collectors.joining(" "));
+    String modifiers = flags.stream().map(Flag::toString).collect(joining(" "));
     String parameters =
         Stream.of(methodType.getArgumentTypes())
             .map(Type::getClassName)
-            .collect(Collectors.joining(", ", "(", ")"));
+            .collect(joining(", ", "(", ")"));
     return getClass().getSimpleName()
         + ": "
         + modifiers

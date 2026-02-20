@@ -423,6 +423,10 @@ checkstyle {
   maxWarnings = 0
 }
 
+tasks.withType<Checkstyle> {
+  isShowViolations = true
+}
+
 dependencyCheck {
   skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"

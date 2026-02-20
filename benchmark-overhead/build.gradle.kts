@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-  implementation(enforcedPlatform("org.junit:junit-bom:5.14.2"))
+  implementation(enforcedPlatform("org.junit:junit-bom:5.14.3"))
 
   testImplementation(platform("org.testcontainers:testcontainers-bom:2.0.3"))
   testImplementation("org.testcontainers:testcontainers:2.0.3")
@@ -27,6 +27,7 @@ dependencies {
   testImplementation("org.jooq:joox:2.0.1")
   testImplementation("com.jayway.jsonpath:json-path:2.10.0")
   testImplementation("org.slf4j:slf4j-simple:2.0.17")
+  testImplementation("org.assertj:assertj-core:3.27.7")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static java.util.stream.Collectors.toList;
+
 import com.openai.core.JsonField;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
@@ -14,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 final class StreamedMessageBuffer {
@@ -61,7 +62,7 @@ final class StreamedMessageBuffer {
       List<Value<?>> toolCallsJson =
           toolCalls.values().stream()
               .map(StreamedMessageBuffer::buildToolCallEventObject)
-              .collect(Collectors.toList());
+              .collect(toList());
       body.put("tool_calls", Value.of(toolCallsJson));
     }
     return Value.of(body);

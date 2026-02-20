@@ -36,16 +36,6 @@ public final class LettuceTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
-  }
-
-  /**
    * Sets whether the {@code redis.encode.start} and {@code redis.encode.end} span events should be
    * emitted by the constructed {@link LettuceTelemetry}. Disabled by default.
    */

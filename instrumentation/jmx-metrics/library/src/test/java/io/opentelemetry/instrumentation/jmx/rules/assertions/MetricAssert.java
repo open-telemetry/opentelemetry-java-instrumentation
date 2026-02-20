@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static java.util.stream.Collectors.toMap;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
@@ -15,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.internal.Integers;
 import org.assertj.core.internal.Iterables;
@@ -238,8 +238,7 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
           for (NumberDataPoint dataPoint : dataPoints) {
             Map<String, String> dataPointAttributes =
                 dataPoint.getAttributesList().stream()
-                    .collect(
-                        Collectors.toMap(KeyValue::getKey, kv -> kv.getValue().getStringValue()));
+                    .collect(toMap(KeyValue::getKey, kv -> kv.getValue().getStringValue()));
             int matchCount = 0;
             for (int i = 0; i < matcherGroups.length; i++) {
               if (matcherGroups[i].matches(dataPointAttributes)) {

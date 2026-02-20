@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import io.opentelemetry.api.metrics.Meter;
+
 public interface ApplicationMeterFactory {
 
-  ApplicationMeter newMeter(io.opentelemetry.api.metrics.Meter agentMeter);
+  ApplicationMeter newMeter(Meter agentMeter);
 }

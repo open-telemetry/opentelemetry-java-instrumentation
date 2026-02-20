@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.logging;
 
-import java.util.concurrent.TimeUnit;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,7 +20,7 @@ public class TestSpringApp {
     SpringApplication app = new SpringApplication(TestSpringApp.class);
     try (ConfigurableApplicationContext ignored = app.run()) {
       // pretend to do some work for a second
-      TimeUnit.SECONDS.sleep(1);
+      SECONDS.sleep(1);
       LoggerFactory.getLogger(TestSpringApp.class).info("Done!");
     }
   }

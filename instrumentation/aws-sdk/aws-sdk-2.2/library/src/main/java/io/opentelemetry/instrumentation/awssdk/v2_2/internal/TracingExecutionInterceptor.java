@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -26,7 +27,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
@@ -421,7 +421,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
               new BufferedReader(
                       new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
                   .lines()
-                  .collect(Collectors.joining("\n"));
+                  .collect(joining("\n"));
           Attributes attributes =
               Attributes.of(
                   HttpAttributes.HTTP_RESPONSE_STATUS_CODE,

@@ -7,8 +7,12 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -19,9 +23,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
@@ -80,18 +81,15 @@ class AwsLambdaSqsEventWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("otel process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .AWS_SQS),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"))));
   }
 
