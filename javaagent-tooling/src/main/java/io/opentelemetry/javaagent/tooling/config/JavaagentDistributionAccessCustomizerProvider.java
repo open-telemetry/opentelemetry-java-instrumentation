@@ -58,9 +58,17 @@ public final class JavaagentDistributionAccessCustomizerProvider
             DistributionPropertyModel javaagent =
                 distribution.getAdditionalProperties().get("javaagent");
             if (javaagent != null) {
-              AgentDistributionConfig.set(
-                  MAPPER.convertValue(javaagent, AgentDistributionConfig.class));
+              try {
+                AgentDistributionConfig.set(
+                    MAPPER.convertValue(javaagent, AgentDistributionConfig.class));
+              } catch (IllegalArgumentException e) {
+                logger.warning(
+                    "Failed to parse distribution.javaagent configuration: " + e.getMessage());
+              }
             }
+          }
+          if (AgentDistributionConfig.getIfInitialized() == null) {
+            AgentDistributionConfig.set(AgentDistributionConfig.create());
           }
           return model;
         });

@@ -101,11 +101,9 @@ public class AgentDistributionConfig {
     INSTANCE = distributionConfig;
   }
 
-  /** Sets the config only if it hasn't been set yet. Used as a fallback for default values. */
-  public static void setIfAbsent(AgentDistributionConfig distributionConfig) {
-    if (INSTANCE == null) {
-      INSTANCE = distributionConfig;
-    }
+  /** Returns the current instance, or null if not yet initialized. */
+  public static AgentDistributionConfig getIfInitialized() {
+    return INSTANCE;
   }
 
   @JsonCreator
