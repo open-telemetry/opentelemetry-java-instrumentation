@@ -25,6 +25,8 @@ public class AgentDistributionConfig {
   @SuppressWarnings("ConstantField") // needs to be mutable for @Initializer
   private static volatile AgentDistributionConfig INSTANCE;
 
+  private static volatile boolean initializationExpected;
+
   @JsonProperty("indy/development")
   private final boolean indyEnabled;
 
@@ -44,10 +46,23 @@ public class AgentDistributionConfig {
   @JsonProperty("instrumentation")
   private final InstrumentationConfig instrumentation;
 
+  /**
+   * Called early in agent bootstrap to signal that {@link #set(AgentDistributionConfig)} is expected
+   * to be called. After this, {@link #get()} will throw if the config has not been initialized.
+   * When this has not been called (e.g. during Gradle byteBuddyJava build tasks), {@link #get()}
+   * returns a default instance instead.
+   */
+  public static void expectInitialization() {
+    initializationExpected = true;
+  }
+
   public static AgentDistributionConfig get() {
     AgentDistributionConfig instance = INSTANCE;
     if (instance == null) {
-      throw new IllegalStateException("AgentDistributionConfig has not been initialized");
+      if (initializationExpected) {
+        throw new IllegalStateException("AgentDistributionConfig has not been initialized");
+      }
+      return new AgentDistributionConfig();
     }
     return instance;
   }
@@ -55,6 +70,7 @@ public class AgentDistributionConfig {
   // Only used by tests
   public static void resetForTest() {
     INSTANCE = null;
+    initializationExpected = false;
   }
 
   /**

@@ -148,6 +148,8 @@ public class AgentInstaller {
               .with(new TransformLoggingListener());
     }
 
+    AgentDistributionConfig.expectInitialization();
+
     installEarlyInstrumentation(agentBuilder, inst);
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
