@@ -261,7 +261,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       String namespace = getter.getDbNamespace(request);
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       String operationName = null;
-      if (!rawQueryTexts.isEmpty() && rawQueryTexts.size() == 1) {
+      if (rawQueryTexts.size() == 1) {
         SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
         operationName = sanitizedQuery.getOperationName();
       }
