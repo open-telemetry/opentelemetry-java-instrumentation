@@ -74,8 +74,15 @@ class StaticImportFormatter : FormatterFunc, Serializable {
     for ((className, pkg, memberPattern) in semconvRules) {
       val regex = Regex("\\b${className}\\.(${memberPattern})\\b")
       val lines = content.lines().toMutableList()
+      var inBlockComment = false
       for (i in lines.indices) {
-        if (lines[i].trimStart().startsWith("import ")) continue
+        val trimmed = lines[i].trimStart()
+        if (trimmed.startsWith("/*")) inBlockComment = true
+        if (inBlockComment) {
+          if (trimmed.contains("*/")) inBlockComment = false
+          continue
+        }
+        if (trimmed.startsWith("import ")) continue
         for (match in regex.findAll(lines[i])) {
           importsToAdd.add("import static ${pkg}.${match.groupValues[1]};")
         }
