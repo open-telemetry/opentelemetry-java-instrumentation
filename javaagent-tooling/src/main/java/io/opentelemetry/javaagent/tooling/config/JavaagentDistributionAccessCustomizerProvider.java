@@ -43,8 +43,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
                     Object beanOrClass,
                     String propertyName)
                     throws IOException {
-                  logger.warning(
-                      "Unknown distribution.javaagent property: " + propertyName);
+                  logger.warning("Unknown distribution.javaagent property: " + propertyName);
                   p.skipChildren();
                   return true;
                 }

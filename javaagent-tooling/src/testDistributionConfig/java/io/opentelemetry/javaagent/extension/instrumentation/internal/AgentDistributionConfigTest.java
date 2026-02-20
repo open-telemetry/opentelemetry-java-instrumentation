@@ -84,9 +84,7 @@ class AgentDistributionConfigTest {
         .isTrue();
 
     // armeria alone should be enabled
-    assertThat(
-            config.isInstrumentationEnabled(
-                Arrays.asList("armeria", "armeria-1.14"), true))
+    assertThat(config.isInstrumentationEnabled(Arrays.asList("armeria", "armeria-1.14"), true))
         .isTrue();
   }
 }

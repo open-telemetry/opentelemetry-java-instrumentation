@@ -43,8 +43,7 @@ public final class OpenTelemetryInstaller {
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
-      AgentDistributionConfig.set(
-          AgentDistributionConfig.fromConfigProperties(configProperties));
+      AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
     }
     // else: AgentDistributionConfig is set by JavaagentDistributionAccessCustomizerProvider
     // from the distribution.javaagent YAML node

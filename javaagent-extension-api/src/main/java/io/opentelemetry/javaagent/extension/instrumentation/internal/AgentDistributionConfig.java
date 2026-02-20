@@ -47,10 +47,10 @@ public class AgentDistributionConfig {
   private final InstrumentationConfig instrumentation;
 
   /**
-   * Called early in agent bootstrap to signal that {@link #set(AgentDistributionConfig)} is expected
-   * to be called. After this, {@link #get()} will throw if the config has not been initialized.
-   * When this has not been called (e.g. during Gradle byteBuddyJava build tasks), {@link #get()}
-   * returns a default instance instead.
+   * Called early in agent bootstrap to signal that {@link #set(AgentDistributionConfig)} is
+   * expected to be called. After this, {@link #get()} will throw if the config has not been
+   * initialized. When this has not been called (e.g. during Gradle byteBuddyJava build tasks),
+   * {@link #get()} returns a default instance instead.
    */
   public static void expectInitialization() {
     initializationExpected = true;
