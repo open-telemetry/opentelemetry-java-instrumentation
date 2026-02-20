@@ -21,7 +21,7 @@ public class OshiMetricsInstaller implements AgentListener {
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     AgentDistributionConfig config = AgentDistributionConfig.get();
-    if (!config.isInstrumentationEnabled("oshi", config.isInstrumentationDefaultEnabled())) {
+    if (!config.isInstrumentationEnabled("oshi")) {
       return;
     }
 

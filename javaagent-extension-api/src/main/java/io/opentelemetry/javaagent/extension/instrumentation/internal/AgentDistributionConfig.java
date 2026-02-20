@@ -23,7 +23,7 @@ import java.util.Set;
  */
 public class AgentDistributionConfig {
   @SuppressWarnings("ConstantField") // needs to be mutable for @Initializer
-  private static volatile AgentDistributionConfig INSTANCE = new AgentDistributionConfig();
+  private static volatile AgentDistributionConfig INSTANCE;
 
   @JsonProperty("indy/development")
   private final boolean indyEnabled;
@@ -45,12 +45,16 @@ public class AgentDistributionConfig {
   private final InstrumentationConfig instrumentation;
 
   public static AgentDistributionConfig get() {
-    return INSTANCE;
+    AgentDistributionConfig instance = INSTANCE;
+    if (instance == null) {
+      throw new IllegalStateException("AgentDistributionConfig has not been initialized");
+    }
+    return instance;
   }
 
-  // Visible for testing
+  // Only used by tests
   public static void resetForTest() {
-    INSTANCE = new AgentDistributionConfig();
+    INSTANCE = null;
   }
 
   /**
@@ -75,6 +79,9 @@ public class AgentDistributionConfig {
 
   @Initializer
   public static void set(AgentDistributionConfig distributionConfig) {
+    if (INSTANCE != null) {
+      throw new IllegalStateException("AgentDistributionConfig has already been initialized");
+    }
     INSTANCE = distributionConfig;
   }
 
@@ -142,7 +149,16 @@ public class AgentDistributionConfig {
     return isInstrumentationEnabled(Collections.singletonList(name), defaultEnabled);
   }
 
-  // Visible for testing
+  /**
+   * Returns whether the given instrumentation is enabled, falling back to {@link
+   * #isInstrumentationDefaultEnabled()} if not explicitly configured.
+   */
+  public boolean isInstrumentationEnabled(String name) {
+    return isInstrumentationEnabled(
+        Collections.singletonList(name), isInstrumentationDefaultEnabled());
+  }
+
+  // Only used by tests
   InstrumentationConfig getInstrumentation() {
     return instrumentation;
   }
