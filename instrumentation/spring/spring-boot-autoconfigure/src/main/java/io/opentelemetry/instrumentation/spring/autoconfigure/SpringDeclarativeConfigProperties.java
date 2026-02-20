@@ -33,8 +33,8 @@ import javax.annotation.Nullable;
  * with only minor modifications to type coercion logic.
  *
  * <p>TODO: Revisit after https://github.com/open-telemetry/opentelemetry-java/issues/8101 — if
- * upstream {@code DeclarativeConfigProperties} exposes type introspection (e.g. {@code getType()} or
- * {@code isString()}), this full copy can be replaced with a thin type-coercing decorator around
+ * upstream {@code DeclarativeConfigProperties} exposes type introspection (e.g. {@code getType()}
+ * or {@code isString()}), this full copy can be replaced with a thin type-coercing decorator around
  * {@code DeclarativeConfigProperties}.
  */
 final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
