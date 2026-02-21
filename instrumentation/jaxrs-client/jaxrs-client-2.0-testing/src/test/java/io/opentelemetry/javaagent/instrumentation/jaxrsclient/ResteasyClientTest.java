@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.ClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
@@ -17,9 +18,9 @@ class ResteasyClientTest extends AbstractJaxRsClientTest {
   ClientBuilder builder(URI uri) {
     ResteasyClientBuilder builder =
         new ResteasyClientBuilder()
-            .establishConnectionTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+            .establishConnectionTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
     if (uri.toString().contains("/read-timeout")) {
-      builder.socketTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      builder.socketTimeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     }
     return builder;
   }

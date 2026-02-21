@@ -50,7 +50,9 @@ public enum JdbcConnectionUrlParser {
           if (colonIndex != -1) {
             user = user.substring(0, colonIndex);
           }
-          builder.user(user);
+          if (!user.isEmpty()) {
+            builder.user(user);
+          }
         }
 
         String path = uri.getPath();
@@ -1108,8 +1110,9 @@ public enum JdbcConnectionUrlParser {
 
   private static void populateStandardProperties(DbInfo.Builder builder, Map<?, ?> props) {
     if (props != null && !props.isEmpty()) {
-      if (props.containsKey("user")) {
-        builder.user((String) props.get("user"));
+      String user = (String) props.get("user");
+      if (user != null && !user.isEmpty()) {
+        builder.user(user);
       }
 
       if (props.containsKey("databasename")) {

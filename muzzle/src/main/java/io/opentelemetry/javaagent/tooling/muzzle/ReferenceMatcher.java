@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -141,7 +141,7 @@ public final class ReferenceMatcher {
         helperClass.getFields().stream()
             .filter(f -> !f.isDeclared())
             .map(f -> new HelperReferenceWrapper.Field(f.getName(), f.getDescriptor()))
-            .collect(Collectors.toSet());
+            .collect(toSet());
 
     // if there are any fields in this helper class that's not declared here, check the type
     // hierarchy

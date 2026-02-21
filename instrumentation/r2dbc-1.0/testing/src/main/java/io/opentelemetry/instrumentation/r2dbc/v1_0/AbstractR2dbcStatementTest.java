@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -22,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -159,7 +159,7 @@ public abstract class AbstractR2dbcStatementTest {
               Mono.from(connectionFactory.create())
                   .flatMapMany(
                       connection ->
-                          Mono.from(connection.createStatement(parameter.statement).execute())
+                          Mono.from(connection.createStatement(parameter.queryText).execute())
                               // Subscribe to the Statement.execute()
                               .flatMapMany(result -> result.map((row, metadata) -> ""))
                               .concatWith(Mono.from(connection.close()).cast(String.class)))
@@ -185,7 +185,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_SYSTEM), parameter.system),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv()
@@ -197,7 +197,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(
                                     maybeStable(DB_SQL_TABLE),
                                     emitStableDatabaseSemconv() ? null : parameter.table),
-                                equalTo(PEER_SERVICE, "test-peer-service"),
+                                equalTo(maybeStablePeerService(), "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -297,22 +297,22 @@ public abstract class AbstractR2dbcStatementTest {
   private static class Parameter {
 
     final String system;
-    final String statement;
-    final String expectedStatement;
+    final String queryText;
+    final String expectedQueryText;
     final String spanName;
     final String table;
     final String operation;
 
     Parameter(
         String system,
-        String statement,
-        String expectedStatement,
+        String queryText,
+        String expectedQueryText,
         String spanName,
         String table,
         String operation) {
       this.system = system;
-      this.statement = statement;
-      this.expectedStatement = expectedStatement;
+      this.queryText = queryText;
+      this.expectedQueryText = expectedQueryText;
       this.spanName = spanName;
       this.table = table;
       this.operation = operation;

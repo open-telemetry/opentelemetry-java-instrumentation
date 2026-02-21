@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -14,11 +15,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -58,21 +58,19 @@ class InstrumenterContextTest {
 
     assertThat(InstrumenterContext.get()).isEmpty();
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
-    // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
+    // verify that sanitized query was cached, see SqlQuerySanitizerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
-    Map<String, SqlStatementInfo> sanitizedMap =
-        (Map<String, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
+    Map<String, SqlQuery> sanitizedMap =
+        (Map<String, SqlQuery>) InstrumenterContext.get().get("sanitized-sql-map");
     assertThat(sanitizedMap).containsKey(testQuery);
 
     // replace cached sanitization result to verify it is used
     sanitizedMap.put(
-        testQuery,
-        SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+        testQuery, SqlQuery.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
-      assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
-          .isEqualTo("test2");
+      assertThat(builder.build().get(maybeStable(DB_SQL_TABLE))).isEqualTo("test2");
     }
 
     // clear cached value to see whether it gets recomputed correctly
@@ -80,8 +78,7 @@ class InstrumenterContextTest {
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
-      assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
-          .isEqualTo("test");
+      assertThat(builder.build().get(maybeStable(DB_SQL_TABLE))).isEqualTo("test");
     }
   }
 }

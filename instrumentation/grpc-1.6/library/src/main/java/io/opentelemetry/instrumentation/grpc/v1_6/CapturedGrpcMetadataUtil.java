@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 final class CapturedGrpcMetadataUtil {
   private static final String RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
@@ -21,8 +21,7 @@ final class CapturedGrpcMetadataUtil {
       new ConcurrentHashMap<>();
 
   static List<String> lowercase(List<String> names) {
-    return unmodifiableList(
-        names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(Collectors.toList()));
+    return unmodifiableList(names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList()));
   }
 
   static AttributeKey<List<String>> requestAttributeKey(String metadataKey) {

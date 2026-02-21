@@ -5,12 +5,13 @@
 
 package io.opentelemetry.smoketest.matrix;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -69,7 +70,7 @@ public class AsyncGreetingServlet extends HttpServlet {
     // wait on payara for the dispatch call and only after that exit from servlet code.
     if (isPayara) {
       try {
-        latch.await(30, TimeUnit.SECONDS);
+        latch.await(30, SECONDS);
         System.err.println("latch released");
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();

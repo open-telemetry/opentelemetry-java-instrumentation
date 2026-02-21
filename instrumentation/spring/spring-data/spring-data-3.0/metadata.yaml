@@ -1,1 +1,3 @@
+display_name: Spring Data
+description: This instrumentation enables spans for Spring Data repository method invocations.
 library_link: https://spring.io/projects/spring-data

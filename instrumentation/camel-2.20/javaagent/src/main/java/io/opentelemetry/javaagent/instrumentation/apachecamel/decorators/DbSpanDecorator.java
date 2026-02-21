@@ -23,14 +23,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.DbAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -39,8 +45,8 @@ import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final SqlQuerySanitizer sanitizer =
+      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   private final String component;
   private final String system;
@@ -85,7 +91,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
-  private String getDbName(Endpoint endpoint) {
+  private String getDbNamespace(Endpoint endpoint) {
     switch (component) {
       case "mongodb":
         Map<String, String> mongoParameters = toQueryParameters(endpoint.getEndpointUri());
@@ -119,21 +125,21 @@ class DbSpanDecorator extends BaseSpanDecorator {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(DbAttributes.DB_SYSTEM_NAME, system);
+      attributes.put(DB_SYSTEM_NAME, system);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
+      attributes.put(DB_SYSTEM, system);
     }
 
     setQueryAttributes(attributes, exchange);
 
-    String dbName = getDbName(endpoint);
-    if (dbName != null) {
+    String namespace = getDbNamespace(endpoint);
+    if (namespace != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_NAMESPACE, dbName);
+        attributes.put(DB_NAMESPACE, namespace);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+        attributes.put(DB_NAME, namespace);
       }
     }
   }
@@ -142,20 +148,19 @@ class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      SqlStatementInfo sqlStatementInfo =
+      SqlQuery sqlQuery =
           SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
-      SqlStatementInfo sqlStatementInfoWithSummary =
+      SqlQuery sqlQueryWithSummary =
           SemconvStability.emitStableDatabaseSemconv()
               ? sanitizer.sanitizeWithSummary(rawQueryText)
               : null;
 
-      if (sqlStatementInfoWithSummary != null) {
-        attributes.put(DbAttributes.DB_QUERY_TEXT, sqlStatementInfoWithSummary.getQueryText());
-        attributes.put(
-            DbAttributes.DB_QUERY_SUMMARY, sqlStatementInfoWithSummary.getQuerySummary());
+      if (sqlQueryWithSummary != null) {
+        attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
+        attributes.put(DB_QUERY_SUMMARY, sqlQueryWithSummary.getQuerySummary());
       }
-      if (sqlStatementInfo != null) {
-        attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlStatementInfo.getQueryText());
+      if (sqlQuery != null) {
+        attributes.put(DB_STATEMENT, sqlQuery.getQueryText());
       }
     }
   }

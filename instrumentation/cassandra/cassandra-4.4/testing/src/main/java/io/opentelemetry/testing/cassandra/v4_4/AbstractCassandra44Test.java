@@ -50,7 +50,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
         .runWithSpan(
             "parent",
             () ->
-                Flux.from(session.executeReactive(parameter.statement))
+                Flux.from(session.executeReactive(parameter.queryText))
                     .doOnComplete(() -> testing().runWithSpan("child", () -> {}))
                     .blockLast());
 
@@ -76,7 +76,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? parameter.spanName : null),

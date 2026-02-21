@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
+
 import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -17,9 +20,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -100,7 +101,7 @@ public final class ContainerResource {
           return Files.lines(path, Charset.forName("Cp1047"));
         } catch (UnsupportedCharsetException e) {
           // What charsets are available depends on the instance of the JVM
-          logger.log(Level.WARNING, "Unable to find charset Cp1047", e);
+          logger.log(WARNING, "Unable to find charset Cp1047", e);
           return Stream.empty();
         }
       } else {
@@ -110,7 +111,7 @@ public final class ContainerResource {
 
     List<String> lineList(Path path) throws IOException {
       try (Stream<String> lines = lines(path)) {
-        return lines.collect(Collectors.toList());
+        return lines.collect(toList());
       }
     }
   }

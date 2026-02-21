@@ -25,12 +25,16 @@ public abstract class CompletionListener<T> {
   private static final String HIT = "hit";
   private static final String MISS = "miss";
 
-  private final Context context;
   private final SpymemcachedRequest request;
+  private final Context context;
 
   protected CompletionListener(Context parentContext, SpymemcachedRequest request) {
     this.request = request;
     context = instrumenter().start(parentContext, request);
+  }
+
+  public Context getContext() {
+    return context;
   }
 
   protected void closeAsyncSpan(T future) {
@@ -74,5 +78,9 @@ public abstract class CompletionListener<T> {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute(MEMCACHED_RESULT, hit ? HIT : MISS);
     }
+  }
+
+  public void done(Throwable thrown) {
+    closeSyncSpan(thrown);
   }
 }
