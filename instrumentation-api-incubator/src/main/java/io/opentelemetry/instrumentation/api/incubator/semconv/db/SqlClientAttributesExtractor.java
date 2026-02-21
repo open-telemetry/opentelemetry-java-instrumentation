@@ -57,14 +57,14 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
-  private final AttributeKey<String> oldSemconvTableAttribute;
+  @Nullable private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean querySanitizationEnabled;
   private final boolean captureQueryParameters;
   private final boolean querySanitizationAnsiQuotes;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
-      AttributeKey<String> oldSemconvTableAttribute,
+      @Nullable AttributeKey<String> oldSemconvTableAttribute,
       boolean querySanitizationEnabled,
       boolean querySanitizationAnsiQuotes,
       boolean captureQueryParameters) {
@@ -97,7 +97,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(
             DB_STATEMENT, querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
         attributes.put(DB_OPERATION, operationName);
-        attributes.put(oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
+        if (oldSemconvTableAttribute != null) {
+          attributes.put(oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
+        }
       }
     }
 

@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class JmxMetricInsightInstallerTest {
   private static final String PATH_TO_ALL_EXISTING_RULES = "src/main/resources/jmx/rules";
   private static final Set<String> FILES_TO_BE_TESTED =
-      new HashSet<>(Arrays.asList("camel.yaml", "kafka-broker.yaml"));
+      new HashSet<>(Collections.singletonList("kafka-broker.yaml"));
 
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {

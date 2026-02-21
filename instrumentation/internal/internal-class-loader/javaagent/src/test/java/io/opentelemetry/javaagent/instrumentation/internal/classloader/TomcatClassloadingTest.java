@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -24,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.stream.Collectors;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot;
@@ -92,7 +92,7 @@ class TomcatClassloadingTest {
     String text =
         new BufferedReader(new InputStreamReader(inputStream, UTF_8))
             .lines()
-            .collect(Collectors.joining("\n"));
+            .collect(joining("\n"));
 
     assertThat(text).isEqualTo("hello");
   }

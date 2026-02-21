@@ -23,14 +23,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.DbAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -119,10 +125,10 @@ class DbSpanDecorator extends BaseSpanDecorator {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(DbAttributes.DB_SYSTEM_NAME, system);
+      attributes.put(DB_SYSTEM_NAME, system);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
+      attributes.put(DB_SYSTEM, system);
     }
 
     setQueryAttributes(attributes, exchange);
@@ -130,10 +136,10 @@ class DbSpanDecorator extends BaseSpanDecorator {
     String namespace = getDbNamespace(endpoint);
     if (namespace != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_NAMESPACE, namespace);
+        attributes.put(DB_NAMESPACE, namespace);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_NAME, namespace);
+        attributes.put(DB_NAME, namespace);
       }
     }
   }
@@ -150,11 +156,11 @@ class DbSpanDecorator extends BaseSpanDecorator {
               : null;
 
       if (sqlQueryWithSummary != null) {
-        attributes.put(DbAttributes.DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
-        attributes.put(DbAttributes.DB_QUERY_SUMMARY, sqlQueryWithSummary.getQuerySummary());
+        attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
+        attributes.put(DB_QUERY_SUMMARY, sqlQueryWithSummary.getQuerySummary());
       }
       if (sqlQuery != null) {
-        attributes.put(DbIncubatingAttributes.DB_STATEMENT, sqlQuery.getQueryText());
+        attributes.put(DB_STATEMENT, sqlQuery.getQueryText());
       }
     }
   }

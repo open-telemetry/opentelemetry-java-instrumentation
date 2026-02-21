@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
@@ -15,7 +16,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Resour
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -47,7 +47,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
           Set<String> names =
               detectors.stream()
                   .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())
-                  .collect(Collectors.toSet());
+                  .collect(toSet());
 
           for (String name : REQUIRED_DETECTORS) {
             if (!names.contains(name)) {

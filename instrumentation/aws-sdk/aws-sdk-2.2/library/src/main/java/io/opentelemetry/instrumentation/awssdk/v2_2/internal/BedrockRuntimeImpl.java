@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
@@ -26,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
@@ -443,7 +443,7 @@ public final class BedrockRuntimeImpl {
       return stopSequences.asList().stream()
           .filter(Document::isString)
           .map(Document::asString)
-          .collect(Collectors.toList());
+          .collect(toList());
     }
     return null;
   }
@@ -1039,7 +1039,7 @@ public final class BedrockRuntimeImpl {
                         return null;
                       })
                   .filter(Objects::nonNull)
-                  .collect(Collectors.toList());
+                  .collect(toList());
           resultBlockBuilder.content(toolResultContentBlocks);
         }
         return ContentBlock.fromToolResult(resultBlockBuilder.build());
@@ -1723,7 +1723,7 @@ public final class BedrockRuntimeImpl {
       List<Value<?>> toolCallValues =
           toolCalls.stream()
               .map(tool -> convertToolCall(tool, captureMessageContent))
-              .collect(Collectors.toList());
+              .collect(toList());
       body.put("toolCalls", Value.of(toolCallValues));
     }
     if (stopReason != null) {

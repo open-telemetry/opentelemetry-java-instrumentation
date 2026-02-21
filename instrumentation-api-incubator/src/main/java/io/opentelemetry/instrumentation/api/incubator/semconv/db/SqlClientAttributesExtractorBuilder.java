@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static java.util.Objects.requireNonNull;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import javax.annotation.Nullable;
 
 /** A builder of {@link SqlClientAttributesExtractor}. */
 public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
@@ -18,7 +17,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   private static final AttributeKey<String> DB_SQL_TABLE = AttributeKey.stringKey("db.sql.table");
 
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
-  AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
+  @Nullable AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean querySanitizationEnabled = true;
   boolean querySanitizationAnsiQuotes = false;
   boolean captureQueryParameters = false;
@@ -28,13 +27,16 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Sets the attribute key for the old semconv table attribute. Pass {@code null} to disable
+   * emitting any table attribute under old semconv.
+   *
    * @deprecated new semantic conventions always use db.collection.name
    */
   @CanIgnoreReturnValue
   @Deprecated // to be removed in 3.0
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
-      AttributeKey<String> oldSemconvTableAttribute) {
-    this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
+      @Nullable AttributeKey<String> oldSemconvTableAttribute) {
+    this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     return this;
   }
 

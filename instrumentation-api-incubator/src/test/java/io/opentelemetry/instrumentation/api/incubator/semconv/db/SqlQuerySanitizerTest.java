@@ -875,6 +875,13 @@ class SqlQuerySanitizerTest {
         Arguments.of("SELECT * FROM exec", expect("SELECT", "exec", "SELECT exec")),
         Arguments.of("SELECT * FROM execute", expect("SELECT", "execute", "SELECT execute")),
 
+        // Oracle database link syntax (table@dblink)
+        Arguments.of(
+            "SELECT * FROM users@remote_db", expect("SELECT", "users", "SELECT users@remote_db")),
+        Arguments.of(
+            "SELECT * FROM schema.users@remote_db",
+            expect("SELECT", "schema.users", "SELECT schema.users@remote_db")),
+
         // SQL keywords used as column names
         Arguments.of(
             "SELECT insert, update FROM mytable", expect("SELECT", "mytable", "SELECT mytable")),

@@ -76,7 +76,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -482,7 +481,7 @@ public class TelemetryConverter {
   private static List<ValueAtQuantile> getValues(SummaryDataPoint point) {
     return point.getQuantileValuesList().stream()
         .map(v -> ImmutableValueAtQuantile.create(v.getQuantile(), v.getValue()))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static AggregationTemporality getTemporality(

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -15,8 +18,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalCli
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.InternalUrlAttributesExtractor;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -79,8 +80,8 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
     internalServerExtractor.onStart(attributes, request);
     internalClientExtractor.onStart(attributes, request);
 
-    attributes.put(HttpAttributes.HTTP_ROUTE, getter.getHttpRoute(request));
-    attributes.put(UserAgentAttributes.USER_AGENT_ORIGINAL, userAgent(request));
+    attributes.put(HTTP_ROUTE, getter.getHttpRoute(request));
+    attributes.put(USER_AGENT_ORIGINAL, userAgent(request));
   }
 
   @Override
@@ -95,7 +96,7 @@ public final class HttpServerAttributesExtractor<REQUEST, RESPONSE>
 
     internalNetworkExtractor.onEnd(attributes, request, response);
 
-    attributes.put(HttpAttributes.HTTP_ROUTE, httpRouteGetter.apply(context));
+    attributes.put(HTTP_ROUTE, httpRouteGetter.apply(context));
   }
 
   /**

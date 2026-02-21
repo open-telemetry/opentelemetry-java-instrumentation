@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -91,6 +91,6 @@ enum KafkaProducerAttributesGetter
     return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
         .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), UTF_8))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

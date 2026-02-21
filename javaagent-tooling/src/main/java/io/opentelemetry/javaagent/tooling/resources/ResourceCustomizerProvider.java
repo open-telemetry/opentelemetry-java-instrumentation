@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.resources;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
@@ -16,7 +17,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Resour
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Adds essential resource detectors to the resource model in declarative configuration, if they are
@@ -49,7 +49,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
           Set<String> names =
               detectors.stream()
                   .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())
-                  .collect(Collectors.toSet());
+                  .collect(toSet());
 
           for (String name : REQUIRED_DETECTORS) {
             if (!names.contains(name)) {

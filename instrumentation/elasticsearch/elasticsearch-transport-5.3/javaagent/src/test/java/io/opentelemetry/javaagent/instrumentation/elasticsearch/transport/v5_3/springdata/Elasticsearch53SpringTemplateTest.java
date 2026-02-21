@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.client.Client;
@@ -401,7 +401,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
               results.addAll(
                   StreamSupport.stream(response.getHits().spliterator(), false)
                       .map(SearchHit::getSource)
-                      .collect(Collectors.toList()));
+                      .collect(toList()));
               if (response.getAggregations() != null) {
                 InternalNested internalNested = response.getAggregations().get("tag");
                 if (internalNested != null) {
