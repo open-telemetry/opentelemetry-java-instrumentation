@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
@@ -30,7 +31,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -196,7 +196,7 @@ public abstract class AbstractElasticsearchTransportClientTest
     assertThat(emptyResult.getIndex()).isEqualTo(indexName);
 
     IndexResponse createResult =
-        client.prepareIndex(indexName, indexType, id).setSource(Collections.emptyMap()).get();
+        client.prepareIndex(indexName, indexType, id).setSource(emptyMap()).get();
     assertThat(createResult.getId()).isEqualTo(id);
     assertThat(createResult.getType()).isEqualTo(indexType);
     assertThat(createResult.getIndex()).isEqualTo(indexName);

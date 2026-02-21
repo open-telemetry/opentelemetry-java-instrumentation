@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0;
 
+import static java.util.Collections.singletonList;
+
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerSingletons;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -64,8 +65,7 @@ public class OpenTelemetryMeterRegistryAutoConfiguration {
               Comparator.comparingInt(
                   value -> value == MicrometerSingletons.meterRegistry() ? 1 : 0));
           Set<MeterRegistry> registries = new LinkedHashSet<>(list);
-          return new CompositeMeterRegistry(
-              original.config().clock(), Collections.singletonList(original)) {
+          return new CompositeMeterRegistry(original.config().clock(), singletonList(original)) {
             @Override
             public Set<MeterRegistry> getRegistries() {
               return registries;

@@ -14,6 +14,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +35,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +103,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
     testNode =
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
-            Collections.singletonList(Netty3Plugin.class)) {};
+            singletonList(Netty3Plugin.class)) {};
     // retry when starting elasticsearch fails with
     // org.elasticsearch.http.BindHttpException: Failed to resolve host [[]]
     // Caused by: java.net.SocketException: No such device (getFlags() failed)
@@ -138,7 +140,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          Collections.singletonMap(
+                          singletonMap(
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
@@ -206,7 +208,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         new NativeSearchQueryBuilder()
             .withIndices(indexName)
             .withTypes(indexType)
-            .withIds(Collections.singleton(id))
+            .withIds(singleton(id))
             .build();
     assertThat(template.queryForIds(query)).isEmpty();
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static java.util.Collections.singletonList;
 
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -15,7 +16,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -53,7 +53,7 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
     }
 
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
-    attributes.put(AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
+    attributes.put(AWS_DYNAMODB_TABLE_NAMES, singletonList(tableName));
   }
 
   private static String getOperationName(Object request) {
