@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -43,7 +44,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -109,7 +109,7 @@ class Netty41ClientSslTest {
   @Test
   @DisplayName("should fail SSL handshake")
   public void testFailSslHandshake() throws Exception {
-    Bootstrap bootstrap = createBootstrap(eventLoopGroup, Collections.singletonList("SSLv3"));
+    Bootstrap bootstrap = createBootstrap(eventLoopGroup, singletonList("SSLv3"));
     URI uri = server.resolveHttpsAddress("/success");
     DefaultFullHttpRequest request =
         new DefaultFullHttpRequest(

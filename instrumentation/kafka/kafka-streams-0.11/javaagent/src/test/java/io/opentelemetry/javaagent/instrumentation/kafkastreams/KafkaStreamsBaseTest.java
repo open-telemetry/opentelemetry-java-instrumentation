@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -19,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -158,7 +158,7 @@ abstract class KafkaStreamsBaseTest {
     if (consumerReady.getCount() != 0) {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
-    consumer.seekToBeginning(Collections.emptyList());
+    consumer.seekToBeginning(emptyList());
   }
 
   public static ConsumerRecords<Integer, String> poll(Duration duration) {
@@ -183,7 +183,7 @@ abstract class KafkaStreamsBaseTest {
 
               @Override
               public Iterable<String> keys(String carrier) {
-                return Collections.singleton("traceparent");
+                return singleton("traceparent");
               }
             });
   }

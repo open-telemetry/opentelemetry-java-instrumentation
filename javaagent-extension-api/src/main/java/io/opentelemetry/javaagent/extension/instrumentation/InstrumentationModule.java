@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.extension.instrumentation;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
@@ -14,7 +15,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -172,7 +172,7 @@ public abstract class InstrumentationModule implements Ordered {
    * detected ones.
    */
   public List<String> getAdditionalHelperClassNames() {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private static class IndyConfigurationHolder {

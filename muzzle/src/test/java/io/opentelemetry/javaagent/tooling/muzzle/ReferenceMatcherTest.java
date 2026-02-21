@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumV
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.NON_STATIC;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.STATIC;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -31,7 +32,6 @@ import io.opentelemetry.test.TestInterface;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -517,7 +517,7 @@ class ReferenceMatcherTest {
   }
 
   private static ReferenceMatcher createMatcher(Map<String, ClassRef> references) {
-    return createMatcher(references, Collections.emptyList());
+    return createMatcher(references, emptyList());
   }
 
   private static ReferenceMatcher createMatcher(

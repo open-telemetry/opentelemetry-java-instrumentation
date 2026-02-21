@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
+import static java.util.Collections.singletonList;
+
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty41ClientTest extends AbstractNetty41ClientTest {
@@ -26,9 +27,9 @@ class Netty41ClientTest extends AbstractNetty41ClientTest {
               channelPipeline.addLast(
                   NettyClientTelemetry.builder(testing.getOpenTelemetry())
                       .setCapturedRequestHeaders(
-                          Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+                          singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
                       .setCapturedResponseHeaders(
-                          Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+                          singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
                       .build()
                       .createCombinedHandler()));
 

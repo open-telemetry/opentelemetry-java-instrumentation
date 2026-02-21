@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -145,7 +145,7 @@ class LambdaContextPropagationTest {
               assertBaggage();
               return null;
             };
-        executor.invokeAny(Collections.singletonList(callable));
+        executor.invokeAny(singletonList(callable));
       }
     }
 

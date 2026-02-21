@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -35,7 +36,6 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -60,8 +60,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
 
   protected CouchbaseCluster prepareCluster(BucketSettings bucketSettings) {
     CouchbaseEnvironment environment = envBuilder(bucketSettings).build();
-    CouchbaseCluster cluster =
-        CouchbaseCluster.create(environment, Collections.singletonList("127.0.0.1"));
+    CouchbaseCluster cluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
     cleanup.deferCleanup(cluster::disconnect);
     cleanup.deferCleanup(environment::shutdown);
 

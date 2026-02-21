@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,7 +33,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new CouchbaseEnvironmentInstrumentation());
+    return singletonList(new CouchbaseEnvironmentInstrumentation());
   }
 
   @Override

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.lang.ref.WeakReference;
@@ -13,7 +15,6 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +114,7 @@ public final class JdbcData {
 
   public static Map<String, String> getParameters(PreparedStatement statement) {
     Map<String, String> parametersMap = parameters.get(statement);
-    return parametersMap != null ? parametersMap : Collections.emptyMap();
+    return parametersMap != null ? parametersMap : emptyMap();
   }
 
   public static void addParameter(PreparedStatement statement, String key, String value) {

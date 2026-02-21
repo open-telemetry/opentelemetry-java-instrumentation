@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,7 +24,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Enumeration;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.WebResource;
@@ -75,7 +75,7 @@ class TomcatClassloadingTest {
 
     Files.write(tmpFile, "hello".getBytes(UTF_8));
     URL url = tmpFile.toUri().toURL();
-    HelperResources.register(classloader, "hello.txt", Collections.singletonList(url));
+    HelperResources.register(classloader, "hello.txt", singletonList(url));
 
     assertThat(classloader.getResource("hello.txt")).isNotNull();
 

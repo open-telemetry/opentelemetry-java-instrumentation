@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -37,7 +38,6 @@ import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.I
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -238,7 +238,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     SendMessageRequest newSendMessageRequest =
         sendMessageRequest.toBuilder()
             .messageAttributes(
-                Collections.singletonMap(
+                singletonMap(
                     "Test-Message-Header",
                     MessageAttributeValue.builder().dataType("String").stringValue("test").build()))
             .build();

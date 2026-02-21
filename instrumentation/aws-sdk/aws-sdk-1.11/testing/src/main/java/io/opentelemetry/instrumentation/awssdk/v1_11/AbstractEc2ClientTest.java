@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractEc2ClientTest extends AbstractBaseAwsClientTest {
@@ -41,6 +42,6 @@ public abstract class AbstractEc2ClientTest extends AbstractBaseAwsClientTest {
 
     Object response = client.allocateAddress();
     assertRequestWithMockedResponse(
-        response, client, "EC2", "AllocateAddress", "POST", Collections.emptyList());
+        response, client, "EC2", "AllocateAddress", "POST", emptyList());
   }
 }

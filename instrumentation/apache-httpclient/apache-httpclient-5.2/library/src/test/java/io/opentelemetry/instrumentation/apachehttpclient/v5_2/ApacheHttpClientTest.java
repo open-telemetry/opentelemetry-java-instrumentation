@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import java.util.Collections;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -32,10 +33,8 @@ class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
   protected CloseableHttpClient createClient(boolean readTimeout) {
     HttpClientBuilder builder =
         ApacheHttpClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(
-                Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(
-                Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+            .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+            .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build()
             .createHttpClientBuilder();
     builder.setDefaultRequestConfig(RequestConfig.custom().setMaxRedirects(2).build());

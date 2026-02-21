@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.javax;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import java.security.Principal;
 import java.util.Arrays;
@@ -73,7 +75,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
     @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> values = request.getHeaders(name);
-    return values == null ? Collections.emptyList() : Collections.list(values);
+    return values == null ? emptyList() : Collections.list(values);
   }
 
   @Override
@@ -87,7 +89,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   public List<String> getRequestParameterValues(
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
-    return values == null ? Collections.emptyList() : Arrays.asList(values);
+    return values == null ? emptyList() : Arrays.asList(values);
   }
 
   @Override

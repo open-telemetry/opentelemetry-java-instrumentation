@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
@@ -13,7 +14,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectionModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ResourceModel;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -26,7 +26,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
   // opentelemetry-javaagent-distribution: adds "distro.name" and "distro.version" attributes
   // (DistroComponentProvider in this package)
   private static final List<String> REQUIRED_DETECTORS =
-      Collections.singletonList("opentelemetry_spring_boot_starter");
+      singletonList("opentelemetry_spring_boot_starter");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {

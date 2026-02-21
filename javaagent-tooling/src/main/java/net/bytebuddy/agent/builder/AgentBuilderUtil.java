@@ -5,6 +5,7 @@
 
 package net.bytebuddy.agent.builder;
 
+import static java.util.Collections.emptyIterator;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
@@ -13,7 +14,6 @@ import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -107,7 +107,7 @@ public class AgentBuilderUtil {
                     // we already know that loading this class is going to fail, no need to
                     // transform it
                     if (DefineClassHandler.isFailedClass(name)) {
-                      return Collections.emptyIterator();
+                      return emptyIterator();
                     }
                     Set<String> loadingSuperTypes = DefineClassHandler.getSuperTypes();
                     // super types set should contain at least java.lang.Object if this set is

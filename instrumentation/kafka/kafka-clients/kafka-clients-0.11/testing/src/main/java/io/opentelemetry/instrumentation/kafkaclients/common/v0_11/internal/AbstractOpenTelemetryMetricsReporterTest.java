@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -24,7 +25,6 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -372,7 +372,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                               point.getAttributes().asMap().keySet().stream()
                                   .map(AttributeKey::getKey)
                                   .collect(toSet()))
-                      .orElse(Collections.emptySet());
+                      .orElse(emptySet());
               assertThat(metricData.getData().getPoints())
                   .extracting(PointData::getAttributes)
                   .extracting(

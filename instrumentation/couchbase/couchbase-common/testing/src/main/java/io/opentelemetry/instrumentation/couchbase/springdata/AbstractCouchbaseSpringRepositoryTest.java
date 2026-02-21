@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.Cluster;
@@ -29,7 +30,6 @@ import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,8 +51,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   @BeforeAll
   void setUp() {
     CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build();
-    Cluster couchbaseCluster =
-        CouchbaseCluster.create(environment, Collections.singletonList("127.0.0.1"));
+    Cluster couchbaseCluster = CouchbaseCluster.create(environment, singletonList("127.0.0.1"));
 
     // Create view for SpringRepository's findAll()
     couchbaseCluster
@@ -61,7 +60,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
         .insertDesignDocument(
             DesignDocument.create(
                 "testDocument",
-                Collections.singletonList(
+                singletonList(
                     DefaultView.create(
                         "all",
                         "function (doc, meta) {"

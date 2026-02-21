@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,7 +20,6 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
@@ -111,7 +111,7 @@ public final class HostIdResource {
       return lines;
     } catch (IOException e) {
       logger.log(FINE, "Failed to read /etc/machine-id", e);
-      return Collections.emptyList();
+      return emptyList();
     }
   }
 
@@ -145,13 +145,13 @@ public final class HostIdResource {
                 + " Output: "
                 + String.join("\n", output));
 
-        return Collections.emptyList();
+        return emptyList();
       }
 
       return output;
     } catch (IOException | InterruptedException e) {
       logger.log(FINE, "Failed to read Windows registry", e);
-      return Collections.emptyList();
+      return emptyList();
     }
   }
 

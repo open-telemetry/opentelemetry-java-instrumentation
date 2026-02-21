@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,7 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -460,7 +460,7 @@ public final class BedrockRuntimeImpl {
     if (sdkResponse instanceof ConverseResponse) {
       StopReason reason = ((ConverseResponse) sdkResponse).stopReason();
       if (reason != null) {
-        return Collections.singletonList(reason.toString());
+        return singletonList(reason.toString());
       }
     } else {
       BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
@@ -535,7 +535,7 @@ public final class BedrockRuntimeImpl {
       return stopReasons;
     }
     if (stopReason != null && stopReason.isString()) {
-      return Collections.singletonList(stopReason.asString());
+      return singletonList(stopReason.asString());
     }
     return null;
   }
@@ -799,7 +799,7 @@ public final class BedrockRuntimeImpl {
               .content(ContentBlock.fromText(inputText.asString()))
               .build();
       recordRequestMessageEvents(
-          otelContext, eventLogger, Collections.singletonList(message), captureMessageContent);
+          otelContext, eventLogger, singletonList(message), captureMessageContent);
       return;
     }
 

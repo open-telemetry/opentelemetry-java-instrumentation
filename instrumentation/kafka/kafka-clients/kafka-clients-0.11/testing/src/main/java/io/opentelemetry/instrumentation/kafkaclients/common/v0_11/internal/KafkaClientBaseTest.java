@@ -19,6 +19,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,7 +30,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,7 @@ public abstract class KafkaClientBaseTest {
 
     try (AdminClient admin = AdminClient.create(adminProps)) {
       admin
-          .createTopics(Collections.singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
+          .createTopics(singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
           .all()
           .get(30, SECONDS);
     }
@@ -105,7 +106,7 @@ public abstract class KafkaClientBaseTest {
     consumer = new KafkaConsumer<>(consumerProps());
 
     consumer.subscribe(
-        Collections.singletonList(SHARED_TOPIC),
+        singletonList(SHARED_TOPIC),
         new ConsumerRebalanceListener() {
           @Override
           public void onPartitionsRevoked(Collection<TopicPartition> collection) {}
@@ -165,7 +166,7 @@ public abstract class KafkaClientBaseTest {
     if (consumerReady.getCount() != 0) {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
-    consumer.seekToBeginning(Collections.emptyList());
+    consumer.seekToBeginning(emptyList());
   }
 
   public ConsumerRecords<Integer, String> poll(Duration duration) {
@@ -194,7 +195,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -217,7 +218,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -256,7 +257,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
 
     if (testMultiBaggage) {

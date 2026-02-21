@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.FieldRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -196,7 +195,7 @@ public final class ReferenceMatcher {
 
   private static List<Mismatch> checkThirdPartyTypeMatch(
       ClassRef reference, TypeDescription typeOnClasspath) {
-    List<Mismatch> mismatches = Collections.emptyList();
+    List<Mismatch> mismatches = emptyList();
 
     for (Flag flag : reference.getFlags()) {
       if (!flag.matches(typeOnClasspath.getActualModifiers(false))) {

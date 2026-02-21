@@ -13,6 +13,8 @@ import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -24,7 +26,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambd
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.reflect.Constructor;
-import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,8 +66,8 @@ class AwsLambdaSqsEventWrapperTest {
     SQSEvent event = new SQSEvent();
     SQSEvent.SQSMessage record = newMessage();
     record.setEventSource("otel");
-    record.setAttributes(Collections.emptyMap());
-    event.setRecords(Collections.singletonList(record));
+    record.setAttributes(emptyMap());
+    event.setRecords(singletonList(record));
 
     TracingSqsEventWrapper wrapper =
         new TracingSqsEventWrapper(

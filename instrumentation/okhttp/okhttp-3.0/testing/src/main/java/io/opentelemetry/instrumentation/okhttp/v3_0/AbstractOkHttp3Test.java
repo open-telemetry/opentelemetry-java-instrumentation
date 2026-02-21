@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -154,7 +154,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
     testing.runWithSpan(
         "parent",
         () -> {
-          Request request = buildRequest(method, uri, Collections.emptyMap());
+          Request request = buildRequest(method, uri, emptyMap());
           testClient
               .newCall(request)
               .enqueue(

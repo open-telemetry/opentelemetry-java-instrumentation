@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,7 +30,7 @@ enum SpringWebMvcHttpAttributesGetter
   @Override
   public List<String> getHttpRequestHeader(HttpServletRequest request, String name) {
     Enumeration<String> headers = request.getHeaders(name);
-    return headers == null ? Collections.emptyList() : Collections.list(headers);
+    return headers == null ? emptyList() : Collections.list(headers);
   }
 
   @Override
@@ -55,7 +57,7 @@ enum SpringWebMvcHttpAttributesGetter
       HttpServletRequest request, HttpServletResponse response, String name) {
     Collection<String> headers = response.getHeaders(name);
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     if (headers instanceof List) {
       return (List<String>) headers;

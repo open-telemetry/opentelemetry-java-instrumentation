@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.connectionFromStatement;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.extractDbInfo;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -15,7 +17,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -87,7 +88,7 @@ public abstract class DbRequest {
       boolean parameterizedQuery) {
     return create(
         dbInfo,
-        Collections.singletonList(queryText),
+        singletonList(queryText),
         batchSize,
         preparedStatementParameters,
         parameterizedQuery);
@@ -130,7 +131,7 @@ public abstract class DbRequest {
   }
 
   public static DbRequest createTransaction(DbInfo dbInfo, String operationName) {
-    return create(dbInfo, Collections.emptyList(), null, operationName, emptyMap(), false);
+    return create(dbInfo, emptyList(), null, operationName, emptyMap(), false);
   }
 
   public abstract DbInfo getDbInfo();

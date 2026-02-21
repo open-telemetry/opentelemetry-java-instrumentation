@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -23,7 +23,7 @@ public final class MapUtils {
   }
 
   public static Map<String, String> emptyIfNull(Map<String, String> map) {
-    return map == null ? Collections.emptyMap() : map;
+    return map == null ? emptyMap() : map;
   }
 
   private MapUtils() {}

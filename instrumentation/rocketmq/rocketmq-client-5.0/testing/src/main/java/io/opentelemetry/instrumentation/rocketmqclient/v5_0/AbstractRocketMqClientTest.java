@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.FIFO;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -37,7 +38,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -375,7 +375,7 @@ public abstract class AbstractRocketMqClientTest {
                               equalTo(
                                   AttributeKey.stringArrayKey(
                                       "messaging.header.Test_Message_Header"),
-                                  Collections.singletonList("test")))
+                                  singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
@@ -395,7 +395,7 @@ public abstract class AbstractRocketMqClientTest {
                                 equalTo(
                                     AttributeKey.stringArrayKey(
                                         "messaging.header.Test_Message_Header"),
-                                    Collections.singletonList("test")))
+                                    singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),
                     span ->

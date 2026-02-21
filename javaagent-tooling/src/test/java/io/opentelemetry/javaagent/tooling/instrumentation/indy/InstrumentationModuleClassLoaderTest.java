@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Collections.emptyList;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -230,7 +231,7 @@ class InstrumentationModuleClassLoaderTest {
 
     @Override
     public List<TypeInstrumentation> typeInstrumentations() {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override

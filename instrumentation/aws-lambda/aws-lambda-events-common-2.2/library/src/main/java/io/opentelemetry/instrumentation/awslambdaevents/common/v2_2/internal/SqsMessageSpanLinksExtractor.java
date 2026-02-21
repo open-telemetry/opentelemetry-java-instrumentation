@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static java.util.Collections.singletonMap;
+
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -13,7 +15,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ class SqsMessageSpanLinksExtractor implements SpanLinksExtractor<SQSMessage> {
           AwsXrayPropagator.getInstance()
               .extract(
                   Context.root(), // We don't want the ambient context.
-                  Collections.singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
+                  singletonMap(AWS_TRACE_HEADER_PROPAGATOR_KEY, parentHeader),
                   MapGetter.INSTANCE);
       SpanContext messageSpanCtx = Span.fromContext(xrayContext).getSpanContext();
       if (messageSpanCtx.isValid()) {

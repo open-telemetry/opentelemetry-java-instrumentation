@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -23,7 +24,6 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -161,7 +161,7 @@ public class YamlHelper {
         Map<String, Object> telemetryEntry = new LinkedHashMap<>();
         telemetryEntry.put("when", group);
         List<EmittedMetrics.Metric> metrics =
-            new ArrayList<>(module.getMetrics().getOrDefault(group, Collections.emptyList()));
+            new ArrayList<>(module.getMetrics().getOrDefault(group, emptyList()));
         List<Map<String, Object>> metricsList = new ArrayList<>();
 
         // sort by name for determinism in the order
@@ -175,7 +175,7 @@ public class YamlHelper {
         }
 
         List<EmittedSpans.Span> spans =
-            new ArrayList<>(module.getSpans().getOrDefault(group, Collections.emptyList()));
+            new ArrayList<>(module.getSpans().getOrDefault(group, emptyList()));
         List<Map<String, Object>> spanList = new ArrayList<>();
 
         // sort by name for determinism in the order

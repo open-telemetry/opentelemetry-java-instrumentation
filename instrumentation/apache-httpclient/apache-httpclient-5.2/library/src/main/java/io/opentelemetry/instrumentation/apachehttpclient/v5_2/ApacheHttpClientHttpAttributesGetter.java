@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
@@ -58,7 +59,7 @@ enum ApacheHttpClientHttpAttributesGetter
   // minimize memory overhead by not using streams
   private static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (Header header : headers) {

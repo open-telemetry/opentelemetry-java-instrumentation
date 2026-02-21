@@ -36,6 +36,11 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "[A-Z][A-Z_0-9]*"
       ),
       Triple(
+        "Collections",
+        "java.util.Collections",
+        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*"
+      ),
+      Triple(
         "ArgumentMatchers",
         "org.mockito.ArgumentMatchers",
         "[a-z][a-zA-Z0-9]*"

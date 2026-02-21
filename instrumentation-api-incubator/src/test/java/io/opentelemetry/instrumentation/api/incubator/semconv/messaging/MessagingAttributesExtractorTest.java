@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -25,7 +26,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,10 +122,10 @@ class MessagingAttributesExtractorTest {
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
-    underTest.onStart(startAttributes, context, Collections.emptyMap());
+    underTest.onStart(startAttributes, context, emptyMap());
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, context, Collections.emptyMap(), null, null);
+    underTest.onEnd(endAttributes, context, emptyMap(), null, null);
 
     // then
     assertThat(startAttributes.build().isEmpty()).isTrue();

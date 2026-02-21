@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
@@ -35,24 +37,22 @@ class MethodsConfigurationParserTest {
         Arguments.of(" ", emptyMap()),
         Arguments.of(
             "some.package.ClassName",
-            Collections.<String, Set<String>>singletonMap(
-                "some.package.ClassName", Collections.emptySet())),
+            Collections.<String, Set<String>>singletonMap("some.package.ClassName", emptySet())),
         Arguments.of("some.package.ClassName[ , ]", emptyMap()),
         Arguments.of("some.package.ClassName[ , method]", emptyMap()),
         Arguments.of(
             "some.package.Class$Name[ method , ]",
-            Collections.singletonMap("some.package.Class$Name", createSet("method"))),
-        Arguments.of(
-            "ClassName[ method1,]", Collections.singletonMap("ClassName", createSet("method1"))),
+            singletonMap("some.package.Class$Name", createSet("method"))),
+        Arguments.of("ClassName[ method1,]", singletonMap("ClassName", createSet("method1"))),
         Arguments.of(
             "ClassName[method1 , method2]",
-            Collections.singletonMap("ClassName", createSet("method1", "method2"))),
+            singletonMap("ClassName", createSet("method1", "method2"))),
         Arguments.of(
             "Class$1[method1 ] ; Class$2[ method2];",
             createTwoEntryMap("Class$1", createSet("method1"), "Class$2", createSet("method2"))),
         Arguments.of(
             "Duplicate[method1] ; Duplicate[method2]  ;Duplicate[method3];",
-            Collections.singletonMap("Duplicate", createSet("method3"))));
+            singletonMap("Duplicate", createSet("method3"))));
   }
 
   private static Map<String, Set<String>> createTwoEntryMap(

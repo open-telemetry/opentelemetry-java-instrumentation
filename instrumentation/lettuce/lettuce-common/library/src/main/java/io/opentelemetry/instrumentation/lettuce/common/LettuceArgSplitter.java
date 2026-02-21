@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.lettuce.common;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,7 +21,7 @@ public final class LettuceArgSplitter {
   // string
   public static List<String> splitArgs(@Nullable String args) {
     if (args == null || args.isEmpty()) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<String> argsList = new ArrayList<>();

@@ -6,12 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationInstrumentation.DEFAULT_ANNOTATIONS;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Stream;
@@ -40,15 +41,13 @@ class IncludeTest {
   private static Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(null, DEFAULT_ANNOTATIONS),
-        Arguments.of(" ", Collections.emptyList()),
-        Arguments.of("some.Invalid[]", Collections.emptyList()),
-        Arguments.of(
-            "some.package.ClassName ", Collections.singletonList("some.package.ClassName")),
-        Arguments.of(
-            " some.package.Class$Name", Collections.singletonList("some.package.Class$Name")),
-        Arguments.of("  ClassName  ", Collections.singletonList("ClassName")),
-        Arguments.of("ClassName", Collections.singletonList("ClassName")),
+        Arguments.of(" ", emptyList()),
+        Arguments.of("some.Invalid[]", emptyList()),
+        Arguments.of("some.package.ClassName ", singletonList("some.package.ClassName")),
+        Arguments.of(" some.package.Class$Name", singletonList("some.package.Class$Name")),
+        Arguments.of("  ClassName  ", singletonList("ClassName")),
+        Arguments.of("ClassName", singletonList("ClassName")),
         Arguments.of("Class$1;Class$2", Arrays.asList("Class$1", "Class$2")),
-        Arguments.of("Duplicate ;Duplicate ;Duplicate; ", Collections.singletonList("Duplicate")));
+        Arguments.of("Duplicate ;Duplicate ;Duplicate; ", singletonList("Duplicate")));
   }
 }

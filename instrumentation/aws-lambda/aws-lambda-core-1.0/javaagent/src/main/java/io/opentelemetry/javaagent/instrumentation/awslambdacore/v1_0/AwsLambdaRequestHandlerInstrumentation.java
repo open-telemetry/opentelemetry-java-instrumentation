@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.flushTimeout;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaSingletons.functionInstrumenter;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -23,7 +24,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Collections;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -77,8 +77,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
       @Nullable
       public static AdviceScope start(Object arg, Context context) {
-        AwsLambdaRequest lambdaRequest =
-            AwsLambdaRequest.create(context, arg, Collections.emptyMap());
+        AwsLambdaRequest lambdaRequest = AwsLambdaRequest.create(context, arg, emptyMap());
         io.opentelemetry.context.Context parentContext =
             functionInstrumenter().extract(lambdaRequest);
         if (!functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {

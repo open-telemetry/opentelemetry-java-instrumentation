@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
+import static java.util.Collections.singletonMap;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -29,7 +31,6 @@ import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.EnumSet;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -113,7 +114,7 @@ class AwsConnector {
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
     sqsClient.setQueueAttributes(
         queueUrl,
-        Collections.singletonMap(
+        singletonMap(
             "Policy",
             String.format(
                 "{"

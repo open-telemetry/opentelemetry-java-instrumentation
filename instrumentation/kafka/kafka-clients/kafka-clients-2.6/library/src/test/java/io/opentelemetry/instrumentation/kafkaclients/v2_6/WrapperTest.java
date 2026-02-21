@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -25,7 +26,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
@@ -97,7 +97,7 @@ class WrapperTest extends AbstractWrapperTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -123,7 +123,7 @@ class WrapperTest extends AbstractWrapperTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -143,7 +143,7 @@ class WrapperTest extends AbstractWrapperTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }

@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
-import java.util.Collections;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -50,7 +51,7 @@ public class Servlet2Accessor extends JavaxServletAccessor<HttpServletResponse>
   @Override
   public List<String> getResponseHeaderValues(
       HttpServletResponse httpServletResponse, String name) {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override

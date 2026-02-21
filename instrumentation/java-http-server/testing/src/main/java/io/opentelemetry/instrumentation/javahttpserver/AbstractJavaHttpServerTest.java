@@ -14,6 +14,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
@@ -25,7 +27,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -35,7 +36,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
   protected void configureContexts(List<HttpContext> contexts) {}
 
   static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
-    sendResponse(exchange, status, Collections.emptyMap(), response);
+    sendResponse(exchange, status, emptyMap(), response);
   }
 
   static void sendResponse(HttpExchange exchange, int status, Map<String, String> headers)
@@ -92,7 +93,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                             sendResponse(
                                 ctx,
                                 REDIRECT.getStatus(),
-                                Collections.singletonMap("Location", REDIRECT.getBody()))));
+                                singletonMap("Location", REDIRECT.getBody()))));
 
     contexts.add(context);
     context =
@@ -143,7 +144,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                             sendResponse(
                                 ctx,
                                 CAPTURE_HEADERS.getStatus(),
-                                Collections.singletonMap(
+                                singletonMap(
                                     "X-Test-Response",
                                     ctx.getRequestHeaders().getFirst("X-Test-Request")),
                                 CAPTURE_HEADERS.getBody())));

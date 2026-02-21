@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +31,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +104,7 @@ class TargetSystemTest {
         stop(targetDependency);
       }
     }
-    targetDependencies = Collections.emptyList();
+    targetDependencies = emptyList();
   }
 
   private static void stop(@Nullable GenericContainer<?> container) {
@@ -168,7 +168,7 @@ class TargetSystemTest {
    * @param target target system to start
    */
   protected void startTarget(GenericContainer<?> target) {
-    startTarget(target, Collections.emptyList());
+    startTarget(target, emptyList());
   }
 
   /**
