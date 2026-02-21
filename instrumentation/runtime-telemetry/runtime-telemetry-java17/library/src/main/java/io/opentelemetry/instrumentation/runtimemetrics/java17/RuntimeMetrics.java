@@ -5,40 +5,23 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static java.util.logging.Level.WARNING;
-
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
-import java.io.Closeable;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
-import java.util.logging.Logger;
+import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
+import java.lang.reflect.Method;
 import javax.annotation.Nullable;
-import jdk.jfr.EventSettings;
-import jdk.jfr.FlightRecorder;
-import jdk.jfr.consumer.RecordingStream;
 
-/** The entry point class for runtime metrics support using JFR and JMX. */
+/**
+ * The entry point class for runtime metrics support using JFR and JMX.
+ *
+ * @deprecated Use {@link RuntimeTelemetry} in the {@code runtime-telemetry} module instead.
+ */
+@Deprecated
 public final class RuntimeMetrics implements AutoCloseable {
 
-  private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
+  private final RuntimeTelemetry delegate;
 
-  private final AtomicBoolean isClosed = new AtomicBoolean();
-  private final OpenTelemetry openTelemetry;
-  private final List<AutoCloseable> observables;
-
-  @Nullable private final JfrRuntimeMetrics jfrRuntimeMetrics;
-
-  RuntimeMetrics(
-      OpenTelemetry openTelemetry,
-      List<AutoCloseable> observables,
-      @Nullable JfrRuntimeMetrics jfrRuntimeMetrics) {
-    this.openTelemetry = openTelemetry;
-    this.observables = List.copyOf(observables);
-    this.jfrRuntimeMetrics = jfrRuntimeMetrics;
+  RuntimeMetrics(RuntimeTelemetry delegate) {
+    this.delegate = delegate;
   }
 
   /**
@@ -62,106 +45,21 @@ public final class RuntimeMetrics implements AutoCloseable {
     return new RuntimeMetricsBuilder(openTelemetry);
   }
 
-  // Visible for testing
-  OpenTelemetry getOpenTelemetry() {
-    return openTelemetry;
-  }
-
-  // Visible for testing
-  JfrRuntimeMetrics getJfrRuntimeMetrics() {
-    return jfrRuntimeMetrics;
+  // Only used by tests
+  @Nullable
+  Object getJfrRuntimeMetrics() {
+    try {
+      Method method = RuntimeTelemetry.class.getDeclaredMethod("getJfrTelemetry");
+      method.setAccessible(true);
+      return method.invoke(delegate);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to access JFR telemetry via reflection", e);
+    }
   }
 
   /** Stop recording JFR events. */
   @Override
   public void close() {
-    if (!isClosed.compareAndSet(false, true)) {
-      logger.log(WARNING, "RuntimeMetrics is already closed");
-      return;
-    }
-    if (jfrRuntimeMetrics != null) {
-      jfrRuntimeMetrics.close();
-    }
-
-    JmxRuntimeMetricsUtil.closeObservers(observables);
-  }
-
-  static class JfrRuntimeMetrics implements Closeable {
-    private final List<RecordedEventHandler> recordedEventHandlers;
-    private final RecordingStream recordingStream;
-    private final CountDownLatch startUpLatch = new CountDownLatch(1);
-    private volatile boolean closed = false;
-
-    private JfrRuntimeMetrics(OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
-      this.recordedEventHandlers = HandlerRegistry.getHandlers(openTelemetry, featurePredicate);
-      recordingStream = new RecordingStream();
-      recordedEventHandlers.forEach(
-          handler -> {
-            EventSettings eventSettings = recordingStream.enable(handler.getEventName());
-            handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
-            handler.getThreshold().ifPresent(eventSettings::withThreshold);
-            recordingStream.onEvent(handler.getEventName(), handler);
-          });
-      recordingStream.onMetadata(event -> startUpLatch.countDown());
-      Thread daemonRunner =
-          new Thread(this::startRecordingStream, "OpenTelemetry JFR-Metrics-Runner");
-      daemonRunner.setDaemon(true);
-      daemonRunner.setContextClassLoader(null);
-      daemonRunner.start();
-    }
-
-    private void startRecordingStream() {
-      if (closed) {
-        return;
-      }
-
-      try {
-        recordingStream.start();
-      } catch (IllegalStateException exception) {
-        // Can happen when close is called at the same time as start
-        if (!closed) {
-          throw exception;
-        }
-      }
-    }
-
-    static JfrRuntimeMetrics build(
-        OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
-      if (!isJfrAvailable()) {
-        return null;
-      }
-      return new JfrRuntimeMetrics(openTelemetry, featurePredicate);
-    }
-
-    @Override
-    public void close() {
-      closed = true;
-      recordingStream.close();
-      recordedEventHandlers.forEach(RecordedEventHandler::close);
-    }
-
-    // Visible for testing
-    List<RecordedEventHandler> getRecordedEventHandlers() {
-      return recordedEventHandlers;
-    }
-
-    // Visible for testing
-    RecordingStream getRecordingStream() {
-      return recordingStream;
-    }
-
-    // Visible for testing
-    CountDownLatch getStartUpLatch() {
-      return startUpLatch;
-    }
-
-    private static boolean isJfrAvailable() {
-      try {
-        return FlightRecorder.isAvailable();
-      } catch (Throwable e) {
-        // NoClassDefFoundError, UnsatisfiedLinkError (native images), or other issues
-        return false;
-      }
-    }
+    delegate.close();
   }
 }
