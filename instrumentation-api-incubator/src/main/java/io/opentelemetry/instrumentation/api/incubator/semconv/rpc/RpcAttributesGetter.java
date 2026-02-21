@@ -16,6 +16,23 @@ import javax.annotation.Nullable;
  */
 public interface RpcAttributesGetter<REQUEST, RESPONSE> {
 
+  /**
+   * Returns the stable semconv system name for the RPC framework (e.g. {@code "grpc"}, {@code
+   * "java_rmi"}, {@code "dotnet_wcf"}).
+   *
+   * @see <a
+   *     href="https://opentelemetry.io/docs/specs/semconv/attributes-registry/rpc/">rpc.system.name
+   *     spec</a>
+   */
+  @Nullable
+  default String getRpcSystemName(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * @deprecated Use {@link #getRpcSystemName(REQUEST)}. To be removed in 3.0.
+   */
+  @Deprecated
   @Nullable
   String getSystem(REQUEST request);
 
