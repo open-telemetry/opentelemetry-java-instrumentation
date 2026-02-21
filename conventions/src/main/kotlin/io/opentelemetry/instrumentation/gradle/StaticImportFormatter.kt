@@ -45,6 +45,12 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "org.mockito.Mockito",
         "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings"
       ),
+      Triple("Assertions", "org.assertj.core.api.Assertions", "assertThat"),
+      Triple(
+        "OpenTelemetryAssertions",
+        "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
+        "[a-z][a-zA-Z0-9]*"
+      ),
     )
 
     var content = input
