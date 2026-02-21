@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.semconv.ServerAttributes;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -25,10 +27,10 @@ public final class InternalServerAttributesExtractor<REQUEST> {
     AddressAndPort serverAddressAndPort = addressAndPortExtractor.extract(request);
 
     if (serverAddressAndPort.address != null) {
-      attributes.put(ServerAttributes.SERVER_ADDRESS, serverAddressAndPort.address);
+      attributes.put(SERVER_ADDRESS, serverAddressAndPort.address);
 
       if (serverAddressAndPort.port != null && serverAddressAndPort.port > 0) {
-        attributes.put(ServerAttributes.SERVER_PORT, (long) serverAddressAndPort.port);
+        attributes.put(SERVER_PORT, (long) serverAddressAndPort.port);
       }
     }
   }

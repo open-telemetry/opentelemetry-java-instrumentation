@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -16,7 +18,6 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.List;
 import java.util.Map;
 import org.jboss.logmanager.ExtLogRecord;
@@ -88,8 +89,8 @@ public final class LoggingEventMapper {
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      builder.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
-      builder.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
+      builder.setAttribute(THREAD_NAME, currentThread.getName());
+      builder.setAttribute(THREAD_ID, currentThread.getId());
     }
 
     builder.setContext(Context.current());

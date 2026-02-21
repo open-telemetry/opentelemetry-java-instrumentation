@@ -63,6 +63,44 @@ class StaticImportFormatter : FormatterFunc, Serializable {
       content = lines.joinToString("\n")
     }
 
+    // Handle semconv classes: find all imported semconv classes (except SchemaUrls) and convert
+    // qualified constant references (e.g. HttpAttributes.HTTP_METHOD) to static imports.
+    // Also handles nested value classes (e.g. DbIncubatingAttributes.DbSystemNameIncubatingValues).
+    val semconvImportRegex =
+      Regex(
+        """^import (io\.opentelemetry\.semconv\.(?:[a-z][a-z.]*\.)?([A-Z][a-zA-Z0-9]+)(?:\.([A-Z][a-zA-Z0-9]+))?);"""
+      )
+    val semconvRules =
+      content
+        .lines()
+        .mapNotNull { line -> semconvImportRegex.find(line.trim()) }
+        .filter { it.groupValues[2] != "SchemaUrls" }
+        .map { m ->
+          // If there is a nested class (group 3), use the nested class as the className so that
+          // references like `DbSystemNameIncubatingValues.COUCHBASE` are rewritten correctly.
+          val className = if (m.groupValues[3].isNotEmpty()) m.groupValues[3] else m.groupValues[2]
+          Triple(className, m.groupValues[1], "[A-Z][A-Z_0-9]*")
+        }
+    for ((className, pkg, memberPattern) in semconvRules) {
+      val regex = Regex("\\b${className}\\.(${memberPattern})\\b")
+      val lines = content.lines().toMutableList()
+      var inBlockComment = false
+      for (i in lines.indices) {
+        val trimmed = lines[i].trimStart()
+        if (trimmed.startsWith("/*")) inBlockComment = true
+        if (inBlockComment) {
+          if (trimmed.contains("*/")) inBlockComment = false
+          continue
+        }
+        if (trimmed.startsWith("import ")) continue
+        for (match in regex.findAll(lines[i])) {
+          importsToAdd.add("import static ${pkg}.${match.groupValues[1]};")
+        }
+        lines[i] = regex.replace(lines[i], "$1")
+      }
+      content = lines.joinToString("\n")
+    }
+
     if (importsToAdd.isNotEmpty()) {
       val lines = content.lines().toMutableList()
       val firstImportIndex = lines.indexOfFirst { it.trimStart().startsWith("import ") }

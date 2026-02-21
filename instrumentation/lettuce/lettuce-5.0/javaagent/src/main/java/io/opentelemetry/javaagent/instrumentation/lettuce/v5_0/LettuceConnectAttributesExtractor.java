@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+
 import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
@@ -20,21 +24,19 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(
-          DbAttributes.DB_SYSTEM_NAME, DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS);
+      attributes.put(DB_SYSTEM_NAME, DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      attributes.put(
-          DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
+      attributes.put(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
     }
 
     int database = redisUri.getDatabase();
     if (database != 0) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbAttributes.DB_NAMESPACE, String.valueOf(database));
+        attributes.put(DB_NAMESPACE, String.valueOf(database));
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+        attributes.put(DB_REDIS_DATABASE_INDEX, (long) database);
       }
     }
   }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -51,8 +53,8 @@ public final class MemoryInit {
     for (MemoryPoolMXBean pool : poolBeans) {
       attributeSets.add(
           Attributes.builder()
-              .put(JvmAttributes.JVM_MEMORY_POOL_NAME, pool.getName())
-              .put(JvmAttributes.JVM_MEMORY_TYPE, memoryType(pool.getType()))
+              .put(JVM_MEMORY_POOL_NAME, pool.getName())
+              .put(JVM_MEMORY_TYPE, memoryType(pool.getType()))
               .build());
     }
 
