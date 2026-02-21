@@ -5,17 +5,18 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -42,8 +43,8 @@ public class ElasticsearchClientAttributeExtractor
   private static void setServerAttributes(AttributesBuilder attributes, Response response) {
     HttpHost host = response.getHost();
     if (host != null) {
-      internalSet(attributes, ServerAttributes.SERVER_ADDRESS, host.getHostName());
-      internalSet(attributes, ServerAttributes.SERVER_PORT, (long) host.getPort());
+      attributes.put(SERVER_ADDRESS, host.getHostName());
+      attributes.put(SERVER_PORT, (long) host.getPort());
     }
   }
 
@@ -52,7 +53,7 @@ public class ElasticsearchClientAttributeExtractor
     uri = uri.startsWith("/") ? uri : "/" + uri;
     String fullUrl = response.getHost().toURI() + uri;
 
-    internalSet(attributes, UrlAttributes.URL_FULL, fullUrl);
+    attributes.put(URL_FULL, fullUrl);
   }
 
   private static void setPathPartsAttributes(
@@ -68,7 +69,7 @@ public class ElasticsearchClientAttributeExtractor
           AttributeKey<String> attributeKey =
               pathPartKeysCache.computeIfAbsent(
                   key, k -> AttributeKey.stringKey(PATH_PARTS_ATTRIBUTE_PREFIX + k));
-          internalSet(attributes, attributeKey, value);
+          attributes.put(attributeKey, value);
         });
   }
 
@@ -77,10 +78,10 @@ public class ElasticsearchClientAttributeExtractor
       AttributesBuilder attributes, Context parentContext, ElasticsearchRestRequest request) {
     String method = request.getMethod();
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      attributes.put(HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      attributes.put(HTTP_REQUEST_METHOD, _OTHER);
+      attributes.put(HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
     setPathPartsAttributes(attributes, request);
   }

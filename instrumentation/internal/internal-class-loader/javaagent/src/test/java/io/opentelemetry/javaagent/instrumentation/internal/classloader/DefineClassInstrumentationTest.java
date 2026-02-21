@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
@@ -57,7 +58,7 @@ class DefineClassInstrumentationTest {
 
     DefiningClassLoader cl = new DefiningClassLoader();
 
-    DefineClassHelper.Handler mockHandler = Mockito.mock(DefineClassHelper.Handler.class);
+    DefineClassHelper.Handler mockHandler = mock(DefineClassHelper.Handler.class);
     // We need to initialize mockHandler by invoking it early, otherwise this leads to problems
     mockHandler.beforeDefineClass(cl, className, bytecode, 0, bytecode.length);
     Mockito.reset(mockHandler);

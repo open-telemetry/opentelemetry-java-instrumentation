@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -37,7 +38,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -82,10 +82,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @AfterAll
   void cleanUpClusters() {
-    clusterCouchbase.disconnect().timeout(10, TimeUnit.SECONDS).toBlocking().single();
+    clusterCouchbase.disconnect().timeout(10, SECONDS).toBlocking().single();
     environmentCouchbase.shutdown();
 
-    clusterMemcache.disconnect().timeout(10, TimeUnit.SECONDS).toBlocking().single();
+    clusterMemcache.disconnect().timeout(10, SECONDS).toBlocking().single();
     environmentMemcache.shutdown();
   }
 
@@ -114,7 +114,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
         .subscribe(
             bucket -> manager.hasBucket(bucketSettings.name()).subscribe(hasBucket::complete));
 
-    assertThat(hasBucket.get(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isTrue();
+    assertThat(hasBucket.get(TIMEOUT_SECONDS, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -160,7 +160,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                           .subscribe(inserted::complete));
         });
 
-    assertThat(inserted.get(TIMEOUT_SECONDS, TimeUnit.SECONDS).content().getString("hello"))
+    assertThat(inserted.get(TIMEOUT_SECONDS, SECONDS).content().getString("hello"))
         .isEqualTo("world");
 
     testing.waitAndAssertTraces(
@@ -216,8 +216,8 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                               }));
         });
 
-    JsonDocument insertedResult = inserted.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    JsonDocument foundResult = found.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    JsonDocument insertedResult = inserted.get(TIMEOUT_SECONDS, SECONDS);
+    JsonDocument foundResult = found.get(TIMEOUT_SECONDS, SECONDS);
     assertThat(foundResult).isEqualTo(insertedResult);
     assertThat(foundResult.content().getString("hello")).isEqualTo("world");
 
@@ -286,7 +286,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                           .subscribe(row -> queryResult.complete(row.value())));
         });
 
-    assertThat(queryResult.get(TIMEOUT_SECONDS, TimeUnit.SECONDS).get("row")).isEqualTo("value");
+    assertThat(queryResult.get(TIMEOUT_SECONDS, SECONDS).get("row")).isEqualTo("value");
 
     testing.waitAndAssertTraces(
         trace ->

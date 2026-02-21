@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -39,7 +40,6 @@ import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
@@ -157,8 +157,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
                 GlobalOpenTelemetry.get(), "external_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> matcher =
-          isDeclaredBy(ElementMatchers.named(className));
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {

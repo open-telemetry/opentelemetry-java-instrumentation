@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.util.logging.Level.FINEST;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.metrics.Meter;
@@ -16,7 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
@@ -86,8 +87,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     RegisteredObservable registeredObservable =
         KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric);
     if (registeredObservable == null) {
-      logger.log(
-          Level.FINEST, "Metric changed but cannot map to instrument: {0}", metric.metricName());
+      logger.log(FINEST, "Metric changed but cannot map to instrument: {0}", metric.metricName());
       return;
     }
 
@@ -98,7 +98,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
         Set<AttributeKey<?>> curAttributeKeys =
             curRegisteredObservable.getAttributes().asMap().keySet();
         if (curRegisteredObservable.getKafkaMetricName().equals(metric.metricName())) {
-          logger.log(Level.FINEST, "Replacing instrument: {0}", curRegisteredObservable);
+          logger.log(FINEST, "Replacing instrument: {0}", curRegisteredObservable);
           closeInstrument(curRegisteredObservable.getObservable());
           it.remove();
         } else if (curRegisteredObservable
@@ -107,7 +107,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
             && attributeKeys.size() > curAttributeKeys.size()
             && attributeKeys.containsAll(curAttributeKeys)) {
           logger.log(
-              Level.FINEST,
+              FINEST,
               "Replacing instrument with higher dimension version: {0}",
               curRegisteredObservable);
           closeInstrument(curRegisteredObservable.getObservable());
@@ -121,7 +121,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   @Override
   public void metricRemoval(KafkaMetric metric) {
-    logger.log(Level.FINEST, "Metric removed: {0}", metric.metricName());
+    logger.log(FINEST, "Metric removed: {0}", metric.metricName());
     synchronized (lock) {
       for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
         RegisteredObservable current = it.next();

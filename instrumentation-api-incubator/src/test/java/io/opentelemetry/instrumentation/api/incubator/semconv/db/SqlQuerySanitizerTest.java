@@ -553,6 +553,10 @@ class SqlQuerySanitizerTest {
         Arguments.of("SeLeCT * FrOm TAblE", expect("SELECT", "TAblE", "SELECT TAblE")),
         Arguments.of("select next value in hibernate_sequence", expect("SELECT", null, "SELECT")),
 
+        // EXPLAIN - preserved as prefix command in summary
+        Arguments.of(
+            "EXPLAIN SELECT * FROM users", expect("SELECT", "users", "EXPLAIN SELECT users")),
+
         // hibernate/jpa
         Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
@@ -852,6 +856,13 @@ class SqlQuerySanitizerTest {
         Arguments.of("SELECT * FROM alter", expect("SELECT", null, "SELECT alter")),
         Arguments.of("SELECT * FROM exec", expect("SELECT", "exec", "SELECT exec")),
         Arguments.of("SELECT * FROM execute", expect("SELECT", "execute", "SELECT execute")),
+
+        // Oracle database link syntax (table@dblink)
+        Arguments.of(
+            "SELECT * FROM users@remote_db", expect("SELECT", "users", "SELECT users@remote_db")),
+        Arguments.of(
+            "SELECT * FROM schema.users@remote_db",
+            expect("SELECT", "schema.users", "SELECT schema.users@remote_db")),
 
         // SQL keywords used as column names
         Arguments.of(
