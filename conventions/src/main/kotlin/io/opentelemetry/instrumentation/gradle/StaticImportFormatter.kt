@@ -51,6 +51,7 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
         "[a-z][a-zA-Z0-9]*"
       ),
+      Triple("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
     )
 
     var content = input
