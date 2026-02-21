@@ -66,7 +66,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("stdServerName")
             .setPort(9999)
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:mysql://my.host")
             .setShortUrl("mysql://my.host:3306")
@@ -87,7 +87,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("myuser")
             .setHost("my.host")
             .setPort(22)
-            .setDb("mydb")
+            .setName("mydb")
             .build(),
         arg("jdbc:mysql://127.0.0.1:22/mydb?user=myuser&password=PW")
             .setProperties(stdProps())
@@ -96,7 +96,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("myuser")
             .setHost("127.0.0.1")
             .setPort(22)
-            .setDb("mydb")
+            .setName("mydb")
             .build(),
         arg("jdbc:mysql://myuser:password@my.host:22/mydb")
             .setShortUrl("mysql://my.host:22")
@@ -104,7 +104,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("myuser")
             .setHost("my.host")
             .setPort(22)
-            .setDb("mydb")
+            .setName("mydb")
             .build(),
         arg("jdbc:mysql:aurora://mdb.host/mdbdb")
             .setShortUrl("mysql:aurora://mdb.host:3306")
@@ -112,7 +112,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("aurora")
             .setHost("mdb.host")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mysql:failover://localhost/mdbdb?autoReconnect=true")
             .setShortUrl("mysql:failover://localhost:3306")
@@ -120,7 +120,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("failover")
             .setHost("localhost")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mysql:loadbalance://127.0.0.1,127.0.0.1:3306/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:loadbalance://127.0.0.1:3306")
@@ -129,7 +129,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("mdbuser")
             .setHost("127.0.0.1")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=127.0.0.1)(port=33)(user=mdbuser)(password=PW),address=(host=mdb.host)(port=3306)(user=otheruser)(password=PW)/mdbdb?user=wrong&password=PW")
             .setShortUrl("mysql:replication://127.0.0.1:33")
@@ -138,7 +138,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("mdbuser")
             .setHost("127.0.0.1")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=mdb.host),address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:replication://mdb.host:3306")
@@ -147,7 +147,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("mdbuser")
             .setHost("mdb.host")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mysql:loadbalance://localhost")
             .setShortUrl("mysql:loadbalance://localhost:3306")
@@ -187,7 +187,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("http")
             .setHost("localhost")
             .setPort(8123)
-            .setDb("mydb")
+            .setName("mydb")
             .build(),
         arg("jdbc:clickhouse:https://localhost:8443?ssl=true")
             .setShortUrl("clickhouse:https://localhost:8443")
@@ -220,7 +220,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("stdServerName")
             .setPort(9999)
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:postgresql://pg.host")
             .setShortUrl("postgresql://pg.host:5432")
@@ -234,7 +234,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("pguser")
             .setHost("pg.host")
             .setPort(11)
-            .setDb("pgdb")
+            .setName("pgdb")
             .build(),
         arg("jdbc:postgresql://pg.host:11/pgdb?user=pguser&password=PW")
             .setProperties(stdProps())
@@ -243,7 +243,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("pguser")
             .setHost("pg.host")
             .setPort(11)
-            .setDb("pgdb")
+            .setName("pgdb")
             .build());
   }
 
@@ -261,14 +261,14 @@ class JdbcConnectionUrlParserTest {
             .setSystem("mariadb")
             .setHost("127.0.0.1")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:localhost/mdbdb")
             .setShortUrl("mariadb://localhost:3306")
             .setSystem("mariadb")
             .setHost("localhost")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:localhost/mdbdb?user=mdbuser&password=PW")
             .setProperties(stdProps())
@@ -277,7 +277,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("mdbuser")
             .setHost("localhost")
             .setPort(9999)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:localhost:33/mdbdb")
             .setProperties(stdProps())
@@ -286,7 +286,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("localhost")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb://mdb.host:33/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mariadb://mdb.host:33")
@@ -294,7 +294,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("mdbuser")
             .setHost("mdb.host")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:aurora://mdb.host/mdbdb")
             .setShortUrl("mariadb:aurora://mdb.host:3306")
@@ -302,7 +302,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("aurora")
             .setHost("mdb.host")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:failover://mdb.host1:33,mdb.host/mdbdb?characterEncoding=utf8")
             .setShortUrl("mariadb:failover://mdb.host1:33")
@@ -310,7 +310,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("failover")
             .setHost("mdb.host1")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:sequential://mdb.host1,mdb.host2:33/mdbdb")
             .setShortUrl("mariadb:sequential://mdb.host1:3306")
@@ -318,7 +318,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("sequential")
             .setHost("mdb.host1")
             .setPort(3306)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33,mdb.host/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -326,7 +326,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("loadbalance")
             .setHost("127.0.0.1")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -334,7 +334,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("loadbalance")
             .setHost("127.0.0.1")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host/mdbdb")
             .setShortUrl("mariadb:loadbalance://2001:0660:7401:0200:0000:0000:0edf:bdd7:33")
@@ -342,7 +342,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("loadbalance")
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
             .setShortUrl("mariadb:replication://localhost:33")
@@ -350,7 +350,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("replication")
             .setHost("localhost")
             .setPort(33)
-            .setDb("mdbdb")
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://localhost")
             .setShortUrl("mariadb:loadbalance://localhost:3306")
@@ -431,7 +431,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("stdServerName")
             .setPort(9999)
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:sqlserver://ss.host\\ssinstance:44;databaseName=ssdb;user=ssuser;password=pw")
             .setShortUrl("sqlserver://ss.host:44")
@@ -440,7 +440,6 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(44)
             .setName("ssinstance")
-            .setDb("ssdb")
             .build(),
         arg("jdbc:sqlserver://;serverName=ss.host\\ssinstance:44;DatabaseName=;")
             .setShortUrl("sqlserver://ss.host:44")
@@ -454,7 +453,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("mssql")
             .setHost("ss.host")
             .setPort(1433)
-            .setDb("ssdb")
+            .setName("ssdb")
             .build(),
         arg("jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;")
             .setShortUrl("microsoft:sqlserver://ss.host:44")
@@ -463,7 +462,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("ssuser")
             .setHost("ss.host")
             .setPort(44)
-            .setDb("ssdb")
+            .setName("ssdb")
             .build(),
 
         // http://jtds.sourceforge.net/faq.html#urlFormat
@@ -473,7 +472,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("sqlserver")
             .setHost("ss.host")
             .setPort(1433)
-            .setDb("ssdb")
+            .setName("ssdb")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1433/ssdb")
             .setShortUrl("jtds:sqlserver://ss.host:1433")
@@ -481,7 +480,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("sqlserver")
             .setHost("ss.host")
             .setPort(1433)
-            .setDb("ssdb")
+            .setName("ssdb")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1433/ssdb;user=ssuser")
             .setShortUrl("jtds:sqlserver://ss.host:1433")
@@ -490,7 +489,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("ssuser")
             .setHost("ss.host")
             .setPort(1433)
-            .setDb("ssdb")
+            .setName("ssdb")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host/ssdb;instance=ssinstance")
             .setShortUrl("jtds:sqlserver://ss.host:1433")
@@ -499,7 +498,6 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1433)
             .setName("ssinstance")
-            .setDb("ssdb")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1444/ssdb;instance=ssinstance")
             .setShortUrl("jtds:sqlserver://ss.host:1444")
@@ -508,7 +506,6 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1444)
             .setName("ssinstance")
-            .setDb("ssdb")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1433/ssdb;instance=ssinstance;user=ssuser")
             .setShortUrl("jtds:sqlserver://ss.host:1433")
@@ -518,7 +515,6 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1433)
             .setName("ssinstance")
-            .setDb("ssdb")
             .build());
   }
 
@@ -601,7 +597,6 @@ class JdbcConnectionUrlParserTest {
             .setHost("orcl.host")
             .setPort(9999)
             .setName("orclsn")
-            .setDb("stdDatabaseName")
             .build(),
         arg("jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=666))"
                 + "(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=orclsn)))")
@@ -645,7 +640,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("stdServerName")
             .setPort(9999)
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:oracle:oci8:@orclsn")
             .setShortUrl("oracle:oci8:")
@@ -687,7 +682,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("db2.host")
             .setPort(9999)
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:db2://db2.host:77/db2db:user=db2user;password=PW;")
             .setShortUrl("db2://db2.host:77")
@@ -705,7 +700,6 @@ class JdbcConnectionUrlParserTest {
             .setHost("db2.host")
             .setPort(77)
             .setName("db2db")
-            .setDb("stdDatabaseName")
             .build(),
         arg("jdbc:as400://ashost:66/asdb:user=asuser;password=PW;")
             .setShortUrl("as400://ashost:66")
@@ -738,7 +732,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("stdUserName")
             .setHost("sap.host")
             .setPort(9999)
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:sap://sap.host:88/?databaseName=sapdb&user=sapuser&password=PW")
             .setShortUrl("sap://sap.host:88")
@@ -746,7 +740,7 @@ class JdbcConnectionUrlParserTest {
             .setUser("sapuser")
             .setHost("sap.host")
             .setPort(88)
-            .setDb("sapdb")
+            .setName("sapdb")
             .build());
   }
 
@@ -832,7 +826,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("h2")
             .setSubtype("mem")
             .setUser("stdUserName")
-            .setDb("stdDatabaseName")
+            .setName("stdDatabaseName")
             .build(),
         arg("jdbc:h2:mem:h2db")
             .setShortUrl("h2:mem:")
@@ -913,7 +907,6 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("mem")
             .setUser("stdUserName")
             .setName("hsdb")
-            .setDb("stdDatabaseName")
             .build(),
         arg("jdbc:hsqldb:mem:hsdb")
             .setShortUrl("hsqldb:mem:")
@@ -1055,7 +1048,6 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("directory")
             .setUser("stdUserName")
             .setName("derbydb")
-            .setDb("stdDatabaseName")
             .build(),
         arg("jdbc:derby:derbydb;user=derbyuser;password=pw")
             .setShortUrl("derby:directory:")
@@ -1076,7 +1068,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("derby")
             .setSubtype("memory")
             .setUser("APP")
-            .setDb("derbydb")
+            .setName("derbydb")
             .build(),
         arg("jdbc:derby:memory:derbydb;databaseName=altdb")
             .setShortUrl("derby:memory:")
@@ -1084,7 +1076,6 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("memory")
             .setUser("APP")
             .setName("derbydb")
-            .setDb("altdb")
             .build(),
         arg("jdbc:derby:memory:derbydb;user=derbyuser;password=pw")
             .setShortUrl("derby:memory:")
@@ -1172,7 +1163,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("sqlserver")
             .setHost("server_name")
             .setPort(1433)
-            .setDb("dbname")
+            .setName("dbname")
             .build(),
         arg("jdbc:datadirect:oracle://server_name:1521;ServiceName=your_servicename")
             .setShortUrl("datadirect:oracle://server_name:1521")
@@ -1194,7 +1185,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("postgresql")
             .setHost("server_name")
             .setPort(5432)
-            .setDb("dbname")
+            .setName("dbname")
             .build(),
         arg("jdbc:datadirect:db2://server_name:50000;DatabaseName=dbname")
             .setShortUrl("datadirect:db2://server_name:50000")
@@ -1202,7 +1193,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("db2")
             .setHost("server_name")
             .setPort(50000)
-            .setDb("dbname")
+            .setName("dbname")
             .build());
   }
 
@@ -1222,7 +1213,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("sqlserver")
             .setHost("server_name")
             .setPort(1433)
-            .setDb("dbname")
+            .setName("dbname")
             .build(),
         arg("jdbc:tibcosoftware:oracle://server_name:1521;ServiceName=your_servicename")
             .setShortUrl("tibcosoftware:oracle://server_name:1521")
@@ -1244,7 +1235,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("postgresql")
             .setHost("server_name")
             .setPort(5432)
-            .setDb("dbname")
+            .setName("dbname")
             .build(),
         arg("jdbc:tibcosoftware:db2://server_name:50000;DatabaseName=dbname")
             .setShortUrl("tibcosoftware:db2://server_name:50000")
@@ -1252,7 +1243,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("db2")
             .setHost("server_name")
             .setPort(50000)
-            .setDb("dbname")
+            .setName("dbname")
             .build());
   }
 
@@ -1276,7 +1267,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("postgresql")
             .setHost("example.com")
             .setPort(50000)
-            .setDb("dbname")
+            .setName("dbname")
             .build(),
         arg("jdbc-secretsmanager:oracle:thin:@example.com:50000/ORCL")
             .setShortUrl("oracle:thin://example.com:50000")
@@ -1314,7 +1305,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("postgresql")
             .setHost("example.com")
             .setPort(50000)
-            .setDb("dbname")
+            .setName("dbname")
             .build(),
         arg("jdbc:tracing:oracle:thin:@example.com:50000/ORCL")
             .setShortUrl("oracle:thin://example.com:50000")
@@ -1346,7 +1337,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("oceanbase")
             .setHost("host")
             .setPort(3306)
-            .setDb("test")
+            .setName("test")
             .build(),
         arg("jdbc:oceanbase:oracle://host:1521")
             .setShortUrl("oceanbase:oracle://host:1521")
@@ -1371,7 +1362,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("lindorm")
             .setSubtype("table")
             .setHost("host")
-            .setDb("test")
+            .setName("test")
             .setPort(30060)
             .build(),
         arg("jdbc:lindorm:tsdb:url=http://host:8242/test")
@@ -1379,16 +1370,15 @@ class JdbcConnectionUrlParserTest {
             .setSystem("lindorm")
             .setSubtype("tsdb")
             .setHost("host")
-            .setDb("test")
             .setPort(8242)
-            .setDb("test")
+            .setName("test")
             .build(),
         arg("jdbc:lindorm:search:url=http://host:30070/test")
             .setShortUrl("lindorm:search://host:30070")
             .setSystem("lindorm")
             .setSubtype("search")
             .setHost("host")
-            .setDb("test")
+            .setName("test")
             .setPort(30070)
             .build());
   }
@@ -1430,7 +1420,6 @@ class JdbcConnectionUrlParserTest {
     assertThat(info.getPort()).isEqualTo(expected.getPort());
     assertThat(info.getUser()).isEqualTo(expected.getUser());
     assertThat(info.getName()).isEqualTo(expected.getName());
-    assertThat(info.getDb()).isEqualTo(expected.getDb());
     assertThat(info).isEqualTo(expected);
   }
 
@@ -1449,7 +1438,6 @@ class JdbcConnectionUrlParserTest {
               .subtype(builder.subtype)
               .user(builder.user)
               .name(builder.name)
-              .db(builder.db)
               .host(builder.host)
               .port(builder.port)
               .build();
@@ -1471,7 +1459,6 @@ class JdbcConnectionUrlParserTest {
     String host;
     Integer port;
     String name;
-    String db;
 
     ParseTestArgumentBuilder(String url) {
       this.url = url;
@@ -1514,11 +1501,6 @@ class JdbcConnectionUrlParserTest {
 
     ParseTestArgumentBuilder setName(String name) {
       this.name = name;
-      return this;
-    }
-
-    ParseTestArgumentBuilder setDb(String db) {
-      this.db = db;
       return this;
     }
 

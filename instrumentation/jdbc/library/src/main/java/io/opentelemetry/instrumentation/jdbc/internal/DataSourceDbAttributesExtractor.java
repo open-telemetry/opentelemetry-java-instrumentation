@@ -54,7 +54,6 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   }
 
   private static String getName(DbInfo dbInfo) {
-    String name = dbInfo.getName();
-    return name == null ? dbInfo.getDb() : name;
+    return dbInfo.getName();
   }
 }
