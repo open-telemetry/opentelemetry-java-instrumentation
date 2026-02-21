@@ -109,6 +109,28 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testCustomMappingsIncludeSpecialMappings() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.custom.enabled", "true");
+    properties.put("otel.instrumentation.http.client.capture-request-headers", "header1,header2");
+    Map<String, String> customMappings = new HashMap<>();
+    customMappings.put("java.custom.enabled", "otel.custom.enabled");
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(properties), customMappings);
+
+    assertThat(config.getStructured("java").getStructured("custom").getBoolean("enabled")).isTrue();
+    assertThat(
+            config
+                .getStructured("general")
+                .getStructured("http")
+                .getStructured("client")
+                .getScalarList("request_captured_headers", String.class))
+        .containsExactly("header1", "header2");
+  }
+
+  @Test
   void testJavaCommonServicePeerMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");
