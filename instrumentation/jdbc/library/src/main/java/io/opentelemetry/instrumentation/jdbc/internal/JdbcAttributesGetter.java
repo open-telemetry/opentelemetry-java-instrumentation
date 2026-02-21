@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
@@ -36,8 +35,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
-    DbInfo dbInfo = request.getDbInfo();
-    return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
+    return request.getDbInfo().getName();
   }
 
   @Deprecated // to be removed in 3.0
