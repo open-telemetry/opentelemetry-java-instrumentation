@@ -18,21 +18,51 @@ import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 public final class DbExecution {
+  // copied from DbAttributes.DbSystemNameValues
+  private static final String POSTGRESQL = "postgresql";
+  // copied from DbAttributes.DbSystemNameValues
+  private static final String MYSQL = "mysql";
+  // copied from DbAttributes.DbSystemNameValues
+  private static final String MARIADB = "mariadb";
+  // copied from DbAttributes.DbSystemNameValues
+  private static final String MICROSOFT_SQL_SERVER = "microsoft.sql_server";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String ORACLE_DB = "oracle.db";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String H2DATABASE = "h2database";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
+  // R2DBC driver identifier → stable semconv db.system.name value
+  private static final Map<String, String> DRIVER_TO_SYSTEM_NAME = buildDriverToSystemName();
+
+  private static Map<String, String> buildDriverToSystemName() {
+    Map<String, String> map = new HashMap<>();
+    map.put("postgresql", POSTGRESQL);
+    map.put("mysql", MYSQL);
+    map.put("mariadb", MARIADB);
+    map.put("mssql", MICROSOFT_SQL_SERVER);
+    map.put("oracle", ORACLE_DB);
+    map.put("h2", H2DATABASE);
+    return map;
+  }
+
+  private final String systemName;
   private final String system;
   private final String user;
-  private final String name;
-  private final String host;
-  private final Integer port;
+  private final String namespace;
+  private final String serverAddress;
+  private final Integer serverPort;
   private final String connectionString;
   private final String rawQueryText;
   private final boolean parameterizedQuery;
@@ -50,7 +80,7 @@ public final class DbExecution {
                 .split(" ")[0]
             : OTHER_SQL;
     this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
-    this.name =
+    this.namespace =
         factoryOptions.hasOption(DATABASE)
             ? ((String) factoryOptions.getValue(DATABASE)).toLowerCase(Locale.ROOT)
             : null;
@@ -58,15 +88,18 @@ public final class DbExecution {
         factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
     String protocol =
         factoryOptions.hasOption(PROTOCOL) ? (String) factoryOptions.getValue(PROTOCOL) : null;
-    this.host = factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
-    this.port = factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
+    this.systemName = resolveDbSystemName(driver, protocol);
+    this.serverAddress =
+        factoryOptions.hasOption(HOST) ? (String) factoryOptions.getValue(HOST) : null;
+    this.serverPort =
+        factoryOptions.hasOption(PORT) ? (Integer) factoryOptions.getValue(PORT) : null;
     this.connectionString =
         String.format(
             "%s%s:%s%s",
             driver != null ? driver : "",
             protocol != null ? ":" + protocol : "",
-            host != null ? "//" + host : "",
-            port != null ? ":" + port : "");
+            serverAddress != null ? "//" + serverAddress : "",
+            serverPort != null ? ":" + serverPort : "");
     this.rawQueryText =
         queryInfo.getQueries().stream()
             .map(QueryInfo::getQuery)
@@ -80,14 +113,20 @@ public final class DbExecution {
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
-  public Integer getPort() {
-    return port;
+  public String getServerAddress() {
+    return serverAddress;
   }
 
-  public String getHost() {
-    return host;
+  @Nullable
+  public Integer getServerPort() {
+    return serverPort;
   }
 
+  public String getSystemName() {
+    return systemName;
+  }
+
+  @Deprecated // to be removed in 3.0
   public String getSystem() {
     return system;
   }
@@ -96,8 +135,8 @@ public final class DbExecution {
     return user;
   }
 
-  public String getName() {
-    return name;
+  public String getNamespace() {
+    return namespace;
   }
 
   public String getConnectionString() {
@@ -120,31 +159,11 @@ public final class DbExecution {
     this.context = context;
   }
 
-  @Override
-  public String toString() {
-    return "DbExecution{"
-        + "system='"
-        + system
-        + '\''
-        + ", user='"
-        + user
-        + '\''
-        + ", name='"
-        + name
-        + '\''
-        + ", host='"
-        + host
-        + '\''
-        + ", port="
-        + port
-        + ", connectionString='"
-        + connectionString
-        + '\''
-        + ", rawQueryText='"
-        + rawQueryText
-        + '\''
-        + ", context="
-        + context
-        + '}';
+  private static String resolveDbSystemName(@Nullable String driver, @Nullable String protocol) {
+
+    // Use PROTOCOL when DRIVER is "pool" (r2dbc-pool wraps the real driver in PROTOCOL),
+    // otherwise use DRIVER directly.
+    String rawDriver = "pool".equals(driver) && protocol != null ? protocol : driver;
+    return rawDriver != null ? DRIVER_TO_SYSTEM_NAME.getOrDefault(rawDriver, OTHER_SQL) : OTHER_SQL;
   }
 }
