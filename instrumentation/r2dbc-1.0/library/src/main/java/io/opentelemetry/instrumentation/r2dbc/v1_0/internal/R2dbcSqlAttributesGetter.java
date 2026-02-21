@@ -21,6 +21,12 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Override
   public String getDbSystemName(DbExecution request) {
+    return request.getSystemName();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  public String getDbSystem(DbExecution request) {
     return request.getSystem();
   }
 
@@ -34,7 +40,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Override
   @Nullable
   public String getDbNamespace(DbExecution request) {
-    return request.getName();
+    return request.getNamespace();
   }
 
   @Deprecated // to be removed in 3.0
@@ -61,13 +67,13 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Nullable
   @Override
   public String getServerAddress(DbExecution request) {
-    return request.getHost();
+    return request.getServerAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(DbExecution request) {
-    return request.getPort();
+    return request.getServerPort();
   }
 
   @Override
