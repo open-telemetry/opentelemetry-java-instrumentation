@@ -30,6 +30,7 @@ enum VertxSqlClientAttributesGetter
     if (SemconvStability.emitStableDatabaseSemconv()) {
       return request.getDbSystemName();
     }
+    // preserving old behavior
     return null;
   }
 
