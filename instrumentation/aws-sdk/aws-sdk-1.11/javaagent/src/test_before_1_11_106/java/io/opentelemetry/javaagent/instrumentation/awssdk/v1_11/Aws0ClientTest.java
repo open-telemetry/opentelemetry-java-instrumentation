@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -257,7 +258,7 @@ class Aws0ClientTest {
                     span.hasName("S3.GetObject")
                         .hasKind(CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasException(caught)
+                        .hasException(emitExceptionAsSpanEvents() ? caught : null)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(URL_FULL, "http://localhost:" + UNUSABLE_PORT),
@@ -295,7 +296,7 @@ class Aws0ClientTest {
                     span.hasName("S3.GetObject")
                         .hasKind(CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasException(caught)
+                        .hasException(emitExceptionAsSpanEvents() ? caught : null)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(URL_FULL, "https://s3.amazonaws.com"),
@@ -333,7 +334,7 @@ class Aws0ClientTest {
                     span.hasName("S3.GetObject")
                         .hasKind(CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasException(caught)
+                        .hasException(emitExceptionAsSpanEvents() ? caught : null)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(URL_FULL, server.httpUri().toString()),
