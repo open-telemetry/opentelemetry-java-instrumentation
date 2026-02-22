@@ -25,7 +25,7 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("org.jooq:joox:2.0.1")
-  testImplementation("com.jayway.jsonpath:json-path:2.10.0")
+  testImplementation("com.jayway.jsonpath:json-path:3.0.0")
   testImplementation("org.slf4j:slf4j-simple:2.0.17")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
