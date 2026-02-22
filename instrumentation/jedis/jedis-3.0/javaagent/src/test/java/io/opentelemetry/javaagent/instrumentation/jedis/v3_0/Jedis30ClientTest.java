@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -23,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
@@ -90,7 +92,9 @@ class Jedis30ClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NETWORK_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
 
@@ -125,7 +129,9 @@ class Jedis30ClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NETWORK_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
@@ -140,7 +146,9 @@ class Jedis30ClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NETWORK_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
@@ -165,7 +173,9 @@ class Jedis30ClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NETWORK_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
@@ -180,7 +190,9 @@ class Jedis30ClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(
+                                NETWORK_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }

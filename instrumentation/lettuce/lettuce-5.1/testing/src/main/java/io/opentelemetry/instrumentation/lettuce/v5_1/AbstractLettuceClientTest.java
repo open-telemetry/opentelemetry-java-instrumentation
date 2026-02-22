@@ -80,7 +80,8 @@ public abstract class AbstractLettuceClientTest {
     }
   }
 
-  protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
+  protected static List<AttributeAssertion> addExtraAttributes(
+      AttributeAssertion... assertions) {
     return Arrays.asList(assertions);
   }
 

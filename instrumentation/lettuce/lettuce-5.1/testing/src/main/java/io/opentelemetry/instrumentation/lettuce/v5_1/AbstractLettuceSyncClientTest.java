@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -137,7 +138,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -180,7 +181,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -207,7 +208,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -234,7 +235,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -272,7 +273,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -299,7 +300,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -328,7 +329,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -366,7 +367,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -394,7 +395,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -423,7 +424,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -445,7 +446,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -468,7 +469,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -492,7 +493,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -510,7 +511,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -551,7 +552,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                               || SemconvStability.emitStableDatabaseSemconv()
                                           ? null
                                           : "Connection disconnected"),
-                                  equalTo(NETWORK_TYPE, "ipv4"),
+                                  equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                   equalTo(NETWORK_PEER_ADDRESS, ip),
                                   equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                   equalTo(SERVER_ADDRESS, host),

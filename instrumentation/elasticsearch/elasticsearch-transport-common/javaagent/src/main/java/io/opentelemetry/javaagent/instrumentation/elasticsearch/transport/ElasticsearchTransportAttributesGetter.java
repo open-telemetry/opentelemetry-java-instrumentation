@@ -10,7 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
-final class ElasticsearchTransportAttributesGetter
+public class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
 
   @Override
@@ -33,5 +33,25 @@ final class ElasticsearchTransportAttributesGetter
   @Override
   public String getDbOperationName(ElasticTransportRequest request) {
     return request.getAction().getClass().getSimpleName();
+  }
+
+  @Override
+  @Nullable
+  public String getNetworkPeerAddress(
+      ElasticTransportRequest request, @Nullable ActionResponse response) {
+    if (response != null && response.remoteAddress() != null) {
+      return response.remoteAddress().getAddress();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(
+      ElasticTransportRequest request, @Nullable ActionResponse response) {
+    if (response != null && response.remoteAddress() != null) {
+      return response.remoteAddress().getPort();
+    }
+    return null;
   }
 }

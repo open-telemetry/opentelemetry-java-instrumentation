@@ -73,7 +73,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       DbClientAttributesGetter<REQUEST, RESPONSE> getter, boolean captureQueryParameters) {
     this.getter = getter;
     this.captureQueryParameters = captureQueryParameters;
-    internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
+            getter, SemconvStability.emitOldDatabaseSemconv(), false);
     serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchTransportClientTest;
 import java.io.File;
 import java.util.Collections;
@@ -111,6 +112,6 @@ public abstract class AbstractElasticsearch6TransportClientTest
 
   @Override
   protected boolean hasNetworkType() {
-    return true;
+    return SemconvStability.emitOldDatabaseSemconv();
   }
 }
