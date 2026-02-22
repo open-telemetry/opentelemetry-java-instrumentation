@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClien
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.attachConnectOptions;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -49,8 +50,8 @@ public class PoolInstrumentation implements TypeInstrumentation {
         named("pool")
             .and(isStatic())
             .and(takesArguments(3))
-            .and(takesArgument(1, named("io.vertx.sqlclient.SqlConnectOptions")))
-            .and(returns(named("io.vertx.sqlclient.Pool"))),
+            .and(takesArgument(1, hasSuperType(named("io.vertx.sqlclient.SqlConnectOptions"))))
+            .and(returns(hasSuperType(named("io.vertx.sqlclient.Pool")))),
         PoolInstrumentation.class.getName() + "$PoolAdvice");
 
     transformer.applyAdviceToMethod(

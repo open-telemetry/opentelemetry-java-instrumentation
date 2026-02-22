@@ -66,7 +66,15 @@ public final class VertxSqlClientRequest {
     if (sqlConnectOptions == null) {
       return null;
     }
-    return DB_SYSTEM_BY_CLASS_NAME.getOrDefault(sqlConnectOptions.getClass().getName(), OTHER_SQL);
+    Class<?> clazz = sqlConnectOptions.getClass();
+    while (clazz != null) {
+      String dbSystem = DB_SYSTEM_BY_CLASS_NAME.get(clazz.getName());
+      if (dbSystem != null) {
+        return dbSystem;
+      }
+      clazz = clazz.getSuperclass();
+    }
+    return OTHER_SQL;
   }
 
   private static Map<String, String> buildDbSystemMap() {
