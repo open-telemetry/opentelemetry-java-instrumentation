@@ -15,22 +15,6 @@ final class Elasticsearch6TransportAttributesGetter extends ElasticsearchTranspo
 
   @Override
   @Nullable
-  public String getNetworkPeerAddress(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
-    // let InetSocketAddress-based extraction handle this
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
-    // let InetSocketAddress-based extraction handle this
-    return null;
-  }
-
-  @Override
-  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       ElasticTransportRequest request, @Nullable ActionResponse response) {
     if (response != null && response.remoteAddress() != null) {

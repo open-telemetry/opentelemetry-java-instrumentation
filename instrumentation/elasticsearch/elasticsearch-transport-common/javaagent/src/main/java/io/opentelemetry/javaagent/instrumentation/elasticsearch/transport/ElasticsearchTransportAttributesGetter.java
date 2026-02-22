@@ -34,24 +34,4 @@ public class ElasticsearchTransportAttributesGetter
   public String getDbOperationName(ElasticTransportRequest request) {
     return request.getAction().getClass().getSimpleName();
   }
-
-  @Override
-  @Nullable
-  public String getNetworkPeerAddress(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
-    if (response != null && response.remoteAddress() != null) {
-      return response.remoteAddress().getAddress();
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(
-      ElasticTransportRequest request, @Nullable ActionResponse response) {
-    if (response != null && response.remoteAddress() != null) {
-      return response.remoteAddress().getPort();
-    }
-    return null;
-  }
 }
