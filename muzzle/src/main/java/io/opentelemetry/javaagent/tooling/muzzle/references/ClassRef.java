@@ -25,7 +25,7 @@ public final class ClassRef {
   private final Set<Source> sources;
   private final Set<Flag> flags;
   private final String className;
-  private final String superClassName;
+  @Nullable private final String superClassName;
   private final Set<String> interfaceNames;
   private final Set<FieldRef> fields;
   private final Set<MethodRef> methods;
@@ -34,7 +34,7 @@ public final class ClassRef {
       Set<Source> sources,
       Set<Flag> flags,
       String className,
-      String superClassName,
+      @Nullable String superClassName,
       Set<String> interfaceNames,
       Set<FieldRef> fields,
       Set<MethodRef> methods) {

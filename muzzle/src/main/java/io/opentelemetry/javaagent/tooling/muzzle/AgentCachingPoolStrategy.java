@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
@@ -50,7 +52,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 
-  private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
+  @Nullable private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;
 
@@ -82,6 +84,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     this.locationStrategy = locationStrategy;
   }
 
+  @Nullable
   private static Method getFindLoadedClassMethod() {
     // instrumentation is null when this code is called from muzzle
     Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
@@ -120,7 +123,9 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   private static Class<?> findLoadedClass(ClassLoader classLoader, String className) {
     try {
-      return (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
+      Method method =
+          requireNonNull(findLoadedClassMethod, "findLoadedClassMethod must be initialized");
+      return (Class<?>) method.invoke(classLoader, className);
     } catch (Exception exception) {
       throw new IllegalStateException(exception);
     }
@@ -171,7 +176,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     private final int hashCode;
 
-    TypeCacheKey(int loaderHash, WeakReference<ClassLoader> loaderRef, String className) {
+    TypeCacheKey(int loaderHash, @Nullable WeakReference<ClassLoader> loaderRef, String className) {
       // classes in java package are always loaded from boot loader
       // set loader to boot loader to avoid creating multiple cache entries
       this.loaderHash = className.startsWith("java.") ? BOOTSTRAP_HASH : loaderHash;
@@ -256,18 +261,19 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         new TypePool.Resolution.Simple(TypeDescription.ForLoadedType.of(Object.class));
 
     private final int loaderHash;
-    private final WeakReference<ClassLoader> loaderRef;
+    @Nullable private final WeakReference<ClassLoader> loaderRef;
     private final Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache;
 
     SharedResolutionCacheAdapter(
         int loaderHash,
-        WeakReference<ClassLoader> loaderRef,
+        @Nullable WeakReference<ClassLoader> loaderRef,
         Cache<TypeCacheKey, TypePool.Resolution> sharedResolutionCache) {
       this.loaderHash = loaderHash;
       this.loaderRef = loaderRef;
       this.sharedResolutionCache = sharedResolutionCache;
     }
 
+    @Nullable
     @Override
     public TypePool.Resolution find(String className) {
       if (OBJECT_NAME.equals(className)) {
@@ -279,7 +285,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       // being defined. For example if another agent adds an interface to the class then returning
       // the cached description that does not have that interface would result in bytebuddy removing
       // that interface.
-      if (AgentTooling.isTransforming(loaderRef != null ? loaderRef.get() : null, className)) {
+      ClassLoader classLoader = loaderRef != null ? loaderRef.get() : null;
+      if (isTransformingClass(classLoader, className)) {
         return null;
       }
 
@@ -290,6 +297,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       }
 
       return null;
+    }
+
+    private static boolean isTransformingClass(
+        @Nullable ClassLoader classLoader, String className) {
+      return AgentTooling.isTransforming(classLoader, className);
     }
 
     @Override
@@ -391,7 +403,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return doResolve(name).isResolved();
       }
 
-      private volatile TypeDescription cached;
+      @Nullable private volatile TypeDescription cached;
 
       @Override
       public TypeDescription resolve() {
@@ -411,7 +423,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     private abstract class CachingTypeDescription
         extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation {
-      private volatile TypeDescription delegate;
+      @Nullable private volatile TypeDescription delegate;
 
       @Override
       protected TypeDescription delegate() {
@@ -421,7 +433,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return delegate;
       }
 
-      private volatile AnnotationList annotations;
+      @Nullable private volatile AnnotationList annotations;
 
       @Override
       public AnnotationList getDeclaredAnnotations() {
@@ -439,7 +451,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return annotations;
       }
 
-      private volatile MethodList<MethodDescription.InDefinedShape> methods;
+      @Nullable private volatile MethodList<MethodDescription.InDefinedShape> methods;
 
       @Override
       public MethodList<MethodDescription.InDefinedShape> getDeclaredMethods() {
@@ -471,9 +483,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return name;
       }
 
-      private volatile TypeDescription.Generic cachedSuperClass;
+      @Nullable private volatile TypeDescription.Generic cachedSuperClass;
 
       @Override
+      @Nullable
       public TypeDescription.Generic getSuperClass() {
         if (cachedSuperClass == null) {
           TypeDescription.Generic superClassDescription = delegate().getSuperClass();
@@ -492,7 +505,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return cachedSuperClass;
       }
 
-      private volatile TypeList.Generic cachedInterfaces;
+      @Nullable private volatile TypeList.Generic cachedInterfaces;
 
       @Override
       public TypeList.Generic getInterfaces() {
@@ -590,9 +603,10 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return name;
       }
 
-      private volatile TypeDescription.Generic cachedSuperClass;
+      @Nullable private volatile TypeDescription.Generic cachedSuperClass;
 
       @Override
+      @Nullable
       public TypeDescription.Generic getSuperClass() {
         if (cachedSuperClass == null) {
           Class<?> clazz = classRef.get();
@@ -610,7 +624,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         return cachedSuperClass;
       }
 
-      private volatile TypeList.Generic cachedInterfaces;
+      @Nullable private volatile TypeList.Generic cachedInterfaces;
 
       @Override
       public TypeList.Generic getInterfaces() {
