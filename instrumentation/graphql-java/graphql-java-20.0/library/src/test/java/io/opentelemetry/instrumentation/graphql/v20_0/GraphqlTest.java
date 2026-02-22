@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -310,13 +311,19 @@ class GraphqlTest extends AbstractGraphqlTest {
                             equalTo(GRAPHQL_FIELD_NAME, "bookById"),
                             equalTo(GRAPHQL_FIELD_PATH, "/bookById"))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("fetching book failed")),
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalStateException("fetching book failed")
+                                : null),
                 span ->
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("fetching book failed"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalStateException("fetching book failed")
+                                : null)));
   }
 
   // test data fetcher returning an error

@@ -11,7 +11,7 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
 @AutoValue
-abstract class CamelRequest {
+public abstract class CamelRequest {
 
   public static CamelRequest create(
       SpanDecorator spanDecorator,

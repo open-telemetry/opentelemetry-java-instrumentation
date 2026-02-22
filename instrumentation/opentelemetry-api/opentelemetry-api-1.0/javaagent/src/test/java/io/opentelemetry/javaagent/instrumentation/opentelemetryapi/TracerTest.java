@@ -11,6 +11,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
@@ -216,7 +217,10 @@ class TracerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasTotalAttributeCount(0).hasException(throwable)));
+                span ->
+                    span.hasName("test")
+                        .hasTotalAttributeCount(0)
+                        .hasException(emitExceptionAsSpanEvents() ? throwable : null)));
   }
 
   @Test

@@ -34,10 +34,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelRequest;
 import java.net.URI;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -55,6 +59,11 @@ class DbSpanDecorator extends BaseSpanDecorator {
   DbSpanDecorator(String component, String system) {
     this.component = component;
     this.system = system;
+  }
+
+  @Override
+  public ExceptionEventExtractor<CamelRequest> getExceptionEventExtractor(SpanKind spanKind) {
+    return DbExceptionEventExtractors.client();
   }
 
   @Override

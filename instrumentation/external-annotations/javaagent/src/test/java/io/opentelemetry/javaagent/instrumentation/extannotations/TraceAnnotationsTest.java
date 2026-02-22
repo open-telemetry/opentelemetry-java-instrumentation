@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -84,7 +85,7 @@ class TraceAnnotationsTest {
                 span ->
                     span.hasName("SayTracedHello.sayError")
                         .hasStatus(StatusData.error())
-                        .hasException(thrown)
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(assertCodeFunction("sayError"))));
   }
 
