@@ -149,6 +149,25 @@ Following the reasoning from
 - `Optional` shouldn't appear in public API signatures
 - Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
 
+## Semantic convention constants
+
+**Library instrumentation**: Copy semantic convention constants directly into library
+instrumentation classes rather than depending on the semconv artifact. Library instrumentation is
+used by end users, and this avoids exposing a dependency on the semconv artifact (which may change
+across versions). For example:
+
+```java
+// copied from MessagingIncubatingAttributes
+private static final AttributeKey<String> MESSAGING_SYSTEM =
+    AttributeKey.stringKey("messaging.system");
+```
+
+**Javaagent instrumentation**: Use the semconv constants from the semconv artifact directly. The
+javaagent bundles its own dependencies, so there is no risk of version conflicts for end users.
+
+**Tests**: Use the semconv constants from the semconv artifact directly. Test dependencies do not
+affect end users.
+
 ## Tooling conventions
 
 ### AssertJ
