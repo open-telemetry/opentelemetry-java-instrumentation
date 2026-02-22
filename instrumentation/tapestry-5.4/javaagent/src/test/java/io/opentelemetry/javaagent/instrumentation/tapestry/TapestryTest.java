@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -143,6 +144,9 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("expected"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalStateException("expected")
+                                : null)));
   }
 }

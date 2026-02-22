@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.dropwizard;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -108,7 +109,8 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
         .hasKind(INTERNAL);
     if (EXCEPTION.equals(endpoint)) {
       span.hasStatus(StatusData.error())
-          .hasException(new IllegalStateException(EXCEPTION.getBody()));
+          .hasException(
+              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
     }
     return span;
   }

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -67,6 +68,9 @@ public abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasNoParent()
-                        .hasException(new ServletException("exception"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new ServletException("exception")
+                                : null)));
   }
 }
