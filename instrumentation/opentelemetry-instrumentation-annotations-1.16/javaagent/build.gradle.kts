@@ -38,6 +38,8 @@ tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
+
+  // not using withType<Test> because want testDeclarativeConfig to only get this from declarative-config.yaml
   test {
     jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
   }
@@ -50,7 +52,14 @@ tasks {
     )
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
+  }
+
   check {
-    dependsOn(testDeclarativeConfig)
+    dependsOn(testDeclarativeConfig, testExceptionSignalLogs)
   }
 }

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.decorators.DecoratorRegistry;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -73,6 +74,13 @@ public final class CamelSingletons {
         Instrumenter.builder(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor);
     builder.addAttributesExtractor(attributesExtractor);
     builder.setSpanStatusExtractor(spanStatusExtractor);
+    Experimental.setExceptionEventExtractor(
+        builder,
+        (logRecordBuilder, context, request) ->
+            request
+                .getSpanDecorator()
+                .getExceptionEventExtractor(request.getSpanKind())
+                .extract(logRecordBuilder, context, request));
 
     INSTRUMENTER = builder.buildInstrumenter(request -> request.getSpanKind());
   }

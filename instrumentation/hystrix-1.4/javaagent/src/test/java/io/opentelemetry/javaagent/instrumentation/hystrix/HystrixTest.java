@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_CIRCUIT_OPEN;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_COMMAND;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_GROUP;
@@ -108,7 +109,8 @@ class HystrixTest {
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException())
+                        .hasException(
+                            emitExceptionAsSpanEvents() ? new IllegalArgumentException() : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
                             equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),

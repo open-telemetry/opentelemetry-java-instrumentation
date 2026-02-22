@@ -14,8 +14,11 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import javax.annotation.Nullable;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -46,18 +49,25 @@ abstract class WithSpanAspect {
         new WithSpanAspectParameterAttributeNamesExtractor(
             parameterNameDiscoverer, spanAttributeNameSupplier);
 
-    instrumenter =
-        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName)
-            .addAttributesExtractor(
-                CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
-            .addAttributesExtractor(
-                MethodSpanAttributesExtractor.create(
-                    JoinPointRequest::method,
-                    parameterAttributeNamesExtractor,
-                    JoinPointRequest::args))
-            .addContextCustomizer(WithSpanAspect::parentContext)
-            .buildInstrumenter(JoinPointRequest::spanKind);
+    instrumenter = buildInstrumenter(openTelemetry, parameterAttributeNamesExtractor);
     this.requestFactory = requestFactory;
+  }
+
+  private static Instrumenter<JoinPointRequest, Object> buildInstrumenter(
+      OpenTelemetry openTelemetry,
+      ParameterAttributeNamesExtractor parameterAttributeNamesExtractor) {
+    InstrumenterBuilder<JoinPointRequest, Object> builder =
+        Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, JoinPointRequest::spanName);
+    Experimental.setExceptionEventExtractor(
+        builder, ExceptionEventExtractor.create("withspan.exception"));
+    return builder
+        .addAttributesExtractor(
+            CodeAttributesExtractor.create(JointPointCodeAttributesExtractor.INSTANCE))
+        .addAttributesExtractor(
+            MethodSpanAttributesExtractor.create(
+                JoinPointRequest::method, parameterAttributeNamesExtractor, JoinPointRequest::args))
+        .addContextCustomizer(WithSpanAspect::parentContext)
+        .buildInstrumenter(JoinPointRequest::spanKind);
   }
 
   private static Context parentContext(

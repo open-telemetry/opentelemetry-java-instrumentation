@@ -26,11 +26,20 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
 /** This interface represents a decorator specific to the component/endpoint being instrumented. */
 public interface SpanDecorator {
+
+  /**
+   * Returns the {@link ExceptionEventExtractor} for the given span kind.
+   *
+   * @param spanKind The span kind
+   * @return The exception event extractor
+   */
+  ExceptionEventExtractor<CamelRequest> getExceptionEventExtractor(SpanKind spanKind);
 
   /**
    * This method indicates whether the component associated with the SpanDecorator should result in

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -63,7 +64,7 @@ class MethodTest {
                 span ->
                     span.hasName("InitialDirContext.search")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasException(throwableReference.get())
+                        .hasException(emitExceptionAsSpanEvents() ? throwableReference.get() : null)
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(InitialDirContext.class, "search"))));
   }
