@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -24,7 +25,12 @@ enum VertxSqlClientAttributesGetter
       createResponseStatusExtractors();
 
   @Override
+  @Nullable
   public String getDbSystemName(VertxSqlClientRequest request) {
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      return request.getDbSystemName();
+    }
+    // preserving old behavior
     return null;
   }
 
