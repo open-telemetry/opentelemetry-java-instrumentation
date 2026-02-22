@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_3;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
@@ -189,7 +190,7 @@ class ProcedureCallTest {
                     span.hasName("ProcedureCall.getOutputs TEST_PROC")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasException(exception)
+                        .hasException(emitExceptionAsSpanEvents() ? exception : null)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             experimentalSatisfies(

@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -13,6 +15,9 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.Experiment
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -37,6 +42,7 @@ import io.lettuce.core.codec.Utf8StringCodec;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -159,29 +165,44 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.type"),
-                                            "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.message"),
-                                            expectedMessage),
-                                        satisfies(
-                                            AttributeKey.stringKey("exception.stacktrace"),
-                                            val -> val.isNotNull())))));
+                span -> {
+                  span.hasName("CONNECT")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, host),
+                          equalTo(SERVER_PORT, incorrectPort),
+                          equalTo(maybeStable(DB_SYSTEM), REDIS),
+                          equalTo(maybeStablePeerService(), "test-peer-service"));
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(
+                                        AttributeKey.stringKey("exception.type"),
+                                        "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
+                                    equalTo(
+                                        AttributeKey.stringKey("exception.message"),
+                                        expectedMessage),
+                                    satisfies(
+                                        AttributeKey.stringKey("exception.stacktrace"),
+                                        val -> val.isNotNull())));
+                  }
+                }));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          EXCEPTION_TYPE,
+                          "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
+                      equalTo(EXCEPTION_MESSAGE, expectedMessage),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   @Test
@@ -440,8 +461,22 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                     span.hasName("DEL")
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("TestException"))
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalStateException("TestException")
+                                : null)
                         .hasAttributesSatisfyingExactly(assertions)));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("db.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "TestException"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   @Test

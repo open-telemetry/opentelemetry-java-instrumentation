@@ -93,8 +93,14 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testStableSemconv, testExperimental, testExceptionSignalLogs)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {
