@@ -9,6 +9,7 @@ import static java.util.Collections.singleton;
 
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -20,6 +21,11 @@ final class CassandraSqlAttributesGetter
   @Override
   public String getDbSystemName(CassandraRequest request) {
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(CassandraRequest request) {
+    return SqlDialect.CASSANDRA;
   }
 
   @Override

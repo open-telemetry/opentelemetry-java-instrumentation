@@ -79,6 +79,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+    SqlDialect dialect = getter.getSqlDialect(request);
 
     Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
@@ -86,7 +87,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryText);
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryText, dialect);
         String operationName = sanitizedQuery.getOperationName();
         attributes.put(
             DB_STATEMENT, querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
@@ -105,7 +106,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean shouldSanitize = querySanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText);
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText, dialect);
         attributes.put(
             DB_QUERY_TEXT, shouldSanitize ? sanitizedQuery.getQueryText() : rawQueryText);
         String querySummary = sanitizedQuery.getQuerySummary();
@@ -115,7 +116,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
-            MultiQuery.analyzeWithSummary(getter.getRawQueryTexts(request), shouldSanitize);
+            MultiQuery.analyzeWithSummary(
+                getter.getRawQueryTexts(request), dialect, shouldSanitize);
         attributes.put(DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
         attributes.put(DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
         attributes.put(DB_STORED_PROCEDURE_NAME, multiQuery.getStoredProcedureName());

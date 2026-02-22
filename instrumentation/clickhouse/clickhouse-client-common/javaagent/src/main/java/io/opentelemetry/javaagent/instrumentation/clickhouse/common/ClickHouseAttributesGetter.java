@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,11 @@ final class ClickHouseAttributesGetter
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(ClickHouseDbRequest request) {
+    return SqlDialect.CLICKHOUSE;
   }
 
   @Nullable

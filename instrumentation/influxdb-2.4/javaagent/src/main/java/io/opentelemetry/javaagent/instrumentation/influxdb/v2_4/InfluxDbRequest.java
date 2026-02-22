@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.INFLUXDB;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
@@ -20,9 +22,12 @@ public abstract class InfluxDbRequest {
 
   public static InfluxDbRequest create(
       String host, int port, String namespace, String operationName, String sql) {
-    SqlQuery sqlQuery = SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
+    SqlQuery sqlQuery =
+        SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(sql, INFLUXDB) : null;
     SqlQuery sqlQueryWithSummary =
-        SemconvStability.emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
+        SemconvStability.emitStableDatabaseSemconv()
+            ? sanitizer.sanitizeWithSummary(sql, INFLUXDB)
+            : null;
     return new AutoValue_InfluxDbRequest(
         host, port, namespace, operationName, sqlQuery, sqlQueryWithSummary);
   }

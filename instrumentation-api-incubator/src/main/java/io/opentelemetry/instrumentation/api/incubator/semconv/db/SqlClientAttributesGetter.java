@@ -53,6 +53,18 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
+   * Returns the SQL dialect used by the database. The dialect determines how double-quoted
+   * fragments are handled during query sanitization. Known-db getters should override this to
+   * return their specific dialect (e.g. {@link SqlDialect#CASSANDRA}).
+   *
+   * <p>By default, returns {@link SqlDialect#DEFAULT}, which treats double-quoted fragments as
+   * string literals.
+   */
+  default SqlDialect getSqlDialect(REQUEST request) {
+    return SqlDialect.DEFAULT;
+  }
+
+  /**
    * Get the raw SQL query texts. The values returned by this method are later sanitized by the
    * {@link SqlClientAttributesExtractor} before being set as span attribute.
    *

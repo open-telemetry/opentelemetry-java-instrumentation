@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.GEODE;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -36,9 +38,9 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (SemconvStability.emitStableDatabaseSemconv()) {
       // even though not using the summary, this will use the same
       // sanitization logic that will be the default under 3.0
-      return sanitizer.sanitizeWithSummary(request.getQueryText()).getQueryText();
+      return sanitizer.sanitizeWithSummary(request.getQueryText(), GEODE).getQueryText();
     } else {
-      return sanitizer.sanitize(request.getQueryText()).getQueryText();
+      return sanitizer.sanitize(request.getQueryText(), GEODE).getQueryText();
     }
   }
 
