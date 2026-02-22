@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
@@ -23,7 +25,6 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -129,19 +130,19 @@ public final class LogEventMapper {
       LocationInfo locationInfo = new LocationInfo(new Throwable(), fqcn);
       String fileName = locationInfo.getFileName();
       if (fileName != null) {
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           builder.setAttribute(CODE_FILE_PATH, fileName);
         }
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           builder.setAttribute(CODE_FILEPATH, fileName);
         }
       }
 
-      if (SemconvStability.isEmitStableCodeSemconv()) {
+      if (emitStableCodeSemconv()) {
         builder.setAttribute(
             CODE_FUNCTION_NAME, locationInfo.getClassName() + "." + locationInfo.getMethodName());
       }
-      if (SemconvStability.isEmitOldCodeSemconv()) {
+      if (emitOldCodeSemconv()) {
         builder.setAttribute(CODE_NAMESPACE, locationInfo.getClassName());
         builder.setAttribute(CODE_FUNCTION, locationInfo.getMethodName());
       }
@@ -156,10 +157,10 @@ public final class LogEventMapper {
         }
       }
       if (codeLineNo >= 0) {
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           builder.setAttribute(CODE_LINE_NUMBER, (long) codeLineNo);
         }
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           builder.setAttribute(CODE_LINENO, (long) codeLineNo);
         }
       }
