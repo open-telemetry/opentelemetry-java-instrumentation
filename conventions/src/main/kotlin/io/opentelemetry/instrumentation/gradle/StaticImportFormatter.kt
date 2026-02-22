@@ -51,6 +51,11 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
         "[a-z][a-zA-Z0-9]*"
       ),
+      Triple(
+        "SemconvStability",
+        "io.opentelemetry.instrumentation.api.internal.SemconvStability",
+        "emit[a-zA-Z0-9]*"
+      ),
     )
 
     var content = input

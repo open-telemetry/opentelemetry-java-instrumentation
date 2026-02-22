@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -242,7 +243,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       MapAssert<AttributeKey<?>, Object> attributesAssert =
           assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
 
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
             CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
       }

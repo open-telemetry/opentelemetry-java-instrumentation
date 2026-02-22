@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -30,7 +32,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetSocketAddress;
@@ -180,10 +181,10 @@ final class OpenTelemetryTracing implements Tracing {
       // the span starts.
       SpanBuilder spanBuilder =
           tracer.spanBuilder("redis").setSpanKind(SpanKind.CLIENT).setParent(context);
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         spanBuilder.setAttribute(DB_SYSTEM_NAME, REDIS);
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv()) {
         spanBuilder.setAttribute(DB_SYSTEM, REDIS);
       }
       return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics, encodingEventsEnabled);
@@ -223,10 +224,10 @@ final class OpenTelemetryTracing implements Tracing {
       this.metrics = metrics;
       this.attributesBuilder = Attributes.builder();
       this.encodingEventsEnabled = encodingEventsEnabled;
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         attributesBuilder.put(DB_SYSTEM_NAME, REDIS);
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv()) {
         attributesBuilder.put(DB_SYSTEM, REDIS);
       }
     }
@@ -318,11 +319,11 @@ final class OpenTelemetryTracing implements Tracing {
         String queryText =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
         if (queryText != null) {
-          if (SemconvStability.emitStableDatabaseSemconv()) {
+          if (emitStableDatabaseSemconv()) {
             spanBuilder.setAttribute(DB_QUERY_TEXT, queryText);
             attributesBuilder.put(DB_QUERY_TEXT, queryText);
           }
-          if (SemconvStability.emitOldDatabaseSemconv()) {
+          if (emitOldDatabaseSemconv()) {
             spanBuilder.setAttribute(DB_STATEMENT, queryText);
             attributesBuilder.put(DB_STATEMENT, queryText);
           }
@@ -384,7 +385,7 @@ final class OpenTelemetryTracing implements Tracing {
         argsString = value;
         return this;
       }
-      if (key.equals("db.namespace") && SemconvStability.emitOldDatabaseSemconv()) {
+      if (key.equals("db.namespace") && emitOldDatabaseSemconv()) {
         // map backwards into db.redis.database.index
         long val = Long.parseLong(value);
         if (span != null) {
@@ -422,7 +423,7 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private void finish(Span span, long startTime) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         metrics.onEnd(
             metrics.onStart(Context.current(), Attributes.empty(), startTime),
             attributesBuilder.build(),

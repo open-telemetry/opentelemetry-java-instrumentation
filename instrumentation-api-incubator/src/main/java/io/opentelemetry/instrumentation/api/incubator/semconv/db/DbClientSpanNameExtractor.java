@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -153,7 +154,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         String querySummary = getter.getDbQuerySummary(request);
         if (querySummary != null) {
           return querySummary;
@@ -183,7 +184,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
+        if (emitStableDatabaseSemconv()) {
           String querySummary = getter.getDbQuerySummary(request);
           if (querySummary != null) {
             return querySummary;
@@ -195,7 +196,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         return computeSpanName(namespace, operationName, null, null);
       }
 
-      if (!SemconvStability.emitStableDatabaseSemconv()) {
+      if (!emitStableDatabaseSemconv()) {
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
@@ -254,7 +255,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         return sqlDelegate.extract(request);
       }
       // For old semconv, use the generic span name format (operation + namespace)

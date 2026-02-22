@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.geode;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.GEODE;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
@@ -35,7 +35,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   public String getDbQueryText(GeodeRequest request) {
     // Geode query language (OQL) is very different from SQL
     // but SQL sanitization is still useful to mask literals
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       // even though not using the summary, this will use the same
       // sanitization logic that will be the default under 3.0
       return sanitizer.sanitizeWithSummary(request.getQueryText(), GEODE).getQueryText();
