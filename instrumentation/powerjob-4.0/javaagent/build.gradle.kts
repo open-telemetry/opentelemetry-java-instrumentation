@@ -33,7 +33,13 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.powerjob.experimental-span-attributes=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testExceptionSignalLogs)
   }
 }

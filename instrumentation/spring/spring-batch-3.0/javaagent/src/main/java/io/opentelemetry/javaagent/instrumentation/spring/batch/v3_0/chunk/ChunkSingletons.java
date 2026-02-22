@@ -13,9 +13,11 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
@@ -27,6 +29,9 @@ public class ChunkSingletons {
     InstrumenterBuilder<ChunkContextAndBuilder, Void> instrumenterBuilder =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), instrumentationName(), ChunkSingletons::spanName);
+
+    Experimental.setExceptionEventExtractor(
+        instrumenterBuilder, ExceptionEventExtractor.create("spring_batch.exception"));
 
     if (shouldCreateRootSpanForChunk()) {
       instrumenterBuilder.addSpanLinksExtractor(ChunkSingletons::extractSpanLinks);

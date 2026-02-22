@@ -58,8 +58,19 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("*ChunkRootSpanTest")
+      excludeTestsMatching("*ItemLevelSpanTest")
+      excludeTestsMatching("*CustomSpanEventTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testChunkRootSpan, testItemLevelSpan)
+    dependsOn(testChunkRootSpan, testItemLevelSpan, testExceptionSignalLogs)
   }
 
   withType<Test>().configureEach {

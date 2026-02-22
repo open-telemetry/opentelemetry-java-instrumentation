@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.basic;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.singletonMap;
 
@@ -77,7 +78,10 @@ abstract class SpringBatchTest {
                         .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.error())
                         .hasTotalAttributeCount(0)
-                        .hasException(new IllegalStateException("fail"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalStateException("fail")
+                                : null)));
   }
 
   @Test
