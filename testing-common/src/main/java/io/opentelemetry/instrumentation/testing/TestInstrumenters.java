@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
@@ -17,7 +18,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
@@ -36,9 +39,12 @@ final class TestInstrumenters {
   private final Instrumenter<String, Void> httpServerInstrumenter;
 
   TestInstrumenters(OpenTelemetry openTelemetry) {
-    instrumenter =
-        Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
-            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
+    InstrumenterBuilder<String, Void> instrumenterBuilder =
+        Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name);
+    Experimental.setExceptionEventExtractor(
+        instrumenterBuilder,
+        (logRecordBuilder, context, request) -> logRecordBuilder.setSeverity(Severity.WARN));
+    instrumenter = instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysInternal());
     httpClientInstrumenter =
         Instrumenter.<String, Void>builder(openTelemetry, "test", name -> name)
             // cover both semconv and span-kind strategies
