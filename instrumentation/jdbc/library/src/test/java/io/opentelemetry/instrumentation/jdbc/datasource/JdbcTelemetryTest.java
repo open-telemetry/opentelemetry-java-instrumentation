@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -29,7 +30,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -62,10 +62,7 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            SemconvStability.emitStableDatabaseSemconv()
-                                ? "SELECT"
-                                : "SELECT dbname")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
 
     assertDurationMetric(
@@ -80,7 +77,7 @@ class JdbcTelemetryTest {
 
   @Test
   void error() throws SQLException {
-    assumeTrue(SemconvStability.emitStableDatabaseSemconv());
+    assumeTrue(emitStableDatabaseSemconv());
 
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource source = spy(new TestDataSource());
@@ -103,18 +100,14 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            SemconvStability.emitStableDatabaseSemconv()
-                                ? "SELECT"
-                                : "SELECT dbname")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, POSTGRESQL),
                             equalTo(DB_NAMESPACE, "dbname"),
                             equalTo(DB_QUERY_TEXT, "SELECT ?;"),
                             equalTo(DB_RESPONSE_STATUS_CODE, "42"),
                             equalTo(
-                                DB_QUERY_SUMMARY,
-                                SemconvStability.emitStableDatabaseSemconv() ? "SELECT" : null),
+                                DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 5432),
                             equalTo(ERROR_TYPE, "java.sql.SQLException"))));
@@ -165,11 +158,7 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span ->
-                    span.hasName(
-                        SemconvStability.emitStableDatabaseSemconv()
-                            ? "SELECT"
-                            : "SELECT dbname")));
+                span -> span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")));
   }
 
   @Test
@@ -234,10 +223,7 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            SemconvStability.emitStableDatabaseSemconv()
-                                ? "SELECT"
-                                : "SELECT dbname")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"))));
   }
 
@@ -275,31 +261,21 @@ class JdbcTelemetryTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(
-                            SemconvStability.emitStableDatabaseSemconv()
-                                ? "BATCH INSERT test"
-                                : "dbname")
+                    span.hasName(emitStableDatabaseSemconv() ? "BATCH INSERT test" : "dbname")
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
                             equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(
                                 DB_CONNECTION_STRING,
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? null
-                                    : "postgresql://127.0.0.1:5432"),
+                                emitStableDatabaseSemconv() ? null : "postgresql://127.0.0.1:5432"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? "INSERT INTO test VALUES(?)"
-                                    : null),
+                                emitStableDatabaseSemconv() ? "INSERT INTO test VALUES(?)" : null),
                             equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                SemconvStability.emitStableDatabaseSemconv() ? 2L : null),
+                                DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 2L : null),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT test"
-                                    : null),
+                                emitStableDatabaseSemconv() ? "BATCH INSERT test" : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 5432))));
   }
