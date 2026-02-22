@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -88,5 +89,16 @@ public abstract class AbstractLettuceClientTest {
         .hasEventsSatisfyingExactly(
             event -> event.hasName("redis.encode.start"),
             event -> event.hasName("redis.encode.end"));
+  }
+
+  protected static String spanName(String operation) {
+    return spanName(operation, host, port);
+  }
+
+  protected static String spanName(String operation, String serverAddress, long serverPort) {
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      return operation + " " + serverAddress + ":" + serverPort;
+    }
+    return operation;
   }
 }
