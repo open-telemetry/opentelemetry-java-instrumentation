@@ -10,7 +10,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -45,20 +44,16 @@ public final class R2dbcInstrumenterBuilder {
 
   public Instrumenter<DbExecution, Void> build(
       UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer,
-      boolean querySanitizationEnabled,
-      boolean ansiQuotes) {
+      boolean querySanitizationEnabled) {
     SpanNameExtractor<DbExecution> spanNameExtractor =
         spanNameExtractorTransformer.apply(
-            DbClientSpanNameExtractor.create(
-                R2dbcSqlAttributesGetter.INSTANCE,
-                ansiQuotes ? SqlDialect.ANSI_QUOTES : SqlDialect.DEFAULT));
+            DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE));
 
     return Instrumenter.<DbExecution, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
                 .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .setQuerySanitizationAnsiQuotes(ansiQuotes)
                 .build())
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(DbClientMetrics.get())

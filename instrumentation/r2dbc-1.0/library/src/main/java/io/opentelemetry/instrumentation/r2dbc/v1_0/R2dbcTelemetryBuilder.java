@@ -21,7 +21,6 @@ public final class R2dbcTelemetryBuilder {
 
   private final R2dbcInstrumenterBuilder instrumenterBuilder;
   private boolean querySanitizationEnabled = true;
-  private boolean querySanitizationAnsiQuotes;
   private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorCustomizer =
       UnaryOperator.identity();
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
@@ -54,18 +53,6 @@ public final class R2dbcTelemetryBuilder {
   }
 
   /**
-   * Sets whether the SQL sanitizer should treat double-quoted fragments as string literals or
-   * identifiers. By default, double quotes are used for string literals. When the sanitizer is able
-   * to detect that the used database does not support double-quoted string literals then this flag
-   * will be automatically switched.
-   */
-  @CanIgnoreReturnValue
-  public R2dbcTelemetryBuilder setQuerySanitizationAnsiQuotes(boolean querySanitizationAnsiQuotes) {
-    this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
-    return this;
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */
@@ -81,8 +68,7 @@ public final class R2dbcTelemetryBuilder {
    */
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
-        instrumenterBuilder.build(
-            spanNameExtractorCustomizer, querySanitizationEnabled, querySanitizationAnsiQuotes),
+        instrumenterBuilder.build(spanNameExtractorCustomizer, querySanitizationEnabled),
         sqlCommenterBuilder.build());
   }
 }

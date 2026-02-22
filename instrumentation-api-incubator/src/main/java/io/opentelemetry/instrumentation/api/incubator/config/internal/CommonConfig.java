@@ -29,7 +29,6 @@ public final class CommonConfig {
   private final Set<String> knownHttpRequestMethods;
   private final EnduserConfig enduserConfig;
   private final boolean querySanitizationEnabled;
-  private final boolean querySanitizationAnsiQuotes;
   private final boolean sqlCommenterEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
@@ -77,8 +76,6 @@ public final class CommonConfig {
                     "known_methods", String.class, new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     querySanitizationEnabled =
         commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true);
-    querySanitizationAnsiQuotes =
-        commonConfig.get("database").get("statement_sanitizer").getBoolean("ansi_quotes", false);
     sqlCommenterEnabled =
         commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled", false);
     emitExperimentalHttpClientTelemetry =
@@ -131,10 +128,6 @@ public final class CommonConfig {
 
   public boolean isQuerySanitizationEnabled() {
     return querySanitizationEnabled;
-  }
-
-  public boolean isQuerySanitizationAnsiQuotes() {
-    return querySanitizationAnsiQuotes;
   }
 
   public boolean isSqlCommenterEnabled() {

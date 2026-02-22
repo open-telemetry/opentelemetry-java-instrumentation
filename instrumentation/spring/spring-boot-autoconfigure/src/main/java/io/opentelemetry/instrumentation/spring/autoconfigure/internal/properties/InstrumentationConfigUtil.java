@@ -55,10 +55,4 @@ public final class InstrumentationConfigUtil {
             "enabled",
             commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled", true));
   }
-
-  public static boolean isQuerySanitizationAnsiQuotes(OpenTelemetry openTelemetry) {
-    DeclarativeConfigProperties commonConfig =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    return commonConfig.get("database").get("statement_sanitizer").getBoolean("ansi_quotes", false);
-  }
 }

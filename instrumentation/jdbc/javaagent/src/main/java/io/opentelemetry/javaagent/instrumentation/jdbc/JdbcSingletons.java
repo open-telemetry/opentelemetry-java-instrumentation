@@ -53,9 +53,6 @@ public final class JdbcSingletons {
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("statement_sanitizer")
                 .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()),
-            DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
-                .get("statement_sanitizer")
-                .getBoolean("ansi_quotes", AgentCommonConfig.get().isQuerySanitizationAnsiQuotes()),
             CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =

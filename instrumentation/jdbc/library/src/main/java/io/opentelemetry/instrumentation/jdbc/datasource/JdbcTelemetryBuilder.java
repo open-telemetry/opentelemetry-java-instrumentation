@@ -25,7 +25,6 @@ public final class JdbcTelemetryBuilder {
   private boolean querySanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
-  private boolean querySanitizationAnsiQuotes = false;
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
 
   static {
@@ -54,18 +53,6 @@ public final class JdbcTelemetryBuilder {
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
     this.querySanitizationEnabled = enabled;
-    return this;
-  }
-
-  /**
-   * Sets whether the SQL sanitizer should treat double-quoted fragments as string literals or
-   * identifiers. By default, double quotes are used for string literals. When the sanitizer is able
-   * to detect that the used database does not support double-quoted string literals then this flag
-   * will be automatically switched.
-   */
-  @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setQuerySanitizationAnsiQuotes(boolean querySanitizationAnsiQuotes) {
-    this.querySanitizationAnsiQuotes = querySanitizationAnsiQuotes;
     return this;
   }
 
@@ -99,7 +86,6 @@ public final class JdbcTelemetryBuilder {
             openTelemetry,
             statementInstrumenterEnabled,
             querySanitizationEnabled,
-            querySanitizationAnsiQuotes,
             captureQueryParameters);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(

@@ -27,20 +27,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST, ?> getter) {
-    return create(getter, SqlDialect.DEFAULT);
-  }
-
-  /**
-   * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
-   * conventions: {@code <db.operation> <db.name>.<identifier>}.
-   *
-   * @see SqlQuery#getOperationName() used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
-   * @see SqlQuery#getCollectionName() used to extract {@code <db.table>} or stored procedure name.
-   */
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      SqlClientAttributesGetter<REQUEST, ?> getter, SqlDialect sqlDialect) {
-    return new SqlClientSpanNameExtractor<>(getter, sqlDialect.ansiQuotes());
+    return new SqlClientSpanNameExtractor<>(getter);
   }
 
   /**
@@ -184,19 +171,15 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       extends DbClientSpanNameExtractor<REQUEST> {
 
     private final SqlClientAttributesGetter<REQUEST, ?> getter;
-    private final boolean ansiQuotes;
 
-    private SqlClientSpanNameExtractor(
-        SqlClientAttributesGetter<REQUEST, ?> getter, boolean ansiQuotes) {
+    private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
-      this.ansiQuotes = ansiQuotes;
     }
 
     @Override
     public String extract(REQUEST request) {
       String namespace = getter.getDbNamespace(request);
-      SqlDialect dialect =
-          SqlQuerySanitizerUtil.getDialect(getter.getDbSystemName(request), ansiQuotes);
+      SqlDialect dialect = getter.getSqlDialect(request);
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
@@ -266,7 +249,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     private MigratingSqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
-      this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter, false);
+      this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter);
     }
 
     @Override
@@ -281,8 +264,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       String operationName = null;
       if (rawQueryTexts.size() == 1) {
         String rawQuery = rawQueryTexts.iterator().next();
-        SqlDialect dialect =
-            SqlQuerySanitizerUtil.getDialect(getter.getDbSystemName(request), false);
+        SqlDialect dialect = getter.getSqlDialect(request);
         SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQuery, dialect);
         operationName = sanitizedQuery.getOperationName();
       }
