@@ -123,8 +123,14 @@ tasks {
     }
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, testExceptionSignalLogs)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -503,7 +504,7 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(
                                 HIBERNATE_SESSION_ID,
                                 trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))
-                        .hasException(mappingException),
+                        .hasException(emitExceptionAsSpanEvents() ? mappingException : null),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)

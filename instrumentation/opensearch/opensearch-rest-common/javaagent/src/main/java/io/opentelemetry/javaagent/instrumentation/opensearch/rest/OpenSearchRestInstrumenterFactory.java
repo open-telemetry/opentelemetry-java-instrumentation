@@ -9,8 +9,11 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 
 public final class OpenSearchRestInstrumenterFactory {
@@ -21,14 +24,16 @@ public final class OpenSearchRestInstrumenterFactory {
     OpenSearchRestNetResponseAttributesGetter netAttributesGetter =
         new OpenSearchRestNetResponseAttributesGetter();
 
-    return Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
-            GlobalOpenTelemetry.get(),
-            instrumentationName,
-            DbClientSpanNameExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
-        .addOperationMetrics(DbClientMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<OpenSearchRestRequest, OpenSearchRestResponse> builder =
+        Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
+                GlobalOpenTelemetry.get(),
+                instrumentationName,
+                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private OpenSearchRestInstrumenterFactory() {}

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -177,8 +178,10 @@ class SessionTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(
-                            new UnknownEntityTypeException(
-                                "Unable to locate persister: java.lang.Long"))
+                            emitExceptionAsSpanEvents()
+                                ? new UnknownEntityTypeException(
+                                    "Unable to locate persister: java.lang.Long")
+                                : null)
                         .hasAttributesSatisfyingExactly(
                             experimentalSatisfies(
                                 HIBERNATE_SESSION_ID,

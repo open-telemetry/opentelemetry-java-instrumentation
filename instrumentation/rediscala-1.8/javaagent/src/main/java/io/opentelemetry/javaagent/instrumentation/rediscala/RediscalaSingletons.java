@@ -9,8 +9,11 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import redis.RedisCommand;
 
 public final class RediscalaSingletons {
@@ -22,14 +25,15 @@ public final class RediscalaSingletons {
   static {
     RediscalaAttributesGetter dbAttributesGetter = new RediscalaAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<RedisCommand<?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<RedisCommand<?, ?>, Void> instrumenter() {
