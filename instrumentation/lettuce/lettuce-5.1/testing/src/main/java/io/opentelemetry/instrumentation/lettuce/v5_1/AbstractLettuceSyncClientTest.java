@@ -9,12 +9,16 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -31,6 +35,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -128,24 +133,26 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
     List<AttributeKey<?>> expected =
         new ArrayList<>(
             asList(
                 DB_SYSTEM_NAME,
+                DB_OPERATION_NAME,
                 SERVER_ADDRESS,
                 SERVER_PORT,
                 NETWORK_PEER_ADDRESS,
@@ -169,18 +176,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -195,18 +203,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(spanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -221,18 +230,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("RANDOMKEY")
+                        span.hasName(spanName("RANDOMKEY"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
+                                    equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -258,18 +268,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("LPUSH")
+                        span.hasName(spanName("LPUSH", host, containerConnection.port))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, containerConnection.port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "LPUSH")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -284,12 +295,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("HMSET")
+                        span.hasName(spanName("HMSET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -297,7 +308,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
-                                        "HMSET user firstname ? lastname ? age ?")))
+                                        "HMSET user firstname ? lastname ? age ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "HMSET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -312,18 +324,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("HGETALL")
+                        span.hasName(spanName("HGETALL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
+                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
+                                    equalTo(maybeStable(DB_OPERATION), "HGETALL")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -349,12 +362,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("EVAL")
+                        span.hasName(spanName("EVAL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -362,7 +375,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
-                                        "EVAL " + b64Script + " 1 TESTLIST ? ?")))
+                                        "EVAL " + b64Script + " 1 TESTLIST ? ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "EVAL")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -377,17 +391,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("MSET")
+                        span.hasName(spanName("MSET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "MSET key1 ? key2 ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "MSET key1 ? key2 ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "MSET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -405,11 +420,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -417,15 +432,21 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
-                                          "CLIENT SETINFO lib-name Lettuce")))),
+                                          "CLIENT SETINFO lib-name Lettuce"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          SemconvStability.emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -434,15 +455,21 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
-                                              stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
+                                              stringAssert.startsWith("CLIENT SETINFO lib-ver")),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          SemconvStability.emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
@@ -452,38 +479,46 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
                                               stringAssert.startsWith(
-                                                  "CLIENT MAINT_NOTIFICATIONS"))))),
+                                                  "CLIENT MAINT_NOTIFICATIONS")),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          SemconvStability.emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("DEBUG")
+                          span.hasName(spanName("DEBUG", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))));
+                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
+                                      equalTo(maybeStable(DB_OPERATION), "DEBUG")))));
     } else {
       testing()
           .waitAndAssertTraces(
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("DEBUG")
+                          span.hasName(spanName("DEBUG", host, containerConnection.port))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))
+                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
+                                      equalTo(maybeStable(DB_OPERATION), "DEBUG")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
   }
@@ -507,22 +542,31 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
-                      span.hasName("SHUTDOWN")
+                      span.hasName(spanName("SHUTDOWN", host, containerConnection.port))
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
                               addExtraAttributes(
                                   equalTo(
                                       AttributeKey.stringKey("error"),
                                       Boolean.getBoolean("testLatestDeps")
+                                              || SemconvStability.emitStableDatabaseSemconv()
                                           ? null
                                           : "Connection disconnected"),
-                                  equalTo(NETWORK_TYPE, "ipv4"),
+                                  equalTo(NETWORK_TYPE, SemconvStability.emitStableDatabaseSemconv() ? null : IPV4),
                                   equalTo(NETWORK_PEER_ADDRESS, ip),
                                   equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, containerConnection.port),
                                   equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")));
+                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
+                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      SemconvStability.emitStableDatabaseSemconv()
+                                          ? (Boolean.getBoolean("testLatestDeps")
+                                              ? "io.lettuce.core.RedisException"
+                                              : null)
+                                          : null)));
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
                         // and also produces an exception event in addition to encode events

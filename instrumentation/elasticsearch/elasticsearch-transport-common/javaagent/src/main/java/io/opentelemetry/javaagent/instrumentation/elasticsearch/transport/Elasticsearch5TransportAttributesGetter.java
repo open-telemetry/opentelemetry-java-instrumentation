@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
-public class ElasticTransportNetworkAttributesGetter
-    implements NetworkAttributesGetter<ElasticTransportRequest, ActionResponse> {
+public class Elasticsearch5TransportAttributesGetter
+    extends ElasticsearchTransportAttributesGetter {
 
   @Override
   @Nullable
