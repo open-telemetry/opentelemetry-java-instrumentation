@@ -107,8 +107,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "SET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("callback")
@@ -151,8 +151,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "GET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -200,8 +200,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "GET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("callback")
@@ -237,8 +237,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
-                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
+                                    equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -261,8 +261,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "COMMAND"),
-                                    equalTo(maybeStable(DB_STATEMENT), "COMMAND")))
+                                    equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
+                                    equalTo(maybeStable(DB_OPERATION), "COMMAND")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -306,8 +306,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "SET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName(spanName("GET"))
@@ -321,8 +321,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "GET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET a"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -350,8 +350,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "SET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName(spanName("GET"))
@@ -365,8 +365,8 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_OPERATION), "GET"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET a"),
+                                    equalTo(maybeStable(DB_OPERATION), "GET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }

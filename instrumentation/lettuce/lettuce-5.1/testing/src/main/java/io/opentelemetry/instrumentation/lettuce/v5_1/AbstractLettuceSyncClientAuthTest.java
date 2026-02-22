@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -77,57 +79,69 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                           span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraErrorAttributes(
-                                      "io.lettuce.core.RedisCommandExecutionException",
+                                  addExtraAttributes(
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
-                                          "CLIENT SETINFO lib-name Lettuce")))),
+                                          "CLIENT SETINFO lib-name Lettuce"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          SemconvStability.emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraErrorAttributes(
-                                      "io.lettuce.core.RedisCommandExecutionException",
+                                  addExtraAttributes(
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
-                                              stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
+                                              stringAssert.startsWith("CLIENT SETINFO lib-ver")),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          SemconvStability.emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  addExtraErrorAttributes(
-                                      "io.lettuce.core.RedisCommandExecutionException",
+                                  addExtraAttributes(
                                       equalTo(NETWORK_TYPE, "ipv4"),
                                       equalTo(NETWORK_PEER_ADDRESS, ip),
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
                                               stringAssert.startsWith(
-                                                  "CLIENT MAINT_NOTIFICATIONS"))))),
+                                                  "CLIENT MAINT_NOTIFICATIONS")),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          SemconvStability.emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -141,8 +155,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_OPERATION), "AUTH"),
-                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
+                                      equalTo(maybeStable(DB_OPERATION), "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
     } else {
@@ -161,8 +175,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                      equalTo(maybeStable(DB_OPERATION), "AUTH"),
-                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
+                                      equalTo(maybeStable(DB_OPERATION), "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
   }
