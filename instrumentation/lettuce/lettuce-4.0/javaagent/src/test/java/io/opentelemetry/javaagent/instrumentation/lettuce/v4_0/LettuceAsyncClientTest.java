@@ -425,8 +425,7 @@ class LettuceAsyncClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(maybeStable(DB_SYSTEM), REDIS),
-                equalTo(maybeStable(DB_OPERATION), "DEL")));
+                equalTo(maybeStable(DB_SYSTEM), REDIS), equalTo(maybeStable(DB_OPERATION), "DEL")));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "java.lang.IllegalStateException"));
     }
