@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
@@ -85,7 +86,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
                                           "CLIENT SETINFO lib-name Lettuce"),
@@ -107,7 +108,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -130,7 +131,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -154,7 +155,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
                                       equalTo(maybeStable(DB_OPERATION), "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
@@ -174,7 +175,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
                                       equalTo(maybeStable(DB_OPERATION), "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
