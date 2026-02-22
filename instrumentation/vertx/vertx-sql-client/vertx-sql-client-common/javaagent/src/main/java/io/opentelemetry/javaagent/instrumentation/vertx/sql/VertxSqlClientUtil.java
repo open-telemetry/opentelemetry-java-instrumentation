@@ -35,6 +35,11 @@ public final class VertxSqlClientUtil {
   private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
       VirtualField.find(SqlConnectOptions.class, String.class);
 
+  private static final VirtualField<Pool, String> poolDbSystem =
+      VirtualField.find(Pool.class, String.class);
+
+  private static final Map<String, String> DB_SYSTEM_BY_DRIVER_CLASS = buildDriverDbSystemMap();
+
   // copied from VertxSqlClientRequest
   private static final String POSTGRESQL = "postgresql";
   private static final String MYSQL = "mysql";
@@ -60,6 +65,15 @@ public final class VertxSqlClientUtil {
     return connectOptionsDbSystem.get(sqlConnectOptions);
   }
 
+  public static void storePoolDbSystem(Pool pool, String dbSystem) {
+    poolDbSystem.set(pool, dbSystem);
+  }
+
+  @Nullable
+  public static String getDbSystemFromDriverClass(String driverClassName) {
+    return DB_SYSTEM_BY_DRIVER_CLASS.get(driverClassName);
+  }
+
   /**
    * Resolve the database system name from the Pool implementation class hierarchy and store it on
    * the SqlConnectOptions for later retrieval.
@@ -69,6 +83,10 @@ public final class VertxSqlClientUtil {
       return;
     }
     String dbSystem = resolveDbSystemFromPool(pool);
+    if (dbSystem == null) {
+      // vertx 5.0: pool class is generic PoolImpl; db system was stored by DriverInstrumentation
+      dbSystem = poolDbSystem.get(pool);
+    }
     if (dbSystem != null) {
       connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
     }
@@ -100,6 +118,16 @@ public final class VertxSqlClientUtil {
     map.put("io.vertx.mssqlclient.MSSQLPool", MICROSOFT_SQL_SERVER);
     map.put("io.vertx.oracleclient.OraclePool", ORACLE_DB);
     map.put("io.vertx.db2client.DB2Pool", DB2);
+    return map;
+  }
+
+  private static Map<String, String> buildDriverDbSystemMap() {
+    Map<String, String> map = new HashMap<>();
+    map.put("io.vertx.pgclient.spi.PgDriver", POSTGRESQL);
+    map.put("io.vertx.mysqlclient.spi.MySQLDriver", MYSQL);
+    map.put("io.vertx.mssqlclient.spi.MSSQLDriver", MICROSOFT_SQL_SERVER);
+    map.put("io.vertx.oracleclient.spi.OracleDriver", ORACLE_DB);
+    map.put("io.vertx.db2client.spi.DB2Driver", DB2);
     return map;
   }
 
