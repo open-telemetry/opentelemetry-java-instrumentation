@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
+import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -17,8 +21,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambd
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -28,7 +30,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +66,7 @@ class AwsLambdaStreamWrapperTest {
 
   @Test
   void handlerTraced() throws Exception {
-    InputStream input = new ByteArrayInputStream("hello\n".getBytes(StandardCharsets.UTF_8));
+    InputStream input = new ByteArrayInputStream("hello\n".getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
 
     TracingRequestStreamWrapper wrapper =
@@ -81,15 +82,15 @@ class AwsLambdaStreamWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
   void handlerTracedWithException() {
-    InputStream input = new ByteArrayInputStream("bye\n".getBytes(StandardCharsets.UTF_8));
+    InputStream input = new ByteArrayInputStream("bye\n".getBytes(UTF_8));
     OutputStream output = new ByteArrayOutputStream();
 
     TracingRequestStreamWrapper wrapper =
@@ -109,10 +110,10 @@ class AwsLambdaStreamWrapperTest {
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
+                                CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandler implements RequestStreamHandler {
@@ -120,10 +121,8 @@ class AwsLambdaStreamWrapperTest {
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
         throws IOException {
-      BufferedReader reader =
-          new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-      BufferedWriter writer =
-          new BufferedWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8));
+      BufferedReader reader = new BufferedReader(new InputStreamReader(input, UTF_8));
+      BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, UTF_8));
       String line = reader.readLine();
       if (line.equals("hello")) {
         writer.write("world");

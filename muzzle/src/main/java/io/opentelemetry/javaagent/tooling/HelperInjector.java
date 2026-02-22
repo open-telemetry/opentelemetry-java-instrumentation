@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -39,7 +41,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -124,7 +125,7 @@ public class HelperInjector implements Transformer {
                 className ->
                     HelperClassDefinition.create(
                         className, helpersSource, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     this.helperClassesGenerator = (cl) -> helpers;
     this.helperResources = helperResources;
@@ -154,7 +155,7 @@ public class HelperInjector implements Transformer {
     List<HelperClassDefinition> helperDefinitions =
         helpers.stream()
             .map(helperType -> HelperClassDefinition.create(helperType, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     return new HelperInjector(
         requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
@@ -182,7 +183,7 @@ public class HelperInjector implements Transformer {
               helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectClass())
                   .collect(
-                      Collectors.toMap(
+                      toMap(
                           HelperClassDefinition::getClassName,
                           helper -> () -> helper.getBytecode().getBytecode(),
                           (a, b) -> {
@@ -195,7 +196,7 @@ public class HelperInjector implements Transformer {
               helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectResource())
                   .collect(
-                      Collectors.toMap(
+                      toMap(
                           helper -> helper.getClassName().replace('.', '/') + ".class",
                           helper -> helper.getBytecode().getUrl()));
 

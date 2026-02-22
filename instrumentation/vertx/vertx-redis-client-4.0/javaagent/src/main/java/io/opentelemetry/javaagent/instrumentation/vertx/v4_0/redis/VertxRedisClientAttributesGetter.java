@@ -24,7 +24,7 @@ public enum VertxRedisClientAttributesGetter
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getUser(VertxRedisClientRequest request) {
@@ -40,7 +40,7 @@ public enum VertxRedisClientAttributesGetter
     return null;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getConnectionString(VertxRedisClientRequest request) {

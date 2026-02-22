@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -43,7 +44,7 @@ public final class BatchRecordsHandler implements Handler<KafkaConsumerRecords<S
   }
 
   public static void waitForMessages() throws InterruptedException {
-    messageReceived.await(30, TimeUnit.SECONDS);
+    messageReceived.await(30, SECONDS);
   }
 
   public static int getLastBatchSize() {

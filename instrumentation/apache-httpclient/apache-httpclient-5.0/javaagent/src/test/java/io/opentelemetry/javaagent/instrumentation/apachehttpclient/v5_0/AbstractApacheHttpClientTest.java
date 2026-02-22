@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -16,7 +17,6 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
@@ -115,6 +115,6 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
   // running testLatestDeps
   @SuppressWarnings("PreferJavaTimeOverload")
   static Timeout getTimeout(Duration duration) {
-    return Timeout.of(duration.toMillis(), TimeUnit.MILLISECONDS);
+    return Timeout.of(duration.toMillis(), MILLISECONDS);
   }
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v3_0.tomcat;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -27,7 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
@@ -156,11 +156,9 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
     accessLogValue.waitForLoggedIds(count);
     assertThat(accessLogValue.getLoggedIds().size()).isEqualTo(count);
     List<String> loggedTraces =
-        accessLogValue.getLoggedIds().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        accessLogValue.getLoggedIds().stream().map(Map.Entry::getKey).collect(toList());
     List<String> loggedSpans =
-        accessLogValue.getLoggedIds().stream()
-            .map(Map.Entry::getValue)
-            .collect(Collectors.toList());
+        accessLogValue.getLoggedIds().stream().map(Map.Entry::getValue).collect(toList());
 
     testing()
         .waitAndAssertTraces(
@@ -178,7 +176,7 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
                               assertThat(loggedTraces).contains(span.getTraceId());
                               assertThat(loggedSpans).contains(span.getSpanId());
                             })
-                .collect(Collectors.toList()));
+                .collect(toList()));
   }
 
   @Test
@@ -210,7 +208,7 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
               trace.hasSpansSatisfyingExactly(
                   spanDataAsserts.stream()
                       .map(e -> (Consumer<SpanDataAssert>) span -> e.accept(span, trace))
-                      .collect(Collectors.toList()));
+                      .collect(toList()));
               SpanData span = trace.getSpan(0);
               Map.Entry<String, String> entry = accessLogValue.getLoggedIds().get(0);
               assertThat(entry.getKey()).isEqualTo(span.getTraceId());

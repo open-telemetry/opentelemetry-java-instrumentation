@@ -29,6 +29,8 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -72,7 +74,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -132,12 +133,12 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
       case SYNC:
         try (StreamResponse<ChatCompletionChunk> result =
             client.chat().completions().createStreaming(params)) {
-          return result.stream().collect(Collectors.toList());
+          return result.stream().collect(toList());
         }
       case SYNC_FROM_ASYNC:
         try (StreamResponse<ChatCompletionChunk> result =
             clientAsync.sync().chat().completions().createStreaming(params)) {
-          return result.stream().collect(Collectors.toList());
+          return result.stream().collect(toList());
         }
       case ASYNC:
       case ASYNC_FROM_SYNC:
@@ -957,7 +958,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "Atlantic Ocean.";
     assertThat(fullMessage).isEqualTo(content);
@@ -1043,7 +1044,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "South Atlantic Ocean";
     assertThat(fullMessage).isEqualTo(content);
@@ -1449,7 +1450,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     getTesting()
         .waitAndAssertTraces(
