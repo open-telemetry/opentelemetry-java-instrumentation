@@ -75,6 +75,26 @@ class Slf4j2Test {
   }
 
   @Test
+  void otelEventNameKeyValue() {
+    logger
+        .atInfo()
+        .setMessage("log message 1")
+        .addKeyValue("otel.event.name", "MyEventName")
+        .addKeyValue("key1", "val1")
+        .log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1")
+                .hasEventName("MyEventName")
+                .hasTotalAttributeCount(codeAttributesLogCount() + 1)
+                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("key1"), "val1")));
+  }
+
+  @Test
   void keyValuePairWinsOverMdc() {
     MDC.put("key1", "mdc-value");
     try {

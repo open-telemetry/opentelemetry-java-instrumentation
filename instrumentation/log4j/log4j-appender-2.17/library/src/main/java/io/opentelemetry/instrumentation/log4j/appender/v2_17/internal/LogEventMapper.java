@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
@@ -37,6 +38,8 @@ import org.apache.logging.log4j.message.Message;
  */
 public final class LogEventMapper<T> {
 
+  private static final Logger logger = Logger.getLogger(LogEventMapper.class.getName());
+
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
   private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
@@ -46,9 +49,12 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+
+  @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
@@ -93,6 +99,10 @@ public final class LogEventMapper<T> {
     }
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureEventName = captureEventName;
+    if (captureEventName) {
+      logger.warning(
+          "The captureEventName setting is deprecated and will be removed in a future version.");
+    }
   }
 
   /**
@@ -200,6 +210,11 @@ public final class LogEventMapper<T> {
       builder.setBody(body);
     }
 
+    String eventName = mapMessage.get(OTEL_EVENT_NAME_KEY);
+    if (eventName != null && !eventName.isEmpty()) {
+      builder.setEventName(eventName);
+    }
+
     if (captureMapMessageAttributes) {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage
@@ -207,6 +222,7 @@ public final class LogEventMapper<T> {
           .forEach(
               (key, value) -> {
                 if (value != null
+                    && !key.equals(OTEL_EVENT_NAME_KEY)
                     && (!checkSpecialMapMessageAttribute
                         || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());

@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -52,6 +53,7 @@ import org.slf4j.event.KeyValuePair;
  * any time.
  */
 public final class LoggingEventMapper {
+  private static final Logger logger = Logger.getLogger(LoggingEventMapper.class.getName());
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
   private static final AttributeKey<String> CODE_NAMESPACE =
@@ -61,6 +63,8 @@ public final class LoggingEventMapper {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+
+  @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
@@ -78,6 +82,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("log.body.template");
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -106,6 +111,10 @@ public final class LoggingEventMapper {
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
     this.captureEventName = builder.captureEventName;
+    if (captureEventName) {
+      logger.warning(
+          "The captureEventName setting is deprecated and will be removed in a future version.");
+    }
   }
 
   public static Builder builder() {
@@ -202,6 +211,10 @@ public final class LoggingEventMapper {
     if (captureMarkerAttribute) {
       boolean skipLogstashMarkers = supportsLogstashMarkers && captureLogstashMarkerAttributes;
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
+    }
+
+    if (supportsKeyValuePairs) {
+      captureOtelEventName(builder, loggingEvent);
     }
 
     if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
@@ -316,11 +329,26 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
+  private static void captureOtelEventName(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
+    if (keyValuePairs != null) {
+      for (KeyValuePair keyValuePair : keyValuePairs) {
+        if (OTEL_EVENT_NAME_KEY.equals(keyValuePair.key) && keyValuePair.value != null) {
+          builder.setEventName(keyValuePair.value.toString());
+          break;
+        }
+      }
+    }
+  }
+
+  @NoMuzzle
   private void captureKeyValuePairAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
+        if (!OTEL_EVENT_NAME_KEY.equals(keyValuePair.key)) {
+          captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
+        }
       }
     }
   }
