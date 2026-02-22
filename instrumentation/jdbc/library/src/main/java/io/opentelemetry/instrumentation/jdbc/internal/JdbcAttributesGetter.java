@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -45,6 +46,15 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getConnectionString(DbRequest request) {
     return request.getDbInfo().getShortUrl();
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(DbRequest request) {
+    String system = request.getDbInfo().getSystem();
+    if ("mysql".equals(system) || "mariadb".equals(system)) {
+      return SqlDialect.DEFAULT;
+    }
+    return SqlDialect.ANSI_QUOTES;
   }
 
   @Override
