@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -169,7 +170,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
@@ -213,7 +214,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
-                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(maybeStable(DB_SYSTEM), REDIS),
                                           equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                                   .satisfies(
                                       AbstractLettuceClientTest::assertCommandEncodeEvents)));
@@ -291,7 +292,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
-                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(maybeStable(DB_SYSTEM), REDIS),
                                           equalTo(
                                               maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                                   .satisfies(
@@ -357,7 +358,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
-                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(maybeStable(DB_SYSTEM), REDIS),
                                           equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                                   .satisfies(
                                       AbstractLettuceClientTest::assertCommandEncodeEvents)));
@@ -416,7 +417,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "HMSET TESTHM firstname ? lastname ? age ?")))
@@ -433,7 +434,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
                                     equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }

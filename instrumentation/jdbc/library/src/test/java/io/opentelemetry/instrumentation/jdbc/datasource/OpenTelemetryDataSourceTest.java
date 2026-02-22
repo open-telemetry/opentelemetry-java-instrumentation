@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -50,7 +51,7 @@ class OpenTelemetryDataSourceTest {
 
     List<AttributeAssertion> assertions =
         SemconvCodeStabilityUtil.codeFunctionAssertions(TestDataSource.class, "getConnection");
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), "postgresql"));
+    assertions.add(equalTo(maybeStable(DB_SYSTEM), POSTGRESQL));
     assertions.add(equalTo(maybeStable(DB_NAME), "dbname"));
     assertions.add(
         equalTo(
