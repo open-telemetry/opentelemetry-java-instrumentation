@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageO
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -22,6 +23,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -82,10 +84,13 @@ public final class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
     if (receiveInstrumentationEnabled) {
-      return instrumenterBuilder
-          .addSpanLinksExtractor(
-              new PropagatorBasedSpanLinksExtractor<>(PROPAGATOR, MessageTextMapGetter.INSTANCE))
-          .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+      instrumenterBuilder.addSpanLinksExtractor(
+          new PropagatorBasedSpanLinksExtractor<>(PROPAGATOR, MessageTextMapGetter.INSTANCE));
+    }
+    Experimental.setExceptionEventExtractor(
+        instrumenterBuilder, MessagingExceptionEventExtractors.client());
+    if (receiveInstrumentationEnabled) {
+      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
     return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
   }
@@ -94,17 +99,20 @@ public final class PulsarSingletons {
     MessagingAttributesGetter<PulsarBatchRequest, Void> getter =
         PulsarBatchMessagingAttributesGetter.INSTANCE;
 
-    return Instrumenter.<PulsarBatchRequest, Void>builder(
-            TELEMETRY,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
-        .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
-        .addOperationMetrics(MessagingConsumerMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<PulsarBatchRequest, Void> batchBuilder =
+        Instrumenter.<PulsarBatchRequest, Void>builder(
+                TELEMETRY,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+            .addAttributesExtractor(
+                ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
+            .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
+            .addOperationMetrics(MessagingConsumerMetrics.get());
+    Experimental.setExceptionEventExtractor(
+        batchBuilder, MessagingExceptionEventExtractors.client());
+    return batchBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {
@@ -123,6 +131,10 @@ public final class PulsarSingletons {
       SpanLinksExtractor<PulsarRequest> spanLinksExtractor =
           new PropagatorBasedSpanLinksExtractor<>(PROPAGATOR, MessageTextMapGetter.INSTANCE);
       instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
+    }
+    Experimental.setExceptionEventExtractor(
+        instrumenterBuilder, MessagingExceptionEventExtractors.process());
+    if (receiveInstrumentationEnabled) {
       return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
     return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
@@ -148,6 +160,7 @@ public final class PulsarSingletons {
       builder.addAttributesExtractor(ExperimentalProducerAttributesExtractor.INSTANCE);
     }
 
+    Experimental.setExceptionEventExtractor(builder, MessagingExceptionEventExtractors.client());
     return builder.buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
   }
 

@@ -5,9 +5,15 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +23,7 @@ import io.nats.client.Message;
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.time.Duration;
@@ -363,8 +370,20 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                         span.hasName("sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
-                            .hasException(exception)
+                            .hasException(emitExceptionAsSpanEvents() ? exception : null)
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("publish", "sub", clientId))));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSeverity(Severity.WARN)
+                      .hasEventName("messaging.client.operation.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
+                          satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 }

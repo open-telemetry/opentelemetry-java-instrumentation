@@ -65,17 +65,27 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-
     systemProperty("collectMetadata", collectMetadata)
   }
 
+  test {
+    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExceptionSignalLogs)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {
