@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -16,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -196,32 +199,14 @@ class SpringRmiTest {
                       .hasKind(SpanKind.INTERNAL)
                       .hasStatus(StatusData.error())
                       .hasNoParent()
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("exception")
-                                  .hasAttributesSatisfying(
-                                      equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                      satisfies(
-                                          EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class)))));
+                      .hasException(emitExceptionAsSpanEvents() ? error : null));
           assertions.add(
               span ->
                   span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
                       .hasKind(SpanKind.CLIENT)
                       .hasStatus(StatusData.error())
                       .hasParent(trace.getSpan(0))
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("exception")
-                                  .hasAttributesSatisfying(
-                                      equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                      satisfies(
-                                          EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class))))
+                      .hasException(emitExceptionAsSpanEvents() ? error : null)
                       .hasAttributesSatisfying(
                           equalTo(RPC_SYSTEM, "spring_rmi"),
                           equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
@@ -233,17 +218,7 @@ class SpringRmiTest {
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfying(
-                                        equalTo(
-                                            EXCEPTION_TYPE, error.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
+                        .hasException(emitExceptionAsSpanEvents() ? error : null)
                         .hasAttributesSatisfying(
                             equalTo(RPC_SYSTEM, testSource.serverSystem),
                             equalTo(RPC_SERVICE, testSource.remoteClassName),
@@ -252,5 +227,45 @@ class SpringRmiTest {
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
+    if (emitExceptionAsLogs()) {
+      if (testSource == TestSource.RMI) {
+        testing.waitAndAssertLogRecords(
+            log ->
+                log.hasSeverity(Severity.ERROR)
+                    .hasEventName("rpc.server.call.exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+            log ->
+                log.hasSeverity(Severity.WARN)
+                    .hasEventName("rpc.client.call.exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+            log ->
+                log.hasSeverity(Severity.WARN)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+      } else {
+        testing.waitAndAssertLogRecords(
+            log ->
+                log.hasSeverity(Severity.WARN)
+                    .hasEventName("rpc.client.call.exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+            log ->
+                log.hasSeverity(Severity.WARN)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+      }
+    }
   }
 }

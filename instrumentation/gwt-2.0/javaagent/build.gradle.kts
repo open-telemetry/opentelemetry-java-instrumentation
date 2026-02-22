@@ -105,21 +105,31 @@ tasks {
 
     into(file(layout.buildDirectory.dir("testapp/web")))
   }
-
-  test {
-    dependsOn(sourceSets["testapp"].output)
-    dependsOn(copyTestWebapp)
-
-    // add test app classes to classpath
-    classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
-
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }
 
 tasks.withType<Test>().configureEach {
+  dependsOn(sourceSets["testapp"].output)
+  dependsOn("copyTestWebapp")
+
+  // add test app classes to classpath
+  classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
+
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
+  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+}
+
+tasks {
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
 }

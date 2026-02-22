@@ -5,13 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.gwt;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -181,11 +187,21 @@ class GwtTest {
                     span.hasName("test.gwt.shared.MessageService/sendMessage")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
-                        .hasException(new IOException())
+                        .hasException(emitExceptionAsSpanEvents() ? new IOException() : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "gwt"),
                             equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
                             equalTo(RPC_METHOD, "sendMessage"))));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.ERROR)
+                  .hasEventName("rpc.server.call.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, IOException.class.getName()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
 
     driver.close();
   }
