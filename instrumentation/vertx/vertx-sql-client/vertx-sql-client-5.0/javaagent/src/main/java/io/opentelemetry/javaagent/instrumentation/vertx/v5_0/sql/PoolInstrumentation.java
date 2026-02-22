@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getPoolSqlConnectOptions;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.resolveAndStoreDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setPoolConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.setSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.wrapContext;
@@ -84,6 +85,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
       }
 
       setPoolConnectOptions(pool, sqlConnectOptions);
+      resolveAndStoreDbSystem(pool, sqlConnectOptions);
       setSqlConnectOptions(null);
     }
   }

@@ -13,7 +13,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 
 public final class VertxSqlClientUtil {
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
@@ -29,12 +32,75 @@ public final class VertxSqlClientUtil {
   private static final VirtualField<Pool, SqlConnectOptions> poolConnectOptions =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
 
+  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+      VirtualField.find(SqlConnectOptions.class, String.class);
+
+  // copied from VertxSqlClientRequest
+  private static final String POSTGRESQL = "postgresql";
+  private static final String MYSQL = "mysql";
+  private static final String MICROSOFT_SQL_SERVER = "microsoft.sql_server";
+  private static final String ORACLE_DB = "oracle.db";
+  private static final String DB2 = "db2";
+
+  private static final Map<String, String> DB_SYSTEM_BY_POOL_CLASS = buildPoolDbSystemMap();
+
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
     poolConnectOptions.set(pool, sqlConnectOptions);
   }
 
   public static SqlConnectOptions getPoolSqlConnectOptions(Pool pool) {
     return poolConnectOptions.get(pool);
+  }
+
+  @Nullable
+  public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
+    if (sqlConnectOptions == null) {
+      return null;
+    }
+    return connectOptionsDbSystem.get(sqlConnectOptions);
+  }
+
+  /**
+   * Resolve the database system name from the Pool implementation class hierarchy and store it on
+   * the SqlConnectOptions for later retrieval.
+   */
+  public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
+    if (sqlConnectOptions == null) {
+      return;
+    }
+    String dbSystem = resolveDbSystemFromPool(pool);
+    if (dbSystem != null) {
+      connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
+    }
+  }
+
+  @Nullable
+  private static String resolveDbSystemFromPool(Pool pool) {
+    Class<?> clazz = pool.getClass();
+    while (clazz != null) {
+      String dbSystem = DB_SYSTEM_BY_POOL_CLASS.get(clazz.getName());
+      if (dbSystem != null) {
+        return dbSystem;
+      }
+      for (Class<?> iface : clazz.getInterfaces()) {
+        dbSystem = DB_SYSTEM_BY_POOL_CLASS.get(iface.getName());
+        if (dbSystem != null) {
+          return dbSystem;
+        }
+      }
+      clazz = clazz.getSuperclass();
+    }
+    return null;
+  }
+
+  private static Map<String, String> buildPoolDbSystemMap() {
+    Map<String, String> map = new HashMap<>();
+    map.put("io.vertx.pgclient.PgPool", POSTGRESQL);
+    map.put("io.vertx.mysqlclient.MySQLPool", MYSQL);
+    map.put("io.vertx.mssqlclient.MSSQLPool", MICROSOFT_SQL_SERVER);
+    map.put("io.vertx.oracleclient.OraclePool", ORACLE_DB);
+    map.put("io.vertx.db2client.DB2Pool", DB2);
+    return map;
   }
 
   private static final VirtualField<Promise<?>, RequestData> requestDataField =

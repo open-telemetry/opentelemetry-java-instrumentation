@@ -66,9 +66,15 @@ public final class VertxSqlClientRequest {
     if (sqlConnectOptions == null) {
       return null;
     }
+    // First check if the db system was resolved from the Pool class at pool creation time
+    String dbSystem = VertxSqlClientUtil.getConnectOptionsDbSystem(sqlConnectOptions);
+    if (dbSystem != null) {
+      return dbSystem;
+    }
+    // Fall back to checking the SqlConnectOptions class hierarchy
     Class<?> clazz = sqlConnectOptions.getClass();
     while (clazz != null) {
-      String dbSystem = DB_SYSTEM_BY_CLASS_NAME.get(clazz.getName());
+      dbSystem = DB_SYSTEM_BY_CLASS_NAME.get(clazz.getName());
       if (dbSystem != null) {
         return dbSystem;
       }
