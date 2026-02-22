@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -227,7 +228,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
                           .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
+                          .hasException(
+                              emitExceptionAsSpanEvents()
+                                  ? new IllegalArgumentException("boom")
+                                  : null)
                           .hasAttributesSatisfyingExactly(processAttributes),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(1)),
                   span -> span.hasName("handle exception").hasParent(trace.getSpan(1)),
@@ -237,7 +241,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
                           .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
+                          .hasException(
+                              emitExceptionAsSpanEvents()
+                                  ? new IllegalArgumentException("boom")
+                                  : null)
                           .hasAttributesSatisfyingExactly(processAttributes),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(4)),
                   span -> span.hasName("handle exception").hasParent(trace.getSpan(4)),
@@ -284,7 +291,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
                           .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
+                          .hasException(
+                              emitExceptionAsSpanEvents()
+                                  ? new IllegalArgumentException("boom")
+                                  : null)
                           .hasAttributesSatisfyingExactly(processAttributes),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
           trace ->
@@ -296,7 +306,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasParent(trace.getSpan(0))
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
                           .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
+                          .hasException(
+                              emitExceptionAsSpanEvents()
+                                  ? new IllegalArgumentException("boom")
+                                  : null)
                           .hasAttributesSatisfyingExactly(processAttributes),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
           trace ->
@@ -499,7 +512,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     if (failed) {
-      span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));
+      span.hasStatus(StatusData.error())
+          .hasException(emitExceptionAsSpanEvents() ? new IllegalArgumentException("boom") : null);
     }
   }
 }
