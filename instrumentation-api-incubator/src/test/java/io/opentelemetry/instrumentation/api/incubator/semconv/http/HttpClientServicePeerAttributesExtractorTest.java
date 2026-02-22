@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
@@ -24,7 +26,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
@@ -101,8 +102,7 @@ class HttpClientServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (SemconvStability.emitOldServicePeerSemconv()
-        && SemconvStability.emitStableServicePeerSemconv()) {
+    if (emitOldServicePeerSemconv() && emitStableServicePeerSemconv()) {
       assertThat(attrs)
           .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
     } else {
@@ -134,8 +134,7 @@ class HttpClientServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (SemconvStability.emitOldServicePeerSemconv()
-        && SemconvStability.emitStableServicePeerSemconv()) {
+    if (emitOldServicePeerSemconv() && emitStableServicePeerSemconv()) {
       assertThat(attrs)
           .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
     } else {

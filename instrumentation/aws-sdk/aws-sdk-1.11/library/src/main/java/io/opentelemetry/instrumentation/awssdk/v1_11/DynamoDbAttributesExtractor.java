@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
@@ -15,7 +17,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -35,19 +36,19 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()) {
       attributes.put(DB_SYSTEM, DYNAMODB);
     }
 
     String operation = getOperationName(request.getOriginalRequest());
     if (operation != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         attributes.put(DB_OPERATION_NAME, operation);
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv()) {
         attributes.put(DB_OPERATION, operation);
       }
     }

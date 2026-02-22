@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -30,7 +32,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -127,7 +128,7 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM, "myDb"),
@@ -141,7 +142,7 @@ class SqlClientAttributesExtractorTest {
               entry(DB_NAMESPACE, "potatoes"),
               entry(DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
               entry(DB_QUERY_SUMMARY, "SELECT potato"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM, "myDb"),
@@ -151,7 +152,7 @@ class SqlClientAttributesExtractorTest {
               entry(DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
               entry(DB_OPERATION, "SELECT"),
               entry(DB_SQL_TABLE, "potato"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM_NAME, "myDb"),
@@ -179,17 +180,17 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
               entry(DB_STATEMENT, "SELECT *"),
               entry(DB_OPERATION, "SELECT"),
               entry(DB_QUERY_TEXT, "SELECT *"),
               entry(DB_QUERY_SUMMARY, "SELECT"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(entry(DB_STATEMENT, "SELECT *"), entry(DB_OPERATION, "SELECT"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(entry(DB_QUERY_TEXT, "SELECT *"), entry(DB_QUERY_SUMMARY, "SELECT"));
     }
@@ -214,7 +215,7 @@ class SqlClientAttributesExtractorTest {
     underTest.onStart(attributes, context, request);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
               entry(DB_STATEMENT, "SELECT * FROM table"),
@@ -222,13 +223,13 @@ class SqlClientAttributesExtractorTest {
               entry(DB_CASSANDRA_TABLE, "table"),
               entry(DB_QUERY_TEXT, "SELECT * FROM table"),
               entry(DB_QUERY_SUMMARY, "SELECT table"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
               entry(DB_STATEMENT, "SELECT * FROM table"),
               entry(DB_OPERATION, "SELECT"),
               entry(DB_CASSANDRA_TABLE, "table"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
               entry(DB_QUERY_TEXT, "SELECT * FROM table"), entry(DB_QUERY_SUMMARY, "SELECT table"));
@@ -270,7 +271,7 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAME, "potatoes"),
@@ -281,14 +282,14 @@ class SqlClientAttributesExtractorTest {
               entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAME, "potatoes"),
               entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
               entry(DB_OPERATION, "INSERT"),
               entry(DB_SQL_TABLE, "potato"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAMESPACE, "potatoes"),
@@ -323,7 +324,7 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAME, "potatoes"),
@@ -331,9 +332,9 @@ class SqlClientAttributesExtractorTest {
               entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DB_QUERY_SUMMARY, "BATCH INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build()).containsOnly(entry(DB_NAME, "potatoes"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAMESPACE, "potatoes"),
@@ -366,7 +367,7 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAME, "potatoes"),
@@ -376,14 +377,14 @@ class SqlClientAttributesExtractorTest {
               entry(DB_NAMESPACE, "potatoes"),
               entry(DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DB_QUERY_SUMMARY, "INSERT potato"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAME, "potatoes"),
               entry(DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
               entry(DB_OPERATION, "INSERT"),
               entry(DB_SQL_TABLE, "potato"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_NAMESPACE, "potatoes"),

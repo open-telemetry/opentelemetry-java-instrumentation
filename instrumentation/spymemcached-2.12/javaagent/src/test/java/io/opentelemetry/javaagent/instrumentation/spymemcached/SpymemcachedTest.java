@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -31,7 +32,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -290,7 +290,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 ERROR_TYPE,
-                                SemconvStability.emitStableDatabaseSemconv()
+                                emitStableDatabaseSemconv()
                                     ? "net.spy.memcached.internal.CheckedOperationTimeoutException"
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
@@ -930,7 +930,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 ERROR_TYPE,
-                                SemconvStability.emitStableDatabaseSemconv()
+                                emitStableDatabaseSemconv()
                                     ? "java.lang.IllegalArgumentException"
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
@@ -1021,7 +1021,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 ERROR_TYPE,
-                                SemconvStability.emitStableDatabaseSemconv()
+                                emitStableDatabaseSemconv()
                                     ? "java.lang.IllegalArgumentException"
                                     : null),
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
