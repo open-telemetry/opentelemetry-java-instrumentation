@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.server;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -34,49 +35,53 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
     span.hasName(handlerSpanName).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasEventsSatisfyingExactly(
-          event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-                      equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      if (emitExceptionAsSpanEvents()) {
+        span.hasEventsSatisfyingExactly(
+            event ->
+                event
+                    .hasName("exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                        equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      }
     } else if (endpoint == NOT_FOUND) {
       span.hasStatus(StatusData.error());
-      if (Boolean.getBoolean("testLatestDeps")) {
-        span.hasEventsSatisfyingExactly(
-            event ->
-                event
-                    .hasName("exception")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            EXCEPTION_TYPE,
-                            "org.springframework.web.reactive.resource.NoResourceFoundException"),
-                        equalTo(
-                            EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
-      } else {
-        span.hasEventsSatisfyingExactly(
-            event ->
-                event
-                    .hasName("exception")
-                    .hasAttributesSatisfyingExactly(
-                        satisfies(
-                            EXCEPTION_TYPE,
-                            val ->
-                                val.satisfiesAnyOf(
-                                    // changed in spring 7+
-                                    v ->
-                                        assertThat(v)
-                                            .isEqualTo(
-                                                "org.springframework.web.server.ResponseStatusException"),
-                                    v ->
-                                        assertThat(v)
-                                            .isEqualTo(
-                                                "org.springframework.web.reactive.resource.NoResourceFoundException"))),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
-                        satisfies(EXCEPTION_MESSAGE, val -> val.contains("404"))));
+      if (emitExceptionAsSpanEvents()) {
+        if (Boolean.getBoolean("testLatestDeps")) {
+          span.hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              EXCEPTION_TYPE,
+                              "org.springframework.web.reactive.resource.NoResourceFoundException"),
+                          equalTo(
+                              EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+        } else {
+          span.hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              EXCEPTION_TYPE,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      // changed in spring 7+
+                                      v ->
+                                          assertThat(v)
+                                              .isEqualTo(
+                                                  "org.springframework.web.server.ResponseStatusException"),
+                                      v ->
+                                          assertThat(v)
+                                              .isEqualTo(
+                                                  "org.springframework.web.reactive.resource.NoResourceFoundException"))),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
+                          satisfies(EXCEPTION_MESSAGE, val -> val.contains("404"))));
+        }
       }
     }
     return span;
