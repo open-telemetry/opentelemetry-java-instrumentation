@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -101,7 +102,7 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "postgresql"),
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
                             equalTo(DB_NAMESPACE, "dbname"),
                             equalTo(DB_QUERY_TEXT, "SELECT ?;"),
                             equalTo(DB_RESPONSE_STATUS_CODE, "42"),
@@ -262,7 +263,7 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName(emitStableDatabaseSemconv() ? "BATCH INSERT test" : "dbname")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "postgresql"),
+                            equalTo(maybeStable(DB_SYSTEM), POSTGRESQL),
                             equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(
                                 DB_CONNECTION_STRING,

@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -211,7 +212,7 @@ class VertxRedisClientTest {
     // not testing database/dup
     if (emitStableDatabaseSemconv()) {
       return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM_NAME, "redis"),
+        equalTo(DB_SYSTEM_NAME, REDIS),
         equalTo(DB_QUERY_TEXT, queryText),
         equalTo(DB_OPERATION_NAME, operation),
         equalTo(DB_NAMESPACE, "1"),
@@ -223,7 +224,7 @@ class VertxRedisClientTest {
       };
     } else {
       return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM, "redis"),
+        equalTo(DB_SYSTEM, REDIS),
         equalTo(DB_STATEMENT, queryText),
         equalTo(DB_OPERATION, operation),
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
