@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -21,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -92,7 +92,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          SemconvStability.emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv()
                                               ? "io.lettuce.core.RedisCommandExecutionException"
                                               : null)))),
               trace ->
@@ -115,7 +115,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          SemconvStability.emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv()
                                               ? "io.lettuce.core.RedisCommandExecutionException"
                                               : null)))),
               trace ->
@@ -139,7 +139,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          SemconvStability.emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv()
                                               ? "io.lettuce.core.RedisCommandExecutionException"
                                               : null)))),
               trace ->

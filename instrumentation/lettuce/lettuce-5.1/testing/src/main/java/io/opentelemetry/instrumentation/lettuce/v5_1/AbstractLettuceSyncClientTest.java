@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -34,7 +35,6 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -435,7 +435,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          SemconvStability.emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv()
                                               ? "io.lettuce.core.RedisCommandExecutionException"
                                               : null)))),
               trace ->
@@ -458,7 +458,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          SemconvStability.emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv()
                                               ? "io.lettuce.core.RedisCommandExecutionException"
                                               : null)))),
               trace ->
@@ -482,7 +482,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(maybeStable(DB_OPERATION), "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          SemconvStability.emitStableDatabaseSemconv()
+                                          emitStableDatabaseSemconv()
                                               ? "io.lettuce.core.RedisCommandExecutionException"
                                               : null)))),
               trace ->
@@ -548,7 +548,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(
                                       AttributeKey.stringKey("error"),
                                       Boolean.getBoolean("testLatestDeps")
-                                              || SemconvStability.emitStableDatabaseSemconv()
+                                              || emitStableDatabaseSemconv()
                                           ? null
                                           : "Connection disconnected"),
                                   equalTo(NETWORK_TYPE, "ipv4"),
@@ -561,7 +561,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                                   equalTo(
                                       ERROR_TYPE,
-                                      SemconvStability.emitStableDatabaseSemconv()
+                                      emitStableDatabaseSemconv()
                                           ? (Boolean.getBoolean("testLatestDeps")
                                               ? "io.lettuce.core.RedisException"
                                               : null)

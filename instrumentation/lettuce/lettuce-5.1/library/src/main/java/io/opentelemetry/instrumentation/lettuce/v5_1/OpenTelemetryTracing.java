@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.CompleteableCommand;
@@ -19,7 +21,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -284,7 +285,7 @@ final class OpenTelemetryTracing implements Tracing {
       }
       // Under old semconv forward unknown tags as raw span attributes for backward compatibility;
       // under stable semconv these are either captured structurally (e.g. error.type) or not needed
-      if (SemconvStability.emitOldDatabaseSemconv() && context != null) {
+      if (emitOldDatabaseSemconv() && context != null) {
         Span.fromContext(context).setAttribute(key, value);
       }
       return this;
