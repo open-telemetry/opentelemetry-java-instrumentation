@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -84,7 +85,7 @@ public abstract class AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasStatus(StatusData.error())
-                            .hasException(thrown)
+                            .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
   }

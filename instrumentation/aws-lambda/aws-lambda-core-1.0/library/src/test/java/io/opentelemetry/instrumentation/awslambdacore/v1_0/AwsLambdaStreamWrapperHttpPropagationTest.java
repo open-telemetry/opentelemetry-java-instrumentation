@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
@@ -126,7 +127,7 @@ class AwsLambdaStreamWrapperHttpPropagationTest {
                         .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
                         .hasParentSpanId("0000000000000456")
                         .hasStatus(StatusData.error())
-                        .hasException(thrown)
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
