@@ -266,7 +266,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     private MigratingSqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
-      this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter);
+      this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter, false);
     }
 
     @Override
@@ -280,7 +280,10 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       String operationName = null;
       if (rawQueryTexts.size() == 1) {
-        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        String rawQuery = rawQueryTexts.iterator().next();
+        SqlDialect dialect =
+            SqlQuerySanitizerUtil.getDialect(getter.getDbSystemName(request), false);
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQuery, dialect);
         operationName = sanitizedQuery.getOperationName();
       }
       if (operationName == null) {
