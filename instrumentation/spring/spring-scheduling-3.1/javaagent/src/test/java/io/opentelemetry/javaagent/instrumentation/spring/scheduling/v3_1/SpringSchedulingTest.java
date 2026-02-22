@@ -5,14 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -166,18 +163,10 @@ class SpringSchedulingTest {
                           .hasNoParent()
                           .hasStatus(StatusData.error())
                           .hasAttributesSatisfyingExactly(assertions)
-                          .hasEventsSatisfyingExactly(
-                              event ->
-                                  event
-                                      .hasName("exception")
-                                      .hasAttributesSatisfying(
-                                          equalTo(
-                                              EXCEPTION_TYPE,
-                                              IllegalStateException.class.getName()),
-                                          equalTo(EXCEPTION_MESSAGE, "failure"),
-                                          satisfies(
-                                              EXCEPTION_STACKTRACE,
-                                              value -> value.isInstanceOf(String.class)))),
+                          .hasException(
+                              emitExceptionAsSpanEvents()
+                                  ? new IllegalStateException("failure")
+                                  : null),
                   span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
     }
   }

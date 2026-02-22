@@ -10,9 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.Sprin
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import org.springframework.batch.core.JobExecution;
 
 public class JobSingletons {
@@ -27,6 +29,8 @@ public class JobSingletons {
     InstrumenterBuilder<JobExecution, Void> instrumenter =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), instrumentationName(), JobSingletons::extractSpanName);
+    Experimental.setExceptionEventExtractor(
+        instrumenter, ExceptionEventExtractor.create("spring_batch.exception"));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenter.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_batch"));
