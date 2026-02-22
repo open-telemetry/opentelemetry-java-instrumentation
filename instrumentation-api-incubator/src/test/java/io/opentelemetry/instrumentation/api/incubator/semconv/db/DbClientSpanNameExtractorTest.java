@@ -13,7 +13,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -179,9 +178,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName)
-        .isEqualTo(
-            SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
+    assertThat(spanName).isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
   }
 
   @Test
@@ -192,7 +189,7 @@ class DbClientSpanNameExtractorTest {
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(singleton("INSERT INTO table VALUES(?)"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(2L);
     }
 
@@ -203,10 +200,7 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertThat(spanName)
-        .isEqualTo(
-            SemconvStability.emitStableDatabaseSemconv()
-                ? "BATCH INSERT table"
-                : "INSERT database.table");
+        .isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "INSERT database.table");
   }
 
   @Test
