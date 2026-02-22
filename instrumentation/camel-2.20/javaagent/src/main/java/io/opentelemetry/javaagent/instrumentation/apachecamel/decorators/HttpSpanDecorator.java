@@ -30,11 +30,15 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelRequest;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
@@ -48,6 +52,14 @@ class HttpSpanDecorator extends BaseSpanDecorator {
   private static final String GET_METHOD = "GET";
   private static final Set<String> knownMethods =
       AgentCommonConfig.get().getKnownHttpRequestMethods();
+
+  @Override
+  public ExceptionEventExtractor<CamelRequest> getExceptionEventExtractor(SpanKind spanKind) {
+    if (spanKind == SpanKind.SERVER) {
+      return HttpExceptionEventExtractors.server();
+    }
+    return HttpExceptionEventExtractors.client();
+  }
 
   protected String getProtocol() {
     return "http";

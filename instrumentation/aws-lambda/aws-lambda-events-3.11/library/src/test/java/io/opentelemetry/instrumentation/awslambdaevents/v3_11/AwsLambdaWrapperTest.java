@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
@@ -94,7 +95,7 @@ class AwsLambdaWrapperTest {
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
-                        .hasException(thrown)
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,

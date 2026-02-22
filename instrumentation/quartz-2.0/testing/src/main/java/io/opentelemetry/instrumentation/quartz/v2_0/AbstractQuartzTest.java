@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.quartz.JobBuilder.newJob;
@@ -107,7 +108,10 @@ public abstract class AbstractQuartzTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasStatus(StatusData.error())
-                            .hasException(new IllegalStateException("Bad job"))
+                            .hasException(
+                                emitExceptionAsSpanEvents()
+                                    ? new IllegalStateException("Bad job")
+                                    : null)
                             .hasAttributesSatisfyingExactly(assertions)));
   }
 

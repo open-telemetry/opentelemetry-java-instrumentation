@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -153,13 +154,13 @@ class KubernetesClientVer20Test {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(apiException),
+                        .hasException(emitExceptionAsSpanEvents() ? apiException : null),
                 span ->
                     span.hasName("get pods/proxy")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(apiException)
+                        .hasException(emitExceptionAsSpanEvents() ? apiException : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 URL_FULL,
@@ -278,7 +279,7 @@ class KubernetesClientVer20Test {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(exceptionReference.get())
+                        .hasException(emitExceptionAsSpanEvents() ? exceptionReference.get() : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 URL_FULL,

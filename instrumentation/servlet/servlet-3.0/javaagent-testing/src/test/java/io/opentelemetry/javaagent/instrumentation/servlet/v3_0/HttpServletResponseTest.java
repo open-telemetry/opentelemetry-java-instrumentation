@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -122,13 +123,19 @@ class HttpServletResponseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new RuntimeException("some error")),
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new RuntimeException("some error")
+                                : null),
                 span ->
                     span.hasName("HttpServletResponseTest$2.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new RuntimeException("some error"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new RuntimeException("some error")
+                                : null)));
   }
 
   /** Tests deprecated methods */

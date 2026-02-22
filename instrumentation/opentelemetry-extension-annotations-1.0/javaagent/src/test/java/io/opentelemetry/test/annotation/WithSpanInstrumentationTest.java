@@ -6,6 +6,7 @@
 package io.opentelemetry.test.annotation;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -141,7 +142,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(exception)
+                        .hasException(emitExceptionAsSpanEvents() ? exception : null)
                         .hasAttributesSatisfyingExactly(
                             codeAttributeAssertions("completionStage"))));
   }
@@ -201,7 +202,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(exception)
+                        .hasException(emitExceptionAsSpanEvents() ? exception : null)
                         .hasAttributesSatisfyingExactly(
                             codeAttributeAssertions("completionStage"))));
   }
@@ -237,7 +238,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(exception)
+                        .hasException(emitExceptionAsSpanEvents() ? exception : null)
                         .hasAttributesSatisfyingExactly(
                             codeAttributeAssertions("completableFuture"))));
   }
@@ -297,7 +298,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(exception)
+                        .hasException(emitExceptionAsSpanEvents() ? exception : null)
                         .hasAttributesSatisfyingExactly(
                             codeAttributeAssertions("completableFuture"))));
   }

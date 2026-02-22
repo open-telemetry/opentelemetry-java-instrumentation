@@ -28,7 +28,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelRequest;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,6 +84,11 @@ class BaseSpanDecorator implements SpanDecorator {
       return map;
     }
     return Collections.emptyMap();
+  }
+
+  @Override
+  public ExceptionEventExtractor<CamelRequest> getExceptionEventExtractor(SpanKind spanKind) {
+    return ExceptionEventExtractor.create("camel.exception");
   }
 
   @Override

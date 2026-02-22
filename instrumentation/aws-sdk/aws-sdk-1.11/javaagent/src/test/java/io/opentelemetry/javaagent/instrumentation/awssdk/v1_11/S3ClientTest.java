@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -124,7 +125,7 @@ class S3ClientTest extends AbstractS3ClientTest {
                         span.hasName("S3.HeadBucket")
                             .hasKind(CLIENT)
                             .hasStatus(StatusData.error())
-                            .hasException(caught)
+                            .hasException(emitExceptionAsSpanEvents() ? caught : null)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(URL_FULL, "https://s3.amazonaws.com"),

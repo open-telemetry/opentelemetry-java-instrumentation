@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
@@ -17,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
@@ -107,6 +109,10 @@ public final class DubboTelemetryBuilder {
             .addAttributesExtractors(attributesExtractors)
             .addOperationMetrics(RpcClientMetrics.get());
 
+    Experimental.setExceptionEventExtractor(
+        serverInstrumenterBuilder, RpcExceptionEventExtractors.server());
+    Experimental.setExceptionEventExtractor(
+        clientInstrumenterBuilder, RpcExceptionEventExtractors.client());
     return new DubboTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE),
         clientInstrumenterBuilder.buildClientInstrumenter(DubboHeadersSetter.INSTANCE));

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -164,7 +165,7 @@ class Netty41ConnectionSpanTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(finalThrownException),
+                        .hasException(emitExceptionAsSpanEvents() ? finalThrownException : null),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(SpanKind.INTERNAL)
@@ -178,7 +179,7 @@ class Netty41ConnectionSpanTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(finalThrownException)
+                        .hasException(emitExceptionAsSpanEvents() ? finalThrownException : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             satisfies(

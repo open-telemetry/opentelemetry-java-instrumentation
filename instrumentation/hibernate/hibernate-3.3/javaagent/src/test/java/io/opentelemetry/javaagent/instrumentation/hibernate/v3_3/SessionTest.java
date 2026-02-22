@@ -5,12 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -19,6 +15,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.hibernate.LockMode;
+import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
@@ -150,17 +147,10 @@ class SessionTest extends AbstractHibernateTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     assertSessionSpan(span, trace.getSpan(0), "Session.replicate java.lang.Long")
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, "org.hibernate.MappingException"),
-                                        equalTo(
-                                            EXCEPTION_MESSAGE, "Unknown entity: java.lang.Long"),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)))),
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new MappingException("Unknown entity: java.lang.Long")
+                                : null),
                 span ->
                     assertSpanWithSessionId(
                         span,

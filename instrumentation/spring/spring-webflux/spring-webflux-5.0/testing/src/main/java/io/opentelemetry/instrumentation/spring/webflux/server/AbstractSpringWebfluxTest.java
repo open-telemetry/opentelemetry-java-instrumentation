@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.server;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -400,16 +401,20 @@ public abstract class AbstractSpringWebfluxTest {
                             equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/**")),
-                span ->
-                    span.hasName("ResourceWebHandler.handle")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(AbstractSpringWebfluxTest::resource404Exception)
-                        .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                "org.springframework.web.reactive.resource.ResourceWebHandler",
-                                "handle"))));
+                span -> {
+                  span.hasName("ResourceWebHandler.handle")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.error());
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        AbstractSpringWebfluxTest::resource404Exception);
+                  }
+                  span.hasAttributesSatisfyingExactly(
+                      codeFunctionAssertions(
+                          "org.springframework.web.reactive.resource.ResourceWebHandler",
+                          "handle"));
+                }));
   }
 
   private static void resource404Exception(EventDataAssert event) {
@@ -521,18 +526,20 @@ public abstract class AbstractSpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasStatus(StatusData.error())
-                      .hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("exception")
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-                                      equalTo(EXCEPTION_MESSAGE, "bad things happen"),
-                                      satisfies(
-                                          EXCEPTION_STACKTRACE,
-                                          val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
+                      .hasStatus(StatusData.error());
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                                    equalTo(EXCEPTION_MESSAGE, "bad things happen"),
+                                    satisfies(
+                                        EXCEPTION_STACKTRACE,
+                                        val -> val.isInstanceOf(String.class))));
+                  }
+                  span.hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));
   }
 

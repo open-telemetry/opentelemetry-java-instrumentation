@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.hystrix;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 
 public final class HystrixSingletons {
 
@@ -20,6 +22,9 @@ public final class HystrixSingletons {
     InstrumenterBuilder<HystrixRequest, Void> builder =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, HystrixRequest::spanName);
+
+    Experimental.setExceptionEventExtractor(
+        builder, ExceptionEventExtractor.create("hystrix.exception"));
 
     if (DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "hystrix")
         .getBoolean("experimental_span_attributes/development", false)) {

@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
+import static io.opentelemetry.api.logs.Severity.ERROR;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -90,6 +94,8 @@ public final class QuartzTelemetryBuilder {
     instrumenter.addAttributesExtractor(
         CodeAttributesExtractor.create(new QuartzCodeAttributesGetter()));
     instrumenter.addAttributesExtractors(additionalExtractors);
+    Experimental.setExceptionEventExtractor(
+        instrumenter, ExceptionEventExtractor.create("scheduled_job.run.exception", ERROR));
 
     return new QuartzTelemetry(new TracingJobListener(instrumenter.buildInstrumenter()));
   }

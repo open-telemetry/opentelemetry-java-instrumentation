@@ -6,8 +6,13 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -36,6 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -898,7 +905,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                         span.hasName("S3.GetObject")
                             .hasKind(SpanKind.CLIENT)
                             .hasStatus(StatusData.error())
-                            .hasException(thrown)
+                            .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
@@ -933,6 +940,20 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(AWS_S3_BUCKET, "somebucket"))));
+
+    if (emitExceptionAsLogs()) {
+      SpanContext spanCtx = getTesting().spans().get(0).getSpanContext();
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSpanContext(spanCtx)
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                          equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   // regression test for

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.struts.v7_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
@@ -114,7 +115,8 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
 
     if (endpoint.equals(EXCEPTION)) {
       span.hasStatus(StatusData.error())
-          .hasException(new IllegalStateException(EXCEPTION.getBody()));
+          .hasException(
+              emitExceptionAsSpanEvents() ? new IllegalStateException(EXCEPTION.getBody()) : null);
     }
 
     span.hasAttributesSatisfyingExactly(

@@ -9,9 +9,12 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 public final class JedisSingletons {
@@ -23,7 +26,7 @@ public final class JedisSingletons {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
     JedisNetworkAttributesGetter netAttributesGetter = new JedisNetworkAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<JedisRequest, Void> builder =
         Instrumenter.<JedisRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -33,8 +36,9 @@ public final class JedisSingletons {
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
                     netAttributesGetter, GlobalOpenTelemetry.get()))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {

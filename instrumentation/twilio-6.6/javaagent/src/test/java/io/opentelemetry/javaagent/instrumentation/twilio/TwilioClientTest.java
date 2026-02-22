@@ -7,7 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +34,7 @@ import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -390,13 +397,36 @@ class TwilioClientTest {
                     span.hasName("test")
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new ApiException("Testing Failure")),
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new ApiException("Testing Failure")
+                                : null),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new ApiException("Testing Failure"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new ApiException("Testing Failure")
+                                : null)));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("twilio.client.request.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, ApiException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Testing Failure"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, ApiException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Testing Failure"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   @Test
@@ -511,13 +541,36 @@ class TwilioClientTest {
                     span.hasName("test")
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new ApiException("Testing Failure")),
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new ApiException("Testing Failure")
+                                : null),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new ApiException("Testing Failure"))));
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new ApiException("Testing Failure")
+                                : null)));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("twilio.client.request.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, ApiException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Testing Failure"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, ApiException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Testing Failure"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 
   private static CloseableHttpResponse mockResponse(String body, int statusCode)

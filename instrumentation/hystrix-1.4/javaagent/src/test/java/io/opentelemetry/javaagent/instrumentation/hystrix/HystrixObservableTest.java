@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_CIRCUIT_OPEN;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_COMMAND;
 import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_GROUP;
@@ -289,7 +290,8 @@ class HystrixObservableTest {
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException()),
+                        .hasException(
+                            emitExceptionAsSpanEvents() ? new IllegalArgumentException() : null),
                 span ->
                     span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
@@ -378,12 +380,12 @@ class HystrixObservableTest {
                     span.hasName("parent")
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(exception),
+                        .hasException(emitExceptionAsSpanEvents() ? exception : null),
                 span ->
                     span.hasName("FailingGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(exception.getCause())
+                        .hasException(emitExceptionAsSpanEvents() ? exception.getCause() : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
                             equalTo(HYSTRIX_GROUP, experimental("FailingGroup")),
@@ -391,7 +393,10 @@ class HystrixObservableTest {
                 span ->
                     span.hasName("FailingGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
-                        .hasException(hystrixRuntimeException.getFallbackException())
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? hystrixRuntimeException.getFallbackException()
+                                : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
                             equalTo(HYSTRIX_GROUP, experimental("FailingGroup")),

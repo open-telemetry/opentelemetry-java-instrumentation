@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -32,6 +34,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -339,6 +342,17 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         error,
                         error.getMessage(),
                         false)));
+
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.ERROR)
+                  .hasEventName("messaging.process.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -356,6 +370,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     }
 
     Throwable finalThrown = thrown;
+    String operation = accessor.getString(3);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -366,13 +381,28 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         0,
                         null,
                         null,
-                        accessor.getString(3),
+                        operation,
                         accessor.getString(0),
                         null,
                         null,
                         finalThrown,
                         accessor.getString(2),
                         false)));
+
+    if (emitExceptionAsLogs() && finalThrown != null) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("messaging.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, finalThrown.getClass().getName()),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          val ->
+                              val.satisfiesAnyOf(
+                                  v -> assertThat(v).isNull(), v -> assertThat(v).isNotNull())),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+    }
   }
 
   @Test
@@ -741,15 +771,17 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   private static void verifyException(SpanDataAssert span, Throwable exception, String errorMsg) {
-    span.hasStatus(StatusData.error())
-        .hasEventsSatisfying(
-            events ->
-                assertThat(events.get(0))
-                    .hasName("exception")
-                    .hasAttributesSatisfying(
-                        equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
-                        equalTo(EXCEPTION_MESSAGE, errorMsg),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+    span.hasStatus(StatusData.error());
+    if (emitExceptionAsSpanEvents()) {
+      span.hasEventsSatisfying(
+          events ->
+              assertThat(events.get(0))
+                  .hasName("exception")
+                  .hasAttributesSatisfying(
+                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, errorMsg),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+    }
   }
 
   private static void verifyParentAndLink(

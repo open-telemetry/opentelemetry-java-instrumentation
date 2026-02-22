@@ -58,7 +58,17 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("Jms3SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
   check {
-    dependsOn(testing.suites, testReceiveSpansDisabled)
+    dependsOn(testing.suites, testReceiveSpansDisabled, testExceptionSignalLogs)
   }
 }

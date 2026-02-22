@@ -15,9 +15,12 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
@@ -36,19 +39,20 @@ public final class LettuceSingletons {
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
 
-    INSTRUMENTER =
+    InstrumenterBuilder<RedisCommand<?, ?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceConnectNetworkAttributesGetter connectNetworkAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
 
-    CONNECT_INSTRUMENTER =
+    InstrumenterBuilder<RedisURI, Void> connectBuilder =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(
@@ -60,8 +64,9 @@ public final class LettuceSingletons {
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")
-                    .getBoolean("enabled", false))
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+                    .getBoolean("enabled", false));
+    Experimental.setExceptionEventExtractor(connectBuilder, DbExceptionEventExtractors.client());
+    CONNECT_INSTRUMENTER = connectBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<RedisCommand<?, ?, ?>, Void> instrumenter() {

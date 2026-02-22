@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -95,7 +96,7 @@ class Netty40ClientSslTest {
                 span ->
                     span.hasName("parent")
                         .hasStatus(StatusData.error())
-                        .hasException(thrownException),
+                        .hasException(emitExceptionAsSpanEvents() ? thrownException : null),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(

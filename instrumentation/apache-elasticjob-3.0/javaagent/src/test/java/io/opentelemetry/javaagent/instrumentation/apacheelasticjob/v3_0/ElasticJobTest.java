@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -283,7 +284,10 @@ class ElasticJobTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestFailedJob.execute")
                         .hasStatus(StatusData.error())
-                        .hasException(new RuntimeException("Simulated job failure for testing"))
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new RuntimeException("Simulated job failure for testing")
+                                : null)
                         .hasAttributesSatisfyingExactly(
                             elasticJobAttributes(
                                 "failedElasticJob",

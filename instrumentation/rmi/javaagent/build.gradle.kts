@@ -36,4 +36,15 @@ tasks {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
+
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.opt-in=logs")
+  }
+
+  check {
+    dependsOn(testExceptionSignalLogs)
+  }
 }

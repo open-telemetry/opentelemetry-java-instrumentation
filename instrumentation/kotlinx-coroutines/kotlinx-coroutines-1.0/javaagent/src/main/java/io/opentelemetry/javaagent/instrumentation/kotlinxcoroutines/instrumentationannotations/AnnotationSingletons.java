@@ -6,8 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
 public final class AnnotationSingletons {
@@ -21,10 +24,14 @@ public final class AnnotationSingletons {
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenter() {
-    return Instrumenter.builder(
+    InstrumenterBuilder<MethodRequest, Object> builder =
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            AnnotationSingletons::spanNameFromMethodRequest)
+            AnnotationSingletons::spanNameFromMethodRequest);
+    Experimental.setExceptionEventExtractor(
+        builder, ExceptionEventExtractor.create("withspan.exception"));
+    return builder
         .addAttributesExtractor(
             CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
         .buildInstrumenter(MethodRequest::getSpanKind);
