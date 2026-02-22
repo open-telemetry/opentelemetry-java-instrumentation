@@ -562,9 +562,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                   equalTo(
                                       ERROR_TYPE,
                                       emitStableDatabaseSemconv()
-                                          ? (Boolean.getBoolean("testLatestDeps")
-                                              ? "io.lettuce.core.RedisException"
-                                              : null)
+                                              && Boolean.getBoolean("testLatestDeps")
+                                          ? "io.lettuce.core.RedisException"
                                           : null)));
                       if (Boolean.getBoolean("testLatestDeps")) {
                         // Seems to only be treated as an error with Lettuce 6+
