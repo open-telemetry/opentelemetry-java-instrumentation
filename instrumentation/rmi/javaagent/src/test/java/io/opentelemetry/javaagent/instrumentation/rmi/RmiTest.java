@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -16,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -132,15 +135,7 @@ class RmiTest {
                     span.hasName("rmi.app.Greeter/exceptional")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Greeter"),
@@ -148,18 +143,33 @@ class RmiTest {
                 span ->
                     span.hasName("rmi.app.Server/exceptional")
                         .hasKind(SpanKind.SERVER)
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM, "java_rmi"),
                             equalTo(RPC_SERVICE, "rmi.app.Server"),
                             equalTo(RPC_METHOD, "exceptional"))));
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          log ->
+              log.hasSeverity(Severity.ERROR)
+                  .hasEventName("rpc.server.call.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasEventName("rpc.client.call.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())),
+          log ->
+              log.hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, thrown.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    }
   }
 }

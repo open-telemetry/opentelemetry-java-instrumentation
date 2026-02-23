@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor.alwaysClient;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
 public final class TwilioSingletons {
@@ -29,6 +32,9 @@ public final class TwilioSingletons {
       instrumenterBuilder.addAttributesExtractor(new TwilioExperimentalAttributesExtractor());
     }
 
+    Experimental.setExceptionEventExtractor(
+        instrumenterBuilder,
+        ExceptionEventExtractor.create("twilio.client.request.exception", Severity.WARN));
     INSTRUMENTER = instrumenterBuilder.buildInstrumenter(alwaysClient());
   }
 

@@ -8,8 +8,11 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.util.List;
 
 /**
@@ -20,20 +23,26 @@ public final class AwsLambdaSqsInstrumenterFactory {
 
   public static Instrumenter<SQSEvent, Void> forEvent(
       OpenTelemetry openTelemetry, String instrumentationName) {
-    return Instrumenter.<SQSEvent, Void>builder(
-            openTelemetry, instrumentationName, AwsLambdaSqsInstrumenterFactory::spanName)
-        .addAttributesExtractor(new SqsEventAttributesExtractor())
-        .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<SQSEvent, Void> builder =
+        Instrumenter.<SQSEvent, Void>builder(
+                openTelemetry, instrumentationName, AwsLambdaSqsInstrumenterFactory::spanName)
+            .addAttributesExtractor(new SqsEventAttributesExtractor())
+            .addSpanLinksExtractor(new SqsEventSpanLinksExtractor());
+    Experimental.setExceptionEventExtractor(builder, MessagingExceptionEventExtractors.process());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<SQSMessage, Void> forMessage(
       OpenTelemetry openTelemetry, String instrumentationName) {
-    return Instrumenter.<SQSMessage, Void>builder(
-            openTelemetry, instrumentationName, message -> message.getEventSource() + " process")
-        .addAttributesExtractor(new SqsMessageAttributesExtractor())
-        .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor())
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    InstrumenterBuilder<SQSMessage, Void> builder =
+        Instrumenter.<SQSMessage, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                message -> message.getEventSource() + " process")
+            .addAttributesExtractor(new SqsMessageAttributesExtractor())
+            .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor());
+    Experimental.setExceptionEventExtractor(builder, MessagingExceptionEventExtractors.process());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static String spanName(SQSEvent event) {

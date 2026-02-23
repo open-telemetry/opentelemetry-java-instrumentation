@@ -60,6 +60,12 @@ public abstract class AbstractSpringWebFluxServerTest
   }
 
   @Override
+  protected void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
+    // Spring WebFlux catches controller exceptions before they reach the HTTP server instrumenter
+    // (Netty), so http.server.request.exception logs are not emitted
+  }
+
+  @Override
   protected void configure(HttpServerTestOptions options) {
     options.setTestPathParam(true);
     options.setHasHandlerSpan(unused -> true);

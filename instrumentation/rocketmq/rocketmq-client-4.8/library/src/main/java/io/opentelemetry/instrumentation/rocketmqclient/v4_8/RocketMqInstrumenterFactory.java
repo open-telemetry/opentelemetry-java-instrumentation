@@ -12,12 +12,14 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -53,6 +55,8 @@ class RocketMqInstrumenterFactory {
           RocketMqProducerExperimentalAttributeExtractor.INSTANCE);
     }
 
+    Experimental.setExceptionEventExtractor(
+        instrumenterBuilder, MessagingExceptionEventExtractors.client());
     return instrumenterBuilder.buildProducerInstrumenter(MapSetter.INSTANCE);
   }
 
@@ -67,6 +71,8 @@ class RocketMqInstrumenterFactory {
             .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
             .addAttributesExtractor(constant(MESSAGING_OPERATION, "receive"));
 
+    Experimental.setExceptionEventExtractor(
+        batchReceiveInstrumenterBuilder, MessagingExceptionEventExtractors.client());
     return new RocketMqConsumerInstrumenter(
         createProcessInstrumenter(
             openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, false),
@@ -96,6 +102,7 @@ class RocketMqInstrumenterFactory {
       builder.addAttributesExtractor(RocketMqConsumerExperimentalAttributeExtractor.INSTANCE);
     }
 
+    Experimental.setExceptionEventExtractor(builder, MessagingExceptionEventExtractors.process());
     if (batch) {
       SpanLinksExtractor<MessageExt> spanLinksExtractor =
           new PropagatorBasedSpanLinksExtractor<>(

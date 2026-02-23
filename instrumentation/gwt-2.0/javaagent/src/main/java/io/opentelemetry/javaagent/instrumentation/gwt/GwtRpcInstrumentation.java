@@ -69,13 +69,23 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         if (!instrumenter().shouldStart(parentContext, method)) {
           return null;
         }
+        Throwable[] throwableHolder = new Throwable[1];
         Context context =
-            instrumenter().start(parentContext, method).with(GwtSingletons.RPC_CONTEXT_KEY, true);
+            instrumenter()
+                .start(parentContext, method)
+                .with(GwtSingletons.RPC_CONTEXT_KEY, true)
+                .with(GwtSingletons.RPC_THROWABLE_KEY, throwableHolder);
         return new AdviceScope(context, context.makeCurrent());
       }
 
       public void end(Method method, @Nullable Throwable throwable) {
         scope.close();
+        if (throwable == null) {
+          Throwable[] holder = context.get(GwtSingletons.RPC_THROWABLE_KEY);
+          if (holder != null) {
+            throwable = holder[0];
+          }
+        }
         instrumenter().end(context, method, null, throwable);
       }
     }
@@ -106,11 +116,12 @@ public class GwtRpcInstrumentation implements TypeInstrumentation {
         return;
       }
       Context context = Java8BytecodeBridge.currentContext();
-      if (context.get(GwtSingletons.RPC_CONTEXT_KEY) == null) {
+      Throwable[] holder = context.get(GwtSingletons.RPC_THROWABLE_KEY);
+      if (holder == null) {
         // not inside rpc invocation
         return;
       }
-      Java8BytecodeBridge.spanFromContext(context).recordException(throwable);
+      holder[0] = throwable;
     }
   }
 }

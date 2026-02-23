@@ -73,7 +73,13 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }
 
+  val testExceptionSignalLogs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.opt-in=logs")
+  }
+
   check {
-    dependsOn(testing.suites, testStableSemconv, testExperimental)
+    dependsOn(testing.suites, testStableSemconv, testExperimental, testExceptionSignalLogs)
   }
 }

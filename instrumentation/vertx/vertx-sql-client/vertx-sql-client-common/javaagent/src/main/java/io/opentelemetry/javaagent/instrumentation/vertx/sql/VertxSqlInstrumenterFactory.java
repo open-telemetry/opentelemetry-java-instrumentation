@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
@@ -39,6 +41,7 @@ public final class VertxSqlInstrumenterFactory {
                     VertxSqlClientNetAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

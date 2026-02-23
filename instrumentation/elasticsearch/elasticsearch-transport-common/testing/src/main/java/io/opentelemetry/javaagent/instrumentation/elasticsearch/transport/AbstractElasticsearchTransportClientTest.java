@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -154,21 +155,23 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(expectedException),
-                span ->
-                    span.hasName("GetAction")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfying(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            RemoteTransportException.class.getName())))
-                        .hasAttributesSatisfyingExactly(assertions),
+                        .hasException(emitExceptionAsSpanEvents() ? expectedException : null),
+                span -> {
+                  span.hasName("GetAction")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.error());
+                  if (emitExceptionAsSpanEvents()) {
+                    span.hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("exception")
+                                .hasAttributesSatisfying(
+                                    equalTo(
+                                        EXCEPTION_TYPE, RemoteTransportException.class.getName())));
+                  }
+                  span.hasAttributesSatisfyingExactly(assertions);
+                },
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

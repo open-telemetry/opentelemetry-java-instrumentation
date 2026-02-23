@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -189,7 +190,10 @@ class SessionTest extends AbstractHibernateTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasException(new UnknownEntityTypeException("java.lang.Long"))
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new UnknownEntityTypeException("java.lang.Long")
+                                : null)
                         .hasAttributesSatisfyingExactly(
                             experimentalSatisfies(
                                 HIBERNATE_SESSION_ID,

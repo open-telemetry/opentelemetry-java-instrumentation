@@ -11,9 +11,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -29,7 +32,7 @@ public final class SpymemcachedSingletons {
     ServerAttributesExtractor<SpymemcachedRequest, Void> serverAttributesExtractor =
         ServerAttributesExtractor.create(serverAttributesGetter);
 
-    INSTRUMENTER =
+    InstrumenterBuilder<SpymemcachedRequest, Object> builder =
         Instrumenter.builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
@@ -55,8 +58,9 @@ public final class SpymemcachedSingletons {
                 })
             .addContextCustomizer(
                 (context, request, attributes) -> SpymemcachedRequestHolder.init(context, request))
-            .addOperationMetrics(DbClientMetrics.get())
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
+    INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   public static Instrumenter<SpymemcachedRequest, Object> instrumenter() {

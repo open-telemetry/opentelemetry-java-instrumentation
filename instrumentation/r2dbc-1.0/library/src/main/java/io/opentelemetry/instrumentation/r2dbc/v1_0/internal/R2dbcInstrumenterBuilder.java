@@ -9,11 +9,14 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbExceptionEventExtractors;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -49,14 +52,16 @@ public final class R2dbcInstrumenterBuilder {
         spanNameExtractorTransformer.apply(
             DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE));
 
-    return Instrumenter.<DbExecution, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
-                .setQuerySanitizationEnabled(querySanitizationEnabled)
-                .build())
-        .addAttributesExtractors(additionalExtractors)
-        .addOperationMetrics(DbClientMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<DbExecution, Void> builder =
+        Instrumenter.<DbExecution, Void>builder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractor(
+                SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
+                    .setQuerySanitizationEnabled(querySanitizationEnabled)
+                    .build())
+            .addAttributesExtractors(additionalExtractors)
+            .addOperationMetrics(DbClientMetrics.get());
+    Experimental.setExceptionEventExtractor(builder, DbExceptionEventExtractors.client());
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

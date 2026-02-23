@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.common;
 
+import static io.opentelemetry.api.logs.Severity.ERROR;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 
 public final class XxlJobInstrumenterFactory {
 
@@ -38,6 +42,8 @@ public final class XxlJobInstrumenterFactory {
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "xxl-job"));
       builder.addAttributesExtractor(new XxlJobExperimentalAttributeExtractor());
     }
+    Experimental.setExceptionEventExtractor(
+        builder, ExceptionEventExtractor.create("scheduled_job.run.exception", ERROR));
     return builder.buildInstrumenter();
   }
 

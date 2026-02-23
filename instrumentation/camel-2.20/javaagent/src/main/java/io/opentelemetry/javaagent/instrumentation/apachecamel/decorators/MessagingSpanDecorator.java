@@ -28,7 +28,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingExceptionEventExtractors;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
+import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelRequest;
 import java.net.URI;
 import java.util.Map;
 import org.apache.camel.Endpoint;
@@ -40,6 +43,14 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
 
   public MessagingSpanDecorator(String component) {
     this.component = component;
+  }
+
+  @Override
+  public ExceptionEventExtractor<CamelRequest> getExceptionEventExtractor(SpanKind spanKind) {
+    if (spanKind == SpanKind.CONSUMER) {
+      return MessagingExceptionEventExtractors.process();
+    }
+    return MessagingExceptionEventExtractors.client();
   }
 
   @Override

@@ -12,8 +12,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.SpanAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -63,19 +66,27 @@ public final class AnnotationSingletons {
   }
 
   private static Instrumenter<Method, Object> createInstrumenter() {
-    return Instrumenter.builder(
+    InstrumenterBuilder<Method, Object> builder =
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            AnnotationSingletons::spanNameFromMethod)
+            AnnotationSingletons::spanNameFromMethod);
+    Experimental.setExceptionEventExtractor(
+        builder, ExceptionEventExtractor.create("withspan.exception"));
+    return builder
         .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributesGetter.INSTANCE))
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethod);
   }
 
   private static Instrumenter<MethodRequest, Object> createInstrumenterWithAttributes() {
-    return Instrumenter.builder(
+    InstrumenterBuilder<MethodRequest, Object> builder =
+        Instrumenter.builder(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            AnnotationSingletons::spanNameFromMethodRequest)
+            AnnotationSingletons::spanNameFromMethodRequest);
+    Experimental.setExceptionEventExtractor(
+        builder, ExceptionEventExtractor.create("withspan.exception"));
+    return builder
         .addAttributesExtractor(
             CodeAttributesExtractor.create(MethodRequestCodeAttributesGetter.INSTANCE))
         .addAttributesExtractor(

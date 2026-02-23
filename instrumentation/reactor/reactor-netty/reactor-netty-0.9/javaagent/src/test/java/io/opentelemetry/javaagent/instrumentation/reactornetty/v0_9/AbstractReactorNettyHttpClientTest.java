@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
@@ -220,12 +221,12 @@ abstract class AbstractReactorNettyHttpClientTest
                       .hasKind(INTERNAL)
                       .hasNoParent()
                       .hasStatus(StatusData.error())
-                      .hasException(thrown),
+                      .hasException(emitExceptionAsSpanEvents() ? thrown : null),
               span ->
                   span.hasKind(CLIENT)
                       .hasParent(parentSpan)
                       .hasStatus(StatusData.error())
-                      .hasException(thrown.getCause()));
+                      .hasException(emitExceptionAsSpanEvents() ? thrown.getCause() : null));
 
           assertSameSpan(parentSpan, onRequestErrorSpan);
         });
