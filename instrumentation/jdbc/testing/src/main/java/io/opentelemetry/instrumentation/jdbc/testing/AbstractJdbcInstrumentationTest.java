@@ -26,6 +26,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.HSQLDB;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -1321,7 +1323,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                                equalTo(maybeStable(DB_SYSTEM), OTHER_SQL),
                                 equalTo(maybeStable(DB_STATEMENT), "testing ?"),
                                 equalTo(
                                     DB_CONNECTION_STRING,
@@ -1409,7 +1411,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                                equalTo(maybeStable(DB_SYSTEM), OTHER_SQL),
                                 equalTo(maybeStable(DB_NAME), databaseName),
                                 equalTo(
                                     DB_CONNECTION_STRING,
@@ -1471,7 +1473,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                     span.hasName("SELECT INFORMATION_SCHEMA.SYSTEM_USERS")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), HSQLDB),
                             equalTo(maybeStable(DB_NAME), databaseNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
                             equalTo(
@@ -1560,7 +1562,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+                                equalTo(maybeStable(DB_SYSTEM), OTHER_SQL),
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
