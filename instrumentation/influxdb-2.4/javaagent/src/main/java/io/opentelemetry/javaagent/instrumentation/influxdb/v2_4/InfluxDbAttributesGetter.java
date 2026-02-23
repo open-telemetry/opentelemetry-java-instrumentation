@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import java.util.Collection;
-import java.util.Collections;
 import javax.annotation.Nullable;
 
 final class InfluxDbAttributesGetter implements SqlClientAttributesGetter<InfluxDbRequest, Void> {
@@ -16,9 +18,9 @@ final class InfluxDbAttributesGetter implements SqlClientAttributesGetter<Influx
   public Collection<String> getRawQueryTexts(InfluxDbRequest request) {
     String sql = request.getSql();
     if (sql == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
-    return Collections.singletonList(sql);
+    return singletonList(sql);
   }
 
   @Nullable
