@@ -35,7 +35,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import java.net.URI;
@@ -46,8 +46,8 @@ import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
-  private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   private final String component;
   private final String system;
@@ -149,9 +149,9 @@ class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      SqlQuery sqlQuery = emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
+      SqlQuery sqlQuery = emitOldDatabaseSemconv() ? analyzer.analyze(rawQueryText) : null;
       SqlQuery sqlQueryWithSummary =
-          emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(rawQueryText) : null;
+          emitStableDatabaseSemconv() ? analyzer.analyzeWithSummary(rawQueryText) : null;
 
       if (sqlQueryWithSummary != null) {
         attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());

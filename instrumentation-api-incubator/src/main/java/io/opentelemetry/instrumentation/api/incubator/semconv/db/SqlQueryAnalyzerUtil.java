@@ -11,24 +11,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Helper class for sanitizing sql that keeps sanitization results in {@link InstrumenterContext} so
- * that each query would be sanitized only once for given {@link Instrumenter} call.
+ * Helper class for analyzing sql that keeps analysis results in {@link InstrumenterContext} so that
+ * each query would be analyzed only once for given {@link Instrumenter} call.
  */
-class SqlQuerySanitizerUtil {
-  private static final SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
+class SqlQueryAnalyzerUtil {
+  private static final SqlQueryAnalyzer analyzer = SqlQueryAnalyzer.create(true);
 
-  static SqlQuery sanitize(String queryText) {
+  static SqlQuery analyze(String queryText) {
     Map<String, SqlQuery> map =
         InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
-    return map.computeIfAbsent(queryText, sanitizer::sanitize);
+    return map.computeIfAbsent(queryText, analyzer::analyze);
   }
 
-  static SqlQuery sanitizeWithSummary(String queryText) {
+  static SqlQuery analyzeWithSummary(String queryText) {
     Map<String, SqlQuery> map =
         InstrumenterContext.computeIfAbsent(
             "sanitized-sql-map-with-summary", unused -> new HashMap<>());
-    return map.computeIfAbsent(queryText, sanitizer::sanitizeWithSummary);
+    return map.computeIfAbsent(queryText, analyzer::analyzeWithSummary);
   }
 
-  private SqlQuerySanitizerUtil() {}
+  private SqlQueryAnalyzerUtil() {}
 }
