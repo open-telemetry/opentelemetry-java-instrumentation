@@ -221,7 +221,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return CAPTURE_REQUEST_BODY && CAPTURE_REQUEST_BODY_SIZE > 0;
   }
 
-  public int captureRequestBodyMaxSize(){
-    return CAPTURE_REQUEST_BODY ? CAPTURE_REQUEST_BODY_SIZE: 0;
+  public int captureRequestBodyMaxSize() {
+    return CAPTURE_REQUEST_BODY ? CAPTURE_REQUEST_BODY_SIZE : 0;
   }
 }

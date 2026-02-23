@@ -629,9 +629,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   void requestBodyCapture(MediaType mediaType) {
     assumeTrue(options.testRequestBodyCapture);
 
-    // truncate body size if it exceeds limit
-    //    AttributeUtil.applyAttributeLengthLimit((String)null, 100);
-
     AttributeKey<String> bodyKey = AttributeKey.stringKey("http.request.body.text");
 
     String method = "POST";

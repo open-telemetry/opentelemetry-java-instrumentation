@@ -93,9 +93,6 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath("/tomcat-context");
 
-    // disabling for now as it's not working for servlet 3
-//    options.setTestRequestBodyCapture(true);
-
     options.setExpectedHttpRoute(
         (ServerEndpoint endpoint, String method) -> {
           if (method.equals(HttpConstants._OTHER)) {
