@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static java.util.Collections.emptySet;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -101,8 +102,7 @@ public final class CommonConfig {
     if (newConfigValue != null) {
       sensitiveQueryParameters = new HashSet<>(newConfigValue);
     } else if (oldRedact != null) {
-      sensitiveQueryParameters =
-          oldRedact ? HttpConstants.SENSITIVE_QUERY_PARAMETERS : Collections.emptySet();
+      sensitiveQueryParameters = oldRedact ? HttpConstants.SENSITIVE_QUERY_PARAMETERS : emptySet();
     } else {
       sensitiveQueryParameters = HttpConstants.SENSITIVE_QUERY_PARAMETERS;
     }
