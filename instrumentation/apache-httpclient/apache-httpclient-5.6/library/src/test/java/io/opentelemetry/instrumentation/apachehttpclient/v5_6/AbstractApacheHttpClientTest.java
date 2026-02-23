@@ -14,13 +14,13 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.Map;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.message.BasicHeader;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -120,7 +120,7 @@ abstract class AbstractApacheHttpClientTest {
           .execute(
               new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()),
               request,
-              new BasicHttpContext(),
+              HttpClientContext.create(),
               responseHandler());
     }
 
@@ -136,7 +136,7 @@ abstract class AbstractApacheHttpClientTest {
             .execute(
                 new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()),
                 request,
-                new BasicHttpContext(),
+                HttpClientContext.create(),
                 responseCallback(httpClientResult));
       } catch (Throwable t) {
         httpClientResult.complete(t);
@@ -202,7 +202,7 @@ abstract class AbstractApacheHttpClientTest {
           .execute(
               new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()),
               request,
-              new BasicHttpContext(),
+              HttpClientContext.create(),
               responseHandler());
     }
 
@@ -218,7 +218,7 @@ abstract class AbstractApacheHttpClientTest {
             .execute(
                 new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()),
                 request,
-                new BasicHttpContext(),
+                HttpClientContext.create(),
                 responseCallback(httpClientResult));
       } catch (Throwable t) {
         httpClientResult.complete(t);
@@ -240,7 +240,7 @@ abstract class AbstractApacheHttpClientTest {
     public int sendRequest(
         BasicClassicHttpRequest request, String method, URI uri, Map<String, String> headers)
         throws Exception {
-      return getClient(uri).execute(request, new BasicHttpContext(), responseHandler());
+      return getClient(uri).execute(request, HttpClientContext.create(), responseHandler());
     }
 
     @Override
@@ -275,7 +275,7 @@ abstract class AbstractApacheHttpClientTest {
           .execute(
               new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort()),
               request,
-              new BasicHttpContext(),
+              HttpClientContext.create(),
               responseHandler());
     }
 
@@ -287,7 +287,8 @@ abstract class AbstractApacheHttpClientTest {
         Map<String, String> headers,
         HttpClientResult httpClientResult) {
       try {
-        getClient(uri).execute(request, new BasicHttpContext(), responseCallback(httpClientResult));
+        getClient(uri)
+            .execute(request, HttpClientContext.create(), responseCallback(httpClientResult));
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
