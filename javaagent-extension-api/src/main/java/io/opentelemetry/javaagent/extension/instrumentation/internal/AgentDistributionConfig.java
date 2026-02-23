@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
+import static java.util.Collections.singletonList;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -143,7 +144,7 @@ public class AgentDistributionConfig {
    * not explicitly configured.
    */
   public boolean isInstrumentationEnabled(String name, boolean defaultEnabled) {
-    return isInstrumentationEnabled(Collections.singletonList(name), defaultEnabled);
+    return isInstrumentationEnabled(singletonList(name), defaultEnabled);
   }
 
   /**
@@ -151,8 +152,7 @@ public class AgentDistributionConfig {
    * #isInstrumentationDefaultEnabled()} if not explicitly configured.
    */
   public boolean isInstrumentationEnabled(String name) {
-    return isInstrumentationEnabled(
-        Collections.singletonList(name), isInstrumentationDefaultEnabled());
+    return isInstrumentationEnabled(singletonList(name), isInstrumentationDefaultEnabled());
   }
 
   // Only used by tests

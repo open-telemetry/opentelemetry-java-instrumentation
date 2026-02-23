@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
