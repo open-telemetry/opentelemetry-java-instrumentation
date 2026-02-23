@@ -12,15 +12,21 @@ import com.google.auto.value.AutoValue;
 public abstract class SqlDialect {
 
   /**
-   * Dialect where double-quoted fragments are treated as string literals and therefore sanitized.
-   * This is the safer default because it avoids leaking potentially sensitive string content.
+   * Dialect where double-quoted fragments are treated as string literals and therefore sanitized
+   * (replaced with {@code ?}).
+   *
+   * <p>This is a safer choice if you don't know how the database interprets double-quoted tokens.
+   * If the database actually uses double quotes for identifiers, the downside is that identifier
+   * names are replaced with {@code ?}, reducing diagnostic clarity. By contrast, choosing {@link
+   * #DOUBLE_QUOTES_ARE_IDENTIFIERS} incorrectly would fail to sanitize sensitive string-literal
+   * values.
    */
   public static final SqlDialect DOUBLE_QUOTES_ARE_STRING_LITERALS = builder().build();
 
   /**
    * Dialect where double-quoted fragments are treated as identifiers (e.g. column/table names) and
-   * therefore left intact during sanitization. Use this for databases like PostgreSQL, Oracle, and
-   * Db2 where double quotes always denote identifiers.
+   * therefore left intact during sanitization. Use this only for databases where double quotes
+   * always denote identifiers.
    */
   public static final SqlDialect DOUBLE_QUOTES_ARE_IDENTIFIERS =
       builder().setDoubleQuotesAreIdentifiers(true).build();
@@ -42,8 +48,8 @@ public abstract class SqlDialect {
 
     Builder() {}
 
-    public abstract Builder setDoubleQuotesAreIdentifiers(boolean doubleQuotesAreIdentifiers);
+    abstract Builder setDoubleQuotesAreIdentifiers(boolean doubleQuotesAreIdentifiers);
 
-    public abstract SqlDialect build();
+    abstract SqlDialect build();
   }
 }

@@ -39,7 +39,9 @@ public final class SqlQuerySanitizer {
    */
   @Deprecated
   public SqlQuery sanitize(@Nullable String query) {
-    return sanitize(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    // DOUBLE_QUOTES_ARE_STRING_LITERALS would be a better default here
+    // but this matches prior behavior
+    return sanitize(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
   }
 
   public SqlQuery sanitize(@Nullable String query, SqlDialect dialect) {
@@ -68,7 +70,9 @@ public final class SqlQuerySanitizer {
    */
   @Deprecated
   public SqlQuery sanitizeWithSummary(@Nullable String query) {
-    return sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    // DOUBLE_QUOTES_ARE_STRING_LITERALS would be a better default here
+    // but this matches prior behavior
+    return sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
   }
 
   /** Sanitize and extract query summary. */

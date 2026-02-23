@@ -55,13 +55,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
               // <special_identifier> ::= <double_quotes><any_character>...<double_quotes>
               // https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-sql-reference-guide/sql-notation-conventions
               "hanadb",
-              // "A character string literal starts and ends with a single quote."
-              // "Case of characters in quoted names is preserved as is."
-              // (double quotes = identifiers)
-              // Note: H2's MySQL compatibility mode (MODE=MySQL) may treat double quotes as
-              // string literals, but the JDBC system string is always "h2" regardless of mode.
-              // https://www.h2database.com/html/grammar.html
-              "h2",
               // "String literals must be enclosed in single quotes.
               // Double quotes are not supported."
               // https://clickhouse.com/docs/en/sql-reference/syntax#string
@@ -100,11 +93,10 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public SqlDialect getSqlDialect(DbRequest request) {
     String system = request.getDbInfo().getSystem();
     if (system != null && DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEMS.contains(system)) {
-      // use the safer default that sanitizes double-quoted fragments as string literals
-      // (note that this can lead to incorrect summarization for databases that do use
-      // double quotes as identifiers)
       return DOUBLE_QUOTES_ARE_IDENTIFIERS;
     }
+    // default to treating double-quoted tokens as string literals for safety, ensuring that
+    // potentially sensitive values are not captured
     return DOUBLE_QUOTES_ARE_STRING_LITERALS;
   }
 

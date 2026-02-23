@@ -52,12 +52,7 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
-  /**
-   * Returns the SQL dialect used by the database. The dialect determines how double-quoted
-   * fragments are handled during query sanitization. Implementations for databases where
-   * double-quoted fragments are identifiers (not string literals) should return {@link
-   * SqlDialect#DOUBLE_QUOTES_ARE_IDENTIFIERS}.
-   */
+  /** Returns the SQL dialect used by the database. */
   SqlDialect getSqlDialect(REQUEST request);
 
   /**
