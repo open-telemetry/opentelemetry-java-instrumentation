@@ -101,7 +101,7 @@ class DeclarativeConfigTest {
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
             "otel.file_format=1.0-rc.1",
-            "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none")
+            "otel.distribution.spring_starter.instrumentation.default_enabled=false")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
 
@@ -111,8 +111,8 @@ class DeclarativeConfigTest {
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
             "otel.file_format=1.0-rc.1",
-            "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none",
-            "otel.instrumentation/development.java.spring_web.enabled=true")
+            "otel.distribution.spring_starter.instrumentation.default_enabled=false",
+            "otel.distribution.spring_starter.instrumentation.enabled=spring_web")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
   }
 
@@ -122,8 +122,29 @@ class DeclarativeConfigTest {
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
             "otel.file_format=1.0-rc.1",
-            "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none",
-            "otel.instrumentation/development.java.spring_web.enabled=false")
+            "otel.distribution.spring_starter.instrumentation.default_enabled=false",
+            "otel.distribution.spring_starter.instrumentation.disabled=spring_web")
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
+  }
+
+  @Test
+  void shouldLoadInstrumentationWhenExplicitlyEnabledWithIndexedProperty() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
+        .withPropertyValues(
+            "otel.file_format=1.0-rc.1",
+            "otel.distribution.spring_starter.instrumentation.default_enabled=false",
+            "otel.distribution.spring_starter.instrumentation.enabled[0]=spring_web")
+        .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
+  }
+
+  @Test
+  void shouldNotLoadInstrumentationWhenExplicitlyDisabledWithIndexedProperty() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
+        .withPropertyValues(
+            "otel.file_format=1.0-rc.1",
+            "otel.distribution.spring_starter.instrumentation.disabled[0]=spring_web")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
 
