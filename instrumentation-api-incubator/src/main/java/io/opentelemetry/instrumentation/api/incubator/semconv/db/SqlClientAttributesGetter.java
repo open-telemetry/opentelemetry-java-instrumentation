@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -61,7 +63,8 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
    * string literals.
    */
   default SqlDialect getSqlDialect(REQUEST request) {
-    return SqlDialect.DEFAULT;
+    // TODO emit DEFAULT even under old semconv for safety
+    return emitStableDatabaseSemconv() ? SqlDialect.DEFAULT : SqlDialect.ANSI_QUOTES;
   }
 
   /**

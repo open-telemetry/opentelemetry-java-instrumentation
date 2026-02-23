@@ -9,8 +9,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -20,6 +23,48 @@ import javax.annotation.Nullable;
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
+
+  // Databases where double quotes are exclusively identifiers and cannot be string literals.
+  private static final Set<String> ANSI_QUOTES_SYSTEMS =
+      new HashSet<>(
+          Arrays.asList(
+              // "A string constant in SQL is an arbitrary sequence of characters
+              // bounded by single quotes (')"
+              // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS
+              "postgresql",
+              // "Text, character, and string literals are always surrounded
+              // by single quotation marks."
+              // https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/Literals.html
+              "oracle",
+              // "A sequence of characters that starts and ends with a string delimiter,
+              // which is an apostrophe (')"
+              // https://www.ibm.com/docs/en/db2/12.1?topic=elements-constants
+              "db2",
+              // "Single quotation marks delimit character strings."
+              // "Double quotation marks delimit special identifiers"
+              // https://db.apache.org/derby/docs/10.17/ref/rrefsqlj28468.html
+              "derby",
+              // "names of objects are enclosed in double-quotes"
+              // (double quotes are exclusively for identifiers; follows SQL standard strictly)
+              // https://hsqldb.org/doc/2.0/guide/sqlgeneral-chapt.html
+              "hsqldb",
+              // <string_literal> ::= <single_quote>[<any_character>...]<single_quote>
+              // <special_identifier> ::= <double_quotes><any_character>...<double_quotes>
+              // https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-sql-reference-guide/sql-notation-conventions
+              "hanadb",
+              // "A character string literal starts and ends with a single quote."
+              // "Case of characters in quoted names is preserved as is."
+              // (double quotes = identifiers)
+              // Note: H2's MySQL compatibility mode (MODE=MySQL) may treat double quotes as
+              // string literals, but the JDBC system string is always "h2" regardless of mode.
+              // https://www.h2database.com/html/grammar.html
+              "h2",
+              // "String literals must be enclosed in single quotes.
+              // Double quotes are not supported."
+              // https://clickhouse.com/docs/en/sql-reference/syntax#string
+              "clickhouse",
+              // PostgreSQL-compatible fork, inherits PG string literal rules
+              "polardb"));
 
   @Nullable
   @Override
@@ -51,10 +96,10 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public SqlDialect getSqlDialect(DbRequest request) {
     String system = request.getDbInfo().getSystem();
-    if ("mysql".equals(system) || "mariadb".equals(system)) {
-      return SqlDialect.DEFAULT;
+    if (system != null && ANSI_QUOTES_SYSTEMS.contains(system)) {
+      return SqlDialect.ANSI_QUOTES;
     }
-    return SqlDialect.ANSI_QUOTES;
+    return SqlDialect.DEFAULT;
   }
 
   @Override
