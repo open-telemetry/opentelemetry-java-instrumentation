@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -209,7 +210,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     if (value instanceof List) {
       List<?> objectList = ((List<?>) value);
       if (objectList.isEmpty()) {
-        return Collections.emptyList();
+        return emptyList();
       }
       List<T> result =
           objectList.stream()

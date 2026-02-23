@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Collections.emptyMap;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -38,7 +39,7 @@ final class SpringConfigProvider implements ConfigProvider {
         EmbeddedConfigFile.getObjectMapper()
             .convertValue(model, new TypeReference<Map<String, Object>>() {});
     if (configurationMap == null) {
-      configurationMap = Collections.emptyMap();
+      configurationMap = emptyMap();
     }
     return SpringDeclarativeConfigProperties.create(configurationMap, componentLoader);
   }
