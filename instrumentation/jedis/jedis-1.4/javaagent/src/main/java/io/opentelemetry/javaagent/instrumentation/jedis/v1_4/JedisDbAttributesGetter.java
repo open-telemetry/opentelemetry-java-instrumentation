@@ -34,4 +34,14 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   public String getDbOperationName(JedisRequest request) {
     return request.getCommand().name();
   }
+
+  @Override
+  public String getServerAddress(JedisRequest request) {
+    return request.getConnection().getHost();
+  }
+
+  @Override
+  public Integer getServerPort(JedisRequest request) {
+    return request.getConnection().getPort();
+  }
 }

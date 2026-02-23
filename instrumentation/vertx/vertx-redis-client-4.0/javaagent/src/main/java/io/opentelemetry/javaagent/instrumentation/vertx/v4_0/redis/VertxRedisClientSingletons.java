@@ -15,8 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
@@ -47,12 +45,8 @@ public final class VertxRedisClientSingletons {
                 DbClientAttributesExtractor.create(VertxRedisClientAttributesGetter.INSTANCE))
             .addAttributesExtractor(VertxRedisClientAttributesExtractor.INSTANCE)
             .addAttributesExtractor(
-                ServerAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
-                NetworkAttributesExtractor.create(VertxRedisClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
-                    VertxRedisClientNetAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
+                    VertxRedisClientAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
