@@ -63,8 +63,7 @@ class SqlQuerySanitizerUtilCacheTest {
 
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
     // verify that sanitized query was cached
-    SqlQuery cached =
-        SqlQuerySanitizerUtil.sanitize(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery cached = SqlQuerySanitizerUtil.sanitize(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(cached)
         .isSameAs(SqlQuerySanitizerUtil.sanitize(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
 
@@ -74,11 +73,9 @@ class SqlQuerySanitizerUtilCacheTest {
     Map<CacheKey, SqlQuery> sanitizedMap =
         (Map<CacheKey, SqlQuery>)
             (Map<?, ?>)
-                InstrumenterContext.computeIfAbsent(
-                    "sanitized-sql-map", unused -> new HashMap<>());
+                InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
     sanitizedMap.put(
-        cacheKey,
-        SqlQuery.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+        cacheKey, SqlQuery.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
