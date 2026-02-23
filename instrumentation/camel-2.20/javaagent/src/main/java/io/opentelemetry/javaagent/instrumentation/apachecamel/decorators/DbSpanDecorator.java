@@ -58,6 +58,14 @@ class DbSpanDecorator extends BaseSpanDecorator {
   }
 
   @Override
+  public boolean shouldStartNewSpan() {
+    // Under stable database semconv, don't create Camel DB spans. The underlying database
+    // instrumentations (JDBC, Cassandra, MongoDB, etc.) produce more accurate spans with correct
+    // db.system.name, connection attributes, and dialect-aware query sanitization.
+    return !emitStableDatabaseSemconv();
+  }
+
+  @Override
   public String getOperationName(
       Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
 
