@@ -7,10 +7,14 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.web.reactive.function.client.WebClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.WebFilter;
 
@@ -40,5 +44,18 @@ public class SpringWebfluxInstrumentationAutoConfiguration {
   WebFilter telemetryFilter(OpenTelemetry openTelemetry) {
     return WebClientBeanPostProcessor.getWebfluxServerTelemetry(openTelemetry)
         .createWebFilterAndRegisterReactorHook();
+  }
+
+  @Configuration
+  @ConditionalOnClass(WebClientCustomizer.class)
+  static class OpentelemetryWebClientCustomizerConfiguration {
+
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE + 10)
+    WebClientCustomizer otelWebClientCustomizer(OpenTelemetry openTelemetry) {
+      SpringWebfluxClientTelemetry webfluxClientTelemetry =
+          WebClientBeanPostProcessor.getWebfluxClientTelemetry(openTelemetry);
+      return builder -> builder.filters(webfluxClientTelemetry::addFilter);
+    }
   }
 }
