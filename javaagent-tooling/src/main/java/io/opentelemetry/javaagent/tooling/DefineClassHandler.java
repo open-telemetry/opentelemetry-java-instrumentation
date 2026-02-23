@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static java.util.Collections.emptySet;
+
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.objectweb.asm.ClassReader;
@@ -25,8 +26,7 @@ public class DefineClassHandler implements Handler {
     // with OpenJ9 class data sharing we don't get real class bytes
     if (classBytes == null
         || (classBytes.length == 40
-            && new String(classBytes, StandardCharsets.ISO_8859_1)
-                .startsWith("J9ROMCLASSCOOKIE"))) {
+            && new String(classBytes, ISO_8859_1).startsWith("J9ROMCLASSCOOKIE"))) {
       return null;
     }
 
@@ -103,7 +103,7 @@ public class DefineClassHandler implements Handler {
 
   public static Set<String> getSuperTypes() {
     Set<String> superNames = defineClassContext.get().superDotNames;
-    return superNames == null ? Collections.emptySet() : superNames;
+    return superNames == null ? emptySet() : superNames;
   }
 
   private static class DefineClassContextImpl implements DefineClassContext {

@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import static java.util.Collections.singletonList;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.Collection;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter
-    implements DbClientAttributesGetter<ClickHouseDbRequest, Void> {
+    implements SqlClientAttributesGetter<ClickHouseDbRequest, Void> {
 
   private final Function<Throwable, String> errorCodeExtractor;
 
@@ -19,43 +22,39 @@ final class ClickHouseAttributesGetter
     this.errorCodeExtractor = errorCodeExtractor;
   }
 
-  @Nullable
   @Override
-  public String getDbQueryText(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
-    }
-    return request.getSqlStatementInfo().getQueryText();
+  public Collection<String> getRawQueryTexts(ClickHouseDbRequest request) {
+    return singletonList(request.getSql());
   }
 
-  @Nullable
-  @Override
-  public String getDbOperationName(ClickHouseDbRequest request) {
-    if (request.getSqlStatementInfo() == null) {
-      return null;
-    }
-    return request.getSqlStatementInfo().getOperationName();
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
+    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
   }
 
   @Nullable
   @Override
   public String getDbNamespace(ClickHouseDbRequest request) {
-    String dbName = request.getDbName();
-    if (dbName == null || dbName.isEmpty()) {
+    String namespace = request.getNamespace();
+    if (namespace == null || namespace.isEmpty()) {
       return null;
     }
-    return dbName;
+    return namespace;
   }
 
   @Nullable
   @Override
   public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
+  }
+
+  @Override
+  public String getServerAddress(ClickHouseDbRequest request) {
+    return request.getHost();
+  }
+
+  @Override
+  public Integer getServerPort(ClickHouseDbRequest request) {
+    return request.getPort();
   }
 }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelOutboundHandler;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
@@ -45,7 +45,7 @@ public final class NettyServerTelemetry {
    * Returns a handler that instruments incoming HTTP requests. Must be paired with {@link
    * #createResponseHandler()}.
    */
-  public ChannelInboundHandlerAdapter createRequestHandler() {
+  public ChannelInboundHandler createRequestHandler() {
     return new HttpServerRequestTracingHandler(instrumenter);
   }
 
@@ -53,28 +53,18 @@ public final class NettyServerTelemetry {
    * Returns a handler that instruments outgoing HTTP responses. Must be paired with {@link
    * #createRequestHandler()}.
    */
-  public ChannelOutboundHandlerAdapter createResponseHandler() {
-    return createResponseHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
-  }
-
-  public ChannelOutboundHandlerAdapter createResponseHandler(
-      HttpServerResponseBeforeCommitHandler commitHandler) {
-    return new HttpServerResponseTracingHandler(instrumenter, commitHandler, protocolEventHandler);
+  public ChannelOutboundHandler createResponseHandler() {
+    return new HttpServerResponseTracingHandler(
+        instrumenter, HttpServerResponseBeforeCommitHandler.Noop.INSTANCE, protocolEventHandler);
   }
 
   /**
    * Returns a handler that instruments incoming HTTP requests and outgoing responses in a single
    * handler.
    */
-  public CombinedChannelDuplexHandler<
-          ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
+  public CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler>
       createCombinedHandler() {
-    return createCombinedHandler(HttpServerResponseBeforeCommitHandler.Noop.INSTANCE);
-  }
-
-  public CombinedChannelDuplexHandler<
-          ? extends ChannelInboundHandlerAdapter, ? extends ChannelOutboundHandlerAdapter>
-      createCombinedHandler(HttpServerResponseBeforeCommitHandler commitHandler) {
-    return new HttpServerTracingHandler(instrumenter, commitHandler, protocolEventHandler);
+    return new HttpServerTracingHandler(
+        instrumenter, HttpServerResponseBeforeCommitHandler.Noop.INSTANCE, protocolEventHandler);
   }
 }

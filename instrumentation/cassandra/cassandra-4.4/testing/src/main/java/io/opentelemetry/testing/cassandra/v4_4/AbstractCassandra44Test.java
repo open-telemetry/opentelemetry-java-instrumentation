@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -25,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -49,7 +51,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
         .runWithSpan(
             "parent",
             () ->
-                Flux.from(session.executeReactive(parameter.statement))
+                Flux.from(session.executeReactive(parameter.queryText))
                     .doOnComplete(() -> testing().runWithSpan("child", () -> {}))
                     .blockLast());
 
@@ -73,10 +75,15 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(maybeStable(DB_SYSTEM), "cassandra"),
+                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
-                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.spanName : null),
+                                equalTo(
+                                    maybeStable(DB_OPERATION),
+                                    emitStableDatabaseSemconv() ? null : parameter.operation),
                                 equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
                                 equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
@@ -87,7 +94,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                                equalTo(
+                                    maybeStable(DB_CASSANDRA_TABLE),
+                                    emitStableDatabaseSemconv() ? null : parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -105,7 +114,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "DROP KEYSPACE IF EXISTS reactive_test",
                     "DROP KEYSPACE IF EXISTS reactive_test",
-                    "DROP",
+                    emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP",
                     "DROP",
                     null))),
         Arguments.of(
@@ -115,7 +124,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {?:?, ?:?}",
-                    "CREATE",
+                    emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
                     "CREATE",
                     null))),
         Arguments.of(

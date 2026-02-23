@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -31,11 +31,28 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     return new SqlClientSpanNameExtractor<>(getter);
   }
 
+  /**
+   * Returns a {@link SpanNameExtractor} that uses SQL parsing for stable semconv span names but
+   * preserves the old semconv span name format (without collection name) for backward
+   * compatibility.
+   *
+   * <p>This is a transitional method for migrating instrumentations from {@link
+   * DbClientAttributesGetter} to {@link SqlClientAttributesGetter}. Once old database semconv are
+   * dropped, callers should switch to {@link #create(SqlClientAttributesGetter)}.
+   *
+   * @deprecated Use {@link #create(SqlClientAttributesGetter)} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  public static <REQUEST> SpanNameExtractor<REQUEST> createForMigration(
+      SqlClientAttributesGetter<REQUEST, ?> getter) {
+    return new MigratingSqlClientSpanNameExtractor<>(getter);
+  }
+
   private static final String DEFAULT_SPAN_NAME = "DB Query";
 
   private DbClientSpanNameExtractor() {}
 
-  protected String computeSpanName(
+  private static String computeSpanName(
       @Nullable String namespace,
       @Nullable String operationName,
       @Nullable String collectionName,
@@ -82,7 +99,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *   <li>{server.address:server.port}
    * </ol>
    */
-  protected String computeSpanNameStable(
+  private static <REQUEST> String computeSpanNameStable(
       DbClientAttributesGetter<REQUEST, ?> getter,
       REQUEST request,
       @Nullable String operation,
@@ -137,7 +154,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         String querySummary = getter.getDbQuerySummary(request);
         if (querySummary != null) {
           return querySummary;
@@ -166,68 +183,93 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          return computeSpanNameStable(getter, request, null, null, null);
+        if (emitStableDatabaseSemconv()) {
+          String querySummary = getter.getDbQuerySummary(request);
+          if (querySummary != null) {
+            return querySummary;
+          }
+          String operationName = getter.getDbOperationName(request);
+          return computeSpanNameStable(getter, request, operationName, null, null);
         }
-        return computeSpanName(namespace, null, null, null);
+        String operationName = getter.getDbOperationName(request);
+        return computeSpanName(namespace, operationName, null, null);
       }
 
-      if (!SemconvStability.emitStableDatabaseSemconv()) {
+      if (!emitStableDatabaseSemconv()) {
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
-        SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
 
         return computeSpanName(
             namespace,
-            sanitizedStatement.getOperationName(),
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            sanitizedQuery.getOperationName(),
+            sanitizedQuery.getCollectionName(),
+            sanitizedQuery.getStoredProcedureName());
       }
 
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlStatementInfo sanitizedStatement =
-            getter instanceof ExtractQuerySummaryMarker
-                ? SqlStatementSanitizerUtil.sanitizeWithSummary(rawQueryText)
-                : SqlStatementSanitizerUtil.sanitize(rawQueryText);
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText);
         boolean batch = isBatch(request);
-        String querySummary = sanitizedStatement.getQuerySummary();
+        String querySummary = sanitizedQuery.getQuerySummary();
         if (querySummary != null) {
           return batch ? "BATCH " + querySummary : querySummary;
         }
-        String operationName = sanitizedStatement.getOperationName();
-        if (batch) {
-          operationName = operationName == null ? "BATCH" : "BATCH " + operationName;
-        }
         return computeSpanNameStable(
-            getter,
-            request,
-            operationName,
-            sanitizedStatement.getCollectionName(),
-            sanitizedStatement.getStoredProcedureName());
+            getter, request, batch ? "BATCH" : null, null, sanitizedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery =
-          getter instanceof ExtractQuerySummaryMarker
-              ? MultiQuery.analyzeWithSummary(rawQueryTexts, false)
-              : MultiQuery.analyze(rawQueryTexts, false);
+      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, false);
       String querySummary = multiQuery.getQuerySummary();
       if (querySummary != null) {
         return querySummary;
       }
       return computeSpanNameStable(
-          getter,
-          request,
-          multiQuery.getOperationName(),
-          multiQuery.getCollectionName(),
-          multiQuery.getStoredProcedureName());
+          getter, request, null, null, multiQuery.getStoredProcedureName());
     }
 
     private boolean isBatch(REQUEST request) {
       Long batchSize = getter.getDbOperationBatchSize(request);
       return batchSize != null && batchSize > 1;
+    }
+  }
+
+  /**
+   * A transitional span name extractor that uses SQL parsing for stable semconv but preserves the
+   * old semconv span name format (operation + namespace, without collection name) for backward
+   * compatibility during migration from {@link DbClientAttributesGetter} to {@link
+   * SqlClientAttributesGetter}.
+   */
+  private static final class MigratingSqlClientSpanNameExtractor<REQUEST>
+      extends DbClientSpanNameExtractor<REQUEST> {
+
+    private final SqlClientAttributesGetter<REQUEST, ?> getter;
+    private final SqlClientSpanNameExtractor<REQUEST> sqlDelegate;
+
+    private MigratingSqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
+      this.getter = getter;
+      this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter);
+    }
+
+    @Override
+    public String extract(REQUEST request) {
+      if (emitStableDatabaseSemconv()) {
+        return sqlDelegate.extract(request);
+      }
+      // For old semconv, use the generic span name format (operation + namespace)
+      // without collection name to preserve backward compatibility
+      String namespace = getter.getDbNamespace(request);
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+      String operationName = null;
+      if (rawQueryTexts.size() == 1) {
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        operationName = sanitizedQuery.getOperationName();
+      }
+      if (operationName == null) {
+        operationName = getter.getDbOperationName(request);
+      }
+      return computeSpanName(namespace, operationName, null, null);
     }
   }
 }

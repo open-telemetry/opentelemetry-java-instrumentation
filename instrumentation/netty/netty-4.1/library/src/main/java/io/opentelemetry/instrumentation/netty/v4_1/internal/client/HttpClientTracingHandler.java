@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpCl
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler.HTTP_CLIENT_RESPONSE;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelOutboundHandler;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
@@ -24,8 +26,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler
  * any time.
  */
 public class HttpClientTracingHandler
-    extends CombinedChannelDuplexHandler<
-        HttpClientResponseTracingHandler, HttpClientRequestTracingHandler> {
+    extends CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler> {
   private final Instrumenter<NettyCommonRequest, HttpResponse> instrumenter;
 
   public HttpClientTracingHandler(

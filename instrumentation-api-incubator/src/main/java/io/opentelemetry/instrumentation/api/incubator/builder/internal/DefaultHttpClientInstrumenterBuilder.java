@@ -5,17 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -34,7 +34,6 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -45,9 +44,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
-
-  // copied from PeerIncubatingAttributes
-  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final String instrumentationName;
   private final OpenTelemetry openTelemetry;
@@ -72,9 +68,9 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
       @Nullable TextMapSetter<REQUEST> headerSetter) {
-    this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
-    this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
-    this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
+    this.instrumentationName = requireNonNull(instrumentationName, "instrumentationName");
+    this.openTelemetry = requireNonNull(openTelemetry, "openTelemetry");
+    this.attributesGetter = requireNonNull(attributesGetter, "attributesGetter");
     httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(attributesGetter);
     httpAttributesExtractorBuilder = HttpClientAttributesExtractor.builder(attributesGetter);
     this.headerSetter = headerSetter;
@@ -97,7 +93,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         instrumentationName,
         openTelemetry,
         attributesGetter,
-        Objects.requireNonNull(headerSetter, "headerSetter"));
+        requireNonNull(headerSetter, "headerSetter"));
   }
 
   /**
@@ -199,21 +195,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Sets custom {@link PeerServiceResolver}. */
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
-      PeerServiceResolver peerServiceResolver) {
-    return addAttributesExtractor(
-        HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
-  }
-
-  /** Sets the {@code peer.service} attribute for http client spans. */
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerService(
-      String peerService) {
-    return addAttributesExtractor(AttributesExtractor.constant(PEER_SERVICE, peerService));
-  }
-
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setBuilderCustomizer(
       Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer) {
@@ -269,11 +250,12 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
     set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
     set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
-    set(config::getPeerServiceResolver, this::setPeerServiceResolver);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientTelemetry);
     set(config::redactQueryParameters, this::setRedactQueryParameters);
+    addAttributesExtractor(
+        HttpClientServicePeerAttributesExtractor.create(attributesGetter, openTelemetry));
     return this;
   }
 

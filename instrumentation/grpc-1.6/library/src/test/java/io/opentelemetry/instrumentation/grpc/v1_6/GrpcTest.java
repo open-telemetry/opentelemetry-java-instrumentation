@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import example.GreeterGrpc;
@@ -25,8 +27,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,8 +46,7 @@ class GrpcTest extends AbstractGrpcTest {
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     return server.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedServerRequestMetadata(
-                Collections.singletonList(SERVER_REQUEST_METADATA_KEY))
+            .setCapturedServerRequestMetadata(singletonList(SERVER_REQUEST_METADATA_KEY))
             .build()
             .createServerInterceptor());
   }
@@ -56,8 +55,7 @@ class GrpcTest extends AbstractGrpcTest {
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     return client.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedClientRequestMetadata(
-                Collections.singletonList(CLIENT_REQUEST_METADATA_KEY))
+            .setCapturedClientRequestMetadata(singletonList(CLIENT_REQUEST_METADATA_KEY))
             .build()
             .createClientInterceptor());
   }
@@ -109,7 +107,7 @@ class GrpcTest extends AbstractGrpcTest {
                         .build()
                         .createClientInterceptor()));
 
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     Metadata extraMetadata = new Metadata();

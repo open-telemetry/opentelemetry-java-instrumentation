@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.0.1"
-    id("com.google.cloud.tools.jib") version "3.5.2"
+    id("com.google.cloud.tools.jib") version "3.5.3"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.3.1"
+  id("com.gradle.develocity") version "4.3.2"
 }
 
 dependencyResolutionManagement {
@@ -396,6 +396,7 @@ include(":instrumentation:jms:jms-common:javaagent")
 include(":instrumentation:jms:jms-common:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
+include(":instrumentation:jmx-metrics:testing-apps:camel-testing-app")
 include(":instrumentation:jmx-metrics:testing-webapp")
 include(":instrumentation:jodd-http-4.2:javaagent")
 include(":instrumentation:jodd-http-4.2:javaagent-unit-tests")
@@ -508,6 +509,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -604,6 +606,7 @@ include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
 include(":instrumentation:servlet:servlet-5.0:jetty11-testing")
 include(":instrumentation:servlet:servlet-5.0:jetty12-testing")
+include(":instrumentation:servlet:servlet-5.0:library")
 include(":instrumentation:servlet:servlet-5.0:testing")
 include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")
@@ -708,6 +711,7 @@ include(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
+include(":instrumentation:zio:zio-http-3.0:javaagent")
 
 // benchmark
 include(":benchmark-overhead-jmh")

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.server;
 
+import static java.util.Collections.emptyIterator;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -33,6 +34,6 @@ public enum HttpRequestHeadersGetter implements TextMapGetter<NettyCommonRequest
   @Override
   public Iterator<String> getAll(@Nullable NettyCommonRequest carrier, String key) {
     List<String> list = carrier.getRequest().headers().getAll(key);
-    return list != null ? list.iterator() : Collections.emptyIterator();
+    return list != null ? list.iterator() : emptyIterator();
   }
 }

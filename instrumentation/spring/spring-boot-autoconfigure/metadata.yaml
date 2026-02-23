@@ -1,3 +1,4 @@
+display_name: Spring Boot Autoconfigure
 description: >
   This instrumentation auto-configures OpenTelemetry instrumentation for spring-web, spring-webmvc,
   and spring-webflux to instrument Spring Boot applications. It does not produce telemetry on its

@@ -28,6 +28,10 @@ Never use the `--rerun-tasks` flag unless explicitly asked to use this option.
 Gradle automatically detects changes and re-runs tasks automatically when needed. Using `--rerun-tasks`
 is wasteful and slows down builds unnecessarily.
 
+Builds and tests in this repository genuinely take a long time (often several minutes).
+When running Gradle commands, use a timeout of 0 (no timeout) and wait for them to complete.
+Do not assume a build has hung or failed just because it takes a while.
+
 ## Throwing exceptions
 
 When writing instrumentation, you have to be really careful about throwing exceptions. For library

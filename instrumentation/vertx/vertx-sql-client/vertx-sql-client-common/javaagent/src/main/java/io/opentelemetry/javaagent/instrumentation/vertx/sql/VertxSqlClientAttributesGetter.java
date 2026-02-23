@@ -28,7 +28,7 @@ enum VertxSqlClientAttributesGetter
     return null;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getUser(VertxSqlClientRequest request) {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Collections.emptyList;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -34,7 +36,6 @@ import java.util.jar.JarOutputStream;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
@@ -65,11 +66,11 @@ class InstrumentationModuleClassLoaderTest {
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
 
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, any());
     m1.installInjectedClasses(toInject);
 
     InstrumentationModuleClassLoader m2 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, any());
     m2.installInjectedClasses(toInject);
 
     // MethodHandles.publicLookup() always succeeds on the first invocation
@@ -104,7 +105,7 @@ class InstrumentationModuleClassLoaderTest {
 
     ClassLoader dummyParent = new URLClassLoader(new URL[] {}, null);
     InstrumentationModuleClassLoader m1 =
-        new InstrumentationModuleClassLoader(dummyParent, dummyParent, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(dummyParent, dummyParent, any());
     m1.installInjectedClasses(toInject);
 
     Class<?> injected = Class.forName(A.class.getName(), true, m1);
@@ -146,7 +147,7 @@ class InstrumentationModuleClassLoaderTest {
       toInject.put(C.class.getName(), BytecodeWithUrl.create(C.class.getName(), moduleSourceCl));
 
       InstrumentationModuleClassLoader moduleCl =
-          new InstrumentationModuleClassLoader(appCl, agentCl, ElementMatchers.any());
+          new InstrumentationModuleClassLoader(appCl, agentCl, any());
       moduleCl.installInjectedClasses(toInject);
 
       // Verify precedence for classloading
@@ -230,7 +231,7 @@ class InstrumentationModuleClassLoaderTest {
 
     @Override
     public List<TypeInstrumentation> typeInstrumentations() {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override
@@ -246,14 +247,14 @@ class InstrumentationModuleClassLoaderTest {
     ClassLoader agentCl = HideMe.class.getClassLoader();
 
     InstrumentationModuleClassLoader nothingHidden =
-        new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(null, agentCl, any());
     nothingHidden.installModule(module);
 
     assertThat(nothingHidden.loadClass(HideMe.class.getName())).isSameAs(HideMe.class);
 
     module.hiddenPackages.add(HideMe.class.getPackage().getName());
     InstrumentationModuleClassLoader classHidden =
-        new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
+        new InstrumentationModuleClassLoader(null, agentCl, any());
     classHidden.installModule(module);
 
     assertThatThrownBy(() -> classHidden.loadClass(HideMe.class.getName()))

@@ -133,13 +133,13 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
                       responseCode > 0 ? responseCode : httpUrlState.statusCode,
                       throwable);
             }
-            httpUrlState.finished = true;
+            httpUrlState.finish();
           } else if (methodName.equals("getInputStream") && responseCode > 0) {
             // responseCode field is sometimes not populated.
             // We can't call getResponseCode() due to some unwanted side-effects
             // (e.g. breaks getOutputStream).
             instrumenter().end(httpUrlState.context, connection, responseCode, null);
-            httpUrlState.finished = true;
+            httpUrlState.finish();
           }
         } finally {
           callDepth.decrementAndGet();

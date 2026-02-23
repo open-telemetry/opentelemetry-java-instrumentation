@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.InetAddress;
@@ -12,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -53,7 +53,7 @@ public final class ApacheHttpClientRequest {
   // minimize memory overhead by not using streams
   static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (int i = 0; i < headers.length; ++i) {
@@ -98,6 +98,15 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
+  InetSocketAddress getNetworkPeerAddress() {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
+  }
+
+  @Nullable
   private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
@@ -123,14 +132,5 @@ public final class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
-  }
-
-  @Nullable
-  InetSocketAddress getNetworkPeerAddress() {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.logging.application;
 
 import static io.opentelemetry.javaagent.bootstrap.InternalLogger.Level.INFO;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -15,7 +16,6 @@ import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.AfterEach;
@@ -86,6 +86,6 @@ class InMemoryLogStoreTest {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     underTest.dump(new PrintStream(out));
-    assertThat(out.toString(StandardCharsets.UTF_8.name())).hasLineCount(2);
+    assertThat(out.toString(UTF_8.name())).hasLineCount(2);
   }
 }

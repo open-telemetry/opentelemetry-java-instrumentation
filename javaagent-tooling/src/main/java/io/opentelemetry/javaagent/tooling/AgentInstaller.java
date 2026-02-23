@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installO
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -54,7 +55,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +99,7 @@ public class AgentInstaller {
 
     Integer strictContextStressorMillis = Integer.getInteger(STRICT_CONTEXT_STRESSOR_MILLIS);
     if (strictContextStressorMillis != null) {
-      io.opentelemetry.context.ContextStorage.addWrapper(
+      ContextStorage.addWrapper(
           storage -> new StrictContextStressor(storage, strictContextStressorMillis));
     }
 
@@ -295,12 +295,7 @@ public class AgentInstaller {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      try {
-        configurer.configure(builder);
-      } catch (UnsupportedOperationException e) {
-        // fall back to the deprecated method
-        configurer.configure(builder, config);
-      }
+      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
@@ -421,7 +416,7 @@ public class AgentInstaller {
             "Exception while retransforming " + batch.size() + " classes: " + batch,
             throwable);
       }
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override

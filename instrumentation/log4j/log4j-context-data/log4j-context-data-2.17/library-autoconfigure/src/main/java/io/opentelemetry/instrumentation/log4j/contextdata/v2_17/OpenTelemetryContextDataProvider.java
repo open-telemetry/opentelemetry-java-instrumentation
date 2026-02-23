@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
@@ -12,9 +14,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.ThreadContext;
@@ -32,7 +34,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
               GlobalOpenTelemetry.get(), "log4j_context_data")
           .getBoolean(
               "add_baggage",
-              io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil.getBoolean(
+              ConfigPropertiesUtil.getBoolean(
                   "otel.instrumentation.log4j-context-data.add-baggage", false));
 
   private static final boolean configuredResourceAttributeAccessible =
@@ -43,7 +45,7 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     if (configuredResourceAttributeAccessible) {
       return ConfiguredResourceAttributesHolder.getResourceAttributes();
     }
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   /**

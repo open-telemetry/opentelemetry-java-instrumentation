@@ -12,10 +12,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
-/**
- * Instrumentation for methods annotated with {@link
- * application.io.opentelemetry.extension.annotations.WithSpan} annotation.
- */
 @AutoService(InstrumentationModule.class)
 public class WithSpanInstrumentationModule extends InstrumentationModule {
 

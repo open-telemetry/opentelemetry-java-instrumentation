@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.StreamUtils.readLines;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -17,7 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -38,7 +39,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -46,12 +46,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final List<String> RESPONSE = Collections.singletonList("Hello.");
+  static final List<String> RESPONSE = singletonList("Hello.");
   static final int STATUS = 200;
 
   @Override
@@ -132,7 +133,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(PEER_SERVICE, "test-peer-service")));
+                equalTo(maybeStablePeerService(), "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -178,7 +179,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(PEER_SERVICE, "test-peer-service")));
+                equalTo(maybeStablePeerService(), "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -230,7 +231,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(PEER_SERVICE, "test-peer-service")));
+                equalTo(maybeStablePeerService(), "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -284,7 +285,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(PEER_SERVICE, "test-peer-service")));
+                equalTo(maybeStablePeerService(), "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -327,7 +328,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, uri),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(ERROR_TYPE, "java.net.ConnectException"),
-                equalTo(PEER_SERVICE, "test-peer-service")));
+                equalTo(maybeStablePeerService(), "test-peer-service")));
 
     testing.waitAndAssertTraces(
         trace ->

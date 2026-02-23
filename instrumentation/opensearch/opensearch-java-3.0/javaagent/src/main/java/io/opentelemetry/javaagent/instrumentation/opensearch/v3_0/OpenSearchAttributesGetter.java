@@ -26,7 +26,7 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRequest request) {
-    return request.getMethod() + " " + request.getOperation();
+    return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override

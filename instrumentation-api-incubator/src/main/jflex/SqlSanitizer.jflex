@@ -43,7 +43,7 @@ POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
 %{
-  static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
+  static SqlQuery sanitize(String statement, SqlDialect dialect) {
     AutoSqlSanitizer sanitizer = new AutoSqlSanitizer(new java.io.StringReader(statement));
     sanitizer.dialect = dialect;
     try {
@@ -57,7 +57,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlQuery.create(null, null, null);
     }
   }
 
@@ -169,8 +169,8 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    SqlQuery getResult(String fullStatement) {
+      return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
     }
   }
 
@@ -200,9 +200,9 @@ WHITESPACE           = [ \t\r\n]+
       return true;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
+    SqlQuery getResult(String fullStatement) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlQuery.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
       }
       return super.getResult(fullStatement);
     }
@@ -211,8 +211,8 @@ WHITESPACE           = [ \t\r\n]+
   private static class NoOp extends Operation {
     static final Operation INSTANCE = new NoOp();
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
+    SqlQuery getResult(String fullStatement) {
+      return SqlQuery.create(fullStatement, null, null);
     }
   }
 
@@ -349,7 +349,7 @@ WHITESPACE           = [ \t\r\n]+
   private class Drop extends DdlOperation {}
   private class Alter extends DdlOperation {}
 
-  private SqlStatementInfo getResult() {
+  private SqlQuery getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
     }

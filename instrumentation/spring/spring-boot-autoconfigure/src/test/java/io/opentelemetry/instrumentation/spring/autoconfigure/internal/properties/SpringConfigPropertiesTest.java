@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.eq;
@@ -17,8 +18,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ class SpringConfigPropertiesTest {
               assertThat(config.getString("otel.exporter.otlp.compression")).isEqualTo("gzip");
               assertThat(config.getBoolean("otel.exporter.otlp.enabled")).isTrue();
               assertThat(config.getDuration("otel.exporter.otlp.timeout"))
-                  .isEqualByComparingTo(java.time.Duration.ofSeconds(1));
+                  .isEqualByComparingTo(Duration.ofSeconds(1));
             });
   }
 
@@ -113,9 +114,9 @@ class SpringConfigPropertiesTest {
     return Stream.of(
         Arguments.of("otel.experimental.resource.disabled.keys", Arrays.asList("a", "b")),
         Arguments.of("otel.propagators", Arrays.asList("baggage", "b3")),
-        Arguments.of("otel.logs.exporter", Collections.singletonList("console")),
-        Arguments.of("otel.metrics.exporter", Collections.singletonList("console")),
-        Arguments.of("otel.traces.exporter", Collections.singletonList("console")),
+        Arguments.of("otel.logs.exporter", singletonList("console")),
+        Arguments.of("otel.metrics.exporter", singletonList("console")),
+        Arguments.of("otel.traces.exporter", singletonList("console")),
         Arguments.of(
             "otel.instrumentation.http.client.capture-request-headers", Arrays.asList("a", "b")),
         Arguments.of(
@@ -203,7 +204,7 @@ class SpringConfigPropertiesTest {
             (Consumer<SpringConfigProperties>)
                 config ->
                     assertThat(config.getDuration("otel.bsp.export.timeout"))
-                        .isEqualByComparingTo(java.time.Duration.ofSeconds(30))),
+                        .isEqualByComparingTo(Duration.ofSeconds(30))),
         Arguments.of(
             "otel.attribute.value.length.limit=256",
             List.class,

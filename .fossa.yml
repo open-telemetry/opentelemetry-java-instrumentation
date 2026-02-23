@@ -843,6 +843,9 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
     - type: gradle
       path: ./
@@ -949,6 +952,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:servlet:servlet-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-common:bootstrap'
@@ -1063,6 +1069,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:zio:zio-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:zio:zio-http-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent'

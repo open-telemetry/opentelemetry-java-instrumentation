@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.quarkus.resteasy.reactive;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -17,7 +19,6 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,7 @@ public abstract class AbstractQuarkusJaxRsTest {
   }
 
   private static AggregatedHttpResponse request(String path) {
-    return request(path, Collections.emptyMap());
+    return request(path, emptyMap());
   }
 
   private static AggregatedHttpResponse request(String path, Map<String, String> headers) {
@@ -108,7 +109,7 @@ public abstract class AbstractQuarkusJaxRsTest {
 
   @Test
   void testAbort() {
-    AggregatedHttpResponse response = request("/hello", Collections.singletonMap("abort", "true"));
+    AggregatedHttpResponse response = request("/hello", singletonMap("abort", "true"));
     assertThat(response.status().code()).isEqualTo(401);
     assertThat(response.contentUtf8()).isEqualTo("Aborted");
 

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.api.trace.Span;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -119,7 +120,7 @@ class FieldMapper {
           } else {
             String value = serializer.serialize(target);
             if (!StringUtils.isEmpty(value)) {
-              span.setAttribute(fieldMapping.getAttributeKey(), Collections.singletonList(value));
+              span.setAttribute(fieldMapping.getAttributeKey(), singletonList(value));
             }
           }
           break;

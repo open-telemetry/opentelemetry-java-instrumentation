@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -17,7 +20,6 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("PreferJavaTimeOverload")
@@ -122,13 +124,13 @@ public abstract class AbstractPrometheusModeTest {
             timerObj,
             TestTimer::getCount,
             TestTimer::getTotalTimeNanos,
-            TimeUnit.NANOSECONDS)
+            NANOSECONDS)
         .description("This is a test function timer")
         .tags("tag", "value")
         .register(Metrics.globalRegistry);
 
     // when
-    timerObj.add(42, TimeUnit.SECONDS);
+    timerObj.add(42, SECONDS);
 
     // then
     testing()
@@ -253,7 +255,7 @@ public abstract class AbstractPrometheusModeTest {
                                                                 .isPositive())))));
 
     // when
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
     sample.stop();
 
     // then
@@ -299,9 +301,9 @@ public abstract class AbstractPrometheusModeTest {
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(1, TimeUnit.SECONDS);
-    timer.record(5, TimeUnit.SECONDS);
-    timer.record(10_789, TimeUnit.MILLISECONDS);
+    timer.record(1, SECONDS);
+    timer.record(5, SECONDS);
+    timer.record(10_789, MILLISECONDS);
 
     // then
     testing()

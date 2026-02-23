@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
@@ -24,7 +26,6 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -88,15 +89,13 @@ class ArmeriaGrpcTest {
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
                             event ->
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
+                                        equalTo(MESSAGE_TYPE, "RECEIVED"),
+                                        equalTo(MESSAGE_ID, 1L))),
                 span ->
                     span.hasName("example.Greeter/SayHello")
                         .hasKind(SpanKind.SERVER)
@@ -113,14 +112,11 @@ class ArmeriaGrpcTest {
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
+                                        equalTo(MESSAGE_TYPE, "RECEIVED"), equalTo(MESSAGE_ID, 1L)),
                             event ->
                                 event
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
+                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
   }
 }

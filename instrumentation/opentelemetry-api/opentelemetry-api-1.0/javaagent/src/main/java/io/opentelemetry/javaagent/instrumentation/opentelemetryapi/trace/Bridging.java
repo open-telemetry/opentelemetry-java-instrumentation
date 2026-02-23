@@ -7,14 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
 import static java.util.logging.Level.FINE;
 
-import application.io.opentelemetry.api.common.AttributeKey;
-import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.trace.Span;
-import application.io.opentelemetry.api.trace.SpanContext;
-import application.io.opentelemetry.api.trace.SpanKind;
-import application.io.opentelemetry.api.trace.StatusCode;
-import application.io.opentelemetry.api.trace.TraceState;
-import application.io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -32,30 +34,29 @@ import java.util.logging.Logger;
  *
  * <p>Also see comments in this module's gradle file.
  */
-// Our convention for accessing agent package
-@SuppressWarnings("UnnecessarilyFullyQualified")
 public class Bridging {
 
   private static final Logger logger = Logger.getLogger(Bridging.class.getName());
 
-  public static Span toApplication(io.opentelemetry.api.trace.Span agentSpan) {
+  public static application.io.opentelemetry.api.trace.Span toApplication(Span agentSpan) {
     if (!agentSpan.getSpanContext().isValid()) {
       // no need to wrap
-      return Span.getInvalid();
+      return application.io.opentelemetry.api.trace.Span.getInvalid();
     } else {
       return new ApplicationSpan(agentSpan);
     }
   }
 
-  public static SpanContext toApplication(io.opentelemetry.api.trace.SpanContext agentContext) {
+  public static application.io.opentelemetry.api.trace.SpanContext toApplication(
+      SpanContext agentContext) {
     if (agentContext.isRemote()) {
-      return SpanContext.createFromRemoteParent(
+      return application.io.opentelemetry.api.trace.SpanContext.createFromRemoteParent(
           agentContext.getTraceId(),
           agentContext.getSpanId(),
           BridgedTraceFlags.fromAgent(agentContext.getTraceFlags()),
           toApplication(agentContext.getTraceState()));
     } else {
-      return SpanContext.create(
+      return application.io.opentelemetry.api.trace.SpanContext.create(
           agentContext.getTraceId(),
           agentContext.getSpanId(),
           BridgedTraceFlags.fromAgent(agentContext.getTraceFlags()),
@@ -63,16 +64,18 @@ public class Bridging {
     }
   }
 
-  private static TraceState toApplication(io.opentelemetry.api.trace.TraceState agentTraceState) {
-    TraceStateBuilder applicationTraceState = TraceState.builder();
+  private static application.io.opentelemetry.api.trace.TraceState toApplication(
+      TraceState agentTraceState) {
+    application.io.opentelemetry.api.trace.TraceStateBuilder applicationTraceState =
+        application.io.opentelemetry.api.trace.TraceState.builder();
     agentTraceState.forEach(applicationTraceState::put);
     return applicationTraceState.build();
   }
 
-  public static io.opentelemetry.api.trace.Span toAgentOrNull(Span applicationSpan) {
+  public static Span toAgentOrNull(application.io.opentelemetry.api.trace.Span applicationSpan) {
     if (!applicationSpan.getSpanContext().isValid()) {
       // no need to wrap
-      return io.opentelemetry.api.trace.Span.getInvalid();
+      return Span.getInvalid();
     } else if (applicationSpan instanceof ApplicationSpan) {
       return ((ApplicationSpan) applicationSpan).getAgentSpan();
     } else {
@@ -80,24 +83,26 @@ public class Bridging {
     }
   }
 
-  public static io.opentelemetry.api.trace.SpanKind toAgentOrNull(SpanKind applicationSpanKind) {
+  public static SpanKind toAgentOrNull(
+      application.io.opentelemetry.api.trace.SpanKind applicationSpanKind) {
     try {
-      return io.opentelemetry.api.trace.SpanKind.valueOf(applicationSpanKind.name());
+      return SpanKind.valueOf(applicationSpanKind.name());
     } catch (IllegalArgumentException e) {
       logger.log(FINE, "unexpected span kind: {0}", applicationSpanKind.name());
       return null;
     }
   }
 
-  public static io.opentelemetry.api.trace.SpanContext toAgent(SpanContext applicationContext) {
+  public static SpanContext toAgent(
+      application.io.opentelemetry.api.trace.SpanContext applicationContext) {
     if (applicationContext.isRemote()) {
-      return io.opentelemetry.api.trace.SpanContext.createFromRemoteParent(
+      return SpanContext.createFromRemoteParent(
           applicationContext.getTraceId(),
           applicationContext.getSpanId(),
           BridgedTraceFlags.toAgent(applicationContext.getTraceFlags()),
           toAgent(applicationContext.getTraceState()));
     } else {
-      return io.opentelemetry.api.trace.SpanContext.create(
+      return SpanContext.create(
           applicationContext.getTraceId(),
           applicationContext.getSpanId(),
           BridgedTraceFlags.toAgent(applicationContext.getTraceFlags()),
@@ -106,14 +111,18 @@ public class Bridging {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"}) // toAgent conversion uses raw AttributeKey
-  public static io.opentelemetry.api.common.Attributes toAgent(Attributes applicationAttributes) {
-    io.opentelemetry.api.common.AttributesBuilder agentAttributes =
-        io.opentelemetry.api.common.Attributes.builder();
+  public static Attributes toAgent(
+      application.io.opentelemetry.api.common.Attributes applicationAttributes) {
+    AttributesBuilder agentAttributes = Attributes.builder();
     applicationAttributes.forEach(
         (key, value) -> {
-          io.opentelemetry.api.common.AttributeKey agentKey = toAgent(key);
+          AttributeKey agentKey = toAgent(key);
           if (agentKey != null) {
-            agentAttributes.put(agentKey, value);
+            if (key.getType().name().equals("VALUE")) {
+              agentAttributes.put(agentKey, ValueBridging.toAgent(value));
+            } else {
+              agentAttributes.put(agentKey, value);
+            }
           }
         });
     return agentAttributes.build();
@@ -122,53 +131,58 @@ public class Bridging {
   // TODO optimize this by storing shaded AttributeKey inside of application AttributeKey instead of
   // creating every time
   @SuppressWarnings({"rawtypes"}) // conversion uses raw AttributeKey
-  public static io.opentelemetry.api.common.AttributeKey toAgent(AttributeKey applicationKey) {
+  public static AttributeKey toAgent(
+      application.io.opentelemetry.api.common.AttributeKey applicationKey) {
     switch (applicationKey.getType()) {
       case STRING:
-        return io.opentelemetry.api.common.AttributeKey.stringKey(applicationKey.getKey());
+        return AttributeKey.stringKey(applicationKey.getKey());
       case BOOLEAN:
-        return io.opentelemetry.api.common.AttributeKey.booleanKey(applicationKey.getKey());
+        return AttributeKey.booleanKey(applicationKey.getKey());
       case LONG:
-        return io.opentelemetry.api.common.AttributeKey.longKey(applicationKey.getKey());
+        return AttributeKey.longKey(applicationKey.getKey());
       case DOUBLE:
-        return io.opentelemetry.api.common.AttributeKey.doubleKey(applicationKey.getKey());
+        return AttributeKey.doubleKey(applicationKey.getKey());
       case STRING_ARRAY:
-        return io.opentelemetry.api.common.AttributeKey.stringArrayKey(applicationKey.getKey());
+        return AttributeKey.stringArrayKey(applicationKey.getKey());
       case BOOLEAN_ARRAY:
-        return io.opentelemetry.api.common.AttributeKey.booleanArrayKey(applicationKey.getKey());
+        return AttributeKey.booleanArrayKey(applicationKey.getKey());
       case LONG_ARRAY:
-        return io.opentelemetry.api.common.AttributeKey.longArrayKey(applicationKey.getKey());
+        return AttributeKey.longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
-        return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
+        return AttributeKey.doubleArrayKey(applicationKey.getKey());
+      default:
+        if (applicationKey.getType().name().equals("VALUE")) {
+          return AttributeKey.valueKey(applicationKey.getKey());
+        }
+        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
+        return null;
     }
-    logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
-    return null;
   }
 
-  public static List<io.opentelemetry.api.common.AttributeKey<?>> toAgent(
-      List<AttributeKey<?>> attributeKeys) {
-    List<io.opentelemetry.api.common.AttributeKey<?>> result =
-        new ArrayList<>(attributeKeys.size());
-    for (AttributeKey<?> attributeKey : attributeKeys) {
+  public static List<AttributeKey<?>> toAgent(
+      List<application.io.opentelemetry.api.common.AttributeKey<?>> attributeKeys) {
+    List<AttributeKey<?>> result = new ArrayList<>(attributeKeys.size());
+    for (application.io.opentelemetry.api.common.AttributeKey<?> attributeKey : attributeKeys) {
       result.add(toAgent(attributeKey));
     }
     return result;
   }
 
-  public static io.opentelemetry.api.trace.StatusCode toAgent(StatusCode applicationStatus) {
-    io.opentelemetry.api.trace.StatusCode agentCanonicalCode;
+  public static StatusCode toAgent(
+      application.io.opentelemetry.api.trace.StatusCode applicationStatus) {
+    StatusCode agentCanonicalCode;
     try {
-      agentCanonicalCode = io.opentelemetry.api.trace.StatusCode.valueOf(applicationStatus.name());
+      agentCanonicalCode = StatusCode.valueOf(applicationStatus.name());
     } catch (IllegalArgumentException e) {
       logger.log(FINE, "unexpected status canonical code: {0}", applicationStatus.name());
-      return io.opentelemetry.api.trace.StatusCode.UNSET;
+      return StatusCode.UNSET;
     }
     return agentCanonicalCode;
   }
 
-  private static io.opentelemetry.api.trace.TraceState toAgent(TraceState applicationTraceState) {
-    io.opentelemetry.api.trace.TraceStateBuilder agentTraceState =
-        io.opentelemetry.api.trace.TraceState.builder();
+  private static TraceState toAgent(
+      application.io.opentelemetry.api.trace.TraceState applicationTraceState) {
+    TraceStateBuilder agentTraceState = TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();
   }
