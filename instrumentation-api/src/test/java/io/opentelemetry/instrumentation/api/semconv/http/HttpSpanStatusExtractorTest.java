@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static java.util.Collections.emptyMap;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.same;
@@ -14,7 +15,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ class HttpSpanStatusExtractorTest {
         .thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(serverGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), null);
 
     if (isError) {
       verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
@@ -56,7 +56,7 @@ class HttpSpanStatusExtractorTest {
         .thenReturn(statusCode);
 
     HttpSpanStatusExtractor.create(clientGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), null);
 
     if (isError) {
       verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
@@ -74,7 +74,7 @@ class HttpSpanStatusExtractorTest {
 
     // Presence of exception overshadows the HTTP status
     HttpSpanStatusExtractor.create(serverGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), error);
 
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
@@ -88,7 +88,7 @@ class HttpSpanStatusExtractorTest {
 
     // Presence of exception overshadows the HTTP status
     HttpSpanStatusExtractor.create(clientGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), error);
 
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
@@ -98,7 +98,7 @@ class HttpSpanStatusExtractorTest {
     when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
 
     HttpSpanStatusExtractor.create(serverGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), null);
 
     verifyNoInteractions(spanStatusBuilder);
   }
@@ -108,7 +108,7 @@ class HttpSpanStatusExtractorTest {
     when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), isNull())).thenReturn(null);
 
     HttpSpanStatusExtractor.create(clientGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), null);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), null);
 
     verifyNoInteractions(spanStatusBuilder);
   }
@@ -119,7 +119,7 @@ class HttpSpanStatusExtractorTest {
     when(serverGetter.getHttpResponseStatusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
 
     HttpSpanStatusExtractor.create(serverGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), error);
 
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }
@@ -130,7 +130,7 @@ class HttpSpanStatusExtractorTest {
     when(clientGetter.getHttpResponseStatusCode(anyMap(), anyMap(), same(error))).thenReturn(null);
 
     HttpSpanStatusExtractor.create(clientGetter)
-        .extract(spanStatusBuilder, Collections.emptyMap(), Collections.emptyMap(), error);
+        .extract(spanStatusBuilder, emptyMap(), emptyMap(), error);
 
     verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
   }

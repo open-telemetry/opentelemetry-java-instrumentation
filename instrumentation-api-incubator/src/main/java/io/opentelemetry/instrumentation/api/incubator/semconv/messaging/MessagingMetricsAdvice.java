@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
@@ -13,8 +16,6 @@ import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.util.List;
 
 final class MessagingMetricsAdvice {
@@ -41,9 +42,9 @@ final class MessagingMetricsAdvice {
           MESSAGING_OPERATION,
           MESSAGING_DESTINATION_PARTITION_ID,
           MESSAGING_DESTINATION_TEMPLATE,
-          ErrorAttributes.ERROR_TYPE,
-          ServerAttributes.SERVER_PORT,
-          ServerAttributes.SERVER_ADDRESS);
+          ERROR_TYPE,
+          SERVER_PORT,
+          SERVER_ADDRESS);
 
   static void applyPublishDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {

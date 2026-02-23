@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.servlet.internal;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,8 +28,8 @@ public final class MappingResolver {
 
   private MappingResolver(
       Set<String> exactMatches, List<WildcardMatcher> wildcardMatchers, boolean hasDefault) {
-    this.exactMatches = exactMatches.isEmpty() ? Collections.emptySet() : exactMatches;
-    this.wildcardMatchers = wildcardMatchers.isEmpty() ? Collections.emptyList() : wildcardMatchers;
+    this.exactMatches = exactMatches.isEmpty() ? emptySet() : exactMatches;
+    this.wildcardMatchers = wildcardMatchers.isEmpty() ? emptyList() : wildcardMatchers;
     this.hasDefault = hasDefault;
   }
 

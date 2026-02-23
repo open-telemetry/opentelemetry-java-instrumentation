@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import java.io.InputStream;
@@ -14,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.snakeyaml.engine.v2.api.Load;
 import org.snakeyaml.engine.v2.api.LoadSettings;
@@ -70,7 +70,7 @@ public class RuleParser {
         rules.stream()
             .map(obj -> (Map<String, Object>) obj)
             .map(RuleParser::parseJmxRule)
-            .collect(Collectors.toList()));
+            .collect(toList()));
   }
 
   @SuppressWarnings("unchecked") // for casting yaml parsed objects

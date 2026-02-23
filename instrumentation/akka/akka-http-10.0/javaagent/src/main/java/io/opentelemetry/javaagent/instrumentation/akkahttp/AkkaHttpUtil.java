@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import java.util.Collections;
 import java.util.List;
 
 public class AkkaHttpUtil {
@@ -21,15 +23,15 @@ public class AkkaHttpUtil {
   public static List<String> requestHeader(HttpRequest httpRequest, String name) {
     return httpRequest
         .getHeader(name)
-        .map(httpHeader -> Collections.singletonList(httpHeader.value()))
-        .orElse(Collections.emptyList());
+        .map(httpHeader -> singletonList(httpHeader.value()))
+        .orElse(emptyList());
   }
 
   public static List<String> responseHeader(HttpResponse httpResponse, String name) {
     return httpResponse
         .getHeader(name)
-        .map(httpHeader -> Collections.singletonList(httpHeader.value()))
-        .orElse(Collections.emptyList());
+        .map(httpHeader -> singletonList(httpHeader.value()))
+        .orElse(emptyList());
   }
 
   public static String protocolName(HttpRequest request) {

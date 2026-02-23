@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -14,7 +16,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -57,13 +58,13 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
-  private final AttributeKey<String> oldSemconvTableAttribute;
+  @Nullable private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean querySanitizationEnabled;
   private final boolean captureQueryParameters;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
-      AttributeKey<String> oldSemconvTableAttribute,
+      @Nullable AttributeKey<String> oldSemconvTableAttribute,
       boolean querySanitizationEnabled,
       boolean captureQueryParameters) {
     this.getter = getter;
@@ -83,7 +84,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
 
-    if (SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryText);
@@ -91,11 +92,13 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(
             DB_STATEMENT, querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
         attributes.put(DB_OPERATION, operationName);
-        attributes.put(oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
+        if (oldSemconvTableAttribute != null) {
+          attributes.put(oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
+        }
       }
     }
 
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       if (isBatch) {
         attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }

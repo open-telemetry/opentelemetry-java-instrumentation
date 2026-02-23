@@ -5,8 +5,9 @@
 
 package io.opentelemetry.smoketest;
 
-import io.opentelemetry.semconv.ServiceAttributes;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
+
 import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,10 +43,8 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
                         .hasResourceSatisfying(
                             resource -> {
                               resource
-                                  .hasAttribute(
-                                      TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                      getAgentVersion())
-                                  .hasAttribute(ServiceAttributes.SERVICE_NAME, "quarkus");
+                                  .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
+                                  .hasAttribute(SERVICE_NAME, "quarkus");
                             })));
   }
 }

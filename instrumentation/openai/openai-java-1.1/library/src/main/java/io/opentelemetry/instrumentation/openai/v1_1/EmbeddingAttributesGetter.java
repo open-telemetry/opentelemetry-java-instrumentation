@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -90,7 +90,7 @@ enum EmbeddingAttributesGetter
   @Override
   public List<String> getResponseFinishReasons(
       EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Nullable

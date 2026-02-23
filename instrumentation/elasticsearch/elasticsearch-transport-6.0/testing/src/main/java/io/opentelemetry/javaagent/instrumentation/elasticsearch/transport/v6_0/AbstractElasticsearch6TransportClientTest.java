@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
+import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchTransportClientTest;
 import java.io.File;
-import java.util.Collections;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.client.transport.TransportClient;
@@ -80,7 +80,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          Collections.singletonMap(
+                          singletonMap(
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);

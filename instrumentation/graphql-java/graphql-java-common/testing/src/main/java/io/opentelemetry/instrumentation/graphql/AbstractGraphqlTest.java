@@ -11,6 +11,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT;
+import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import graphql.ExecutionResult;
@@ -30,7 +33,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -178,12 +180,10 @@ public abstract class AbstractGraphqlTest {
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME,
-                                  "findBookById"),
-                              equalTo(GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "query"),
+                              equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
+                              equalTo(GRAPHQL_OPERATION_TYPE, "query"),
                               normalizedQueryEqualsTo(
-                                  GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
+                                  GRAPHQL_DOCUMENT,
                                   "query findBookById { bookById(id: ?) { name } }")));
               if (includeDataFetcher()) {
                 assertions.add(
@@ -338,13 +338,10 @@ public abstract class AbstractGraphqlTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME,
-                                    "addNewBook"),
-                                equalTo(
-                                    GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE, "mutation"),
+                                equalTo(GRAPHQL_OPERATION_NAME, "addNewBook"),
+                                equalTo(GRAPHQL_OPERATION_TYPE, "mutation"),
                                 normalizedQueryEqualsTo(
-                                    GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
+                                    GRAPHQL_DOCUMENT,
                                     "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations;
 
 import static java.util.logging.Level.FINE;
 
-import application.io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -42,7 +41,10 @@ public final class AnnotationSingletons {
     try {
       inheritContextMethodHandle =
           MethodHandles.publicLookup()
-              .findVirtual(WithSpan.class, "inheritContext", MethodType.methodType(boolean.class));
+              .findVirtual(
+                  application.io.opentelemetry.instrumentation.annotations.WithSpan.class,
+                  "inheritContext",
+                  MethodType.methodType(boolean.class));
     } catch (NoSuchMethodException | IllegalAccessException ignore) {
       // ignore
     }
@@ -93,7 +95,9 @@ public final class AnnotationSingletons {
   }
 
   private static SpanKind spanKindFromMethod(Method method) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+    application.io.opentelemetry.instrumentation.annotations.WithSpan annotation =
+        method.getDeclaredAnnotation(
+            application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
     if (annotation == null) {
       return SpanKind.INTERNAL;
     }
@@ -115,7 +119,9 @@ public final class AnnotationSingletons {
   }
 
   private static String spanNameFromMethod(Method method) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+    application.io.opentelemetry.instrumentation.annotations.WithSpan annotation =
+        method.getDeclaredAnnotation(
+            application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
     String spanName = annotation.value();
     if (spanName.isEmpty()) {
       spanName = SpanNames.fromMethod(method);
@@ -132,7 +138,9 @@ public final class AnnotationSingletons {
       return true;
     }
 
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+    application.io.opentelemetry.instrumentation.annotations.WithSpan annotation =
+        method.getDeclaredAnnotation(
+            application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
     try {
       return (boolean) inheritContextMethodHandle.invoke(annotation);
     } catch (Throwable ignore) {

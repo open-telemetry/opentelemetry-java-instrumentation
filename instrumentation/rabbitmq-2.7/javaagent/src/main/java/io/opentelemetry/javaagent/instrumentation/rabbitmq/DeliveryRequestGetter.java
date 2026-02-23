@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
 import java.util.Map;
 
 enum DeliveryRequestGetter implements TextMapGetter<DeliveryRequest> {
@@ -15,11 +16,11 @@ enum DeliveryRequestGetter implements TextMapGetter<DeliveryRequest> {
   @Override
   public Iterable<String> keys(DeliveryRequest carrier) {
     if (carrier == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     Map<String, Object> headers = carrier.getProperties().getHeaders();
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return headers.keySet();
   }
