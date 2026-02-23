@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
@@ -14,7 +16,6 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JmxRuntimeMetricsFactory;
-import java.util.Collections;
 import java.util.List;
 
 /** Builder for {@link RuntimeTelemetry}. */
@@ -105,7 +106,7 @@ public final class RuntimeTelemetryBuilder {
 
     List<AutoCloseable> observables =
         disableJmx
-            ? Collections.emptyList()
+            ? emptyList()
             : JmxRuntimeMetricsFactory.buildObservables(
                 emitExperimentalMetrics, captureGcCause, preferJfrMetrics, jmxMeter);
     AutoCloseable jfrTelemetry = jfrConfig.buildJfrTelemetry(preferJfrMetrics, jfrMeter);
