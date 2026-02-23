@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -114,7 +117,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
             propertyName,
             o -> (List<String>) o,
             (properties, lastPart) -> properties.getScalarList(lastPart, String.class));
-    return propertyValue == null ? Collections.emptyList() : propertyValue;
+    return propertyValue == null ? emptyList() : propertyValue;
   }
 
   @Override
@@ -125,7 +128,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
             DeclarativeConfigProperties.class,
             DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     Map<String, String> result = new HashMap<>();
     propertyValue

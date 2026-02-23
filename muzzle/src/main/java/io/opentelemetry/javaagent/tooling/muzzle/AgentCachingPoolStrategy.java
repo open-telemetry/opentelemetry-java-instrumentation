@@ -5,6 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
@@ -12,7 +17,6 @@ import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -98,11 +102,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         ClassInjector.UsingInstrumentation.redefineModule(
             instrumentation,
             javaBase,
-            Collections.emptySet(),
-            Collections.emptyMap(),
-            Collections.singletonMap("java.lang", Collections.singleton(currentModule)),
-            Collections.emptySet(),
-            Collections.emptyMap());
+            emptySet(),
+            emptyMap(),
+            singletonMap("java.lang", singleton(currentModule)),
+            emptySet(),
+            emptyMap());
       }
     }
     try {

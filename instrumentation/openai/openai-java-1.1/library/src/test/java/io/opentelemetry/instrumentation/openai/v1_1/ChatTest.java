@@ -39,7 +39,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -192,7 +191,7 @@ class ChatTest extends AbstractChatTest {
   void multipleChoicesNoCaptureContent() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -582,7 +581,7 @@ class ChatTest extends AbstractChatTest {
   void streamNoCaptureContent() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -667,7 +666,7 @@ class ChatTest extends AbstractChatTest {
   void streamMultipleChoicesNoCaptureContent() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();

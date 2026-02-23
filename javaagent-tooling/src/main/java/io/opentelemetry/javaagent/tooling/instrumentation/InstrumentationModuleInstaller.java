@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -35,7 +36,6 @@ import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -109,7 +109,7 @@ public final class InstrumentationModuleInstaller {
           (ExperimentalInstrumentationModule) instrumentationModule;
       injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
     } else {
-      injectedHelperClassNames = Collections.emptyList();
+      injectedHelperClassNames = emptyList();
     }
 
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);

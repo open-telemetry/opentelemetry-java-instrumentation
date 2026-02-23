@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.CodeAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -45,7 +47,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     if (cls != null) {
       sb.append(cls.getName());
 
-      if (SemconvStability.isEmitOldCodeSemconv()) {
+      if (emitOldCodeSemconv()) {
         attributes.put(CODE_NAMESPACE, cls.getName());
       }
     }
@@ -55,12 +57,12 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
         sb.append(".");
       }
       sb.append(methodName);
-      if (SemconvStability.isEmitOldCodeSemconv()) {
+      if (emitOldCodeSemconv()) {
         attributes.put(CODE_FUNCTION, methodName);
       }
     }
-    if (SemconvStability.isEmitStableCodeSemconv() && sb.length() > 0) {
-      attributes.put(CodeAttributes.CODE_FUNCTION_NAME, sb.toString());
+    if (emitStableCodeSemconv() && sb.length() > 0) {
+      attributes.put(CODE_FUNCTION_NAME, sb.toString());
     }
   }
 

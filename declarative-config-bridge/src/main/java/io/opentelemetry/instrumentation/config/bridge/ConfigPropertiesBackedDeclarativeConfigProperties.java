@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -12,7 +13,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +96,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, Collections.emptyList());
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, emptyList());
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
