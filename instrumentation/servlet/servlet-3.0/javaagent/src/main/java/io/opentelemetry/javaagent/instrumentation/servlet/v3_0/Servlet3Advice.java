@@ -107,9 +107,6 @@ public class Servlet3Advice {
     }
 
     HttpServletRequest request = (HttpServletRequest) servletRequest;
-    // TODO: wrap request
-    // request = Servlet3Singletons.wrapForBodyCaptureIfNeeded(request);
-
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
     String snippet = getSnippetInjectionHelper().getSnippet();

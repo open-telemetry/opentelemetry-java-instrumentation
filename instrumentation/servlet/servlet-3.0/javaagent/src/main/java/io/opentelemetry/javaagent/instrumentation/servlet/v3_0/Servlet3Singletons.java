@@ -74,14 +74,5 @@ public final class Servlet3Singletons {
     }
   }
 
-  public static HttpServletRequest wrapForBodyCaptureIfNeeded(HttpServletRequest request) {
-    return request;
-//    int size = helper().captureRequestBodyMaxSize();
-//    if (size <= 0) {
-//      return request;
-//    }
-//    return new Servlet3BodyCaptureRequestWrapper(request, size);
-  }
-
   private Servlet3Singletons() {}
 }
