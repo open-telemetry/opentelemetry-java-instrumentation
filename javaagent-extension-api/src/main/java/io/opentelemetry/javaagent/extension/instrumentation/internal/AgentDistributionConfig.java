@@ -22,7 +22,7 @@ import java.util.Set;
  * at any time.
  */
 public class AgentDistributionConfig {
-  private static volatile AgentDistributionConfig INSTANCE = new AgentDistributionConfig();
+  private static volatile AgentDistributionConfig instance = new AgentDistributionConfig();
 
   private static volatile boolean initialized;
 
@@ -46,12 +46,12 @@ public class AgentDistributionConfig {
   private final InstrumentationConfig instrumentation;
 
   public static AgentDistributionConfig get() {
-    return INSTANCE;
+    return instance;
   }
 
   // Only used by tests
   public static void resetForTest() {
-    INSTANCE = new AgentDistributionConfig();
+    instance = new AgentDistributionConfig();
     initialized = false;
   }
 
@@ -80,7 +80,7 @@ public class AgentDistributionConfig {
       throw new IllegalStateException("AgentDistributionConfig has already been initialized");
     }
     initialized = true;
-    INSTANCE = distributionConfig;
+    instance = distributionConfig;
   }
 
   @JsonCreator
