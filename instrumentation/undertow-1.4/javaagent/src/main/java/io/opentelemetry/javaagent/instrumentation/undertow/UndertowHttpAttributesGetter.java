@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -25,7 +26,7 @@ public class UndertowHttpAttributesGetter
   @Override
   public List<String> getHttpRequestHeader(HttpServerExchange exchange, String name) {
     HeaderValues values = exchange.getRequestHeaders().get(name);
-    return values == null ? Collections.emptyList() : values;
+    return values == null ? emptyList() : values;
   }
 
   @Override
@@ -38,7 +39,7 @@ public class UndertowHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       HttpServerExchange exchange, HttpServerExchange unused, String name) {
     HeaderValues values = exchange.getResponseHeaders().get(name);
-    return values == null ? Collections.emptyList() : values;
+    return values == null ? emptyList() : values;
   }
 
   @Override

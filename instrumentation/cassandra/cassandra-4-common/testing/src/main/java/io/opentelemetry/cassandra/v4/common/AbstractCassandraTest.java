@@ -28,6 +28,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -138,7 +139,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(maybeStable(DB_SYSTEM), "cassandra"),
+                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(
@@ -199,7 +200,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(maybeStable(DB_SYSTEM), "cassandra"),
+                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
                                 equalTo(

@@ -36,6 +36,11 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "[A-Z][A-Z_0-9]*"
       ),
       Triple(
+        "Collections",
+        "java.util.Collections",
+        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*"
+      ),
+      Triple(
         "ArgumentMatchers",
         "org.mockito.ArgumentMatchers",
         "[a-z][a-zA-Z0-9]*"
@@ -50,6 +55,11 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "OpenTelemetryAssertions",
         "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
         "[a-z][a-zA-Z0-9]*"
+      ),
+      Triple(
+        "SemconvStability",
+        "io.opentelemetry.instrumentation.api.internal.SemconvStability",
+        "emit[a-zA-Z0-9]*"
       ),
     )
 

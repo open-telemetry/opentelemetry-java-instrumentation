@@ -23,6 +23,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -34,7 +36,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import java.net.URI;
@@ -124,10 +125,10 @@ class DbSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       attributes.put(DB_SYSTEM_NAME, system);
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()) {
       attributes.put(DB_SYSTEM, system);
     }
 
@@ -135,10 +136,10 @@ class DbSpanDecorator extends BaseSpanDecorator {
 
     String namespace = getDbNamespace(endpoint);
     if (namespace != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         attributes.put(DB_NAMESPACE, namespace);
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
+      if (emitOldDatabaseSemconv()) {
         attributes.put(DB_NAME, namespace);
       }
     }
@@ -148,12 +149,9 @@ class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      SqlQuery sqlQuery =
-          SemconvStability.emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
+      SqlQuery sqlQuery = emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
       SqlQuery sqlQueryWithSummary =
-          SemconvStability.emitStableDatabaseSemconv()
-              ? sanitizer.sanitizeWithSummary(rawQueryText)
-              : null;
+          emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(rawQueryText) : null;
 
       if (sqlQueryWithSummary != null) {
         attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
