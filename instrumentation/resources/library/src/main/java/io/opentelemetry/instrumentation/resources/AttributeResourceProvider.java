@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
@@ -15,7 +16,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -101,7 +101,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
 
     Object value = existing.getAttribute(key);
 
-    if (key.equals(ServiceAttributes.SERVICE_NAME)) {
+    if (key.equals(SERVICE_NAME)) {
       return config.getString("otel.service.name") == null && "unknown_service:java".equals(value);
     }
 

@@ -28,6 +28,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -43,7 +44,6 @@ import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
 import java.net.URI;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -168,7 +168,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setHttpAttributes(endpoint -> Collections.singleton(NETWORK_PEER_PORT));
+    options.setHttpAttributes(endpoint -> singleton(NETWORK_PEER_PORT));
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setUseHttp2(useHttp2());
   }

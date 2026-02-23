@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,7 @@ class CamelTest extends TargetSystemTest {
 
   @Test
   void testCollectedMetrics() {
-    List<String> yamlFiles = Collections.singletonList("camel.yaml");
+    List<String> yamlFiles = singletonList("camel.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 

@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
-import java.util.Collections;
 import java.util.Map;
 import org.apache.camel.Endpoint;
 
@@ -32,7 +33,7 @@ final class CamelPropagationUtil {
     return AwsXrayPropagator.getInstance()
         .extract(
             Context.current(),
-            Collections.singletonMap("X-Amzn-Trace-Id", exchangeHeaders.get("AWSTraceHeader")),
+            singletonMap("X-Amzn-Trace-Id", exchangeHeaders.get("AWSTraceHeader")),
             MapGetter.INSTANCE);
   }
 

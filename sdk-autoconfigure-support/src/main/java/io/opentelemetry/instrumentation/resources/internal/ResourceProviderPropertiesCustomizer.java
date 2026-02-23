@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -88,16 +90,16 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
     if (!enabledProviders.isEmpty()) {
       // users has requested specific providers to be enabled only
       enabled.addAll(enabledProviders);
-      return Collections.singletonMap(ENABLED_KEY, String.join(",", enabled));
+      return singletonMap(ENABLED_KEY, String.join(",", enabled));
     }
 
     if (disabled.isEmpty()) {
       // all providers that are disabled by default are enabled, no need to set any properties
-      return Collections.emptyMap();
+      return emptyMap();
     }
 
     disabled.addAll(config.getList(DISABLED_KEY));
-    return Collections.singletonMap(DISABLED_KEY, String.join(",", disabled));
+    return singletonMap(DISABLED_KEY, String.join(",", disabled));
   }
 
   private static boolean isEnabled(
