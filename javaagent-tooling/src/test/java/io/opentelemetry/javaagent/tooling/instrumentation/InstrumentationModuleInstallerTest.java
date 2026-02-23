@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +54,7 @@ class InstrumentationModuleInstallerTest {
 
     assertThat(
             AgentDistributionConfig.get()
-                .isInstrumentationEnabled(new TreeSet<>(asList("first", "second")), defaultEnabled))
+                .isInstrumentationEnabled(asList("first", "second"), defaultEnabled))
         .isEqualTo(expected);
   }
 
