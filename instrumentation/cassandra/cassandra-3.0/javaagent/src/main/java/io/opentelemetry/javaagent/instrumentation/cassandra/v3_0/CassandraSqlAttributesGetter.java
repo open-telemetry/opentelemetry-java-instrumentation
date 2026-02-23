@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static java.util.Collections.singleton;
 
 import com.datastax.driver.core.ExecutionInfo;
@@ -25,7 +26,9 @@ final class CassandraSqlAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(CassandraRequest request) {
-    return SqlDialect.CASSANDRA;
+    // "A string constant is an arbitrary sequence of characters enclosed by single-quote(')."
+    // https://cassandra.apache.org/doc/stable/cassandra/developing/cql/definitions.html#constants
+    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
   @Override

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -56,16 +54,11 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
 
   /**
    * Returns the SQL dialect used by the database. The dialect determines how double-quoted
-   * fragments are handled during query sanitization. Known-db getters should override this to
-   * return their specific dialect (e.g. {@link SqlDialect#CASSANDRA}).
-   *
-   * <p>By default, returns {@link SqlDialect#DEFAULT}, which treats double-quoted fragments as
-   * string literals.
+   * fragments are handled during query sanitization. Implementations for databases where
+   * double-quoted fragments are identifiers (not string literals) should return {@link
+   * SqlDialect#DOUBLE_QUOTES_ARE_IDENTIFIERS}.
    */
-  default SqlDialect getSqlDialect(REQUEST request) {
-    // TODO emit DEFAULT even under old semconv for safety
-    return emitStableDatabaseSemconv() ? SqlDialect.DEFAULT : SqlDialect.ANSI_QUOTES;
-  }
+  SqlDialect getSqlDialect(REQUEST request);
 
   /**
    * Get the raw SQL query texts. The values returned by this method are later sanitized by the

@@ -23,6 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -149,9 +150,14 @@ class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      SqlQuery sqlQuery = emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
+      SqlQuery sqlQuery =
+          emitOldDatabaseSemconv()
+              ? sanitizer.sanitize(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+              : null;
       SqlQuery sqlQueryWithSummary =
-          emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(rawQueryText) : null;
+          emitStableDatabaseSemconv()
+              ? sanitizer.sanitizeWithSummary(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+              : null;
 
       if (sqlQueryWithSummary != null) {
         attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());

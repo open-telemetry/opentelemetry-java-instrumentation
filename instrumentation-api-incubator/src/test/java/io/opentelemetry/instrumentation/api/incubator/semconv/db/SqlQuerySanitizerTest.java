@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -23,8 +25,8 @@ class SqlQuerySanitizerTest {
 
   private static SqlQuery sanitize(String sql) {
     return emitStableDatabaseSemconv()
-        ? SANITIZER.sanitizeWithSummary(sql)
-        : SANITIZER.sanitize(sql);
+        ? SANITIZER.sanitizeWithSummary(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+        : SANITIZER.sanitize(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private static SqlQuery sanitize(String sql, SqlDialect dialect) {
@@ -36,7 +38,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = sanitize(original, SqlDialect.ANSI_QUOTES);
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -48,7 +50,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("couchbaseArgs")
   void normalizeCouchbase(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = sanitize(original, SqlDialect.COUCHBASE);
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -60,7 +62,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("simplifyArgs")
   void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = sanitize(original, SqlDialect.ANSI_QUOTES);
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -78,7 +80,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("simplifyDefaultArgs")
   void simplifySqlDefault(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = sanitize(original, SqlDialect.DEFAULT);
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -148,7 +150,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("ddlArgs")
   void checkDdlOperationStatementsAreOk(String actual, Function<String, SqlQuery> expectFunc) {
-    SqlQuery result = sanitize(actual, SqlDialect.ANSI_QUOTES);
+    SqlQuery result = sanitize(actual, DOUBLE_QUOTES_ARE_IDENTIFIERS);
     SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -168,7 +170,7 @@ class SqlQuerySanitizerTest {
     String s = "'";
     SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
     for (int i = 0; i < 10000; i++) {
-      assertThat(sanitizer.sanitize(s)).isNotNull();
+      assertThat(sanitizer.sanitize(s, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isNotNull();
       s += "'";
     }
   }
@@ -179,7 +181,7 @@ class SqlQuerySanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s);
+    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo("?");
   }
 
@@ -189,7 +191,7 @@ class SqlQuerySanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s);
+    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
@@ -217,7 +219,7 @@ class SqlQuerySanitizerTest {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt(Character.MAX_VALUE));
       }
-      SqlQuerySanitizer.create(true).sanitize(sb.toString());
+      SqlQuerySanitizer.create(true).sanitize(sb.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS);
     }
   }
 
@@ -229,7 +231,10 @@ class SqlQuerySanitizerTest {
     }
     s.append("?)");
 
-    String sanitized = SqlQuerySanitizer.create(true).sanitize(s.toString()).getQueryText();
+    String sanitized =
+        SqlQuerySanitizer.create(true)
+            .sanitize(s.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQueryText();
 
     assertThat(sanitized).isEqualTo("select col from table where col in (?)");
   }
@@ -238,7 +243,10 @@ class SqlQuerySanitizerTest {
   void largeQueryCached() {
     // test that short query is cached
     String shortQuery = "SELECT * FROM TABLE WHERE FIELD = 1234";
-    String sanitizedShort = SqlQuerySanitizer.create(true).sanitize(shortQuery).getQueryText();
+    String sanitizedShort =
+        SqlQuerySanitizer.create(true)
+            .sanitize(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQueryText();
     assertThat(sanitizedShort).doesNotContain("1234");
     assertThat(SqlQuerySanitizer.isCached(shortQuery)).isTrue();
 
@@ -248,7 +256,10 @@ class SqlQuerySanitizerTest {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
     String largeQuery = s.toString();
-    String sanitizedLarge = SqlQuerySanitizer.create(true).sanitize(largeQuery).getQueryText();
+    String sanitizedLarge =
+        SqlQuerySanitizer.create(true)
+            .sanitize(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
     assertThat(SqlQuerySanitizer.isCached(largeQuery)).isFalse();
   }
@@ -265,7 +276,9 @@ class SqlQuerySanitizerTest {
       sql.append("very_long_table_name_").append(i);
     }
     String result =
-        SqlQuerySanitizer.create(true).sanitizeWithSummary(sql.toString()).getQuerySummary();
+        SqlQuerySanitizer.create(true)
+            .sanitizeWithSummary(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)
         .isEqualTo(

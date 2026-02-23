@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
@@ -129,10 +130,12 @@ public final class CouchbaseQuerySanitizer {
   }
 
   private static SqlQuery sanitizeString(String query, boolean withSummary) {
+    // "In SQL++ single and double quotation marks can be used for strings."
+    // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
     if (withSummary) {
-      return sanitizer.sanitizeWithSummary(query, SqlDialect.COUCHBASE);
+      return sanitizer.sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     }
-    return sanitizer.sanitize(query, SqlDialect.COUCHBASE);
+    return sanitizer.sanitize(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private CouchbaseQuerySanitizer() {}

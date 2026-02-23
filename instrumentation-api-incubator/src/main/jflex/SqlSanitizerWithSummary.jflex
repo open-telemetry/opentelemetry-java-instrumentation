@@ -1094,10 +1094,22 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
-          if (dialect.ansiQuotes()) {
-            if (!insideComment) {
-              operation.handleIdentifier();
-            }
+          // Always notify the operation about double-quoted identifiers regardless of dialect
+          // so that summarization works correctly even when the dialect treats double quotes as
+          // string literals. For example, SELECT * FROM "my_table" should produce the summary
+          // "SELECT my_table" regardless of whether the dialect sanitizes the token or not.
+          // The operation's own state guards (e.g. identifierCaptured, captureTableList) ensure
+          // handleIdentifier() is a no-op when not structurally expected. And so there is
+          // not a concern about leaking sensitive string literals in the summary.
+          //
+          // This is important because instrumentation doesn't always know whether the database
+          // treats double-quoted tokens as identifiers or string literals, in which case
+          // it defaults to treating them as string literals for safety — ensuring that
+          // potentially sensitive string literal values are never leaked into telemetry.
+          if (!insideComment) {
+            operation.handleIdentifier();
+          }
+          if (dialect.doubleQuotesAreIdentifiers()) {
             appendCurrentFragment();
           } else {
             builder.append('?');

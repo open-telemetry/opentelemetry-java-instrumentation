@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
@@ -29,7 +30,9 @@ class DbClientSpanNameExtractorTest {
 
   @BeforeEach
   void setUp() {
-    lenient().when(sqlAttributesGetter.getSqlDialect(any())).thenReturn(SqlDialect.DEFAULT);
+    lenient()
+        .when(sqlAttributesGetter.getSqlDialect(any()))
+        .thenReturn(DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   @Test

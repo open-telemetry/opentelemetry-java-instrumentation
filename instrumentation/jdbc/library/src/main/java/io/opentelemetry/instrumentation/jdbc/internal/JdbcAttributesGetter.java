@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -25,7 +28,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
 
   // Databases where double quotes are exclusively identifiers and cannot be string literals.
-  private static final Set<String> ANSI_QUOTES_SYSTEMS =
+  private static final Set<String> DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEMS =
       new HashSet<>(
           Arrays.asList(
               // "A string constant in SQL is an arbitrary sequence of characters
@@ -96,10 +99,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public SqlDialect getSqlDialect(DbRequest request) {
     String system = request.getDbInfo().getSystem();
-    if (system != null && ANSI_QUOTES_SYSTEMS.contains(system)) {
-      return SqlDialect.ANSI_QUOTES;
+    if (system != null && DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEMS.contains(system)) {
+      // use the safer default that sanitizes double-quoted fragments as string literals
+      // (note that this can lead to incorrect summarization for databases that do use
+      // double quotes as identifiers)
+      return DOUBLE_QUOTES_ARE_IDENTIFIERS;
     }
-    return SqlDialect.DEFAULT;
+    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
   }
 
   @Override

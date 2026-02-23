@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -34,7 +36,10 @@ final class ClickHouseAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(ClickHouseDbRequest request) {
-    return SqlDialect.CLICKHOUSE;
+    // "String literals must be enclosed in single quotes.
+    // Double quotes are not supported."
+    // https://clickhouse.com/docs/en/sql-reference/syntax#string
+    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
   @Nullable

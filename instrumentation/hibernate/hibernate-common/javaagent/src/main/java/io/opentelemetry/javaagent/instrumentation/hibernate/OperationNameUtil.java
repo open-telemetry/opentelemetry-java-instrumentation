@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
@@ -24,7 +25,8 @@ public final class OperationNameUtil {
   public static String getOperationNameForQuery(@Nullable String query) {
     if (emitStableDatabaseSemconv()) {
       if (query != null) {
-        SqlQuery info = sanitizer.sanitizeWithSummary(query);
+        // note: summarization is not affected by the choice of dialect
+        SqlQuery info = sanitizer.sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
         String summary = info.getQuerySummary();
         if (summary != null) {
           return summary;
@@ -39,7 +41,7 @@ public final class OperationNameUtil {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlQuery info = sanitizer.sanitize(query);
+    SqlQuery info = sanitizer.sanitize(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     if (info.getOperationName() != null) {
       operation = info.getOperationName();
       if (info.getCollectionName() != null) {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.INFLUXDB;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
@@ -23,9 +23,14 @@ public abstract class InfluxDbRequest {
 
   public static InfluxDbRequest create(
       String host, int port, String namespace, String operationName, String sql) {
-    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? sanitizer.sanitize(sql, INFLUXDB) : null;
+    // "String literals must be surrounded by single quotes."
+    // https://docs.influxdata.com/influxdb/v2/reference/syntax/influxql/spec/#strings
+    SqlQuery sqlQuery =
+        emitOldDatabaseSemconv() ? sanitizer.sanitize(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS) : null;
     SqlQuery sqlQueryWithSummary =
-        emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql, INFLUXDB) : null;
+        emitStableDatabaseSemconv()
+            ? sanitizer.sanitizeWithSummary(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS)
+            : null;
     return new AutoValue_InfluxDbRequest(
         host, port, namespace, operationName, sqlQuery, sqlQueryWithSummary);
   }
