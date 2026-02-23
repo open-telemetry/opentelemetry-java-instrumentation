@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.ServerAttributes;
 import javax.annotation.Nullable;
 
 public class CassandraAttributesExtractor
@@ -28,9 +30,7 @@ public class CassandraAttributesExtractor
       return;
     }
     attributes.put(
-        ServerAttributes.SERVER_ADDRESS,
-        executionInfo.getQueriedHost().getSocketAddress().getHostString());
-    attributes.put(
-        ServerAttributes.SERVER_PORT, executionInfo.getQueriedHost().getSocketAddress().getPort());
+        SERVER_ADDRESS, executionInfo.getQueriedHost().getSocketAddress().getHostString());
+    attributes.put(SERVER_PORT, executionInfo.getQueriedHost().getSocketAddress().getPort());
   }
 }

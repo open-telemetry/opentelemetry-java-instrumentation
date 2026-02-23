@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -23,7 +24,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MethodConfiguration {
@@ -48,7 +48,7 @@ public class MethodConfiguration {
     if (includeList != null) {
       return includeList.stream()
           .flatMap(MethodConfiguration::parseMethodInstrumentation)
-          .collect(Collectors.toList());
+          .collect(toList());
     }
 
     // Fall back to old string property format
@@ -109,6 +109,6 @@ public class MethodConfiguration {
             e ->
                 new MethodInstrumentation(
                     e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -122,7 +123,7 @@ public final class SupportabilityMetrics {
    */
   public static final class CounterNames {
     public static final String SQL_SANITIZER_CACHE_MISS =
-        SemconvStability.emitStableDatabaseSemconv()
+        emitStableDatabaseSemconv()
             ? "sql sanitizer cache miss"
             : "SqlStatementSanitizer cache miss";
 

@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -18,9 +20,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,7 +46,7 @@ class InstrumenterContextTest {
 
           @Override
           public Collection<String> getRawQueryTexts(Object request) {
-            return Collections.singletonList(testQuery);
+            return singletonList(testQuery);
           }
         };
     SpanNameExtractor<Object> spanNameExtractor = DbClientSpanNameExtractor.create(getter);
@@ -70,8 +70,7 @@ class InstrumenterContextTest {
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
-      assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
-          .isEqualTo("test2");
+      assertThat(builder.build().get(maybeStable(DB_SQL_TABLE))).isEqualTo("test2");
     }
 
     // clear cached value to see whether it gets recomputed correctly
@@ -79,8 +78,7 @@ class InstrumenterContextTest {
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
-      assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
-          .isEqualTo("test");
+      assertThat(builder.build().get(maybeStable(DB_SQL_TABLE))).isEqualTo("test");
     }
   }
 }

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -61,22 +61,22 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
 
   @Test
   void invokeAll() {
-    executeTwoTasks(task -> executor.invokeAll(Collections.singleton(task)));
+    executeTwoTasks(task -> executor.invokeAll(singleton(task)));
   }
 
   @Test
   void invokeAllWithTimeout() {
-    executeTwoTasks(task -> executor.invokeAll(Collections.singleton(task), 10, SECONDS));
+    executeTwoTasks(task -> executor.invokeAll(singleton(task), 10, SECONDS));
   }
 
   @Test
   void invokeAny() {
-    executeTwoTasks(task -> executor.invokeAny(Collections.singleton(task)));
+    executeTwoTasks(task -> executor.invokeAny(singleton(task)));
   }
 
   @Test
   void invokeAnyWithTimeout() {
-    executeTwoTasks(task -> executor.invokeAny(Collections.singleton(task), 10, SECONDS));
+    executeTwoTasks(task -> executor.invokeAny(singleton(task), 10, SECONDS));
   }
 
   @Test

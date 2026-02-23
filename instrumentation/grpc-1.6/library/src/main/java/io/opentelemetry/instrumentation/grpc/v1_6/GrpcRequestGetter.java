@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static java.util.Collections.emptyIterator;
+import static java.util.stream.Collectors.toList;
 
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
@@ -22,7 +22,7 @@ enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
     // accessed via Metadata.Key.of() and would cause IllegalArgumentException
     return request.getMetadata().keys().stream()
         .filter(key -> !key.startsWith(":"))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

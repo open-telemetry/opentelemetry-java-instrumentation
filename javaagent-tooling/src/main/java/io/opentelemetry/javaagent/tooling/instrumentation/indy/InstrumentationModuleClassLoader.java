@@ -5,6 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toMap;
+
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -61,7 +65,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
 
   private static final Map<String, BytecodeWithUrl> ALWAYS_INJECTED_CLASSES =
-      Collections.singletonMap(
+      singletonMap(
           LookupExposer.class.getName(), BytecodeWithUrl.create(LookupExposer.class).cached());
   private static final ProtectionDomain PROTECTION_DOMAIN = getProtectionDomain();
   private static final MethodHandle FIND_PACKAGE_METHOD = getFindPackageMethod();
@@ -147,7 +151,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     Map<String, BytecodeWithUrl> classesToInject =
         getClassesToInject(module).stream()
             .collect(
-                Collectors.toMap(
+                toMap(
                     className -> className,
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
@@ -301,8 +305,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       return super.getResources(resourceName);
     }
     URL resource = getResource(resourceName);
-    List<URL> result =
-        resource != null ? Collections.singletonList(resource) : Collections.emptyList();
+    List<URL> result = resource != null ? singletonList(resource) : emptyList();
     return Collections.enumeration(result);
   }
 

@@ -10,20 +10,21 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -71,7 +72,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
             .newPushConsumerBuilder()
             .setClientConfiguration(clientConfiguration)
             .setConsumerGroup(consumerGroup)
-            .setSubscriptionExpressions(Collections.singletonMap(topic, filterExpression))
+            .setSubscriptionExpressions(singletonMap(topic, filterExpression))
             .setMessageListener(
                 messageView -> {
                   testing().runWithSpan("child", () -> {});
@@ -114,10 +115,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
-                                    equalTo(
-                                        MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-                                        MessagingIncubatingAttributes
-                                            .MessagingRocketmqMessageTypeIncubatingValues.NORMAL),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(
@@ -132,10 +130,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 // As the child of send span.
                                 .hasParent(trace.getSpan(1))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(
-                                        MessagingIncubatingAttributes
-                                            .MESSAGING_ROCKETMQ_CLIENT_GROUP,
-                                        consumerGroup),
+                                    equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),

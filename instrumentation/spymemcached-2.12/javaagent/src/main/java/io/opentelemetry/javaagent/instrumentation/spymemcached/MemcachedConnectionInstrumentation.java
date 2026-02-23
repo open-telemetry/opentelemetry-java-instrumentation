@@ -40,6 +40,9 @@ public class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   public static class AddOperationAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Argument(1) Operation operation) {
+      // we are reading node from operation instead of using the node that was passed to the method,
+      // because we want to get the node that is actually handling the request, which could be
+      // different from the one passed to the method in case of retries
       SpymemcachedRequestHolder.setHandlingNode(
           Java8BytecodeBridge.currentContext(), operation.getHandlingNode());
     }

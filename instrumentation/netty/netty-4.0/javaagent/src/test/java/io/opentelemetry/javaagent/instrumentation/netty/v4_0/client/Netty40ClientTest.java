@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -33,7 +34,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -179,7 +179,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://192.0.2.1/": // non routable address
-        return Collections.emptySet();
+        return emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);

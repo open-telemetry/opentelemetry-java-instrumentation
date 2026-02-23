@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.CodeAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -60,7 +61,7 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
       }
     }
     if (SemconvStability.isEmitStableCodeSemconv() && sb.length() > 0) {
-      attributes.put(CodeAttributes.CODE_FUNCTION_NAME, sb.toString());
+      attributes.put(CODE_FUNCTION_NAME, sb.toString());
     }
   }
 

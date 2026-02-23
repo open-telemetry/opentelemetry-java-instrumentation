@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -39,12 +41,10 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -223,7 +223,7 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public ConfigProperties otelProperties() {
-      return DefaultConfigProperties.createFromMap(Collections.emptyMap());
+      return DefaultConfigProperties.createFromMap(emptyMap());
     }
 
     @Configuration
@@ -249,7 +249,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public ConfigProperties otelProperties(ApplicationContext applicationContext) {
       return DefaultConfigProperties.create(
-          Collections.emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
+          emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
     }
   }
 
@@ -272,7 +272,7 @@ public class OpenTelemetryAutoConfiguration {
     public <T> Iterable<T> load(Class<T> spiClass) {
       List<T> spi = spiHelper.load(spiClass);
       List<T> beans =
-          applicationContext.getBeanProvider(spiClass).orderedStream().collect(Collectors.toList());
+          applicationContext.getBeanProvider(spiClass).orderedStream().collect(toList());
       spi.addAll(beans);
       return spi;
     }
