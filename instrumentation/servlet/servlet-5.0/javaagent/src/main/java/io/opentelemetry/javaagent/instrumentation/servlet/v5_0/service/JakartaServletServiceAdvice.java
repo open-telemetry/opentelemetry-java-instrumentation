@@ -17,7 +17,6 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHol
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.body.Servlet5BodyCaptureRequestWrapper;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
@@ -112,7 +111,7 @@ public class JakartaServletServiceAdvice {
     }
 
     HttpServletRequest request = (HttpServletRequest) servletRequest;
-    request = helper().wrapForBodyCaptureIfNeeded(request, Servlet5BodyCaptureRequestWrapper::new);
+    request = Servlet5Singletons.wrapForBodyCaptureIfNeeded(request);
 
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 

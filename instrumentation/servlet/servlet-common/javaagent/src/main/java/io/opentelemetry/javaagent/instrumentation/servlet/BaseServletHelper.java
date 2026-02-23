@@ -31,7 +31,6 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
@@ -218,15 +217,11 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
   }
 
-  public REQUEST wrapForBodyCaptureIfNeeded(
-      REQUEST request, BiFunction<REQUEST, Integer, REQUEST> wrapFunction) {
-    if (!captureRequestBodyEnabled()) {
-      return request;
-    }
-    return wrapFunction.apply(request, CAPTURE_REQUEST_BODY_SIZE);
-  }
-
   public static boolean captureRequestBodyEnabled() {
     return CAPTURE_REQUEST_BODY && CAPTURE_REQUEST_BODY_SIZE > 0;
+  }
+
+  public int captureRequestBodyMaxSize(){
+    return CAPTURE_REQUEST_BODY ? CAPTURE_REQUEST_BODY_SIZE: 0;
   }
 }
