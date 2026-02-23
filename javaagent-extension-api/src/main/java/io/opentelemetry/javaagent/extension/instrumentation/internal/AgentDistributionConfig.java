@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +21,6 @@ import java.util.Set;
  * at any time.
  */
 public class AgentDistributionConfig {
-  @SuppressWarnings("ConstantField") // needs to be mutable for @Initializer
   private static volatile AgentDistributionConfig INSTANCE = new AgentDistributionConfig();
 
   private static volatile boolean initialized;
@@ -76,7 +74,6 @@ public class AgentDistributionConfig {
     return new ConfigPropertiesAgentDistributionConfig(configProperties);
   }
 
-  @Initializer
   public static void set(AgentDistributionConfig distributionConfig) {
     if (initialized) {
       throw new IllegalStateException("AgentDistributionConfig has already been initialized");
