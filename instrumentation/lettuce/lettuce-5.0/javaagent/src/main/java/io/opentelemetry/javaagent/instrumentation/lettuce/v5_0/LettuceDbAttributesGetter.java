@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static java.util.Collections.emptyList;
+
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -37,7 +38,7 @@ final class LettuceDbAttributesGetter
     String command = LettuceInstrumentationUtil.getCommandName(request);
     List<String> args =
         request.getArgs() == null
-            ? Collections.emptyList()
+            ? emptyList()
             : LettuceArgSplitter.splitArgs(request.getArgs().toCommandString());
     return sanitizer.sanitize(command, args);
   }

@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GR
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -64,7 +65,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -1405,15 +1405,12 @@ public abstract class AbstractGrpcTest {
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttribute(
-                                clientAttributeKey, Collections.singletonList(clientMetadataValue)),
+                            .hasAttribute(clientAttributeKey, singletonList(clientMetadataValue)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
-                            .hasAttribute(
-                                serverAttributeKey,
-                                Collections.singletonList(serverMetadataValue))));
+                            .hasAttribute(serverAttributeKey, singletonList(serverMetadataValue))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {

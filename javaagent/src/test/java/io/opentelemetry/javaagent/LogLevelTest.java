@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import jvmbootstraptest.LogLevelChecker;
@@ -27,7 +27,7 @@ class LogLevelTest {
             LogLevelChecker.class.getName(),
             new String[] {"-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"},
             new String[0],
-            Collections.emptyMap(),
+            emptyMap(),
             true);
 
     assertThat(exitCode).isOne();
@@ -44,7 +44,7 @@ class LogLevelTest {
               "-Dotel.javaagent.enabled=false"
             },
             new String[0],
-            Collections.emptyMap(),
+            emptyMap(),
             true);
 
     assertThat(exitCode).isZero();
@@ -73,7 +73,7 @@ class LogLevelTest {
             LogLevelChecker.class.getName(),
             new String[] {"-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"},
             new String[0],
-            Collections.emptyMap(),
+            emptyMap(),
             true);
 
     assertThat(exitCode).isZero();

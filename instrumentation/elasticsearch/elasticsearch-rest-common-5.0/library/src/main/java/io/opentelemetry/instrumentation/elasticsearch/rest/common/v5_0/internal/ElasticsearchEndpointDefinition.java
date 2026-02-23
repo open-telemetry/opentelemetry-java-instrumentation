@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -144,7 +144,7 @@ public final class ElasticsearchEndpointDefinition {
           }
         }
       } else {
-        pathPartNames = Collections.emptyList();
+        pathPartNames = emptyList();
       }
     }
 

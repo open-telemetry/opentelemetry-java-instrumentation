@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -35,7 +36,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -73,11 +73,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   void setUpClusters() {
     environmentCouchbase = envBuilder(bucketCouchbase).build();
     clusterCouchbase =
-        CouchbaseAsyncCluster.create(environmentCouchbase, Collections.singletonList("127.0.0.1"));
+        CouchbaseAsyncCluster.create(environmentCouchbase, singletonList("127.0.0.1"));
 
     environmentMemcache = envBuilder(bucketMemcache).build();
-    clusterMemcache =
-        CouchbaseAsyncCluster.create(environmentMemcache, Collections.singletonList("127.0.0.1"));
+    clusterMemcache = CouchbaseAsyncCluster.create(environmentMemcache, singletonList("127.0.0.1"));
   }
 
   @AfterAll

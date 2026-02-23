@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
@@ -17,7 +19,6 @@ import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -147,28 +148,28 @@ public final class LogEventMapper<T> {
       if (source != null) {
         String fileName = source.getFileName();
         if (fileName != null) {
-          if (SemconvStability.isEmitStableCodeSemconv()) {
+          if (emitStableCodeSemconv()) {
             builder.setAttribute(CODE_FILE_PATH, fileName);
           }
-          if (SemconvStability.isEmitOldCodeSemconv()) {
+          if (emitOldCodeSemconv()) {
             builder.setAttribute(CODE_FILEPATH, fileName);
           }
         }
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           builder.setAttribute(
               CODE_FUNCTION_NAME, source.getClassName() + "." + source.getMethodName());
         }
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           builder.setAttribute(CODE_NAMESPACE, source.getClassName());
           builder.setAttribute(CODE_FUNCTION, source.getMethodName());
         }
 
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
-          if (SemconvStability.isEmitStableCodeSemconv()) {
+          if (emitStableCodeSemconv()) {
             builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
           }
-          if (SemconvStability.isEmitOldCodeSemconv()) {
+          if (emitOldCodeSemconv()) {
             builder.setAttribute(CODE_LINENO, (long) lineNumber);
           }
         }

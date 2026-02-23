@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -26,7 +26,7 @@ final class ClickHouseAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(ClickHouseDbRequest request) {
-    return Collections.singletonList(request.getSql());
+    return singletonList(request.getSql());
   }
 
   @Override

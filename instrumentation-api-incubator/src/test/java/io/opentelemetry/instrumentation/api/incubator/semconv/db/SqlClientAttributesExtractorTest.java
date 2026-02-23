@@ -23,8 +23,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
@@ -33,7 +35,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -87,7 +88,7 @@ class SqlClientAttributesExtractorTest {
     public Map<String, String> getDbQueryParameters(Map<String, Object> map) {
       Map<String, String> parameters =
           (Map<String, String>) read(map, "db.query.parameter", Map.class);
-      return parameters != null ? parameters : Collections.emptyMap();
+      return parameters != null ? parameters : emptyMap();
     }
 
     protected String read(Map<String, Object> map, String key) {
@@ -249,7 +250,7 @@ class SqlClientAttributesExtractorTest {
 
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();
@@ -449,7 +450,7 @@ class SqlClientAttributesExtractorTest {
     request.put("db.namespace", "potatoes");
     request.put("db.query.texts", singleton("INSERT INTO potato VALUES(?)"));
     request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
-    request.put("db.query.parameter", Collections.singletonMap("0", "1"));
+    request.put("db.query.parameter", singletonMap("0", "1"));
 
     Context context = Context.root();
 
