@@ -78,10 +78,7 @@ public class TestServlet5 {
               resp.getWriter().print(endpoint.getBody());
             } else if (CAPTURE_BODY.equals(endpoint)) {
               // read body to trigger body capture
-              ServletInputStream requestBody = req.getInputStream();
-              while (!requestBody.isFinished()) {
-                requestBody.read();
-              }
+              consumeRequestBody(req);
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(endpoint.getBody());
             } else if (ERROR.equals(endpoint)) {
@@ -162,12 +159,10 @@ public class TestServlet5 {
                       context.complete();
                     } else if (CAPTURE_BODY.equals(endpoint)) {
                       // read body to trigger body capture
-                      ServletInputStream requestBody = req.getInputStream();
-                      while (!requestBody.isFinished()) {
-                        requestBody.read();
-                      }
+                      consumeRequestBody(req);
                       resp.setStatus(endpoint.getStatus());
                       resp.getWriter().print(endpoint.getBody());
+                      context.complete();
                     } else if (ERROR.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
                       resp.getWriter().print(endpoint.getBody());
@@ -254,10 +249,7 @@ public class TestServlet5 {
                 resp.getWriter().print(endpoint.getBody());
               } else if (CAPTURE_BODY.equals(endpoint)) {
                 // read body to trigger body capture
-                ServletInputStream requestBody = req.getInputStream();
-                while (!requestBody.isFinished()) {
-                  requestBody.read();
-                }
+                consumeRequestBody(req);
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(endpoint.getBody());
               } else if (ERROR.equals(endpoint)) {
@@ -328,6 +320,13 @@ public class TestServlet5 {
       } else {
         req.startAsync().dispatch("/recursive");
       }
+    }
+  }
+
+  private static void consumeRequestBody(HttpServletRequest req) throws IOException {
+    ServletInputStream requestBody = req.getInputStream();
+    while (!requestBody.isFinished()) {
+      requestBody.read();
     }
   }
 }
