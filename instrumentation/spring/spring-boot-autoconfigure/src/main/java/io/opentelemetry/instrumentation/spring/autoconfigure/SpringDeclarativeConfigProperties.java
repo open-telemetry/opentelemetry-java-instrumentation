@@ -172,6 +172,15 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     if (value instanceof Integer) {
       return (Integer) value;
     }
+    if (value instanceof Long) {
+      long longValue = (Long) value;
+      if (longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
+        // Unlikely to reach here since Jackson already deserializes values
+        // fitting in int range as Integer, but handle it for safety.
+        return (int) longValue;
+      }
+      return null;
+    }
     if (value instanceof String) {
       try {
         return Integer.parseInt((String) value);
