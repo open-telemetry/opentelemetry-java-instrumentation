@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionPropertyModel;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -65,7 +66,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         try {
           return MAPPER.convertValue(javaagent, AgentDistributionConfig.class);
         } catch (IllegalArgumentException e) {
-          logger.warning("Failed to parse distribution.javaagent configuration: " + e.getMessage());
+          logger.log(Level.WARNING, "Failed to parse distribution.javaagent configuration", e);
         }
       }
     }

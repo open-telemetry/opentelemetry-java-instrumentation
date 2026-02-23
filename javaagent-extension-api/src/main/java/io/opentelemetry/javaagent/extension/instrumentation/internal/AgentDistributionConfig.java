@@ -26,23 +26,18 @@ public class AgentDistributionConfig {
 
   private static volatile boolean initialized;
 
-  @JsonProperty("indy/development")
   private final boolean indyEnabled;
 
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
   // too much javaagent users can file a bug, force sync execution by setting this property to true
   // and continue using the javaagent
-  @JsonProperty("force_synchronous_agent_listeners/development")
   private final boolean forceSynchronousAgentListeners;
 
-  @JsonProperty("exclude_classes")
   private final List<String> excludeClasses;
 
-  @JsonProperty("exclude_class_loaders")
   private final List<String> excludeClassLoaders;
 
-  @JsonProperty("instrumentation")
   private final InstrumentationConfig instrumentation;
 
   public static AgentDistributionConfig get() {
