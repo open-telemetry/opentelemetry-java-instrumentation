@@ -82,7 +82,7 @@ Do not stop a given execution until you have worked through all phases below.
   - **Test locally before committing**:
     - For markdown lint failures: `mise run lint:markdown`
     - For compilation errors: `./gradlew <failed-task-path>`
-    - For test failures: `./gradlew <failed-test-task>`
+    - For test failures: Run the whole module's test task (e.g., `./gradlew :instrumentation:module-name:javaagent:test`) instead of just the individual failing test, as there are often other tests in the module that also need to be fixed
     - Verify the fix resolves the issue
   - Update the checkbox in CI-PLAN.md
   - Commit each logical fix as a separate commit
