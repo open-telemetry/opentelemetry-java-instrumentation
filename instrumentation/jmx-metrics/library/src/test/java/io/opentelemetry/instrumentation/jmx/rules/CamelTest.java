@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointMatcher.equalTo;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointMatcher.greaterThanOrEqual;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
@@ -98,6 +100,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of routes started successfully since context start-up or the last reset operation.")
                     .hasUnit("{route}")
+                    .hasDataPointsWithValues(equalTo(2))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.route.added",
@@ -107,6 +110,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of routes added successfully since context start-up or the last reset operation.")
                     .hasUnit("{route}")
+                    .hasDataPointsWithValues(equalTo(2))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.count",
@@ -116,6 +120,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithValues(greaterThanOrEqual(1))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.completed",
@@ -125,6 +130,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithValues(greaterThanOrEqual(1))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.failed.count",
@@ -134,6 +140,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithValues(equalTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.failed.handled",
@@ -143,6 +150,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithValues(equalTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.inflight",
@@ -161,6 +169,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithValues(equalTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.redelivered.external",
@@ -170,6 +179,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithValues(equalTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.processing.duration.max",
