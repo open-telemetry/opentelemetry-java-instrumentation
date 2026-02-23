@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -80,7 +80,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       @Nullable
       public static AdviceScope start(Object arg, Context context) {
 
-        Map<String, String> headers = Collections.emptyMap();
+        Map<String, String> headers = emptyMap();
         if (arg instanceof APIGatewayProxyRequestEvent) {
           headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
         }

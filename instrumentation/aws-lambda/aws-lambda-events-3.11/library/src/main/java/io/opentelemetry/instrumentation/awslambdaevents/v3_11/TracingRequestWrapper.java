@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static java.util.Collections.emptyMap;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
@@ -22,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -50,7 +51,7 @@ public class TracingRequestWrapper extends TracingRequestStreamWrapper {
     if (input instanceof APIGatewayProxyRequestEvent) {
       return MapUtils.emptyIfNull(((APIGatewayProxyRequestEvent) input).getHeaders());
     }
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   @Override

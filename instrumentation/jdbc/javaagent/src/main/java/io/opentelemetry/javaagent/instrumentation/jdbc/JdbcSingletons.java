@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -25,7 +26,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Wrapper;
-import java.util.Collections;
 import javax.sql.DataSource;
 
 public final class JdbcSingletons {
@@ -48,7 +48,7 @@ public final class JdbcSingletons {
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
-            Collections.singletonList(servicePeerExtractor),
+            singletonList(servicePeerExtractor),
             true,
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("statement_sanitizer")
@@ -58,7 +58,7 @@ public final class JdbcSingletons {
     TRANSACTION_INSTRUMENTER =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
-            Collections.singletonList(servicePeerExtractor),
+            singletonList(servicePeerExtractor),
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("transaction/development")
                 .getBoolean("enabled", false));

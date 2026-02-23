@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.security.config.v6_0.webflux;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -15,7 +16,6 @@ import io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttri
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.Arrays;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -53,7 +53,7 @@ class EnduserAttributesCapturingWebFilterTest {
           MockServerHttpRequest request = MockServerHttpRequest.get("/").build();
           MockServerWebExchange exchange = MockServerWebExchange.from(request);
           DefaultWebFilterChain filterChain =
-              new DefaultWebFilterChain(exch -> Mono.empty(), Collections.emptyList());
+              new DefaultWebFilterChain(exch -> Mono.empty(), emptyList());
           Context otelContext = Context.current();
           filter
               .filter(exchange, filterChain)

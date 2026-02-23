@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
@@ -23,7 +25,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -47,8 +48,8 @@ public final class GrpcTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
   private boolean emitMessageEvents = true;
-  private List<String> capturedClientRequestMetadata = Collections.emptyList();
-  private List<String> capturedServerRequestMetadata = Collections.emptyList();
+  private List<String> capturedClientRequestMetadata = emptyList();
+  private List<String> capturedServerRequestMetadata = emptyList();
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

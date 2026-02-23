@@ -5,6 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toMap;
 
@@ -17,9 +25,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.CodeAttributes;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Instant;
@@ -104,11 +109,11 @@ public final class LogEventMapper {
       if (builder instanceof ExtendedLogRecordBuilder) {
         ((ExtendedLogRecordBuilder) builder).setException(throwable);
       } else {
-        builder.setAttribute(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-        builder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+        builder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
+        builder.setAttribute(EXCEPTION_MESSAGE, throwable.getMessage());
         StringWriter writer = new StringWriter();
         throwable.printStackTrace(new PrintWriter(writer));
-        builder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+        builder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
       }
     }
 
@@ -116,8 +121,8 @@ public final class LogEventMapper {
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      builder.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
-      builder.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
+      builder.setAttribute(THREAD_NAME, currentThread.getName());
+      builder.setAttribute(THREAD_ID, currentThread.getId());
     }
 
     if (captureCodeAttributes) {
@@ -125,7 +130,7 @@ public final class LogEventMapper {
       String fileName = locationInfo.getFileName();
       if (fileName != null) {
         if (SemconvStability.isEmitStableCodeSemconv()) {
-          builder.setAttribute(CodeAttributes.CODE_FILE_PATH, fileName);
+          builder.setAttribute(CODE_FILE_PATH, fileName);
         }
         if (SemconvStability.isEmitOldCodeSemconv()) {
           builder.setAttribute(CODE_FILEPATH, fileName);
@@ -134,8 +139,7 @@ public final class LogEventMapper {
 
       if (SemconvStability.isEmitStableCodeSemconv()) {
         builder.setAttribute(
-            CodeAttributes.CODE_FUNCTION_NAME,
-            locationInfo.getClassName() + "." + locationInfo.getMethodName());
+            CODE_FUNCTION_NAME, locationInfo.getClassName() + "." + locationInfo.getMethodName());
       }
       if (SemconvStability.isEmitOldCodeSemconv()) {
         builder.setAttribute(CODE_NAMESPACE, locationInfo.getClassName());
@@ -153,7 +157,7 @@ public final class LogEventMapper {
       }
       if (codeLineNo >= 0) {
         if (SemconvStability.isEmitStableCodeSemconv()) {
-          builder.setAttribute(CodeAttributes.CODE_LINE_NUMBER, (long) codeLineNo);
+          builder.setAttribute(CODE_LINE_NUMBER, (long) codeLineNo);
         }
         if (SemconvStability.isEmitOldCodeSemconv()) {
           builder.setAttribute(CODE_LINENO, (long) codeLineNo);
