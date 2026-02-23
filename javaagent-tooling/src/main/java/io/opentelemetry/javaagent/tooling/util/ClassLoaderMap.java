@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -21,12 +24,10 @@ class ClassLoaderMap {
   private static final Cache<ClassLoader, WeakReference<Map<Object, Object>>> data = Cache.weak();
   private static final Map<Object, Object> bootLoaderData = new ConcurrentHashMap<>();
   private static final HelperInjector helperInjector =
-      HelperInjector.forDynamicTypes(
-          ClassLoaderMap.class.getSimpleName(), Collections.emptyList(), null);
+      HelperInjector.forDynamicTypes(ClassLoaderMap.class.getSimpleName(), emptyList(), null);
   static Injector defaultInjector =
       (classLoader, className, bytes) -> {
-        helperInjector.injectHelperClasses(
-            classLoader, Collections.singletonMap(className, () -> bytes));
+        helperInjector.injectHelperClasses(classLoader, singletonMap(className, () -> bytes));
         return Class.forName(className, false, classLoader);
       };
 
@@ -59,7 +60,7 @@ class ClassLoaderMap {
     if (map == null) {
       // skip setting up the map if get was called
       if (!initialize) {
-        return Collections.emptyMap();
+        return emptyMap();
       }
       map = createMap(classLoader, classInjector);
       data.put(classLoader, new WeakReference<>(map));

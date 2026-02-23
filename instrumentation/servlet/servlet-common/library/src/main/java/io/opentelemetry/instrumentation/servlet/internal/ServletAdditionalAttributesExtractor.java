@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.servlet.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;
 
@@ -56,7 +56,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       if (principal != null) {
         String name = principal.getName();
         if (name != null) {
-          attributes.put(EnduserIncubatingAttributes.ENDUSER_ID, name);
+          attributes.put(ENDUSER_ID, name);
         }
       }
     }

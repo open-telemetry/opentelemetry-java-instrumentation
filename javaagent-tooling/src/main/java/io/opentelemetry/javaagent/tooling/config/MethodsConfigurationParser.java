@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
 import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -94,7 +94,7 @@ public final class MethodsConfigurationParser {
           continue;
         }
         if (!classMethod.contains("[")) {
-          toTrace.put(classMethod.trim(), Collections.emptySet());
+          toTrace.put(classMethod.trim(), emptySet());
           continue;
         }
         String[] splitClassMethod = classMethod.split("\\[", -1);

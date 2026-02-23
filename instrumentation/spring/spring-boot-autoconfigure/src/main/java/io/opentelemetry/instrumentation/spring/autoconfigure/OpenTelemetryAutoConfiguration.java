@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -39,7 +40,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -223,7 +223,7 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public ConfigProperties otelProperties() {
-      return DefaultConfigProperties.createFromMap(Collections.emptyMap());
+      return DefaultConfigProperties.createFromMap(emptyMap());
     }
 
     @Configuration
@@ -249,7 +249,7 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public ConfigProperties otelProperties(ApplicationContext applicationContext) {
       return DefaultConfigProperties.create(
-          Collections.emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
+          emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
     }
   }
 

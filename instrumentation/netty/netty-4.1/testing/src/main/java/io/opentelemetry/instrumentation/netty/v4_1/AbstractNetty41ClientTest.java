@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -23,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -126,7 +127,7 @@ public abstract class AbstractNetty41ClientTest
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
     if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
-      return Collections.emptySet();
+      return emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);
@@ -160,7 +161,7 @@ public abstract class AbstractNetty41ClientTest
   void closeChannel() throws ExecutionException, InterruptedException {
     String method = "GET";
     URI uri = resolveAddress("/read-timeout");
-    DefaultFullHttpRequest request = buildRequest(method, uri, Collections.emptyMap());
+    DefaultFullHttpRequest request = buildRequest(method, uri, emptyMap());
 
     Channel channel =
         clientExtension().getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
