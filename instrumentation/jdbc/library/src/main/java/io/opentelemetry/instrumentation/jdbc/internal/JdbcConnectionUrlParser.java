@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
@@ -1090,7 +1091,7 @@ public enum JdbcConnectionUrlParser {
   // Source: https://stackoverflow.com/a/13592567
   private static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     Map<String, String> queryPairs = new LinkedHashMap<>();
     String[] pairs = query.split(separator);

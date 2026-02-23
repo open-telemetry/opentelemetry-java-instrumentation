@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.graphql.internal;
 
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
 import graphql.execution.instrumentation.InstrumentationContext;
@@ -35,7 +38,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import java.util.Locale;
 
 /**
@@ -106,9 +108,8 @@ public final class OpenTelemetryInstrumentationHelper {
           Span span = Span.fromContext(context);
           for (GraphQLError error : result.getErrors()) {
             AttributesBuilder attributes = Attributes.builder();
-            attributes.put(
-                ExceptionAttributes.EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
-            attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, error.getMessage());
+            attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
+            attributes.put(EXCEPTION_MESSAGE, error.getMessage());
 
             span.addEvent("exception", attributes.build());
           }
