@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
-import java.util.Objects;
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nullable;
 import org.apache.cxf.message.Exchange;
 import org.apache.cxf.message.Message;
@@ -25,7 +26,7 @@ public class CxfRequest {
   }
 
   public String spanName() {
-    return Objects.requireNonNull(spanName);
+    return requireNonNull(spanName);
   }
 
   public Message message() {

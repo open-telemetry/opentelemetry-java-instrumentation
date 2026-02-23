@@ -5,8 +5,25 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,18 +39,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.CodeAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
@@ -135,7 +142,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             otelResourceProperties,
             otelSpringProperties,
             DefaultConfigProperties.createFromMap(
-                Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
+                singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
         .containsEntry("b", "2")
@@ -156,7 +163,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     spanDataAssert
                         .hasKind(SpanKind.CLIENT)
                         .hasAttribute(
-                            DbIncubatingAttributes.DB_STATEMENT,
+                            DB_STATEMENT,
                             "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -164,11 +171,9 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                     clientSpan
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                UrlAttributes.URL_FULL,
-                                stringAssert -> stringAssert.endsWith("/ping")),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            satisfies(ServerAttributes.SERVER_PORT, val -> val.isNotZero())),
+                            satisfies(URL_FULL, stringAssert -> stringAssert.endsWith("/ping")),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isNotZero())),
                 serverSpan ->
                     HttpSpanDataAssert.create(serverSpan)
                         .assertServerGetRequest("/ping")
@@ -179,24 +184,19 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                                     .hasAttribute(
                                         AttributeKey.stringKey("attributeFromYaml"), "true")
                                     .hasAttribute(
-                                        satisfies(
-                                            ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
-                                            val -> val.isNotBlank())))
+                                        satisfies(SERVICE_INSTANCE_ID, val -> val.isNotBlank())))
                         .hasAttributesSatisfying(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            satisfies(
-                                ClientAttributes.CLIENT_ADDRESS,
-                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HTTP_ROUTE, "/ping"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(CLIENT_ADDRESS, s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
                                 AttributeKey.stringArrayKey("http.request.header.key"),
-                                Collections.singletonList("value")),
-                            satisfies(ServerAttributes.SERVER_PORT, val -> val.isNotZero()),
-                            satisfies(ThreadIncubatingAttributes.THREAD_ID, val -> val.isNotZero()),
-                            satisfies(
-                                ThreadIncubatingAttributes.THREAD_NAME, val -> val.isNotBlank())),
+                                singletonList("value")),
+                            satisfies(SERVER_PORT, val -> val.isNotZero()),
+                            satisfies(THREAD_ID, val -> val.isNotZero()),
+                            satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 val -> withSpanAssert(val)));
 
     // Metric
@@ -244,17 +244,14 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       MapAssert<AttributeKey<?>, Object> attributesAssert =
           assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
 
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
-            CodeAttributes.CODE_FUNCTION_NAME,
-            "org.springframework.boot.StartupInfoLogger.logStarting");
+            CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
       }
       if (SemconvStability.isEmitOldCodeSemconv()) {
         attributesAssert
-            .containsEntry(
-                CodeIncubatingAttributes.CODE_NAMESPACE,
-                "org.springframework.boot.StartupInfoLogger")
-            .containsEntry(CodeIncubatingAttributes.CODE_FUNCTION, "logStarting");
+            .containsEntry(CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger")
+            .containsEntry(CODE_FUNCTION, "logStarting");
       }
     }
   }
@@ -308,9 +305,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 span -> span.hasName("server"),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasAttribute(
-                            DbIncubatingAttributes.DB_STATEMENT,
-                            "select name from customer where id = 1")));
+                        .hasAttribute(DB_STATEMENT, "select name from customer where id = 1")));
   }
 
   @Test
@@ -321,8 +316,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
-                span ->
-                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));
   }
 
@@ -336,8 +330,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 span ->
                     HttpSpanDataAssert.create(span)
                         .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/test")));
+                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/test")));
   }
 }

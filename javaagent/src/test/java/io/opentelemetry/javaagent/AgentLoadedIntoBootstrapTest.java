@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.util.Collections;
 import jvmbootstraptest.AgentLoadedChecker;
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap;
 import org.junit.jupiter.api.Test;
@@ -19,11 +19,7 @@ class AgentLoadedIntoBootstrapTest {
   void agentLoadsWhenSeparateJvmIsLaunched() throws Exception {
     int exitCode =
         IntegrationTestUtils.runOnSeparateJvm(
-            AgentLoadedChecker.class.getName(),
-            new String[0],
-            new String[0],
-            Collections.emptyMap(),
-            true);
+            AgentLoadedChecker.class.getName(), new String[0], new String[0], emptyMap(), true);
 
     assertThat(exitCode).isZero();
   }
@@ -49,7 +45,7 @@ class AgentLoadedIntoBootstrapTest {
     try {
       int exitCode =
           IntegrationTestUtils.runOnSeparateJvm(
-              mainClassName, new String[0], new String[0], Collections.emptyMap(), pathToJar, true);
+              mainClassName, new String[0], new String[0], emptyMap(), pathToJar, true);
 
       assertThat(exitCode).isZero();
     } finally {

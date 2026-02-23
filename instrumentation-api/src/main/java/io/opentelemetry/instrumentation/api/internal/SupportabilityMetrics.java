@@ -5,13 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.api.trace.SpanKind;
 import java.security.PrivilegedAction;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -95,7 +97,7 @@ public final class SupportabilityMetrics {
                         result.setContextClassLoader(null);
                         return result;
                       }));
-      executor.scheduleAtFixedRate(this::report, 5, 5, TimeUnit.SECONDS);
+      executor.scheduleAtFixedRate(this::report, 5, 5, SECONDS);
       // the condition below will always be false, but by referencing the executor it ensures the
       // executor can't become unreachable in the middle of the scheduleAtFixedRate() method
       // execution above (and prior to the task being registered), which can lead to the executor
@@ -121,7 +123,7 @@ public final class SupportabilityMetrics {
    */
   public static final class CounterNames {
     public static final String SQL_SANITIZER_CACHE_MISS =
-        SemconvStability.emitStableDatabaseSemconv()
+        emitStableDatabaseSemconv()
             ? "sql sanitizer cache miss"
             : "SqlStatementSanitizer cache miss";
 

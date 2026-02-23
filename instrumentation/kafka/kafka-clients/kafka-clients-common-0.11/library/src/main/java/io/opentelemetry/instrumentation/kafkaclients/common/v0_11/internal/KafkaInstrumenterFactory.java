@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -70,7 +69,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter() {
-    return createProducerInstrumenter(Collections.emptyList());
+    return createProducerInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
@@ -92,7 +91,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
-    return createConsumerReceiveInstrumenter(Collections.emptyList());
+    return createConsumerReceiveInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
@@ -114,7 +113,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {
-    return createConsumerProcessInstrumenter(Collections.emptyList());
+    return createConsumerProcessInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter(

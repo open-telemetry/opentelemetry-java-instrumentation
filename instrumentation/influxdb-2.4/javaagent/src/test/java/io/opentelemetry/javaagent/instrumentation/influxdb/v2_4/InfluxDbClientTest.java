@@ -18,6 +18,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.INFLUXDB;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -28,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;
@@ -114,7 +116,7 @@ class InfluxDbClientTest {
                     span.hasName("CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -125,7 +127,7 @@ class InfluxDbClientTest {
                     span.hasName("WRITE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -136,7 +138,7 @@ class InfluxDbClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -153,7 +155,7 @@ class InfluxDbClientTest {
                     span.hasName("DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -163,7 +165,7 @@ class InfluxDbClientTest {
   @Test
   void testQueryWithTwoArguments() {
     Query query = new Query("SELECT * FROM cpu_load where test1 = 'influxDb'", databaseName);
-    influxDb.query(query, TimeUnit.MILLISECONDS);
+    influxDb.query(query, MILLISECONDS);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -175,7 +177,7 @@ class InfluxDbClientTest {
                                 : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -208,7 +210,7 @@ class InfluxDbClientTest {
     BlockingQueue<QueryResult> queue = new LinkedBlockingQueue<>();
 
     influxDb.query(query, 2, result -> queue.add(result));
-    queue.poll(20, TimeUnit.SECONDS);
+    queue.poll(20, SECONDS);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -220,7 +222,7 @@ class InfluxDbClientTest {
                                 : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -241,7 +243,7 @@ class InfluxDbClientTest {
     BlockingQueue<QueryResult> queue = new LinkedBlockingQueue<>();
 
     influxDb.query(query, 2, result -> queue.add(result));
-    queue.poll(20, TimeUnit.SECONDS);
+    queue.poll(20, SECONDS);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -253,7 +255,7 @@ class InfluxDbClientTest {
                                 : "SELECT " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -283,7 +285,7 @@ class InfluxDbClientTest {
               () -> testing.runWithSpan("child", () -> {}),
               throwable -> {});
         });
-    assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -297,7 +299,7 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -333,7 +335,7 @@ class InfluxDbClientTest {
                 countDownLatchFailure.countDown();
               });
         });
-    assertThat(countDownLatchFailure.await(10, TimeUnit.SECONDS)).isTrue();
+    assertThat(countDownLatchFailure.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -344,7 +346,7 @@ class InfluxDbClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -372,7 +374,7 @@ class InfluxDbClientTest {
                     span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -384,8 +386,7 @@ class InfluxDbClientTest {
     String measurement = "cpu_load";
     List<String> records = new ArrayList<>();
     records.add(measurement + ",atag=test1 idle=100,usertime=10,system=1 1485273600");
-    influxDb.write(
-        databaseName, "autogen", InfluxDB.ConsistencyLevel.ONE, TimeUnit.SECONDS, records);
+    influxDb.write(databaseName, "autogen", InfluxDB.ConsistencyLevel.ONE, SECONDS, records);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -394,7 +395,7 @@ class InfluxDbClientTest {
                     span.hasName("WRITE " + databaseName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -417,7 +418,7 @@ class InfluxDbClientTest {
                     span.hasName("WRITE")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
+                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
                             equalTo(maybeStable(DB_NAME), null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),

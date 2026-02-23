@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.emptySet;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
@@ -31,12 +34,10 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.condition.OS;
@@ -68,7 +69,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
               protected void initChannel(@NotNull SocketChannel socketChannel) throws Exception {
                 ChannelPipeline pipeline = socketChannel.pipeline();
                 if (readTimeout) {
-                  pipeline.addLast(new ReadTimeoutHandler(2000, TimeUnit.MILLISECONDS));
+                  pipeline.addLast(new ReadTimeoutHandler(2000, MILLISECONDS));
                 }
                 pipeline.addLast(new HttpClientCodec());
               }
@@ -107,7 +108,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
     CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
     channel.writeAndFlush(request).get();
-    return result.get(20, TimeUnit.SECONDS);
+    return result.get(20, SECONDS);
   }
 
   @Override
@@ -178,7 +179,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
       case "http://192.0.2.1/": // non routable address
-        return Collections.emptySet();
+        return emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);

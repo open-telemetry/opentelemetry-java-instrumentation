@@ -5,10 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -43,7 +47,7 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
 
   static class ThreadPoolExecutorTest extends ExecutorInstrumentationTest<ThreadPoolExecutor> {
     ThreadPoolExecutorTest() {
-      super(new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<>(20)));
+      super(new ThreadPoolExecutor(1, 1, 1000, NANOSECONDS, new ArrayBlockingQueue<>(20)));
     }
   }
 
@@ -61,17 +65,17 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
 
     @Test
     void scheduleRunnable() {
-      executeTwoTasks(task -> executor().schedule((Runnable) task, 10, TimeUnit.MICROSECONDS));
+      executeTwoTasks(task -> executor().schedule((Runnable) task, 10, MICROSECONDS));
     }
 
     @Test
     void scheduleCallable() {
-      executeTwoTasks(task -> executor().schedule((Callable<?>) task, 10, TimeUnit.MICROSECONDS));
+      executeTwoTasks(task -> executor().schedule((Callable<?>) task, 10, MICROSECONDS));
     }
 
     @Test
     void scheduleLambdaRunnable() {
-      executeTwoTasks(task -> executor().schedule(() -> task.run(), 10, TimeUnit.MICROSECONDS));
+      executeTwoTasks(task -> executor().schedule(() -> task.run(), 10, MICROSECONDS));
     }
 
     @Test
@@ -85,19 +89,17 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
                         return null;
                       },
                       10,
-                      TimeUnit.MICROSECONDS));
+                      MICROSECONDS));
     }
 
     @Test
     void scheduleRunnableAndCancel() {
-      executeAndCancelTasks(
-          task -> executor().schedule((Runnable) task, 10, TimeUnit.MICROSECONDS));
+      executeAndCancelTasks(task -> executor().schedule((Runnable) task, 10, MICROSECONDS));
     }
 
     @Test
     void scheduleCallableAndCancel() {
-      executeAndCancelTasks(
-          task -> executor().schedule((Callable<?>) task, 10, TimeUnit.MICROSECONDS));
+      executeAndCancelTasks(task -> executor().schedule((Callable<?>) task, 10, MICROSECONDS));
     }
   }
 
@@ -163,7 +165,7 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
     public List<Runnable> shutdownNow() {
       running = false;
       workerThread.interrupt();
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override
@@ -205,13 +207,13 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
-      return Collections.singletonList(submit(tasks.stream().findFirst().get()));
+      return singletonList(submit(tasks.stream().findFirst().get()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(
         Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) {
-      return Collections.singletonList(submit(tasks.stream().findFirst().get()));
+      return singletonList(submit(tasks.stream().findFirst().get()));
     }
 
     @Override

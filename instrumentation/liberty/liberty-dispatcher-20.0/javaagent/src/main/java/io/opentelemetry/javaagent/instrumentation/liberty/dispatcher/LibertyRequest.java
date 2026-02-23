@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
+import static java.util.Collections.emptyList;
+
 import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.channel.HttpRequestMessage;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -63,7 +64,7 @@ public class LibertyRequest {
   public List<String> getHeaderValues(String name) {
     List<HeaderField> headers = httpRequestMessage.getHeaders(name);
     if (headers.isEmpty()) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(headers.size());
     for (HeaderField header : headers) {

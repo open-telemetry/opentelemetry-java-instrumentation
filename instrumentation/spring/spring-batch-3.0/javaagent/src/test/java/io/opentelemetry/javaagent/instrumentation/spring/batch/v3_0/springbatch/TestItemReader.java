@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch;
 
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toList;
+
 import java.util.stream.IntStream;
 import org.springframework.batch.item.support.ListItemReader;
 
 public class TestItemReader extends ListItemReader<String> {
   public TestItemReader() {
-    super(IntStream.range(0, 13).mapToObj(String::valueOf).collect(Collectors.toList()));
+    super(IntStream.range(0, 13).mapToObj(String::valueOf).collect(toList()));
   }
 }

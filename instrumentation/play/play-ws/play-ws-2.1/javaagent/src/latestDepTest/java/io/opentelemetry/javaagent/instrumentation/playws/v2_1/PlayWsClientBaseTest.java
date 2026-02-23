@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.singletonList;
 
 import akka.actor.ActorSystem;
 import akka.stream.Materializer;
@@ -19,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -126,7 +126,7 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
         throws Exception {
       try {
         // default implementation calls InetAddress.getAllByName
-        promise.setSuccess(Collections.singletonList(InetAddress.getByName(inetHost)));
+        promise.setSuccess(singletonList(InetAddress.getByName(inetHost)));
       } catch (UnknownHostException exception) {
         promise.setFailure(exception);
       }

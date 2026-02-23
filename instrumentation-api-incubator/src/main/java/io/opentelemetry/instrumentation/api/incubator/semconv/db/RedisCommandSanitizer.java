@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableMap;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -465,7 +465,7 @@ public final class RedisCommandSanitizer {
 
   static String argToString(Object arg) {
     if (arg instanceof byte[]) {
-      return new String((byte[]) arg, StandardCharsets.UTF_8);
+      return new String((byte[]) arg, UTF_8);
     } else {
       return String.valueOf(arg);
     }

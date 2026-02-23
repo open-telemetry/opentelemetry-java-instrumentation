@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
 import static io.opentelemetry.instrumentation.restlet.v1_1.internal.RestletHeadersGetter.getHeaders;
+import static java.util.Collections.emptyList;
 
 import com.noelios.restlet.http.HttpCall;
 import com.noelios.restlet.http.HttpRequest;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.restlet.data.Form;
@@ -50,7 +50,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   public List<String> getHttpRequestHeader(Request request, String name) {
     Form headers = getHeaders(request);
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
@@ -65,7 +65,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     Form headers = getHeaders(response);
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return parametersToList(headers.subList(name, /* ignoreCase= */ true));
   }
@@ -73,7 +73,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   // minimize memory overhead by not using streams
   private static List<String> parametersToList(Series<Parameter> headers) {
     if (headers.isEmpty()) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> stringHeaders = new ArrayList<>(headers.size());
     for (Parameter header : headers) {

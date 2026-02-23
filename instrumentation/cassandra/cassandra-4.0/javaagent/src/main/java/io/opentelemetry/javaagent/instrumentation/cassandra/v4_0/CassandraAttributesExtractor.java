@@ -5,6 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
+
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -13,10 +30,6 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -44,42 +57,33 @@ final class CassandraAttributesExtractor
     if (coordinator != null) {
       SocketAddress address = coordinator.getEndPoint().resolve();
       if (address instanceof InetSocketAddress) {
-        attributes.put(
-            ServerAttributes.SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
-        attributes.put(ServerAttributes.SERVER_PORT, ((InetSocketAddress) address).getPort());
+        attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
+        attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
       }
       if (coordinator.getDatacenter() != null) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          attributes.put(
-              CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
+        if (emitStableDatabaseSemconv()) {
+          attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
         }
-        if (SemconvStability.emitOldDatabaseSemconv()) {
-          attributes.put(
-              DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
+        if (emitOldDatabaseSemconv()) {
+          attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
         }
       }
       if (coordinator.getHostId() != null) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          attributes.put(
-              CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID,
-              coordinator.getHostId().toString());
+        if (emitStableDatabaseSemconv()) {
+          attributes.put(CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
         }
-        if (SemconvStability.emitOldDatabaseSemconv()) {
-          attributes.put(
-              DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID,
-              coordinator.getHostId().toString());
+        if (emitOldDatabaseSemconv()) {
+          attributes.put(DB_CASSANDRA_COORDINATOR_ID, coordinator.getHostId().toString());
         }
       }
     }
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       attributes.put(
-          CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT,
-          executionInfo.getSpeculativeExecutionCount());
+          CASSANDRA_SPECULATIVE_EXECUTION_COUNT, executionInfo.getSpeculativeExecutionCount());
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()) {
       attributes.put(
-          DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT,
-          executionInfo.getSpeculativeExecutionCount());
+          DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, executionInfo.getSpeculativeExecutionCount());
     }
 
     Statement<?> statement = executionInfo.getStatement();
@@ -91,28 +95,28 @@ final class CassandraAttributesExtractor
     } else {
       consistencyLevel = config.getString(DefaultDriverOption.REQUEST_CONSISTENCY);
     }
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      attributes.put(DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_CASSANDRA_CONSISTENCY_LEVEL, consistencyLevel);
     }
 
     if (statement.getPageSize() > 0) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE, statement.getPageSize());
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(CASSANDRA_PAGE_SIZE, statement.getPageSize());
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_CASSANDRA_PAGE_SIZE, statement.getPageSize());
       }
     } else {
       int pageSize = config.getInt(DefaultDriverOption.REQUEST_PAGE_SIZE);
       if (pageSize > 0) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          attributes.put(CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE, pageSize);
+        if (emitStableDatabaseSemconv()) {
+          attributes.put(CASSANDRA_PAGE_SIZE, pageSize);
         }
-        if (SemconvStability.emitOldDatabaseSemconv()) {
-          attributes.put(DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE, pageSize);
+        if (emitOldDatabaseSemconv()) {
+          attributes.put(DB_CASSANDRA_PAGE_SIZE, pageSize);
         }
       }
     }
@@ -121,11 +125,11 @@ final class CassandraAttributesExtractor
     if (idempotent == null) {
       idempotent = config.getBoolean(DefaultDriverOption.REQUEST_DEFAULT_IDEMPOTENCE);
     }
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT, idempotent);
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(CASSANDRA_QUERY_IDEMPOTENT, idempotent);
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      attributes.put(DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE, idempotent);
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_CASSANDRA_IDEMPOTENCE, idempotent);
     }
   }
 }

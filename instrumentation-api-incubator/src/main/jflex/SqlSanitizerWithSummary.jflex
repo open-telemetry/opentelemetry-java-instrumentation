@@ -35,7 +35,8 @@ IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_Q
 // We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
 // and BACKTICK_QUOTED_STR are handled separately. Depending on the context they appear in they will
 // either be recorded as the identifier or replaced with ?.
-IDENTIFIER           = {UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)
+// The optional "@" {UNQUOTED_IDENTIFIER} suffix supports Oracle database link syntax (table@dblink).
+IDENTIFIER           = ({UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)) ("@" {UNQUOTED_IDENTIFIER})?
 BASIC_NUM            = [.+-]* [0-9] ([0-9] | [eE.+-])*
 HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
@@ -886,6 +887,15 @@ WHITESPACE           = [ \t\r\n]+
           if (shouldStartNewOperation()) {
             setOperation(new Show());
             appendOperationToSummary("SHOW");
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "EXPLAIN" {
+          // EXPLAIN is a prefix command - append to summary but don't set an operation,
+          // so the inner statement (SELECT, INSERT, etc.) gets processed normally.
+          if (!insideComment && operation == none) {
+            appendOperationToSummary("EXPLAIN");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
