@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -194,8 +194,8 @@ public class AgentDistributionConfig {
         @JsonProperty("disabled") List<String> disabled,
         @JsonProperty("enabled") List<String> enabled) {
       this.defaultEnabled = defaultEnabled != null ? defaultEnabled : true;
-      this.disabled = disabled != null ? new LinkedHashSet<>(disabled) : new LinkedHashSet<>();
-      this.enabled = enabled != null ? new LinkedHashSet<>(enabled) : new LinkedHashSet<>();
+      this.disabled = disabled != null ? new HashSet<>(disabled) : new HashSet<>();
+      this.enabled = enabled != null ? new HashSet<>(enabled) : new HashSet<>();
     }
 
     // Default constructor
