@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -17,14 +19,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -99,7 +100,7 @@ class DbClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM, "myDb"),
@@ -113,7 +114,7 @@ class DbClientAttributesExtractorTest {
               entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
               entry(DB_QUERY_SUMMARY, "SELECT potato"),
               entry(DB_OPERATION_NAME, "SELECT"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+    } else if (emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM, "myDb"),
@@ -122,7 +123,7 @@ class DbClientAttributesExtractorTest {
               entry(DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DB_STATEMENT, "SELECT * FROM potato"),
               entry(DB_OPERATION, "SELECT"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+    } else if (emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DB_SYSTEM_NAME, "myDb"),
@@ -143,7 +144,7 @@ class DbClientAttributesExtractorTest {
 
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

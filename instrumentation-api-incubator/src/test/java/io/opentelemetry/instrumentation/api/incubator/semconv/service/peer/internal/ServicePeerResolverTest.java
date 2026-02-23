@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +17,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -136,7 +136,7 @@ class ServicePeerResolverTest {
   }
 
   private static void assertNamespace(@Nullable String expected, Attributes attrs) {
-    if (SemconvStability.emitStableServicePeerSemconv()) {
+    if (emitStableServicePeerSemconv()) {
       if (expected != null) {
         assertThat(attrs.get(SERVICE_PEER_NAMESPACE)).isEqualTo(expected);
       } else {

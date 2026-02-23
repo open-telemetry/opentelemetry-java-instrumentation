@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.util.Collections.singletonMap;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
-import java.util.Collections;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class OtlpProtocolPropertiesSupplier implements AutoConfigurationCustomizerProvider {
@@ -16,7 +17,7 @@ public class OtlpProtocolPropertiesSupplier implements AutoConfigurationCustomiz
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
     autoConfigurationCustomizer.addPropertiesSupplier(
-        () -> Collections.singletonMap("otel.exporter.otlp.protocol", "http/protobuf"));
+        () -> singletonMap("otel.exporter.otlp.protocol", "http/protobuf"));
   }
 
   @Override

@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -555,7 +556,7 @@ public abstract class AbstractMongoClientTest<T> {
             val ->
                 val.satisfies(
                     statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
-        equalTo(maybeStable(DB_SYSTEM), "mongodb"),
+        equalTo(maybeStable(DB_SYSTEM), MONGODB),
         equalTo(
             DB_CONNECTION_STRING,
             emitStableDatabaseSemconv() ? null : "mongodb://localhost:" + port),
