@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -21,7 +22,6 @@ import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -64,7 +64,7 @@ public class GarbageCollector {
       logger.fine(
           "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
               + " GC metrics will not be reported.");
-      return Collections.emptyList();
+      return emptyList();
     }
 
     return registerObservers(

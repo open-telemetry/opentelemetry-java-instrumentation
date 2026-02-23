@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
-import java.util.Collections;
 import java.util.Map;
 
 final class SqsParentContext {
@@ -32,10 +33,7 @@ final class SqsParentContext {
   static Context ofSystemAttributes(Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
-        .extract(
-            Context.root(),
-            Collections.singletonMap("X-Amzn-Trace-Id", traceHeader),
-            MapGetter.INSTANCE);
+        .extract(Context.root(), singletonMap("X-Amzn-Trace-Id", traceHeader), MapGetter.INSTANCE);
   }
 
   private SqsParentContext() {}

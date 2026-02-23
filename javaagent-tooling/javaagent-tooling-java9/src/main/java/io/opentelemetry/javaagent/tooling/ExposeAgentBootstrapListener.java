@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.instrument.Instrumentation;
-import java.util.Collections;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -64,11 +66,11 @@ public class ExposeAgentBootstrapListener extends AgentBuilder.Listener.Adapter 
       ClassInjector.UsingInstrumentation.redefineModule(
           instrumentation,
           fromModule,
-          Collections.singleton(targetModule),
-          Collections.emptyMap(),
-          Collections.emptyMap(),
-          Collections.emptySet(),
-          Collections.emptyMap());
+          singleton(targetModule),
+          emptyMap(),
+          emptyMap(),
+          emptySet(),
+          emptyMap());
     }
   }
 }

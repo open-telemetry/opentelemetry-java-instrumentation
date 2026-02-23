@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class InternalInstrumenterCustomizerUtil {
   static {
-    instrumenterCustomizerProviders = Collections.emptyList();
+    instrumenterCustomizerProviders = emptyList();
     try {
       // initializing InstrumenterCustomizerUtil will call setInstrumenterCustomizerProviders on
       // this class

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static java.util.stream.Collectors.toList;
@@ -158,7 +161,7 @@ public class HelperInjector implements Transformer {
             .collect(toList());
 
     return new HelperInjector(
-        requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
+        requestingName, cl -> helperDefinitions, emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
@@ -240,8 +243,7 @@ public class HelperInjector implements Transformer {
       }
     }
     additionalResources.forEach(
-        (path, url) ->
-            injectResourceToClassloader(classLoader, path, Collections.singletonList(url)));
+        (path, url) -> injectResourceToClassloader(classLoader, path, singletonList(url)));
   }
 
   private static void injectResourceToClassloader(
@@ -381,7 +383,7 @@ public class HelperInjector implements Transformer {
         if (classInjector != null) {
           iterator.remove();
           try {
-            classInjector.injectRaw(Collections.singletonMap(className, entry.getValue()));
+            classInjector.injectRaw(singletonMap(className, entry.getValue()));
           } catch (LinkageError error) {
             // Unlike the ClassInjector.UsingUnsafe.ofBootLoader() ClassInjector.UsingLookup doesn't
             // check whether the class got loaded when there is an exception defining it.

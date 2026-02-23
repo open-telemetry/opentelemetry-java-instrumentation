@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
+import static java.util.Collections.emptyList;
+
 import com.ibm.ws.http.dispatcher.internal.channel.HttpDispatcherLink;
 import com.ibm.wsspi.http.HttpResponse;
 import com.ibm.wsspi.http.channel.values.StatusCodes;
-import java.util.Collections;
 import java.util.List;
 
 public class LibertyResponse {
@@ -28,6 +29,6 @@ public class LibertyResponse {
     HttpResponse response = httpDispatcherLink.getResponse();
     // response is set to null on destroy(), so it shouldn't really ever be null in the middle of
     // request processing, but just to be safe let's check it
-    return response == null ? Collections.emptyList() : response.getHeaders(name);
+    return response == null ? emptyList() : response.getHeaders(name);
   }
 }
