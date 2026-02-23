@@ -104,10 +104,12 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
         continue;
       }
       throw new DeclarativeConfigException(
-          "Unable to initialize ExtendedConfigProperties. Key \""
+          "Unable to initialize SpringDeclarativeConfigProperties. Key \""
               + key
-              + "\" has unrecognized object type "
-              + value.getClass().getName());
+              + "\" has unrecognized value type "
+              + value.getClass().getName()
+              + ". Supported value types include primitives (String, Boolean, Integer, Long,"
+              + " Double), lists of primitives, lists of maps, and maps");
     }
     return new SpringDeclarativeConfigProperties(
         simpleEntries, listEntries, mapEntries, componentLoader);
@@ -249,7 +251,12 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
       return (Boolean) value;
     }
     if (value instanceof String) {
-      return Boolean.parseBoolean((String) value);
+      if ("true".equalsIgnoreCase((String) value)) {
+        return true;
+      }
+      if ("false".equalsIgnoreCase((String) value)) {
+        return false;
+      }
     }
     return null;
   }
@@ -276,6 +283,12 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
   private static Double doubleOrNull(@Nullable Object value) {
     if (value instanceof Double) {
       return (Double) value;
+    }
+    if (value instanceof Integer) {
+      return ((Integer) value).doubleValue();
+    }
+    if (value instanceof Long) {
+      return ((Long) value).doubleValue();
     }
     if (value instanceof String) {
       try {
