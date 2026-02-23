@@ -19,13 +19,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -144,7 +144,7 @@ class DbClientAttributesExtractorTest {
 
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

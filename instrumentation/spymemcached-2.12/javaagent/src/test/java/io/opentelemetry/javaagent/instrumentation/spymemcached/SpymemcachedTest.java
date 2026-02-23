@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MEMCACHED;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +40,6 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -119,7 +119,7 @@ class SpymemcachedTest {
     ConnectionFactory connectionFactory = connectionFactoryBuilder.build();
     try {
       MemcachedClient memcached =
-          new MemcachedClient(connectionFactory, Collections.singletonList(memcachedAddress));
+          new MemcachedClient(connectionFactory, singletonList(memcachedAddress));
       cleanup.deferCleanup(memcached::shutdown);
 
       testing.runWithSpan(

@@ -68,7 +68,6 @@ import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -428,7 +427,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void multipleChoices() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -889,7 +888,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -941,7 +940,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void stream() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -1026,7 +1025,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void streamIncludeUsage() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build())
             .build();
@@ -1139,7 +1138,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void streamMultipleChoices() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -1596,7 +1595,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -1685,8 +1684,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             .parameters(
                 FunctionParameters.builder()
                     .putAdditionalProperty("type", JsonValue.from("object"))
-                    .putAdditionalProperty(
-                        "required", JsonValue.from(Collections.singletonList("location")))
+                    .putAdditionalProperty("required", JsonValue.from(singletonList("location")))
                     .putAdditionalProperty("additionalProperties", JsonValue.from(false))
                     .putAdditionalProperty("properties", JsonObject.of(properties))
                     .build())

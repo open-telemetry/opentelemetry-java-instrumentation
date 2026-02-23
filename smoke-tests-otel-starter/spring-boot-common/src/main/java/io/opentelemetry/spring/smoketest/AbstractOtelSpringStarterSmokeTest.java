@@ -22,6 +22,8 @@ import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -39,7 +41,6 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
@@ -141,7 +142,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             otelResourceProperties,
             otelSpringProperties,
             DefaultConfigProperties.createFromMap(
-                Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
+                singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
         .containsEntry("b", "2")
@@ -192,7 +193,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                             satisfies(CLIENT_ADDRESS, s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
                                 AttributeKey.stringArrayKey("http.request.header.key"),
-                                Collections.singletonList("value")),
+                                singletonList("value")),
                             satisfies(SERVER_PORT, val -> val.isNotZero()),
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
