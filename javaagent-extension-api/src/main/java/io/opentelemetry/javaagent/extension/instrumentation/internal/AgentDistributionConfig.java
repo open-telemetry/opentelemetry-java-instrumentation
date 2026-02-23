@@ -111,6 +111,8 @@ public class AgentDistributionConfig {
    *
    * @return {@code true} if instrumentations are enabled by default, {@code false} otherwise
    */
+  // TODO remove after
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16087
   public boolean isInstrumentationDefaultEnabled() {
     return instrumentation.isDefaultEnabled();
   }
