@@ -289,7 +289,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       // the cached description that does not have that interface would result in bytebuddy removing
       // that interface.
       ClassLoader classLoader = loaderRef != null ? loaderRef.get() : null;
-      if (isTransformingClass(classLoader, className)) {
+      if (AgentTooling.isTransforming(classLoader, className)) {
         return null;
       }
 
@@ -300,11 +300,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       }
 
       return null;
-    }
-
-    private static boolean isTransformingClass(
-        @Nullable ClassLoader classLoader, String className) {
-      return AgentTooling.isTransforming(classLoader, className);
     }
 
     @Override

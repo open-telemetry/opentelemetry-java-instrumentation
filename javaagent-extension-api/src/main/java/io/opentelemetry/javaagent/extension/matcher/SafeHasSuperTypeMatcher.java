@@ -12,6 +12,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingSuperTypeMatcher;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -186,8 +187,10 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     }
 
     @Override
-    @Nullable
     public TypeDefinition next() {
+      if (next == null) {
+        throw new NoSuchElementException();
+      }
       return next;
     }
 
