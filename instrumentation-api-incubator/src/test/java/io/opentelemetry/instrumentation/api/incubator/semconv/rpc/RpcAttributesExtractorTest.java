@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.entry;
@@ -14,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -102,15 +103,15 @@ class RpcAttributesExtractorTest {
     // Build expected entries list based on semconv mode
     List<Map.Entry<? extends AttributeKey<?>, ?>> expectedEntries = new ArrayList<>();
 
-    if (SemconvStability.emitStableRpcSemconv()) {
+    if (emitStableRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
       expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
     }
 
-    if (SemconvStability.emitOldRpcSemconv()) {
+    if (emitOldRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM, "test"));
       expectedEntries.add(entry(RPC_SERVICE, "my.Service"));
-      if (!SemconvStability.emitStableRpcSemconv()) {
+      if (!emitStableRpcSemconv()) {
         expectedEntries.add(entry(RPC_METHOD, "Method"));
       }
     }
@@ -140,7 +141,7 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
 
-    if (SemconvStability.emitStableRpcSemconv()) {
+    if (emitStableRpcSemconv()) {
       assertThat(attributes.build()).containsEntry(ERROR_TYPE, "CANCELLED");
     }
   }
@@ -159,7 +160,7 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, new IllegalArgumentException());
 
-    if (SemconvStability.emitStableRpcSemconv()) {
+    if (emitStableRpcSemconv()) {
       assertThat(attributes.build())
           .containsEntry(ERROR_TYPE, "java.lang.IllegalArgumentException");
     }
@@ -179,7 +180,7 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
 
-    if (SemconvStability.emitStableRpcSemconv()) {
+    if (emitStableRpcSemconv()) {
       assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
     }
   }
