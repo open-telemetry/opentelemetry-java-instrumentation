@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.sql.Connection;
@@ -64,7 +64,7 @@ class JdbcRowCountDisabledTest {
                 span -> span.hasName("parent"),
                 span ->
                     span.hasName(
-                            SemconvStability.emitStableDatabaseSemconv()
+                            emitStableDatabaseSemconv()
                                 ? "SELECT test_table"
                                 : "SELECT testdisabled.test_table")
                         .satisfies(
