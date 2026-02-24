@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -119,6 +120,7 @@ final class VirtualFieldImplementationsGenerator {
           private final boolean frames =
               implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
 
+          @Nullable
           @Override
           public MethodVisitor visitMethod(
               int access, String name, String descriptor, String signature, String[] exceptions) {
@@ -275,25 +277,28 @@ final class VirtualFieldImplementationsGenerator {
       this.map = map;
     }
 
+    @Nullable
     @Override
     public Object get(Object object) {
       return realGet(object);
     }
 
     @Override
-    public void set(Object object, Object fieldValue) {
+    public void set(Object object, @Nullable Object fieldValue) {
       realPut(object, fieldValue);
     }
 
+    @Nullable
     private Object realGet(Object key) {
       // to be generated
       return null;
     }
 
-    private void realPut(Object key, Object value) {
+    private void realPut(Object key, @Nullable Object value) {
       // to be generated
     }
 
+    @Nullable
     private Object mapGet(Object key) {
       return map.get(key);
     }

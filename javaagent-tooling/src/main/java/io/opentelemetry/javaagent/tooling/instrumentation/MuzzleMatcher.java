@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
@@ -18,7 +19,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
 import io.opentelemetry.javaagent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,9 +40,8 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
   private final InstrumentationModule instrumentationModule;
   private final UnaryOperator<ClassLoader> classLoaderTransformer;
   private final Level muzzleLogLevel;
-  private final AtomicBoolean initialized = new AtomicBoolean(false);
+  private final AtomicReference<ReferenceMatcher> referenceMatcher = new AtomicReference<>();
   private final Cache<ClassLoader, Boolean> matchCache = Cache.weak();
-  private volatile ReferenceMatcher referenceMatcher;
 
   MuzzleMatcher(
       TransformSafeLogger instrumentationLogger,
@@ -105,9 +105,11 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
   // ReferenceMatcher is lazily created to avoid unnecessarily loading the muzzle references from
   // the module during the agent setup
   private ReferenceMatcher getReferenceMatcher() {
-    if (initialized.compareAndSet(false, true)) {
-      referenceMatcher = ReferenceMatcher.of(instrumentationModule);
+    ReferenceMatcher result = referenceMatcher.get();
+    if (result == null) {
+      referenceMatcher.compareAndSet(null, ReferenceMatcher.of(instrumentationModule));
+      result = requireNonNull(referenceMatcher.get());
     }
-    return referenceMatcher;
+    return result;
   }
 }

@@ -100,6 +100,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     return new SafeInterfaceIterator(typeDefinition);
   }
 
+  @Nullable
   static TypeDefinition safeGetSuperClass(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.getSuperClass();
@@ -157,7 +158,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       implements Iterator<TypeDefinition>, Iterable<TypeDefinition> {
     private final TypeDefinition typeDefinition;
     @Nullable private final Iterator<TypeDescription.Generic> it;
-    private TypeDefinition next;
+    @Nullable private TypeDefinition next;
 
     private SafeInterfaceIterator(TypeDefinition typeDefinition) {
       this.typeDefinition = typeDefinition;
@@ -185,6 +186,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     }
 
     @Override
+    @Nullable
     public TypeDefinition next() {
       return next;
     }

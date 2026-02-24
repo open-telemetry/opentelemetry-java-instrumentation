@@ -18,6 +18,7 @@ import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
 import java.util.ServiceLoader;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -33,7 +34,7 @@ public class AgentStarterImpl implements AgentStarter {
   private final Instrumentation instrumentation;
   private final File javaagentFile;
   private final boolean isSecurityManagerSupportEnabled;
-  private ClassLoader extensionClassLoader;
+  @Nullable private ClassLoader extensionClassLoader;
 
   public AgentStarterImpl(
       Instrumentation instrumentation,
@@ -133,6 +134,7 @@ public class AgentStarterImpl implements AgentStarter {
             + "'. The agent will use the no-op implementation.");
   }
 
+  @Nullable
   @Override
   public ClassLoader getExtensionClassLoader() {
     return extensionClassLoader;
@@ -147,6 +149,7 @@ public class AgentStarterImpl implements AgentStarter {
     boolean hookInserted = false;
     boolean transformed = false;
 
+    @Nullable
     @Override
     public byte[] transform(
         ClassLoader loader,
@@ -193,6 +196,7 @@ public class AgentStarterImpl implements AgentStarter {
   private static class InetAddressClassFileTransformer implements ClassFileTransformer {
     boolean hookInserted = false;
 
+    @Nullable
     @Override
     public byte[] transform(
         ClassLoader loader,

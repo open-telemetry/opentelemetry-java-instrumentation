@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import org.objectweb.asm.AnnotationVisitor;
@@ -180,6 +182,7 @@ class AdviceTransformer {
   private static final Type ADVICE_RETURN = Type.getType(Advice.Return.class);
 
   /** Argument annotated with {@code @Advice.Return(readOnly = false)} or {@code null}. */
+  @Nullable
   private static OutputArgument getWritableReturnValue(MethodNode source) {
     if (source.visibleParameterAnnotations != null) {
       for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
@@ -203,6 +206,7 @@ class AdviceTransformer {
   private static final Type ADVICE_ENTER = Type.getType(Advice.Enter.class);
 
   /** Argument annotated with {@code @Advice.Enter} or {@code null}. */
+  @Nullable
   private static OutputArgument getEnterArgument(MethodNode source) {
     Type[] argumentTypes = Type.getArgumentTypes(source.desc);
     if (source.visibleParameterAnnotations != null) {
@@ -285,6 +289,7 @@ class AdviceTransformer {
     return hasAnnotation(source, ADVICE_ON_METHOD_EXIT);
   }
 
+  @Nullable
   private static AnnotationNode getAnnotationNode(MethodNode source, Type type) {
     if (source.visibleAnnotations != null) {
       for (AnnotationNode annotationNode : source.visibleAnnotations) {
@@ -463,7 +468,7 @@ class AdviceTransformer {
       MethodNode source,
       String originalDesc,
       List<AdviceLocal> adviceLocals,
-      OutputArgument enterArgument,
+      @Nullable OutputArgument enterArgument,
       int returnIndex) {
     AtomicReference<GeneratorAdapter> generatorRef = new AtomicReference<>();
     AtomicInteger dataIndex = new AtomicInteger();
@@ -498,7 +503,8 @@ class AdviceTransformer {
           public void visitInsn(int opcode) {
             if (isEnterAdvice && Opcodes.ARETURN == opcode) {
               // expecting object array on stack
-              GeneratorAdapter ga = generatorRef.get();
+              GeneratorAdapter ga =
+                  requireNonNull(generatorRef.get(), "GeneratorAdapter not initialized");
               // duplicate array
               ga.dup();
               // push array index for the map
@@ -531,7 +537,8 @@ class AdviceTransformer {
           @Override
           public void visitCode() {
             super.visitCode();
-            GeneratorAdapter ga = generatorRef.get();
+            GeneratorAdapter ga =
+                requireNonNull(generatorRef.get(), "GeneratorAdapter not initialized");
             Type[] argumentTypes = ga.getArgumentTypes();
 
             if (isEnterAdvice) {
@@ -660,6 +667,7 @@ class AdviceTransformer {
                 writableArguments,
                 writableReturn,
                 adviceLocals);
+        requireNonNull(mv, "instrumentOurParameters returned null");
         methodNode.accept(mv);
 
         methodNode = tmp;
@@ -698,6 +706,7 @@ class AdviceTransformer {
         MethodVisitor mv =
             instrumentAdviceLocals(
                 false, tmp, methodNode, originalDescriptor, adviceLocals, enterArgument, -1);
+        requireNonNull(mv, "instrumentAdviceLocals returned null");
         methodNode.accept(mv);
 
         methodNode = tmp;
@@ -730,7 +739,7 @@ class AdviceTransformer {
       MethodNode source,
       String originalDesc,
       List<OutputArgument> writableArguments,
-      OutputArgument writableReturn,
+      @Nullable OutputArgument writableReturn,
       List<AdviceLocal> adviceLocals) {
 
     // position 0 in enter advice is reserved for the return value of the method
@@ -761,6 +770,7 @@ class AdviceTransformer {
     return Boolean.FALSE.equals(value);
   }
 
+  @Nullable
   private static Object getAttributeValue(AnnotationNode annotationNode, String attributeName) {
     if (annotationNode.values != null && !annotationNode.values.isEmpty()) {
       List<Object> values = annotationNode.values;
@@ -777,6 +787,7 @@ class AdviceTransformer {
   }
 
   /** Return the value of the {@code value} attribute of the annotation. */
+  @Nullable
   private static Object getAnnotationValue(AnnotationNode annotationNode) {
     if (annotationNode.values != null && !annotationNode.values.isEmpty()) {
       List<Object> values = annotationNode.values;
