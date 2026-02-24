@@ -198,8 +198,9 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
         return ExtendedAttributeKey.doubleArrayKey(applicationKey.getKey());
       case EXTENDED_ATTRIBUTES:
         return ExtendedAttributeKey.extendedAttributesKey(applicationKey.getKey());
+      default:
+        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
+        return null;
     }
-    logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
-    return null;
   }
 }
