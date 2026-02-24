@@ -61,7 +61,19 @@ class RpcSpanNameExtractorTest {
   }
 
   @Test
-  void rpcMethodNull() {
+  void rpcMethodNull_fallsBackToSystemName() {
+    assumeTrue(SemconvStability.emitStableRpcSemconv());
+
+    RpcRequest request = new RpcRequest();
+
+    when(getter.getRpcSystemName(request)).thenReturn("grpc");
+
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    assertThat(extractor.extract(request)).isEqualTo("grpc");
+  }
+
+  @Test
+  void rpcMethodAndSystemNameNull() {
     assumeTrue(SemconvStability.emitStableRpcSemconv());
 
     RpcRequest request = new RpcRequest();

@@ -64,6 +64,7 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    *     method is unavailable
    */
   @Nullable
+  // TODO remove default implementation
   default String getRpcMethod(REQUEST request) {
     return null;
   }
@@ -73,15 +74,16 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>This method should return {@code null} if there was no error.
    *
-   * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
-   * will be used as error type.
+   * <p>If this method returns {@code null}, the exception class name
+   * will be used as error type if one was thrown.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
    *
-   * <p>Examples: {@code OK}, {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
+   * <p>Examples: {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
    */
   @Nullable
+  // TODO remove default implementation
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     return null;

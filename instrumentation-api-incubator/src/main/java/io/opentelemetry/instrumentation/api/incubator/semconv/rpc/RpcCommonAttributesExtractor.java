@@ -62,7 +62,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     if (SemconvStability.emitStableRpcSemconv()) {
       String errorType = getter.getErrorType(request, response, error);
-      // fall back to exception class name & _OTHER
+      // fall back to exception class name
       if (errorType == null && error != null) {
         errorType = error.getClass().getName();
       }
