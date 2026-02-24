@@ -38,7 +38,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -62,7 +62,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("simplifyArgs")
   void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -150,7 +150,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("ddlArgs")
   void checkDdlOperationStatementsAreOk(String actual, Function<String, SqlQuery> expectFunc) {
-    SqlQuery result = sanitize(actual, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery result = sanitize(actual, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -320,7 +320,7 @@ class SqlQuerySanitizerTest {
         Arguments.of("+7", "?", null),
         Arguments.of("SELECT 0x0af764", "SELECT ?", "SELECT"),
         Arguments.of("SELECT 0xdeadBEEF", "SELECT ?", "SELECT"),
-        Arguments.of("SELECT * FROM \"TABLE\"", "SELECT * FROM \"TABLE\"", "SELECT \"TABLE\""),
+        Arguments.of("SELECT * FROM \"TABLE\"", "SELECT * FROM ?", "SELECT \"TABLE\""),
 
         // Not numbers but could be confused as such
         Arguments.of("SELECT A + B", "SELECT A + B", "SELECT"),
@@ -489,7 +489,9 @@ class SqlQuerySanitizerTest {
             expect("SELECT", "`schema`.`table`", "SELECT `schema`.`table`")),
         Arguments.of(
             "SELECT x, y, z FROM \"schema table\"",
-            expect("SELECT", "schema table", "SELECT \"schema table\"")),
+            expect("SELECT x, y, z FROM ?", "SELECT", "schema table", "SELECT \"schema table\"")),
+        // double-quoted dot-separated identifiers are matched as IDENTIFIER, not DOUBLE_QUOTED_STR,
+        // so they are always preserved regardless of dialect
         Arguments.of(
             "SELECT x, y, z FROM \"schema\".\"table\"",
             expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
@@ -605,7 +607,7 @@ class SqlQuerySanitizerTest {
             expect("INSERT", "db table", "INSERT `db table`")),
         Arguments.of(
             "insert into \"db table\" where lalala",
-            expect("INSERT", "db table", "INSERT \"db table\"")),
+            expect("insert into ? where lalala", "INSERT", "db table", "INSERT \"db table\"")),
         Arguments.of("insert without i-n-t-o", expect("INSERT", null, "INSERT")),
 
         // Delete
@@ -617,7 +619,11 @@ class SqlQuerySanitizerTest {
             expect("DELETE", "my table", "DELETE `my table`")),
         Arguments.of(
             "delete from \"my table\" where something something",
-            expect("DELETE", "my table", "DELETE \"my table\"")),
+            expect(
+                "delete from ? where something something",
+                "DELETE",
+                "my table",
+                "DELETE \"my table\"")),
         Arguments.of(
             "delete from foo where x IN (1,2,3)",
             expect("delete from foo where x IN (?)", "DELETE", "foo", "DELETE foo")),
@@ -640,8 +646,7 @@ class SqlQuerySanitizerTest {
                 "UPDATE `my table`")),
         Arguments.of(
             "update \"my table\" set answer=42",
-            expect(
-                "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
+            expect("update ? set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
         // Call
@@ -661,7 +666,9 @@ class SqlQuerySanitizerTest {
         // Merge
         Arguments.of("merge into table", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge into `my table`", expect("MERGE", "my table", "MERGE `my table`")),
-        Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE \"my table\"")),
+        Arguments.of(
+            "merge into \"my table\"",
+            expect("merge into ?", "MERGE", "my table", "MERGE \"my table\"")),
         Arguments.of(
             "merge table (into is optional in some dbs)", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge (into )))", expect("MERGE", null, "MERGE")),
@@ -977,5 +984,43 @@ class SqlQuerySanitizerTest {
                 "ALTER TABLE",
                 "users",
                 "ALTER TABLE users")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("doubleQuotesAsIdentifiersArgs")
+  void simplifySqlDoubleQuotesAsIdentifiers(
+      String original, Function<String, SqlQuery> expectedFunction) {
+    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery expected = expectedFunction.apply(original);
+    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
+    if (emitStableDatabaseSemconv()) {
+      assertThat(result.getOperationName()).isNull();
+      assertThat(result.getCollectionName()).isNull();
+      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
+    } else {
+      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+      assertThat(result.getQuerySummary()).isNull();
+    }
+  }
+
+  private static Stream<Arguments> doubleQuotesAsIdentifiersArgs() {
+    return Stream.of(
+        // When dialect treats double quotes as identifiers, quoted text is preserved in query
+        Arguments.of("SELECT * FROM \"TABLE\"", expect("SELECT", "TABLE", "SELECT \"TABLE\"")),
+        Arguments.of(
+            "SELECT x, y, z FROM \"schema table\"",
+            expect("SELECT", "schema table", "SELECT \"schema table\"")),
+        Arguments.of(
+            "insert into \"db table\" where lalala",
+            expect("INSERT", "db table", "INSERT \"db table\"")),
+        Arguments.of(
+            "delete from \"my table\" where something something",
+            expect("DELETE", "my table", "DELETE \"my table\"")),
+        Arguments.of(
+            "update \"my table\" set answer=42",
+            expect(
+                "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
+        Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE \"my table\"")));
   }
 }
