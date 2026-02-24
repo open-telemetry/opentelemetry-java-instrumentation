@@ -560,10 +560,18 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
+          // Always notify the operation about double-quoted tokens regardless of dialect so
+          // that table name extraction works correctly even when the dialect treats them as
+          // string literals. For example, SELECT * FROM "my_table" should extract the table
+          // name "my_table" whether or not the dialect sanitizes the token.
+          //
+          // The extractionDone guard ensures handleIdentifier() is a no-op once extraction
+          // is complete, so there is no risk of leaking sensitive string content into the
+          // span name.
+          if (!insideComment && !extractionDone) {
+            extractionDone = operation.handleIdentifier();
+          }
           if (doubleQuotesAreIdentifiers) {
-            if (!insideComment && !extractionDone) {
-              extractionDone = operation.handleIdentifier();
-            }
             appendCurrentFragment();
           } else {
             builder.append('?');
