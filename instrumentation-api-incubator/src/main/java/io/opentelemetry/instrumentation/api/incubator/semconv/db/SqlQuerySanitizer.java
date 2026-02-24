@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_SANITIZER_CACHE_MISS;
 
@@ -40,9 +39,7 @@ public final class SqlQuerySanitizer {
    */
   @Deprecated
   public SqlQuery sanitize(@Nullable String query) {
-    // DOUBLE_QUOTES_ARE_STRING_LITERALS would be a better default here
-    // but this matches prior behavior
-    return sanitize(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    return sanitize(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   public SqlQuery sanitize(@Nullable String query, SqlDialect dialect) {
@@ -71,9 +68,7 @@ public final class SqlQuerySanitizer {
    */
   @Deprecated
   public SqlQuery sanitizeWithSummary(@Nullable String query) {
-    // DOUBLE_QUOTES_ARE_STRING_LITERALS would be a better default here
-    // but this matches prior behavior
-    return sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    return sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   /** Sanitize and extract query summary. */
