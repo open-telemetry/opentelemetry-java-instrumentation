@@ -140,9 +140,10 @@ public class Bridging {
         return io.opentelemetry.api.common.AttributeKey.longArrayKey(applicationKey.getKey());
       case DOUBLE_ARRAY:
         return io.opentelemetry.api.common.AttributeKey.doubleArrayKey(applicationKey.getKey());
+      default:
+        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
+        return null;
     }
-    logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
-    return null;
   }
 
   public static List<io.opentelemetry.api.common.AttributeKey<?>> toAgent(
