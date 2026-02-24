@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -83,8 +85,8 @@ enum SpringMessagingAttributesGetter
   public List<String> getMessageHeader(MessageWithChannel request, String name) {
     Object value = request.getMessage().getHeaders().get(name);
     if (value != null) {
-      return Collections.singletonList(value.toString());
+      return singletonList(value.toString());
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }

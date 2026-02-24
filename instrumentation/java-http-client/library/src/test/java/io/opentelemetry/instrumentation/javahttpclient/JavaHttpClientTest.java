@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.javahttpclient;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.http.HttpClient;
-import java.util.Collections;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -23,10 +24,8 @@ class JavaHttpClientTest {
     @Override
     protected HttpClient configureHttpClient(HttpClient httpClient) {
       return JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
-          .setCapturedRequestHeaders(
-              Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-          .setCapturedResponseHeaders(
-              Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+          .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+          .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
           .build()
           .wrap(httpClient);
     }

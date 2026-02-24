@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -28,6 +29,23 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST, ?> getter) {
     return new SqlClientSpanNameExtractor<>(getter);
+  }
+
+  /**
+   * Returns a {@link SpanNameExtractor} that uses SQL parsing for stable semconv span names but
+   * preserves the old semconv span name format (without collection name) for backward
+   * compatibility.
+   *
+   * <p>This is a transitional method for migrating instrumentations from {@link
+   * DbClientAttributesGetter} to {@link SqlClientAttributesGetter}. Once old database semconv are
+   * dropped, callers should switch to {@link #create(SqlClientAttributesGetter)}.
+   *
+   * @deprecated Use {@link #create(SqlClientAttributesGetter)} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  public static <REQUEST> SpanNameExtractor<REQUEST> createForMigration(
+      SqlClientAttributesGetter<REQUEST, ?> getter) {
+    return new MigratingSqlClientSpanNameExtractor<>(getter);
   }
 
   private static final String DEFAULT_SPAN_NAME = "DB Query";
@@ -136,7 +154,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         String querySummary = getter.getDbQuerySummary(request);
         if (querySummary != null) {
           return querySummary;
@@ -165,13 +183,19 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          return computeSpanNameStable(getter, request, null, null, null);
+        if (emitStableDatabaseSemconv()) {
+          String querySummary = getter.getDbQuerySummary(request);
+          if (querySummary != null) {
+            return querySummary;
+          }
+          String operationName = getter.getDbOperationName(request);
+          return computeSpanNameStable(getter, request, operationName, null, null);
         }
-        return computeSpanName(namespace, null, null, null);
+        String operationName = getter.getDbOperationName(request);
+        return computeSpanName(namespace, operationName, null, null);
       }
 
-      if (!SemconvStability.emitStableDatabaseSemconv()) {
+      if (!emitStableDatabaseSemconv()) {
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
@@ -208,6 +232,44 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     private boolean isBatch(REQUEST request) {
       Long batchSize = getter.getDbOperationBatchSize(request);
       return batchSize != null && batchSize > 1;
+    }
+  }
+
+  /**
+   * A transitional span name extractor that uses SQL parsing for stable semconv but preserves the
+   * old semconv span name format (operation + namespace, without collection name) for backward
+   * compatibility during migration from {@link DbClientAttributesGetter} to {@link
+   * SqlClientAttributesGetter}.
+   */
+  private static final class MigratingSqlClientSpanNameExtractor<REQUEST>
+      extends DbClientSpanNameExtractor<REQUEST> {
+
+    private final SqlClientAttributesGetter<REQUEST, ?> getter;
+    private final SqlClientSpanNameExtractor<REQUEST> sqlDelegate;
+
+    private MigratingSqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
+      this.getter = getter;
+      this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter);
+    }
+
+    @Override
+    public String extract(REQUEST request) {
+      if (emitStableDatabaseSemconv()) {
+        return sqlDelegate.extract(request);
+      }
+      // For old semconv, use the generic span name format (operation + namespace)
+      // without collection name to preserve backward compatibility
+      String namespace = getter.getDbNamespace(request);
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+      String operationName = null;
+      if (rawQueryTexts.size() == 1) {
+        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        operationName = sanitizedQuery.getOperationName();
+      }
+      if (operationName == null) {
+        operationName = getter.getDbOperationName(request);
+      }
+      return computeSpanName(namespace, operationName, null, null);
     }
   }
 }

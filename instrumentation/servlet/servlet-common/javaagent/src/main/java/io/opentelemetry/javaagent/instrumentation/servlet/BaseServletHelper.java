@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -182,7 +183,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     if (principal != null) {
       String name = principal.getName();
       if (name != null) {
-        serverSpan.setAttribute(EnduserIncubatingAttributes.ENDUSER_ID, name);
+        serverSpan.setAttribute(ENDUSER_ID, name);
       }
     }
   }

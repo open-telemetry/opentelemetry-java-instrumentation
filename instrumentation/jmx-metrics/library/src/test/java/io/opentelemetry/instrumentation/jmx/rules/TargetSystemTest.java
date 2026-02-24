@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +31,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +63,7 @@ class TargetSystemTest {
 
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
-  private static Path testAppPath;
+  private static Path testWebAppPath;
 
   private static String otlpEndpoint;
 
@@ -78,10 +78,10 @@ class TargetSystemTest {
     otlpEndpoint = "http://host.testcontainers.internal:" + otlpServer.httpPort();
 
     TargetSystemTest.agentPath = getArtifactPath("io.opentelemetry.javaagent.path");
-    TargetSystemTest.testAppPath = getArtifactPath("io.opentelemetry.testapp.path");
+    TargetSystemTest.testWebAppPath = getArtifactPath("io.opentelemetry.testapp.path");
   }
 
-  private static Path getArtifactPath(String systemProperty) {
+  protected static Path getArtifactPath(String systemProperty) {
     String pathValue = System.getProperty(systemProperty);
     assertThat(pathValue).isNotNull();
     Path path = Paths.get(pathValue);
@@ -104,7 +104,7 @@ class TargetSystemTest {
         stop(targetDependency);
       }
     }
-    targetDependencies = Collections.emptyList();
+    targetDependencies = emptyList();
   }
 
   private static void stop(@Nullable GenericContainer<?> container) {
@@ -168,7 +168,7 @@ class TargetSystemTest {
    * @param target target system to start
    */
   protected void startTarget(GenericContainer<?> target) {
-    startTarget(target, Collections.emptyList());
+    startTarget(target, emptyList());
   }
 
   /**
@@ -207,9 +207,14 @@ class TargetSystemTest {
     }
   }
 
+  protected static void copyTestAppToTarget(
+      Path from, GenericContainer<?> target, String targetPath) {
+    logger.info("copying test application {} to container {}", from, targetPath);
+    target.withCopyFileToContainer(MountableFile.forHostPath(from), targetPath);
+  }
+
   protected static void copyTestWebAppToTarget(GenericContainer<?> target, String targetPath) {
-    logger.info("copying test application {} to container {}", testAppPath, targetPath);
-    target.withCopyFileToContainer(MountableFile.forHostPath(testAppPath), targetPath);
+    copyTestAppToTarget(testWebAppPath, target, targetPath);
   }
 
   private static String yamlResourcePath(String yaml) {

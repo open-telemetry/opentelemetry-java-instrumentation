@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
 import jakarta.servlet.AsyncEvent;
@@ -97,7 +99,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   @Override
   public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
     Enumeration<String> values = request.getHeaders(name);
-    return values == null ? Collections.emptyList() : Collections.list(values);
+    return values == null ? emptyList() : Collections.list(values);
   }
 
   @Override
@@ -109,7 +111,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   public List<String> getRequestParameterValues(
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
-    return values == null ? Collections.emptyList() : Arrays.asList(values);
+    return values == null ? emptyList() : Arrays.asList(values);
   }
 
   @Override
@@ -148,7 +150,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   public List<String> getResponseHeaderValues(HttpServletResponse response, String name) {
     Collection<String> values = response.getHeaders(name);
     if (values == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     if (values instanceof List) {
       return (List<String>) values;

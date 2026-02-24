@@ -50,40 +50,6 @@
   -->
 
   <module name="TreeWalker">
-    <!-- Enforce static imports for OpenTelemetryAssertions methods (lowercase), but allow inner
-    classes (uppercase). The negative lookahead is needed so we don't match import lines. -->
-    <module name="RegexpSinglelineJava">
-      <property name="format"
-                value="^(?!.*import).*OpenTelemetryAssertions\.[a-z]"/>
-      <property name="message"
-                value="Please statically import methods from OpenTelemetryAssertions"/>
-    </module>
-    <module name="RegexpSinglelineJava">
-      <property name="format"
-                value="(?&lt;!import static org.assertj.core.api.|OpenTelemetry)Assertions.assertThat"/>
-      <property name="message"
-                value="Please statically import methods from Assertions (OpenTelemetryAssertions extends Assertions)"/>
-    </module>
-    <module name="RegexpSinglelineJava">
-      <property name="format" value="^(?!.*import).*\bObjects\.requireNonNull\b"/>
-      <property name="message" value="Please statically import Objects.requireNonNull"/>
-    </module>
-    <module name="RegexpSinglelineJava">
-      <property name="format" value="^(?!.*import).*\bElementMatchers\.[a-z]"/>
-      <property name="message" value="Please statically import methods from ElementMatchers"/>
-    </module>
-    <module name="RegexpSinglelineJava">
-      <property name="format" value="^(?!.*import).*\bAgentElementMatchers\.[a-z]"/>
-      <property name="message" value="Please statically import methods from AgentElementMatchers"/>
-    </module>
-    <module name="RegexpSinglelineJava">
-      <property name="format" value="^(?!.*import).*\bTimeUnit\.[A-Z]"/>
-      <property name="message" value="Please statically import constants from TimeUnit"/>
-    </module>
-    <module name="RegexpSinglelineJava">
-      <property name="format" value="^(?!.*import).*\bStandardCharsets\.[A-Z]"/>
-      <property name="message" value="Please statically import constants from StandardCharsets"/>
-    </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>

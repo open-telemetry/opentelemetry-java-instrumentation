@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -62,7 +65,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
 
   private static final Map<String, BytecodeWithUrl> ALWAYS_INJECTED_CLASSES =
-      Collections.singletonMap(
+      singletonMap(
           LookupExposer.class.getName(), BytecodeWithUrl.create(LookupExposer.class).cached());
   private static final ProtectionDomain PROTECTION_DOMAIN = getProtectionDomain();
   private static final MethodHandle FIND_PACKAGE_METHOD = getFindPackageMethod();
@@ -302,8 +305,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       return super.getResources(resourceName);
     }
     URL resource = getResource(resourceName);
-    List<URL> result =
-        resource != null ? Collections.singletonList(resource) : Collections.emptyList();
+    List<URL> result = resource != null ? singletonList(resource) : emptyList();
     return Collections.enumeration(result);
   }
 

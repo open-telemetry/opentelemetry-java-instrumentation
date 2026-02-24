@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -72,7 +72,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
             .newPushConsumerBuilder()
             .setClientConfiguration(clientConfiguration)
             .setConsumerGroup(consumerGroup)
-            .setSubscriptionExpressions(Collections.singletonMap(topic, filterExpression))
+            .setSubscriptionExpressions(singletonMap(topic, filterExpression))
             .setMessageListener(
                 messageView -> {
                   testing().runWithSpan("child", () -> {});
