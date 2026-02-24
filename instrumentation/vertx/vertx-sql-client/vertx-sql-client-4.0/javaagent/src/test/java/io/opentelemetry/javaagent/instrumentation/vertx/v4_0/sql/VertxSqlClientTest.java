@@ -217,9 +217,7 @@ class VertxSqlClientTest {
                             equalTo(
                                 DB_RESPONSE_STATUS_CODE,
                                 emitStableDatabaseSemconv() ? "42601" : null),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv() ? "42601" : null)),
+                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
