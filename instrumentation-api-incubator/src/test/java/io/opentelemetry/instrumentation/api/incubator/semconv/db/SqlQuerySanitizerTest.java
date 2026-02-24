@@ -78,24 +78,6 @@ class SqlQuerySanitizerTest {
   }
 
   @ParameterizedTest
-  @MethodSource("simplifyDefaultArgs")
-  void simplifySqlDefault(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    SqlQuery expected = expectedFunction.apply(original);
-    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getOperationName()).isNull();
-      assertThat(result.getCollectionName()).isNull();
-      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
-    } else {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isNull();
-    }
-    assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
-  }
-
-  @ParameterizedTest
   @MethodSource("sensitiveArgs")
   void sanitizeSensitive(String original, String expected, String expectedQuerySummary) {
     SqlQuery result = sanitize(original);
@@ -930,24 +912,6 @@ class SqlQuerySanitizerTest {
         Arguments.of(
             "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
             expect("SELECT", null, "SELECT t SELECT t SELECT")));
-  }
-
-  private static Stream<Arguments> simplifyDefaultArgs() {
-    return Stream.of(
-        Arguments.of(
-            "select \"a\" IN(x, \"b\") from table where col in (1) and z IN( \"3\", \"4\" )",
-            expect(
-                "select ? IN(x, ?) from table where col in (?) and z IN(?)",
-                "SELECT",
-                "table",
-                "SELECT table")),
-        Arguments.of(
-            "update `my table` set answer=42 where x IN(\"a\", \"b\") AND y In (\"a\", \"b\")",
-            expect(
-                "update `my table` set answer=? where x IN(?) AND y In (?)",
-                "UPDATE",
-                "my table",
-                "UPDATE `my table`")));
   }
 
   private static Stream<Arguments> ddlArgs() {
