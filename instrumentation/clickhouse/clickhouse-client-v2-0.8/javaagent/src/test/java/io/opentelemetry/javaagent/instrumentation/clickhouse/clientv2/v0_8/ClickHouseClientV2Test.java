@@ -277,9 +277,7 @@ class ClickHouseClientV2Test {
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(
                                 DB_RESPONSE_STATUS_CODE, emitStableDatabaseSemconv() ? "60" : null),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv() ? "60" : null))));
+                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "60" : null))));
   }
 
   @Test

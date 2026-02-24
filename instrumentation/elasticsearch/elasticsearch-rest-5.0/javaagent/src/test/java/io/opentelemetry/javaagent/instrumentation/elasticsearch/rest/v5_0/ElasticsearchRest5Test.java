@@ -131,6 +131,7 @@ class ElasticsearchRest5Test {
     assertDurationMetric(
         testing,
         "io.opentelemetry.elasticsearch-rest-5.0",
+        DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);

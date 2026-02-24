@@ -180,6 +180,7 @@ class ElasticsearchClientTest {
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
         DB_OPERATION_NAME,
+        DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
