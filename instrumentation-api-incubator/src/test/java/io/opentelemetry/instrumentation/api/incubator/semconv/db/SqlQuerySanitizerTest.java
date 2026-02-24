@@ -248,7 +248,7 @@ class SqlQuerySanitizerTest {
             .sanitize(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
             .getQueryText();
     assertThat(sanitizedShort).doesNotContain("1234");
-    assertThat(SqlQuerySanitizer.isCached(shortQuery)).isTrue();
+    assertThat(SqlQuerySanitizer.isCached(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isTrue();
 
     // test that large query is not cached
     StringBuffer s = new StringBuffer();
@@ -261,7 +261,7 @@ class SqlQuerySanitizerTest {
             .sanitize(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
             .getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
-    assertThat(SqlQuerySanitizer.isCached(largeQuery)).isFalse();
+    assertThat(SqlQuerySanitizer.isCached(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
   }
 
   @Test

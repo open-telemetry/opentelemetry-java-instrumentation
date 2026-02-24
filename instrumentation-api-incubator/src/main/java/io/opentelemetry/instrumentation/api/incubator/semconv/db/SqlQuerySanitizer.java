@@ -92,8 +92,8 @@ public final class SqlQuerySanitizer {
   }
 
   // visible for tests
-  static boolean isCached(String query) {
-    return sqlToQueryCache.get(CacheKey.create(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)) != null;
+  static boolean isCached(String query, SqlDialect dialect) {
+    return sqlToQueryCache.get(CacheKey.create(query, dialect)) != null;
   }
 
   @AutoValue
