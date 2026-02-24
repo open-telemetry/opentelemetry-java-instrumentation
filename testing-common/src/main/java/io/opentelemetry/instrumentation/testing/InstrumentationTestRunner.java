@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -39,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionFactory;
@@ -285,7 +285,7 @@ public abstract class InstrumentationTestRunner {
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
     return getExportedMetrics().stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**

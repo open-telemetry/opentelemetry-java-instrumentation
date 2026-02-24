@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
@@ -24,7 +25,6 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -242,8 +242,7 @@ public abstract class AbstractLogbackTest {
     assertions.addAll(
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
     assertions.add(
-        equalTo(
-            AttributeKey.stringArrayKey("logback.marker"), Collections.singletonList(markerName)));
+        equalTo(AttributeKey.stringArrayKey("logback.marker"), singletonList(markerName)));
 
     testing()
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));

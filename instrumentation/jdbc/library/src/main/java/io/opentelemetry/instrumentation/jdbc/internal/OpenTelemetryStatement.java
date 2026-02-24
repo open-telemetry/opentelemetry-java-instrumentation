@@ -20,6 +20,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
@@ -31,7 +33,6 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 class OpenTelemetryStatement<S extends Statement> implements Statement {
@@ -478,8 +479,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request =
-        DbRequest.create(dbInfo, batchCommands, batchSize, Collections.emptyMap(), false);
+    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, emptyMap(), false);
     return wrapCall(request, callable);
   }
 }

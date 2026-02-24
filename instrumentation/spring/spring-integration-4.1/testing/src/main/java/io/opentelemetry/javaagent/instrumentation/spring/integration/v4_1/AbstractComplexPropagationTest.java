@@ -5,17 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toMap;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,7 @@ public abstract class AbstractComplexPropagationTest {
     SpringApplication springApplication =
         new SpringApplication(contextClasses.toArray(new Class<?>[0]));
     springApplication.setDefaultProperties(
-        Collections.singletonMap("spring.main.web-application-type", "none"));
+        singletonMap("spring.main.web-application-type", "none"));
     applicationContext = springApplication.run();
   }
 
@@ -151,7 +152,7 @@ public abstract class AbstractComplexPropagationTest {
       Map<String, String> headers =
           message.getHeaders().entrySet().stream()
               .filter(kv -> kv.getValue() instanceof String)
-              .collect(Collectors.toMap(Map.Entry::getKey, kv -> (String) kv.getValue()));
+              .collect(toMap(Map.Entry::getKey, kv -> (String) kv.getValue()));
       return new Payload(body, headers);
     }
 

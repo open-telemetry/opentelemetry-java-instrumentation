@@ -5,6 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
@@ -12,17 +23,12 @@ import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
-import io.opentelemetry.semconv.DbAttributes;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.util.List;
 
 final class DbClientMetricsAdvice {
 
   static final List<Double> DURATION_SECONDS_BUCKETS =
-      unmodifiableList(
-          asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
+      unmodifiableList(asList(0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0));
 
   static final List<Long> RETURNED_ROWS_BUCKETS =
       unmodifiableList(asList(10L, 50L, 100L, 250L, 500L, 1000L, 2000L, 5000L, 10000L));
@@ -34,17 +40,17 @@ final class DbClientMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                DbAttributes.DB_SYSTEM_NAME,
-                DbAttributes.DB_COLLECTION_NAME,
-                DbAttributes.DB_NAMESPACE,
-                DbAttributes.DB_OPERATION_NAME,
-                DbAttributes.DB_QUERY_SUMMARY,
-                DbAttributes.DB_RESPONSE_STATUS_CODE,
-                ErrorAttributes.ERROR_TYPE,
-                NetworkAttributes.NETWORK_PEER_ADDRESS,
-                NetworkAttributes.NETWORK_PEER_PORT,
-                ServerAttributes.SERVER_ADDRESS,
-                ServerAttributes.SERVER_PORT));
+                DB_SYSTEM_NAME,
+                DB_COLLECTION_NAME,
+                DB_NAMESPACE,
+                DB_OPERATION_NAME,
+                DB_QUERY_SUMMARY,
+                DB_RESPONSE_STATUS_CODE,
+                ERROR_TYPE,
+                NETWORK_PEER_ADDRESS,
+                NETWORK_PEER_PORT,
+                SERVER_ADDRESS,
+                SERVER_PORT));
   }
 
   static void applyReturnedRowsAdvice(LongHistogramBuilder builder) {
@@ -54,17 +60,17 @@ final class DbClientMetricsAdvice {
     ((ExtendedLongHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                DbAttributes.DB_SYSTEM_NAME,
-                DbAttributes.DB_COLLECTION_NAME,
-                DbAttributes.DB_NAMESPACE,
-                DbAttributes.DB_OPERATION_NAME,
-                DbAttributes.DB_QUERY_SUMMARY,
-                DbAttributes.DB_RESPONSE_STATUS_CODE,
-                ErrorAttributes.ERROR_TYPE,
-                NetworkAttributes.NETWORK_PEER_ADDRESS,
-                NetworkAttributes.NETWORK_PEER_PORT,
-                ServerAttributes.SERVER_ADDRESS,
-                ServerAttributes.SERVER_PORT));
+                DB_SYSTEM_NAME,
+                DB_COLLECTION_NAME,
+                DB_NAMESPACE,
+                DB_OPERATION_NAME,
+                DB_QUERY_SUMMARY,
+                DB_RESPONSE_STATUS_CODE,
+                ERROR_TYPE,
+                NETWORK_PEER_ADDRESS,
+                NETWORK_PEER_PORT,
+                SERVER_ADDRESS,
+                SERVER_PORT));
   }
 
   private DbClientMetricsAdvice() {}

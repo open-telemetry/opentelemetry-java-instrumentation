@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testreport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.util.Collections.singletonList;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -32,7 +33,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -265,7 +265,7 @@ public class FlakyTestReporter {
     NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     GoogleCredentials credentials =
         GoogleCredentials.fromStream(new ByteArrayInputStream(accessKey.getBytes(UTF_8)))
-            .createScoped(Collections.singletonList(SheetsScopes.SPREADSHEETS));
+            .createScoped(singletonList(SheetsScopes.SPREADSHEETS));
     Sheets service =
         new Sheets.Builder(
                 transport,

@@ -23,10 +23,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
 import org.apache.camel.Endpoint;
@@ -58,13 +60,11 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(
-        MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-        getDestination(exchange, endpoint));
+    attributes.put(MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
 
     String messageId = getMessageId(exchange);
     if (messageId != null) {
-      attributes.put(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId);
+      attributes.put(MESSAGING_MESSAGE_ID, messageId);
     }
   }
 

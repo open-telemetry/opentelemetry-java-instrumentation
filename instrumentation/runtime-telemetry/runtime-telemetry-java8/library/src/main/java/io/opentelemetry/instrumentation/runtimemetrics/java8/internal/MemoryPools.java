@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -49,8 +52,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getUsage,
                     MemoryUsage::getUsed)));
@@ -61,8 +64,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getUsage,
                     MemoryUsage::getCommitted)));
@@ -73,8 +76,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getUsage,
                     MemoryUsage::getMax)));
@@ -86,8 +89,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getCollectionUsage,
                     MemoryUsage::getUsed)));

@@ -29,6 +29,8 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -66,13 +68,11 @@ import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -132,12 +132,12 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
       case SYNC:
         try (StreamResponse<ChatCompletionChunk> result =
             client.chat().completions().createStreaming(params)) {
-          return result.stream().collect(Collectors.toList());
+          return result.stream().collect(toList());
         }
       case SYNC_FROM_ASYNC:
         try (StreamResponse<ChatCompletionChunk> result =
             clientAsync.sync().chat().completions().createStreaming(params)) {
-          return result.stream().collect(Collectors.toList());
+          return result.stream().collect(toList());
         }
       case ASYNC:
       case ASYNC_FROM_SYNC:
@@ -427,7 +427,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void multipleChoices() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -888,7 +888,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -940,7 +940,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void stream() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -957,7 +957,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "Atlantic Ocean.";
     assertThat(fullMessage).isEqualTo(content);
@@ -1025,7 +1025,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void streamIncludeUsage() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build())
             .build();
@@ -1043,7 +1043,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     String content = "South Atlantic Ocean";
     assertThat(fullMessage).isEqualTo(content);
@@ -1138,7 +1138,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
   void streamMultipleChoices() {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .n(2)
             .build();
@@ -1449,7 +1449,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 })
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .collect(Collectors.joining());
+            .collect(joining());
 
     getTesting()
         .waitAndAssertTraces(
@@ -1595,7 +1595,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
-            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
@@ -1684,8 +1684,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             .parameters(
                 FunctionParameters.builder()
                     .putAdditionalProperty("type", JsonValue.from("object"))
-                    .putAdditionalProperty(
-                        "required", JsonValue.from(Collections.singletonList("location")))
+                    .putAdditionalProperty("required", JsonValue.from(singletonList("location")))
                     .putAdditionalProperty("additionalProperties", JsonValue.from(false))
                     .putAdditionalProperty("properties", JsonObject.of(properties))
                     .build())

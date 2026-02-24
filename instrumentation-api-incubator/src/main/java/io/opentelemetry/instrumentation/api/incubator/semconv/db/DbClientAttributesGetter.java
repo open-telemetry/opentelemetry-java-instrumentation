@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -79,7 +80,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   default Map<String, String> getDbQueryParameters(REQUEST request) {
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   // TODO: make this required to implement

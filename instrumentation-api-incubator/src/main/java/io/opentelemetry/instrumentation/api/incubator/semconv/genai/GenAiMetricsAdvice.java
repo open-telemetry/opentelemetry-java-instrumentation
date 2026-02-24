@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAi
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_RESPONSE_MODEL;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics.GEN_AI_TOKEN_TYPE;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
@@ -19,7 +20,6 @@ import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
-import io.opentelemetry.semconv.ErrorAttributes;
 import java.util.List;
 
 final class GenAiMetricsAdvice {
@@ -61,7 +61,7 @@ final class GenAiMetricsAdvice {
             asList(
                 GEN_AI_OPERATION_NAME,
                 GEN_AI_PROVIDER_NAME,
-                ErrorAttributes.ERROR_TYPE,
+                ERROR_TYPE,
                 GEN_AI_REQUEST_MODEL,
                 SERVER_PORT,
                 GEN_AI_RESPONSE_MODEL,

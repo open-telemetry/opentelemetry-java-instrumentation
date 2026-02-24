@@ -1071,6 +1071,9 @@ targets:
       target: ':instrumentation:zio:zio-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:zio:zio-http-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent'
     - type: gradle
       path: ./

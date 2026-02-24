@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
@@ -87,7 +87,7 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
         .flatMap(record -> StreamSupport.stream(record.headers().spliterator(), false))
         .filter(header -> name.equals(header.key()) && header.value() != null)
         .map(header -> convertHeaderValue(header))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static String convertHeaderValue(Header header) {
