@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.utility.JavaModule;
@@ -18,11 +19,11 @@ import net.bytebuddy.utility.JavaModule;
  */
 public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
 
-  private final ClassLoader bootstrapProxy;
+  @Nullable private final ClassLoader bootstrapProxy;
   private final List<ClassFileLocator> additionalLocators;
 
   public AgentLocationStrategy(
-      ClassLoader bootstrapProxy, List<ClassFileLocator> additionalLocators) {
+      @Nullable ClassLoader bootstrapProxy, List<ClassFileLocator> additionalLocators) {
     this.bootstrapProxy = bootstrapProxy;
     this.additionalLocators = additionalLocators;
   }
@@ -32,7 +33,8 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
   }
 
   @Override
-  public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
+  public ClassFileLocator classFileLocator(
+      @Nullable ClassLoader classLoader, @Nullable JavaModule javaModule) {
     List<ClassFileLocator> locators = new ArrayList<>();
 
     if (additionalLocators != null) {
