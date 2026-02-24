@@ -5,37 +5,38 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
+import application.io.opentelemetry.api.logs.Logger;
+import application.io.opentelemetry.api.logs.LoggerBuilder;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.logs.LoggerBuilder;
 
-final class ApplicationLoggerBuilder
-    implements application.io.opentelemetry.api.logs.LoggerBuilder {
+final class ApplicationLoggerBuilder implements LoggerBuilder {
 
   private final ApplicationLoggerFactory loggerFactory;
-  private final LoggerBuilder agentBuilder;
+  private final io.opentelemetry.api.logs.LoggerBuilder agentBuilder;
 
-  ApplicationLoggerBuilder(ApplicationLoggerFactory loggerFactory, LoggerBuilder agentBuilder) {
+  ApplicationLoggerBuilder(
+      ApplicationLoggerFactory loggerFactory,
+      io.opentelemetry.api.logs.LoggerBuilder agentBuilder) {
     this.loggerFactory = loggerFactory;
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.logs.LoggerBuilder setSchemaUrl(String schemaUrl) {
+  public LoggerBuilder setSchemaUrl(String schemaUrl) {
     agentBuilder.setSchemaUrl(schemaUrl);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.logs.LoggerBuilder setInstrumentationVersion(
-      String version) {
+  public LoggerBuilder setInstrumentationVersion(String version) {
     agentBuilder.setInstrumentationVersion(version);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.api.logs.Logger build() {
+  public Logger build() {
     return loggerFactory.newLogger(agentBuilder.build());
   }
 }

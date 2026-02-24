@@ -5,43 +5,44 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import application.io.opentelemetry.api.metrics.DoubleGaugeBuilder;
+import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
+import application.io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import java.util.function.Consumer;
 
-public class ApplicationDoubleGaugeBuilder
-    implements application.io.opentelemetry.api.metrics.DoubleGaugeBuilder {
+public class ApplicationDoubleGaugeBuilder implements DoubleGaugeBuilder {
 
-  private final DoubleGaugeBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder;
 
-  protected ApplicationDoubleGaugeBuilder(DoubleGaugeBuilder agentBuilder) {
+  protected ApplicationDoubleGaugeBuilder(
+      io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.DoubleGaugeBuilder setDescription(
-      String description) {
+  public DoubleGaugeBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.DoubleGaugeBuilder setUnit(String unit) {
+  public DoubleGaugeBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongGaugeBuilder ofLongs() {
+  public LongGaugeBuilder ofLongs() {
     return new ApplicationLongGaugeBuilder(agentBuilder.ofLongs());
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.ObservableDoubleGauge buildWithCallback(
-      Consumer<application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement>
-          applicationCallback) {
+  public ObservableDoubleGauge buildWithCallback(
+      Consumer<ObservableDoubleMeasurement> applicationCallback) {
     return new ApplicationObservableDoubleGauge(
         agentBuilder.buildWithCallback(
             agentMeasurement ->
@@ -50,7 +51,7 @@ public class ApplicationDoubleGaugeBuilder
   }
 
   // added in 1.15.0
-  public application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement buildObserver() {
+  public ObservableDoubleMeasurement buildObserver() {
     return new ApplicationObservableDoubleMeasurement(agentBuilder.buildObserver());
   }
 }

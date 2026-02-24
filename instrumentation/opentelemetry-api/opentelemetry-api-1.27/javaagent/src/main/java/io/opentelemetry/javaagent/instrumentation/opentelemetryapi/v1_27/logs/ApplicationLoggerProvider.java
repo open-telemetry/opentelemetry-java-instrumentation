@@ -5,23 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
-import io.opentelemetry.api.logs.LoggerProvider;
+import application.io.opentelemetry.api.logs.LoggerBuilder;
+import application.io.opentelemetry.api.logs.LoggerProvider;
 
-public class ApplicationLoggerProvider
-    implements application.io.opentelemetry.api.logs.LoggerProvider {
+// Our convention for accessing agent packages.
+@SuppressWarnings("UnnecessarilyFullyQualified")
+public class ApplicationLoggerProvider implements LoggerProvider {
 
   private final ApplicationLoggerFactory loggerFactory;
-  private final LoggerProvider agentLoggerProvider;
+  private final io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider;
 
   public ApplicationLoggerProvider(
-      ApplicationLoggerFactory loggerFactory, LoggerProvider agentLoggerProvider) {
+      ApplicationLoggerFactory loggerFactory,
+      io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider) {
     this.loggerFactory = loggerFactory;
     this.agentLoggerProvider = agentLoggerProvider;
   }
 
   @Override
-  public application.io.opentelemetry.api.logs.LoggerBuilder loggerBuilder(
-      String instrumentationName) {
+  public LoggerBuilder loggerBuilder(String instrumentationName) {
     return new ApplicationLoggerBuilder(
         loggerFactory, agentLoggerProvider.loggerBuilder(instrumentationName));
   }

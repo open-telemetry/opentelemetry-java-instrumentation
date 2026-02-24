@@ -5,15 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics;
 
-import io.opentelemetry.api.metrics.LongGauge;
+import application.io.opentelemetry.api.common.Attributes;
+import application.io.opentelemetry.api.metrics.LongGauge;
+import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationLongGauge138 implements application.io.opentelemetry.api.metrics.LongGauge {
+public class ApplicationLongGauge138 implements LongGauge {
 
-  private final LongGauge agentLongGauge;
+  private final io.opentelemetry.api.metrics.LongGauge agentLongGauge;
 
-  protected ApplicationLongGauge138(LongGauge agentLongGauge) {
+  protected ApplicationLongGauge138(io.opentelemetry.api.metrics.LongGauge agentLongGauge) {
     this.agentLongGauge = agentLongGauge;
   }
 
@@ -23,15 +25,12 @@ public class ApplicationLongGauge138 implements application.io.opentelemetry.api
   }
 
   @Override
-  public void set(long value, application.io.opentelemetry.api.common.Attributes attributes) {
+  public void set(long value, Attributes attributes) {
     agentLongGauge.set(value, Bridging.toAgent(attributes));
   }
 
   @Override
-  public void set(
-      long value,
-      application.io.opentelemetry.api.common.Attributes attributes,
-      application.io.opentelemetry.context.Context applicationContext) {
+  public void set(long value, Attributes attributes, Context applicationContext) {
     agentLongGauge.set(
         value,
         Bridging.toAgent(attributes),

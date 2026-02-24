@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics;
 
-import io.opentelemetry.api.metrics.BatchCallback;
+import application.io.opentelemetry.api.metrics.BatchCallback;
 
-final class ApplicationBatchCallback
-    implements application.io.opentelemetry.api.metrics.BatchCallback {
-  private final BatchCallback agentCallback;
+final class ApplicationBatchCallback implements BatchCallback {
+  private final io.opentelemetry.api.metrics.BatchCallback agentCallback;
 
-  ApplicationBatchCallback(BatchCallback agentCallback) {
+  ApplicationBatchCallback(io.opentelemetry.api.metrics.BatchCallback agentCallback) {
     this.agentCallback = agentCallback;
   }
 

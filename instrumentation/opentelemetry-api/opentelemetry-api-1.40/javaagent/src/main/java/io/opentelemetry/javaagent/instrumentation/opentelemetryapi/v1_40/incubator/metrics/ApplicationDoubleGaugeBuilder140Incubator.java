@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
+import application.io.opentelemetry.api.metrics.DoubleGauge;
+import application.io.opentelemetry.api.metrics.LongGaugeBuilder;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.incubator.metrics.ApplicationDoubleGaugeBuilder138Incubator;
 
 final class ApplicationDoubleGaugeBuilder140Incubator
     extends ApplicationDoubleGaugeBuilder138Incubator {
 
-  private final DoubleGaugeBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.DoubleGaugeBuilder agentBuilder;
 
   ApplicationDoubleGaugeBuilder140Incubator(DoubleGaugeBuilder agentBuilder) {
     super(agentBuilder);
@@ -19,12 +21,12 @@ final class ApplicationDoubleGaugeBuilder140Incubator
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongGaugeBuilder ofLongs() {
+  public LongGaugeBuilder ofLongs() {
     return new ApplicationLongGaugeBuilder140Incubator(agentBuilder.ofLongs());
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleGauge build() {
+  public DoubleGauge build() {
     return new ApplicationDoubleGauge140Incubator(agentBuilder.build());
   }
 }
