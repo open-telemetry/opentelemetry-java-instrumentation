@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import application.io.opentelemetry.context.Context;
+import application.io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -17,10 +19,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Returns AgentContextStorage as the implementation of ContextStorage in the application classpath.
- * We do this instead of using the normal service loader mechanism to make sure there is no
- * dependency on a system property or possibility of a user overriding this since it's required for
- * instrumentation in the agent to work properly.
+ * Returns {@link AgentContextStorage} as the implementation of {@link ContextStorage} in the
+ * application classpath. We do this instead of using the normal service loader mechanism to make
+ * sure there is no dependency on a system property or possibility of a user overriding this since
+ * it's required for instrumentation in the agent to work properly.
  */
 class ContextInstrumentation implements TypeInstrumentation {
 
@@ -40,8 +42,7 @@ class ContextInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static application.io.opentelemetry.context.Context methodExit(
-        @Advice.Return application.io.opentelemetry.context.Context root) {
+    public static Context methodExit(@Advice.Return Context root) {
       return AgentContextStorage.wrapRootContext(root);
     }
   }

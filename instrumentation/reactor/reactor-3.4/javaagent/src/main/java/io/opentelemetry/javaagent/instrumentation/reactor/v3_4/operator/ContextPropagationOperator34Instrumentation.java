@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Context;
+import application.io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -20,7 +20,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import reactor.util.context.ContextView;
 
 class ContextPropagationOperator34Instrumentation implements TypeInstrumentation {
   @Override
@@ -50,11 +49,11 @@ class ContextPropagationOperator34Instrumentation implements TypeInstrumentation
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static application.io.opentelemetry.context.Context methodExit(
-        @Advice.Argument(0) ContextView reactorContext,
-        @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
+    public static Context methodExit(
+        @Advice.Argument(0) reactor.util.context.ContextView reactorContext,
+        @Advice.Argument(1) Context defaultContext) {
 
-      Context agentContext =
+      io.opentelemetry.context.Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
       if (agentContext == null) {
         return defaultContext;

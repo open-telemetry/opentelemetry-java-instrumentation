@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import io.opentelemetry.api.metrics.LongUpDownCounter;
+import application.io.opentelemetry.api.common.Attributes;
+import application.io.opentelemetry.api.metrics.LongUpDownCounter;
+import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-public class ApplicationLongUpDownCounter
-    implements application.io.opentelemetry.api.metrics.LongUpDownCounter {
+public class ApplicationLongUpDownCounter implements LongUpDownCounter {
 
-  private final LongUpDownCounter agentCounter;
+  private final io.opentelemetry.api.metrics.LongUpDownCounter agentCounter;
 
-  protected ApplicationLongUpDownCounter(LongUpDownCounter agentCounter) {
+  protected ApplicationLongUpDownCounter(
+      io.opentelemetry.api.metrics.LongUpDownCounter agentCounter) {
     this.agentCounter = agentCounter;
   }
 
@@ -24,16 +26,12 @@ public class ApplicationLongUpDownCounter
   }
 
   @Override
-  public void add(
-      long value, application.io.opentelemetry.api.common.Attributes applicationAttributes) {
+  public void add(long value, Attributes applicationAttributes) {
     agentCounter.add(value, Bridging.toAgent(applicationAttributes));
   }
 
   @Override
-  public void add(
-      long value,
-      application.io.opentelemetry.api.common.Attributes applicationAttributes,
-      application.io.opentelemetry.context.Context applicationContext) {
+  public void add(long value, Attributes applicationAttributes, Context applicationContext) {
     agentCounter.add(
         value,
         Bridging.toAgent(applicationAttributes),

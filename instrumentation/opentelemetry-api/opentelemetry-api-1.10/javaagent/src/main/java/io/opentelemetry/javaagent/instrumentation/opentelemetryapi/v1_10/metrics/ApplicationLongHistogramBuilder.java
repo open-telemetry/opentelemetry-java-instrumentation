@@ -5,35 +5,35 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import application.io.opentelemetry.api.metrics.LongHistogram;
+import application.io.opentelemetry.api.metrics.LongHistogramBuilder;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.metrics.LongHistogramBuilder;
 
-public class ApplicationLongHistogramBuilder
-    implements application.io.opentelemetry.api.metrics.LongHistogramBuilder {
+public class ApplicationLongHistogramBuilder implements LongHistogramBuilder {
 
-  private final LongHistogramBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder;
 
-  protected ApplicationLongHistogramBuilder(LongHistogramBuilder agentBuilder) {
+  protected ApplicationLongHistogramBuilder(
+      io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.LongHistogramBuilder setDescription(
-      String description) {
+  public LongHistogramBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.LongHistogramBuilder setUnit(String unit) {
+  public LongHistogramBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongHistogram build() {
+  public LongHistogram build() {
     return new ApplicationLongHistogram(agentBuilder.build());
   }
 }

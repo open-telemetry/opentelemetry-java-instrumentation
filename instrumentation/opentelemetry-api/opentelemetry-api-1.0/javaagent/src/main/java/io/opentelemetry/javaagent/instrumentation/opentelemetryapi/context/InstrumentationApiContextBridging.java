@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
-import io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -22,7 +22,7 @@ final class InstrumentationApiContextBridging {
 
     try {
       bridges.add(
-          new ContextKeyBridge<application.io.opentelemetry.api.trace.Span, Span>(
+          new ContextKeyBridge<Span, io.opentelemetry.api.trace.Span>(
               "application.io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan",
               "io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan",
               Bridging::toApplication,
@@ -35,7 +35,7 @@ final class InstrumentationApiContextBridging {
       // old SERVER_KEY bridge - needed to make legacy ServerSpan work, for users who're using old
       // instrumentation-api version with the newest agent version
       bridges.add(
-          new ContextKeyBridge<application.io.opentelemetry.api.trace.Span, Span>(
+          new ContextKeyBridge<Span, io.opentelemetry.api.trace.Span>(
               "application.io.opentelemetry.instrumentation.api.internal.SpanKey",
               "io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan",
               "SERVER_KEY",
@@ -92,7 +92,11 @@ final class InstrumentationApiContextBridging {
               agentHttpRouteState,
               "create",
               MethodType.methodType(
-                  agentHttpRouteState, String.class, String.class, int.class, Span.class));
+                  agentHttpRouteState,
+                  String.class,
+                  String.class,
+                  int.class,
+                  io.opentelemetry.api.trace.Span.class));
       agentGetMethod =
           lookup.findVirtual(agentHttpRouteState, "getMethod", MethodType.methodType(String.class));
       agentGetRoute =
@@ -101,7 +105,10 @@ final class InstrumentationApiContextBridging {
           lookup.findVirtual(
               agentHttpRouteState, "getUpdatedBySourceOrder", MethodType.methodType(int.class));
       agentGetSpan =
-          lookup.findVirtual(agentHttpRouteState, "getSpan", MethodType.methodType(Span.class));
+          lookup.findVirtual(
+              agentHttpRouteState,
+              "getSpan",
+              MethodType.methodType(io.opentelemetry.api.trace.Span.class));
 
       applicationHttpRouteState =
           Class.forName("application.io.opentelemetry.instrumentation.api.internal.HttpRouteState");
@@ -111,11 +118,7 @@ final class InstrumentationApiContextBridging {
                 applicationHttpRouteState,
                 "create",
                 MethodType.methodType(
-                    applicationHttpRouteState,
-                    String.class,
-                    String.class,
-                    int.class,
-                    application.io.opentelemetry.api.trace.Span.class));
+                    applicationHttpRouteState, String.class, String.class, int.class, Span.class));
       } catch (NoSuchMethodException exception) {
         // older instrumentation-api has only the variant that does not take span
         applicationCreate =
@@ -139,9 +142,7 @@ final class InstrumentationApiContextBridging {
       try {
         applicationGetSpan =
             lookup.findVirtual(
-                applicationHttpRouteState,
-                "getSpan",
-                MethodType.methodType(application.io.opentelemetry.api.trace.Span.class));
+                applicationHttpRouteState, "getSpan", MethodType.methodType(Span.class));
       } catch (NoSuchMethodException ignored) {
         // not present in older instrumentation-api
       }
@@ -185,17 +186,14 @@ final class InstrumentationApiContextBridging {
               AGENT_GET_ROUTE,
               AGENT_GET_UPDATED_BY_SOURCE_ORDER,
               AGENT_GET_SPAN,
-              o -> o != null ? Bridging.toApplication((Span) o) : null),
+              o -> o != null ? Bridging.toApplication((io.opentelemetry.api.trace.Span) o) : null),
           httpRouteStateConvert(
               AGENT_CREATE,
               APPLICATION_GET_METHOD,
               APPLICATION_GET_ROUTE,
               APPLICATION_GET_UPDATED_BY_SOURCE_ORDER,
               APPLICATION_GET_SPAN,
-              o ->
-                  o != null
-                      ? Bridging.toAgentOrNull((application.io.opentelemetry.api.trace.Span) o)
-                      : null));
+              o -> o != null ? Bridging.toAgentOrNull((Span) o) : null));
     } catch (Throwable ignored) {
       return null;
     }

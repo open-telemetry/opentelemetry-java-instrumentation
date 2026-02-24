@@ -5,37 +5,38 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import application.io.opentelemetry.api.metrics.Meter;
+import application.io.opentelemetry.api.metrics.MeterBuilder;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.metrics.MeterBuilder;
 
-final class ApplicationMeterBuilder
-    implements application.io.opentelemetry.api.metrics.MeterBuilder {
+final class ApplicationMeterBuilder implements MeterBuilder {
 
   private final ApplicationMeterFactory meterFactory;
-  private final MeterBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.MeterBuilder agentBuilder;
 
-  ApplicationMeterBuilder(ApplicationMeterFactory meterFactory, MeterBuilder agentBuilder) {
+  ApplicationMeterBuilder(
+      ApplicationMeterFactory meterFactory,
+      io.opentelemetry.api.metrics.MeterBuilder agentBuilder) {
     this.meterFactory = meterFactory;
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.MeterBuilder setSchemaUrl(String schemaUrl) {
+  public MeterBuilder setSchemaUrl(String schemaUrl) {
     agentBuilder.setSchemaUrl(schemaUrl);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.MeterBuilder setInstrumentationVersion(
-      String version) {
+  public MeterBuilder setInstrumentationVersion(String version) {
     agentBuilder.setInstrumentationVersion(version);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.Meter build() {
+  public Meter build() {
     return meterFactory.newMeter(agentBuilder.build());
   }
 }

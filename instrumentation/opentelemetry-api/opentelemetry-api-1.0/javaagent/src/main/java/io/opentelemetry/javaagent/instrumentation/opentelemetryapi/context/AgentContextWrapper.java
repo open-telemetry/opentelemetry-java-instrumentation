@@ -5,15 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
+import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.context.Context;
+import application.io.opentelemetry.context.ContextKey;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.baggage.BaggageBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final class AgentContextWrapper implements application.io.opentelemetry.context.Context {
+final class AgentContextWrapper implements Context {
 
   static final List<ContextKeyBridge<?, ?>> CONTEXT_KEY_BRIDGES;
 
@@ -21,7 +22,7 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
     List<ContextKeyBridge<?, ?>> bridges = new ArrayList<>();
     try {
       bridges.add(
-          new ContextKeyBridge<application.io.opentelemetry.api.trace.Span, Span>(
+          new ContextKeyBridge<Span, io.opentelemetry.api.trace.Span>(
               "application.io.opentelemetry.api.trace.SpanContextKey",
               "io.opentelemetry.api.trace.SpanContextKey",
               Bridging::toApplication,
@@ -43,15 +44,14 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
     CONTEXT_KEY_BRIDGES = Collections.unmodifiableList(bridges);
   }
 
-  final Context agentContext;
-  final application.io.opentelemetry.context.Context applicationContext;
+  final io.opentelemetry.context.Context agentContext;
+  final Context applicationContext;
 
-  AgentContextWrapper(Context agentContext) {
+  AgentContextWrapper(io.opentelemetry.context.Context agentContext) {
     this(agentContext, agentContext.get(AgentContextStorage.APPLICATION_CONTEXT));
   }
 
-  AgentContextWrapper(
-      Context agentContext, application.io.opentelemetry.context.Context applicationContext) {
+  AgentContextWrapper(io.opentelemetry.context.Context agentContext, Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
       throw new IllegalStateException("Expected unwrapped context");
     }
@@ -59,19 +59,19 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
     this.applicationContext = applicationContext;
   }
 
-  Context toAgentContext() {
+  io.opentelemetry.context.Context toAgentContext() {
     if (agentContext.get(AgentContextStorage.APPLICATION_CONTEXT) == applicationContext) {
       return agentContext;
     }
     return agentContext.with(AgentContextStorage.APPLICATION_CONTEXT, applicationContext);
   }
 
-  public Context getAgentContext() {
+  public io.opentelemetry.context.Context getAgentContext() {
     return agentContext;
   }
 
   @Override
-  public <V> V get(application.io.opentelemetry.context.ContextKey<V> key) {
+  public <V> V get(ContextKey<V> key) {
     for (ContextKeyBridge<?, ?> bridge : CONTEXT_KEY_BRIDGES) {
       V value = bridge.get(this, key);
       if (value != null) {
@@ -83,10 +83,9 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
   }
 
   @Override
-  public <V> application.io.opentelemetry.context.Context with(
-      application.io.opentelemetry.context.ContextKey<V> k1, V v1) {
+  public <V> Context with(ContextKey<V> k1, V v1) {
     for (ContextKeyBridge<?, ?> bridge : CONTEXT_KEY_BRIDGES) {
-      application.io.opentelemetry.context.Context context = bridge.with(this, k1, v1);
+      Context context = bridge.with(this, k1, v1);
       if (context != null) {
         return context;
       }
