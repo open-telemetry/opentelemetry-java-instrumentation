@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.servlet.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 
 /**
@@ -66,7 +67,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
         return null;
       }
       String encoding = accessor.getRequestContentEncoding(request);
-      Charset charset = StandardCharsets.UTF_8;
+      Charset charset = UTF_8;
       if (encoding != null && Charset.isSupported(encoding)) {
         charset = Charset.forName(encoding);
       }

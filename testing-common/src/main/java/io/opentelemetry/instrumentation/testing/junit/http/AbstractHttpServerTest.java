@@ -37,6 +37,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -89,7 +90,6 @@ import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpObject;
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpVersion;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -636,7 +636,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     Charset charset = mediaType.charset();
     if (charset == null) {
       // when not specified, default to UTF-8, for example with "application/x-www-form-urlencoded"
-      charset = StandardCharsets.UTF_8;
+      charset = UTF_8;
     }
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(
