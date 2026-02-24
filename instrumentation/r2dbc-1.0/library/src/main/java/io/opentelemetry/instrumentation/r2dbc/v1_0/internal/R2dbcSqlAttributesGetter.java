@@ -31,6 +31,9 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     // the underlying database is unknown, use the safer default that sanitizes double-quoted
     // fragments as string literals (note that this can lead to incorrect summarization
     // for databases that do use double quotes as identifiers)
+    //
+    // TODO do better in
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16251
     return DOUBLE_QUOTES_ARE_STRING_LITERALS;
   }
 
