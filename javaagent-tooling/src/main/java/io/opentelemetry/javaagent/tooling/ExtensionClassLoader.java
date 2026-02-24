@@ -109,7 +109,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     }
   }
 
-  private static File ensureTempDirectoryExists(File tempDirectory) throws IOException {
+  private static File ensureTempDirectoryExists(@Nullable File tempDirectory) throws IOException {
     if (tempDirectory == null) {
       tempDirectory = Files.createTempDirectory("otel-extensions").toFile();
       tempDirectory.deleteOnExit();

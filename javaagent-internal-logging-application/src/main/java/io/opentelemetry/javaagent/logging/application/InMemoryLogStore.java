@@ -10,6 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 final class InMemoryLogStore {
 
@@ -20,7 +21,7 @@ final class InMemoryLogStore {
 
   private final int limit;
 
-  private InternalLogger.Factory applicationLoggerFactory;
+  @Nullable private InternalLogger.Factory applicationLoggerFactory;
 
   InMemoryLogStore(int limit) {
     this.limit = limit;

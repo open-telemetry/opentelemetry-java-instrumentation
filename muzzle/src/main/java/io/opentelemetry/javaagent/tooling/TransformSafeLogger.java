@@ -30,7 +30,7 @@ public final class TransformSafeLogger {
   static {
     if (ENABLE_TRANSFORM_SAFE_LOGGING) {
       logMessageQueue = new ArrayBlockingQueue<>(1000);
-      Thread thread = new Thread(new LogMessageQueueReader());
+      Thread thread = new Thread(new LogMessageQueueReader(logMessageQueue));
       thread.setName("otel-javaagent-transform-safe-logger");
       thread.setDaemon(true);
       thread.setContextClassLoader(null);
@@ -87,11 +87,17 @@ public final class TransformSafeLogger {
   }
 
   private static class LogMessageQueueReader implements Runnable {
+    private final BlockingQueue<LogMessage> queue;
+
+    LogMessageQueueReader(BlockingQueue<LogMessage> queue) {
+      this.queue = queue;
+    }
+
     @Override
     public void run() {
       try {
         while (true) {
-          LogMessage logMessage = logMessageQueue.take();
+          LogMessage logMessage = queue.take();
           logMessage.logger.log(
               logMessage.level,
               formatMessage(logMessage.format, logMessage.arguments),
@@ -107,11 +113,15 @@ public final class TransformSafeLogger {
     private final Level level;
     private final Logger logger;
     private final String format;
-    private final Throwable error;
-    private final Object[] arguments;
+    @Nullable private final Throwable error;
+    @Nullable private final Object[] arguments;
 
     private LogMessage(
-        Level level, Logger logger, String format, Throwable error, Object[] arguments) {
+        Level level,
+        Logger logger,
+        String format,
+        @Nullable Throwable error,
+        @Nullable Object[] arguments) {
       this.level = level;
       this.logger = logger;
       this.format = format;
@@ -120,7 +130,7 @@ public final class TransformSafeLogger {
     }
   }
 
-  private static String formatMessage(String format, Object[] arguments) {
+  private static String formatMessage(String format, @Nullable Object[] arguments) {
     if (arguments == null || arguments.length == 0) {
       return format;
     } else {

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -60,7 +61,7 @@ public final class InstrumentationModuleInstaller {
       VirtualFieldImplementationInstallerFactory.getInstance();
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
-    this.instrumentation = instrumentation;
+    this.instrumentation = requireNonNull(instrumentation, "Instrumentation must not be null");
   }
 
   // Need to call deprecated API for backward compatibility with modules that haven't migrated
@@ -188,12 +189,15 @@ public final class InstrumentationModuleInstaller {
     }
 
     MuzzleMatcher muzzleMatcher = new MuzzleMatcher(logger, instrumentationModule);
+    ClassLoader extensionsClassLoader =
+        requireNonNull(
+            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperClassNames,
             helperResourceBuilder.getResources(),
-            Utils.getExtensionsClassLoader(),
+            extensionsClassLoader,
             instrumentation);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
