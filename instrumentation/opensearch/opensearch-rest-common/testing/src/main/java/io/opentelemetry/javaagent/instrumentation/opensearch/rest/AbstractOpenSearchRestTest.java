@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -91,7 +93,10 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+                                equalTo(
+                                    DB_RESPONSE_STATUS_CODE,
+                                    emitStableDatabaseSemconv() ? "200" : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -162,7 +167,10 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+                                equalTo(
+                                    DB_RESPONSE_STATUS_CODE,
+                                    emitStableDatabaseSemconv() ? "200" : null)),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -188,6 +196,11 @@ public abstract class AbstractOpenSearchRestTest {
 
     getTesting().waitForTraces(1);
 
-    assertDurationMetric(getTesting(), getInstrumentationName(), DB_OPERATION_NAME, DB_SYSTEM_NAME);
+    assertDurationMetric(
+        getTesting(),
+        getInstrumentationName(),
+        DB_OPERATION_NAME,
+        DB_RESPONSE_STATUS_CODE,
+        DB_SYSTEM_NAME);
   }
 }
