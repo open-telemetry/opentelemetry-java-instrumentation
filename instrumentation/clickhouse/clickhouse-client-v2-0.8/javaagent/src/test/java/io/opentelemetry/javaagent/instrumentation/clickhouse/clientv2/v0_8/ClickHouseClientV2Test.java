@@ -279,9 +279,7 @@ class ClickHouseClientV2Test {
                                 DB_RESPONSE_STATUS_CODE, emitStableDatabaseSemconv() ? "60" : null),
                             equalTo(
                                 ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "com.clickhouse.client.api.ServerException"
-                                    : null))));
+                                emitStableDatabaseSemconv() ? "60" : null))));
   }
 
   @Test

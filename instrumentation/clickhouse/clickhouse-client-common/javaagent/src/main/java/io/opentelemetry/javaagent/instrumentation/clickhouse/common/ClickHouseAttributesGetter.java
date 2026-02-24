@@ -48,6 +48,13 @@ final class ClickHouseAttributesGetter
     return errorCodeExtractor.apply(error);
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return errorCodeExtractor.apply(error);
+  }
+
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
     return request.getHost();

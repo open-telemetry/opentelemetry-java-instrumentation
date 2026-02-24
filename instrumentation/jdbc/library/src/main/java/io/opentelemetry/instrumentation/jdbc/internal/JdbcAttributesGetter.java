@@ -66,6 +66,16 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof SQLException) {
+      return Integer.toString(((SQLException) error).getErrorCode());
+    }
+    return null;
+  }
+
   @Override
   public Map<String, String> getDbQueryParameters(DbRequest request) {
     return request.getPreparedStatementParameters();

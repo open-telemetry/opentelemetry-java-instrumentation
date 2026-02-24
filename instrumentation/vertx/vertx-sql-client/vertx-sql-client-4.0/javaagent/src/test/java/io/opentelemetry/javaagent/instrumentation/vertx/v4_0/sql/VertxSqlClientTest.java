@@ -219,9 +219,7 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? "42601" : null),
                             equalTo(
                                 ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "io.vertx.pgclient.PgException"
-                                    : null)),
+                                emitStableDatabaseSemconv() ? "42601" : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

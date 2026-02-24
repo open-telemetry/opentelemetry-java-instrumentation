@@ -100,6 +100,16 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      CommandStartedEvent request, @Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof MongoException) {
+      return Integer.toString(((MongoException) error).getCode());
+    }
+    return null;
+  }
+
   String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown

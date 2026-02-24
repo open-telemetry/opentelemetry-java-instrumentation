@@ -60,6 +60,16 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Nullable
   @Override
+  public String getErrorType(
+      DbExecution request, @Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof R2dbcException) {
+      return ((R2dbcException) error).getSqlState();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(DbExecution request) {
     return request.getHost();
   }

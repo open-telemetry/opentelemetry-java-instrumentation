@@ -110,7 +110,7 @@ class JdbcTelemetryTest {
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 5432),
-                            equalTo(ERROR_TYPE, "java.sql.SQLException"))));
+                            equalTo(ERROR_TYPE, "42"))));
 
     assertDurationMetric(
         testing,
