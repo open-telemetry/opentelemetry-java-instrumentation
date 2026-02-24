@@ -150,7 +150,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalNetworkExtractor.onEnd(attributes, request, response);
-    DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
+    DbClientAttributesExtractor.onEndCommon(attributes, getter, request, response, error);
   }
 
   /**
