@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.ContextStorage;
+import application.io.opentelemetry.api.baggage.Baggage;
+import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.context.Context;
+import application.io.opentelemetry.context.ContextStorage;
+import application.io.opentelemetry.context.Scope;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -17,22 +19,22 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 
 /**
- * ContextStorage which stores the Context in the user's application inside the Context in the
- * agent. This allows for context interaction to be maintained between the app and agent.
+ * {@link ContextStorage} which stores the {@link Context} in the user's application inside the
+ * {@link Context} in the agent. This allows for context interaction to be maintained between the
+ * app and agent.
  *
  * <p>This storage allows for implicit parenting of context to exist between the agent and
  * application by storing the concrete application context in the agent context and returning a
  * wrapper which accesses into this stored concrete context.
  *
  * <p>This storage also makes sure that OpenTelemetry objects are shared within the context. To do
- * this, it recognizes the keys for OpenTelemetry objects (e.g, Span, Baggage) and always stores and
- * retrieves them from the agent context, even when accessed from the application. All other
- * accesses are to the concrete application context.
+ * this, it recognizes the keys for OpenTelemetry objects (e.g, {@link Span}, {@link Baggage}) and
+ * always stores and retrieves them from the agent context, even when accessed from the application.
+ * All other accesses are to the concrete application context.
  */
 // Annotation doesn't work on some fields due to fully qualified name (no clue why it matters...)
 @SuppressWarnings("FieldMissingNullable")
-public class AgentContextStorage
-    implements application.io.opentelemetry.context.ContextStorage, AutoCloseable {
+public class AgentContextStorage implements ContextStorage, AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(AgentContextStorage.class.getName());
 
@@ -40,11 +42,11 @@ public class AgentContextStorage
   private static final MethodHandle CONTEXT_STORAGE_ROOT_HANDLE = getContextStorageRootHandle();
 
   // unwrapped application root context
-  private final application.io.opentelemetry.context.Context applicationRoot;
+  private final Context applicationRoot;
   // wrapped application root context
-  private final application.io.opentelemetry.context.Context root;
+  private final Context root;
 
-  private AgentContextStorage(application.io.opentelemetry.context.ContextStorage delegate) {
+  private AgentContextStorage(ContextStorage delegate) {
     applicationRoot = getRootContext(delegate);
     root = getWrappedRootContext(applicationRoot);
   }
@@ -52,10 +54,7 @@ public class AgentContextStorage
   private static MethodHandle getContextStorageRootHandle() {
     try {
       return MethodHandles.lookup()
-          .findVirtual(
-              application.io.opentelemetry.context.ContextStorage.class,
-              "root",
-              MethodType.methodType(application.io.opentelemetry.context.Context.class));
+          .findVirtual(ContextStorage.class, "root", MethodType.methodType(Context.class));
     } catch (NoSuchMethodException | IllegalAccessException exception) {
       return null;
     }
@@ -65,13 +64,11 @@ public class AgentContextStorage
     return CONTEXT_STORAGE_ROOT_HANDLE != null;
   }
 
-  private static application.io.opentelemetry.context.Context getRootContext(
-      application.io.opentelemetry.context.ContextStorage contextStorage) {
+  private static Context getRootContext(ContextStorage contextStorage) {
     if (has15Api()) {
       // when bridging to 1.5 api call ContextStorage.root()
       try {
-        return (application.io.opentelemetry.context.Context)
-            CONTEXT_STORAGE_ROOT_HANDLE.invoke(contextStorage);
+        return (Context) CONTEXT_STORAGE_ROOT_HANDLE.invoke(contextStorage);
       } catch (Throwable throwable) {
         throw new IllegalStateException("Failed to get root context", throwable);
       }
@@ -80,16 +77,14 @@ public class AgentContextStorage
     }
   }
 
-  private static application.io.opentelemetry.context.Context getWrappedRootContext(
-      application.io.opentelemetry.context.Context rootContext) {
+  private static Context getWrappedRootContext(Context rootContext) {
     if (has15Api()) {
-      return new AgentContextWrapper(Context.root(), rootContext);
+      return new AgentContextWrapper(io.opentelemetry.context.Context.root(), rootContext);
     }
     return RootContextHolder.ROOT;
   }
 
-  public static application.io.opentelemetry.context.Context wrapRootContext(
-      application.io.opentelemetry.context.Context rootContext) {
+  public static Context wrapRootContext(Context rootContext) {
     if (has15Api()) {
       return rootContext;
     }
@@ -99,14 +94,12 @@ public class AgentContextStorage
   // helper class for keeping track of root context when bridging to api earlier than 1.5
   private static class RootContextHolder {
     // unwrapped application root context
-    static final application.io.opentelemetry.context.Context APPLICATION_ROOT =
-        application.io.opentelemetry.context.Context.root();
+    static final Context APPLICATION_ROOT = Context.root();
     // wrapped application root context
-    static final application.io.opentelemetry.context.Context ROOT =
-        new AgentContextWrapper(Context.root(), APPLICATION_ROOT);
+    static final Context ROOT =
+        new AgentContextWrapper(io.opentelemetry.context.Context.root(), APPLICATION_ROOT);
 
-    static application.io.opentelemetry.context.Context getRootContext(
-        application.io.opentelemetry.context.Context rootContext) {
+    static Context getRootContext(Context rootContext) {
       // APPLICATION_ROOT is null when this method is called while the static initializer is
       // initializing the value of APPLICATION_ROOT field
       if (RootContextHolder.APPLICATION_ROOT == null) {
@@ -116,15 +109,11 @@ public class AgentContextStorage
     }
   }
 
-  public static Function<
-          ? super application.io.opentelemetry.context.ContextStorage,
-          ? extends application.io.opentelemetry.context.ContextStorage>
-      wrap() {
+  public static Function<? super ContextStorage, ? extends ContextStorage> wrap() {
     return contextStorage -> new AgentContextStorage(contextStorage);
   }
 
-  public static Context getAgentContext(
-      application.io.opentelemetry.context.Context applicationContext) {
+  public static io.opentelemetry.context.Context getAgentContext(Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
       return ((AgentContextWrapper) applicationContext).toAgentContext();
     }
@@ -132,41 +121,39 @@ public class AgentContextStorage
       logger.log(
           FINE, "unexpected context: " + applicationContext, new Exception("unexpected context"));
     }
-    return Context.root();
+    return io.opentelemetry.context.Context.root();
   }
 
-  public static application.io.opentelemetry.context.Context toApplicationContext(
-      Context agentContext) {
+  public static Context toApplicationContext(io.opentelemetry.context.Context agentContext) {
     return new AgentContextWrapper(agentContext);
   }
 
-  public static application.io.opentelemetry.context.Context newContextWrapper(
-      Context agentContext, application.io.opentelemetry.context.Context applicationContext) {
+  public static Context newContextWrapper(
+      io.opentelemetry.context.Context agentContext, Context applicationContext) {
     if (applicationContext instanceof AgentContextWrapper) {
       applicationContext = ((AgentContextWrapper) applicationContext).applicationContext;
     }
     return new AgentContextWrapper(agentContext, applicationContext);
   }
 
-  static final ContextKey<application.io.opentelemetry.context.Context> APPLICATION_CONTEXT =
-      ContextKey.named("otel-context");
+  static final io.opentelemetry.context.ContextKey<Context> APPLICATION_CONTEXT =
+      io.opentelemetry.context.ContextKey.named("otel-context");
 
   @Override
-  public application.io.opentelemetry.context.Scope attach(
-      application.io.opentelemetry.context.Context toAttach) {
-    Context currentAgentContext = Context.current();
-    application.io.opentelemetry.context.Context currentApplicationContext =
-        currentAgentContext.get(APPLICATION_CONTEXT);
+  public Scope attach(Context toAttach) {
+    io.opentelemetry.context.Context currentAgentContext =
+        io.opentelemetry.context.Context.current();
+    Context currentApplicationContext = currentAgentContext.get(APPLICATION_CONTEXT);
     if (currentApplicationContext == null) {
       currentApplicationContext = applicationRoot;
     }
 
-    Context newAgentContext;
+    io.opentelemetry.context.Context newAgentContext;
     if (toAttach instanceof AgentContextWrapper) {
       AgentContextWrapper wrapper = (AgentContextWrapper) toAttach;
       if (currentApplicationContext == wrapper.applicationContext
           && currentAgentContext == wrapper.agentContext) {
-        return application.io.opentelemetry.context.Scope.noop();
+        return Scope.noop();
       }
       newAgentContext = wrapper.toAgentContext();
     } else {
@@ -177,27 +164,28 @@ public class AgentContextStorage
   }
 
   @Override
-  public application.io.opentelemetry.context.Context current() {
-    Context agentContext = Context.current();
-    application.io.opentelemetry.context.Context applicationContext =
-        agentContext.get(APPLICATION_CONTEXT);
+  public Context current() {
+    io.opentelemetry.context.Context agentContext = io.opentelemetry.context.Context.current();
+    Context applicationContext = agentContext.get(APPLICATION_CONTEXT);
     if (applicationContext == null) {
       applicationContext = applicationRoot;
     }
-    if (applicationContext == applicationRoot && agentContext == Context.root()) {
+    if (applicationContext == applicationRoot
+        && agentContext == io.opentelemetry.context.Context.root()) {
       return root;
     }
     return new AgentContextWrapper(agentContext, applicationContext);
   }
 
   @Override
-  public application.io.opentelemetry.context.Context root() {
+  public Context root() {
     return root;
   }
 
   @Override
   public void close() throws Exception {
-    ContextStorage agentStorage = ContextStorage.get();
+    io.opentelemetry.context.ContextStorage agentStorage =
+        io.opentelemetry.context.ContextStorage.get();
     if (agentStorage instanceof AutoCloseable) {
       ((AutoCloseable) agentStorage).close();
     }

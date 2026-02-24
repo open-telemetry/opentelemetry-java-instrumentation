@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.logs;
 
-import io.opentelemetry.api.logs.Logger;
+import application.io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.ApplicationLogger;
 
 class ApplicationLogger150 extends ApplicationLogger {
 
-  private final Logger agentLogger;
+  private final io.opentelemetry.api.logs.Logger agentLogger;
 
-  ApplicationLogger150(Logger agentLogger) {
+  ApplicationLogger150(io.opentelemetry.api.logs.Logger agentLogger) {
     super(agentLogger);
     this.agentLogger = agentLogger;
   }
 
   @Override
-  public application.io.opentelemetry.api.logs.LogRecordBuilder logRecordBuilder() {
+  public LogRecordBuilder logRecordBuilder() {
     return new ApplicationLogRecordBuilder150(agentLogger.logRecordBuilder());
   }
 }

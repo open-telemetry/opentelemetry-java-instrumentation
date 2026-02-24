@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounter;
+import application.io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounter;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongUpDownCounter;
 
 final class ApplicationLongUpDownCounter140Incubator extends ApplicationLongUpDownCounter
-    implements application.io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounter {
+    implements ExtendedLongUpDownCounter {
 
-  private final LongUpDownCounter agentCounter;
+  private final io.opentelemetry.api.metrics.LongUpDownCounter agentCounter;
 
   ApplicationLongUpDownCounter140Incubator(LongUpDownCounter agentCounter) {
     super(agentCounter);
@@ -21,6 +21,7 @@ final class ApplicationLongUpDownCounter140Incubator extends ApplicationLongUpDo
 
   @Override
   public boolean isEnabled() {
-    return ((ExtendedLongUpDownCounter) agentCounter).isEnabled();
+    return ((io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounter) agentCounter)
+        .isEnabled();
   }
 }

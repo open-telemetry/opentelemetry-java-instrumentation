@@ -5,32 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder;
-import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
+import application.io.opentelemetry.api.common.AttributeKey;
+import application.io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder;
+import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongUpDownCounterBuilder;
 import java.util.List;
 
 public class ApplicationLongUpDownCounterBuilder137 extends ApplicationLongUpDownCounterBuilder
-    implements application.io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder {
+    implements ExtendedLongUpDownCounterBuilder {
 
-  private final LongUpDownCounterBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder;
 
-  protected ApplicationLongUpDownCounterBuilder137(LongUpDownCounterBuilder agentBuilder) {
+  protected ApplicationLongUpDownCounterBuilder137(
+      io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder ofDoubles() {
+  public DoubleUpDownCounterBuilder ofDoubles() {
     return new ApplicationDoubleUpDownCounterBuilder137(agentBuilder.ofDoubles());
   }
 
   @Override
-  public application.io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder
-      setAttributesAdvice(
-          List<application.io.opentelemetry.api.common.AttributeKey<?>> attributes) {
-    ((ExtendedLongUpDownCounterBuilder) agentBuilder)
+  public ExtendedLongUpDownCounterBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
+    ((io.opentelemetry.api.incubator.metrics.ExtendedLongUpDownCounterBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

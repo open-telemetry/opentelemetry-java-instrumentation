@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import application.io.opentelemetry.context.Context;
 import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -33,8 +34,7 @@ public class TestInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static boolean onExit(
-        @Advice.Argument(0) application.io.opentelemetry.context.Context context) {
+    public static boolean onExit(@Advice.Argument(0) Context context) {
       return InstrumentationUtil.shouldSuppressInstrumentation(
           AgentContextStorage.getAgentContext(context));
     }

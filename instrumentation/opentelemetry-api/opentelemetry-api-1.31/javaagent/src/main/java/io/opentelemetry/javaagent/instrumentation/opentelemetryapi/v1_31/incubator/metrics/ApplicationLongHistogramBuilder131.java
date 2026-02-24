@@ -5,35 +5,34 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.incubator.metrics;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
-import io.opentelemetry.api.metrics.LongHistogramBuilder;
+import application.io.opentelemetry.api.common.AttributeKey;
+import application.io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogramBuilder;
 import java.util.List;
 
 final class ApplicationLongHistogramBuilder131 extends ApplicationLongHistogramBuilder
-    implements application.io.opentelemetry.extension.incubator.metrics
-        .ExtendedLongHistogramBuilder {
+    implements ExtendedLongHistogramBuilder {
 
-  private final LongHistogramBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder;
 
-  ApplicationLongHistogramBuilder131(LongHistogramBuilder agentBuilder) {
+  ApplicationLongHistogramBuilder131(
+      io.opentelemetry.api.metrics.LongHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
   }
 
   @Override
-  public application.io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder
-      setExplicitBucketBoundariesAdvice(List<Long> bucketBoundaries) {
+  public ExtendedLongHistogramBuilder setExplicitBucketBoundariesAdvice(
+      List<Long> bucketBoundaries) {
     agentBuilder.setExplicitBucketBoundariesAdvice(bucketBoundaries);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.extension.incubator.metrics.ExtendedLongHistogramBuilder
-      setAttributesAdvice(
-          List<application.io.opentelemetry.api.common.AttributeKey<?>> attributes) {
-    ((ExtendedLongHistogramBuilder) agentBuilder).setAttributesAdvice(Bridging.toAgent(attributes));
+  public ExtendedLongHistogramBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
+    ((io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder) agentBuilder)
+        .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }
 }
