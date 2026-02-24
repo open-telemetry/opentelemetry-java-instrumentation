@@ -6,29 +6,25 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer.CacheKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SqlQuerySanitizerUtilCacheTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  @SuppressWarnings("deprecation") // using deprecated DB_SQL_TABLE
   @Test
   void testSqlSanitizerCaching() {
     String testQuery = "SELECT name FROM test WHERE id = 1";
@@ -67,27 +63,15 @@ class SqlQuerySanitizerUtilCacheTest {
     assertThat(cached)
         .isSameAs(SqlQuerySanitizerUtil.sanitize(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
 
-    // replace cached sanitization result to verify it is used by the attributes extractor
-    CacheKey cacheKey = CacheKey.create(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    @SuppressWarnings("unchecked")
-    Map<CacheKey, SqlQuery> sanitizedMap =
-        (Map<CacheKey, SqlQuery>)
-            (Map<?, ?>)
-                InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
-    sanitizedMap.put(
-        cacheKey, SqlQuery.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+    // verify that the attributes extractor produces correct values
+    AttributeKey<String> queryTextKey =
+        emitStableDatabaseSemconv()
+            ? AttributeKey.stringKey("db.query.text")
+            : AttributeKey.stringKey("db.statement");
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);
-      assertThat(builder.build().get(maybeStable(DB_SQL_TABLE))).isEqualTo("test2");
-    }
-
-    // clear cached value to see whether it gets recomputed correctly
-    sanitizedMap.clear();
-    {
-      AttributesBuilder builder = Attributes.builder();
-      attributesExtractor.onStart(builder, Context.root(), null);
-      assertThat(builder.build().get(maybeStable(DB_SQL_TABLE))).isEqualTo("test");
+      assertThat(builder.build().get(queryTextKey)).isEqualTo("SELECT name FROM test WHERE id = ?");
     }
   }
 }
