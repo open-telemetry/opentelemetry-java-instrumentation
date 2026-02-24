@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.javalin")
     module.set("javalin")
-    versions.set("[5.0.0,)")
+    versions.set("[5.0.0,7.0.0)")
     // 3.2.0 depends on org.meteogroup.jbrotli:jbrotli:0.5.0 that is not available in central
     skip("3.2.0")
     assertInverse.set(true)
@@ -21,4 +21,7 @@ dependencies {
   library("io.javalin:javalin:5.0.0")
 
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
+
+  // TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16261
+  latestDepTestLibrary("io.javalin:javalin:6.+") // documented limitation
 }

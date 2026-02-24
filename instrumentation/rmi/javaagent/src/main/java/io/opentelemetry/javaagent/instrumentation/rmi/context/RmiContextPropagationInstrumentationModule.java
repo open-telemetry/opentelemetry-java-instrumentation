@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.context;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,7 +16,6 @@ import io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientCo
 import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiServerContextInstrumentation;
 import java.rmi.Remote;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.utility.JavaModule;
@@ -34,7 +34,7 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
 
   @Override
   public Map<JavaModule, List<String>> jpmsModulesToOpen() {
-    return Collections.singletonMap(
+    return singletonMap(
         JavaModule.ofType(Remote.class), Arrays.asList("sun.rmi.server", "sun.rmi.transport"));
   }
 

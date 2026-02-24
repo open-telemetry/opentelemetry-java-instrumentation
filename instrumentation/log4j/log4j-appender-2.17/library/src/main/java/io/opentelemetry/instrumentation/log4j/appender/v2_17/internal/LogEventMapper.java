@@ -5,15 +5,21 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.CodeAttributes;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -142,29 +148,28 @@ public final class LogEventMapper<T> {
       if (source != null) {
         String fileName = source.getFileName();
         if (fileName != null) {
-          if (SemconvStability.isEmitStableCodeSemconv()) {
-            builder.setAttribute(CodeAttributes.CODE_FILE_PATH, fileName);
+          if (emitStableCodeSemconv()) {
+            builder.setAttribute(CODE_FILE_PATH, fileName);
           }
-          if (SemconvStability.isEmitOldCodeSemconv()) {
+          if (emitOldCodeSemconv()) {
             builder.setAttribute(CODE_FILEPATH, fileName);
           }
         }
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           builder.setAttribute(
-              CodeAttributes.CODE_FUNCTION_NAME,
-              source.getClassName() + "." + source.getMethodName());
+              CODE_FUNCTION_NAME, source.getClassName() + "." + source.getMethodName());
         }
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           builder.setAttribute(CODE_NAMESPACE, source.getClassName());
           builder.setAttribute(CODE_FUNCTION, source.getMethodName());
         }
 
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
-          if (SemconvStability.isEmitStableCodeSemconv()) {
-            builder.setAttribute(CodeAttributes.CODE_LINE_NUMBER, (long) lineNumber);
+          if (emitStableCodeSemconv()) {
+            builder.setAttribute(CODE_LINE_NUMBER, (long) lineNumber);
           }
-          if (SemconvStability.isEmitOldCodeSemconv()) {
+          if (emitOldCodeSemconv()) {
             builder.setAttribute(CODE_LINENO, (long) lineNumber);
           }
         }
@@ -251,11 +256,11 @@ public final class LogEventMapper<T> {
     if (builder instanceof ExtendedLogRecordBuilder) {
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     } else {
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      builder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
+      builder.setAttribute(EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();
       throwable.printStackTrace(new PrintWriter(writer));
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      builder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
     }
   }
 

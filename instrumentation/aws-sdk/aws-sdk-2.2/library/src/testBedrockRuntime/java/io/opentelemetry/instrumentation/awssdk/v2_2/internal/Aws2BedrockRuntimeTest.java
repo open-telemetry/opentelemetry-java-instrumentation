@@ -32,7 +32,6 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -225,7 +224,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -572,7 +571,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -984,7 +983,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1149,7 +1148,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1426,7 +1425,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1634,7 +1633,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1842,7 +1841,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1985,7 +1984,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2265,7 +2264,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2448,7 +2447,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(Collections.emptyMap())),
+                    .hasBody(Value.of(emptyMap())),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),

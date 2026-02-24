@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,7 +20,6 @@ import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -424,10 +424,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
                   .collect(joining("\n"));
           Attributes attributes =
               Attributes.of(
-                  HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                  Long.valueOf(errorCode),
-                  HTTP_ERROR_MSG,
-                  errorMsg);
+                  HTTP_RESPONSE_STATUS_CODE, Long.valueOf(errorCode), HTTP_ERROR_MSG, errorMsg);
           span.addEvent(HTTP_FAILURE_EVENT, attributes);
           return errorMsg;
         }

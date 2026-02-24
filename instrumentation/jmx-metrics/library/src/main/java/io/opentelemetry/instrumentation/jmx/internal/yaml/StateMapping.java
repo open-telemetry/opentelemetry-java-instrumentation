@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,8 +23,7 @@ import javax.annotation.Nullable;
  */
 public class StateMapping {
 
-  private static final StateMapping EMPTY =
-      new StateMapping(null, Collections.emptyMap(), Collections.emptySet());
+  private static final StateMapping EMPTY = new StateMapping(null, emptyMap(), emptySet());
 
   /** default state to map entries that are not part of {@link #stateMapping} */
   @Nullable private final String defaultStateKey;

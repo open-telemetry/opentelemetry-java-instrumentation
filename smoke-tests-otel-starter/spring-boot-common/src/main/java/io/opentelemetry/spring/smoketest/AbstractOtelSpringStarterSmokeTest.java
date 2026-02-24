@@ -5,6 +5,8 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -21,12 +23,13 @@ import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -38,7 +41,6 @@ import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
@@ -140,7 +142,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             otelResourceProperties,
             otelSpringProperties,
             DefaultConfigProperties.createFromMap(
-                Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
+                singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
         .containsEntry("a", "1")
         .containsEntry("b", "2")
@@ -191,7 +193,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                             satisfies(CLIENT_ADDRESS, s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
                                 AttributeKey.stringArrayKey("http.request.header.key"),
-                                Collections.singletonList("value")),
+                                singletonList("value")),
                             satisfies(SERVER_PORT, val -> val.isNotZero()),
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
@@ -242,11 +244,11 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       MapAssert<AttributeKey<?>, Object> attributesAssert =
           assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
 
-      if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
             CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
       }
-      if (SemconvStability.isEmitOldCodeSemconv()) {
+      if (emitOldCodeSemconv()) {
         attributesAssert
             .containsEntry(CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger")
             .containsEntry(CODE_FUNCTION, "logStarting");

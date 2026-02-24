@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper.messageBytesToString;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
       result.add(messageBytesToString(headers.getValue(i)));
       i = headers.findHeader(name, i + 1);
     }
-    return result != null ? result : Collections.emptyList();
+    return result != null ? result : emptyList();
   }
 
   @Override
