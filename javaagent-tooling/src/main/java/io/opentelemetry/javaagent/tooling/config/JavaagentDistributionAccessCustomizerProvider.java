@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Distri
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionPropertyModel;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
@@ -60,7 +61,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         });
   }
 
-  private static AgentDistributionConfig parseConfig(DistributionModel distribution) {
+  private static AgentDistributionConfig parseConfig(@Nullable DistributionModel distribution) {
     if (distribution != null) {
       DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
       if (javaagent != null) {
