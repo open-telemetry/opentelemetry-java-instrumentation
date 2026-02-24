@@ -23,5 +23,5 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
 
   // TODO see https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16261
-  latestDepTestLibrary("io.javalin:javalin:6.+") // documented limitation
+  latestDepTestLibrary("io.javalin:javalin:5.+") // documented limitation
 }
