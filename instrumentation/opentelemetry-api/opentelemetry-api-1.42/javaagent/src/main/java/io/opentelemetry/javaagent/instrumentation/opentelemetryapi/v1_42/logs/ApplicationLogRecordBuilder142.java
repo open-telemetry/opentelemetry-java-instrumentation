@@ -69,6 +69,8 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
         byte[] bytes = new byte[byteBuffer.remaining()];
         byteBuffer.get(bytes);
         break;
+      default:
+        break;
     }
 
     throw new IllegalStateException("Unhandled value type: " + value.getType());

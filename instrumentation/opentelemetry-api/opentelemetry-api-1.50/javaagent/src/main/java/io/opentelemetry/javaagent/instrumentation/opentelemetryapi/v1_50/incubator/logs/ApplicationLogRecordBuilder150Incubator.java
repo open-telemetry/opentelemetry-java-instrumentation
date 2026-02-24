@@ -190,8 +190,9 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
       case EXTENDED_ATTRIBUTES:
         return io.opentelemetry.api.incubator.common.ExtendedAttributeKey.extendedAttributesKey(
             applicationKey.getKey());
+      default:
+        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
+        return null;
     }
-    logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
-    return null;
   }
 }
