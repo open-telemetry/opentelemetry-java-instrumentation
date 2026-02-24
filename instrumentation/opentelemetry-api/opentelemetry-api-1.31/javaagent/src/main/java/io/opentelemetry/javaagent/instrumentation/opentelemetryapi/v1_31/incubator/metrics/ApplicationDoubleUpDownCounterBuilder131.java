@@ -5,28 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.incubator.metrics;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleUpDownCounterBuilder;
-import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
+import application.io.opentelemetry.api.common.AttributeKey;
+import application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleUpDownCounterBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleUpDownCounterBuilder;
 import java.util.List;
 
 final class ApplicationDoubleUpDownCounterBuilder131 extends ApplicationDoubleUpDownCounterBuilder
-    implements application.io.opentelemetry.extension.incubator.metrics
-        .ExtendedDoubleUpDownCounterBuilder {
+    implements ExtendedDoubleUpDownCounterBuilder {
 
-  private final DoubleUpDownCounterBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder;
 
-  ApplicationDoubleUpDownCounterBuilder131(DoubleUpDownCounterBuilder agentBuilder) {
+  ApplicationDoubleUpDownCounterBuilder131(
+      io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
   }
 
   @Override
-  public application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleUpDownCounterBuilder
-      setAttributesAdvice(
-          List<application.io.opentelemetry.api.common.AttributeKey<?>> attributes) {
-    ((ExtendedDoubleUpDownCounterBuilder) agentBuilder)
+  public ExtendedDoubleUpDownCounterBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
+    ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleUpDownCounterBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

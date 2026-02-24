@@ -5,43 +5,44 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import application.io.opentelemetry.api.metrics.DoubleCounter;
+import application.io.opentelemetry.api.metrics.DoubleCounterBuilder;
+import application.io.opentelemetry.api.metrics.ObservableDoubleCounter;
+import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.metrics.DoubleCounterBuilder;
 import java.util.function.Consumer;
 
-public class ApplicationDoubleCounterBuilder
-    implements application.io.opentelemetry.api.metrics.DoubleCounterBuilder {
+public class ApplicationDoubleCounterBuilder implements DoubleCounterBuilder {
 
-  private final DoubleCounterBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder;
 
-  protected ApplicationDoubleCounterBuilder(DoubleCounterBuilder agentBuilder) {
+  protected ApplicationDoubleCounterBuilder(
+      io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.DoubleCounterBuilder setDescription(
-      String description) {
+  public DoubleCounterBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.DoubleCounterBuilder setUnit(String unit) {
+  public DoubleCounterBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleCounter build() {
+  public DoubleCounter build() {
     return new ApplicationDoubleCounter(agentBuilder.build());
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.ObservableDoubleCounter buildWithCallback(
-      Consumer<application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement>
-          applicationCallback) {
+  public ObservableDoubleCounter buildWithCallback(
+      Consumer<ObservableDoubleMeasurement> applicationCallback) {
     return new ApplicationObservableDoubleCounter(
         agentBuilder.buildWithCallback(
             agentMeasurement ->
@@ -50,7 +51,7 @@ public class ApplicationDoubleCounterBuilder
   }
 
   // added in 1.15.0
-  public application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement buildObserver() {
+  public ObservableDoubleMeasurement buildObserver() {
     return new ApplicationObservableDoubleMeasurement(agentBuilder.buildObserver());
   }
 }

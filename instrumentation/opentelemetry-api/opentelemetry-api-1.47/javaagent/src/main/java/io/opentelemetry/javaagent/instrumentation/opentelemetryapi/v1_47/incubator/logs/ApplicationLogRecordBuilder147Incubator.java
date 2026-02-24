@@ -5,24 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs;
 
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
-import io.opentelemetry.api.logs.LogRecordBuilder;
+import application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs.ApplicationLogRecordBuilder142;
 
 public class ApplicationLogRecordBuilder147Incubator extends ApplicationLogRecordBuilder142
-    implements application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder {
+    implements ExtendedLogRecordBuilder {
 
-  private final LogRecordBuilder agentLogRecordBuilder;
+  private final io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder;
 
-  ApplicationLogRecordBuilder147Incubator(LogRecordBuilder agentLogRecordBuilder) {
+  ApplicationLogRecordBuilder147Incubator(
+      io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder) {
     super(agentLogRecordBuilder);
     this.agentLogRecordBuilder = agentLogRecordBuilder;
   }
 
   @Override
-  public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setEventName(
-      String eventName) {
-    ((ExtendedLogRecordBuilder) agentLogRecordBuilder).setEventName(eventName);
+  public ExtendedLogRecordBuilder setEventName(String eventName) {
+    ((io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder) agentLogRecordBuilder)
+        .setEventName(eventName);
     return this;
   }
 }

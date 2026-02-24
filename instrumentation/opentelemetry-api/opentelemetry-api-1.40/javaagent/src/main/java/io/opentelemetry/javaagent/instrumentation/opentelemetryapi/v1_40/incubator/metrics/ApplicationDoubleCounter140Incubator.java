@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounter;
-import io.opentelemetry.api.metrics.DoubleCounter;
+import application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleCounter;
 
 final class ApplicationDoubleCounter140Incubator extends ApplicationDoubleCounter
-    implements application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounter {
-  private final DoubleCounter agentCounter;
+    implements ExtendedDoubleCounter {
+  private final io.opentelemetry.api.metrics.DoubleCounter agentCounter;
 
-  ApplicationDoubleCounter140Incubator(DoubleCounter agentCounter) {
+  ApplicationDoubleCounter140Incubator(io.opentelemetry.api.metrics.DoubleCounter agentCounter) {
     super(agentCounter);
     this.agentCounter = agentCounter;
   }
 
   @Override
   public boolean isEnabled() {
-    return ((ExtendedDoubleCounter) agentCounter).isEnabled();
+    return ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounter) agentCounter)
+        .isEnabled();
   }
 }

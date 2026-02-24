@@ -5,48 +5,50 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
+import application.io.opentelemetry.api.metrics.LongUpDownCounter;
+import application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
+import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import java.util.function.Consumer;
 
-public class ApplicationLongUpDownCounterBuilder
-    implements application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder {
+public class ApplicationLongUpDownCounterBuilder implements LongUpDownCounterBuilder {
 
-  private final LongUpDownCounterBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder;
 
-  protected ApplicationLongUpDownCounterBuilder(LongUpDownCounterBuilder agentBuilder) {
+  protected ApplicationLongUpDownCounterBuilder(
+      io.opentelemetry.api.metrics.LongUpDownCounterBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder setDescription(
-      String description) {
+  public LongUpDownCounterBuilder setDescription(String description) {
     agentBuilder.setDescription(description);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder setUnit(String unit) {
+  public LongUpDownCounterBuilder setUnit(String unit) {
     agentBuilder.setUnit(unit);
     return this;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder ofDoubles() {
+  public DoubleUpDownCounterBuilder ofDoubles() {
     return new ApplicationDoubleUpDownCounterBuilder(agentBuilder.ofDoubles());
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongUpDownCounter build() {
+  public LongUpDownCounter build() {
     return new ApplicationLongUpDownCounter(agentBuilder.build());
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter buildWithCallback(
-      Consumer<application.io.opentelemetry.api.metrics.ObservableLongMeasurement>
-          applicationCallback) {
+  public ObservableLongUpDownCounter buildWithCallback(
+      Consumer<ObservableLongMeasurement> applicationCallback) {
     return new ApplicationObservableLongUpDownCounter(
         agentBuilder.buildWithCallback(
             agentMeasurement ->
@@ -55,7 +57,7 @@ public class ApplicationLongUpDownCounterBuilder
   }
 
   // added in 1.15.0
-  public application.io.opentelemetry.api.metrics.ObservableLongMeasurement buildObserver() {
+  public ObservableLongMeasurement buildObserver() {
     return new ApplicationObservableLongMeasurement(agentBuilder.buildObserver());
   }
 }

@@ -5,49 +5,50 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics;
 
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableMeasurement;
+import application.io.opentelemetry.api.metrics.BatchCallback;
+import application.io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ObservableMeasurementWrapper;
 
 public class ApplicationMeter115 extends ApplicationMeter {
 
-  private final Meter agentMeter;
+  private final io.opentelemetry.api.metrics.Meter agentMeter;
 
-  protected ApplicationMeter115(Meter agentMeter) {
+  protected ApplicationMeter115(io.opentelemetry.api.metrics.Meter agentMeter) {
     super(agentMeter);
     this.agentMeter = agentMeter;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.BatchCallback batchCallback(
+  public BatchCallback batchCallback(
       Runnable callback,
-      application.io.opentelemetry.api.metrics.ObservableMeasurement observableMeasurement,
-      application.io.opentelemetry.api.metrics.ObservableMeasurement... additionalMeasurements) {
+      ObservableMeasurement observableMeasurement,
+      ObservableMeasurement... additionalMeasurements) {
     return new ApplicationBatchCallback(
         agentMeter.batchCallback(
             callback, unwrap(observableMeasurement), unwrap(additionalMeasurements)));
   }
 
-  private static ObservableMeasurement unwrap(
-      application.io.opentelemetry.api.metrics.ObservableMeasurement observableMeasurement) {
+  private static io.opentelemetry.api.metrics.ObservableMeasurement unwrap(
+      ObservableMeasurement observableMeasurement) {
     if (observableMeasurement == null) {
       return null;
     }
     if (!(observableMeasurement instanceof ObservableMeasurementWrapper)) {
       // unwrap instruments that weren't created by us into a dummy instrument
       // sdk ignores instruments that it didn't create
-      return new ObservableMeasurement() {};
+      return new io.opentelemetry.api.metrics.ObservableMeasurement() {};
     }
     return ((ObservableMeasurementWrapper<?>) observableMeasurement).unwrap();
   }
 
-  private static ObservableMeasurement[] unwrap(
-      application.io.opentelemetry.api.metrics.ObservableMeasurement[] observableMeasurements) {
+  private static io.opentelemetry.api.metrics.ObservableMeasurement[] unwrap(
+      ObservableMeasurement[] observableMeasurements) {
     if (observableMeasurements == null) {
       return null;
     }
-    ObservableMeasurement[] result = new ObservableMeasurement[observableMeasurements.length];
+    io.opentelemetry.api.metrics.ObservableMeasurement[] result =
+        new io.opentelemetry.api.metrics.ObservableMeasurement[observableMeasurements.length];
     for (int i = 0; i < observableMeasurements.length; i++) {
       result[i] = unwrap(observableMeasurements[i]);
     }

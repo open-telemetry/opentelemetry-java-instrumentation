@@ -5,15 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context;
 
-import io.opentelemetry.context.ContextKey;
+import application.io.opentelemetry.context.Context;
+import application.io.opentelemetry.context.ContextKey;
 import java.lang.reflect.Field;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 final class ContextKeyBridge<APPLICATION, AGENT> {
 
-  private final application.io.opentelemetry.context.ContextKey<APPLICATION> applicationContextKey;
-  private final ContextKey<AGENT> agentContextKey;
+  private final ContextKey<APPLICATION> applicationContextKey;
+  private final io.opentelemetry.context.ContextKey<AGENT> agentContextKey;
   private final Function<APPLICATION, AGENT> toAgent;
   private final Function<AGENT, APPLICATION> toApplication;
 
@@ -73,22 +74,19 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
     Field applicationContextKeyField =
         applicationKeyHolderClass.getDeclaredField(applicationFieldName);
     applicationContextKeyField.setAccessible(true);
-    this.applicationContextKey =
-        (application.io.opentelemetry.context.ContextKey<APPLICATION>)
-            applicationContextKeyField.get(null);
+    this.applicationContextKey = (ContextKey<APPLICATION>) applicationContextKeyField.get(null);
 
     Field agentContextKeyField = agentKeyHolderClass.getDeclaredField(agentFieldName);
     agentContextKeyField.setAccessible(true);
-    this.agentContextKey = (ContextKey<AGENT>) agentContextKeyField.get(null);
+    this.agentContextKey =
+        (io.opentelemetry.context.ContextKey<AGENT>) agentContextKeyField.get(null);
 
     this.toApplication = toApplication;
     this.toAgent = toAgent;
   }
 
   @Nullable
-  <V> V get(
-      AgentContextWrapper contextWrapper,
-      application.io.opentelemetry.context.ContextKey<V> requestedKey) {
+  <V> V get(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey) {
     if (requestedKey == applicationContextKey) {
       AGENT agentValue = contextWrapper.agentContext.get(agentContextKey);
       if (agentValue == null) {
@@ -103,10 +101,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
   }
 
   @Nullable
-  <V> application.io.opentelemetry.context.Context with(
-      AgentContextWrapper contextWrapper,
-      application.io.opentelemetry.context.ContextKey<V> requestedKey,
-      V value) {
+  <V> Context with(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey, V value) {
     if (requestedKey == applicationContextKey) {
       @SuppressWarnings("unchecked") // fine
       APPLICATION applicationValue = (APPLICATION) value;

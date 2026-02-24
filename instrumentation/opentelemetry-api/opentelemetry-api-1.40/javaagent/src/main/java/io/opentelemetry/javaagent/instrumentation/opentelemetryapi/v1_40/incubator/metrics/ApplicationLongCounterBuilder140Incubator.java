@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
+import application.io.opentelemetry.api.metrics.DoubleCounterBuilder;
+import application.io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_37.incubator.metrics.ApplicationLongCounterBuilder137;
 
 final class ApplicationLongCounterBuilder140Incubator extends ApplicationLongCounterBuilder137 {
-  private final LongCounterBuilder agentBuilder;
+  private final io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder;
 
   ApplicationLongCounterBuilder140Incubator(LongCounterBuilder agentBuilder) {
     super(agentBuilder);
@@ -17,12 +19,12 @@ final class ApplicationLongCounterBuilder140Incubator extends ApplicationLongCou
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleCounterBuilder ofDoubles() {
+  public DoubleCounterBuilder ofDoubles() {
     return new ApplicationDoubleCounterBuilder140Incubator(agentBuilder.ofDoubles());
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongCounter build() {
+  public LongCounter build() {
     return new ApplicationLongCounter140Incubator(agentBuilder.build());
   }
 }

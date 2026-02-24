@@ -5,29 +5,27 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import io.opentelemetry.api.trace.TraceFlags;
+import application.io.opentelemetry.api.trace.TraceFlags;
 
-final class BridgedTraceFlags
-    implements application.io.opentelemetry.api.trace.TraceFlags, TraceFlags {
+final class BridgedTraceFlags implements TraceFlags, io.opentelemetry.api.trace.TraceFlags {
 
   private static final BridgedTraceFlags[] INSTANCES = buildInstances();
 
-  static BridgedTraceFlags toAgent(
-      application.io.opentelemetry.api.trace.TraceFlags applicationTraceFlags) {
+  static BridgedTraceFlags toAgent(TraceFlags applicationTraceFlags) {
     if (applicationTraceFlags instanceof BridgedTraceFlags) {
       return (BridgedTraceFlags) applicationTraceFlags;
     }
     return INSTANCES[applicationTraceFlags.asByte() & 255];
   }
 
-  static BridgedTraceFlags fromAgent(TraceFlags agentTraceFlags) {
+  static BridgedTraceFlags fromAgent(io.opentelemetry.api.trace.TraceFlags agentTraceFlags) {
     if (agentTraceFlags instanceof BridgedTraceFlags) {
       return (BridgedTraceFlags) agentTraceFlags;
     }
     return INSTANCES[agentTraceFlags.asByte() & 255];
   }
 
-  private final application.io.opentelemetry.api.trace.TraceFlags delegate;
+  private final TraceFlags delegate;
 
   @Override
   public boolean isSampled() {
@@ -52,14 +50,12 @@ final class BridgedTraceFlags
   private static BridgedTraceFlags[] buildInstances() {
     BridgedTraceFlags[] instances = new BridgedTraceFlags[256];
     for (int i = 0; i < 256; i++) {
-      instances[i] =
-          new BridgedTraceFlags(
-              application.io.opentelemetry.api.trace.TraceFlags.fromByte((byte) i));
+      instances[i] = new BridgedTraceFlags(TraceFlags.fromByte((byte) i));
     }
     return instances;
   }
 
-  private BridgedTraceFlags(application.io.opentelemetry.api.trace.TraceFlags delegate) {
+  private BridgedTraceFlags(TraceFlags delegate) {
     this.delegate = delegate;
   }
 }

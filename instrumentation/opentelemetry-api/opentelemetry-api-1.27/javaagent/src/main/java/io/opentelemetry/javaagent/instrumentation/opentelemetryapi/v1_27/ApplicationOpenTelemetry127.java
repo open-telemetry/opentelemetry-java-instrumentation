@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
+import application.io.opentelemetry.api.OpenTelemetry;
+import application.io.opentelemetry.api.logs.LoggerProvider;
+import application.io.opentelemetry.api.metrics.MeterProvider;
+import application.io.opentelemetry.api.trace.TracerProvider;
+import application.io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation.ApplicationContextPropagators;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationMeterFactory;
@@ -19,21 +22,21 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.trace.A
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14;
 import java.lang.reflect.InvocationTargetException;
 
-public class ApplicationOpenTelemetry127 implements application.io.opentelemetry.api.OpenTelemetry {
+public class ApplicationOpenTelemetry127 implements OpenTelemetry {
 
   // Accessed with reflection
   @SuppressWarnings("unused")
-  public static final application.io.opentelemetry.api.OpenTelemetry INSTANCE =
-      new ApplicationOpenTelemetry127();
+  public static final OpenTelemetry INSTANCE = new ApplicationOpenTelemetry127();
 
-  private final application.io.opentelemetry.api.trace.TracerProvider applicationTracerProvider;
-  private final application.io.opentelemetry.context.propagation.ContextPropagators
-      applicationContextPropagators;
-  private final application.io.opentelemetry.api.metrics.MeterProvider applicationMeterProvider;
-  private final application.io.opentelemetry.api.logs.LoggerProvider applicationLoggerProvider;
+  private final TracerProvider applicationTracerProvider;
+  private final ContextPropagators applicationContextPropagators;
+  private final MeterProvider applicationMeterProvider;
+  private final LoggerProvider applicationLoggerProvider;
 
+  @SuppressWarnings("UnnecessarilyFullyQualified")
   protected ApplicationOpenTelemetry127() {
-    OpenTelemetry agentOpenTelemetry = GlobalOpenTelemetry.get();
+    io.opentelemetry.api.OpenTelemetry agentOpenTelemetry =
+        io.opentelemetry.api.GlobalOpenTelemetry.get();
     applicationTracerProvider =
         new ApplicationTracerProvider14(getTracerFactory(), agentOpenTelemetry.getTracerProvider());
     applicationContextPropagators =
@@ -45,22 +48,22 @@ public class ApplicationOpenTelemetry127 implements application.io.opentelemetry
   }
 
   @Override
-  public application.io.opentelemetry.api.trace.TracerProvider getTracerProvider() {
+  public TracerProvider getTracerProvider() {
     return applicationTracerProvider;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.MeterProvider getMeterProvider() {
+  public MeterProvider getMeterProvider() {
     return applicationMeterProvider;
   }
 
   @Override
-  public application.io.opentelemetry.api.logs.LoggerProvider getLogsBridge() {
+  public LoggerProvider getLogsBridge() {
     return applicationLoggerProvider;
   }
 
   @Override
-  public application.io.opentelemetry.context.propagation.ContextPropagators getPropagators() {
+  public ContextPropagators getPropagators() {
     return applicationContextPropagators;
   }
 

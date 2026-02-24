@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import application.io.opentelemetry.api.common.Attributes;
+import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
 final class ApplicationObservableLongMeasurement
-    implements application.io.opentelemetry.api.metrics.ObservableLongMeasurement,
-        ObservableMeasurementWrapper<ObservableLongMeasurement> {
+    implements ObservableLongMeasurement,
+        ObservableMeasurementWrapper<io.opentelemetry.api.metrics.ObservableLongMeasurement> {
 
-  private final ObservableLongMeasurement agentMeasurement;
+  private final io.opentelemetry.api.metrics.ObservableLongMeasurement agentMeasurement;
 
-  ApplicationObservableLongMeasurement(ObservableLongMeasurement agentMeasurement) {
+  ApplicationObservableLongMeasurement(
+      io.opentelemetry.api.metrics.ObservableLongMeasurement agentMeasurement) {
     this.agentMeasurement = agentMeasurement;
   }
 
@@ -24,12 +26,12 @@ final class ApplicationObservableLongMeasurement
   }
 
   @Override
-  public void record(long v, application.io.opentelemetry.api.common.Attributes attributes) {
+  public void record(long v, Attributes attributes) {
     agentMeasurement.record(v, Bridging.toAgent(attributes));
   }
 
   @Override
-  public ObservableLongMeasurement unwrap() {
+  public io.opentelemetry.api.metrics.ObservableLongMeasurement unwrap() {
     return agentMeasurement;
   }
 }

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram;
+import application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogram;
 
 final class ApplicationDoubleHistogram140Incubator extends ApplicationDoubleHistogram
-    implements application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram {
+    implements ExtendedDoubleHistogram {
 
-  private final DoubleHistogram agentHistogram;
+  private final io.opentelemetry.api.metrics.DoubleHistogram agentHistogram;
 
   ApplicationDoubleHistogram140Incubator(DoubleHistogram agentHistogram) {
     super(agentHistogram);
@@ -21,6 +21,7 @@ final class ApplicationDoubleHistogram140Incubator extends ApplicationDoubleHist
 
   @Override
   public boolean isEnabled() {
-    return ((ExtendedDoubleHistogram) agentHistogram).isEnabled();
+    return ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram) agentHistogram)
+        .isEnabled();
   }
 }

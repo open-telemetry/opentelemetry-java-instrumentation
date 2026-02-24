@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config;
 
-import io.opentelemetry.api.incubator.config.ConfigProvider;
+import application.io.opentelemetry.api.incubator.config.ConfigProvider;
+import application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import javax.annotation.Nullable;
 
-public final class ApplicationConfigProvider156Incubator
-    implements application.io.opentelemetry.api.incubator.config.ConfigProvider {
+public final class ApplicationConfigProvider156Incubator implements ConfigProvider {
 
-  private final application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties
-      declarativeConfigProperties;
+  private final DeclarativeConfigProperties declarativeConfigProperties;
 
-  public ApplicationConfigProvider156Incubator(ConfigProvider configProvider) {
+  public ApplicationConfigProvider156Incubator(
+      io.opentelemetry.api.incubator.config.ConfigProvider configProvider) {
     this.declarativeConfigProperties =
         new ApplicationDeclarativeConfigProperties156Incubator(
             configProvider.getInstrumentationConfig());
@@ -22,8 +22,7 @@ public final class ApplicationConfigProvider156Incubator
 
   @Nullable
   @Override
-  public application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties
-      getInstrumentationConfig() {
+  public DeclarativeConfigProperties getInstrumentationConfig() {
     return declarativeConfigProperties;
   }
 }

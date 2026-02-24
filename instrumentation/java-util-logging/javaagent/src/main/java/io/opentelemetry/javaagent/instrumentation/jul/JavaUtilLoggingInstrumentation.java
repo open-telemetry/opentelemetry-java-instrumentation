@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import application.java.util.logging.Logger;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -44,8 +45,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth methodEnter(
-        @Advice.This application.java.util.logging.Logger logger,
-        @Advice.Argument(0) LogRecord logRecord) {
+        @Advice.This Logger logger, @Advice.Argument(0) LogRecord logRecord) {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);

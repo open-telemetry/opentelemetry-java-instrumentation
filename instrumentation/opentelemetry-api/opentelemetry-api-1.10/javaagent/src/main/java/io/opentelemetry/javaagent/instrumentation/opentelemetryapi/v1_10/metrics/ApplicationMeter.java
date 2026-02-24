@@ -5,35 +5,37 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import io.opentelemetry.api.metrics.Meter;
+import application.io.opentelemetry.api.metrics.DoubleGaugeBuilder;
+import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import application.io.opentelemetry.api.metrics.LongCounterBuilder;
+import application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
+import application.io.opentelemetry.api.metrics.Meter;
 
-public class ApplicationMeter implements application.io.opentelemetry.api.metrics.Meter {
+public class ApplicationMeter implements Meter {
 
-  private final Meter agentMeter;
+  private final io.opentelemetry.api.metrics.Meter agentMeter;
 
-  protected ApplicationMeter(Meter agentMeter) {
+  protected ApplicationMeter(io.opentelemetry.api.metrics.Meter agentMeter) {
     this.agentMeter = agentMeter;
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongCounterBuilder counterBuilder(String name) {
+  public LongCounterBuilder counterBuilder(String name) {
     return new ApplicationLongCounterBuilder(agentMeter.counterBuilder(name));
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.LongUpDownCounterBuilder upDownCounterBuilder(
-      String name) {
+  public LongUpDownCounterBuilder upDownCounterBuilder(String name) {
     return new ApplicationLongUpDownCounterBuilder(agentMeter.upDownCounterBuilder(name));
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleHistogramBuilder histogramBuilder(
-      String name) {
+  public DoubleHistogramBuilder histogramBuilder(String name) {
     return new ApplicationDoubleHistogramBuilder(agentMeter.histogramBuilder(name));
   }
 
   @Override
-  public application.io.opentelemetry.api.metrics.DoubleGaugeBuilder gaugeBuilder(String name) {
+  public DoubleGaugeBuilder gaugeBuilder(String name) {
     return new ApplicationDoubleGaugeBuilder(agentMeter.gaugeBuilder(name));
   }
 }

@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import application.io.opentelemetry.api.trace.Span;
+import application.io.opentelemetry.context.Context;
+import application.io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -46,20 +46,21 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static application.io.opentelemetry.context.Context onEnter(
-        @Advice.This
-            application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey,
-        @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
-        @Advice.Argument(1) application.io.opentelemetry.api.trace.Span applicationSpan) {
+    public static Context onEnter(
+        @Advice.This SpanKey applicationSpanKey,
+        @Advice.Argument(0) Context applicationContext,
+        @Advice.Argument(1) Span applicationSpan) {
 
-      SpanKey agentSpanKey = SpanKeyBridging.toAgentOrNull(applicationSpanKey);
+      io.opentelemetry.instrumentation.api.internal.SpanKey agentSpanKey =
+          SpanKeyBridging.toAgentOrNull(applicationSpanKey);
       if (agentSpanKey == null) {
         return null;
       }
 
-      Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
+      io.opentelemetry.context.Context agentContext =
+          AgentContextStorage.getAgentContext(applicationContext);
 
-      Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
+      io.opentelemetry.api.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
       if (agentSpan == null) {
         // if application span can not be bridged to agent span, this could happen when it is not
         // created through bridged GlobalOpenTelemetry, we'll let the original method run and
@@ -67,17 +68,17 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      Context newAgentContext = agentSpanKey.storeInContext(agentContext, agentSpan);
+      io.opentelemetry.context.Context newAgentContext =
+          agentSpanKey.storeInContext(agentContext, agentSpan);
 
       return AgentContextStorage.toApplicationContext(newAgentContext);
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static application.io.opentelemetry.context.Context onExit(
-        @Advice.Return application.io.opentelemetry.context.Context originalResult,
-        @Advice.Enter @Nullable
-            application.io.opentelemetry.context.Context newApplicationContext) {
+    public static Context onExit(
+        @Advice.Return Context originalResult,
+        @Advice.Enter @Nullable Context newApplicationContext) {
       return newApplicationContext != null ? newApplicationContext : originalResult;
     }
   }
@@ -87,19 +88,19 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static application.io.opentelemetry.api.trace.Span onEnter(
-        @Advice.This
-            application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey,
-        @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext) {
+    public static Span onEnter(
+        @Advice.This SpanKey applicationSpanKey, @Advice.Argument(0) Context applicationContext) {
 
-      SpanKey agentSpanKey = SpanKeyBridging.toAgentOrNull(applicationSpanKey);
+      io.opentelemetry.instrumentation.api.internal.SpanKey agentSpanKey =
+          SpanKeyBridging.toAgentOrNull(applicationSpanKey);
       if (agentSpanKey == null) {
         return null;
       }
 
-      Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
+      io.opentelemetry.context.Context agentContext =
+          AgentContextStorage.getAgentContext(applicationContext);
 
-      Span agentSpan = agentSpanKey.fromContextOrNull(agentContext);
+      io.opentelemetry.api.trace.Span agentSpan = agentSpanKey.fromContextOrNull(agentContext);
       if (agentSpan == null) {
         // Bridged agent span was not found. Run the original method, there could be an unbridged
         // span stored in the application context.
@@ -111,9 +112,8 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static application.io.opentelemetry.api.trace.Span onExit(
-        @Advice.Return application.io.opentelemetry.api.trace.Span originalResult,
-        @Advice.Enter @Nullable application.io.opentelemetry.api.trace.Span applicationSpan) {
+    public static Span onExit(
+        @Advice.Return Span originalResult, @Advice.Enter @Nullable Span applicationSpan) {
       return applicationSpan != null ? applicationSpan : originalResult;
     }
   }
