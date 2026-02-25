@@ -9,6 +9,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,7 +19,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,13 +84,6 @@ class RpcAttributesExtractorTest {
   // Stable semconv keys
   private static final AttributeKey<String> RPC_SYSTEM_NAME =
       AttributeKey.stringKey("rpc.system.name");
-
-  // Old semconv keys (from RpcIncubatingAttributes)
-  private static final AttributeKey<String> RPC_SYSTEM = RpcIncubatingAttributes.RPC_SYSTEM;
-
-  private static final AttributeKey<String> RPC_SERVICE = RpcIncubatingAttributes.RPC_SERVICE;
-
-  private static final AttributeKey<String> RPC_METHOD = RpcIncubatingAttributes.RPC_METHOD;
 
   private static void testExtractor(AttributesExtractor<Map<String, String>, Void> extractor) {
     Map<String, String> request = new HashMap<>();
