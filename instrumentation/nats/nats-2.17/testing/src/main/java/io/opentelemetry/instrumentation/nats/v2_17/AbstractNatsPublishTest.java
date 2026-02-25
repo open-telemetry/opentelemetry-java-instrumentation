@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
@@ -101,6 +103,17 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
     assertTraceparentHeader(subscription);
   }
 
+  @Test
+  void testPublishMessageTemporarySubject() throws InterruptedException {
+    NatsMessage message = NatsMessage.builder().subject("_R_.qQzIWn.0JuCnu").data("x").build();
+
+    // when
+    testing().runWithSpan("parent", () -> connection.publish(message));
+
+    // then
+    assertTemporaryPublishSpan();
+  }
+
   private void assertPublishSpan() {
     testing()
         .waitAndAssertTraces(
@@ -113,5 +126,23 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("publish", "sub", clientId))));
+  }
+
+  private void assertTemporaryPublishSpan() {
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("(temporary) publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes(
+                                    "publish",
+                                    "(temporary)",
+                                    clientId,
+                                    equalTo(MESSAGING_DESTINATION_TEMPORARY, true)))));
   }
 }
