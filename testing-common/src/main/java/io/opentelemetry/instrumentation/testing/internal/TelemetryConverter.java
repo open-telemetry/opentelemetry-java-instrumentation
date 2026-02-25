@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.Attributes;
@@ -74,9 +75,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -305,7 +304,7 @@ public class TelemetryConverter {
         TestLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
             .setSpanContext(
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
@@ -331,7 +330,7 @@ public class TelemetryConverter {
         TestExtendedLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
             .setSpanContext(
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
@@ -482,7 +481,7 @@ public class TelemetryConverter {
   private static List<ValueAtQuantile> getValues(SummaryDataPoint point) {
     return point.getQuantileValuesList().stream()
         .map(v -> ImmutableValueAtQuantile.create(v.getQuantile(), v.getValue()))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static AggregationTemporality getTemporality(

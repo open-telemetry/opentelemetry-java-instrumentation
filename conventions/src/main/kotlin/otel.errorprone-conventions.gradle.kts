@@ -58,8 +58,8 @@ tasks {
         // Suggests using Guava types for fields but we don't use Guava
         disable("ImmutableMemberCollection")
 
-        // Fully qualified names may be necessary when deprecating a class to avoid
-        // deprecation warning.
+        // Replaced by custom OtelUnnecessarilyFullyQualified check which handles
+        // application.* and other repo-specific conventions
         disable("UnnecessarilyFullyQualified")
 
         // TODO (trask) use animal sniffer

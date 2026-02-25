@@ -6,6 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
@@ -14,9 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -71,10 +72,9 @@ class SpringTemplateTest extends AbstractJmsTest {
     config.setSecurityEnabled(false);
     config.setPersistenceEnabled(false);
     config.setQueueConfigurations(
-        Collections.singletonList(
-            new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
+        singletonList(new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
     config.setAcceptorConfigurations(
-        Collections.singleton(new TransportConfiguration(InVMAcceptorFactory.class.getName())));
+        singleton(new TransportConfiguration(InVMAcceptorFactory.class.getName())));
 
     server = HornetQServers.newHornetQServer(config);
     server.start();
@@ -99,7 +99,7 @@ class SpringTemplateTest extends AbstractJmsTest {
     session.run();
 
     template = new JmsTemplate(connectionFactory);
-    template.setReceiveTimeout(TimeUnit.SECONDS.toMillis(10));
+    template.setReceiveTimeout(SECONDS.toMillis(10));
   }
 
   @AfterAll
@@ -154,7 +154,7 @@ class SpringTemplateTest extends AbstractJmsTest {
             template.send(
                 msg.getJMSReplyTo(),
                 (session) ->
-                    Objects.requireNonNull(template.getMessageConverter())
+                    requireNonNull(template.getMessageConverter())
                         .toMessage("responded!", session));
           } catch (Exception e) {
             throw new RuntimeException(e);
@@ -167,8 +167,7 @@ class SpringTemplateTest extends AbstractJmsTest {
             template.sendAndReceive(
                 queue,
                 session ->
-                    Objects.requireNonNull(template.getMessageConverter())
-                        .toMessage(messageText, session));
+                    requireNonNull(template.getMessageConverter()).toMessage(messageText, session));
 
     assertThat(receivedMessage).isNotNull();
     assertThat(receivedMessage.getText()).isEqualTo("responded!");

@@ -7,6 +7,10 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -21,13 +25,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
@@ -66,7 +68,7 @@ public abstract class AbstractNetty41ClientTest
     CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
     channel.writeAndFlush(defaultFullHttpRequest).get();
-    return result.get(20, TimeUnit.SECONDS);
+    return result.get(20, SECONDS);
   }
 
   @Override
@@ -93,7 +95,7 @@ public abstract class AbstractNetty41ClientTest
     CompletableFuture<Integer> result = new CompletableFuture<>();
     result.whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
     if (uri.toString().contains("/read-timeout")) {
-      ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+      ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS));
     }
     ch.pipeline().addLast(new ClientHandler(result));
     ch.writeAndFlush(defaultFullHttpRequest);
@@ -125,7 +127,7 @@ public abstract class AbstractNetty41ClientTest
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
     if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
-      return Collections.emptySet();
+      return emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);
@@ -159,16 +161,14 @@ public abstract class AbstractNetty41ClientTest
   void closeChannel() throws ExecutionException, InterruptedException {
     String method = "GET";
     URI uri = resolveAddress("/read-timeout");
-    DefaultFullHttpRequest request = buildRequest(method, uri, Collections.emptyMap());
+    DefaultFullHttpRequest request = buildRequest(method, uri, emptyMap());
 
     Channel channel =
         clientExtension().getBootstrap(uri).connect(uri.getHost(), getPort(uri)).sync().channel();
     configureChannel(channel);
     CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
-    channel
-        .pipeline()
-        .addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+    channel.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS));
     channel.writeAndFlush(request).get();
     Thread.sleep(1_000);
     channel.close();

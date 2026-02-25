@@ -7,11 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -26,7 +28,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,6 @@ import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
@@ -125,13 +125,13 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     if (configString == null) {
       return new HashSet<>(DEFAULT_ANNOTATIONS);
     } else if (configString.isEmpty()) {
-      return Collections.emptySet();
+      return emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
       logger.log(
           WARNING,
           "Invalid trace annotations config \"{0}\". Must match 'package.Annotation$Name;*'.",
           configString);
-      return Collections.emptySet();
+      return emptySet();
     } else {
       Set<String> annotations = new HashSet<>();
       String[] annotationClasses = configString.split(";", -1);
@@ -157,8 +157,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
                 GlobalOpenTelemetry.get(), "external_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> matcher =
-          isDeclaredBy(ElementMatchers.named(className));
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {

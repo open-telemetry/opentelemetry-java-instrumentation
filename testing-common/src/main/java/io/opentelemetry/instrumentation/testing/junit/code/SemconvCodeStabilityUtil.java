@@ -5,14 +5,20 @@
 
 package io.opentelemetry.instrumentation.testing.junit.code;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
-import io.opentelemetry.semconv.CodeAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
@@ -33,14 +39,13 @@ public class SemconvCodeStabilityUtil {
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   public static List<AttributeAssertion> codeFileAndLineAssertions(String filePath) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(equalTo(CodeAttributes.CODE_FILE_PATH, filePath));
-      assertions.add(satisfies(CodeAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive));
+    if (emitStableCodeSemconv()) {
+      assertions.add(equalTo(CODE_FILE_PATH, filePath));
+      assertions.add(satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive));
     }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FILEPATH, filePath));
-      assertions.add(
-          satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive));
+    if (emitOldCodeSemconv()) {
+      assertions.add(equalTo(CODE_FILEPATH, filePath));
+      assertions.add(satisfies(CODE_LINENO, AbstractLongAssert::isPositive));
     }
 
     return assertions;
@@ -84,22 +89,22 @@ public class SemconvCodeStabilityUtil {
       // CHECKSTYLE:ON
       ) {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(satisfies(CodeAttributes.CODE_FUNCTION_NAME, functionNameAssert));
+    if (emitStableCodeSemconv()) {
+      assertions.add(satisfies(CODE_FUNCTION_NAME, functionNameAssert));
     }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
-      assertions.add(satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, namespaceAssert));
+    if (emitOldCodeSemconv()) {
+      assertions.add(equalTo(CODE_FUNCTION, methodName));
+      assertions.add(satisfies(CODE_NAMESPACE, namespaceAssert));
     }
     return assertions;
   }
 
   public static int codeAttributesLogCount() {
     int count = 0;
-    if (SemconvStability.isEmitOldCodeSemconv()) {
+    if (emitOldCodeSemconv()) {
       count += 4;
     }
-    if (SemconvStability.isEmitStableCodeSemconv()) {
+    if (emitStableCodeSemconv()) {
       count += 3;
     }
     return count;

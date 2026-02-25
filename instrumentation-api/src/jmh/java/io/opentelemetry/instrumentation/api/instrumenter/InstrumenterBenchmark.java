@@ -5,15 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -28,7 +30,7 @@ import org.openjdk.jmh.annotations.Warmup;
 @Fork(3)
 @Warmup(iterations = 10, time = 1)
 @Measurement(iterations = 5, time = 1)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@OutputTimeUnit(MICROSECONDS)
 @BenchmarkMode(Mode.AverageTime)
 @State(Scope.Thread)
 public class InstrumenterBenchmark {
@@ -75,9 +77,9 @@ public class InstrumenterBenchmark {
     @Override
     public List<String> getHttpRequestHeader(Object unused, String name) {
       if (name.equalsIgnoreCase("user-agent")) {
-        return Collections.singletonList("OpenTelemetryBot");
+        return singletonList("OpenTelemetryBot");
       }
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override
@@ -88,7 +90,7 @@ public class InstrumenterBenchmark {
 
     @Override
     public List<String> getHttpResponseHeader(Object unused, Void unused2, String name) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override

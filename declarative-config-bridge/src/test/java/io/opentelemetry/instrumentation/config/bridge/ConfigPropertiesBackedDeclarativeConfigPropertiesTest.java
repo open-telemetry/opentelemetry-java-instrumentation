@@ -77,15 +77,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testAgentPrefix() {
-    DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.indy", "true");
-
-    assertThat(config.getStructured("java").getStructured("agent").getBoolean("indy/development"))
-        .isNotNull()
-        .isTrue();
-  }
-
-  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 
@@ -262,61 +253,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("kafka")
                 .getStructured("producer_propagation")
                 .getBoolean("enabled"))
-        .isNull();
-  }
-
-  @Test
-  void testAgentInstrumentationMode_getString_booleanTrue() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "true");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
-        .isEqualTo("default");
-  }
-
-  @Test
-  void testAgentInstrumentationMode_getString_booleanFalse() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "false");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
-        .isEqualTo("none");
-  }
-
-  @Test
-  void testSpringStarterInstrumentationMode_getString_booleanTrue() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "true");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("spring_starter")
-                .getString("instrumentation_mode"))
-        .isEqualTo("default");
-  }
-
-  @Test
-  void testSpringStarterInstrumentationMode_getString_booleanFalse() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "false");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("spring_starter")
-                .getString("instrumentation_mode"))
-        .isEqualTo("none");
-  }
-
-  @Test
-  void testAgentInstrumentationMode_notSet() {
-    DeclarativeConfigProperties config = createConfig("some.other.property", "value");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
         .isNull();
   }
 

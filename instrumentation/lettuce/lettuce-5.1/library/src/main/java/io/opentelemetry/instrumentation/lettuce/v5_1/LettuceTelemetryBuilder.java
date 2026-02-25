@@ -9,7 +9,13 @@ import static io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry.INS
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -36,16 +42,6 @@ public final class LettuceTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    return setQuerySanitizationEnabled(statementSanitizationEnabled);
-  }
-
-  /**
    * Sets whether the {@code redis.encode.start} and {@code redis.encode.end} span events should be
    * emitted by the constructed {@link LettuceTelemetry}. Disabled by default.
    */
@@ -60,10 +56,26 @@ public final class LettuceTelemetryBuilder {
    * LettuceTelemetryBuilder}.
    */
   public LettuceTelemetry build() {
-    return new LettuceTelemetry(
-        openTelemetry,
-        querySanitizationEnabled,
-        encodingEventsEnabled,
-        DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
+    LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+
+    Instrumenter<LettuceRequest, LettuceResponse> instrumenter =
+        Instrumenter.<LettuceRequest, LettuceResponse>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get())
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, request, response, error) -> {
+                  if (response != null && response.getErrorMessage() != null) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.<LettuceRequest, LettuceResponse>getDefault()
+                        .extract(spanStatusBuilder, request, response, error);
+                  }
+                })
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+
+    return new LettuceTelemetry(instrumenter, querySanitizationEnabled, encodingEventsEnabled);
   }
 }

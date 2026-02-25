@@ -1,6 +1,6 @@
 [tools]
 lychee = "0.23.0"
-markdownlint-cli2 = "0.20.0"
+markdownlint-cli2 = "0.21.0"
 
 [settings]
 # Only install tools explicitly defined in the [tools] section above
@@ -12,11 +12,7 @@ windows_executable_extensions = ["sh"]
 windows_default_file_shell_args = "bash"
 use_file_shell_for_executable_tasks = true
 
+# Pick the tasks you need from flint (https://github.com/grafana/flint)
 [tasks."lint:links"]
-file = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java-contrib/refs/heads/main/.mise/tasks/lint/links.sh"
-
-[tasks."lint:local-links"]
-file = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java-contrib/refs/heads/main/.mise/tasks/lint/local-links.sh"
-
-[tasks."lint:links-in-modified-files"]
-file = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java-contrib/refs/heads/main/.mise/tasks/lint/links-in-modified-files.sh"
+description = "Check for broken links in changed files + all local links"
+file = "https://raw.githubusercontent.com/grafana/flint/8822bdc543f28f2c7dd1f697af4df6d89768c507/tasks/lint/links.sh" # v0.7.0

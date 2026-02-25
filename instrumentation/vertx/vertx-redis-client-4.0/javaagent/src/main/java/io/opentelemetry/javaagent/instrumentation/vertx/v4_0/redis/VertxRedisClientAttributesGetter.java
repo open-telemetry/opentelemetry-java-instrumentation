@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
@@ -24,7 +25,7 @@ public enum VertxRedisClientAttributesGetter
     return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getUser(VertxRedisClientRequest request) {
@@ -34,13 +35,13 @@ public enum VertxRedisClientAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(VertxRedisClientRequest request) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return String.valueOf(request.getDatabaseIndex());
     }
     return null;
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Override
   @Nullable
   public String getConnectionString(VertxRedisClientRequest request) {

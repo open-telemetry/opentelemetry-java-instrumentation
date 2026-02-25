@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
@@ -18,7 +19,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.internal.ExtendedOpenTelemetrySdk;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 @SuppressWarnings({"DoNotMockAutoValue", "deprecation"})
 class DeclarativeConfigPropertiesBridgeBuilderTest {
@@ -27,7 +27,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
     ConfigProperties configPropertiesMock = mock(ConfigProperties.class);
     AutoConfiguredOpenTelemetrySdk sdkMock = mock(AutoConfiguredOpenTelemetrySdk.class);
     try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
+        mockStatic(AutoConfigureUtil.class)) {
       autoConfigureUtilMock
           .when(() -> AutoConfigureUtil.getConfig(sdkMock))
           .thenReturn(configPropertiesMock);
@@ -58,7 +58,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
     when(extendedOpenTelemetrySdk.getConfigProvider()).thenReturn(configProviderMock);
 
     try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
+        mockStatic(AutoConfigureUtil.class)) {
       autoConfigureUtilMock.when(() -> AutoConfigureUtil.getConfig(sdkMock)).thenReturn(null);
 
       ConfigProperties configProperties =
@@ -78,7 +78,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
     when(configProviderMock.getInstrumentationConfig()).thenReturn(null);
 
     try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
+        mockStatic(AutoConfigureUtil.class)) {
       autoConfigureUtilMock.when(() -> AutoConfigureUtil.getConfig(sdkMock)).thenReturn(null);
 
       ConfigProperties configProperties =

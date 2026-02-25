@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.ExtractQuerySummaryMarker;
-import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
@@ -17,8 +15,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcAttributesGetter
-    implements SqlClientAttributesGetter<DbRequest, Void>, ExtractQuerySummaryMarker {
+public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
 
@@ -28,7 +25,7 @@ public final class JdbcAttributesGetter
     return request.getDbInfo().getSystem();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getUser(DbRequest request) {
@@ -38,11 +35,10 @@ public final class JdbcAttributesGetter
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
-    DbInfo dbInfo = request.getDbInfo();
-    return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
+    return request.getDbInfo().getName();
   }
 
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   @Override
   public String getConnectionString(DbRequest request) {

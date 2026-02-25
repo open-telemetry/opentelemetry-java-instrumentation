@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -12,7 +14,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,12 +30,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
-
-  private static final String AGENT_INSTRUMENTATION_MODE = "java.agent.instrumentation_mode";
-  private static final String SPRING_STARTER_INSTRUMENTATION_MODE =
-      "java.spring_starter.instrumentation_mode";
-  private static final String COMMON_DEFAULT_ENABLED =
-      "otel.instrumentation.common.default-enabled";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -103,7 +98,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return createInstrumentationConfig(configProperties, Collections.emptyMap());
+    return createInstrumentationConfig(configProperties, emptyMap());
   }
 
   public static DeclarativeConfigProperties createInstrumentationConfig(
@@ -111,7 +106,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     Map<String, String> mergedMappings = new HashMap<>(SPECIAL_MAPPINGS);
     mergedMappings.putAll(mappings);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, Collections.emptyList(), mergedMappings);
+        configProperties, emptyList(), mergedMappings);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
@@ -124,17 +119,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Nullable
   @Override
   public String getString(String name) {
-    String fullPath = pathWithName(name);
-
-    if (fullPath.equals(AGENT_INSTRUMENTATION_MODE)
-        || fullPath.equals(SPRING_STARTER_INSTRUMENTATION_MODE)) {
-      Boolean value = configProperties.getBoolean(COMMON_DEFAULT_ENABLED);
-      if (value != null) {
-        return value ? "default" : "none";
-      }
-      return null;
-    }
-
     return configProperties.getString(resolvePropertyKey(name));
   }
 
@@ -252,15 +236,7 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    String translated = translatedPath.toString();
-
-    // Handle agent prefix: java.agent.* → otel.javaagent.*
-    if (translated.startsWith("agent.")) {
-      return "otel.java" + translated;
-    }
-
-    // Standard mapping
-    return "otel.instrumentation." + translated;
+    return "otel.instrumentation." + translatedPath;
   }
 
   private String pathWithName(String name) {

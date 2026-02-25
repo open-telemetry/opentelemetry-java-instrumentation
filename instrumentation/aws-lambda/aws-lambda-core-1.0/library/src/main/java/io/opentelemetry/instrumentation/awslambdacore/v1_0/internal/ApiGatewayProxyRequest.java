@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.HeadersFactory.ofStream;
+import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -56,7 +56,7 @@ public abstract class ApiGatewayProxyRequest {
   @Nullable
   public Map<String, String> getHeaders() throws IOException {
     Map<String, String> headers = ofStream(freshStream());
-    return (headers == null ? Collections.emptyMap() : headers);
+    return (headers == null ? emptyMap() : headers);
   }
 
   public abstract InputStream freshStream() throws IOException;
@@ -76,7 +76,7 @@ public abstract class ApiGatewayProxyRequest {
 
     @Override
     public Map<String, String> getHeaders() {
-      return Collections.emptyMap();
+      return emptyMap();
     }
   }
 

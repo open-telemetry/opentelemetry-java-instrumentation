@@ -5,14 +5,15 @@
 
 package field;
 
-import org.junit.jupiter.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 class VirtualFieldTest {
 
   @Test
   void testVirtualFields() {
-    Assertions.assertTrue(virtualFieldTestMethod());
+    assertThat(virtualFieldTestMethod()).isTrue();
   }
 
   // instrumented by VirtualFieldTestInstrumentationModule

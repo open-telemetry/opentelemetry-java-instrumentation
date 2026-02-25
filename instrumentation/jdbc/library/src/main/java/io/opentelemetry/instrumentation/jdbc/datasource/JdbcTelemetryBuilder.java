@@ -49,20 +49,11 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
-  /** Configures whether JDBC Statements are sanitized. Enabled by default. */
+  /** Configures whether JDBC queries are sanitized. Enabled by default. */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setQuerySanitizationEnabled(boolean enabled) {
     this.querySanitizationEnabled = enabled;
     return this;
-  }
-
-  /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
-    return setQuerySanitizationEnabled(enabled);
   }
 
   /** Configures whether spans are created for JDBC Transactions. Disabled by default. */
@@ -74,7 +65,7 @@ public final class JdbcTelemetryBuilder {
 
   /**
    * Configures whether parameters are captured for JDBC Statements. Enabling this option disables
-   * the statement sanitization. Disabled by default.
+   * the query sanitization. Disabled by default.
    *
    * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
    * personally identifiable information or protected health info.

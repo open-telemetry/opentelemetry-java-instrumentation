@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.rxjava.v2_0;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This test creates the specified number of traces with three spans: 1) Outer (root) span 2) Middle
@@ -36,7 +37,7 @@ public class RxJava2ConcurrencyTestHelper {
     try {
       // Continue even on timeout so the test assertions can show what is missing
       //noinspection ResultOfMethodCallIgnored
-      latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
+      latch.await(timeoutMillis, MILLISECONDS);
     } catch (InterruptedException e) {
       throw new IllegalStateException(e);
     }
@@ -52,9 +53,9 @@ public class RxJava2ConcurrencyTestHelper {
               .subscribeOn(iteration.scheduler)
               .observeOn(iteration.scheduler)
               // Use varying delay so that different stages of the chain would alternate.
-              .delay(iteration.index % 10, TimeUnit.MILLISECONDS, iteration.scheduler)
+              .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .map((it) -> it)
-              .delay(iteration.index % 10, TimeUnit.MILLISECONDS, iteration.scheduler)
+              .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .doOnSuccess(v -> launchInner(v, runner))
               .subscribe();
         });
@@ -69,7 +70,7 @@ public class RxJava2ConcurrencyTestHelper {
           Single.fromCallable(() -> iteration)
               .subscribeOn(iteration.scheduler)
               .observeOn(iteration.scheduler)
-              .delay(iteration.index % 10, TimeUnit.MILLISECONDS, iteration.scheduler)
+              .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
               .doOnSuccess(
                   (it) -> {
                     runner.runWithSpan(

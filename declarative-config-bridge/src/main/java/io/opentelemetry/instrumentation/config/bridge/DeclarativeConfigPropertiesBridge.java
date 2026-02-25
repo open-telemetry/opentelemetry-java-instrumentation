@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -14,7 +16,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -66,7 +67,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       DeclarativeConfigProperties baseNode,
       Map<String, String> mappings,
       Map<String, Object> overrideValues) {
-    this.baseNode = Objects.requireNonNull(baseNode);
+    this.baseNode = requireNonNull(baseNode);
     this.mappings = mappings;
     this.overrideValues = overrideValues;
   }
@@ -119,7 +120,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
             propertyName,
             o -> (List<String>) o,
             (properties, lastPart) -> properties.getScalarList(lastPart, String.class));
-    return propertyValue == null ? Collections.emptyList() : propertyValue;
+    return propertyValue == null ? emptyList() : propertyValue;
   }
 
   @Override
@@ -130,7 +131,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
             DeclarativeConfigProperties.class,
             DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     Map<String, String> result = new HashMap<>();
     propertyValue
@@ -173,7 +174,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     DeclarativeConfigProperties target = baseNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
-        target = target.getStructured(segments[i], empty());
+        target = target.get(segments[i]);
       }
     }
     String lastPart = segments[segments.length - 1];
