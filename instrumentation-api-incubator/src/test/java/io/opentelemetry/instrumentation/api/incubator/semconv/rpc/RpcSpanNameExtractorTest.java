@@ -79,6 +79,7 @@ class RpcSpanNameExtractorTest {
 
     RpcRequest request = new RpcRequest();
 
+    when(getter.getRpcSystemName(request)).thenCallRealMethod();
     when(getter.getSystem(request)).thenReturn("grpc");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
