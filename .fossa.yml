@@ -180,9 +180,6 @@ targets:
       target: ':instrumentation:java-util-logging:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:javalin-5.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jaxrs-client:jaxrs-client-1.1-testing'
     - type: gradle
       path: ./
@@ -541,6 +538,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:internal:internal-url-class-loader:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:javalin:javalin-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:javalin:javalin-7.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-1.0:javaagent'

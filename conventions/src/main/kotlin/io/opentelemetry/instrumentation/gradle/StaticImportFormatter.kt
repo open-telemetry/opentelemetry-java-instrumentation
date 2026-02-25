@@ -61,6 +61,7 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*"
       ),
+      Triple("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
     )
 
     var content = input

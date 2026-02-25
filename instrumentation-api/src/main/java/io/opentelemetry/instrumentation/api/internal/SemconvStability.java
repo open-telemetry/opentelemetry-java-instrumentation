@@ -144,11 +144,11 @@ public final class SemconvStability {
     return dbSystemName != null ? dbSystemName : oldDbSystem;
   }
 
-  public static boolean isEmitOldCodeSemconv() {
+  public static boolean emitOldCodeSemconv() {
     return emitOldCodeSemconv;
   }
 
-  public static boolean isEmitStableCodeSemconv() {
+  public static boolean emitStableCodeSemconv() {
     return emitStableCodeSemconv;
   }
 
