@@ -7,10 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -109,27 +117,78 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
     template.requestBody("direct:input", (Object) null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("camel.uri"),
-                                experimental("cql://" + host + ":" + cassandraPort + "/test")),
-                            equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "select * from test.users where id=? ALLOW FILTERING"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test.users" : null),
-                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA))));
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(stringKey("camel.uri"), experimental("direct://input"))),
+                  span ->
+                      span.hasName("SELECT test.users")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, cassandraPort),
+                              satisfies(
+                                  NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                              equalTo(NETWORK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM_NAME, "cassandra"),
+                              equalTo(DB_NAMESPACE, "test"),
+                              equalTo(
+                                  DB_QUERY_TEXT,
+                                  "select * from test.users where id=1 ALLOW FILTERING"),
+                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("USE test")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, cassandraPort),
+                              satisfies(
+                                  NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                              equalTo(NETWORK_PEER_PORT, cassandraPort),
+                              equalTo(DB_SYSTEM_NAME, "cassandra"),
+                              equalTo(DB_QUERY_TEXT, "USE test"),
+                              equalTo(DB_QUERY_SUMMARY, "USE test"))));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(stringKey("camel.uri"), experimental("direct://input"))),
+                  // Camel's DB span (less accurate)
+                  span ->
+                      span.hasName("cql")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  stringKey("camel.uri"),
+                                  experimental("cql://" + host + ":" + cassandraPort + "/test")),
+                              equalTo(DB_NAME, "test"),
+                              equalTo(
+                                  DB_STATEMENT,
+                                  "select * from test.users where id=? ALLOW FILTERING"),
+                              equalTo(DB_SYSTEM, CASSANDRA)),
+                  // Cassandra instrumentation's DB span (more accurate, with connection info)
+                  span ->
+                      span.hasName("SELECT test.users")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(1))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("DB Query").hasKind(SpanKind.CLIENT)));
+    }
   }
 }
