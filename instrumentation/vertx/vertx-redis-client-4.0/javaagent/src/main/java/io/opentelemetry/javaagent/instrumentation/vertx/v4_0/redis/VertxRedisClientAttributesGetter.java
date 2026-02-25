@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 public enum VertxRedisClientAttributesGetter
@@ -22,7 +22,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Override
   public String getDbSystemName(VertxRedisClientRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Deprecated // to be removed in 3.0
