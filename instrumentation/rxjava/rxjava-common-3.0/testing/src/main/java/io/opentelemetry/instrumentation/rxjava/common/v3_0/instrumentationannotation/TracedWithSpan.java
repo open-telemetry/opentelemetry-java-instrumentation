@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.rxjava.v3.common.extensionannotation;
+package io.opentelemetry.instrumentation.rxjava.common.v3_0.instrumentationannotation;
 
-import io.opentelemetry.instrumentation.rxjava.v3.common.AbstractTracedWithSpan;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.rxjava.common.v3_0.AbstractTracedWithSpan;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -14,47 +15,46 @@ import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.parallel.ParallelFlowable;
 import org.reactivestreams.Publisher;
 
-@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 public class TracedWithSpan extends AbstractTracedWithSpan {
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Completable completable(Completable source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Maybe<String> maybe(Maybe<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Single<String> single(Single<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Observable<String> observable(Observable<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Flowable<String> flowable(Flowable<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public ParallelFlowable<String> parallelFlowable(ParallelFlowable<String> source) {
     return source;
   }
 
   @Override
-  @io.opentelemetry.extension.annotations.WithSpan
+  @WithSpan
   public Publisher<String> publisher(Publisher<String> source) {
     return source;
   }
