@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -17,23 +19,29 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RpcSpanNameExtractorTest {
 
-  @Mock RpcAttributesGetter<RpcRequest, Void> getter;
+  @Mock RpcAttributesGetter<RpcRequest, Object> getter;
 
-  @SuppressWarnings("deprecation") // testing deprecated method
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    when(getter.getService(request)).thenReturn("my.Service");
-    when(getter.getMethod(request)).thenReturn("Method");
+    if (emitStableRpcSemconv()) {
+      when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
+    } else {
+      when(getter.getService(request)).thenReturn("my.Service");
+      when(getter.getMethod(request)).thenReturn("Method");
+    }
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated method
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
   void serviceNull() {
+    assumeTrue(!emitStableRpcSemconv());
+
     RpcRequest request = new RpcRequest();
 
     when(getter.getMethod(request)).thenReturn("Method");
@@ -44,12 +52,40 @@ class RpcSpanNameExtractorTest {
 
   @Test
   void methodNull() {
+    assumeTrue(!emitStableRpcSemconv());
+
     RpcRequest request = new RpcRequest();
 
     when(getter.getService(request)).thenReturn("my.Service");
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("RPC request");
+  }
+
+  @Test
+  void rpcMethodNull_fallsBackToSystemName() {
+    assumeTrue(emitStableRpcSemconv());
+
+    RpcRequest request = new RpcRequest();
+
+    when(getter.getRpcSystemName(request)).thenReturn("grpc");
+
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    assertThat(extractor.extract(request)).isEqualTo("grpc");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method fallback
+  void rpcMethodNull_fallsBackToSystemName_viaGetSystem() {
+    assumeTrue(emitStableRpcSemconv());
+
+    RpcRequest request = new RpcRequest();
+
+    when(getter.getRpcSystemName(request)).thenCallRealMethod();
+    when(getter.getSystem(request)).thenReturn("grpc");
+
+    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
+    assertThat(extractor.extract(request)).isEqualTo("grpc");
   }
 
   static class RpcRequest {}
