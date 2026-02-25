@@ -3,7 +3,7 @@ version: 3
 targets:
   only:
     # only scanning the modules which are published
-    # (as opposed to internal testing modules)
+    # (as opposed to internal testing modules
     - type: gradle
       path: ./
       target: ':declarative-config-bridge'
@@ -927,9 +927,6 @@ targets:
       target: ':instrumentation:rxjava:rxjava-2.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rxjava:rxjava-common-3.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:rxjava:rxjava-3.0:javaagent'
     - type: gradle
       path: ./
@@ -940,6 +937,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:rxjava:rxjava-3.1.1:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rxjava:rxjava-common-3.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-2.2:javaagent'
