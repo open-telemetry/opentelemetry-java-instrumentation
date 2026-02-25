@@ -228,6 +228,7 @@ readonly INSTRUMENTATIONS=(
   "servlet:servlet-2.2:javaagent:test"
   "servlet:servlet-3.0:javaagent-testing:test"
   "servlet:servlet-5.0:jetty12-testing:test"
+  "sofa-rpc-5.4:javaagent:testSofaRpc"
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-data:spring-data-1.8:javaagent:test"
   "spring:spring-integration-4.1:javaagent:test"
