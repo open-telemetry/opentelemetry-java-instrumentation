@@ -17,26 +17,24 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class SqlQuerySanitizerTest {
+class SqlQueryAnalyzerTest {
 
-  private static final SqlQuerySanitizer SANITIZER = SqlQuerySanitizer.create(true);
+  private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
-  private static SqlQuery sanitize(String sql) {
-    return emitStableDatabaseSemconv()
-        ? SANITIZER.sanitizeWithSummary(sql)
-        : SANITIZER.sanitize(sql);
+  private static SqlQuery analyze(String sql) {
+    return emitStableDatabaseSemconv() ? ANALYZER.analyzeWithSummary(sql) : ANALYZER.analyze(sql);
   }
 
-  private static SqlQuery sanitize(String sql, SqlDialect dialect) {
+  private static SqlQuery analyze(String sql, SqlDialect dialect) {
     return emitStableDatabaseSemconv()
-        ? SANITIZER.sanitizeWithSummary(sql, dialect)
-        : SANITIZER.sanitize(sql, dialect);
+        ? ANALYZER.analyzeWithSummary(sql, dialect)
+        : ANALYZER.analyze(sql, dialect);
   }
 
   @ParameterizedTest
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = sanitize(original);
+    SqlQuery result = analyze(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -48,7 +46,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("couchbaseArgs")
   void normalizeCouchbase(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = sanitize(original, SqlDialect.COUCHBASE);
+    SqlQuery result = analyze(original, SqlDialect.COUCHBASE);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -60,7 +58,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("simplifyArgs")
   void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = sanitize(original);
+    SqlQuery result = analyze(original);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -78,7 +76,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("sensitiveArgs")
   void sanitizeSensitive(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = sanitize(original);
+    SqlQuery result = analyze(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -111,11 +109,11 @@ class SqlQuerySanitizerTest {
     }
     String query = sb.toString();
 
-    String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
+    String analyzedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
 
-    SqlQuery result = sanitize(query);
+    SqlQuery result = analyze(query);
 
-    assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
+    assertThat(result.getQueryText()).isEqualTo(analyzedQuery);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getOperationName()).isNull();
       assertThat(result.getCollectionName()).isNull();
@@ -130,7 +128,7 @@ class SqlQuerySanitizerTest {
   @ParameterizedTest
   @MethodSource("ddlArgs")
   void checkDdlOperationStatementsAreOk(String actual, Function<String, SqlQuery> expectFunc) {
-    SqlQuery result = sanitize(actual);
+    SqlQuery result = analyze(actual);
     SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -148,9 +146,9 @@ class SqlQuerySanitizerTest {
   @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
-    SqlQuerySanitizer sanitizer = SqlQuerySanitizer.create(true);
+    SqlQueryAnalyzer analyzer = SqlQueryAnalyzer.create(true);
     for (int i = 0; i < 10000; i++) {
-      assertThat(sanitizer.sanitize(s)).isNotNull();
+      assertThat(analyzer.analyze(s)).isNotNull();
       s += "'";
     }
   }
@@ -161,7 +159,7 @@ class SqlQuerySanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s);
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s);
     assertThat(result.getQueryText()).isEqualTo("?");
   }
 
@@ -171,7 +169,7 @@ class SqlQuerySanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQuerySanitizer.create(true).sanitize(s);
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s);
     assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
@@ -181,7 +179,7 @@ class SqlQuerySanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-    SqlQuery result = sanitize(s.toString());
+    SqlQuery result = analyze(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
     if (emitStableDatabaseSemconv()) {
@@ -199,7 +197,7 @@ class SqlQuerySanitizerTest {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt(Character.MAX_VALUE));
       }
-      SqlQuerySanitizer.create(true).sanitize(sb.toString());
+      SqlQueryAnalyzer.create(true).analyze(sb.toString());
     }
   }
 
@@ -211,18 +209,18 @@ class SqlQuerySanitizerTest {
     }
     s.append("?)");
 
-    String sanitized = SqlQuerySanitizer.create(true).sanitize(s.toString()).getQueryText();
+    String analyzed = SqlQueryAnalyzer.create(true).analyze(s.toString()).getQueryText();
 
-    assertThat(sanitized).isEqualTo("select col from table where col in (?)");
+    assertThat(analyzed).isEqualTo("select col from table where col in (?)");
   }
 
   @Test
   void largeQueryCached() {
     // test that short query is cached
     String shortQuery = "SELECT * FROM TABLE WHERE FIELD = 1234";
-    String sanitizedShort = SqlQuerySanitizer.create(true).sanitize(shortQuery).getQueryText();
-    assertThat(sanitizedShort).doesNotContain("1234");
-    assertThat(SqlQuerySanitizer.isCached(shortQuery)).isTrue();
+    String analyzedShort = SqlQueryAnalyzer.create(true).analyze(shortQuery).getQueryText();
+    assertThat(analyzedShort).doesNotContain("1234");
+    assertThat(SqlQueryAnalyzer.isCached(shortQuery)).isTrue();
 
     // test that large query is not cached
     StringBuffer s = new StringBuffer();
@@ -230,9 +228,9 @@ class SqlQuerySanitizerTest {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
     String largeQuery = s.toString();
-    String sanitizedLarge = SqlQuerySanitizer.create(true).sanitize(largeQuery).getQueryText();
-    assertThat(sanitizedLarge).doesNotContain("1234");
-    assertThat(SqlQuerySanitizer.isCached(largeQuery)).isFalse();
+    String analyzedLarge = SqlQueryAnalyzer.create(true).analyze(largeQuery).getQueryText();
+    assertThat(analyzedLarge).doesNotContain("1234");
+    assertThat(SqlQueryAnalyzer.isCached(largeQuery)).isFalse();
   }
 
   @Test
@@ -247,7 +245,7 @@ class SqlQuerySanitizerTest {
       sql.append("very_long_table_name_").append(i);
     }
     String result =
-        SqlQuerySanitizer.create(true).sanitizeWithSummary(sql.toString()).getQuerySummary();
+        SqlQueryAnalyzer.create(true).analyzeWithSummary(sql.toString()).getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)
         .isEqualTo(

@@ -16,28 +16,28 @@ import javax.annotation.Nullable;
  * This class is responsible for masking potentially sensitive parameters in SQL (and SQL-like)
  * statements and queries.
  */
-public final class SqlQuerySanitizer {
+public final class SqlQueryAnalyzer {
   private static final SupportabilityMetrics supportability = SupportabilityMetrics.instance();
 
   private static final Cache<CacheKey, SqlQuery> sqlToQueryCache = Cache.bounded(1000);
   private static final Cache<CacheKey, SqlQuery> sqlToQueryCacheWithSummary = Cache.bounded(1000);
   private static final int LARGE_QUERY_THRESHOLD = 10 * 1024;
 
-  public static SqlQuerySanitizer create(boolean querySanitizationEnabled) {
-    return new SqlQuerySanitizer(querySanitizationEnabled);
+  public static SqlQueryAnalyzer create(boolean querySanitizationEnabled) {
+    return new SqlQueryAnalyzer(querySanitizationEnabled);
   }
 
   private final boolean querySanitizationEnabled;
 
-  private SqlQuerySanitizer(boolean querySanitizationEnabled) {
+  private SqlQueryAnalyzer(boolean querySanitizationEnabled) {
     this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
-  public SqlQuery sanitize(@Nullable String query) {
-    return sanitize(query, SqlDialect.DEFAULT);
+  public SqlQuery analyze(@Nullable String query) {
+    return analyze(query, SqlDialect.DEFAULT);
   }
 
-  public SqlQuery sanitize(@Nullable String query, SqlDialect dialect) {
+  public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.create(query, null, null);
     }
@@ -45,24 +45,24 @@ public final class SqlQuerySanitizer {
     // cache growing too large
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
     if (query.length() > LARGE_QUERY_THRESHOLD) {
-      return sanitizeImpl(query, dialect);
+      return analyzeImpl(query, dialect);
     }
     return sqlToQueryCache.computeIfAbsent(
-        CacheKey.create(query, dialect), k -> sanitizeImpl(query, dialect));
+        CacheKey.create(query, dialect), k -> analyzeImpl(query, dialect));
   }
 
-  private static SqlQuery sanitizeImpl(String query, SqlDialect dialect) {
+  private static SqlQuery analyzeImpl(String query, SqlDialect dialect) {
     supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizer.sanitize(query, dialect);
   }
 
-  /** Sanitize and extract query summary. */
-  public SqlQuery sanitizeWithSummary(@Nullable String query) {
-    return sanitizeWithSummary(query, SqlDialect.DEFAULT);
+  /** Analyze and extract query summary. */
+  public SqlQuery analyzeWithSummary(@Nullable String query) {
+    return analyzeWithSummary(query, SqlDialect.DEFAULT);
   }
 
-  /** Sanitize and extract query summary. */
-  public SqlQuery sanitizeWithSummary(@Nullable String query, SqlDialect dialect) {
+  /** Analyze and extract query summary. */
+  public SqlQuery analyzeWithSummary(@Nullable String query, SqlDialect dialect) {
     if (!querySanitizationEnabled || query == null) {
       return SqlQuery.createWithSummary(query, null, null);
     }
@@ -70,13 +70,13 @@ public final class SqlQuerySanitizer {
     // cache growing too large
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
     if (query.length() > LARGE_QUERY_THRESHOLD) {
-      return sanitizeWithSummaryImpl(query, dialect);
+      return analyzeWithSummaryImpl(query, dialect);
     }
     return sqlToQueryCacheWithSummary.computeIfAbsent(
-        CacheKey.create(query, dialect), k -> sanitizeWithSummaryImpl(query, dialect));
+        CacheKey.create(query, dialect), k -> analyzeWithSummaryImpl(query, dialect));
   }
 
-  private static SqlQuery sanitizeWithSummaryImpl(String query, SqlDialect dialect) {
+  private static SqlQuery analyzeWithSummaryImpl(String query, SqlDialect dialect) {
     supportability.incrementCounter(SQL_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizerWithSummary.sanitize(query, dialect);
   }
@@ -90,7 +90,7 @@ public final class SqlQuerySanitizer {
   abstract static class CacheKey {
 
     static CacheKey create(String queryText, SqlDialect dialect) {
-      return new AutoValue_SqlQuerySanitizer_CacheKey(queryText, dialect);
+      return new AutoValue_SqlQueryAnalyzer_CacheKey(queryText, dialect);
     }
 
     abstract String getQueryText();

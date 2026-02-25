@@ -10,21 +10,21 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class InfluxDbRequest {
 
-  private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static InfluxDbRequest create(
       String host, int port, String namespace, String operationName, String sql) {
-    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? sanitizer.sanitize(sql) : null;
+    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? analyzer.analyze(sql) : null;
     SqlQuery sqlQueryWithSummary =
-        emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(sql) : null;
+        emitStableDatabaseSemconv() ? analyzer.analyzeWithSummary(sql) : null;
     return new AutoValue_InfluxDbRequest(
         host, port, namespace, operationName, sqlQuery, sqlQueryWithSummary);
   }
