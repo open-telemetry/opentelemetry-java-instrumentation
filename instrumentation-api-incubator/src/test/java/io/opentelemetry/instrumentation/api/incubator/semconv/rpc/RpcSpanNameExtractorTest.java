@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -27,9 +26,12 @@ class RpcSpanNameExtractorTest {
   void normal() {
     RpcRequest request = new RpcRequest();
 
-    lenient().when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
-    lenient().when(getter.getService(request)).thenReturn("my.Service");
-    lenient().when(getter.getMethod(request)).thenReturn("Method");
+    if (emitStableRpcSemconv()) {
+      when(getter.getRpcMethod(request)).thenReturn("my.Service/Method");
+    } else {
+      when(getter.getService(request)).thenReturn("my.Service");
+      when(getter.getMethod(request)).thenReturn("Method");
+    }
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
