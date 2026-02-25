@@ -73,13 +73,16 @@ class RpcSpanNameExtractorTest {
   }
 
   @Test
-  void rpcMethodAndSystemNameNull() {
+  @SuppressWarnings("deprecation") // testing deprecated method fallback
+  void rpcMethodNull_fallsBackToSystemName_viaGetSystem() {
     assumeTrue(emitStableRpcSemconv());
 
     RpcRequest request = new RpcRequest();
 
+    when(getter.getSystem(request)).thenReturn("grpc");
+
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("RPC request");
+    assertThat(extractor.extract(request)).isEqualTo("grpc");
   }
 
   static class RpcRequest {}

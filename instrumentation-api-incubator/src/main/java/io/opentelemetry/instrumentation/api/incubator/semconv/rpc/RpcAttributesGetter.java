@@ -24,16 +24,15 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    *     href="https://opentelemetry.io/docs/specs/semconv/attributes-registry/rpc/">rpc.system.name
    *     spec</a>
    */
-  @Nullable
+  @SuppressWarnings("deprecation")
   default String getRpcSystemName(REQUEST request) {
-    return null;
+    return getSystem(request);
   }
 
   /**
    * @deprecated Use {@link #getRpcSystemName(REQUEST)}. To be removed in 3.0.
    */
   @Deprecated
-  @Nullable
   String getSystem(REQUEST request);
 
   @Nullable
