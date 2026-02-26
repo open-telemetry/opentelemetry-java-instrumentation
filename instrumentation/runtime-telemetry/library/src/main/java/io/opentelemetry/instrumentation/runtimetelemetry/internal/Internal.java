@@ -246,8 +246,7 @@ public final class Internal {
    * @return the configured RuntimeTelemetry, or null if runtime telemetry is disabled
    */
   @Nullable
-  public static RuntimeTelemetry configure(
-      OpenTelemetry openTelemetry, boolean defaultEnabled) {
+  public static RuntimeTelemetry configure(OpenTelemetry openTelemetry, boolean defaultEnabled) {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
     DeclarativeConfigProperties java17Config =
