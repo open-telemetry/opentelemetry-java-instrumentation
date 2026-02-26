@@ -27,7 +27,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -52,9 +51,7 @@ class RpcServerMetricsTest {
             .put(
                 RPC_METHOD,
                 emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
-            .put(
-                RPC_SYSTEM_NAME,
-                emitStableRpcSemconv() ? SemconvStability.stableRpcSystemName("grpc") : null)
+            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
             .build();
 
     Attributes requestAttributes1 =
@@ -203,9 +200,7 @@ class RpcServerMetricsTest {
                                               equalTo(
                                                   RPC_METHOD,
                                                   "myservice.EchoService/exampleMethod"),
-                                              equalTo(
-                                                  RPC_SYSTEM_NAME,
-                                                  SemconvStability.stableRpcSystemName("grpc")),
+                                              equalTo(RPC_SYSTEM_NAME, "grpc"),
                                               equalTo(SERVER_ADDRESS, "example.com"),
                                               equalTo(SERVER_PORT, 8080))
                                           .hasExemplarsSatisfying(
@@ -259,9 +254,7 @@ class RpcServerMetricsTest {
                                               equalTo(
                                                   RPC_METHOD,
                                                   "myservice.EchoService/exampleMethod"),
-                                              equalTo(
-                                                  RPC_SYSTEM_NAME,
-                                                  SemconvStability.stableRpcSystemName("grpc")),
+                                              equalTo(RPC_SYSTEM_NAME, "grpc"),
                                               equalTo(SERVER_PORT, 8080)))));
     }
   }
