@@ -71,7 +71,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       authority = GrpcAuthorityStorage.getAuthority(call);
     }
     GrpcRequest request =
-        new GrpcRequest(
+        GrpcRequest.createServerRequest(
             call.getMethodDescriptor(),
             headers,
             call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR),
