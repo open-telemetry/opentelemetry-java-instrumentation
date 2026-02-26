@@ -9,7 +9,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.util.Collections.singletonList;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
@@ -262,7 +261,7 @@ public class FlakyTestReporter {
       return;
     }
 
-    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+    NetHttpTransport transport = new NetHttpTransport.Builder().build();
     GoogleCredentials credentials =
         GoogleCredentials.fromStream(new ByteArrayInputStream(accessKey.getBytes(UTF_8)))
             .createScoped(singletonList(SheetsScopes.SPREADSHEETS));

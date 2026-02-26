@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -54,18 +52,6 @@ public class Java17RuntimeMetricsAutoConfiguration {
     logger.debug("Use runtime metrics instrumentation for Java 17+");
     this.closeable =
         RuntimeMetricsConfigUtil.configure(
-            RuntimeMetrics.builder(openTelemetry),
-            openTelemetry,
-            instrumentationMode(openTelemetry));
-  }
-
-  private static String instrumentationMode(OpenTelemetry openTelemetry) {
-    String mode =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "spring_starter")
-            .getString("instrumentation_mode", "default");
-    if (!mode.equals("default") && !mode.equals("none")) {
-      throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-    }
-    return mode;
+            RuntimeMetrics.builder(openTelemetry), openTelemetry, true);
   }
 }

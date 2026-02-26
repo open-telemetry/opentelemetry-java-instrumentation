@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -29,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -248,7 +248,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
         attributesAssert.containsEntry(
             CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
       }
-      if (SemconvStability.isEmitOldCodeSemconv()) {
+      if (emitOldCodeSemconv()) {
         attributesAssert
             .containsEntry(CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger")
             .containsEntry(CODE_FUNCTION, "logStarting");

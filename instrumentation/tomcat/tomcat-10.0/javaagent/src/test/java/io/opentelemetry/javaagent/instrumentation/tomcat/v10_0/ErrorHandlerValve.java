@@ -10,7 +10,8 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.valves.ErrorReportValve;
 
-class ErrorHandlerValve extends ErrorReportValve {
+// public, because it's loaded by reflection
+public class ErrorHandlerValve extends ErrorReportValve {
   @Override
   protected void report(Request request, Response response, Throwable t) {
     if (response.getStatus() < 400 || response.getContentWritten() > 0 || !response.isError()) {
