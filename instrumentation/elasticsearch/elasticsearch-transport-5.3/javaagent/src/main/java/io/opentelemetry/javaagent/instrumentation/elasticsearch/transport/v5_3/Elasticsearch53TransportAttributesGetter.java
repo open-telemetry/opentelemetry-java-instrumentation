@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportAttributesGetter;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
 
-public class ElasticTransportNetworkAttributesGetter
-    implements NetworkAttributesGetter<ElasticTransportRequest, ActionResponse> {
+final class Elasticsearch53TransportAttributesGetter
+    extends ElasticsearchTransportAttributesGetter {
 
   @Override
   @Nullable
