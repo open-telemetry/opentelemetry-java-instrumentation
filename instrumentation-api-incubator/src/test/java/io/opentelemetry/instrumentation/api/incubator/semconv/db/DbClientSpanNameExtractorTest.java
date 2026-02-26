@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -178,9 +178,7 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    assertThat(spanName)
-        .isEqualTo(
-            SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
+    assertThat(spanName).isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database");
   }
 
   @Test
@@ -191,7 +189,7 @@ class DbClientSpanNameExtractorTest {
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(singleton("INSERT INTO table VALUES(?)"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(2L);
     }
 
@@ -202,10 +200,66 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertThat(spanName)
-        .isEqualTo(
-            SemconvStability.emitStableDatabaseSemconv()
-                ? "BATCH INSERT table"
-                : "INSERT database.table");
+        .isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "INSERT database.table");
+  }
+
+  @Test
+  void shouldFallBackToExplicitOperationNameForEmptySqlQuery() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
+    when(sqlAttributesGetter.getDbOperationName(dbRequest)).thenReturn("WRITE");
+    when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName).isEqualTo("WRITE mydb");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void shouldPreserveOldSemconvSpanNameForMigration() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
+        .thenReturn(singleton("SELECT * from table"));
+    lenient().when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
+
+    SpanNameExtractor<DbRequest> underTest =
+        DbClientSpanNameExtractor.createForMigration(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void shouldFallBackToExplicitOperationForEmptySqlQueryInMigration() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
+    when(sqlAttributesGetter.getDbOperationName(dbRequest)).thenReturn("WRITE");
+    when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
+
+    SpanNameExtractor<DbRequest> underTest =
+        DbClientSpanNameExtractor.createForMigration(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName).isEqualTo("WRITE mydb");
   }
 
   static class DbRequest {}

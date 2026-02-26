@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -12,8 +16,6 @@ import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongHistogramBuilder;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.util.List;
 
 final class RpcMetricsAdvice {
@@ -27,10 +29,10 @@ final class RpcMetricsAdvice {
           RpcCommonAttributesExtractor.RPC_SERVICE,
           RpcCommonAttributesExtractor.RPC_METHOD,
           RPC_GRPC_STATUS_CODE,
-          NetworkAttributes.NETWORK_TYPE,
-          NetworkAttributes.NETWORK_TRANSPORT,
-          ServerAttributes.SERVER_ADDRESS,
-          ServerAttributes.SERVER_PORT);
+          NETWORK_TYPE,
+          NETWORK_TRANSPORT,
+          SERVER_ADDRESS,
+          SERVER_PORT);
 
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {

@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static java.util.Collections.singletonList;
 
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -14,9 +17,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -36,26 +36,25 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Res
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM_NAME, AWS_DYNAMODB);
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM, DYNAMODB);
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM, DYNAMODB);
     }
 
     String operation = getOperationName(request.getOriginalRequest());
     if (operation != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION_NAME, operation);
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(DB_OPERATION_NAME, operation);
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION, operation);
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_OPERATION, operation);
       }
     }
 
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
-    AttributesExtractorUtil.internalSet(
-        attributes, AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
+    attributes.put(AWS_DYNAMODB_TABLE_NAMES, singletonList(tableName));
   }
 
   private static String getOperationName(Object request) {

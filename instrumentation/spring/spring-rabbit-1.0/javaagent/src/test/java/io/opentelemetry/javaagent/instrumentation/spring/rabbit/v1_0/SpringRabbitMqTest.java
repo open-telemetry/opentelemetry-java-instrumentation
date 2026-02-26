@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.singletonList;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -26,13 +27,11 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +130,7 @@ class SpringRabbitMqTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -242,8 +241,7 @@ class SpringRabbitMqTest {
                         span.hasName("<generated> process")
                             .hasAttribute(
                                 equalTo(
-                                    MessagingIncubatingAttributes
-                                        .MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                     anonymousQueueName))),
             trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
             trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),

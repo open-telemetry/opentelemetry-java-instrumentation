@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -20,8 +22,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
@@ -54,10 +54,10 @@ final class ApiGatewayProxyAttributesExtractor
   void onRequest(AttributesBuilder attributes, APIGatewayProxyRequestEvent request) {
     String method = request.getHttpMethod();
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
+      attributes.put(HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      attributes.put(HTTP_REQUEST_METHOD, _OTHER);
+      attributes.put(HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
     Map<String, String> headers = lowercaseMap(request.getHeaders());
@@ -66,7 +66,7 @@ final class ApiGatewayProxyAttributesExtractor
       attributes.put(USER_AGENT_ORIGINAL, userAgent);
     }
 
-    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(request, headers));
+    attributes.put(URL_FULL, getHttpUrl(request, headers));
   }
 
   private static String getHttpUrl(

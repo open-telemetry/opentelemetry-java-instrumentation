@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldServicePeerSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
@@ -16,7 +18,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -105,14 +106,14 @@ public class ServicePeerResolver {
 
     String name = servicePeer.name;
     if (name != null) {
-      if (SemconvStability.emitOldServicePeerSemconv()) {
+      if (emitOldServicePeerSemconv()) {
         attributeSetter.accept(PEER_SERVICE, name);
       }
-      if (SemconvStability.emitStableServicePeerSemconv()) {
+      if (emitStableServicePeerSemconv()) {
         attributeSetter.accept(SERVICE_PEER_NAME, name);
       }
     }
-    if (SemconvStability.emitStableServicePeerSemconv()) {
+    if (emitStableServicePeerSemconv()) {
       String namespace = servicePeer.namespace;
       if (namespace != null) {
         attributeSetter.accept(SERVICE_PEER_NAMESPACE, namespace);

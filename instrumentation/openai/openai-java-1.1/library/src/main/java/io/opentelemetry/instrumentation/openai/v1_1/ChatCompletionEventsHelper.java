@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_PROVIDER_NAME;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
@@ -32,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 final class ChatCompletionEventsHelper {
@@ -78,7 +79,7 @@ final class ChatCompletionEventsHelper {
                   List<Value<?>> toolCallsJson =
                       toolCalls.stream()
                           .map(call -> buildToolCallEventObject(call, captureMessageContent))
-                          .collect(Collectors.toList());
+                          .collect(toList());
                   body.put("tool_calls", Value.of(toolCallsJson));
                 });
       } else if (msg.isTool()) {
@@ -121,7 +122,7 @@ final class ChatCompletionEventsHelper {
                 return null;
               })
           .filter(Objects::nonNull)
-          .collect(Collectors.joining());
+          .collect(joining());
     } else {
       return "";
     }
@@ -154,16 +155,14 @@ final class ChatCompletionEventsHelper {
       return content.asArrayOfContentParts().stream()
           .map(part -> part.isText() ? part.asText().text() : null)
           .filter(Objects::nonNull)
-          .collect(Collectors.joining());
+          .collect(joining());
     } else {
       return "";
     }
   }
 
   private static String joinContentParts(List<ChatCompletionContentPartText> contentParts) {
-    return contentParts.stream()
-        .map(ChatCompletionContentPartText::text)
-        .collect(Collectors.joining());
+    return contentParts.stream().map(ChatCompletionContentPartText::text).collect(joining());
   }
 
   public static void emitCompletionLogEvents(
@@ -186,7 +185,7 @@ final class ChatCompletionEventsHelper {
                     Value.of(
                         toolCalls.stream()
                             .map(call -> buildToolCallEventObject(call, captureMessageContent))
-                            .collect(Collectors.toList())));
+                            .collect(toList())));
               });
       emitCompletionLogEvent(
           context,

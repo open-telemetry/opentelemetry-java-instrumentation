@@ -6,6 +6,7 @@
 package org.springframework.web.servlet.v6_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
@@ -26,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.core.Ordered;
@@ -120,7 +120,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private boolean findMapping(HttpServletRequest request) {
     try {
       // handlerMapping already null-checked above
-      for (HandlerMapping mapping : Objects.requireNonNull(handlerMappings)) {
+      for (HandlerMapping mapping : requireNonNull(handlerMappings)) {
         HandlerExecutionChain handler = mapping.getHandler(request);
         if (handler != null) {
           return true;

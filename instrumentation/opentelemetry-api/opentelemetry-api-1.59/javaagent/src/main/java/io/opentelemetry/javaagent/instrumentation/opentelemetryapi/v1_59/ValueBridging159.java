@@ -7,9 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_59;
 
 import static java.util.logging.Level.FINE;
 
-import application.io.opentelemetry.api.common.KeyValue;
-import application.io.opentelemetry.api.common.Value;
-import application.io.opentelemetry.api.common.ValueType;
+import io.opentelemetry.api.common.KeyValue;
+import io.opentelemetry.api.common.Value;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,67 +36,69 @@ public final class ValueBridging159 {
     if (applicationValue == null) {
       return null;
     }
-    if (!(applicationValue instanceof Value)) {
-      logger.log(FINE, "Expected Value but got: {0}", applicationValue.getClass().getName());
+    if (!(applicationValue instanceof application.io.opentelemetry.api.common.Value)) {
+      logger.log(
+          FINE,
+          "Expected application.io.opentelemetry.api.common.Value but got: {0}",
+          applicationValue.getClass().getName());
       return null;
     }
-    return convertValue((Value<?>) applicationValue);
+    return convertValue((application.io.opentelemetry.api.common.Value<?>) applicationValue);
   }
 
   // Unchecked casts are safe because we switch on the type and cast accordingly
   @SuppressWarnings("unchecked")
   @Nullable
-  private static io.opentelemetry.api.common.Value<?> convertValue(Value<?> applicationValue) {
-    ValueType type = applicationValue.getType();
+  private static Value<?> convertValue(
+      application.io.opentelemetry.api.common.Value<?> applicationValue) {
+    application.io.opentelemetry.api.common.ValueType type = applicationValue.getType();
     switch (type) {
       case STRING:
-        return io.opentelemetry.api.common.Value.of((String) applicationValue.getValue());
+        return Value.of((String) applicationValue.getValue());
       case BOOLEAN:
-        return io.opentelemetry.api.common.Value.of((Boolean) applicationValue.getValue());
+        return Value.of((Boolean) applicationValue.getValue());
       case LONG:
-        return io.opentelemetry.api.common.Value.of((Long) applicationValue.getValue());
+        return Value.of((Long) applicationValue.getValue());
       case DOUBLE:
-        return io.opentelemetry.api.common.Value.of((Double) applicationValue.getValue());
+        return Value.of((Double) applicationValue.getValue());
       case BYTES:
         ByteBuffer buffer = (ByteBuffer) applicationValue.getValue();
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
-        return io.opentelemetry.api.common.Value.of(bytes);
+        return Value.of(bytes);
       case ARRAY:
-        List<Value<?>> applicationArray = (List<Value<?>>) applicationValue.getValue();
-        List<io.opentelemetry.api.common.Value<?>> agentArray = new ArrayList<>();
-        for (Value<?> element : applicationArray) {
-          io.opentelemetry.api.common.Value<?> agentElement = convertValue(element);
+        List<application.io.opentelemetry.api.common.Value<?>> applicationArray =
+            (List<application.io.opentelemetry.api.common.Value<?>>) applicationValue.getValue();
+        List<Value<?>> agentArray = new ArrayList<>();
+        for (application.io.opentelemetry.api.common.Value<?> element : applicationArray) {
+          Value<?> agentElement = convertValue(element);
           if (agentElement != null) {
             agentArray.add(agentElement);
           }
         }
-        return io.opentelemetry.api.common.Value.of(agentArray);
+        return Value.of(agentArray);
       case KEY_VALUE_LIST:
-        List<KeyValue> applicationKvList = (List<KeyValue>) applicationValue.getValue();
-        io.opentelemetry.api.common.KeyValue[] agentKvArray =
-            new io.opentelemetry.api.common.KeyValue[applicationKvList.size()];
+        List<application.io.opentelemetry.api.common.KeyValue> applicationKvList =
+            (List<application.io.opentelemetry.api.common.KeyValue>) applicationValue.getValue();
+        KeyValue[] agentKvArray = new KeyValue[applicationKvList.size()];
         int i = 0;
-        for (KeyValue applicationKv : applicationKvList) {
-          io.opentelemetry.api.common.Value<?> agentKvValue =
-              convertValue(applicationKv.getValue());
+        for (application.io.opentelemetry.api.common.KeyValue applicationKv : applicationKvList) {
+          Value<?> agentKvValue = convertValue(applicationKv.getValue());
           if (agentKvValue != null) {
-            agentKvArray[i++] =
-                io.opentelemetry.api.common.KeyValue.of(applicationKv.getKey(), agentKvValue);
+            agentKvArray[i++] = KeyValue.of(applicationKv.getKey(), agentKvValue);
           }
         }
         // Trim array if unexpected Value types were encountered
         if (i < agentKvArray.length) {
-          io.opentelemetry.api.common.KeyValue[] trimmed =
-              new io.opentelemetry.api.common.KeyValue[i];
+          KeyValue[] trimmed = new KeyValue[i];
           System.arraycopy(agentKvArray, 0, trimmed, 0, i);
-          return io.opentelemetry.api.common.Value.of(trimmed);
+          return Value.of(trimmed);
         }
-        return io.opentelemetry.api.common.Value.of(agentKvArray);
+        return Value.of(agentKvArray);
       case EMPTY:
-        return io.opentelemetry.api.common.Value.empty();
+        return Value.empty();
     }
-    logger.log(FINE, "unexpected Value type: {0}", type);
+    logger.log(FINE, "unexpected application.io.opentelemetry.api.common.Value type: {0}", type);
     return null;
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -15,15 +16,14 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
 import static java.util.Collections.singletonList;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -54,11 +54,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
     List<AttributeAssertion> additionalAttributes =
         Arrays.asList(
-            equalTo(
-                maybeStable(DB_SYSTEM),
-                SemconvStability.emitStableDatabaseSemconv()
-                    ? AWS_DYNAMODB
-                    : DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB),
+            equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
             equalTo(maybeStable(DB_OPERATION), "CreateTable"),
             equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
 

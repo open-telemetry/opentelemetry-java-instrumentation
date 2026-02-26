@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.header.Header;
@@ -21,7 +21,7 @@ enum KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
   public Iterable<String> keys(KafkaProcessRequest carrier) {
     return StreamSupport.stream(carrier.getRecord().headers().spliterator(), false)
         .map(Header::key)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Nullable

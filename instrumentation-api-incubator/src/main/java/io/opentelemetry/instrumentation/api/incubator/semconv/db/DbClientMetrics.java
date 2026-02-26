@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
@@ -19,7 +20,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.logging.Logger;
 
 /**
@@ -45,7 +45,7 @@ public final class DbClientMetrics implements OperationListener {
    * @see InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return OperationMetricsUtil.create("database client", DbClientMetrics::new);
     }
     return meter -> OperationMetricsUtil.NOOP_OPERATION_LISTENER;

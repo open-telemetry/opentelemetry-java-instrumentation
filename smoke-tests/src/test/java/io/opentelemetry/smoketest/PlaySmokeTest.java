@@ -5,10 +5,10 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,7 +44,7 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
                 span ->
                     span.hasName("GET /welcome")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/welcome"),
+                        .hasAttribute(HTTP_ROUTE, "/welcome"),
                 span -> span.hasName("/welcome").hasKind(SpanKind.INTERNAL)));
   }
 }

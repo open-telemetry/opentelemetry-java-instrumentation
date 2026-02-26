@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.semconv.JvmAttributes;
+import io.opentelemetry.semconv.JvmAttributes.JvmMemoryTypeValues;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
@@ -49,8 +52,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getUsage,
                     MemoryUsage::getUsed)));
@@ -61,8 +64,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getUsage,
                     MemoryUsage::getCommitted)));
@@ -73,8 +76,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getUsage,
                     MemoryUsage::getMax)));
@@ -86,8 +89,8 @@ public class MemoryPools {
             .setUnit("By")
             .buildWithCallback(
                 callback(
-                    JvmAttributes.JVM_MEMORY_POOL_NAME,
-                    JvmAttributes.JVM_MEMORY_TYPE,
+                    JVM_MEMORY_POOL_NAME,
+                    JVM_MEMORY_TYPE,
                     poolBeans,
                     MemoryPoolMXBean::getCollectionUsage,
                     MemoryUsage::getUsed)));
@@ -131,9 +134,9 @@ public class MemoryPools {
   private static String memoryType(MemoryType memoryType) {
     switch (memoryType) {
       case HEAP:
-        return JvmAttributes.JvmMemoryTypeValues.HEAP;
+        return JvmMemoryTypeValues.HEAP;
       case NON_HEAP:
-        return JvmAttributes.JvmMemoryTypeValues.NON_HEAP;
+        return JvmMemoryTypeValues.NON_HEAP;
     }
     return "unknown";
   }

@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.59.0"
-val otelContribVersion = "1.53.0-alpha"
+val otelContribVersion = "1.54.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -27,7 +27,7 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.21.0",
+  "com.fasterxml.jackson:jackson-bom:2.21.1",
   "com.google.guava:guava-bom:33.5.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -43,7 +43,7 @@ val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.39.0"
+val semConvVersion = "1.40.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(

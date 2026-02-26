@@ -25,9 +25,6 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$module_name" == "graphql-java-common" ]]; then
     continue
   fi
-  if [[ "$module_name" == "rxjava-3-common" ]]; then
-    continue
-  fi
   if [[ "$module_name" == "servlet-javax-common" ]]; then
     continue
   fi

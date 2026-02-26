@@ -35,8 +35,4 @@ public class SyncCompletionListener extends CompletionListener<Void> {
   protected void processResult(Span span, Void future) {
     logger.severe("processResult was called on SyncCompletionListener. This should never happen.");
   }
-
-  public void done(Throwable thrown) {
-    closeSyncSpan(thrown);
-  }
 }
