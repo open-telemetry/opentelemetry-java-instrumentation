@@ -21,7 +21,7 @@ public final class InfluxDbSingletons {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.builder(
+        Instrumenter.<InfluxDbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.influxdb-2.4",
                 DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
