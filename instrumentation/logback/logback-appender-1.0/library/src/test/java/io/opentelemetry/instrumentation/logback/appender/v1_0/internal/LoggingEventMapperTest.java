@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -13,7 +14,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -101,8 +101,8 @@ class LoggingEventMapperTest {
     LoggingEventMapper.captureAttribute(builder, false, "DoubleArray", new Double[] {2.0});
 
     LoggingEventMapper.captureAttribute(builder, false, "ObjectArray", new Object[] {"test"});
-    LoggingEventMapper.captureAttribute(builder, false, "List", Collections.singletonList("test"));
-    LoggingEventMapper.captureAttribute(builder, false, "Set", Collections.singleton("test"));
+    LoggingEventMapper.captureAttribute(builder, false, "List", singletonList("test"));
+    LoggingEventMapper.captureAttribute(builder, false, "Set", singleton("test"));
 
     verify(builder).setAttribute(AttributeKey.booleanArrayKey("booleanArray"), singletonList(true));
     verify(builder).setAttribute(AttributeKey.booleanArrayKey("BooleanArray"), singletonList(true));

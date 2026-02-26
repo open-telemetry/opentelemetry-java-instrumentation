@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -164,7 +165,7 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
     public List<Runnable> shutdownNow() {
       running = false;
       workerThread.interrupt();
-      return Collections.emptyList();
+      return emptyList();
     }
 
     @Override
@@ -206,13 +207,13 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
-      return Collections.singletonList(submit(tasks.stream().findFirst().get()));
+      return singletonList(submit(tasks.stream().findFirst().get()));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(
         Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) {
-      return Collections.singletonList(submit(tasks.stream().findFirst().get()));
+      return singletonList(submit(tasks.stream().findFirst().get()));
     }
 
     @Override

@@ -36,6 +36,11 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "[A-Z][A-Z_0-9]*"
       ),
       Triple(
+        "Collections",
+        "java.util.Collections",
+        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*"
+      ),
+      Triple(
         "ArgumentMatchers",
         "org.mockito.ArgumentMatchers",
         "[a-z][a-zA-Z0-9]*"
@@ -56,6 +61,7 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*"
       ),
+      Triple("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
     )
 
     var content = input
@@ -85,12 +91,9 @@ class StaticImportFormatter : FormatterFunc, Serializable {
       content
         .lines()
         .mapNotNull { line -> semconvImportRegex.find(line.trim()) }
-        .filter { it.groupValues[2] != "SchemaUrls" }
+        .filter { it.groupValues[2] != "SchemaUrls" && it.groupValues[3].isEmpty() }
         .map { m ->
-          // If there is a nested class (group 3), use the nested class as the className so that
-          // references like `DbSystemNameIncubatingValues.COUCHBASE` are rewritten correctly.
-          val className = if (m.groupValues[3].isNotEmpty()) m.groupValues[3] else m.groupValues[2]
-          Triple(className, m.groupValues[1], "[A-Z][A-Z_0-9]*")
+          Triple(m.groupValues[2], m.groupValues[1], "[A-Z][A-Z_0-9]*")
         }
     for ((className, pkg, memberPattern) in semconvRules) {
       val regex = Regex("\\b${className}\\.(${memberPattern})\\b")
@@ -108,6 +111,37 @@ class StaticImportFormatter : FormatterFunc, Serializable {
           importsToAdd.add("import static ${pkg}.${match.groupValues[1]};")
         }
         lines[i] = regex.replace(lines[i], "$1")
+      }
+      content = lines.joinToString("\n")
+    }
+
+    // Handle nested value class references through the outer class, e.g.
+    // DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA when only
+    // DbIncubatingAttributes is imported (not the nested class directly).
+    // Rewrites to NestedClass.CONSTANT and adds a regular import of the nested class.
+    val outerOnlySemconvImports =
+      content
+        .lines()
+        .mapNotNull { line -> semconvImportRegex.find(line.trim()) }
+        .filter { it.groupValues[2] != "SchemaUrls" && it.groupValues[3].isEmpty() }
+        .map { m -> Pair(m.groupValues[2], m.groupValues[1]) }
+    for ((outerClassName, outerPkg) in outerOnlySemconvImports) {
+      val regex =
+        Regex("\\b${outerClassName}\\.([A-Z][a-zA-Z0-9]*[a-z][a-zA-Z0-9]*)\\.([A-Z][A-Z_0-9]+)\\b")
+      val lines = content.lines().toMutableList()
+      var inBlockComment = false
+      for (i in lines.indices) {
+        val trimmed = lines[i].trimStart()
+        if (trimmed.startsWith("/*")) inBlockComment = true
+        if (inBlockComment) {
+          if (trimmed.contains("*/")) inBlockComment = false
+          continue
+        }
+        if (trimmed.startsWith("import ")) continue
+        for (match in regex.findAll(lines[i])) {
+          importsToAdd.add("import ${outerPkg}.${match.groupValues[1]};")
+        }
+        lines[i] = regex.replace(lines[i], "$1.$2")
       }
       content = lines.joinToString("\n")
     }

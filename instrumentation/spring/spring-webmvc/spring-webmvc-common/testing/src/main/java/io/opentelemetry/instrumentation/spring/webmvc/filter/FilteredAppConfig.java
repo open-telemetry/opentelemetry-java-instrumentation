@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.spring.webmvc.filter;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -48,7 +48,7 @@ public class FilteredAppConfig implements WebMvcConfigurer {
     configurer
         .favorParameter(true)
         .ignoreAcceptHeader(true)
-        .defaultContentTypeStrategy(webRequest -> Collections.singletonList(MediaType.TEXT_PLAIN));
+        .defaultContentTypeStrategy(webRequest -> singletonList(MediaType.TEXT_PLAIN));
   }
 
   @Override

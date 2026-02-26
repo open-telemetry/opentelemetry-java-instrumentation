@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -19,7 +19,7 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   public String getDbSystemName(OpenSearchRestRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+    return DbSystemNameIncubatingValues.OPENSEARCH;
   }
 
   @Override

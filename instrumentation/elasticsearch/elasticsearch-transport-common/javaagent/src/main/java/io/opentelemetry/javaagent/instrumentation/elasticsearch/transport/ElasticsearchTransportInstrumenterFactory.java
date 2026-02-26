@@ -24,10 +24,7 @@ public final class ElasticsearchTransportInstrumenterFactory {
   public static Instrumenter<ElasticTransportRequest, ActionResponse> create(
       String instrumentationName,
       AttributesExtractor<ElasticTransportRequest, ActionResponse> experimentalAttributesExtractor,
-      AttributesExtractor<ElasticTransportRequest, ActionResponse> netAttributesExtractor) {
-
-    ElasticsearchTransportAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchTransportAttributesGetter();
+      ElasticsearchTransportAttributesGetter dbClientAttributesGetter) {
 
     InstrumenterBuilder<ElasticTransportRequest, ActionResponse> instrumenterBuilder =
         Instrumenter.<ElasticTransportRequest, ActionResponse>builder(
@@ -35,7 +32,6 @@ public final class ElasticsearchTransportInstrumenterFactory {
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-            .addAttributesExtractor(netAttributesExtractor)
             .addOperationMetrics(DbClientMetrics.get());
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

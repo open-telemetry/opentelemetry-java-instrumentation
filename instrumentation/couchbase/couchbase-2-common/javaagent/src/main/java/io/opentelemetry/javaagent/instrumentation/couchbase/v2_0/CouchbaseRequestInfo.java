@@ -46,9 +46,9 @@ public abstract class CouchbaseRequestInfo {
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitize(query) : null;
+    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =
-        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.sanitizeWithSummary(query) : null;
+        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
     String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
     return new AutoValue_CouchbaseRequestInfo(
         bucket, sqlQuery, sqlQueryWithSummary, operation, false);

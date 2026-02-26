@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
@@ -63,7 +64,7 @@ public enum JdbcConnectionUrlParser {
           path = path.substring(1);
         }
         if (!path.isEmpty()) {
-          builder.db(path);
+          builder.name(path);
         }
         if (uri.getHost() != null) {
           builder.host(uri.getHost());
@@ -91,13 +92,6 @@ public enum JdbcConnectionUrlParser {
       }
 
       String[] split = jdbcUrl.split(";", 2);
-      if (split.length > 1) {
-        Map<String, String> props = splitQuery(split[1], ";");
-        populateStandardProperties(builder, props);
-        if (props.containsKey("instance")) {
-          builder.name(props.get("instance"));
-        }
-      }
 
       String urlServerName = split[0].substring(hostIndex + 17);
       if (!urlServerName.isEmpty()) {
@@ -106,8 +100,16 @@ public enum JdbcConnectionUrlParser {
 
       int databaseLoc = serverName.indexOf("/");
       if (databaseLoc > 1) {
-        builder.db(serverName.substring(databaseLoc + 1));
+        builder.name(serverName.substring(databaseLoc + 1));
         serverName = serverName.substring(0, databaseLoc);
+      }
+
+      if (split.length > 1) {
+        Map<String, String> props = splitQuery(split[1], ";");
+        populateStandardProperties(builder, props);
+        if (props.containsKey("instance")) {
+          builder.name(props.get("instance"));
+        }
       }
 
       int portLoc = serverName.indexOf(":");
@@ -294,9 +296,9 @@ public enum JdbcConnectionUrlParser {
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
-        builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
+        builder.name(jdbcUrl.substring(dbLoc + 1, paramLoc));
       } else {
-        builder.db(jdbcUrl.substring(dbLoc + 1));
+        builder.name(jdbcUrl.substring(dbLoc + 1));
       }
 
       if (portLoc > 0) {
@@ -330,9 +332,9 @@ public enum JdbcConnectionUrlParser {
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
-        builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
+        builder.name(jdbcUrl.substring(dbLoc + 1, paramLoc));
       } else if (dbLoc != -1) {
-        builder.db(jdbcUrl.substring(dbLoc + 1));
+        builder.name(jdbcUrl.substring(dbLoc + 1));
       }
 
       if (jdbcUrl.startsWith("address=")) {
@@ -808,7 +810,10 @@ public enum JdbcConnectionUrlParser {
       if (host != null) {
         builder.host(host);
       }
-      return builder.name(instance);
+      if (instance != null) {
+        builder.name(instance);
+      }
+      return builder;
     }
   },
 
@@ -1086,7 +1091,7 @@ public enum JdbcConnectionUrlParser {
   // Source: https://stackoverflow.com/a/13592567
   private static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
-      return Collections.emptyMap();
+      return emptyMap();
     }
     Map<String, String> queryPairs = new LinkedHashMap<>();
     String[] pairs = query.split(separator);
@@ -1116,10 +1121,10 @@ public enum JdbcConnectionUrlParser {
       }
 
       if (props.containsKey("databasename")) {
-        builder.db((String) props.get("databasename"));
+        builder.name((String) props.get("databasename"));
       }
       if (props.containsKey("databaseName")) {
-        builder.db((String) props.get("databaseName"));
+        builder.name((String) props.get("databaseName"));
       }
 
       if (props.containsKey("servername")) {
