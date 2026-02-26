@@ -45,8 +45,8 @@ public final class RpcServerMetrics implements OperationListener {
 
   @Nullable private final DoubleHistogram oldServerDurationHistogram;
   @Nullable private final DoubleHistogram stableServerDurationHistogram;
-  private final LongHistogram oldServerRequestSize;
-  private final LongHistogram oldServerResponseSize;
+  @Nullable private final LongHistogram oldServerRequestSize;
+  @Nullable private final LongHistogram oldServerResponseSize;
 
   private RpcServerMetrics(Meter meter) {
     // Old metric (milliseconds)
@@ -75,23 +75,28 @@ public final class RpcServerMetrics implements OperationListener {
       stableServerDurationHistogram = null;
     }
 
-    LongHistogramBuilder requestSizeBuilder =
-        meter
-            .histogramBuilder("rpc.server.request.size")
-            .setUnit("By")
-            .setDescription("Measures the size of RPC request messages (uncompressed).")
-            .ofLongs();
-    RpcMetricsAdvice.applyOldServerRequestSizeAdvice(requestSizeBuilder);
-    oldServerRequestSize = requestSizeBuilder.build();
+    if (emitOldRpcSemconv()) {
+      LongHistogramBuilder requestSizeBuilder =
+          meter
+              .histogramBuilder("rpc.server.request.size")
+              .setUnit("By")
+              .setDescription("Measures the size of RPC request messages (uncompressed).")
+              .ofLongs();
+      RpcMetricsAdvice.applyOldServerRequestSizeAdvice(requestSizeBuilder);
+      oldServerRequestSize = requestSizeBuilder.build();
 
-    LongHistogramBuilder responseSizeBuilder =
-        meter
-            .histogramBuilder("rpc.server.response.size")
-            .setUnit("By")
-            .setDescription("Measures the size of RPC response messages (uncompressed).")
-            .ofLongs();
-    RpcMetricsAdvice.applyOldServerRequestSizeAdvice(responseSizeBuilder);
-    oldServerResponseSize = responseSizeBuilder.build();
+      LongHistogramBuilder responseSizeBuilder =
+          meter
+              .histogramBuilder("rpc.server.response.size")
+              .setUnit("By")
+              .setDescription("Measures the size of RPC response messages (uncompressed).")
+              .ofLongs();
+      RpcMetricsAdvice.applyOldServerRequestSizeAdvice(responseSizeBuilder);
+      oldServerResponseSize = responseSizeBuilder.build();
+    } else {
+      oldServerRequestSize = null;
+      oldServerResponseSize = null;
+    }
   }
 
   /**
@@ -124,19 +129,12 @@ public final class RpcServerMetrics implements OperationListener {
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
     double durationNanos = endNanos - state.startTimeNanos();
 
-    // Record to old histogram (milliseconds)
-    if (oldServerDurationHistogram != null) {
-      Attributes oldAttributes = getOldAttributes(attributes, state);
-      oldServerDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
-    }
-
-    // Record to stable histogram (seconds)
-    if (stableServerDurationHistogram != null) {
-      stableServerDurationHistogram.record(durationNanos / NANOS_PER_S, attributes, context);
-    }
-
     if (emitOldRpcSemconv()) {
       Attributes oldAttributes = getOldAttributes(attributes, state);
+
+      if (oldServerDurationHistogram != null) {
+        oldServerDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
+      }
 
       Long rpcServerRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
       if (rpcServerRequestBodySize != null) {
@@ -147,6 +145,10 @@ public final class RpcServerMetrics implements OperationListener {
       if (rpcServerResponseBodySize != null) {
         oldServerResponseSize.record(rpcServerResponseBodySize, oldAttributes, context);
       }
+    }
+
+    if (stableServerDurationHistogram != null) {
+      stableServerDurationHistogram.record(durationNanos / NANOS_PER_S, attributes, context);
     }
   }
 
