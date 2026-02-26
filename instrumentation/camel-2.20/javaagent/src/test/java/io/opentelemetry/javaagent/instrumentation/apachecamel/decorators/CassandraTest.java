@@ -143,7 +143,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               satisfies(
                                   NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM_NAME, "cassandra"),
+                              equalTo(DB_SYSTEM_NAME, CASSANDRA),
                               equalTo(DB_NAMESPACE, "test"),
                               equalTo(
                                   DB_QUERY_TEXT,

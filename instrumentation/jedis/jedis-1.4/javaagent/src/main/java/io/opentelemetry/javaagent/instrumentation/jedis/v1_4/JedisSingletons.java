@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 public final class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
@@ -21,7 +20,6 @@ public final class JedisSingletons {
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
-    JedisNetworkAttributesGetter netAttributesGetter = new JedisNetworkAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<JedisRequest, Void>builder(
@@ -29,10 +27,9 @@ public final class JedisSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
-                    netAttributesGetter, GlobalOpenTelemetry.get()))
+                    dbAttributesGetter, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
