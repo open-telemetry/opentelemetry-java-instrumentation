@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
@@ -81,7 +80,14 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
-    return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
+  public String getErrorType(
+      ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
+    if (response != null) {
+      int statusCode = response.getStatusLine().getStatusCode();
+      if (statusCode >= 400 || statusCode < 100) {
+        return Integer.toString(statusCode);
+      }
+    }
+    return null;
   }
 }

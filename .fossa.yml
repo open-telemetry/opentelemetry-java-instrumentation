@@ -180,9 +180,6 @@ targets:
       target: ':instrumentation:java-util-logging:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:javalin-5.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jaxrs-client:jaxrs-client-1.1-testing'
     - type: gradle
       path: ./
@@ -547,6 +544,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:internal:internal-url-class-loader:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:javalin:javalin-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:javalin:javalin-7.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-1.0:javaagent'
@@ -933,9 +936,6 @@ targets:
       target: ':instrumentation:rxjava:rxjava-2.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rxjava:rxjava-3-common:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:rxjava:rxjava-3.0:javaagent'
     - type: gradle
       path: ./
@@ -946,6 +946,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:rxjava:rxjava-3.1.1:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rxjava:rxjava-common-3.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-2.2:javaagent'

@@ -68,6 +68,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   @Nullable
+  @Deprecated
   default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
@@ -81,5 +82,21 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   // TODO: make this required to implement
   default Map<String, String> getDbQueryParameters(REQUEST request) {
     return emptyMap();
+  }
+
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
+   * type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   */
+  @Nullable
+  // TODO remove the default implementation and make this required to implement
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
   }
 }

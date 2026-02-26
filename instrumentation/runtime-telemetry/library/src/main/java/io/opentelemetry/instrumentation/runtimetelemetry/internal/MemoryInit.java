@@ -12,7 +12,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.semconv.JvmAttributes;
+import io.opentelemetry.semconv.JvmAttributes.JvmMemoryTypeValues;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
@@ -73,9 +73,9 @@ public final class MemoryInit {
   private static String memoryType(MemoryType memoryType) {
     switch (memoryType) {
       case HEAP:
-        return JvmAttributes.JvmMemoryTypeValues.HEAP;
+        return JvmMemoryTypeValues.HEAP;
       case NON_HEAP:
-        return JvmAttributes.JvmMemoryTypeValues.NON_HEAP;
+        return JvmMemoryTypeValues.NON_HEAP;
     }
     return "unknown";
   }
