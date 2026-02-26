@@ -19,10 +19,10 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class SqlQuerySummaryEdgeCasesTest {
 
-  private static final SqlQuerySanitizer SANITIZER = SqlQuerySanitizer.create(true);
+  private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
   private static SqlQuery sanitize(String sql) {
-    return SANITIZER.sanitizeWithSummary(sql);
+    return ANALYZER.analyzeWithSummary(sql);
   }
 
   // ===== DATABASE-SPECIFIC DML SYNTAX =====
