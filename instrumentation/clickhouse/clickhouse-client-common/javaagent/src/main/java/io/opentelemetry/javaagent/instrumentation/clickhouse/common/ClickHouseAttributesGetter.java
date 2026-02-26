@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.Collection;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -29,7 +29,7 @@ final class ClickHouseAttributesGetter
 
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+    return DbSystemNameIncubatingValues.CLICKHOUSE;
   }
 
   @Nullable
@@ -44,7 +44,8 @@ final class ClickHouseAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getErrorType(
+      ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
   }
 

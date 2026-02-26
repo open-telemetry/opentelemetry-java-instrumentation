@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -17,14 +17,14 @@ public final class OperationNameUtil {
 
   private static final String FALLBACK_SPAN_NAME = "hibernate";
 
-  private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   // query could be HQL or SQL
   public static String getOperationNameForQuery(@Nullable String query) {
     if (emitStableDatabaseSemconv()) {
       if (query != null) {
-        SqlQuery info = sanitizer.sanitizeWithSummary(query);
+        SqlQuery info = analyzer.analyzeWithSummary(query);
         String summary = info.getQuerySummary();
         if (summary != null) {
           return summary;
@@ -39,7 +39,7 @@ public final class OperationNameUtil {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlQuery info = sanitizer.sanitize(query);
+    SqlQuery info = analyzer.analyze(query);
     if (info.getOperationName() != null) {
       operation = info.getOperationName();
       if (info.getCollectionName() != null) {
