@@ -58,7 +58,7 @@ class InstrumenterContextTest {
 
     assertThat(InstrumenterContext.get()).isEmpty();
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
-    // verify that sanitized query was cached, see SqlQuerySanitizerUtil
+    // verify that sanitized query was cached, see SqlQueryAnalyzerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
     Map<String, SqlQuery> sanitizedMap =
         (Map<String, SqlQuery>) InstrumenterContext.get().get("sanitized-sql-map");

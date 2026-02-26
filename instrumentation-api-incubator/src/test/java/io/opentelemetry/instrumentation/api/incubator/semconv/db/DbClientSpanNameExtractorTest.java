@@ -232,7 +232,7 @@ class DbClientSpanNameExtractorTest {
     lenient().when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createForMigration(sqlAttributesGetter);
+        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
@@ -253,7 +253,7 @@ class DbClientSpanNameExtractorTest {
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
 
     SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.createForMigration(sqlAttributesGetter);
+        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);

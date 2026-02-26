@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
@@ -26,7 +28,6 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.io.PrintWriter;
@@ -178,7 +179,7 @@ public final class LoggingEventMapper {
         String fileName = firstStackElement.getFileName();
         int lineNumber = firstStackElement.getLineNumber();
 
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILEPATH, fileName);
           }
@@ -188,7 +189,7 @@ public final class LoggingEventMapper {
             builder.setAttribute(CODE_LINENO, (long) lineNumber);
           }
         }
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILE_PATH, fileName);
           }
