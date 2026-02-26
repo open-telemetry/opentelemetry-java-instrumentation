@@ -10,6 +10,7 @@ import static java.util.logging.Level.FINE;
 import com.fasterxml.jackson.core.JsonFactory;
 import jakarta.json.stream.JsonGenerator;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -43,74 +44,65 @@ public final class OpenSearchBodyExtractor {
       }
 
       return serializeSanitized(mapper, request);
-    } catch (RuntimeException e) {
-      logger.log(FINE, "Failure extracting body", e);
+    } catch (Exception exception) {
+      logger.log(FINE, "Failure extracting body", exception);
       return null;
     }
   }
 
   @Nullable
-  private static String serializeSanitized(JsonpMapper mapper, Object item) {
-    try {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+  private static String serializeSanitized(JsonpMapper mapper, Object item) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-      if (mapper instanceof JacksonJsonpMapper) {
-        // Use Jackson-based sanitizing generator for JacksonJsonpMapper
-        com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
-            JSON_FACTORY.createGenerator(baos);
-        com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
-            new SanitizingJacksonJsonGenerator(jacksonGenerator);
-        JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator);
+    if (mapper instanceof JacksonJsonpMapper) {
+      // Use Jackson-based sanitizing generator for JacksonJsonpMapper
+      com.fasterxml.jackson.core.JsonGenerator jacksonGenerator =
+          JSON_FACTORY.createGenerator(baos);
+      com.fasterxml.jackson.core.JsonGenerator sanitizingGenerator =
+          new SanitizingJacksonJsonGenerator(jacksonGenerator);
+      try (JsonGenerator generator = new JacksonJsonpGenerator(sanitizingGenerator)) {
         mapper.serialize(item, generator);
-        generator.close();
+      }
+    } else {
+      // Fallback for other mappers (may not work for all implementations)
+      JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(baos);
+      try (JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator)) {
+        mapper.serialize(item, generator);
+      }
+    }
+
+    String result = baos.toString(StandardCharsets.UTF_8).trim();
+    return result.isEmpty() ? null : result;
+  }
+
+  @Nullable
+  private static String serializeNdJsonSanitized(JsonpMapper mapper, NdJsonpSerializable value)
+      throws IOException {
+    StringBuilder result = new StringBuilder();
+    Iterator<?> values = value._serializables();
+    boolean first = true;
+
+    while (values.hasNext()) {
+      Object item = values.next();
+      String itemStr;
+
+      if (item instanceof NdJsonpSerializable && item != value) {
+        // Recursively handle nested NdJsonpSerializable
+        itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item);
       } else {
-        // Fallback for other mappers (may not work for all implementations)
-        JsonGenerator rawGenerator = mapper.jsonProvider().createGenerator(baos);
-        JsonGenerator generator = new SanitizingJsonGenerator(rawGenerator);
-        mapper.serialize(item, generator);
-        generator.close();
+        itemStr = serializeSanitized(mapper, item);
       }
 
-      String result = baos.toString(StandardCharsets.UTF_8).trim();
-      return result.isEmpty() ? null : result;
-    } catch (Exception e) {
-      logger.log(FINE, "Failure serializing item", e);
-      return null;
-    }
-  }
-
-  @Nullable
-  private static String serializeNdJsonSanitized(JsonpMapper mapper, NdJsonpSerializable value) {
-    try {
-      StringBuilder result = new StringBuilder();
-      Iterator<?> values = value._serializables();
-      boolean first = true;
-
-      while (values.hasNext()) {
-        Object item = values.next();
-        String itemStr;
-
-        if (item instanceof NdJsonpSerializable && item != value) {
-          // Recursively handle nested NdJsonpSerializable
-          itemStr = serializeNdJsonSanitized(mapper, (NdJsonpSerializable) item);
-        } else {
-          itemStr = serializeSanitized(mapper, item);
+      if (itemStr != null && !itemStr.isEmpty()) {
+        if (!first) {
+          result.append(QUERY_SEPARATOR);
         }
-
-        if (itemStr != null && !itemStr.isEmpty()) {
-          if (!first) {
-            result.append(QUERY_SEPARATOR);
-          }
-          result.append(itemStr);
-          first = false;
-        }
+        result.append(itemStr);
+        first = false;
       }
-
-      return result.length() == 0 ? null : result.toString();
-    } catch (RuntimeException e) {
-      logger.log(FINE, "Failure serializing NdJson", e);
-      return null;
     }
+
+    return result.length() == 0 ? null : result.toString();
   }
 
   private OpenSearchBodyExtractor() {}
