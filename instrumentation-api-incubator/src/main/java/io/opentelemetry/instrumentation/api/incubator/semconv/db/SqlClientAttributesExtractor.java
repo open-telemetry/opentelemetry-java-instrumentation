@@ -108,8 +108,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
-        attributes.put(
-            DB_QUERY_TEXT, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);
+        attributes.put(DB_QUERY_TEXT, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);
         String querySummary = analyzedQuery.getQuerySummary();
         attributes.put(
             DB_QUERY_SUMMARY,

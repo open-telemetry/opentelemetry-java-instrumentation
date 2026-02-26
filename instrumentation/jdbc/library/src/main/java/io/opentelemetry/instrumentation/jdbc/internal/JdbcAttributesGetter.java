@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDiale
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
