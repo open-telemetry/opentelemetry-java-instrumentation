@@ -21,7 +21,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +30,8 @@ import org.apache.logging.log4j.message.Message;
 
 public final class Log4jHelper {
 
-  private static final Logger logger = Logger.getLogger(Log4jHelper.class.getName());
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(Log4jHelper.class.getName());
 
   private static final LogEventMapper<Map<String, String>> mapper;
   private static final boolean captureExperimentalAttributes;
