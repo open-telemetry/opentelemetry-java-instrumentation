@@ -58,12 +58,6 @@ enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
-    return responseStatusExtractor.apply(error);
-  }
-
-  @Nullable
-  @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     return responseStatusExtractor.apply(error);

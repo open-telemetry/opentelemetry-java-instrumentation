@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
@@ -146,7 +145,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     if (emitStableDatabaseSemconv()) {
-      attributes.put(DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
       String errorType = getter.getErrorType(request, response, error);
       // fall back to exception class name
       if (errorType == null && error != null) {

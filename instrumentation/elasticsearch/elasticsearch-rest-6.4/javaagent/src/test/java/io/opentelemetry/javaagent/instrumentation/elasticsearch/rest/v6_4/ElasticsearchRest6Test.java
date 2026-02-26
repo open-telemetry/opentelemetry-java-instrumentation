@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -102,10 +100,7 @@ class ElasticsearchRest6Test {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "200" : null)),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -122,7 +117,6 @@ class ElasticsearchRest6Test {
     assertDurationMetric(
         testing,
         "io.opentelemetry.elasticsearch-rest-6.4",
-        DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
@@ -181,10 +175,7 @@ class ElasticsearchRest6Test {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "200" : null)),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)

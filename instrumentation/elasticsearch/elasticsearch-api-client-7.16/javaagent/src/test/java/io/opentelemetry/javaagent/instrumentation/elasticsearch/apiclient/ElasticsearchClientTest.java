@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -112,10 +110,7 @@ class ElasticsearchClientTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "200" : null)),
+                            equalTo(SERVER_PORT, httpHost.getPort())),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -157,10 +152,7 @@ class ElasticsearchClientTest {
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
                                 DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("index"), "test-index"),
-                            equalTo(DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"), "test-id"),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "201" : null)),
+                            equalTo(DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"), "test-id")),
                 span ->
                     span.hasName("PUT")
                         .hasKind(SpanKind.CLIENT)
@@ -180,7 +172,6 @@ class ElasticsearchClientTest {
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
         DB_OPERATION_NAME,
-        DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
@@ -223,10 +214,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_FULL, httpHost.toURI() + "/"),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                emitStableDatabaseSemconv() ? "200" : null)),
+                            equalTo(URL_FULL, httpHost.toURI() + "/")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)

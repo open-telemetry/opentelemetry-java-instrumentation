@@ -34,10 +34,4 @@ final class OpenSearchAttributesGetter
   public String getDbOperationName(OpenSearchRequest request) {
     return request.getMethod();
   }
-
-  @Nullable
-  @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
-    return null; // Response status is handled by HTTP instrumentation
-  }
 }

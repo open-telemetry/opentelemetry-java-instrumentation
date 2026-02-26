@@ -80,15 +80,6 @@ final class ElasticsearchDbAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      return Integer.toString(response.getStatusLine().getStatusCode());
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getErrorType(
       ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
     if (response != null) {
