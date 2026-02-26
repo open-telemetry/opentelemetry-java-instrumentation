@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.logging.Level.FINE;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import jakarta.json.stream.JsonGenerator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -39,7 +39,7 @@ public final class OpenSearchBodyExtractor {
         // This path is typically not used for search queries
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ((GenericSerializable) request).serialize(baos);
-        String body = baos.toString(StandardCharsets.UTF_8);
+        String body = baos.toString(UTF_8);
         return body.isEmpty() ? null : body;
       }
 
@@ -71,7 +71,7 @@ public final class OpenSearchBodyExtractor {
       }
     }
 
-    String result = baos.toString(StandardCharsets.UTF_8).trim();
+    String result = baos.toString(UTF_8).trim();
     return result.isEmpty() ? null : result;
   }
 
