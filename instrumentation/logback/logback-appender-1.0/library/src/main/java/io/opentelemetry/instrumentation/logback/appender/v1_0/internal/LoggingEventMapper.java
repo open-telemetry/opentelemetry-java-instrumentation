@@ -40,7 +40,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -53,7 +52,6 @@ import org.slf4j.event.KeyValuePair;
  * any time.
  */
 public final class LoggingEventMapper {
-  private static final Logger logger = Logger.getLogger(LoggingEventMapper.class.getName());
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
   private static final AttributeKey<String> CODE_NAMESPACE =
@@ -111,10 +109,6 @@ public final class LoggingEventMapper {
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
     this.captureEventName = builder.captureEventName;
-    if (captureEventName) {
-      logger.warning(
-          "The captureEventName setting is deprecated and will be removed in a future version.");
-    }
   }
 
   public static Builder builder() {

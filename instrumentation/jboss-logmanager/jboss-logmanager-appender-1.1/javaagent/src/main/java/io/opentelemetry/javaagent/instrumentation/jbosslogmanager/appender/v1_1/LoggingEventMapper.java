@@ -60,7 +60,8 @@ public final class LoggingEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
     if (captureEventName) {
       julLogger.warning(
-          "The capture-event-name setting is deprecated and will be removed in a future version.");
+          "The otel.instrumentation.jboss-logmanager.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
     }
   }
 

@@ -24,7 +24,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
@@ -37,8 +36,6 @@ import org.apache.logging.log4j.message.Message;
  * any time.
  */
 public final class LogEventMapper<T> {
-
-  private static final Logger logger = Logger.getLogger(LogEventMapper.class.getName());
 
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
@@ -99,10 +96,6 @@ public final class LogEventMapper<T> {
     }
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureEventName = captureEventName;
-    if (captureEventName) {
-      logger.warning(
-          "The captureEventName setting is deprecated and will be removed in a future version.");
-    }
   }
 
   /**
