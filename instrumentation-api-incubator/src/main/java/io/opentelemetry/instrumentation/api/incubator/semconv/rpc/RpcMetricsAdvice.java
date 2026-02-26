@@ -57,13 +57,13 @@ final class RpcMetricsAdvice {
       keys.add(RPC_GRPC_STATUS_CODE);
     }
 
-    // Network type only for old semconv
+    // Network type and transport only for old semconv
     if (!stable) {
       keys.add(NETWORK_TYPE);
+      keys.add(NETWORK_TRANSPORT);
     }
 
     // Common attributes
-    keys.add(NETWORK_TRANSPORT);
     keys.add(SERVER_ADDRESS);
     keys.add(SERVER_PORT);
 
