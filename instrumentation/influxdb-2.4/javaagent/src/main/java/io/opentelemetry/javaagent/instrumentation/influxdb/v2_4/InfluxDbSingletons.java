@@ -21,12 +21,12 @@ public final class InfluxDbSingletons {
     InfluxDbAttributesGetter dbAttributesGetter = new InfluxDbAttributesGetter();
 
     INSTRUMENTER =
-        Instrumenter.<InfluxDbRequest, Void>builder(
+        Instrumenter.builder(
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.influxdb-2.4",
-                DbClientSpanNameExtractor.createForMigration(dbAttributesGetter))
+                DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
             .addAttributesExtractor(
-                SqlClientAttributesExtractor.<InfluxDbRequest, Void>builder(dbAttributesGetter)
+                SqlClientAttributesExtractor.builder(dbAttributesGetter)
                     .setTableAttribute(null)
                     .build())
             .addOperationMetrics(DbClientMetrics.get())
