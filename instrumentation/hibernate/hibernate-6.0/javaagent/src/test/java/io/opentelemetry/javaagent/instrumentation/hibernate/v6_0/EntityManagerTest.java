@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -149,7 +150,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -331,7 +332,7 @@ class EntityManagerTest extends AbstractHibernateTest {
     span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
@@ -363,7 +364,7 @@ class EntityManagerTest extends AbstractHibernateTest {
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
