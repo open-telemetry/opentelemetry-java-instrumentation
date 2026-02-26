@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -35,7 +35,7 @@ class DistroVersionResourceProviderTest {
 
           assertThat(
                   resource
-                      .createResource(DefaultConfigProperties.createFromMap(Collections.emptyMap()))
+                      .createResource(DefaultConfigProperties.createFromMap(emptyMap()))
                       .getAttributes()
                       .asMap())
               .containsEntry(

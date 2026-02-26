@@ -168,7 +168,6 @@ readonly INSTRUMENTATIONS=(
   "lettuce:lettuce-5.0:javaagent:testExperimental"
   "lettuce:lettuce-5.0:javaagent:testStableSemconv"
   "lettuce:lettuce-5.1:javaagent:test"
-  "lettuce:lettuce-5.1:javaagent:testStableSemconv"
   "mongo:mongo-3.1:javaagent:test"
   "mongo:mongo-3.1:javaagent:testStableSemconv"
   "mongo:mongo-3.7:javaagent:test"
@@ -293,4 +292,6 @@ readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
   "kafka:kafka-streams-0.11:javaagent:test"
   "kafka:kafka-streams-0.11:javaagent:testExperimental"
+  "lettuce:lettuce-5.1:javaagent:test"
+  "lettuce:lettuce-5.1:javaagent:testStableSemconv"
 )

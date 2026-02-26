@@ -5,14 +5,17 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
@@ -74,7 +77,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -86,11 +89,17 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
-                                          "CLIENT SETINFO lib-name Lettuce")))),
+                                          "CLIENT SETINFO lib-name Lettuce"),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -103,11 +112,17 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
-                                              stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
+                                              stringAssert.startsWith("CLIENT SETINFO lib-ver")),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("CLIENT")
+                          span.hasName(spanName("CLIENT"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -121,11 +136,17 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
                                               stringAssert.startsWith(
-                                                  "CLIENT MAINT_NOTIFICATIONS"))))),
+                                                  "CLIENT MAINT_NOTIFICATIONS")),
+                                      equalTo(maybeStable(DB_OPERATION), "CLIENT"),
+                                      equalTo(
+                                          ERROR_TYPE,
+                                          emitStableDatabaseSemconv()
+                                              ? "io.lettuce.core.RedisCommandExecutionException"
+                                              : null)))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("AUTH")
+                          span.hasName(spanName("AUTH"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -135,7 +156,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
+                                      equalTo(maybeStable(DB_OPERATION), "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
     } else {
@@ -144,7 +166,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("AUTH")
+                          span.hasName(spanName("AUTH"))
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
@@ -154,7 +176,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?"),
+                                      equalTo(maybeStable(DB_OPERATION), "AUTH")))
                               .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
   }

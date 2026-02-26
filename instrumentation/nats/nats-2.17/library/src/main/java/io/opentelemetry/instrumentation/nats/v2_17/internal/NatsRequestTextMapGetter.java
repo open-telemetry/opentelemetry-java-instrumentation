@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.nats.client.impl.Headers;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
 import javax.annotation.Nullable;
 
 enum NatsRequestTextMapGetter implements TextMapGetter<NatsRequest> {
@@ -18,7 +19,7 @@ enum NatsRequestTextMapGetter implements TextMapGetter<NatsRequest> {
     Headers headers = request.getHeaders();
 
     if (headers == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     return headers.keySet();

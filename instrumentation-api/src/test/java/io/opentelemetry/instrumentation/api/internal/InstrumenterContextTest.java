@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -20,7 +21,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,7 +46,7 @@ class InstrumenterContextTest {
 
           @Override
           public Collection<String> getRawQueryTexts(Object request) {
-            return Collections.singletonList(testQuery);
+            return singletonList(testQuery);
           }
         };
     SpanNameExtractor<Object> spanNameExtractor = DbClientSpanNameExtractor.create(getter);
@@ -58,7 +58,7 @@ class InstrumenterContextTest {
 
     assertThat(InstrumenterContext.get()).isEmpty();
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
-    // verify that sanitized query was cached, see SqlQuerySanitizerUtil
+    // verify that sanitized query was cached, see SqlQueryAnalyzerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
     Map<String, SqlQuery> sanitizedMap =
         (Map<String, SqlQuery>) InstrumenterContext.get().get("sanitized-sql-map");

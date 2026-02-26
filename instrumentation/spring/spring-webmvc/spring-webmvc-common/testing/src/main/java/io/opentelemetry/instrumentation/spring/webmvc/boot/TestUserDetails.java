@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
+import static java.util.Collections.emptySet;
+
 import java.util.Collection;
-import java.util.Collections;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -23,7 +24,7 @@ public class TestUserDetails implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return Collections.emptySet();
+    return emptySet();
   }
 
   @Override

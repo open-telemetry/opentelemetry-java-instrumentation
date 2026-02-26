@@ -5,18 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -64,11 +65,11 @@ class CodeAttributesExtractorTest {
     Attributes attributes = startAttributes.build();
     SemconvCodeStabilityUtil.codeFunctionAssertions(TestClass.class, "doSomething");
 
-    if (SemconvStability.isEmitStableCodeSemconv()) {
+    if (emitStableCodeSemconv()) {
       assertThat(attributes)
           .containsEntry(CODE_FUNCTION_NAME, TestClass.class.getName() + ".doSomething");
     }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
+    if (emitOldCodeSemconv()) {
       assertThat(attributes)
           .containsEntry(CODE_NAMESPACE, TestClass.class.getName())
           .containsEntry(CODE_FUNCTION, "doSomething");
@@ -84,7 +85,7 @@ class CodeAttributesExtractorTest {
 
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

@@ -20,9 +20,9 @@ resource:
     - name: service.name
       value: declarative-config-smoke-test
 
-instrumentation/development:
-  java:
-    agent:
-      instrumentation_mode: none
-    tomcat:
-      enabled: true
+distribution:
+  javaagent:
+    instrumentation:
+      default_enabled: false
+      enabled:
+        - tomcat
