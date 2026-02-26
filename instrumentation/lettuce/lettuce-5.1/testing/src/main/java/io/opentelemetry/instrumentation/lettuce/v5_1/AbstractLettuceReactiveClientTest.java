@@ -104,8 +104,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -149,8 +148,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -199,8 +197,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -237,8 +234,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -262,8 +258,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -308,8 +303,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -324,8 +318,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -354,8 +347,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -370,8 +362,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),

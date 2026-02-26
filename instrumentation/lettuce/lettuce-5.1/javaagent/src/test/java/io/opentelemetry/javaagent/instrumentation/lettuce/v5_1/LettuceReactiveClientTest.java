@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -65,8 +64,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
@@ -81,8 +79,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(
-                                        NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
