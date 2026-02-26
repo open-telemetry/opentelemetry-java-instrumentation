@@ -242,19 +242,19 @@ public final class Internal {
    * Configures and builds a {@link RuntimeTelemetry} instance based on the provided configuration.
    *
    * @param openTelemetry the OpenTelemetry instance
-   * @param instrumentationMode the instrumentation mode ("default" or other)
+   * @param defaultEnabled whether instrumentation is enabled by default
    * @return the configured RuntimeTelemetry, or null if runtime telemetry is disabled
    */
   @Nullable
   public static RuntimeTelemetry configure(
-      OpenTelemetry openTelemetry, String instrumentationMode) {
+      OpenTelemetry openTelemetry, boolean defaultEnabled) {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
     DeclarativeConfigProperties java17Config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17");
 
     // Determine which configuration is being used
-    boolean baseEnabled = config.getBoolean("enabled", instrumentationMode.equals("default"));
+    boolean baseEnabled = config.getBoolean("enabled", defaultEnabled);
     boolean java17Enabled = java17Config.getBoolean("enabled", false);
     boolean java17EnableAll = java17Config.getBoolean("enable_all", false);
 

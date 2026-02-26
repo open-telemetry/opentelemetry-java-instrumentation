@@ -10,7 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.javaagent.extension.AgentListener;
-import io.opentelemetry.javaagent.tooling.config.AgentConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 
 /** An {@link AgentListener} that enables runtime metrics during agent startup. */
@@ -20,7 +20,9 @@ public class RuntimeTelemetryInstaller implements AgentListener {
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     RuntimeTelemetry runtimeTelemetry =
-        Internal.configure(GlobalOpenTelemetry.get(), AgentConfig.instrumentationMode());
+        Internal.configure(
+            GlobalOpenTelemetry.get(),
+            AgentDistributionConfig.get().isInstrumentationDefaultEnabled());
     if (runtimeTelemetry != null) {
       Runtime.getRuntime()
           .addShutdownHook(
