@@ -47,9 +47,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     } else {
       // "String literals are delimited by single quotation marks."
       // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-      return analyzer
-          .analyze(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS)
-          .getQueryText();
+      return analyzer.analyze(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS).getQueryText();
     }
   }
 
