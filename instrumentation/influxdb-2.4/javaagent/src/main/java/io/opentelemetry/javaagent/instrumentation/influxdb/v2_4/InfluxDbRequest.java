@@ -11,25 +11,25 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class InfluxDbRequest {
 
-  private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   public static InfluxDbRequest create(
-      String host, int port, String namespace, String operationName, String sql) {
+      String host, int port, String namespace, @Nullable String operationName, @Nullable String sql) {
     // "String literals must be surrounded by single quotes."
     // https://docs.influxdata.com/influxdb/v2/reference/syntax/influxql/spec/#strings
     SqlQuery sqlQuery =
-        emitOldDatabaseSemconv() ? sanitizer.sanitize(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS) : null;
+        emitOldDatabaseSemconv() ? analyzer.analyze(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS) : null;
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv()
-            ? sanitizer.sanitizeWithSummary(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS)
+            ? analyzer.analyzeWithSummary(sql, DOUBLE_QUOTES_ARE_IDENTIFIERS)
             : null;
     return new AutoValue_InfluxDbRequest(
         host, port, namespace, operationName, sqlQuery, sqlQueryWithSummary);
@@ -45,8 +45,5 @@ public abstract class InfluxDbRequest {
   public abstract String getOperationName();
 
   @Nullable
-  public abstract SqlQuery getSqlQuery();
-
-  @Nullable
-  public abstract SqlQuery getSqlQueryWithSummary();
+  public abstract String getSql();
 }

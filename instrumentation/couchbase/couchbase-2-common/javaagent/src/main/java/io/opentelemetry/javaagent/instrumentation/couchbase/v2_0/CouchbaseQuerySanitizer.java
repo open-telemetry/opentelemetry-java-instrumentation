@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -17,8 +17,8 @@ import javax.annotation.Nullable;
 
 public final class CouchbaseQuerySanitizer {
 
-  private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   @Nullable private static final Class<?> QUERY_CLASS;
   @Nullable private static final Class<?> STATEMENT_CLASS;
@@ -77,23 +77,23 @@ public final class CouchbaseQuerySanitizer {
     ANALYTICS_GET_STATEMENT = analyticsGetStatement;
   }
 
-  public static SqlQuery sanitize(Object query) {
-    return sanitizeInternal(query, false);
+  public static SqlQuery analyze(Object query) {
+    return analyzeInternal(query, false);
   }
 
-  public static SqlQuery sanitizeWithSummary(Object query) {
-    return sanitizeInternal(query, true);
+  public static SqlQuery analyzeWithSummary(Object query) {
+    return analyzeInternal(query, true);
   }
 
-  private static SqlQuery sanitizeInternal(Object query, boolean withSummary) {
+  private static SqlQuery analyzeInternal(Object query, boolean withSummary) {
     if (query instanceof String) {
-      return sanitizeString((String) query, withSummary);
+      return analyzeString((String) query, withSummary);
     }
     // Query is present in Couchbase [2.0.0, 2.2.0)
     // Statement is present starting from Couchbase 2.1.0
     if ((QUERY_CLASS != null && QUERY_CLASS.isAssignableFrom(query.getClass()))
         || (STATEMENT_CLASS != null && STATEMENT_CLASS.isAssignableFrom(query.getClass()))) {
-      return sanitizeString(query.toString(), withSummary);
+      return analyzeString(query.toString(), withSummary);
     }
     // SpatialViewQuery is present starting from Couchbase 2.1.0
     String queryClassName = query.getClass().getName();
@@ -105,14 +105,14 @@ public final class CouchbaseQuerySanitizer {
     if (N1QL_QUERY_CLASS != null && N1QL_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String queryText = getQueryText(N1QL_GET_STATEMENT, query);
       if (queryText != null) {
-        return sanitizeString(queryText, withSummary);
+        return analyzeString(queryText, withSummary);
       }
     }
     // AnalyticsQuery is present starting from Couchbase 2.4.3
     if (ANALYTICS_QUERY_CLASS != null && ANALYTICS_QUERY_CLASS.isAssignableFrom(query.getClass())) {
       String queryText = getQueryText(ANALYTICS_GET_STATEMENT, query);
       if (queryText != null) {
-        return sanitizeString(queryText, withSummary);
+        return analyzeString(queryText, withSummary);
       }
     }
     return SqlQuery.create(query.getClass().getSimpleName(), null, null);
@@ -129,13 +129,13 @@ public final class CouchbaseQuerySanitizer {
     }
   }
 
-  private static SqlQuery sanitizeString(String query, boolean withSummary) {
+  private static SqlQuery analyzeString(String query, boolean withSummary) {
     // "In SQL++ single and double quotation marks can be used for strings."
     // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
     if (withSummary) {
-      return sanitizer.sanitizeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      return analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     }
-    return sanitizer.sanitize(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    return analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private CouchbaseQuerySanitizer() {}

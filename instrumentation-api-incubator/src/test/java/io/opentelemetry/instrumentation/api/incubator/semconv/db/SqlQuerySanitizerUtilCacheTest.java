@@ -58,10 +58,10 @@ class SqlQuerySanitizerUtilCacheTest {
     cleanup.deferCleanup(InstrumenterContext::reset);
 
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
-    // verify that sanitized query was cached
-    SqlQuery cached = SqlQuerySanitizerUtil.sanitize(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    // verify that analyzed query was cached
+    SqlQuery cached = SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(cached)
-        .isSameAs(SqlQuerySanitizerUtil.sanitize(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
+        .isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
 
     // verify that the attributes extractor produces correct values
     AttributeKey<String> queryTextKey =

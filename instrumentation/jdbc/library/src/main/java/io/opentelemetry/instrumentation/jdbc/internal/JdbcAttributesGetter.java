@@ -78,8 +78,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
-    DbInfo dbInfo = request.getDbInfo();
-    return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
+    return request.getDbInfo().getName();
   }
 
   @Deprecated // to be removed in 3.0
@@ -112,7 +111,8 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getErrorType(
+      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }

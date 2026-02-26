@@ -29,10 +29,10 @@ class MultiQuery {
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     UniqueValue uniqueQuerySummary = new UniqueValue();
     for (String rawQueryText : rawQueryTexts) {
-      SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText, dialect);
-      uniqueStoredProcedureName.set(sanitizedQuery.getStoredProcedureName());
-      uniqueQueryTexts.add(querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
-      uniqueQuerySummary.set(sanitizedQuery.getQuerySummary());
+      SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
+      uniqueStoredProcedureName.set(analyzedQuery.getStoredProcedureName());
+      uniqueQueryTexts.add(querySanitizationEnabled ? analyzedQuery.getQueryText() : rawQueryText);
+      uniqueQuerySummary.set(analyzedQuery.getQuerySummary());
     }
 
     String querySummary = uniqueQuerySummary.getValue();

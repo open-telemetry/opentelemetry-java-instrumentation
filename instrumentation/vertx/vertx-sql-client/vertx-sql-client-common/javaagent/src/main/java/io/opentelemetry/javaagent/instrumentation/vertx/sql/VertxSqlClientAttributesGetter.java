@@ -12,9 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -22,8 +20,8 @@ enum VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
   INSTANCE;
 
-  private static final List<Function<Exception, String>> responseStatusExtractors =
-      createResponseStatusExtractors();
+  private static final Function<Throwable, String> responseStatusExtractor =
+      createResponseStatusExtractor();
 
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
@@ -73,14 +71,9 @@ enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
-    for (Function<Exception, String> extractor : responseStatusExtractors) {
-      String status = extractor.apply((Exception) error);
-      if (status != null) {
-        return status;
-      }
-    }
-    return null;
+  public String getErrorType(
+      VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return responseStatusExtractor.apply(error);
   }
 
   @Override
@@ -88,14 +81,19 @@ enum VertxSqlClientAttributesGetter
     return request.isParameterizedQuery();
   }
 
-  private static List<Function<Exception, String>> createResponseStatusExtractors() {
-    return Arrays.asList(
-        responseStatusExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState"),
-        // older version only have this method
-        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode"));
+  private static Function<Throwable, String> createResponseStatusExtractor() {
+    Function<Throwable, String> extractor =
+        responseStatusExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState");
+    // older versions only have this method
+    Function<Throwable, String> fallback =
+        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode");
+    return error -> {
+      String status = extractor.apply(error);
+      return status != null ? status : fallback.apply(error);
+    };
   }
 
-  private static Function<Exception, String> responseStatusExtractor(
+  private static Function<Throwable, String> responseStatusExtractor(
       String className, String methodName) {
     try {
       // loaded via reflection, because this class is not available in all versions that we support

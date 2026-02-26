@@ -88,13 +88,13 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     if (emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitize(rawQueryText, dialect);
-        String operationName = sanitizedQuery.getOperationName();
+        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryText, dialect);
+        String operationName = analyzedQuery.getOperationName();
         attributes.put(
-            DB_STATEMENT, querySanitizationEnabled ? sanitizedQuery.getQueryText() : rawQueryText);
+            DB_STATEMENT, querySanitizationEnabled ? analyzedQuery.getQueryText() : rawQueryText);
         attributes.put(DB_OPERATION, operationName);
         if (oldSemconvTableAttribute != null) {
-          attributes.put(oldSemconvTableAttribute, sanitizedQuery.getCollectionName());
+          attributes.put(oldSemconvTableAttribute, analyzedQuery.getCollectionName());
         }
       }
     }
@@ -107,14 +107,14 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean shouldSanitize = querySanitizationEnabled && !parameterizedQuery;
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery sanitizedQuery = SqlQuerySanitizerUtil.sanitizeWithSummary(rawQueryText, dialect);
+        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
         attributes.put(
-            DB_QUERY_TEXT, shouldSanitize ? sanitizedQuery.getQueryText() : rawQueryText);
-        String querySummary = sanitizedQuery.getQuerySummary();
+            DB_QUERY_TEXT, shouldSanitize ? analyzedQuery.getQueryText() : rawQueryText);
+        String querySummary = analyzedQuery.getQuerySummary();
         attributes.put(
             DB_QUERY_SUMMARY,
             isBatch && querySummary != null ? "BATCH " + querySummary : querySummary);
-        attributes.put(DB_STORED_PROCEDURE_NAME, sanitizedQuery.getStoredProcedureName());
+        attributes.put(DB_STORED_PROCEDURE_NAME, analyzedQuery.getStoredProcedureName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             MultiQuery.analyzeWithSummary(
@@ -152,7 +152,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalNetworkExtractor.onEnd(attributes, request, response);
-    DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
+    DbClientAttributesExtractor.onEndCommon(attributes, getter, request, response, error);
   }
 
   /**

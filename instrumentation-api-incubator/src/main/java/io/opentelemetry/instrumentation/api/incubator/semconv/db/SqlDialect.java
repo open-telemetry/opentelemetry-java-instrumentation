@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import com.google.auto.value.AutoValue;
 
-/** Describes SQL dialect options that affect how {@link SqlQuerySanitizer} processes queries. */
+/** Describes SQL dialect options that affect how {@link SqlQueryAnalyzer} processes queries. */
 @AutoValue
 public abstract class SqlDialect {
 
