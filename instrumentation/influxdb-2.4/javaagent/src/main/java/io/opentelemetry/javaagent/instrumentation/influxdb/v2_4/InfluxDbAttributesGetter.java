@@ -54,4 +54,14 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     String namespace = request.getNamespace();
     return "".equals(namespace) ? null : namespace;
   }
+
+  @Override
+  public String getServerAddress(InfluxDbRequest request) {
+    return request.getHost();
+  }
+
+  @Override
+  public Integer getServerPort(InfluxDbRequest request) {
+    return request.getPort();
+  }
 }

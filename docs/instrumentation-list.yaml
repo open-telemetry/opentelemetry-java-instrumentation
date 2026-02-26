@@ -2403,14 +2403,6 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.query.summary
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
         - name: http.request.method
           type: STRING
         - name: http.response.status_code
@@ -5441,12 +5433,24 @@ libraries:
     library_link: https://javalin.io/
     features:
     - HTTP_ROUTE
-    source_path: instrumentation/javalin-5.0
+    source_path: instrumentation/javalin/javalin-5.0
     minimum_java_version: 11
     scope:
       name: io.opentelemetry.javalin-5.0
     javaagent_target_versions:
-    - io.javalin:javalin:[5.0.0,)
+    - io.javalin:javalin:[5.0.0,7.0.0)
+  - name: javalin-7.0
+    description: This instrumentation enriches existing HTTP server spans with route
+      information, it does not emit any telemetry on its own.
+    library_link: https://javalin.io/
+    features:
+    - HTTP_ROUTE
+    source_path: instrumentation/javalin/javalin-7.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.javalin-7.0
+    javaagent_target_versions:
+    - io.javalin:javalin:[7.0.0,)
   jaxrs:
   - name: jaxrs-1.0
     display_name: JAX-RS 1.x
@@ -8177,6 +8181,8 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: db.operation
+          type: STRING
         - name: db.statement
           type: STRING
         - name: db.system
@@ -8200,6 +8206,8 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
+        - name: db.operation.name
+          type: STRING
         - name: db.system.name
           type: STRING
         - name: network.peer.address
@@ -8213,11 +8221,13 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: db.operation.name
+          type: STRING
         - name: db.query.text
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: error
+        - name: error.type
           type: STRING
         - name: network.peer.address
           type: STRING
