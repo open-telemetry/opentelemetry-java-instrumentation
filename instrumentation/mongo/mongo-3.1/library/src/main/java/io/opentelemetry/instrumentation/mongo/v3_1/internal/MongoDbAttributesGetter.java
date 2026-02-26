@@ -93,6 +93,26 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
+  public String getServerAddress(CommandStartedEvent event) {
+    if (event.getConnectionDescription() != null
+        && event.getConnectionDescription().getServerAddress() != null) {
+      return event.getConnectionDescription().getServerAddress().getHost();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(CommandStartedEvent event) {
+    if (event.getConnectionDescription() != null
+        && event.getConnectionDescription().getServerAddress() != null) {
+      return event.getConnectionDescription().getServerAddress().getPort();
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
   public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof MongoException) {
       return Integer.toString(((MongoException) error).getCode());
