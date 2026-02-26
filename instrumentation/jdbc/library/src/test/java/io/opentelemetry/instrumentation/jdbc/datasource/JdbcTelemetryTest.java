@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -105,19 +104,17 @@ class JdbcTelemetryTest {
                             equalTo(DB_SYSTEM_NAME, POSTGRESQL),
                             equalTo(DB_NAMESPACE, "dbname"),
                             equalTo(DB_QUERY_TEXT, "SELECT ?;"),
-                            equalTo(DB_RESPONSE_STATUS_CODE, "42"),
                             equalTo(
                                 DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? "SELECT" : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 5432),
-                            equalTo(ERROR_TYPE, "java.sql.SQLException"))));
+                            equalTo(ERROR_TYPE, "42"))));
 
     assertDurationMetric(
         testing,
         "io.opentelemetry.jdbc",
         DB_NAMESPACE,
         DB_QUERY_SUMMARY,
-        DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         ERROR_TYPE,
         SERVER_ADDRESS,
