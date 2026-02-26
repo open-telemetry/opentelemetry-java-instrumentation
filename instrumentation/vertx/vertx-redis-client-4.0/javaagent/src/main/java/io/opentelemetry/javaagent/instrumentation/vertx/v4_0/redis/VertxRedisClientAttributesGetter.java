@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 public enum VertxRedisClientAttributesGetter
@@ -22,7 +22,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Override
   public String getDbSystemName(VertxRedisClientRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Deprecated // to be removed in 3.0
@@ -57,5 +57,29 @@ public enum VertxRedisClientAttributesGetter
   @Override
   public String getDbOperationName(VertxRedisClientRequest request) {
     return request.getCommand();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(VertxRedisClientRequest request) {
+    return request.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(VertxRedisClientRequest request) {
+    return request.getPort();
+  }
+
+  @Override
+  @Nullable
+  public String getNetworkPeerAddress(VertxRedisClientRequest request, @Nullable Void unused) {
+    return request.getPeerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(VertxRedisClientRequest request, @Nullable Void unused) {
+    return request.getPeerPort();
   }
 }

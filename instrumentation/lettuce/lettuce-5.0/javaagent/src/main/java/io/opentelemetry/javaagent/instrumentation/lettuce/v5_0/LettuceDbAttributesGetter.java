@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -24,7 +24,7 @@ final class LettuceDbAttributesGetter
 
   @Override
   public String getDbSystemName(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override

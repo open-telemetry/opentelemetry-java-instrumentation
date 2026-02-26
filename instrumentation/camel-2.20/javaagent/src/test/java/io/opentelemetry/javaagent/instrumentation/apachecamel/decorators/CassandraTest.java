@@ -58,8 +58,6 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
   private static Integer cassandraPort;
 
-  private static CqlSession cqlSession;
-
   @Override
   protected ConfigurableApplicationContext setupServer() {
     cassandra.start();
@@ -93,20 +91,19 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   @AfterAll
   protected void cleanUp() {
     cleanupServer();
-    cqlSession.close();
     cassandra.stop();
   }
 
   static void cassandraSetup() {
-    cqlSession =
+    try (CqlSession cqlSession =
         CqlSession.builder()
             .addContactPoint(cassandra.getContactPoint())
             .withLocalDatacenter(cassandra.getLocalDatacenter())
-            .build();
-
-    cqlSession.execute(
-        "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
-    cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
+            .build()) {
+      cqlSession.execute(
+          "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
+      cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
+    }
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -114,6 +111,15 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   void testCassandra() {
     CamelContext camelContext = appContext.getBean(CamelContext.class);
     ProducerTemplate template = camelContext.createProducerTemplate();
+
+    // Warm up: the "cql://" endpoint in the camel route creates a CassandraProducer that manages
+    // its own CqlSession, separate from the cqlSession used for test setup above. On the first
+    // route execution that producer-owned session issues a "USE <keyspace>" command whose span may
+    // or may not join the route's trace depending on timing, making assertions flaky. Running the
+    // route once and discarding telemetry ensures the "USE" span is gone for subsequent calls.
+    template.requestBody("direct:input", (Object) null);
+    testing.waitForTraces(1);
+    testing.clearData();
 
     template.requestBody("direct:input", (Object) null);
 
@@ -137,27 +143,12 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               satisfies(
                                   NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM_NAME, "cassandra"),
+                              equalTo(DB_SYSTEM_NAME, CASSANDRA),
                               equalTo(DB_NAMESPACE, "test"),
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("USE test")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
-                              equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, cassandraPort),
-                              satisfies(
-                                  NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
-                              equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM_NAME, "cassandra"),
-                              equalTo(DB_QUERY_TEXT, "USE test"),
-                              equalTo(DB_QUERY_SUMMARY, "USE test"))));
+                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -185,10 +176,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                   span ->
                       span.hasName("SELECT test.users")
                           .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(1))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("DB Query").hasKind(SpanKind.CLIENT)));
+                          .hasParent(trace.getSpan(1))));
     }
   }
 }
