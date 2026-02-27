@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.propagation;
 
-import application.io.opentelemetry.context.Context;
-import application.io.opentelemetry.context.propagation.TextMapGetter;
-import application.io.opentelemetry.context.propagation.TextMapPropagator;
-import application.io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import java.util.Collection;
 
-class ApplicationTextMapPropagator implements TextMapPropagator {
+class ApplicationTextMapPropagator
+    implements application.io.opentelemetry.context.propagation.TextMapPropagator {
 
-  private final io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator;
+  private final TextMapPropagator agentTextMapPropagator;
 
-  ApplicationTextMapPropagator(
-      io.opentelemetry.context.propagation.TextMapPropagator agentTextMapPropagator) {
+  ApplicationTextMapPropagator(TextMapPropagator agentTextMapPropagator) {
     this.agentTextMapPropagator = agentTextMapPropagator;
   }
 
@@ -27,11 +27,12 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
   }
 
   @Override
-  public <C> Context extract(
-      Context applicationContext, C carrier, TextMapGetter<C> applicationGetter) {
-    io.opentelemetry.context.Context agentContext =
-        AgentContextStorage.getAgentContext(applicationContext);
-    io.opentelemetry.context.Context agentUpdatedContext =
+  public <C> application.io.opentelemetry.context.Context extract(
+      application.io.opentelemetry.context.Context applicationContext,
+      C carrier,
+      application.io.opentelemetry.context.propagation.TextMapGetter<C> applicationGetter) {
+    Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
+    Context agentUpdatedContext =
         agentTextMapPropagator.extract(agentContext, carrier, new AgentGetter<>(applicationGetter));
     if (agentUpdatedContext == agentContext) {
       return applicationContext;
@@ -41,18 +42,20 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
 
   @Override
   public <C> void inject(
-      Context applicationContext, C carrier, TextMapSetter<C> applicationSetter) {
-    io.opentelemetry.context.Context agentContext =
-        AgentContextStorage.getAgentContext(applicationContext);
+      application.io.opentelemetry.context.Context applicationContext,
+      C carrier,
+      application.io.opentelemetry.context.propagation.TextMapSetter<C> applicationSetter) {
+    Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
     agentTextMapPropagator.inject(agentContext, carrier, new AgentSetter<>(applicationSetter));
   }
 
-  private static class AgentGetter<C>
-      implements io.opentelemetry.context.propagation.TextMapGetter<C> {
+  private static class AgentGetter<C> implements TextMapGetter<C> {
 
-    private final TextMapGetter<C> applicationGetter;
+    private final application.io.opentelemetry.context.propagation.TextMapGetter<C>
+        applicationGetter;
 
-    AgentGetter(TextMapGetter<C> applicationGetter) {
+    AgentGetter(
+        application.io.opentelemetry.context.propagation.TextMapGetter<C> applicationGetter) {
       this.applicationGetter = applicationGetter;
     }
 
@@ -67,12 +70,13 @@ class ApplicationTextMapPropagator implements TextMapPropagator {
     }
   }
 
-  private static class AgentSetter<C>
-      implements io.opentelemetry.context.propagation.TextMapSetter<C> {
+  private static class AgentSetter<C> implements TextMapSetter<C> {
 
-    private final TextMapSetter<C> applicationSetter;
+    private final application.io.opentelemetry.context.propagation.TextMapSetter<C>
+        applicationSetter;
 
-    AgentSetter(TextMapSetter<C> applicationSetter) {
+    AgentSetter(
+        application.io.opentelemetry.context.propagation.TextMapSetter<C> applicationSetter) {
       this.applicationSetter = applicationSetter;
     }
 

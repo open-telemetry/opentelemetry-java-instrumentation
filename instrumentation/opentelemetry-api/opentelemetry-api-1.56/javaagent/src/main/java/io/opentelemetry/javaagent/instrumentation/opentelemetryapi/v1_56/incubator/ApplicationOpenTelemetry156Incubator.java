@@ -5,42 +5,40 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator;
 
-import application.io.opentelemetry.api.OpenTelemetry;
-import application.io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import application.io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.ApplicationOpenTelemetry127;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationConfigProvider156Incubator;
 import javax.annotation.Nullable;
 
 public final class ApplicationOpenTelemetry156Incubator extends ApplicationOpenTelemetry127
-    implements ExtendedOpenTelemetry {
+    implements application.io.opentelemetry.api.incubator.ExtendedOpenTelemetry {
 
   // Accessed with reflection
   @Nullable
   @SuppressWarnings("unused")
-  public static final OpenTelemetry INSTANCE = create();
+  public static final application.io.opentelemetry.api.OpenTelemetry INSTANCE = create();
 
-  private final ConfigProvider configProvider;
+  private final application.io.opentelemetry.api.incubator.config.ConfigProvider configProvider;
 
   @Nullable
   private static ApplicationOpenTelemetry156Incubator create() {
-    io.opentelemetry.api.OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    if (openTelemetry instanceof io.opentelemetry.api.incubator.ExtendedOpenTelemetry) {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
       return new ApplicationOpenTelemetry156Incubator(
-          ((io.opentelemetry.api.incubator.ExtendedOpenTelemetry) openTelemetry)
-              .getConfigProvider());
+          ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider());
     }
     return null;
   }
 
-  public ApplicationOpenTelemetry156Incubator(
-      io.opentelemetry.api.incubator.config.ConfigProvider configProvider) {
+  public ApplicationOpenTelemetry156Incubator(ConfigProvider configProvider) {
     this.configProvider = new ApplicationConfigProvider156Incubator(configProvider);
   }
 
   @Override
-  public ConfigProvider getConfigProvider() {
+  public application.io.opentelemetry.api.incubator.config.ConfigProvider getConfigProvider() {
     return configProvider;
   }
 }
