@@ -183,6 +183,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     @Override
     public String extract(REQUEST request) {
       String namespace = getter.getDbNamespace(request);
+      SqlDialect dialect = getter.getSqlDialect(request);
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
@@ -202,8 +203,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null, null);
         }
-        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryTexts.iterator().next());
-
+        SqlQuery analyzedQuery =
+            SqlQueryAnalyzerUtil.analyze(rawQueryTexts.iterator().next(), dialect);
         return computeSpanName(
             namespace,
             analyzedQuery.getOperationName(),
@@ -213,7 +214,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
-        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText);
+        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyzeWithSummary(rawQueryText, dialect);
         boolean batch = isBatch(request);
         String querySummary = analyzedQuery.getQuerySummary();
         if (querySummary != null) {
@@ -223,7 +224,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             getter, request, batch ? "BATCH" : null, null, analyzedQuery.getStoredProcedureName());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, false);
+      MultiQuery multiQuery = MultiQuery.analyzeWithSummary(rawQueryTexts, dialect, false);
       String querySummary = multiQuery.getQuerySummary();
       if (querySummary != null) {
         return querySummary;
@@ -266,7 +267,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       String operationName = null;
       if (rawQueryTexts.size() == 1) {
-        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQueryTexts.iterator().next());
+        String rawQuery = rawQueryTexts.iterator().next();
+        SqlDialect dialect = getter.getSqlDialect(request);
+        SqlQuery analyzedQuery = SqlQueryAnalyzerUtil.analyze(rawQuery, dialect);
         operationName = analyzedQuery.getOperationName();
       }
       if (operationName == null) {

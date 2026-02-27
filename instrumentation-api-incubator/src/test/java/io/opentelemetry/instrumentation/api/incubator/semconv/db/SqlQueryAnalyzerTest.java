@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -22,7 +24,9 @@ class SqlQueryAnalyzerTest {
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
   private static SqlQuery analyze(String sql) {
-    return emitStableDatabaseSemconv() ? ANALYZER.analyzeWithSummary(sql) : ANALYZER.analyze(sql);
+    return emitStableDatabaseSemconv()
+        ? ANALYZER.analyzeWithSummary(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+        : ANALYZER.analyze(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private static SqlQuery analyze(String sql, SqlDialect dialect) {
@@ -34,19 +38,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = analyze(original);
-    assertThat(result.getQueryText()).isEqualTo(expected);
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
-    } else {
-      assertThat(result.getQuerySummary()).isNull();
-    }
-  }
-
-  @ParameterizedTest
-  @MethodSource("couchbaseArgs")
-  void normalizeCouchbase(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = analyze(original, SqlDialect.COUCHBASE);
+    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo(expected);
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
@@ -58,7 +50,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("simplifyArgs")
   void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = analyze(original);
+    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -128,7 +120,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("ddlArgs")
   void checkDdlOperationStatementsAreOk(String actual, Function<String, SqlQuery> expectFunc) {
-    SqlQuery result = analyze(actual);
+    SqlQuery result = analyze(actual, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
@@ -148,7 +140,7 @@ class SqlQueryAnalyzerTest {
     String s = "'";
     SqlQueryAnalyzer analyzer = SqlQueryAnalyzer.create(true);
     for (int i = 0; i < 10000; i++) {
-      assertThat(analyzer.analyze(s)).isNotNull();
+      assertThat(analyzer.analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isNotNull();
       s += "'";
     }
   }
@@ -159,7 +151,7 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s);
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo("?");
   }
 
@@ -169,7 +161,7 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s);
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
@@ -197,7 +189,7 @@ class SqlQueryAnalyzerTest {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt(Character.MAX_VALUE));
       }
-      SqlQueryAnalyzer.create(true).analyze(sb.toString());
+      SqlQueryAnalyzer.create(true).analyze(sb.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS);
     }
   }
 
@@ -209,7 +201,10 @@ class SqlQueryAnalyzerTest {
     }
     s.append("?)");
 
-    String analyzed = SqlQueryAnalyzer.create(true).analyze(s.toString()).getQueryText();
+    String analyzed =
+        SqlQueryAnalyzer.create(true)
+            .analyze(s.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQueryText();
 
     assertThat(analyzed).isEqualTo("select col from table where col in (?)");
   }
@@ -218,9 +213,12 @@ class SqlQueryAnalyzerTest {
   void largeQueryCached() {
     // test that short query is cached
     String shortQuery = "SELECT * FROM TABLE WHERE FIELD = 1234";
-    String analyzedShort = SqlQueryAnalyzer.create(true).analyze(shortQuery).getQueryText();
+    String analyzedShort =
+        SqlQueryAnalyzer.create(true)
+            .analyze(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQueryText();
     assertThat(analyzedShort).doesNotContain("1234");
-    assertThat(SqlQueryAnalyzer.isCached(shortQuery)).isTrue();
+    assertThat(SqlQueryAnalyzer.isCached(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isTrue();
 
     // test that large query is not cached
     StringBuffer s = new StringBuffer();
@@ -228,9 +226,12 @@ class SqlQueryAnalyzerTest {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
     String largeQuery = s.toString();
-    String analyzedLarge = SqlQueryAnalyzer.create(true).analyze(largeQuery).getQueryText();
+    String analyzedLarge =
+        SqlQueryAnalyzer.create(true)
+            .analyze(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQueryText();
     assertThat(analyzedLarge).doesNotContain("1234");
-    assertThat(SqlQueryAnalyzer.isCached(largeQuery)).isFalse();
+    assertThat(SqlQueryAnalyzer.isCached(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
   }
 
   @Test
@@ -245,7 +246,9 @@ class SqlQueryAnalyzerTest {
       sql.append("very_long_table_name_").append(i);
     }
     String result =
-        SqlQueryAnalyzer.create(true).analyzeWithSummary(sql.toString()).getQuerySummary();
+        SqlQueryAnalyzer.create(true)
+            .analyzeWithSummary(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)
         .isEqualTo(
@@ -287,7 +290,7 @@ class SqlQueryAnalyzerTest {
         Arguments.of("+7", "?", null),
         Arguments.of("SELECT 0x0af764", "SELECT ?", "SELECT"),
         Arguments.of("SELECT 0xdeadBEEF", "SELECT ?", "SELECT"),
-        Arguments.of("SELECT * FROM \"TABLE\"", "SELECT * FROM \"TABLE\"", "SELECT \"TABLE\""),
+        Arguments.of("SELECT * FROM \"TABLE\"", "SELECT * FROM ?", "SELECT \"TABLE\""),
 
         // Not numbers but could be confused as such
         Arguments.of("SELECT A + B", "SELECT A + B", "SELECT"),
@@ -377,39 +380,6 @@ class SqlQueryAnalyzerTest {
         Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "SELECT TABLE"));
   }
 
-  private static Stream<Arguments> couchbaseArgs() {
-    return Stream.of(
-        // Some databases support/encourage " instead of ' with same escape rules
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"words and spaces'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"\\\\\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"'$$$$'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"));
-  }
-
   private static Function<String, SqlQuery> expect(
       String operation, String collectionName, String querySummary) {
     return sql ->
@@ -456,7 +426,9 @@ class SqlQueryAnalyzerTest {
             expect("SELECT", "`schema`.`table`", "SELECT `schema`.`table`")),
         Arguments.of(
             "SELECT x, y, z FROM \"schema table\"",
-            expect("SELECT", "schema table", "SELECT \"schema table\"")),
+            expect("SELECT x, y, z FROM ?", "SELECT", "schema table", "SELECT \"schema table\"")),
+        // double-quoted dot-separated identifiers are matched as IDENTIFIER, not DOUBLE_QUOTED_STR,
+        // so they are always preserved regardless of dialect
         Arguments.of(
             "SELECT x, y, z FROM \"schema\".\"table\"",
             expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
@@ -572,7 +544,7 @@ class SqlQueryAnalyzerTest {
             expect("INSERT", "db table", "INSERT `db table`")),
         Arguments.of(
             "insert into \"db table\" where lalala",
-            expect("INSERT", "db table", "INSERT \"db table\"")),
+            expect("insert into ? where lalala", "INSERT", "db table", "INSERT \"db table\"")),
         Arguments.of("insert without i-n-t-o", expect("INSERT", null, "INSERT")),
 
         // Delete
@@ -584,7 +556,11 @@ class SqlQueryAnalyzerTest {
             expect("DELETE", "my table", "DELETE `my table`")),
         Arguments.of(
             "delete from \"my table\" where something something",
-            expect("DELETE", "my table", "DELETE \"my table\"")),
+            expect(
+                "delete from ? where something something",
+                "DELETE",
+                "my table",
+                "DELETE \"my table\"")),
         Arguments.of(
             "delete from foo where x IN (1,2,3)",
             expect("delete from foo where x IN (?)", "DELETE", "foo", "DELETE foo")),
@@ -607,8 +583,7 @@ class SqlQueryAnalyzerTest {
                 "UPDATE `my table`")),
         Arguments.of(
             "update \"my table\" set answer=42",
-            expect(
-                "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
+            expect("update ? set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
         // Call
@@ -628,7 +603,9 @@ class SqlQueryAnalyzerTest {
         // Merge
         Arguments.of("merge into table", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge into `my table`", expect("MERGE", "my table", "MERGE `my table`")),
-        Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE \"my table\"")),
+        Arguments.of(
+            "merge into \"my table\"",
+            expect("merge into ?", "MERGE", "my table", "MERGE \"my table\"")),
         Arguments.of(
             "merge table (into is optional in some dbs)", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge (into )))", expect("MERGE", null, "MERGE")),
@@ -926,5 +903,43 @@ class SqlQueryAnalyzerTest {
                 "ALTER TABLE",
                 "users",
                 "ALTER TABLE users")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("doubleQuotesAsIdentifiersArgs")
+  void simplifySqlDoubleQuotesAsIdentifiers(
+      String original, Function<String, SqlQuery> expectedFunction) {
+    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery expected = expectedFunction.apply(original);
+    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
+    if (emitStableDatabaseSemconv()) {
+      assertThat(result.getOperationName()).isNull();
+      assertThat(result.getCollectionName()).isNull();
+      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
+    } else {
+      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+      assertThat(result.getQuerySummary()).isNull();
+    }
+  }
+
+  private static Stream<Arguments> doubleQuotesAsIdentifiersArgs() {
+    return Stream.of(
+        // When dialect treats double quotes as identifiers, quoted text is preserved in query
+        Arguments.of("SELECT * FROM \"TABLE\"", expect("SELECT", "TABLE", "SELECT \"TABLE\"")),
+        Arguments.of(
+            "SELECT x, y, z FROM \"schema table\"",
+            expect("SELECT", "schema table", "SELECT \"schema table\"")),
+        Arguments.of(
+            "insert into \"db table\" where lalala",
+            expect("INSERT", "db table", "INSERT \"db table\"")),
+        Arguments.of(
+            "delete from \"my table\" where something something",
+            expect("DELETE", "my table", "DELETE \"my table\"")),
+        Arguments.of(
+            "update \"my table\" set answer=42",
+            expect(
+                "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
+        Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE \"my table\"")));
   }
 }

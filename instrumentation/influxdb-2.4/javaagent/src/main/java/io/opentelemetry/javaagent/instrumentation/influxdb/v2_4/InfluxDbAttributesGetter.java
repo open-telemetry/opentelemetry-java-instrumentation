@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -21,6 +23,13 @@ final class InfluxDbAttributesGetter implements SqlClientAttributesGetter<Influx
       return emptyList();
     }
     return singletonList(sql);
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(InfluxDbRequest request) {
+    // "String literals must be surrounded by single quotes."
+    // https://docs.influxdata.com/influxdb/v2/reference/syntax/influxql/spec/#strings
+    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
   @Nullable
