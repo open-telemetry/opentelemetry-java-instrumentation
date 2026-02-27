@@ -1,16 +1,33 @@
 ---
-mode: agent
+name: fix-ci
+description: Analyze and fix CI failures in a GitHub PR for the current branch. Use this when asked to fix CI failures, fix broken builds, or resolve failing checks on a pull request. Downloads CI logs, identifies failed Gradle tasks, creates a plan, applies fixes, tests locally, and pushes.
 ---
 
-# Fix PR CI failures
+# Fix CI Failures
 
 Analyze the CI failures in the PR for the current branch and fix them, following the structured plan below.
 
-Each time this prompt is triggered, assume you are starting fresh from the beginning of the process.
+Each time this skill is triggered, assume you are starting fresh from the beginning of the process.
 
 Do not stop a given execution until you have worked through all phases below.
 
-## Phase 0: Validate
+## When to Use
+
+Use this skill when the user wants to:
+- Fix CI failures on a pull request
+- Analyze and resolve failing GitHub Actions checks
+- Debug build or test failures in a PR pipeline
+
+## Prerequisites
+
+- Must be on a non-protected branch (not `main`)
+- The `gh` CLI must be authenticated
+- The branch must have an open PR with CI failures
+- Gradle must be available for local testing
+
+## Process
+
+### Phase 0: Validate
 
 1. Verify we're not on a protected branch: `git branch --show-current` should not be `main`
 2. Check that the branch is up-to-date with remote: `git fetch && git status` - exit and warn if behind
@@ -19,7 +36,7 @@ Do not stop a given execution until you have worked through all phases below.
 5. Use `gh pr view <pr-number> --json statusCheckRollup --jq '.statusCheckRollup[] | select(.conclusion == "FAILURE") | {name: .name, detailsUrl: .detailsUrl}'` to get the list of all failed CI jobs
 6. Check if there are actually CI failures to fix - if all jobs passed, exit early
 
-## Phase 1: Gather Information
+### Phase 1: Gather Information
 
 **Phase 1 is for gathering information ONLY. Do NOT analyze failures or look at any code during this phase.**
 **Your only goal in Phase 1 is to collect: job names, job IDs, log files, and failed task names.**
@@ -44,7 +61,7 @@ Do not stop a given execution until you have worked through all phases below.
        - For compilation errors: `grep -B 5 -A 20 "error:" /tmp/<job-name>.log`
        - For task failures: `grep -B 2 -A 15 "Task.*FAILED" /tmp/<job-name>.log`
 
-## Phase 2: Create CI-PLAN.md
+### Phase 2: Create CI-PLAN.md
 
 **ONLY:** Create the CI-PLAN.md file in the repository root with the following structure:
 
@@ -70,7 +87,7 @@ Do not stop a given execution until you have worked through all phases below.
 [Any patterns or observations about the failures]
 ```
 
-## Phase 3: Fix Issues
+### Phase 3: Fix Issues
 
 **Important**: Do not commit CI-PLAN.md - it's only for tracking work during the session
 
@@ -89,7 +106,7 @@ Do not stop a given execution until you have worked through all phases below.
     - Reminder: do not commit CI-PLAN.md
 - Do not git push in this phase
 
-## Phase 4: Validate and Push
+### Phase 4: Validate and Push
 
 - Once all fixes are committed, push the changes: `git push` (or `git push -f` if needed)
 - Provide a summary of:
