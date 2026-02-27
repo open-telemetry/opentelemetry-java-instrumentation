@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import application.io.opentelemetry.api.trace.Span;
-import application.io.opentelemetry.context.Context;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
@@ -44,16 +44,13 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
   public static class UpdateAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Context applicationContext,
+        @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
         @Advice.Argument(1) int updatedBySourceOrder,
         @Advice.Argument(2) String route) {
 
-      io.opentelemetry.context.Context agentContext =
-          AgentContextStorage.getAgentContext(applicationContext);
+      Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
 
-      io.opentelemetry.instrumentation.api.internal.HttpRouteState agentRouteState =
-          io.opentelemetry.instrumentation.api.internal.HttpRouteState.fromContextOrNull(
-              agentContext);
+      HttpRouteState agentRouteState = HttpRouteState.fromContextOrNull(agentContext);
       if (agentRouteState == null) {
         return;
       }
@@ -66,12 +63,11 @@ final class HttpRouteStateInstrumentation implements TypeInstrumentation {
   public static class UpdateSpanAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Context applicationContext, @Advice.Argument(1) Span applicationSpan) {
+        @Advice.Argument(0) application.io.opentelemetry.context.Context applicationContext,
+        @Advice.Argument(1) application.io.opentelemetry.api.trace.Span applicationSpan) {
 
-      io.opentelemetry.context.Context agentContext =
-          AgentContextStorage.getAgentContext(applicationContext);
-      io.opentelemetry.instrumentation.api.internal.HttpRouteState.updateSpan(
-          agentContext, Bridging.toAgentOrNull(applicationSpan));
+      Context agentContext = AgentContextStorage.getAgentContext(applicationContext);
+      HttpRouteState.updateSpan(agentContext, Bridging.toAgentOrNull(applicationSpan));
     }
   }
 }

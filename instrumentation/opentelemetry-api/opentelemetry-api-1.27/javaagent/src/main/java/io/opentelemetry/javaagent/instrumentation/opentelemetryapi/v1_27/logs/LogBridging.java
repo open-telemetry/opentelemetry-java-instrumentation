@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 
-import application.io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.logs.Severity;
 import java.util.EnumMap;
 
 /**
@@ -21,26 +21,26 @@ import java.util.EnumMap;
  *
  * <p>Also see comments in this module's gradle file.
  */
-// Our convention for accessing agent package
-@SuppressWarnings("UnnecessarilyFullyQualified")
 public class LogBridging {
 
-  private static final EnumMap<Severity, io.opentelemetry.api.logs.Severity> severityMap;
+  private static final EnumMap<application.io.opentelemetry.api.logs.Severity, Severity>
+      severityMap;
 
   static {
-    severityMap = new EnumMap<>(Severity.class);
-    for (Severity severity : Severity.values()) {
+    severityMap = new EnumMap<>(application.io.opentelemetry.api.logs.Severity.class);
+    for (application.io.opentelemetry.api.logs.Severity severity :
+        application.io.opentelemetry.api.logs.Severity.values()) {
       try {
-        severityMap.put(severity, io.opentelemetry.api.logs.Severity.valueOf(severity.name()));
+        severityMap.put(severity, Severity.valueOf(severity.name()));
       } catch (IllegalArgumentException e) {
         // No mapping exists for this severity, ignore
       }
     }
   }
 
-  public static io.opentelemetry.api.logs.Severity toAgent(Severity applicationSeverity) {
-    return severityMap.getOrDefault(
-        applicationSeverity, io.opentelemetry.api.logs.Severity.UNDEFINED_SEVERITY_NUMBER);
+  public static Severity toAgent(
+      application.io.opentelemetry.api.logs.Severity applicationSeverity) {
+    return severityMap.getOrDefault(applicationSeverity, Severity.UNDEFINED_SEVERITY_NUMBER);
   }
 
   private LogBridging() {}

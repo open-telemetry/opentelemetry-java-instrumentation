@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import application.io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -70,7 +69,7 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static reactor.util.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
-        @Advice.Argument(1) Context applicationContext) {
+        @Advice.Argument(1) application.io.opentelemetry.context.Context applicationContext) {
       return ContextPropagationOperator.storeOpenTelemetryContext(
           reactorContext, AgentContextStorage.getAgentContext(applicationContext));
     }
@@ -85,9 +84,9 @@ class ContextPropagationOperatorInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static Context methodExit(
+    public static application.io.opentelemetry.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
-        @Advice.Argument(1) Context defaultContext) {
+        @Advice.Argument(1) application.io.opentelemetry.context.Context defaultContext) {
 
       io.opentelemetry.context.Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContext(reactorContext, null);
