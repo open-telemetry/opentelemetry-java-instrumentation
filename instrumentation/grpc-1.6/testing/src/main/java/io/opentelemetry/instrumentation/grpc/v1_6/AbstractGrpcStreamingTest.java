@@ -263,7 +263,7 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(
                                         RPC_RESPONSE_STATUS_CODE,
                                         emitStableRpcSemconv()
-                                            ? String.valueOf(Status.Code.OK.value())
+                                            ? Status.Code.OK.name()
                                             : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
@@ -295,7 +295,7 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(
                                     RPC_RESPONSE_STATUS_CODE,
                                     emitStableRpcSemconv()
-                                        ? String.valueOf(Status.Code.OK.value())
+                                        ? Status.Code.OK.name()
                                         : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
@@ -359,7 +359,7 @@ public abstract class AbstractGrpcStreamingTest {
                                                       RPC_METHOD, "example.Greeter/Conversation"),
                                                   equalTo(
                                                       RPC_RESPONSE_STATUS_CODE,
-                                                      String.valueOf(Status.Code.OK.value())))))));
+                                                      Status.Code.OK.name()))))));
     }
     if (emitOldRpcSemconv()) {
       testing()
@@ -407,7 +407,7 @@ public abstract class AbstractGrpcStreamingTest {
                                                       RPC_METHOD, "example.Greeter/Conversation"),
                                                   equalTo(
                                                       RPC_RESPONSE_STATUS_CODE,
-                                                      String.valueOf(Status.Code.OK.value())))))));
+                                                      Status.Code.OK.name()))))));
     }
   }
 

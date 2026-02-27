@@ -52,7 +52,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
         attributes.put(RPC_GRPC_STATUS_CODE, status.getCode().value());
       }
       if (emitStableRpcSemconv()) {
-        attributes.put(RPC_RESPONSE_STATUS_CODE, String.valueOf(status.getCode().value()));
+        attributes.put(RPC_RESPONSE_STATUS_CODE, status.getCode().name());
       }
     }
     for (String key : capturedRequestMetadata) {
