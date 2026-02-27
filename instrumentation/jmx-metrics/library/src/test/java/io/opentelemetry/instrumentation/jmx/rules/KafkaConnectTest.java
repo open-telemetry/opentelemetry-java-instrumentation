@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -130,7 +131,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void metricsAreReportedFromKafkaConnectContainer() throws Exception {
-    List<String> yamlFiles = Collections.singletonList("kafka-connect.yaml");
+    List<String> yamlFiles = singletonList("kafka-connect.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
@@ -178,7 +179,7 @@ class KafkaConnectTest extends TargetSystemTest {
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
 
-    startTarget(kafkaConnect, Collections.singletonList(kafka));
+    startTarget(kafkaConnect, singletonList(kafka));
 
     String connectUrl = connectUrl(kafkaConnect);
     createConnector(connectUrl, sourceConnectorConfig());
@@ -360,7 +361,7 @@ class KafkaConnectTest extends TargetSystemTest {
     if (body != null) {
       connection.setDoOutput(true);
       connection.setRequestProperty("Content-Type", "application/json");
-      byte[] bytes = body.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+      byte[] bytes = body.getBytes(java.nio.charset.UTF_8);
       connection.setRequestProperty("Content-Length", Integer.toString(bytes.length));
       try (OutputStream output = connection.getOutputStream()) {
         output.write(bytes);
@@ -387,7 +388,7 @@ class KafkaConnectTest extends TargetSystemTest {
       while ((read = stream.read(buffer)) != -1) {
         output.write(buffer, 0, read);
       }
-      return output.toString(java.nio.charset.StandardCharsets.UTF_8.name());
+      return output.toString(java.nio.charset.UTF_8.name());
     } finally {
       try {
         stream.close();
