@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.common
+package io.opentelemetry.instrumentation.ktor.common.v2_0
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -14,7 +14,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
-import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
+import io.opentelemetry.instrumentation.ktor.common.v2_0.internal.KtorBuilderUtil
 import java.util.function.Function
 import java.util.function.UnaryOperator
 
