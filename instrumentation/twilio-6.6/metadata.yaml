@@ -1,0 +1,12 @@
+display_name: Twilio
+description: >
+  This instrumentation enables client spans for Twilio SDK API calls such as sending messages and
+  making phone calls.
+library_link: https://github.com/twilio/twilio-java
+configurations:
+  - name: otel.instrumentation.twilio.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and
+      `twilio.status`.
+    type: boolean
+    default: false

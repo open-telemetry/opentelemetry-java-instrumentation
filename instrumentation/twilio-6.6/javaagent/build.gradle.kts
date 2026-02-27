@@ -22,6 +22,8 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.twilio.experimental-span-attributes=true")
+  systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
 }
