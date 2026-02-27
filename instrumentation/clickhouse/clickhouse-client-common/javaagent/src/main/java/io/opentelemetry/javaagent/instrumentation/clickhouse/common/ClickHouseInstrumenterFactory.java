@@ -26,7 +26,7 @@ public final class ClickHouseInstrumenterFactory {
             instrumenterName,
             DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.<ClickHouseDbRequest, Void>builder(dbAttributesGetter)
+            SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setTableAttribute(null)
                 .build())
         .addOperationMetrics(DbClientMetrics.get())

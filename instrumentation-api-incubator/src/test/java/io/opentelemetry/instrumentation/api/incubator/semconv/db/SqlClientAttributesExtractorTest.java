@@ -206,7 +206,7 @@ class SqlClientAttributesExtractorTest {
     Context context = Context.root();
 
     AttributesExtractor<Map<String, Object>, Void> underTest =
-        SqlClientAttributesExtractor.<Map<String, Object>, Void>builder(new TestAttributesGetter())
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
             .setTableAttribute(DB_CASSANDRA_TABLE)
             .build();
 
