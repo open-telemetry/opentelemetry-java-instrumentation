@@ -21,9 +21,20 @@ dependencies {
   latestDepTestLibrary("com.twilio.sdk:twilio:7.+") // documented limitation
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.twilio.experimental-span-attributes=true")
-  systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.twilio.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }
