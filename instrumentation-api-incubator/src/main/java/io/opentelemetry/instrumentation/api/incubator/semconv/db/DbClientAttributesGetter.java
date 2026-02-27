@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -48,7 +49,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    *
    * @deprecated There is no replacement at this time.
    */
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   default String getUser(REQUEST request) {
     return null;
@@ -59,7 +60,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    *
    * @deprecated There is no replacement at this time.
    */
-  @Deprecated
+  @Deprecated // to be removed in 3.0
   @Nullable
   default String getConnectionString(REQUEST request) {
     return null;
@@ -67,6 +68,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   @Nullable
+  @Deprecated
   default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
@@ -79,6 +81,22 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   default Map<String, String> getDbQueryParameters(REQUEST request) {
-    return Collections.emptyMap();
+    return emptyMap();
+  }
+
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
+   * type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   */
+  @Nullable
+  // TODO remove the default implementation and make this required to implement
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static org.assertj.core.api.Assertions.fail;
+
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection.OpenTelemetryConnectionJdbc43;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
@@ -12,11 +14,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class WrapperTest {
 
+  // we don't implement methods introduced in jdbc 4.5 (added in java 26) yet
+  @EnabledForJreRange(max = JRE.JAVA_25)
   @Test
   void wrapperImplementsAllMethods() throws Exception {
     validate(Statement.class, OpenTelemetryStatement.class);
@@ -34,7 +39,7 @@ class WrapperTest {
     for (Method method : jdbcClass.getMethods()) {
       Method result = wrapperClass.getMethod(method.getName(), method.getParameterTypes());
       if (!result.getDeclaringClass().getName().startsWith("io.opentelemetry")) {
-        Assertions.fail(wrapperClass.getName() + " does not override " + method);
+        fail(wrapperClass.getName() + " does not override " + method);
       }
     }
   }

@@ -35,6 +35,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
 
+  testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
+
   testImplementation("org.apache.camel:camel-core:$camelversion")
   testImplementation("org.apache.camel:camel-spring-boot-starter:$camelversion")
   testImplementation("org.apache.camel:camel-jetty-starter:$camelversion")

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -19,9 +17,9 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<Long> RPC_REQUEST_SIZE = AttributeKey.longKey("rpc.request.size");
   static final AttributeKey<Long> RPC_RESPONSE_SIZE = AttributeKey.longKey("rpc.response.size");
 
-  private final RpcAttributesGetter<REQUEST> getter;
+  private final RpcAttributesGetter<REQUEST, RESPONSE> getter;
 
-  RpcSizeAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  RpcSizeAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 
@@ -30,7 +28,7 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
    * attributesGetter} instance to determine the request and response size.
    */
   public static <REQUEST, RESPONSE> RpcSizeAttributesExtractor<REQUEST, RESPONSE> create(
-      RpcAttributesGetter<REQUEST> attributesGetter) {
+      RpcAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
     return new RpcSizeAttributesExtractor<>(attributesGetter);
   }
 
@@ -44,7 +42,7 @@ public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    internalSet(attributes, RPC_REQUEST_SIZE, getter.getRequestSize(request));
-    internalSet(attributes, RPC_RESPONSE_SIZE, getter.getResponseSize(request));
+    attributes.put(RPC_REQUEST_SIZE, getter.getRequestSize(request));
+    attributes.put(RPC_RESPONSE_SIZE, getter.getResponseSize(request));
   }
 }

@@ -18,22 +18,23 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -95,9 +96,9 @@ public abstract class KafkaClientBaseTest {
 
     try (AdminClient admin = AdminClient.create(adminProps)) {
       admin
-          .createTopics(Collections.singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
+          .createTopics(singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
           .all()
-          .get(30, TimeUnit.SECONDS);
+          .get(30, SECONDS);
     }
 
     producer = new KafkaProducer<>(producerProps());
@@ -105,7 +106,7 @@ public abstract class KafkaClientBaseTest {
     consumer = new KafkaConsumer<>(consumerProps());
 
     consumer.subscribe(
-        Collections.singletonList(SHARED_TOPIC),
+        singletonList(SHARED_TOPIC),
         new ConsumerRebalanceListener() {
           @Override
           public void onPartitionsRevoked(Collection<TopicPartition> collection) {}
@@ -153,19 +154,19 @@ public abstract class KafkaClientBaseTest {
   }
 
   public void awaitUntilConsumerIsReady() throws InterruptedException {
-    if (consumerReady.await(0, TimeUnit.SECONDS)) {
+    if (consumerReady.await(0, SECONDS)) {
       return;
     }
     for (int i = 0; i < 10; i++) {
       poll(Duration.ofMillis(100));
-      if (consumerReady.await(1, TimeUnit.SECONDS)) {
+      if (consumerReady.await(1, SECONDS)) {
         break;
       }
     }
     if (consumerReady.getCount() != 0) {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
-    consumer.seekToBeginning(Collections.emptyList());
+    consumer.seekToBeginning(emptyList());
   }
 
   public ConsumerRecords<Integer, String> poll(Duration duration) {
@@ -194,7 +195,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -217,7 +218,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
     return assertions;
   }
@@ -250,15 +251,13 @@ public abstract class KafkaClientBaseTest {
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
     } else {
-      assertions.add(
-          equalTo(
-              MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(StandardCharsets.UTF_8).length));
+      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
     }
     if (testHeaders) {
       assertions.add(
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              Collections.singletonList("test")));
+              singletonList("test")));
     }
 
     if (testMultiBaggage) {

@@ -17,7 +17,7 @@ public final class MongoTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
 
-  private boolean statementSanitizationEnabled = true;
+  private boolean querySanitizationEnabled = true;
   private int maxNormalizedQueryLength = DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 
   MongoTelemetryBuilder(OpenTelemetry openTelemetry, String instrumentationName) {
@@ -26,14 +26,14 @@ public final class MongoTelemetryBuilder {
   }
 
   /**
-   * Sets whether the {@code db.statement} attribute on the spans emitted by the constructed {@link
-   * MongoTelemetry} should be sanitized. If set to {@code true}, all parameters that can
-   * potentially contain sensitive information will be masked. Enabled by default.
+   * Sets whether the {@code db.statement}/{@code db.query.text} attribute on the spans emitted by
+   * the constructed {@link MongoTelemetry} should be sanitized. If set to {@code true}, all
+   * parameters that can potentially contain sensitive information will be masked. Enabled by
+   * default.
    */
   @CanIgnoreReturnValue
-  public MongoTelemetryBuilder setStatementSanitizationEnabled(
-      boolean statementSanitizationEnabled) {
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+  public MongoTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
     return this;
   }
 
@@ -52,6 +52,6 @@ public final class MongoTelemetryBuilder {
    */
   public MongoTelemetry build() {
     return new MongoTelemetry(
-        openTelemetry, instrumentationName, statementSanitizationEnabled, maxNormalizedQueryLength);
+        openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
   }
 }

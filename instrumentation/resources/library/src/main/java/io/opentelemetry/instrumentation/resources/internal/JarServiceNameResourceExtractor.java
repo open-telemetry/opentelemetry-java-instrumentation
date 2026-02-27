@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -50,7 +50,7 @@ public final class JarServiceNameResourceExtractor {
               String serviceName = getServiceName(jarPath);
               logger.log(
                   FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
-              return Resource.create(Attributes.of(ServiceAttributes.SERVICE_NAME, serviceName));
+              return Resource.create(Attributes.of(SERVICE_NAME, serviceName));
             })
         .orElseGet(Resource::empty);
   }

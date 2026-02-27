@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryMerger;
 import io.opentelemetry.instrumentation.docs.parsers.EmittedScopeParser;
 import io.opentelemetry.instrumentation.docs.parsers.GradleParser;
@@ -68,7 +67,7 @@ class InstrumentationAnalyzer {
       module.setMetadata(metaData);
     }
 
-    module.setTargetVersions(getVersionInformation(module));
+    module.setAgentTargetVersions(getVersionInformation(module));
 
     // Handle telemetry merging (manual + emitted)
     setMergedTelemetry(module, metaData);
@@ -94,8 +93,7 @@ class InstrumentationAnalyzer {
     }
   }
 
-  private Map<InstrumentationType, Set<String>> getVersionInformation(
-      InstrumentationModule module) {
+  private Set<String> getVersionInformation(InstrumentationModule module) {
     List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
     return GradleParser.extractVersions(gradleFiles, module);
   }

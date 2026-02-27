@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +29,7 @@ final class CachedPropertyResolver {
   private final ConcurrentHashMap<CacheKey, Optional<?>> cache = new ConcurrentHashMap<>();
 
   CachedPropertyResolver(Environment environment) {
-    this.environment = Objects.requireNonNull(environment, "environment");
+    this.environment = requireNonNull(environment, "environment");
   }
 
   /**
@@ -70,8 +72,8 @@ final class CachedPropertyResolver {
     private final int cachedHashCode;
 
     CacheKey(String name, Class<?> targetType) {
-      this.name = Objects.requireNonNull(name, "name");
-      this.targetType = Objects.requireNonNull(targetType, "targetType");
+      this.name = requireNonNull(name, "name");
+      this.targetType = requireNonNull(targetType, "targetType");
       this.cachedHashCode = Objects.hash(name, targetType);
     }
 

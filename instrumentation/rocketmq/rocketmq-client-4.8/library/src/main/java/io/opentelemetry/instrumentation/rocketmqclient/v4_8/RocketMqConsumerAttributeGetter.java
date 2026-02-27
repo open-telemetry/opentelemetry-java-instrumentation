@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -81,8 +83,8 @@ enum RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<Messag
   public List<String> getMessageHeader(MessageExt request, String name) {
     String value = request.getProperties().get(name);
     if (value != null) {
-      return Collections.singletonList(value);
+      return singletonList(value);
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }

@@ -18,13 +18,14 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -38,7 +39,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -56,6 +56,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2ClientRecordHttpErrorTest {
   private static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
@@ -110,7 +111,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
               new BufferedReader(
                       new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
                   .lines()
-                  .collect(Collectors.joining("\n"));
+                  .collect(joining("\n"));
           httpErrorMessages.add(errorMsg);
           return errorMsg;
         }
@@ -124,9 +125,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   }
 
   public boolean isRecordIndividualHttpErrorEnabled() {
-    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
-    return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
+    // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
+    return Boolean.getBoolean(
+        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error");
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -187,7 +188,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                           equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                           equalTo(AWS_REQUEST_ID, requestId),
                           equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                          equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
+                          equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                           equalTo(maybeStable(DB_OPERATION), operation));
                       if (isRecordIndividualHttpErrorEnabled()) {
                         span.hasEventsSatisfyingExactly(

@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
 import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -61,7 +62,7 @@ public final class Servlet3Accessor extends JavaxServletAccessor<HttpServletResp
   public List<String> getResponseHeaderValues(HttpServletResponse response, String name) {
     Collection<String> values = response.getHeaders(name);
     if (values == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     if (values instanceof List) {
       return (List<String>) values;

@@ -25,6 +25,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties messaging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");

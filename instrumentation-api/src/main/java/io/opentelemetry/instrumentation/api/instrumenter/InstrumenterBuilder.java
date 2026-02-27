@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -38,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -355,7 +355,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                   String url = provider.internalGetSchemaUrl();
                   return url == null ? Stream.of() : Stream.of(url);
                 })
-            .collect(Collectors.toSet());
+            .collect(toSet());
     switch (computedSchemaUrls.size()) {
       case 0:
         return null;
@@ -386,6 +386,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getConfigProvider()
               .getInstrumentationConfig("common");
     }
+
+    @SuppressWarnings("deprecation") // using deprecated config property
     String result =
         commonConfig.getString(
             "span_suppression_strategy/development",
@@ -403,7 +405,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               SpanKey spanKey = provider.internalGetSpanKey();
               return spanKey == null ? Stream.of() : Stream.of(spanKey);
             })
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   private void propagateOperationListenersToOnEnd() {

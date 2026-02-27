@@ -5,21 +5,43 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 public final class OperationNameUtil {
 
-  private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+  private static final String FALLBACK_SPAN_NAME = "hibernate";
 
-  public static String getOperationNameForQuery(String query) {
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+
+  // query could be HQL or SQL
+  public static String getOperationNameForQuery(@Nullable String query) {
+    if (emitStableDatabaseSemconv()) {
+      if (query != null) {
+        // note: summarization is not affected by the choice of dialect
+        SqlQuery info = analyzer.analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+        String summary = info.getQuerySummary();
+        if (summary != null) {
+          return summary;
+        }
+      }
+      return FALLBACK_SPAN_NAME;
+    }
+    return getOperationNameForQueryOldSemconv(query);
+  }
+
+  private static String getOperationNameForQueryOldSemconv(@Nullable String query) {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name
     String operation = "Hibernate Query";
-    SqlStatementInfo info = sanitizer.sanitize(query);
+    SqlQuery info = analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     if (info.getOperationName() != null) {
       operation = info.getOperationName();
       if (info.getCollectionName() != null) {

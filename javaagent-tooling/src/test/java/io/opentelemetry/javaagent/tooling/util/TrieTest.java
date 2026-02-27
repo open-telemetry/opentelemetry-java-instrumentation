@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
@@ -18,12 +15,12 @@ class TrieTest {
     Trie<Integer> trie =
         Trie.<Integer>builder().put("abc", 0).put("abcd", 10).put("abcde", 20).build();
 
-    assertNull(trie.getOrNull("ab"));
-    assertFalse(trie.contains("ab"));
-    assertEquals(0, trie.getOrNull("abc"));
-    assertEquals(10, trie.getOrNull("abcd"));
-    assertEquals(20, trie.getOrNull("abcde"));
-    assertTrue(trie.contains("abcde"));
+    assertThat(trie.getOrNull("ab")).isNull();
+    assertThat(trie.contains("ab")).isFalse();
+    assertThat(trie.getOrNull("abc")).isEqualTo(0);
+    assertThat(trie.getOrNull("abcd")).isEqualTo(10);
+    assertThat(trie.getOrNull("abcde")).isEqualTo(20);
+    assertThat(trie.contains("abcde")).isTrue();
   }
 
   @Test
@@ -31,23 +28,23 @@ class TrieTest {
     Trie<Integer> trie =
         Trie.<Integer>builder().put("abc", 0).put("abcde", 10).put("abcdfgh", 20).build();
 
-    assertNull(trie.getOrNull("ababababa"));
-    assertEquals(0, trie.getOrNull("abcd"));
-    assertEquals(10, trie.getOrNull("abcdefgh"));
-    assertEquals(20, trie.getOrNull("abcdfghjkl"));
+    assertThat(trie.getOrNull("ababababa")).isNull();
+    assertThat(trie.getOrNull("abcd")).isEqualTo(0);
+    assertThat(trie.getOrNull("abcdefgh")).isEqualTo(10);
+    assertThat(trie.getOrNull("abcdfghjkl")).isEqualTo(20);
   }
 
   @Test
   void shouldOverwritePreviousValue() {
     Trie<Integer> trie = Trie.<Integer>builder().put("abc", 0).put("abc", 12).build();
 
-    assertEquals(12, trie.getOrNull("abc"));
+    assertThat(trie.getOrNull("abc")).isEqualTo(12);
   }
 
   @Test
   void shouldReturnDefaultValueWhenNotMatched() {
     Trie<Integer> trie = Trie.<Integer>builder().put("abc", 42).build();
 
-    assertEquals(-1, trie.getOrDefault("acdc", -1));
+    assertThat(trie.getOrDefault("acdc", -1)).isEqualTo(-1);
   }
 }

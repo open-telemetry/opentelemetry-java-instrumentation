@@ -33,7 +33,7 @@ public final class JettyClientTelemetry {
   }
 
   /** Returns an instrumented HTTP client. */
-  public HttpClient newHttpClient() {
+  public HttpClient createHttpClient() {
     return new TracingHttpClient(instrumenter);
   }
 
@@ -42,7 +42,7 @@ public final class JettyClientTelemetry {
    *
    * @param httpClientTransport the HTTP client transport to use
    */
-  public HttpClient newHttpClient(HttpClientTransport httpClientTransport) {
+  public HttpClient createHttpClient(HttpClientTransport httpClientTransport) {
     return new TracingHttpClient(instrumenter, httpClientTransport);
   }
 }

@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
@@ -36,7 +36,6 @@ import io.opentelemetry.javaagent.tooling.util.NamedMatcher;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -70,9 +69,10 @@ public final class InstrumentationModuleInstaller {
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
       ConfigProperties config) {
-    if (!isInstrumentationEnabled(
-        instrumentationModule.instrumentationNames(),
-        instrumentationModule.defaultEnabled(config))) {
+    if (!AgentDistributionConfig.get()
+        .isInstrumentationEnabled(
+            instrumentationModule.instrumentationNames(),
+            instrumentationModule.defaultEnabled(config))) {
       logger.log(
           FINE, "Instrumentation {0} is disabled", instrumentationModule.instrumentationName());
       return parentAgentBuilder;
@@ -109,7 +109,7 @@ public final class InstrumentationModuleInstaller {
           (ExperimentalInstrumentationModule) instrumentationModule;
       injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
     } else {
-      injectedHelperClassNames = Collections.emptyList();
+      injectedHelperClassNames = emptyList();
     }
 
     ClassInjectorImpl injectedClassesCollector = new ClassInjectorImpl(instrumentationModule);
@@ -236,20 +236,6 @@ public final class InstrumentationModuleInstaller {
     }
 
     return agentBuilder;
-  }
-
-  static boolean isInstrumentationEnabled(
-      Iterable<String> instrumentationNames, boolean defaultEnabled) {
-    for (String name : instrumentationNames) {
-      String normalizedName = name.replace('-', '_');
-      Boolean enabled =
-          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), normalizedName)
-              .getBoolean("enabled");
-      if (enabled != null) {
-        return enabled;
-      }
-    }
-    return defaultEnabled;
   }
 
   private static AgentBuilder.Identified.Narrowable setTypeMatcher(

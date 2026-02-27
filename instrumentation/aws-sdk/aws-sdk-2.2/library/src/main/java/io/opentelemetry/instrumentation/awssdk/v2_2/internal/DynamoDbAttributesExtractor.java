@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -12,8 +14,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
@@ -34,19 +34,19 @@ class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttrib
       AttributesBuilder attributes,
       Context parentContext,
       ExecutionAttributes executionAttributes) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM_NAME, AWS_DYNAMODB);
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM_NAME, AWS_DYNAMODB);
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM, DYNAMODB);
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM, DYNAMODB);
     }
     String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
     if (operation != null) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION_NAME, operation);
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(DB_OPERATION_NAME, operation);
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION, operation);
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_OPERATION, operation);
       }
     }
   }

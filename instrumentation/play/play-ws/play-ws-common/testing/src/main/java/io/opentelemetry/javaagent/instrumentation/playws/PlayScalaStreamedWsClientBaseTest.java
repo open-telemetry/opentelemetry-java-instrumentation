@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import play.api.libs.ws.StandaloneWSClient;
@@ -56,8 +57,7 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
   public int sendRequest(
       StandaloneWSRequest request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    return Await.result(internalSendRequest(request), Duration.apply(10, TimeUnit.SECONDS))
-        .status();
+    return Await.result(internalSendRequest(request), Duration.apply(10, SECONDS)).status();
   }
 
   @Override

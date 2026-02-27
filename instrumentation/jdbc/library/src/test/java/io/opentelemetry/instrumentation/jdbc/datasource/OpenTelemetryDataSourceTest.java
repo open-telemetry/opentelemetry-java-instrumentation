@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -51,7 +51,7 @@ class OpenTelemetryDataSourceTest {
 
     List<AttributeAssertion> assertions =
         SemconvCodeStabilityUtil.codeFunctionAssertions(TestDataSource.class, "getConnection");
-    assertions.add(equalTo(maybeStable(DB_SYSTEM), "postgresql"));
+    assertions.add(equalTo(maybeStable(DB_SYSTEM), POSTGRESQL));
     assertions.add(equalTo(maybeStable(DB_NAME), "dbname"));
     assertions.add(
         equalTo(
@@ -102,12 +102,11 @@ class OpenTelemetryDataSourceTest {
   }
 
   private static void assertDbInfo(DbInfo dbInfo) {
-    assertThat(dbInfo.getSystem()).isEqualTo("postgresql");
-    assertNull(dbInfo.getSubtype());
+    assertThat(dbInfo.getSystem()).isEqualTo(POSTGRESQL);
+    assertThat(dbInfo.getSubtype()).isNull();
     assertThat(dbInfo.getShortUrl()).isEqualTo("postgresql://127.0.0.1:5432");
-    assertNull(dbInfo.getUser());
-    assertNull(dbInfo.getName());
-    assertThat(dbInfo.getDb()).isEqualTo("dbname");
+    assertThat(dbInfo.getUser()).isNull();
+    assertThat(dbInfo.getName()).isEqualTo("dbname");
     assertThat(dbInfo.getHost()).isEqualTo("127.0.0.1");
     assertThat(dbInfo.getPort()).isEqualTo(5432);
   }

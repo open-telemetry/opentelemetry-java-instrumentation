@@ -32,7 +32,7 @@ public final class ArmeriaServerTelemetry {
   }
 
   /** Returns a decorator for instrumenting Armeria services. */
-  public Function<? super HttpService, ? extends HttpService> newDecorator() {
+  public Function<HttpService, HttpService> createDecorator() {
     return service -> new OpenTelemetryService(service, instrumenter);
   }
 }

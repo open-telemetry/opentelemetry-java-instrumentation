@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Collections;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -41,7 +41,7 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     // These are helper classes injected by api-version specific instrumentation modules
     // We don't want to fall back to accidentally trying to load those from the agent CL
     // when they haven't been injected
-    return Collections.singletonList("io.opentelemetry.javaagent.instrumentation.opentelemetryapi");
+    return singletonList("io.opentelemetry.javaagent.instrumentation.opentelemetryapi");
   }
 
   @Override

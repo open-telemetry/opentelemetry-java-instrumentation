@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11.0.29_7-jdk@sha256:fd9fc42ab01c4db92911d2f1d63743d0de62a1c9183ccf40bd4943990f739e22 as app-build
+FROM eclipse-temurin:11.0.30_7-jdk@sha256:e73fba329aceb94a75d2438dcd0271ea26ebd0e19e5c3689873f054c2b4c7528 as app-build
 
 # This is the base image that will contain a built version of the spring-petclinic-rest
 # application. Installing the dependencies and maven compiling the application is time
@@ -13,7 +13,7 @@ RUN git checkout 8aa4d49
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-FROM bellsoft/liberica-openjdk-alpine:25.0.1@sha256:b93fbc9ec64d89c7eb6e225b7a2e8f62c83e001266177d75e365cb0bc77681c4
+FROM bellsoft/liberica-openjdk-alpine:25.0.2@sha256:31929ba9551e22cf598d6b65129c50eb0236f9dc3bde2b4270cb93bea4d7c85a
 COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
 EXPOSE 9966

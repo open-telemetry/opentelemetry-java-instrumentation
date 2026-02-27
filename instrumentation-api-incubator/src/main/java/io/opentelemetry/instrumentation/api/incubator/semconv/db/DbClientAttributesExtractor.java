@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
@@ -94,26 +94,24 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     Long batchSize = getter.getDbOperationBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
 
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(
-          attributes,
-          DB_SYSTEM_NAME,
-          SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
-      internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
-      internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
-      internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
-      internalSet(attributes, DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(
+          DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
+      attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
+      attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
+      attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
+      attributes.put(DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
       if (isBatch) {
-        internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
+        attributes.put(DB_OPERATION_BATCH_SIZE, batchSize);
       }
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_SYSTEM, getter.getDbSystemName(request));
-      internalSet(attributes, DB_USER, getter.getUser(request));
-      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
-      internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
-      internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
-      internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_SYSTEM, getter.getDbSystemName(request));
+      attributes.put(DB_USER, getter.getUser(request));
+      attributes.put(DB_NAME, getter.getDbNamespace(request));
+      attributes.put(DB_CONNECTION_STRING, getter.getConnectionString(request));
+      attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
+      attributes.put(DB_OPERATION, getter.getDbOperationName(request));
     }
 
     // Query parameters are an incubating feature and work with both old and new semconv
@@ -123,7 +121,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
           String key = entry.getKey();
           String value = entry.getValue();
-          internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
+          attributes.put(DB_QUERY_PARAMETER.getAttributeKey(key), value);
         }
       }
     }
@@ -137,22 +135,22 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalNetworkExtractor.onEnd(attributes, request, response);
-    onEndCommon(attributes, getter, response, error);
+    onEndCommon(attributes, getter, request, response, error);
   }
 
   static <REQUEST, RESPONSE> void onEndCommon(
       AttributesBuilder attributes,
       DbClientAttributesGetter<REQUEST, RESPONSE> getter,
+      REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      if (error != null) {
-        internalSet(attributes, ERROR_TYPE, error.getClass().getName());
+    if (emitStableDatabaseSemconv()) {
+      String errorType = getter.getErrorType(request, response, error);
+      // fall back to exception class name
+      if (errorType == null && error != null) {
+        errorType = error.getClass().getName();
       }
-      if (error != null || response != null) {
-        internalSet(
-            attributes, DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
-      }
+      attributes.put(ERROR_TYPE, errorType);
     }
   }
 

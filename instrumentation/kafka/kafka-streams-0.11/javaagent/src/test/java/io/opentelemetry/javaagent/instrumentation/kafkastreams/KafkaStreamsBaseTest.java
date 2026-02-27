@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
@@ -15,14 +18,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -81,7 +81,7 @@ abstract class KafkaStreamsBaseTest {
                   new NewTopic(STREAM_PENDING, 1, (short) 1),
                   new NewTopic(STREAM_PROCESSED, 1, (short) 1)))
           .all()
-          .get(10, TimeUnit.SECONDS);
+          .get(10, SECONDS);
     }
 
     producer = new KafkaProducer<>(producerProps(kafka.getBootstrapServers()));
@@ -146,19 +146,19 @@ abstract class KafkaStreamsBaseTest {
   // gets properly assigned a topic partition
   @SuppressWarnings("PreferJavaTimeOverload")
   static void awaitUntilConsumerIsReady() throws InterruptedException {
-    if (consumerReady.await(0, TimeUnit.SECONDS)) {
+    if (consumerReady.await(0, SECONDS)) {
       return;
     }
     for (int i = 0; i < 10; i++) {
       poll(Duration.ofMillis(100));
-      if (consumerReady.await(1, TimeUnit.SECONDS)) {
+      if (consumerReady.await(1, SECONDS)) {
         break;
       }
     }
     if (consumerReady.getCount() != 0) {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
-    consumer.seekToBeginning(Collections.emptyList());
+    consumer.seekToBeginning(emptyList());
   }
 
   public static ConsumerRecords<Integer, String> poll(Duration duration) {
@@ -167,8 +167,7 @@ abstract class KafkaStreamsBaseTest {
 
   static Context getContext(Headers headers) {
     String traceparent =
-        new String(
-            headers.headers("traceparent").iterator().next().value(), StandardCharsets.UTF_8);
+        new String(headers.headers("traceparent").iterator().next().value(), UTF_8);
     return W3CTraceContextPropagator.getInstance()
         .extract(
             Context.root(),
@@ -184,7 +183,7 @@ abstract class KafkaStreamsBaseTest {
 
               @Override
               public Iterable<String> keys(String carrier) {
-                return Collections.singleton("traceparent");
+                return singleton("traceparent");
               }
             });
   }

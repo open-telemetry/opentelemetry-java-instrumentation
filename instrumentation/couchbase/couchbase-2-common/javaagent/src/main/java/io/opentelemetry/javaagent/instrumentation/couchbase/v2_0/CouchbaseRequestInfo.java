@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import static io.opentelemetry.context.ContextKey.named;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,14 +42,16 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, operation, true);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
-    SqlStatementInfo statement = CouchbaseQuerySanitizer.sanitize(query);
-
+    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
+    SqlQuery sqlQueryWithSummary =
+        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
+    String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, statement.getQueryText(), statement.getOperationName(), false);
+        bucket, sqlQuery, sqlQueryWithSummary, operation, false);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -69,7 +73,10 @@ public abstract class CouchbaseRequestInfo {
   public abstract String bucket();
 
   @Nullable
-  public abstract String statement();
+  public abstract SqlQuery getSqlQuery();
+
+  @Nullable
+  public abstract SqlQuery getSqlQueryWithSummary();
 
   @Nullable
   public abstract String operation();

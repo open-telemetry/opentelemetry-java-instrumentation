@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.javahttpclient.internal;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import java.net.http.HttpHeaders;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public final class HttpHeadersSetter {
             headerMap,
             (carrier, key, value) -> {
               if (carrier != null) {
-                carrier.put(key, Collections.singletonList(value));
+                carrier.put(key, singletonList(value));
               }
             });
 

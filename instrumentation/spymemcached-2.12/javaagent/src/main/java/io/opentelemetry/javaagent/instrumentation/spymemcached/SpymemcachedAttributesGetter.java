@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 public class SpymemcachedAttributesGetter
@@ -13,7 +14,7 @@ public class SpymemcachedAttributesGetter
 
   @Override
   public String getDbSystemName(SpymemcachedRequest spymemcachedRequest) {
-    return "memcached";
+    return DbSystemNameIncubatingValues.MEMCACHED;
   }
 
   @Override
@@ -31,6 +32,6 @@ public class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
-    return spymemcachedRequest.dbOperation();
+    return spymemcachedRequest.getOperationName();
   }
 }

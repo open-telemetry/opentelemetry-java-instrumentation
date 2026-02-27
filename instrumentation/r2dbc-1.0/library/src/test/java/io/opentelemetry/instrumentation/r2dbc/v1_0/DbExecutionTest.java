@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
@@ -39,12 +39,13 @@ class DbExecutionTest {
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.parse("r2dbc:mariadb://root:root@localhost:3306/db");
     DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
-    assertEquals("testdb", dbExecution.getSystem());
-    assertEquals("root", dbExecution.getUser());
-    assertEquals("db", dbExecution.getName());
-    assertEquals("localhost", dbExecution.getHost());
-    assertEquals(3306, dbExecution.getPort());
-    assertEquals("mariadb://localhost:3306", dbExecution.getConnectionString());
-    assertEquals("SELECT * from person where last_name = 'tom'", dbExecution.getRawQueryText());
+    assertThat(dbExecution.getSystem()).isEqualTo("testdb");
+    assertThat(dbExecution.getUser()).isEqualTo("root");
+    assertThat(dbExecution.getName()).isEqualTo("db");
+    assertThat(dbExecution.getHost()).isEqualTo("localhost");
+    assertThat(dbExecution.getPort()).isEqualTo(3306);
+    assertThat(dbExecution.getConnectionString()).isEqualTo("mariadb://localhost:3306");
+    assertThat(dbExecution.getRawQueryText())
+        .isEqualTo("SELECT * from person where last_name = 'tom'");
   }
 }

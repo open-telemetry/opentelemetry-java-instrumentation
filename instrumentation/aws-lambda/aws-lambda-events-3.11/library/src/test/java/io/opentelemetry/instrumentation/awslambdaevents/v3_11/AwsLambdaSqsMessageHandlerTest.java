@@ -7,10 +7,13 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -24,11 +27,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
-import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,12 +65,12 @@ class AwsLambdaSqsMessageHandlerTest {
   @Test
   void processSpans() {
     SQSEvent.SQSMessage message1 = newMessage();
-    message1.setAttributes(Collections.singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
+    message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
     message1.setMessageId("message1");
     message1.setEventSource("queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
-    message2.setAttributes(Collections.singletonMap("AWSTraceHeader", AWS_TRACE_HEADER2));
+    message2.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER2));
     message2.setMessageId("message2");
     message2.setEventSource("queue1");
 
@@ -88,17 +88,13 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("queue1 process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .AWS_SQS),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"))
                         .hasLinks(
                             LinkData.create(
@@ -118,10 +114,7 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .AWS_SQS),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message1"),
                             equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
@@ -137,10 +130,7 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .AWS_SQS),
+                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_MESSAGE_ID, "message2"),
                             equalTo(MESSAGING_DESTINATION_NAME, "queue1"))

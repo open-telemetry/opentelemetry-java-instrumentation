@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -103,7 +104,7 @@ final class ExecutorMatchers {
             .getScalarList("include", String.class, emptyList()));
     INSTRUMENTED_EXECUTOR_NAMES = Collections.unmodifiableSet(combined);
 
-    INSTRUMENTED_EXECUTOR_PREFIXES = Collections.singletonList("slick.util.AsyncExecutor$");
+    INSTRUMENTED_EXECUTOR_PREFIXES = singletonList("slick.util.AsyncExecutor$");
   }
 
   static ElementMatcher.Junction<TypeDescription> executorNameMatcher() {

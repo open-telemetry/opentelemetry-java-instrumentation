@@ -31,6 +31,7 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -41,7 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -87,6 +87,7 @@ import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2ClientCoreTest {
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
@@ -99,9 +100,9 @@ public abstract class AbstractAws2ClientCoreTest {
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
   protected static boolean isSqsAttributeInjectionEnabled() {
-    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
-    return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+    // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
+    return Boolean.getBoolean(
+        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging");
   }
 
   protected void configureSdkClient(SdkClientBuilder<?, ?> builder) {
@@ -272,7 +273,7 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(AWS_DYNAMODB_TABLE_COUNT, 1),
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
             equalTo(maybeStable(DB_OPERATION), "ListTables"));
   }
 
@@ -293,7 +294,7 @@ public abstract class AbstractAws2ClientCoreTest {
                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                 equalTo(AWS_REQUEST_ID, "UNKNOWN"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
+                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                 equalTo(maybeStable(DB_OPERATION), operation)));
     assertions.addAll(extraAttributes);
     span.hasName("DynamoDb." + operation)

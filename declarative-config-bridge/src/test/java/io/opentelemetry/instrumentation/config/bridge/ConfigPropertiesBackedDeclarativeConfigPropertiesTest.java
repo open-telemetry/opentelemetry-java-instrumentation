@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -76,15 +77,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testAgentPrefix() {
-    DeclarativeConfigProperties config = createConfig("otel.javaagent.experimental.indy", "true");
-
-    assertThat(config.getStructured("java").getStructured("agent").getBoolean("indy/development"))
-        .isNotNull()
-        .isTrue();
-  }
-
-  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 
@@ -108,16 +100,20 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testGeneralPeerServiceMapping() {
+  void testJavaCommonServicePeerMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.peer-service-mapping", "old-name=new-name");
+        createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");
 
-    assertThat(
-            config
-                .getStructured("general")
-                .getStructured("peer")
-                .getStructuredList("service_mapping"))
-        .isNotNull();
+    List<DeclarativeConfigProperties> mappings =
+        config
+            .getStructured("java")
+            .getStructured("common")
+            .getStructuredList("service_peer_mapping");
+    assertThat(mappings).isNotNull().hasSize(1);
+    assertThat(mappings.get(0).getString("peer")).isEqualTo("1.2.3.4");
+    assertThat(mappings.get(0).getString("service_name")).isEqualTo("FooService");
+    // service_namespace is not supported in flat config
+    assertThat(mappings.get(0).getString("service_namespace")).isNull();
   }
 
   @Test
@@ -235,61 +231,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("kafka")
                 .getStructured("producer_propagation")
                 .getBoolean("enabled"))
-        .isNull();
-  }
-
-  @Test
-  void testAgentInstrumentationMode_getString_booleanTrue() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "true");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
-        .isEqualTo("default");
-  }
-
-  @Test
-  void testAgentInstrumentationMode_getString_booleanFalse() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "false");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
-        .isEqualTo("none");
-  }
-
-  @Test
-  void testSpringStarterInstrumentationMode_getString_booleanTrue() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "true");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("spring_starter")
-                .getString("instrumentation_mode"))
-        .isEqualTo("default");
-  }
-
-  @Test
-  void testSpringStarterInstrumentationMode_getString_booleanFalse() {
-    DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.default-enabled", "false");
-
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("spring_starter")
-                .getString("instrumentation_mode"))
-        .isEqualTo("none");
-  }
-
-  @Test
-  void testAgentInstrumentationMode_notSet() {
-    DeclarativeConfigProperties config = createConfig("some.other.property", "value");
-
-    assertThat(
-            config.getStructured("java").getStructured("agent").getString("instrumentation_mode"))
         .isNull();
   }
 

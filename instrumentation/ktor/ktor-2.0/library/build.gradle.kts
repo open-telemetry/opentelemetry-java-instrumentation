@@ -13,7 +13,7 @@ dependencies {
   library("io.ktor:ktor-client-core:$ktorVersion")
   library("io.ktor:ktor-server-core:$ktorVersion")
 
-  api(project(":instrumentation:ktor:ktor-2-common:library"))
+  api(project(":instrumentation:ktor:ktor-common-2.0:library"))
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
 
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -38,6 +38,19 @@ kotlin {
   }
 }
 
-tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

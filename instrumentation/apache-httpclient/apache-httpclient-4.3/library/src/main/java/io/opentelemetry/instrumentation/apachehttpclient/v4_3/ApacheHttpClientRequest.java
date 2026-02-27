@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.InetAddress;
@@ -12,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -46,14 +46,6 @@ public final class ApacheHttpClientRequest {
     return delegate;
   }
 
-  /**
-   * @deprecated use {@link #getRequest()} instead.
-   */
-  @Deprecated
-  public HttpRequest getDelegate() {
-    return getRequest();
-  }
-
   List<String> getHeader(String name) {
     return headersToList(delegate.getHeaders(name));
   }
@@ -61,7 +53,7 @@ public final class ApacheHttpClientRequest {
   // minimize memory overhead by not using streams
   static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (int i = 0; i < headers.length; ++i) {
@@ -95,24 +87,23 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
   @Nullable
-  public String getServerAddress() {
+  String getServerAddress() {
     return uri == null ? null : uri.getHost();
   }
 
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
   @Nullable
-  public Integer getServerPort() {
+  Integer getServerPort() {
     return uri == null ? null : uri.getPort();
+  }
+
+  @Nullable
+  InetSocketAddress getNetworkPeerAddress() {
+    if (target == null) {
+      return null;
+    }
+    InetAddress inetAddress = target.getAddress();
+    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 
   @Nullable
@@ -141,19 +132,5 @@ public final class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
-  }
-
-  // TODO: make this package protected
-  /**
-   * @deprecated for internal use only.
-   */
-  @Deprecated
-  @Nullable
-  public InetSocketAddress getNetworkPeerAddress() {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
   }
 }
