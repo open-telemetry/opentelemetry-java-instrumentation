@@ -43,18 +43,26 @@ class RpcClientMetricsTest {
 
     OperationListener listener = RpcClientMetrics.get().create(meterProvider.get("test"));
 
-    Attributes requestAttributes2 =
+    Attributes requestAttributes1 =
         Attributes.builder()
+            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
             .put(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null)
             .put(RPC_SERVICE, emitOldRpcSemconv() ? "myservice.EchoService" : null)
             .put(
                 RPC_METHOD,
                 emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
-            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
+            .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
             .build();
 
-    Attributes requestAttributes1 =
-        requestAttributes2.toBuilder().put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10).build();
+    Attributes requestAttributes2 =
+        Attributes.builder()
+            .put(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null)
+            .put(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null)
+            .put(RPC_SERVICE, emitOldRpcSemconv() ? "myservice.EchoService" : null)
+            .put(
+                RPC_METHOD,
+                emitStableRpcSemconv() ? "myservice.EchoService/exampleMethod" : "exampleMethod")
+            .build();
 
     Attributes responseAttributes1 =
         Attributes.builder()
