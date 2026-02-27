@@ -29,14 +29,18 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
   }
 
   val testBothSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    jvmArgs("-Djava.net.preferIPv4Stack=true")
   }
 
   check {

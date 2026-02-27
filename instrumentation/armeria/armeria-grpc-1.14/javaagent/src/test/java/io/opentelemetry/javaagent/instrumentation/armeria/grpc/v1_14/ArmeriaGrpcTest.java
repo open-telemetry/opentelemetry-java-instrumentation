@@ -92,9 +92,7 @@ class ArmeriaGrpcTest {
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
-                                emitStableRpcSemconv()
-                                    ? String.valueOf(Status.Code.OK.value())
-                                    : null),
+                                emitStableRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, (long) server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -124,9 +122,7 @@ class ArmeriaGrpcTest {
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
                                 RPC_RESPONSE_STATUS_CODE,
-                                emitStableRpcSemconv()
-                                    ? String.valueOf(Status.Code.OK.value())
-                                    : null),
+                                emitStableRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
