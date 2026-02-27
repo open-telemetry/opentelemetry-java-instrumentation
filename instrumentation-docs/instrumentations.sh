@@ -259,6 +259,8 @@ readonly INSTRUMENTATIONS=(
   "tapestry-5.4:javaagent:test"
   "tomcat:tomcat-jdbc:javaagent:test"
   "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
+  "twilio-6.6:javaagent:test"
+  "twilio-6.6:javaagent:testExperimental"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:test"
