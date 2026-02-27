@@ -1609,11 +1609,16 @@ public abstract class AbstractGrpcTest {
 
   @Test
   void setCapturedRequestMetadata() throws Exception {
-    String metadataAttributePrefix = "rpc.grpc.request.metadata.";
+    String oldMetadataAttributePrefix = "rpc.grpc.request.metadata.";
+    String stableMetadataAttributePrefix = "rpc.request.metadata.";
     AttributeKey<List<String>> clientAttributeKey =
-        AttributeKey.stringArrayKey(metadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(
+            (emitStableRpcSemconv() ? stableMetadataAttributePrefix : oldMetadataAttributePrefix)
+                + CLIENT_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> serverAttributeKey =
-        AttributeKey.stringArrayKey(metadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(
+            (emitStableRpcSemconv() ? stableMetadataAttributePrefix : oldMetadataAttributePrefix)
+                + SERVER_REQUEST_METADATA_KEY);
     String serverMetadataValue = "server-value";
     String clientMetadataValue = "client-value";
 
