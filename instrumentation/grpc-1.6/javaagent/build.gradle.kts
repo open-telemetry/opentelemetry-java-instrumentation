@@ -80,8 +80,22 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+  }
+
   check {
-    dependsOn(testExperimental, testStableSemconv)
+    dependsOn(testExperimental, testStableSemconv, testBothSemconv)
   }
 }
 
