@@ -190,7 +190,6 @@ class RpcClientMetricsTest {
                                       point
                                           .hasSum(0.15)
                                           .hasAttributesSatisfyingExactly(
-                                              equalTo(NETWORK_TRANSPORT, "tcp"),
                                               equalTo(
                                                   RPC_METHOD,
                                                   "myservice.EchoService/exampleMethod"),
@@ -244,7 +243,6 @@ class RpcClientMetricsTest {
                                       point
                                           .hasSum(0.15)
                                           .hasAttributesSatisfyingExactly(
-                                              equalTo(NETWORK_TRANSPORT, "tcp"),
                                               equalTo(
                                                   RPC_METHOD,
                                                   "myservice.EchoService/exampleMethod"),
