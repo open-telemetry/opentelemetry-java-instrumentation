@@ -19,7 +19,6 @@ import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.NdJsonpSerializable;
 import org.opensearch.client.json.jackson.JacksonJsonpGenerator;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
-import org.opensearch.client.transport.GenericSerializable;
 
 public final class OpenSearchBodyExtractor {
 
@@ -32,15 +31,6 @@ public final class OpenSearchBodyExtractor {
     try {
       if (request instanceof NdJsonpSerializable) {
         return serializeNdJsonSanitized(mapper, (NdJsonpSerializable) request);
-      }
-
-      if (request instanceof GenericSerializable) {
-        // GenericSerializable writes directly to output stream, cannot sanitize
-        // This path is typically not used for search queries
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ((GenericSerializable) request).serialize(baos);
-        String body = baos.toString(UTF_8);
-        return body.isEmpty() ? null : body;
       }
 
       return serializeSanitized(mapper, request);

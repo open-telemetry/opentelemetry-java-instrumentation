@@ -18,7 +18,7 @@ public final class OpenSearchSingletons {
 
   public static final boolean CAPTURE_SEARCH_QUERY =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "opensearch")
-          .getBoolean("capture_search_query", false);
+          .getBoolean("capture_search_query", true);
 
   public static Instrumenter<OpenSearchRequest, Void> instrumenter() {
     return INSTRUMENTER;

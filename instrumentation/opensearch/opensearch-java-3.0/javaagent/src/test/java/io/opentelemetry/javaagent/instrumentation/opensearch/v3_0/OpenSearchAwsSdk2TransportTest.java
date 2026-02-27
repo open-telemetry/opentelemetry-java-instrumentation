@@ -255,11 +255,4 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     setupForHealthResponse();
     super.shouldRecordMetrics();
   }
-
-  @Test
-  @Override
-  void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {
-    setupForSearchResponse();
-    super.shouldNotCaptureSearchQueryBodyWhenDisabled();
-  }
 }

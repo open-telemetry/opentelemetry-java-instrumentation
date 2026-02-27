@@ -43,6 +43,8 @@ tasks {
   test {
     filter {
       excludeTestsMatching("OpenSearchCaptureSearchQueryTest")
+      excludeTestsMatching("OpenSearchCaptureSearchQueryJsonbTest")
+      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
     }
   }
 
@@ -52,8 +54,19 @@ tasks {
 
     filter {
       includeTestsMatching("OpenSearchCaptureSearchQueryTest")
+      includeTestsMatching("OpenSearchCaptureSearchQueryJsonbTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=true")
+  }
+
+  val testDisabledCaptureSearchQuery by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
+    }
+    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -62,6 +75,8 @@ tasks {
 
     filter {
       excludeTestsMatching("OpenSearchCaptureSearchQueryTest")
+      excludeTestsMatching("OpenSearchCaptureSearchQueryJsonbTest")
+      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
     }
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
@@ -73,6 +88,7 @@ tasks {
 
     filter {
       includeTestsMatching("OpenSearchCaptureSearchQueryTest")
+      includeTestsMatching("OpenSearchCaptureSearchQueryJsonbTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
@@ -80,6 +96,7 @@ tasks {
 
   check {
     dependsOn(testCaptureSearchQuery)
+    dependsOn(testDisabledCaptureSearchQuery)
     dependsOn(testStableSemconv)
     dependsOn(testCaptureSearchQueryStableSemconv)
   }
