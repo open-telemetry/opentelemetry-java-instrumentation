@@ -5,140 +5,156 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import application.io.opentelemetry.api.common.AttributeKey;
-import application.io.opentelemetry.api.common.Attributes;
-import application.io.opentelemetry.api.trace.Span;
-import application.io.opentelemetry.api.trace.SpanContext;
-import application.io.opentelemetry.api.trace.StatusCode;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-public class ApplicationSpan implements Span {
+public class ApplicationSpan implements application.io.opentelemetry.api.trace.Span {
 
-  private final io.opentelemetry.api.trace.Span agentSpan;
+  private final Span agentSpan;
 
-  public ApplicationSpan(io.opentelemetry.api.trace.Span agentSpan) {
+  public ApplicationSpan(Span agentSpan) {
     this.agentSpan = agentSpan;
   }
 
-  io.opentelemetry.api.trace.Span getAgentSpan() {
+  Span getAgentSpan() {
     return agentSpan;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span setAttribute(String key, String value) {
+  public application.io.opentelemetry.api.trace.Span setAttribute(String key, String value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span setAttribute(String key, long value) {
+  public application.io.opentelemetry.api.trace.Span setAttribute(String key, long value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span setAttribute(String key, double value) {
+  public application.io.opentelemetry.api.trace.Span setAttribute(String key, double value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span setAttribute(String key, boolean value) {
+  public application.io.opentelemetry.api.trace.Span setAttribute(String key, boolean value) {
     agentSpan.setAttribute(key, value);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public <T> Span setAttribute(AttributeKey<T> applicationKey, T value) {
-    @SuppressWarnings("unchecked") // toAgent uses raw AttributeKey
-    io.opentelemetry.api.common.AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
+  // unchecked: toAgent returns raw AttributeKey, VALUE bridging requires casting to Object key
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public <T> application.io.opentelemetry.api.trace.Span setAttribute(
+      application.io.opentelemetry.api.common.AttributeKey<T> applicationKey, T value) {
+    AttributeKey<T> agentKey = Bridging.toAgent(applicationKey);
     if (agentKey != null) {
-      agentSpan.setAttribute(agentKey, value);
+      // For VALUE type attributes, need to bridge the Value object as well
+      if (applicationKey.getType().name().equals("VALUE")) {
+        agentSpan.setAttribute((AttributeKey) agentKey, ValueBridging.toAgent(value));
+      } else {
+        agentSpan.setAttribute(agentKey, value);
+      }
     }
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span addEvent(String name) {
+  public application.io.opentelemetry.api.trace.Span addEvent(String name) {
     agentSpan.addEvent(name);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span addEvent(String name, long timestamp, TimeUnit unit) {
+  public application.io.opentelemetry.api.trace.Span addEvent(
+      String name, long timestamp, TimeUnit unit) {
     agentSpan.addEvent(name, timestamp, unit);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span addEvent(String name, Attributes applicationAttributes) {
+  public application.io.opentelemetry.api.trace.Span addEvent(
+      String name, application.io.opentelemetry.api.common.Attributes applicationAttributes) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes));
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span addEvent(
-      String name, Attributes applicationAttributes, long timestamp, TimeUnit unit) {
+  public application.io.opentelemetry.api.trace.Span addEvent(
+      String name,
+      application.io.opentelemetry.api.common.Attributes applicationAttributes,
+      long timestamp,
+      TimeUnit unit) {
     agentSpan.addEvent(name, Bridging.toAgent(applicationAttributes), timestamp, unit);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span addLink(SpanContext spanContext) {
+  public application.io.opentelemetry.api.trace.Span addLink(
+      application.io.opentelemetry.api.trace.SpanContext spanContext) {
     agentSpan.addLink(Bridging.toAgent(spanContext));
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span addLink(SpanContext spanContext, Attributes attributes) {
+  public application.io.opentelemetry.api.trace.Span addLink(
+      application.io.opentelemetry.api.trace.SpanContext spanContext,
+      application.io.opentelemetry.api.common.Attributes attributes) {
     agentSpan.addLink(Bridging.toAgent(spanContext), Bridging.toAgent(attributes));
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span setStatus(StatusCode status) {
+  public application.io.opentelemetry.api.trace.Span setStatus(
+      application.io.opentelemetry.api.trace.StatusCode status) {
     agentSpan.setStatus(Bridging.toAgent(status));
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span setStatus(StatusCode status, String description) {
+  public application.io.opentelemetry.api.trace.Span setStatus(
+      application.io.opentelemetry.api.trace.StatusCode status, String description) {
     agentSpan.setStatus(Bridging.toAgent(status), description);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span recordException(Throwable throwable) {
+  public application.io.opentelemetry.api.trace.Span recordException(Throwable throwable) {
     agentSpan.recordException(throwable);
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span recordException(Throwable throwable, Attributes attributes) {
+  public application.io.opentelemetry.api.trace.Span recordException(
+      Throwable throwable, application.io.opentelemetry.api.common.Attributes attributes) {
     agentSpan.recordException(throwable, Bridging.toAgent(attributes));
     return this;
   }
 
   @Override
   @CanIgnoreReturnValue
-  public Span updateName(String name) {
+  public application.io.opentelemetry.api.trace.Span updateName(String name) {
     agentSpan.updateName(name);
     return this;
   }
@@ -154,7 +170,7 @@ public class ApplicationSpan implements Span {
   }
 
   @Override
-  public SpanContext getSpanContext() {
+  public application.io.opentelemetry.api.trace.SpanContext getSpanContext() {
     return Bridging.toApplication(agentSpan.getSpanContext());
   }
 
