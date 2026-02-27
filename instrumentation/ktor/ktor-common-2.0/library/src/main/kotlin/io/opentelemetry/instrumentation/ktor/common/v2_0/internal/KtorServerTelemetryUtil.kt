@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.common.internal
+package io.opentelemetry.instrumentation.ktor.common.v2_0.internal
 
 import io.ktor.server.application.*
-import io.ktor.server.application.hooks.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.*
@@ -16,8 +15,8 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
-import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder
-import io.opentelemetry.instrumentation.ktor.v2_0.common.ApplicationRequestGetter
+import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.common.v2_0.ApplicationRequestGetter
 import kotlinx.coroutines.withContext
 
 /**

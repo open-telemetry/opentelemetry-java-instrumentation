@@ -660,9 +660,6 @@ targets:
       target: ':instrumentation:ktor:ktor-1.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:ktor:ktor-2-common:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:ktor:ktor-2.0:javaagent'
     - type: gradle
       path: ./
@@ -676,6 +673,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:ktor:ktor-common:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:ktor:ktor-common-2.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-4.0:javaagent'

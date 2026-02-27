@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics.CounterNames.SQL_SANITIZER_CACHE_MISS;
 
 import com.google.auto.value.AutoValue;
@@ -33,8 +34,12 @@ public final class SqlQueryAnalyzer {
     this.querySanitizationEnabled = querySanitizationEnabled;
   }
 
+  /**
+   * @deprecated Use {@link #analyze(String, SqlDialect)} and pass an explicit dialect.
+   */
+  @Deprecated
   public SqlQuery analyze(@Nullable String query) {
-    return analyze(query, SqlDialect.DEFAULT);
+    return analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {
@@ -56,9 +61,14 @@ public final class SqlQueryAnalyzer {
     return AutoSqlSanitizer.sanitize(query, dialect);
   }
 
-  /** Analyze and extract query summary. */
+  /**
+   * Analyze and extract query summary.
+   *
+   * @deprecated Use {@link #analyzeWithSummary(String, SqlDialect)} and pass an explicit dialect.
+   */
+  @Deprecated
   public SqlQuery analyzeWithSummary(@Nullable String query) {
-    return analyzeWithSummary(query, SqlDialect.DEFAULT);
+    return analyzeWithSummary(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   /** Analyze and extract query summary. */
@@ -82,8 +92,8 @@ public final class SqlQueryAnalyzer {
   }
 
   // visible for tests
-  static boolean isCached(String query) {
-    return sqlToQueryCache.get(CacheKey.create(query, SqlDialect.DEFAULT)) != null;
+  static boolean isCached(String query, SqlDialect dialect) {
+    return sqlToQueryCache.get(CacheKey.create(query, dialect)) != null;
   }
 
   @AutoValue
