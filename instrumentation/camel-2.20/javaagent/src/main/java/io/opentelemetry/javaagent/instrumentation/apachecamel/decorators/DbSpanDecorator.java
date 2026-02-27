@@ -159,8 +159,6 @@ class DbSpanDecorator extends BaseSpanDecorator {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
       // using the conservative default since the underlying database is unknown to camel
-      // TODO consider removing db spans from camel since underlying database instrumentation
-      // can do a better job
       SqlQuery sqlQuery =
           emitOldDatabaseSemconv()
               ? analyzer.analyze(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS)

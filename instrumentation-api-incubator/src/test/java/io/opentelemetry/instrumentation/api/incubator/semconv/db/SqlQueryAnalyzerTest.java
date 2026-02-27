@@ -51,6 +51,7 @@ class SqlQueryAnalyzerTest {
   @MethodSource("simplifyArgs")
   void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
     SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
       assertThat(result.getOperationName()).isNull();
@@ -147,6 +148,16 @@ class SqlQueryAnalyzerTest {
   @Test
   void veryLongNumbersAreOk() {
     String s = "";
+    for (int i = 0; i < 10000; i++) {
+      s += String.valueOf(i);
+    }
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    assertThat(result.getQueryText()).isEqualTo("?");
+  }
+
+  @Test
+  void veryLongNumbersAtEndOfTableAreOk() {
+    String s = "A";
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
@@ -367,39 +378,6 @@ class SqlQueryAnalyzerTest {
 
         // hibernate/jpa query language
         Arguments.of("FROM TABLE WHERE FIELD=1234", "FROM TABLE WHERE FIELD=?", "SELECT TABLE"));
-  }
-
-  private static Stream<Arguments> couchbaseArgs() {
-    return Stream.of(
-        // Some databases support/encourage " instead of ' with same escape rules
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"words and spaces'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \" an escaped \"\" quote mark inside\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"\\\\\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"'inside singles'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"'$$$$'\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"),
-        Arguments.of(
-            "SELECT * FROM TABLE WHERE FIELD = \"a single ' singlequote inside\"",
-            "SELECT * FROM TABLE WHERE FIELD = ?",
-            "SELECT TABLE"));
   }
 
   private static Function<String, SqlQuery> expect(
@@ -931,7 +909,7 @@ class SqlQueryAnalyzerTest {
   @MethodSource("doubleQuotesAsIdentifiersArgs")
   void simplifySqlDoubleQuotesAsIdentifiers(
       String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = sanitize(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     if (emitStableDatabaseSemconv()) {
