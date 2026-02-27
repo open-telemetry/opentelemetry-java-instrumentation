@@ -191,6 +191,8 @@ readonly INSTRUMENTATIONS=(
   "opensearch:opensearch-rest-1.0:javaagent:testStableSemconv"
   "opensearch:opensearch-rest-3.0:javaagent:test"
   "opensearch:opensearch-rest-3.0:javaagent:testStableSemconv"
+  "oracle-ucp-11.2:javaagent:test"
+  "oracle-ucp-11.2:javaagent:testStableSemconv"
   "oshi:javaagent:test"
   "oshi:javaagent:testExperimental"
   "pekko:pekko-http-1.0:javaagent:test"
@@ -282,8 +284,6 @@ readonly COLIMA_INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:testStableSemconv"
   "jms:jms-3.0:javaagent:test"
-  "oracle-ucp-11.2:javaagent:test"
-  "oracle-ucp-11.2:javaagent:testStableSemconv"
   "spring:spring-jms:spring-jms-6.0:javaagent:test"
 )
 
