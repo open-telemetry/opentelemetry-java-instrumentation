@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.common.internal
+package io.opentelemetry.instrumentation.ktor.common.v2_0.internal
 
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -13,7 +13,7 @@ import io.ktor.util.pipeline.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount
-import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorClientTelemetry
+import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorClientTelemetry
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
