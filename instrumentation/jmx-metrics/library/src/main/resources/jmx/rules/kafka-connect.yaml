@@ -15,7 +15,7 @@ rules:
         metric: connector.startup
         type: counter
         unit: &unit_startup "{startup}"
-        desc: &connector_startup_desc The total number of connector starts.
+        desc: &connector_startup_desc The number of connector starts for this worker.
         metricAttribute:
           kafka.connect.worker.connector.startup.result: const(failure)
       # kafka.connect.worker.connector.startup
@@ -31,13 +31,13 @@ rules:
         metric: task.count
         type: updowncounter
         unit: "{task}"
-        desc: The number of tasks run in this worker.
+        desc: The number of currently running tasks for this worker.
       # kafka.connect.worker.task.startup
       task-startup-failure-total:
         metric: task.startup
         type: counter
         unit: *unit_startup
-        desc: &task_startup_desc The total number of task starts.
+        desc: &task_startup_desc The number of task starts for this worker.
         metricAttribute:
           kafka.connect.worker.task.startup.result: const(failure)
       # kafka.connect.worker.task.startup
@@ -91,12 +91,12 @@ rules:
   - bean: kafka.connect:type=connect-worker-rebalance-metrics
     prefix: kafka.connect.worker.rebalance.
     mapping:
-      # kafka.connect.worker.rebalance.completed.total
+      # kafka.connect.worker.rebalance.completed
       completed-rebalances-total:
-        metric: completed.total
+        metric: completed
         type: counter
         unit: "{rebalance}"
-        desc: The total number of rebalances completed by this worker.
+        desc: The number of rebalances completed by this worker.
       # kafka.connect.worker.rebalance.protocol
       connect-protocol:
         metric: protocol
@@ -110,20 +110,19 @@ rules:
       # kafka.connect.worker.rebalance.epoch
       epoch:
         metric: epoch
-        type: updowncounter
+        type: counter
         unit: "{epoch}"
         desc: The epoch or generation number of this worker.
-      # kafka.connect.worker.rebalance.leader
-      # kafka.connect.worker.rebalance.avg.time
+      # kafka.connect.worker.rebalance.time.avg
       rebalance-avg-time-ms:
-        metric: avg.time
+        metric: time.avg
         type: gauge
         sourceUnit: ms
         unit: s
         desc: The average time in milliseconds spent by this worker to rebalance.
-      # kafka.connect.worker.rebalance.max.time
+      # kafka.connect.worker.rebalance.time.max
       rebalance-max-time-ms:
-        metric: max.time
+        metric: time.max
         type: gauge
         sourceUnit: ms
         unit: s
@@ -132,7 +131,7 @@ rules:
       rebalancing:
         metric: active
         type: updowncounter
-        unit: &unit_one '1'
+        unit: "1"
         desc: Whether this worker is currently rebalancing.
         metricAttribute:
           kafka.connect.worker.rebalance.state:
@@ -178,22 +177,23 @@ rules:
         type: gauge
         unit: *unit_record
         desc: The number of records in the largest batch the task has processed so far.
-      # kafka.connect.task.offset.commit.avg.time
+      # kafka.connect.task.offset.commit.time.avg
       offset-commit-avg-time-ms:
-        metric: offset.commit.avg.time
+        metric: offset.commit.time.avg
         type: gauge
         sourceUnit: ms
         unit: s
         desc: The average time in milliseconds taken by this task to commit offsets.
-      # kafka.connect.task.offset.commit.failure.percentage
+      # kafka.connect.task.offset.commit.failure.ratio
       offset-commit-failure-percentage:
-        metric: offset.commit.failure.percentage
+        metric: offset.commit.failure.ratio
+        sourceUnit: "%"
         type: gauge
-        unit: *unit_one
+        unit: "1"
         desc: The average percentage of this task's offset commit attempts that failed.
-      # kafka.connect.task.offset.commit.max.time
+      # kafka.connect.task.offset.commit.time.max
       offset-commit-max-time-ms:
-        metric: offset.commit.max.time
+        metric: offset.commit.time.max
         type: gauge
         sourceUnit: ms
         unit: s
@@ -202,7 +202,7 @@ rules:
       running-ratio:
         metric: running.ratio
         type: gauge
-        unit: *unit_one
+        unit: "1"
         desc: The fraction of time this task has spent in the running state.
       # kafka.connect.task.status
       status:
@@ -226,40 +226,40 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.sink.offset.commit.completion.total
+      # kafka.connect.sink.offset.commit.completion.count
       offset-commit-completion-total:
-        metric: offset.commit.completion.total
+        metric: offset.commits.completed
         type: counter
         unit: "{commit}"
-        desc: The total number of offset commit completions that were completed successfully.
+        desc: The number of offset commit completions that were completed successfully.
       # kafka.connect.sink.offset.commit.seq
       offset-commit-seq-no:
         metric: offset.commit.seq
-        type: updowncounter
+        type: counter
         unit: "{sequence}"
         desc: The current sequence number for offset commits.
-      # kafka.connect.sink.offset.commit.skip.total
+      # kafka.connect.sink.offset.commit.skipped
       offset-commit-skip-total:
-        metric: offset.commit.skip.total
+        metric: offset.commit.skipped
         type: counter
         unit: "{commit}"
-        desc: The total number of offset commit completions that were received too late and skipped/ignored.
+        desc: The number of offset commit completions that were received too late and skipped/ignored.
       # kafka.connect.sink.partition.count
       partition-count:
         metric: partition.count
         type: updowncounter
         unit: "{partition}"
         desc: The number of topic partitions assigned to this task belonging to the named sink connector in this worker.
-      # kafka.connect.sink.put.batch.avg.time
+      # kafka.connect.sink.put.batch.time.avg
       put-batch-avg-time-ms:
-        metric: put.batch.avg.time
+        metric: put.batch.time.avg
         type: gauge
         sourceUnit: ms
         unit: s
         desc: The average time taken by this task to put a batch of sinks records.
-      # kafka.connect.sink.put.batch.max.time
+      # kafka.connect.sink.put.batch.time.max
       put-batch-max-time-ms:
-        metric: put.batch.max.time
+        metric: put.batch.time.max
         type: gauge
         sourceUnit: ms
         unit: s
@@ -268,7 +268,7 @@ rules:
       sink-record-active-count:
         metric: record.active.count
         type: updowncounter
-        unit: *unit_record
+        unit: "{record}"
         desc: The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.
       # kafka.connect.sink.record.lag.max
       sink-record-lag-max:
@@ -276,18 +276,18 @@ rules:
         type: gauge
         unit: *unit_record
         desc: The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions.
-      # kafka.connect.sink.record.read.total
+      # kafka.connect.sink.record.read.count
       sink-record-read-total:
-        metric: record.read.total
+        metric: record.read.count
         type: counter
         unit: *unit_record
-        desc: The total number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.
-      # kafka.connect.sink.record.send.total
+        desc: The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.
+      # kafka.connect.sink.record.send.count
       sink-record-send-total:
-        metric: record.send.total
+        metric: record.send.count
         type: counter
         unit: *unit_record
-        desc: The total number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted.
+        desc: The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted.
 
   - bean: kafka.connect:type=source-task-metrics,connector=*,task=*
     prefix: kafka.connect.source.
@@ -295,16 +295,16 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.source.poll.batch.avg.time
+      # kafka.connect.source.poll.batch.time.avg
       poll-batch-avg-time-ms:
-        metric: poll.batch.avg.time
+        metric: poll.batch.time.avg
         type: gauge
         sourceUnit: ms
         unit: s
         desc: The average time in milliseconds taken by this task to poll for a batch of source records.
-      # kafka.connect.source.poll.batch.max.time
+      # kafka.connect.source.poll.batch.time.max
       poll-batch-max-time-ms:
-        metric: poll.batch.max.time
+        metric: poll.batch.time.max
         type: gauge
         sourceUnit: ms
         unit: s
@@ -313,17 +313,17 @@ rules:
       source-record-active-count:
         metric: record.active.count
         type: updowncounter
-        unit: *unit_record
+        unit: "{record}"
         desc: The number of records that have been produced by this task but not yet completely written to Kafka.
-      # kafka.connect.source.record.poll.total
+      # kafka.connect.source.record.poll.count
       source-record-poll-total:
-        metric: record.poll.total
+        metric: record.poll.count
         type: counter
         unit: *unit_record
-        desc: The total number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
-      # kafka.connect.source.record.write.total
+        desc: The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
+      # kafka.connect.source.record.write.count
       source-record-write-total:
-        metric: record.write.total
+        metric: record.write.count
         type: counter
         unit: *unit_record
         desc: The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations.
@@ -372,33 +372,33 @@ rules:
         unit: s
         dropNegativeValues: true
         desc: The epoch timestamp when this task last encountered an error.
-      # kafka.connect.task.error.total.errors.logged
+      # kafka.connect.task.error.errors.logged
       total-errors-logged:
-        metric: total.errors.logged
+        metric: errors.logged.count
         type: counter
         unit: "{error}"
         desc: The number of errors that were logged.
-      # kafka.connect.task.error.total.record.errors
+      # kafka.connect.task.error.record.errors
       total-record-errors:
-        metric: total.record.errors
+        metric: record.errors.count
         type: counter
-        unit: *unit_record
+        unit: "{record}"
         desc: The number of record processing errors in this task.
-      # kafka.connect.task.error.total.record.failures
+      # kafka.connect.task.error.record.failures
       total-record-failures:
-        metric: total.record.failures
+        metric: record.failures.count
         type: counter
         unit: *unit_record
         desc: The number of record processing failures in this task.
-      # kafka.connect.task.error.total.records.skipped
+      # kafka.connect.task.error.records.skipped
       total-records-skipped:
-        metric: total.records.skipped
+        metric: records.skipped.count
         type: counter
         unit: *unit_record
         desc: The number of records skipped due to errors.
-      # kafka.connect.task.error.total.retries
+      # kafka.connect.task.error.retries
       total-retries:
-        metric: total.retries
+        metric: retries.count
         type: counter
         unit: "{retry}"
         desc: The number of operations retried.
