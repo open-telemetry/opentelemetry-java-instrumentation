@@ -248,7 +248,8 @@ public abstract class AbstractGrpcStreamingTest {
                                         GRPC_SENT_MESSAGE_COUNT,
                                         v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                                    equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                                    equalTo(
+                                        RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
                                     equalTo(
                                         RPC_SERVICE,
                                         emitOldRpcSemconv() ? "example.Greeter" : null),
@@ -262,9 +263,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                                     equalTo(
                                         RPC_RESPONSE_STATUS_CODE,
-                                        emitStableRpcSemconv()
-                                            ? Status.Code.OK.name()
-                                            : null),
+                                        emitStableRpcSemconv() ? Status.Code.OK.name() : null),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
@@ -295,9 +294,7 @@ public abstract class AbstractGrpcStreamingTest {
                                     emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                                 equalTo(
                                     RPC_RESPONSE_STATUS_CODE,
-                                    emitStableRpcSemconv()
-                                        ? Status.Code.OK.name()
-                                        : null),
+                                    emitStableRpcSemconv() ? Status.Code.OK.name() : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
