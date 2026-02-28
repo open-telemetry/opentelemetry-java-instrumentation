@@ -113,9 +113,9 @@ rules:
         type: counter
         unit: "{epoch}"
         desc: The epoch or generation number of this worker.
-      # kafka.connect.worker.rebalance.time.avg
+      # kafka.connect.worker.rebalance.time.average
       rebalance-avg-time-ms:
-        metric: time.avg
+        metric: time.average
         type: gauge
         sourceUnit: ms
         unit: s
@@ -165,21 +165,21 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.task.batch.size.avg
+      # kafka.connect.task.batch.size.average
       batch-size-avg:
-        metric: batch.size.avg
+        metric: batch.size.average
         type: gauge
-        unit: &unit_record "{record}"
+        unit: &unit_record_task "{record}"
         desc: The average number of records in the batches the task has processed so far.
       # kafka.connect.task.batch.size.max
       batch-size-max:
         metric: batch.size.max
         type: gauge
-        unit: *unit_record
+        unit: *unit_record_task
         desc: The number of records in the largest batch the task has processed so far.
-      # kafka.connect.task.offset.commit.time.avg
+      # kafka.connect.task.offset.commit.time.average
       offset-commit-avg-time-ms:
-        metric: offset.commit.time.avg
+        metric: offset.commit.time.average
         type: gauge
         sourceUnit: ms
         unit: s
@@ -250,9 +250,9 @@ rules:
         type: updowncounter
         unit: "{partition}"
         desc: The number of topic partitions assigned to this task belonging to the named sink connector in this worker.
-      # kafka.connect.sink.put.batch.time.avg
+      # kafka.connect.sink.put.batch.time.average
       put-batch-avg-time-ms:
-        metric: put.batch.time.avg
+        metric: put.batch.time.average
         type: gauge
         sourceUnit: ms
         unit: s
@@ -274,19 +274,19 @@ rules:
       sink-record-lag-max:
         metric: record.lag.max
         type: gauge
-        unit: *unit_record
+        unit: &unit_record_sink "{record}"
         desc: The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions.
       # kafka.connect.sink.record.read.count
       sink-record-read-total:
         metric: record.read.count
         type: counter
-        unit: *unit_record
+        unit: *unit_record_sink
         desc: The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.
       # kafka.connect.sink.record.send.count
       sink-record-send-total:
         metric: record.send.count
         type: counter
-        unit: *unit_record
+        unit: *unit_record_sink
         desc: The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted.
 
   - bean: kafka.connect:type=source-task-metrics,connector=*,task=*
@@ -295,9 +295,9 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.source.poll.batch.time.avg
+      # kafka.connect.source.poll.batch.time.average
       poll-batch-avg-time-ms:
-        metric: poll.batch.time.avg
+        metric: poll.batch.time.average
         type: gauge
         sourceUnit: ms
         unit: s
@@ -319,31 +319,31 @@ rules:
       source-record-poll-total:
         metric: record.poll.count
         type: counter
-        unit: *unit_record
+        unit: &unit_record_source
         desc: The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
       # kafka.connect.source.record.write.count
       source-record-write-total:
         metric: record.write.count
         type: counter
-        unit: *unit_record
+        unit: *unit_record_source
         desc: The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations.
-      # kafka.connect.source.transaction.size.avg
+      # kafka.connect.source.transaction.size.average
       transaction-size-avg:
-        metric: transaction.size.avg
+        metric: transaction.size.average
         type: gauge
-        unit: *unit_record
+        unit: *unit_record_source
         desc: The average number of records in the transactions the task has committed so far.
       # kafka.connect.source.transaction.size.max
       transaction-size-max:
         metric: transaction.size.max
         type: gauge
-        unit: *unit_record
+        unit: *unit_record_source
         desc: The number of records in the largest transaction the task has committed so far.
       # kafka.connect.source.transaction.size.min
       transaction-size-min:
         metric: transaction.size.min
         type: gauge
-        unit: *unit_record
+        unit: *unit_record_source
         desc: The number of records in the smallest transaction the task has committed so far.
 
   - bean: kafka.connect:type=task-error-metrics,connector=*,task=*
@@ -352,15 +352,15 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.task.error.deadletterqueue.produce.failures
+      # kafka.connect.task.error.deadletterqueue.produce.failure.count
       deadletterqueue-produce-failures:
-        metric: deadletterqueue.produce.failures
+        metric: deadletterqueue.produce.failure.count
         type: counter
         unit: "{failure}"
         desc: The number of failed writes to the dead letter queue.
-      # kafka.connect.task.error.deadletterqueue.produce.requests
+      # kafka.connect.task.error.deadletterqueue.produce.request.count
       deadletterqueue-produce-requests:
-        metric: deadletterqueue.produce.requests
+        metric: deadletterqueue.produce.request.count
         type: counter
         unit: "{request}"
         desc: The number of attempted writes to the dead letter queue.
@@ -372,33 +372,33 @@ rules:
         unit: s
         dropNegativeValues: true
         desc: The epoch timestamp when this task last encountered an error.
-      # kafka.connect.task.error.errors.logged.count
+      # kafka.connect.task.error.logged.count
       total-errors-logged:
-        metric: errors.logged.count
+        metric: logged.count
         type: counter
         unit: "{error}"
         desc: The number of errors that were logged.
-      # kafka.connect.task.error.record.errors.count
+      # kafka.connect.task.error.record.error.count
       total-record-errors:
-        metric: record.errors.count
+        metric: record.error.count
         type: counter
-        unit: "{record}"
+        unit: &unit_record "{record}"
         desc: The number of record processing errors in this task.
-      # kafka.connect.task.error.record.failures.count
+      # kafka.connect.task.error.record.failure.count
       total-record-failures:
-        metric: record.failures.count
+        metric: record.failure.count
         type: counter
         unit: *unit_record
         desc: The number of record processing failures in this task.
-      # kafka.connect.task.error.records.skipped.count
+      # kafka.connect.task.error.record.skipped.count
       total-records-skipped:
-        metric: records.skipped.count
+        metric: record.skipped.count
         type: counter
         unit: *unit_record
         desc: The number of records skipped due to errors.
-      # kafka.connect.task.error.retries.count
+      # kafka.connect.task.error.retry.count
       total-retries:
-        metric: retries.count
+        metric: retry.count
         type: counter
         unit: "{retry}"
         desc: The number of operations retried.

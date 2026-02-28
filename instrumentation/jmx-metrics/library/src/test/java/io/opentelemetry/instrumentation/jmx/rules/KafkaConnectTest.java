@@ -55,9 +55,9 @@ class KafkaConnectTest extends TargetSystemTest {
     Collections.addAll(
         OPTIONAL_APACHE_METRICS,
         "kafka.connect.sink.record.lag.max",
-        "kafka.connect.task.offset.commit.time.avg",
+        "kafka.connect.task.offset.commit.time.average",
         "kafka.connect.task.offset.commit.time.max",
-        "kafka.connect.source.transaction.size.avg",
+        "kafka.connect.source.transaction.size.average",
         "kafka.connect.source.transaction.size.max",
         "kafka.connect.source.transaction.size.min");
   }
