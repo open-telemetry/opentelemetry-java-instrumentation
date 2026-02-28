@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common;
+package io.opentelemetry.javaagent.instrumentation.netty.v4_0.common;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.VirtualFieldHelper.CHANNEL_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.common.VirtualFieldHelper.CHANNEL_HANDLER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
