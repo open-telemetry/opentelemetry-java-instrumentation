@@ -27,7 +27,14 @@ otelJava {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -38,6 +45,7 @@ tasks {
   }
 
   check {
+    dependsOn(testExperimental)
     dependsOn(testStableSemconv)
   }
 }
