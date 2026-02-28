@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.common.internal
+package io.opentelemetry.instrumentation.ktor.common.v2_0.internal
 
-import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorClientTelemetryBuilder
-import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorClientTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorServerTelemetryBuilder
 
 class Experimental private constructor() {
 

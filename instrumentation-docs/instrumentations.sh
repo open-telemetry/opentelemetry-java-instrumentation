@@ -191,6 +191,8 @@ readonly INSTRUMENTATIONS=(
   "opensearch:opensearch-rest-1.0:javaagent:testStableSemconv"
   "opensearch:opensearch-rest-3.0:javaagent:test"
   "opensearch:opensearch-rest-3.0:javaagent:testStableSemconv"
+  "oracle-ucp-11.2:javaagent:test"
+  "oracle-ucp-11.2:javaagent:testStableSemconv"
   "oshi:javaagent:test"
   "oshi:javaagent:testExperimental"
   "pekko:pekko-http-1.0:javaagent:test"
@@ -259,6 +261,8 @@ readonly INSTRUMENTATIONS=(
   "tapestry-5.4:javaagent:test"
   "tomcat:tomcat-jdbc:javaagent:test"
   "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
+  "twilio-6.6:javaagent:test"
+  "twilio-6.6:javaagent:testExperimental"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:test"
@@ -280,8 +284,6 @@ readonly COLIMA_INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:testStableSemconv"
   "jms:jms-3.0:javaagent:test"
-  "oracle-ucp-11.2:javaagent:test"
-  "oracle-ucp-11.2:javaagent:testStableSemconv"
   "spring:spring-jms:spring-jms-6.0:javaagent:test"
 )
 

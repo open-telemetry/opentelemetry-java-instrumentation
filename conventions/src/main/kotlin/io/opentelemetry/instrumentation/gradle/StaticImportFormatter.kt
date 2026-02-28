@@ -61,6 +61,11 @@ class StaticImportFormatter : FormatterFunc, Serializable {
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*"
       ),
+      Triple(
+        "SqlDialect",
+        "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect", 
+        "DOUBLE_QUOTES_ARE_[A-Z_]+"
+      ),
       Triple("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
     )
 
