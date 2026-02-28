@@ -102,7 +102,7 @@ public class GenerateDocs {
           .append("| ")
           .append(feature.name())
           .append(" | ")
-          .append(feature.overlapsWithJmx())
+          .append(!feature.overlapsWithJmx() && !feature.isExperimental())
           .append(" | ")
           .append(metricCol)
           .append(" |")

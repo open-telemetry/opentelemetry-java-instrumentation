@@ -55,8 +55,6 @@ public final class Internal {
 
   @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setDisableJmx;
 
-  private Internal() {}
-
   /**
    * Sets whether all JFR features should be enabled. This is used for backward compatibility with
    * the {@code runtime_telemetry_java17.enable_all} configuration option.
@@ -373,4 +371,6 @@ public final class Internal {
     }
     Internal.setCaptureGcCause(builder, captureGcCause);
   }
+
+  private Internal() {}
 }

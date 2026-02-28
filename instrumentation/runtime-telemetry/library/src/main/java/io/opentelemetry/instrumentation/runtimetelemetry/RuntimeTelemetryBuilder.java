@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import javax.annotation.Nullable;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
@@ -26,13 +27,13 @@ public final class RuntimeTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final JfrConfig jfrConfig;
 
-  private boolean emitExperimentalMetrics = false;
-  private boolean preferJfrMetrics = false;
-  private boolean disableJmx = false;
-  private boolean captureGcCause = false;
+  private boolean emitExperimentalMetrics;
+  private boolean preferJfrMetrics;
+  private boolean disableJmx;
+  private boolean captureGcCause;
   // For backward compatibility: support separate instrumentation names for JMX and JFR metrics
-  private String jmxInstrumentationName = null;
-  private String jfrInstrumentationName = null;
+  @Nullable private String jmxInstrumentationName;
+  @Nullable private String jfrInstrumentationName;
 
   static {
     Experimental.internalSetEmitExperimentalMetrics(
