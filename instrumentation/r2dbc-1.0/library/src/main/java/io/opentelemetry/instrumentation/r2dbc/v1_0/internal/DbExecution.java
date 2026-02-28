@@ -113,6 +113,7 @@ public final class DbExecution {
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
+  @Nullable
   public String getServerAddress() {
     return serverAddress;
   }
@@ -135,6 +136,7 @@ public final class DbExecution {
     return user;
   }
 
+  @Nullable
   public String getNamespace() {
     return namespace;
   }
@@ -160,7 +162,6 @@ public final class DbExecution {
   }
 
   private static String resolveDbSystemName(@Nullable String driver, @Nullable String protocol) {
-
     // Use PROTOCOL when DRIVER is "pool" (r2dbc-pool wraps the real driver in PROTOCOL),
     // otherwise use DRIVER directly.
     String rawDriver = "pool".equals(driver) && protocol != null ? protocol : driver;

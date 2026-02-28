@@ -45,6 +45,10 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
    * Returns the old semconv {@code db.system} value. Defaults to {@link #getDbSystemName} for
    * instrumentations where the old and new values are the same.
    *
+   * <p>Implementors whose old {@code db.system} value differs from the new {@code db.system.name}
+   * value <b>must override</b> this method; otherwise old-semconv spans will silently emit the new
+   * value for {@code db.system}.
+   *
    * @deprecated Use {@link #getDbSystemName} instead.
    */
   @Deprecated // to be removed in 3.0
