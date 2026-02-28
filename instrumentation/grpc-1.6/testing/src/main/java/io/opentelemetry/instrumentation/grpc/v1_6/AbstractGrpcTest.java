@@ -1605,14 +1605,14 @@ public abstract class AbstractGrpcTest {
   void setCapturedRequestMetadata() throws Exception {
     String oldMetadataAttributePrefix = "rpc.grpc.request.metadata.";
     String stableMetadataAttributePrefix = "rpc.request.metadata.";
-    AttributeKey<List<String>> clientAttributeKey =
-        AttributeKey.stringArrayKey(
-            (emitStableRpcSemconv() ? stableMetadataAttributePrefix : oldMetadataAttributePrefix)
-                + CLIENT_REQUEST_METADATA_KEY);
-    AttributeKey<List<String>> serverAttributeKey =
-        AttributeKey.stringArrayKey(
-            (emitStableRpcSemconv() ? stableMetadataAttributePrefix : oldMetadataAttributePrefix)
-                + SERVER_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> oldClientAttributeKey =
+        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> stableClientAttributeKey =
+        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> oldServerAttributeKey =
+        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> stableServerAttributeKey =
+        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
     String serverMetadataValue = "server-value";
     String clientMetadataValue = "client-value";
 
@@ -1657,16 +1657,32 @@ public abstract class AbstractGrpcTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttribute(clientAttributeKey, singletonList(clientMetadataValue)),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttribute(serverAttributeKey, singletonList(serverMetadataValue))));
+                    span -> {
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0));
+                      if (emitOldRpcSemconv()) {
+                        span.hasAttribute(
+                            oldClientAttributeKey, singletonList(clientMetadataValue));
+                      }
+                      if (emitStableRpcSemconv()) {
+                        span.hasAttribute(
+                            stableClientAttributeKey, singletonList(clientMetadataValue));
+                      }
+                    },
+                    span -> {
+                      span.hasName("example.Greeter/SayHello")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1));
+                      if (emitOldRpcSemconv()) {
+                        span.hasAttribute(
+                            oldServerAttributeKey, singletonList(serverMetadataValue));
+                      }
+                      if (emitStableRpcSemconv()) {
+                        span.hasAttribute(
+                            stableServerAttributeKey, singletonList(serverMetadataValue));
+                      }
+                    }));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
