@@ -106,6 +106,36 @@ methods below the non-private methods that use them.
 **Static utility classes**: Place the private constructor (used to prevent instantiation) after all
 methods.
 
+**Static field initialization**: When a `static final` field requires non-trivial initialization,
+use a private static builder method or a `static {}` block, placed **immediately after the field**.
+For immutable collections on Java 9+ modules, `List.of()` / `Map.of()` / `Map.ofEntries()` are
+preferred. Avoid double-brace initialization (`new HashMap<>() {{ put(...); }}`).
+
+```java
+// preferred: private builder method
+private static final Map<String, String> FOO_MAP = buildFooMap();
+
+private static Map<String, String> buildFooMap() {
+  Map<String, String> map = new HashMap<>();
+  map.put("a", "alpha");
+  map.put("b", "beta");
+  return Collections.unmodifiableMap(map);
+}
+
+// also acceptable: static {} block
+private static final Map<String, String> FOO_MAP;
+
+static {
+  Map<String, String> map = new HashMap<>();
+  map.put("a", "alpha");
+  map.put("b", "beta");
+  FOO_MAP = Collections.unmodifiableMap(map);
+}
+
+// Java 9+ modules: use immutable factory methods
+private static final Map<String, String> FOO_MAP = Map.of("a", "alpha", "b", "beta");
+```
+
 ### `final` keyword usage
 
 Public non-internal non-test classes should be declared `final` where possible.
