@@ -10,17 +10,17 @@ rules:
         type: updowncounter
         unit: "{connector}"
         desc: The number of connectors run in this worker.
-      # kafka.connect.worker.connector.startup
+      # kafka.connect.worker.connector.startup.count
       connector-startup-failure-total:
-        metric: connector.startup
+        metric: connector.startup.count
         type: counter
         unit: &unit_startup "{startup}"
         desc: &connector_startup_desc The number of connector starts for this worker.
         metricAttribute:
           kafka.connect.worker.connector.startup.result: const(failure)
-      # kafka.connect.worker.connector.startup
+      # kafka.connect.worker.connector.startup.count
       connector-startup-success-total:
-        metric: connector.startup
+        metric: connector.startup.count
         type: counter
         unit: *unit_startup
         desc: *connector_startup_desc
@@ -32,17 +32,17 @@ rules:
         type: updowncounter
         unit: "{task}"
         desc: The number of currently running tasks for this worker.
-      # kafka.connect.worker.task.startup
+      # kafka.connect.worker.task.startup.count
       task-startup-failure-total:
-        metric: task.startup
+        metric: task.startup.count
         type: counter
         unit: *unit_startup
         desc: &task_startup_desc The number of task starts for this worker.
         metricAttribute:
           kafka.connect.worker.task.startup.result: const(failure)
-      # kafka.connect.worker.task.startup
+      # kafka.connect.worker.task.startup.count
       task-startup-success-total:
-        metric: task.startup
+        metric: task.startup.count
         type: counter
         unit: *unit_startup
         desc: *task_startup_desc
@@ -91,9 +91,9 @@ rules:
   - bean: kafka.connect:type=connect-worker-rebalance-metrics
     prefix: kafka.connect.worker.rebalance.
     mapping:
-      # kafka.connect.worker.rebalance.completed
+      # kafka.connect.worker.rebalance.completed.count
       completed-rebalances-total:
-        metric: completed
+        metric: completed.count
         type: counter
         unit: "{rebalance}"
         desc: The number of rebalances completed by this worker.
@@ -226,9 +226,9 @@ rules:
       kafka.connect.connector: param(connector)
       kafka.connect.task.id: param(task)
     mapping:
-      # kafka.connect.sink.offset.commit.completion.count
+      # kafka.connect.sink.offset.commit.completed.count
       offset-commit-completion-total:
-        metric: offset.commits.completed
+        metric: offset.commit.completed.count
         type: counter
         unit: "{commit}"
         desc: The number of offset commit completions that were completed successfully.
@@ -238,9 +238,9 @@ rules:
         type: counter
         unit: "{sequence}"
         desc: The current sequence number for offset commits.
-      # kafka.connect.sink.offset.commit.skipped
+      # kafka.connect.sink.offset.commit.skipped.count
       offset-commit-skip-total:
-        metric: offset.commit.skipped
+        metric: offset.commit.skipped.count
         type: counter
         unit: "{commit}"
         desc: The number of offset commit completions that were received too late and skipped/ignored.
@@ -372,31 +372,31 @@ rules:
         unit: s
         dropNegativeValues: true
         desc: The epoch timestamp when this task last encountered an error.
-      # kafka.connect.task.error.errors.logged
+      # kafka.connect.task.error.errors.logged.count
       total-errors-logged:
         metric: errors.logged.count
         type: counter
         unit: "{error}"
         desc: The number of errors that were logged.
-      # kafka.connect.task.error.record.errors
+      # kafka.connect.task.error.record.errors.count
       total-record-errors:
         metric: record.errors.count
         type: counter
         unit: "{record}"
         desc: The number of record processing errors in this task.
-      # kafka.connect.task.error.record.failures
+      # kafka.connect.task.error.record.failures.count
       total-record-failures:
         metric: record.failures.count
         type: counter
         unit: *unit_record
         desc: The number of record processing failures in this task.
-      # kafka.connect.task.error.records.skipped
+      # kafka.connect.task.error.records.skipped.count
       total-records-skipped:
         metric: records.skipped.count
         type: counter
         unit: *unit_record
         desc: The number of records skipped due to errors.
-      # kafka.connect.task.error.retries
+      # kafka.connect.task.error.retries.count
       total-retries:
         metric: retries.count
         type: counter
