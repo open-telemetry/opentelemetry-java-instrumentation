@@ -190,7 +190,7 @@ rules:
         sourceUnit: "%"
         type: gauge
         unit: "1"
-        desc: The average percentage of this task's offset commit attempts that failed.
+        desc: The average ratio of this task's offset commit attempts that failed.
       # kafka.connect.task.offset.commit.time.max
       offset-commit-max-time-ms:
         metric: offset.commit.time.max

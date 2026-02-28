@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -15,7 +16,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -362,7 +362,7 @@ class KafkaConnectTest extends TargetSystemTest {
     if (body != null) {
       connection.setDoOutput(true);
       connection.setRequestProperty("Content-Type", "application/json");
-      byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+      byte[] bytes = body.getBytes(UTF_8);
       connection.setRequestProperty("Content-Length", Integer.toString(bytes.length));
       try (OutputStream output = connection.getOutputStream()) {
         output.write(bytes);
@@ -389,7 +389,7 @@ class KafkaConnectTest extends TargetSystemTest {
       while ((read = stream.read(buffer)) != -1) {
         output.write(buffer, 0, read);
       }
-      return output.toString(StandardCharsets.UTF_8.name());
+      return output.toString(UTF_8.name());
     } finally {
       try {
         stream.close();
