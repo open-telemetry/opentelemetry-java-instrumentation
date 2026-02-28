@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -53,7 +53,7 @@ class ContextBridgeTest {
           assertThat(Span.fromContextOrNull(Context.current())).isNotNull();
 
           List<SpanKey> spanKeys =
-              Arrays.asList(
+              asList(
                   // span kind keys
                   SpanKey.KIND_SERVER,
                   SpanKey.KIND_CLIENT,

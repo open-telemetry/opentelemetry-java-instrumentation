@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumV
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.NON_STATIC;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.STATIC;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -31,7 +32,6 @@ import io.opentelemetry.test.TestAbstractSuperClass;
 import io.opentelemetry.test.TestInterface;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -283,7 +283,7 @@ class ReferenceMatcherTest {
             "match static field",
             "staticB",
             Type.getType(Nested.B.class),
-            new HashSet<>(Arrays.asList(STATIC, PROTECTED_OR_HIGHER)),
+            new HashSet<>(asList(STATIC, PROTECTED_OR_HIGHER)),
             Nested.A.class,
             null),
         Arguments.of(
@@ -405,7 +405,7 @@ class ReferenceMatcherTest {
     references.put(emptySuperClassRef.getClassName(), emptySuperClassRef);
 
     List<String> helperClasses =
-        Arrays.asList(reference.getClassName(), emptySuperClassRef.getClassName());
+        asList(reference.getClassName(), emptySuperClassRef.getClassName());
 
     List<Mismatch> mismatches =
         createMatcher(references, helperClasses)
@@ -436,7 +436,7 @@ class ReferenceMatcherTest {
     references.put(helper.getClassName(), helper);
     references.put(baseHelper.getClassName(), baseHelper);
 
-    List<String> helperClasses = Arrays.asList(helper.getClassName(), baseHelper.getClassName());
+    List<String> helperClasses = asList(helper.getClassName(), baseHelper.getClassName());
 
     List<Mismatch> mismatches =
         createMatcher(references, helperClasses)

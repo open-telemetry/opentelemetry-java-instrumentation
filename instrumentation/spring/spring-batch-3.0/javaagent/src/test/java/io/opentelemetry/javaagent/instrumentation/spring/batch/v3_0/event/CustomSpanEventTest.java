@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.event;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -14,7 +15,6 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JobRu
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ abstract class CustomSpanEventTest {
         trace -> {
           List<Consumer<SpanDataAssert>> assertions =
               new ArrayList<>(
-                  Arrays.asList(
+                  asList(
                       span ->
                           span.hasName("BatchJob customSpanEventsItemsJob")
                               .hasKind(SpanKind.INTERNAL)
@@ -101,7 +101,7 @@ abstract class CustomSpanEventTest {
 
   protected void itemSpans(TraceAssert trace, List<Consumer<SpanDataAssert>> assertions) {
     assertions.addAll(
-        Arrays.asList(
+        asList(
             span ->
                 span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemRead")
                     .hasKind(SpanKind.INTERNAL)

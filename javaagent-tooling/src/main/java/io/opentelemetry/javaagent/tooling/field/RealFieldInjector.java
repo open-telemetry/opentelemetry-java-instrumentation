@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.tooling.field;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealFieldName;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealGetterName;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealSetterName;
+import static java.util.Arrays.asList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.Utils;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -92,7 +92,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
         if (interfaces == null) {
           interfaces = new String[] {};
         }
-        Set<String> set = new LinkedHashSet<>(Arrays.asList(interfaces));
+        Set<String> set = new LinkedHashSet<>(asList(interfaces));
         set.add(INSTALLED_FIELDS_MARKER_CLASS_NAME);
         set.add(interfaceType.getInternalName());
         super.visit(version, access, name, signature, superName, set.toArray(new String[] {}));

@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -30,7 +31,6 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -373,7 +373,7 @@ abstract class AbstractPulsarClientTest {
       String destination, String messageId, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
@@ -411,7 +411,7 @@ abstract class AbstractPulsarClientTest {
       String destination, String messageId, boolean testHeaders, boolean isBatch) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
@@ -440,7 +440,7 @@ abstract class AbstractPulsarClientTest {
       String destination, String messageId, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 equalTo(MESSAGING_OPERATION, "process"),

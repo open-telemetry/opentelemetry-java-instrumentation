@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -30,7 +31,6 @@ import io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelp
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -370,7 +370,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideHibernateActionParameters() {
     List<BiConsumer<Session, Value>> sessionMethodTests =
-        Arrays.asList(
+        asList(
             (session, val) -> session.lock(val, LockMode.READ),
             (session, val) -> session.lock("Value", val, LockMode.READ),
             (session, val) -> session.lock(null, val, LockMode.READ),
@@ -450,7 +450,7 @@ class SessionTest extends AbstractHibernateTest {
   private static Stream<Arguments> provideHibernateActionWithStatelessSessionParameters() {
 
     List<BiConsumer<StatelessSession, Value>> statelessSessionMethodTests =
-        Arrays.asList(
+        asList(
             (statelessSession, val) -> statelessSession.refresh(val),
             (statelessSession, val) ->
                 statelessSession.refresh(
@@ -588,7 +588,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideHibernateReplicateParameters() {
     List<BiConsumer<Session, Value>> sessionMethodTests =
-        Arrays.asList(
+        asList(
             (session, val) -> {
               Value replicated = new Value(val.getName() + " replicated");
               replicated.setId(val.getId());
@@ -618,7 +618,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideHibernateCommitActionParameters() {
     List<BiConsumer<Session, Value>> sessionMethodTests =
-        Arrays.asList(
+        asList(
             (session, val) -> session.save(new Value("Another value")),
             (session, val) -> session.save("Value", new Value("Another value")),
             (session, val) -> session.saveOrUpdate(new Value("Value")),
@@ -745,7 +745,7 @@ class SessionTest extends AbstractHibernateTest {
 
   private static Stream<Arguments> provideAttachesStateToQueryParameters() {
     List<Function<Session, SelectionQuery<?>>> queryBuildMethods =
-        Arrays.asList(
+        asList(
             session -> session.createQuery("from Value"),
             session -> session.getNamedQuery("TestNamedQuery"),
             session -> session.createNativeQuery("SELECT * FROM Value"),

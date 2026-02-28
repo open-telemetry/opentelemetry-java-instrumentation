@@ -15,13 +15,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -63,7 +63,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "publish"),
@@ -83,7 +83,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "process"),

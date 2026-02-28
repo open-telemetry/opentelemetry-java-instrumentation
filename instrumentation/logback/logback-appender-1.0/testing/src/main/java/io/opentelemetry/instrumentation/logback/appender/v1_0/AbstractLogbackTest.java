@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -172,7 +172,7 @@ public abstract class AbstractLogbackTest {
                     codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
                 if (logException) {
                   attributeAsserts.addAll(
-                      Arrays.asList(
+                      asList(
                           equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                           equalTo(EXCEPTION_MESSAGE, "hello"),
                           satisfies(
@@ -249,7 +249,7 @@ public abstract class AbstractLogbackTest {
   }
 
   private static List<AttributeAssertion> threadAssertions() {
-    return Arrays.asList(
+    return asList(
         equalTo(THREAD_NAME, Thread.currentThread().getName()),
         equalTo(THREAD_ID, Thread.currentThread().getId()));
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -15,7 +16,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -1015,7 +1015,7 @@ public enum JdbcConnectionUrlParser {
   private final List<String> typeKeys;
 
   JdbcConnectionUrlParser(String... typeKeys) {
-    this.typeKeys = Collections.unmodifiableList(Arrays.asList(typeKeys));
+    this.typeKeys = Collections.unmodifiableList(asList(typeKeys));
   }
 
   abstract DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder);

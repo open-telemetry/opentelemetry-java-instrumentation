@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServ
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,7 +26,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -117,7 +117,7 @@ class ServicePeerAttributesExtractorTest {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    List<DeclarativeConfigProperties> entryList = Arrays.asList(entries);
+    List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
     return new ServicePeerResolver(otel);
   }

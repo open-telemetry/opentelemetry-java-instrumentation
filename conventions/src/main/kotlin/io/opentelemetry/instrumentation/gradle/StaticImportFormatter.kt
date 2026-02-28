@@ -16,69 +16,87 @@ import java.io.Serializable
 class StaticImportFormatter : FormatterFunc, Serializable {
 
   override fun apply(input: String): String {
-    // (className, fullyQualifiedName, memberPattern)
+    // (className, fullyQualifiedName, memberPattern, skipIf)
+    // skipIf: optional predicate on the full file content; if it returns true the rule is skipped.
+    // Use this when the member name can conflict with an inherited method (e.g. AbstractAssert
+    // defines asList(), so rewriting Arrays.asList in its subclasses causes a compile error).
+    data class Rule(
+      val className: String,
+      val fqn: String,
+      val memberPattern: String,
+      val skipIf: ((String) -> Boolean)? = null,
+    )
+
     val rules = listOf(
-      Triple("Objects", "java.util.Objects", "requireNonNull"),
-      Triple(
+      Rule("Objects", "java.util.Objects", "requireNonNull"),
+      Rule(
         "ElementMatchers",
         "net.bytebuddy.matcher.ElementMatchers",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
-      Triple(
+      Rule(
         "AgentElementMatchers",
         "io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
-      Triple("TimeUnit", "java.util.concurrent.TimeUnit", "[A-Z][A-Z_0-9]*"),
-      Triple(
+      Rule("TimeUnit", "java.util.concurrent.TimeUnit", "[A-Z][A-Z_0-9]*"),
+      Rule(
         "StandardCharsets",
         "java.nio.charset.StandardCharsets",
-        "[A-Z][A-Z_0-9]*"
+        "[A-Z][A-Z_0-9]*",
       ),
-      Triple(
+      Rule(
+        "Arrays",
+        "java.util.Arrays",
+        "asList",
+        // AbstractAssert defines asList(), so the static import would be ambiguous in subclasses.
+        skipIf = { content -> content.contains("extends AbstractAssert") },
+      ),
+      Rule(
         "Collections",
         "java.util.Collections",
-        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*"
+        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*",
       ),
-      Triple(
+      Rule(
         "ArgumentMatchers",
         "org.mockito.ArgumentMatchers",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
-      Triple(
+      Rule(
         "Mockito",
         "org.mockito.Mockito",
-        "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings"
+        "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings",
       ),
-      Triple("Assertions", "org.assertj.core.api.Assertions", "assertThat"),
-      Triple(
+      Rule("Assertions", "org.assertj.core.api.Assertions", "assertThat"),
+      Rule(
         "OpenTelemetryAssertions",
         "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
-      Triple(
+      Rule(
         "SemconvStability",
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
-        "emit[a-zA-Z0-9]*"
+        "emit[a-zA-Z0-9]*",
       ),
-      Triple(
+      Rule(
         "SqlDialect",
-        "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect", 
-        "DOUBLE_QUOTES_ARE_[A-Z_]+"
+        "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect",
+        "DOUBLE_QUOTES_ARE_[A-Z_]+",
       ),
-      Triple("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
+      Rule("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
     )
 
     var content = input
     val importsToAdd = mutableSetOf<String>()
 
-    for ((className, pkg, memberPattern) in rules) {
-      val regex = Regex("\\b${className}\\.(${memberPattern})\\b")
+    for (rule in rules) {
+      if (rule.skipIf?.invoke(content) == true) continue
+      val regex = Regex("\\b${rule.className}\\.(${rule.memberPattern})\\b")
       val lines = content.lines().toMutableList()
       for (i in lines.indices) {
         if (lines[i].trimStart().startsWith("import ")) continue
         for (match in regex.findAll(lines[i])) {
-          importsToAdd.add("import static ${pkg}.${match.groupValues[1]};")
+          importsToAdd.add("import static ${rule.fqn}.${match.groupValues[1]};")
         }
         lines[i] = regex.replace(lines[i], "$1")
       }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,20 +113,16 @@ class SpringConfigPropertiesTest {
 
   public static Stream<Arguments> listProperties() {
     return Stream.of(
-        Arguments.of("otel.experimental.resource.disabled.keys", Arrays.asList("a", "b")),
-        Arguments.of("otel.propagators", Arrays.asList("baggage", "b3")),
+        Arguments.of("otel.experimental.resource.disabled.keys", asList("a", "b")),
+        Arguments.of("otel.propagators", asList("baggage", "b3")),
         Arguments.of("otel.logs.exporter", singletonList("console")),
         Arguments.of("otel.metrics.exporter", singletonList("console")),
         Arguments.of("otel.traces.exporter", singletonList("console")),
-        Arguments.of(
-            "otel.instrumentation.http.client.capture-request-headers", Arrays.asList("a", "b")),
-        Arguments.of(
-            "otel.instrumentation.http.client.capture-response-headers", Arrays.asList("a", "b")),
-        Arguments.of(
-            "otel.instrumentation.http.server.capture-request-headers", Arrays.asList("a", "b")),
-        Arguments.of(
-            "otel.instrumentation.http.server.capture-response-headers", Arrays.asList("a", "b")),
-        Arguments.of("otel.instrumentation.http.known-methods", Arrays.asList("a", "b")));
+        Arguments.of("otel.instrumentation.http.client.capture-request-headers", asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.client.capture-response-headers", asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.server.capture-request-headers", asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.server.capture-response-headers", asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.known-methods", asList("a", "b")));
   }
 
   @ParameterizedTest

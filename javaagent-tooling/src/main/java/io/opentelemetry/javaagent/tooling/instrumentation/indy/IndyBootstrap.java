@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
@@ -18,7 +19,6 @@ import java.lang.invoke.MethodType;
 import java.lang.invoke.MutableCallSite;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
-import java.util.Arrays;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -226,7 +226,7 @@ public class IndyBootstrap {
     String moduleName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->
         (instrumentedType, instrumentedMethod) ->
-            Arrays.asList(
+            asList(
                 JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
@@ -302,7 +302,7 @@ public class IndyBootstrap {
                 "Unknown type of method: " + proxiedMethod.getName());
           }
 
-          return Arrays.asList(
+          return asList(
               JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_PROXY),
               JavaConstant.Simple.ofLoaded(moduleName),
               JavaConstant.Simple.ofLoaded(proxiedType.getName()),

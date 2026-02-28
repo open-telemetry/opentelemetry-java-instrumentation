@@ -5,12 +5,12 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,7 +24,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 public abstract class AbstractSpringStarterSmokeTest {
 
   private static final List<String> IGNORED_WARNINGS =
-      Arrays.asList(
+      asList(
           "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider",
           "The architecture 'amd64' for image",
           "The DescribeTopicPartitions API is not supported, using Metadata API to describe topics",

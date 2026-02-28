@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.ToIntFunction;
@@ -35,7 +35,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     implements SpanKeyProvider {
 
   private static final Set<String> PARAMS_TO_REDACT =
-      new HashSet<>(Arrays.asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature"));
+      new HashSet<>(asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature"));
 
   /**
    * Creates the HTTP client attributes extractor with default configuration.

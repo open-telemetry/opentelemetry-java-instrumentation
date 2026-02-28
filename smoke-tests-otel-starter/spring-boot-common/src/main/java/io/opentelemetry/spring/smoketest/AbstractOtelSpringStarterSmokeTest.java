@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +41,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
@@ -207,7 +207,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     // JMX based metrics - test one per JMX bean
     List<String> jmxMetrics =
-        new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
+        new ArrayList<>(asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
@@ -263,7 +263,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     // JFR based metrics
     for (String metric :
-        Arrays.asList(
+        asList(
             "jvm.cpu.limit",
             "jvm.buffer.count",
             "jvm.class.count",

@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -38,7 +39,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -126,7 +126,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -172,7 +172,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -224,7 +224,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -278,7 +278,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, url.getPort()),
@@ -321,7 +321,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),

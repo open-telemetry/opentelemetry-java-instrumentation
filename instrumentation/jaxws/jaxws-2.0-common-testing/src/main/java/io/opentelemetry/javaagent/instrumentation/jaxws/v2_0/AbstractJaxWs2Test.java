@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -21,7 +22,6 @@ import io.opentelemetry.test.hello_web_service.Hello2Response;
 import io.opentelemetry.test.hello_web_service.HelloRequest;
 import io.opentelemetry.test.hello_web_service.HelloResponse;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -112,7 +112,7 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               span.hasName(serverSpanName(testMethod.methodName()))
                                   .hasNoParent()
@@ -150,7 +150,7 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               span.hasName(serverSpanName(testMethod.methodName()))
                                   .hasNoParent()

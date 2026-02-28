@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ROLE;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_SCOPE;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
@@ -15,7 +16,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.Arrays;
 import java.util.function.Consumer;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -64,7 +64,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("SCOPE_scope1"),
                 new SimpleGrantedAuthority("SCOPE_scope2")));
 
@@ -88,7 +88,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2")));
 
@@ -110,7 +110,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -134,7 +134,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -158,7 +158,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("ROLE_role1"),
                 new SimpleGrantedAuthority("ROLE_role2"),
                 new SimpleGrantedAuthority("SCOPE_scope1"),
@@ -186,7 +186,7 @@ class EnduserAttributesCapturerTest {
         new PreAuthenticatedAuthenticationToken(
             "principal",
             null,
-            Arrays.asList(
+            asList(
                 new SimpleGrantedAuthority("role_role1"),
                 new SimpleGrantedAuthority("role_role2"),
                 new SimpleGrantedAuthority("scope_scope1"),

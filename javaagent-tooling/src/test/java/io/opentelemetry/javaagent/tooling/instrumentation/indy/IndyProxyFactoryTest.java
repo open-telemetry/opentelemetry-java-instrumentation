@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
@@ -16,7 +17,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import net.bytebuddy.description.method.MethodDescription;
@@ -86,7 +86,7 @@ public class IndyProxyFactoryTest {
     } else if (proxiedMethod.isStatic()) {
       kind = "static";
     }
-    return Arrays.asList(
+    return asList(
         JavaConstant.Simple.ofLoaded(proxiedType.getName()), JavaConstant.Simple.ofLoaded(kind));
   }
 

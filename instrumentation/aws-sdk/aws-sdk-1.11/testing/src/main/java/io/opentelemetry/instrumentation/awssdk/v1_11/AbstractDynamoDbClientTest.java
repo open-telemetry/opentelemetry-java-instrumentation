@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -27,7 +28,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -53,7 +53,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
     List<AttributeAssertion> additionalAttributes =
-        Arrays.asList(
+        asList(
             equalTo(maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
             equalTo(maybeStable(DB_OPERATION), "CreateTable"),
             equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));

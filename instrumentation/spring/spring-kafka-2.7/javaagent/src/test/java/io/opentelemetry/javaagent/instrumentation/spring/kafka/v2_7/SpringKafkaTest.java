@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -31,7 +32,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.AbstractSpringKafkaTest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -171,7 +171,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
@@ -450,7 +450,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                   span -> span.hasName("consumer").hasParent(trace.getSpan(5))));
     } else {
       assertions.addAll(
-          Arrays.asList(
+          asList(
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       SpringKafkaTest::assertReceiveSpan,
