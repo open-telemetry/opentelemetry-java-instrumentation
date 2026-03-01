@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -35,7 +36,6 @@ import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.Utf8StringCodec;
 import io.lettuce.core.protocol.AsyncCommand;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -174,13 +174,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            AttributeKey.stringKey("exception.type"),
+                                            stringKey("exception.type"),
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.message"),
-                                            expectedMessage),
+                                        equalTo(stringKey("exception.message"), expectedMessage),
                                         satisfies(
-                                            AttributeKey.stringKey("exception.stacktrace"),
+                                            stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))));
   }
 

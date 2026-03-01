@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
@@ -30,7 +30,7 @@ class ResourceProviderPropertiesCustomizerTest {
   public static final class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
-      return Resource.create(Attributes.of(AttributeKey.stringKey("key"), "value"));
+      return Resource.create(Attributes.of(stringKey("key"), "value"));
     }
   }
 
@@ -111,10 +111,9 @@ class ResourceProviderPropertiesCustomizerTest {
                                   .build());
 
                       if (tc.result) {
-                        assertThat(attributes.get(AttributeKey.stringKey("key")))
-                            .isEqualTo("value");
+                        assertThat(attributes.get(stringKey("key"))).isEqualTo("value");
                       } else {
-                        assertThat(attributes.get(AttributeKey.stringKey("key"))).isNull();
+                        assertThat(attributes.get(stringKey("key"))).isNull();
                       }
                     }));
   }

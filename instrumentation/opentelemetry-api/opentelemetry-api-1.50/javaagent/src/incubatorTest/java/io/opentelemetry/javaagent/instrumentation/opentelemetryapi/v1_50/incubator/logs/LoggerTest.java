@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
@@ -79,7 +79,7 @@ class LoggerTest {
         .setSeverity(Severity.DEBUG)
         .setSeverityText("debug")
         .setBody("body")
-        .setAttribute(AttributeKey.stringKey("key1"), "value")
+        .setAttribute(stringKey("key1"), "value")
         .setAttribute(ExtendedAttributeKey.stringKey("key2"), "value")
         .setAllAttributes(Attributes.builder().put("key3", "value").build())
         .setAllAttributes(ExtendedAttributes.builder().put("key4", "value").build())

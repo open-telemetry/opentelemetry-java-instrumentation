@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.graphql;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -191,8 +192,8 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("bookById")
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById"),
-                                equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById")));
+                                equalTo(stringKey("graphql.field.path"), "/bookById"),
+                                equalTo(stringKey("graphql.field.name"), "bookById")));
               }
               assertions.add(
                   span ->
@@ -226,18 +227,17 @@ public abstract class AbstractGraphqlTest {
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(AttributeKey.stringKey("graphql.operation.type"), "query"),
+                              equalTo(stringKey("graphql.operation.type"), "query"),
                               normalizedQueryEqualsTo(
-                                  AttributeKey.stringKey("graphql.document"),
-                                  "{ bookById(id: ?) { name } }")));
+                                  stringKey("graphql.document"), "{ bookById(id: ?) { name } }")));
               if (includeDataFetcher()) {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("graphql.field.path"), "/bookById"),
-                                equalTo(AttributeKey.stringKey("graphql.field.name"), "bookById")));
+                                equalTo(stringKey("graphql.field.path"), "/bookById"),
+                                equalTo(stringKey("graphql.field.name"), "bookById")));
               }
               assertions.add(
                   span ->

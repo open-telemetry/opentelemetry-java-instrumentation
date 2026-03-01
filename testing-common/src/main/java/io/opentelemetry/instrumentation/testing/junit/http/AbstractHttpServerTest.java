@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -590,8 +592,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             trace.anySatisfy(
                 span ->
                     assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
-                        .hasAttribute(
-                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")));
+                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")));
   }
 
   @Test
@@ -614,10 +615,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             trace.anySatisfy(
                 span ->
                     assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
-                        .hasAttribute(
-                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")
-                        .hasAttribute(
-                            AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")
+                        .hasAttribute(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {
@@ -654,9 +653,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME),
-                                requestId)));
+                            equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
             spanAssertions.add(
                 span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
 
@@ -956,7 +953,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));
+            equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId));
     return span;
   }
 

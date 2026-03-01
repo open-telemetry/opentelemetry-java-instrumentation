@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v1_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -15,7 +16,6 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -185,8 +185,8 @@ class Log4j1Test {
     List<AttributeAssertion> assertions =
         SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
     assertions.addAll(SemconvCodeStabilityUtil.codeFunctionAssertions(Log4j1Test.class, "testMdc"));
-    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey("key2"), "val2"));
     assertions.add(equalTo(THREAD_NAME, Thread.currentThread().getName()));
     assertions.add(equalTo(THREAD_ID, Thread.currentThread().getId()));
 

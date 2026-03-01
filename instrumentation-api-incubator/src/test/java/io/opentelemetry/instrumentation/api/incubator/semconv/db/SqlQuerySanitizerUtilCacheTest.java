@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singletonList;
@@ -65,9 +66,7 @@ class SqlQuerySanitizerUtilCacheTest {
 
     // verify that the attributes extractor produces correct values
     AttributeKey<String> queryTextKey =
-        emitStableDatabaseSemconv()
-            ? AttributeKey.stringKey("db.query.text")
-            : AttributeKey.stringKey("db.statement");
+        emitStableDatabaseSemconv() ? stringKey("db.query.text") : stringKey("db.statement");
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);

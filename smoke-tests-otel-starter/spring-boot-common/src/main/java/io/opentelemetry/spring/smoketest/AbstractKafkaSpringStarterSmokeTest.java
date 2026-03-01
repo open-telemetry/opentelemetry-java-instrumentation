@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -97,7 +98,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testListener"),
                             satisfies(
-                                AttributeKey.longKey("kafka.record.queue_time_ms"),
+                                longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
