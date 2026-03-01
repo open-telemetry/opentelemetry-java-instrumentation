@@ -89,8 +89,10 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
           git push --force origin "$BRANCH_NAME"
+          git remote set-url origin "https://github.com/${{ github.repository }}.git"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'
