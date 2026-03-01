@@ -1,3 +1,13 @@
+// plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
+// causing "No XmlService implementation found" in Gradle's classloader
+buildscript {
+  configurations.classpath {
+    resolutionStrategy {
+      force "org.codehaus.plexus:plexus-xml:4.0.4"
+    }
+  }
+}
+
 plugins {
   id "java"
 
