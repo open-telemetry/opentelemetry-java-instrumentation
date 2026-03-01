@@ -319,7 +319,7 @@ rules:
       source-record-poll-total:
         metric: record.poll.count
         type: counter
-        unit: &unit_record_source
+        unit: &unit_record_source "{record}"
         desc: The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
       # kafka.connect.source.record.write.count
       source-record-write-total:
