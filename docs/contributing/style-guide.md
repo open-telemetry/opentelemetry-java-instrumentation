@@ -7,8 +7,7 @@ This project follows the
 
 ### Auto-formatting
 
-The build will fail if source code is not formatted according to Google Java
-Style.
+One of the CI checks will fail if source code is not formatted according to Google Java Style.
 
 Run the following command to reformat all files:
 
@@ -16,9 +15,9 @@ Run the following command to reformat all files:
 ./gradlew spotlessApply
 ```
 
-For IntelliJ users, an `.editorconfig` file is provided that IntelliJ will automatically use to
-adjust code formatting settings. However, it does not support all required rules, so you may still
-need to run `./gradlew spotlessApply` periodically.
+In addition to Google Java Style formatting, spotless applies
+[custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
+(e.g. rewriting `Objects.requireNonNull` to a static import).
 
 #### Pre-commit hook
 
@@ -40,39 +39,6 @@ To run these checks locally:
 ```
 ./gradlew checkstyleMain checkstyleTest
 ```
-
-### Static imports
-
-Consider statically importing the following commonly used methods and constants:
-
-- **Test methods**
-  - `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*`
-  - `org.assertj.core.api.Assertions.*`
-  - `org.mockito.Mockito.*`
-  - `org.mockito.ArgumentMatchers.*`
-- **Utility methods**
-  - `io.opentelemetry.api.common.AttributeKey.*`
-  - `java.util.Arrays` - `asList`, `stream`
-  - `java.util.Collections` - `singleton*`, `empty*`, `unmodifiable*`, `synchronized*`, `checked*`
-  - `java.util.Objects` - `requireNonNull`
-  - `java.util.function.Function` - `identity`
-  - `java.util.stream.Collectors.*`
-- **Utility constants**
-  - `java.util.Locale.*`
-  - `java.util.concurrent.TimeUnit.*`
-  - `java.util.logging.Level.*`
-  - `java.nio.charset.StandardCharsets.*`
-- **ByteBuddy**
-  - `net.bytebuddy.matcher.ElementMatchers.*`
-  - `io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.*`
-- **OpenTelemetry semantic convention constants**
-  - All constants under `io.opentelemetry.semconv.**`, except for
-    `io.opentelemetry.semconv.SchemaUrls.*` constants
-
-Some of these are enforced by checkstyle rules:
-
-- Look for `RegexpSinglelineJava` in `checkstyle.xml`
-- Use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
 
 ## Java Language Conventions
 
