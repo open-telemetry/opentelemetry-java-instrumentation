@@ -16,12 +16,12 @@ formatting between the docs are cosmetic; bean names align across both variants.
 
 ## Worker metrics
 
-| Metric Name                                  | Type          | Unit        | Attributes                                       | Description                                      |
-|----------------------------------------------|---------------|-------------|--------------------------------------------------|--------------------------------------------------|
-| kafka.connect.worker.connector.count         | UpDownCounter | {connector} |                                                  | The number of connectors run in this worker.     |
-| kafka.connect.worker.connector.startup.count | Counter       | {startup}   | kafka.connect.worker.connector.startup.result    | The number of connector starts for this worker.  |
-| kafka.connect.worker.task.count              | UpDownCounter | {task}      |                                                  | The number of currently running tasks for this worker. |
-| kafka.connect.worker.task.startup.count      | Counter       | {startup}   | kafka.connect.worker.task.startup.result         | The number of task starts for this worker.       |
+| Metric Name | Type | Unit | Attributes | Description |
+| --- | --- | --- | --- | --- |
+| kafka.connect.worker.connector.count | UpDownCounter | {connector} | | The number of connectors run in this worker. |
+| kafka.connect.worker.connector.startup.count | Counter | {startup} | kafka.connect.worker.connector.startup.result | The number of connector starts for this worker. |
+| kafka.connect.worker.task.count | UpDownCounter | {task} | | The number of currently running tasks for this worker. |
+| kafka.connect.worker.task.startup.count | Counter | {startup} | kafka.connect.worker.task.startup.result | The number of task starts for this worker. |
 
 Result values: success, failure.
 
@@ -48,55 +48,55 @@ State values: destroyed, failed, paused, restarting, running, unassigned.
 
 Attributes: `kafka.connect.connector` and the state attribute shown.
 
-| Metric Name                     | Type          | Unit | Attributes                             | Description                                                                                                                                                                 |
-|---------------------------------|---------------|------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kafka.connect.connector.status  | UpDownCounter | 1    | kafka.connect.connector.state          | Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.                                          |
+| Metric Name | Type | Unit | Attributes | Description |
+| --- | --- | --- | --- | --- |
+| kafka.connect.connector.status | UpDownCounter | 1 | kafka.connect.connector.state | Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values. |
 
 ## Connector task metrics
 
 All metrics include `kafka.connect.connector` and `kafka.connect.task.id`. Attributes column lists any additional state attributes.
 
-| Metric Name                                         | Type          | Unit     | Attributes                                        | Description                                                                                                        |
-|-----------------------------------------------------|---------------|----------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| kafka.connect.task.batch.size.average               | Gauge         | {record} |                                                   | The average number of records in the batches the task has processed so far.                                        |
-| kafka.connect.task.batch.size.max                   | Gauge         | {record} |                                                   | The number of records in the largest batch the task has processed so far.                                          |
-| kafka.connect.task.offset.commit.time.average       | Gauge         | s        |                                                   | The average time in milliseconds taken by this task to commit offsets.                                             |
-| kafka.connect.task.offset.commit.failure.ratio      | Gauge         | 1        |                                                   | The average ratio of this task's offset commit attempts that failed.                                               |
-| kafka.connect.task.offset.commit.time.max           | Gauge         | s        |                                                   | The maximum time in milliseconds taken by this task to commit offsets.                                             |
-| kafka.connect.task.running.ratio                    | Gauge         | 1        |                                                   | The fraction of time this task has spent in the running state.                                                     |
-| kafka.connect.task.status                           | UpDownCounter | 1        | kafka.connect.task.state                          | The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values. |
+| Metric Name | Type | Unit | Attributes | Description |
+| --- | --- | --- | --- | --- |
+| kafka.connect.task.batch.size.average | Gauge | {record} | | The average number of records in the batches the task has processed so far. |
+| kafka.connect.task.batch.size.max | Gauge | {record} | | The number of records in the largest batch the task has processed so far. |
+| kafka.connect.task.offset.commit.time.average | Gauge | s | | The average time in milliseconds taken by this task to commit offsets. |
+| kafka.connect.task.offset.commit.failure.ratio | Gauge | 1 | | The average ratio of this task's offset commit attempts that failed. |
+| kafka.connect.task.offset.commit.time.max | Gauge | s | | The maximum time in milliseconds taken by this task to commit offsets. |
+| kafka.connect.task.running.ratio | Gauge | 1 | | The fraction of time this task has spent in the running state. |
+| kafka.connect.task.status | UpDownCounter | 1 | kafka.connect.task.state | The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values. |
 
 ## Sink task metrics
 
 Attributes: `kafka.connect.connector`, `kafka.connect.task.id`.
 
-| Metric Name                                       | Type          | Unit        | Attributes | Description                                                                                                                          |
-|---------------------------------------------------|---------------|-------------|------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| kafka.connect.sink.offset.commit.completed.count  | Counter       | {commit}    |            | The number of offset commit completions that were completed successfully.                                                            |
-| kafka.connect.sink.offset.commit.seq              | Counter       | {sequence}  |            | The current sequence number for offset commits.                                                                                      |
-| kafka.connect.sink.offset.commit.skipped.count    | Counter       | {commit}    |            | The number of offset commit completions that were received too late and skipped/ignored.                                             |
-| kafka.connect.sink.partition.count                | UpDownCounter | {partition} |            | The number of topic partitions assigned to this task belonging to the named sink connector in this worker.                          |
-| kafka.connect.sink.put.batch.time.average         | Gauge         | s           |            | The average time taken by this task to put a batch of sinks records.                                                                 |
-| kafka.connect.sink.put.batch.time.max             | Gauge         | s           |            | The maximum time taken by this task to put a batch of sinks records.                                                                 |
-| kafka.connect.sink.record.active.count            | UpDownCounter | {record}    |            | The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.         |
-| kafka.connect.sink.record.lag.max                 | Gauge         | {record}    |            | The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions.         |
-| kafka.connect.sink.record.read.count              | Counter       | {record}    |            | The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted. |
-| kafka.connect.sink.record.send.count              | Counter       | {record}    |            | The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted. |
+| Metric Name | Type | Unit | Attributes | Description |
+| --- | --- | --- | --- | --- |
+| kafka.connect.sink.offset.commit.completed.count | Counter | {commit} | | The number of offset commit completions that were completed successfully. |
+| kafka.connect.sink.offset.commit.seq | Counter | {sequence} | | The current sequence number for offset commits. |
+| kafka.connect.sink.offset.commit.skipped.count | Counter | {commit} | | The number of offset commit completions that were received too late and skipped/ignored. |
+| kafka.connect.sink.partition.count | UpDownCounter | {partition} | | The number of topic partitions assigned to this task belonging to the named sink connector in this worker. |
+| kafka.connect.sink.put.batch.time.average | Gauge | s | | The average time taken by this task to put a batch of sinks records. |
+| kafka.connect.sink.put.batch.time.max | Gauge | s | | The maximum time taken by this task to put a batch of sinks records. |
+| kafka.connect.sink.record.active.count | UpDownCounter | {record} | | The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task. |
+| kafka.connect.sink.record.lag.max | Gauge | {record} | | The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions. |
+| kafka.connect.sink.record.read.count | Counter | {record} | | The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted. |
+| kafka.connect.sink.record.send.count | Counter | {record} | | The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted. |
 
 ## Source task metrics
 
 Attributes: `kafka.connect.connector`, `kafka.connect.task.id`.
 
-| Metric Name                                  | Type          | Unit       | Attributes | Description                                                                                                 |
-|----------------------------------------------|---------------|------------|------------|-------------------------------------------------------------------------------------------------------------|
-| kafka.connect.source.poll.batch.time.average | Gauge         | s          |            | The average time in milliseconds taken by this task to poll for a batch of source records.                  |
-| kafka.connect.source.poll.batch.time.max     | Gauge         | s          |            | The maximum time in milliseconds taken by this task to poll for a batch of source records.                  |
-| kafka.connect.source.record.active.count     | UpDownCounter | {record}   |            | The number of records that have been produced by this task but not yet completely written to Kafka.         |
-| kafka.connect.source.record.poll.count       | Counter       | {record}   |            | The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker. |
-| kafka.connect.source.record.write.count      | Counter       | {record}   |            | The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations. |
-| kafka.connect.source.transaction.size.average | Gauge         | {record}   |            | The average number of records in the transactions the task has committed so far.                            |
-| kafka.connect.source.transaction.size.max    | Gauge         | {record}   |            | The number of records in the largest transaction the task has committed so far.                             |
-| kafka.connect.source.transaction.size.min    | Gauge         | {record}   |            | The number of records in the smallest transaction the task has committed so far.                            |
+| Metric Name | Type | Unit | Attributes | Description |
+| --- | --- | --- | --- | --- |
+| kafka.connect.source.poll.batch.time.average | Gauge | s | | The average time in milliseconds taken by this task to poll for a batch of source records. |
+| kafka.connect.source.poll.batch.time.max | Gauge | s | | The maximum time in milliseconds taken by this task to poll for a batch of source records. |
+| kafka.connect.source.record.active.count | UpDownCounter | {record} | | The number of records that have been produced by this task but not yet completely written to Kafka. |
+| kafka.connect.source.record.poll.count | Counter | {record} | | The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker. |
+| kafka.connect.source.record.write.count | Counter | {record} | | The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations. |
+| kafka.connect.source.transaction.size.average | Gauge | {record} | | The average number of records in the transactions the task has committed so far. |
+| kafka.connect.source.transaction.size.max | Gauge | {record} | | The number of records in the largest transaction the task has committed so far. |
+| kafka.connect.source.transaction.size.min | Gauge | {record} | | The number of records in the smallest transaction the task has committed so far. |
 
 ## Task error metrics
 
