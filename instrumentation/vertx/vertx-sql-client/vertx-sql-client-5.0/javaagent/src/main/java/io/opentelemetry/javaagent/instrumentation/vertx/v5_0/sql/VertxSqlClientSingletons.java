@@ -5,11 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
+
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlInstrumenterFactory;
 import io.vertx.core.Future;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.internal.SqlClientBase;
@@ -23,8 +26,35 @@ public final class VertxSqlClientSingletons {
     return INSTRUMENTER;
   }
 
+  private static final VirtualField<Pool, String> poolDbSystem =
+      VirtualField.find(Pool.class, String.class);
+
+  private static final VirtualField<SqlConnectOptions, String> connectOptionsDbSystem =
+      VirtualField.find(SqlConnectOptions.class, String.class);
+
   private static final VirtualField<SqlClientBase, SqlConnectOptions> connectOptionsField =
       VirtualField.find(SqlClientBase.class, SqlConnectOptions.class);
+
+  public static void storePoolDbSystem(Pool pool, String dbSystem) {
+    poolDbSystem.set(pool, dbSystem);
+  }
+
+  public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
+    if (sqlConnectOptions != null) {
+      String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
+      if (dbSystem != null) {
+        return dbSystem;
+      }
+    }
+    return OTHER_SQL;
+  }
+
+  public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {
+    String dbSystem = poolDbSystem.get(pool);
+    if (sqlConnectOptions != null && dbSystem != null) {
+      connectOptionsDbSystem.set(sqlConnectOptions, dbSystem);
+    }
+  }
 
   public static SqlConnectOptions getSqlConnectOptions(SqlClientBase sqlClientBase) {
     return connectOptionsField.get(sqlClientBase);

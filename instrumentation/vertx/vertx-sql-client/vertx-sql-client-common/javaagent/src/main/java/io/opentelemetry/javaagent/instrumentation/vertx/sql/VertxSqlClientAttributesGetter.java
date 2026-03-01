@@ -5,7 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.DB2;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MICROSOFT_SQL_SERVER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MYSQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -24,19 +31,30 @@ enum VertxSqlClientAttributesGetter
       createResponseStatusExtractor();
 
   @Override
+  @Nullable
   public String getDbSystemName(VertxSqlClientRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      return request.getDbSystemName();
+    }
+    // preserving old behavior
     return null;
   }
 
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
-    // the underlying database is unknown, use the safer default that sanitizes double-quoted
-    // fragments as string literals (note that this can lead to incorrect summarization
-    // for databases that do use double quotes as identifiers)
-    //
-    // TODO do better in
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16254
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    switch (request.getDbSystemName()) {
+      case MYSQL:
+        // MySQL treats double-quoted fragments as string literals by default
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      case POSTGRESQL:
+      case ORACLE_DB:
+      case DB2:
+      case MICROSOFT_SQL_SERVER:
+        // These databases treat double-quoted fragments as identifiers
+        return DOUBLE_QUOTES_ARE_IDENTIFIERS;
+      default:
+        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    }
   }
 
   @Deprecated // to be removed in 3.0
