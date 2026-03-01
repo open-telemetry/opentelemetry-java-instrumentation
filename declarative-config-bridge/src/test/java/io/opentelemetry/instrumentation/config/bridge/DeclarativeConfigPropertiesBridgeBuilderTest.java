@@ -20,7 +20,7 @@ import io.opentelemetry.sdk.internal.ExtendedOpenTelemetrySdk;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
-@SuppressWarnings("DoNotMockAutoValue")
+@SuppressWarnings({"DoNotMockAutoValue", "deprecation"})
 class DeclarativeConfigPropertiesBridgeBuilderTest {
   @Test
   void shouldUseConfigPropertiesForAutoConfiguration() {

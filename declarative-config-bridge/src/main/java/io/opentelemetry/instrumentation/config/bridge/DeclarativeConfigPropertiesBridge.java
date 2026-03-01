@@ -48,7 +48,11 @@ import javax.annotation.Nullable;
  *       common:
  *         string_key: value
  * </pre>
+ *
+ * @deprecated Use {@link ConfigPropertiesBackedConfigProvider} instead. Scheduled for removal in
+ *     3.0.0, tracked in issue #16238.
  */
+@Deprecated
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
