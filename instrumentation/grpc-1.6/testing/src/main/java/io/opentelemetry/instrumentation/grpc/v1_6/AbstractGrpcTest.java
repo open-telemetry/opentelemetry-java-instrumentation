@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.ME
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -874,6 +875,9 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
                                 equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
                                 equalTo(RPC_METHOD, emitStableRpcSemconv() ? "_OTHER" : null),
+                                equalTo(
+                                    RPC_METHOD_ORIGINAL,
+                                    emitStableRpcSemconv() ? "example.Greeter/SayHello" : null),
                                 equalTo(
                                     RPC_GRPC_STATUS_CODE,
                                     emitOldRpcSemconv()
