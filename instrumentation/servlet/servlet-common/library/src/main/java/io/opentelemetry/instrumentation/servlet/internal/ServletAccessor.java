@@ -70,4 +70,6 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   boolean isResponseCommitted(RESPONSE response);
 
   boolean isServletException(Throwable throwable);
+
+  String getRequestContentEncoding(REQUEST request);
 }

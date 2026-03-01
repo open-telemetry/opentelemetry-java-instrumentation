@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.tomcat.v10_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -74,6 +75,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     addServlet(context, REDIRECT.getPath(), servlet);
     addServlet(context, AUTH_REQUIRED.getPath(), servlet);
     addServlet(context, CAPTURE_HEADERS.getPath(), servlet);
+    addServlet(context, CAPTURE_BODY.getPath(), servlet);
     addServlet(context, INDEXED_CHILD.getPath(), servlet);
   }
 
@@ -97,6 +99,8 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath("/tomcat-context");
+
+    options.setTestRequestBodyCapture(true);
 
     options.setExpectedHttpRoute(
         (ServerEndpoint endpoint, String method) -> {

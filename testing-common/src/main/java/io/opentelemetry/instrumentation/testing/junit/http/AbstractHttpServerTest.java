@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -36,6 +37,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -87,6 +89,7 @@ import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpClientC
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpObject;
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.HttpVersion;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -100,6 +103,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -618,6 +622,50 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                             AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")
                         .hasAttribute(
                             AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("requestBodyCaptureParameters")
+  void requestBodyCapture(MediaType mediaType) {
+    assumeTrue(options.testRequestBodyCapture);
+
+    AttributeKey<String> bodyKey = AttributeKey.stringKey("http.request.body.text");
+
+    String method = "POST";
+    String bodyContent = "Hållo Wörld!";
+    Charset charset = mediaType.charset();
+    if (charset == null) {
+      // when not specified, default to UTF-8, for example with "application/x-www-form-urlencoded"
+      charset = UTF_8;
+    }
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            HttpMethod.valueOf(method),
+            resolveAddress(CAPTURE_BODY, getProtocolPrefix()),
+            mediaType,
+            HttpData.of(charset, bodyContent));
+
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(CAPTURE_BODY.getBody());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, CAPTURE_BODY, CAPTURE_BODY.status)
+                        .hasAttribute(bodyKey, bodyContent)));
+  }
+
+  private static Stream<Arguments> requestBodyCaptureParameters() {
+    return Stream.of(
+            MediaType.PLAIN_TEXT,
+            MediaType.PLAIN_TEXT_UTF_8,
+            MediaType.FORM_DATA,
+            MediaType.JSON,
+            MediaType.JSON_UTF_8)
+        .map(Arguments::arguments);
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {

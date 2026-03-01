@@ -102,29 +102,30 @@ public class JakartaServletServiceAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Object[] onEnter(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
-      @Advice.Argument(0) ServletRequest request,
-      @Advice.Argument(1) ServletResponse originalResponse) {
+      @Advice.Argument(0) ServletRequest servletRequest,
+      @Advice.Argument(1) ServletResponse servletResponse) {
 
-    ServletResponse response = originalResponse;
-
-    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
-      return new Object[] {null, request, response};
+    if (!(servletRequest instanceof HttpServletRequest)
+        || !(servletResponse instanceof HttpServletResponse)) {
+      return new Object[] {null, servletRequest, servletResponse};
     }
-    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    HttpServletRequest request = (HttpServletRequest) servletRequest;
+    request = Servlet5Singletons.wrapForBodyCaptureIfNeeded(request);
+
+    HttpServletResponse response = (HttpServletResponse) servletResponse;
 
     String snippet = getSnippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
-        && !((HttpServletResponse) response)
-            .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
-      response =
-          new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+        && !response.containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
+      response = new Servlet5SnippetInjectingResponseWrapper(response, snippet);
     }
 
     AdviceScope adviceScope =
         new AdviceScope(
             CallDepth.forClass(AppServerBridge.getCallDepthKey()),
             servletOrFilter,
-            (HttpServletRequest) request,
+            request,
             response);
 
     return new Object[] {adviceScope, request, response};

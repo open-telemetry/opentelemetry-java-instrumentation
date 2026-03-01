@@ -31,6 +31,7 @@ public abstract class JettyServlet5Test
     super.configure(options);
     options.setTestNotFound(false);
     options.setContextPath("/jetty-context");
+    options.setTestRequestBodyCapture(true);
   }
 
   @Override

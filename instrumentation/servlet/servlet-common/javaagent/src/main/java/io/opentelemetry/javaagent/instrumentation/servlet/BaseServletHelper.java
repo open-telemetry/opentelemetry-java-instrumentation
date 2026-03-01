@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAdditionalAttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestBodyExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
@@ -40,6 +41,12 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   private static final boolean ADD_TRACE_ID_REQUEST_ATTRIBUTE =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
           .getBoolean("add_trace_id_request_attribute/development", true);
+  private static final boolean CAPTURE_REQUEST_BODY =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getBoolean("capture_request_body/development", false);
+  private static final int CAPTURE_REQUEST_BODY_SIZE =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+          .getInt("capture_request_body_max_size/development", 1024);
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
@@ -140,6 +147,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     captureRequestParameters(serverSpan, request);
     captureEnduserId(serverSpan, request);
+    captureRequestBody(serverSpan, request);
   }
 
   /**
@@ -180,6 +188,16 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     }
   }
 
+  private void captureRequestBody(Span serverSpan, REQUEST request) {
+    if (!captureRequestBodyEnabled()) {
+      return;
+    }
+    String body = ServletRequestBodyExtractor.getRequestBodyValue(accessor, request);
+    if (body != null) {
+      serverSpan.setAttribute(ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE, body);
+    }
+  }
+
   /*
   Given request already has a context associated with it.
   As there should not be nested spans of kind SERVER, we should NOT create a new span here.
@@ -198,5 +216,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
+  }
+
+  public static boolean captureRequestBodyEnabled() {
+    return CAPTURE_REQUEST_BODY && CAPTURE_REQUEST_BODY_SIZE > 0;
+  }
+
+  public int captureRequestBodyMaxSize() {
+    return CAPTURE_REQUEST_BODY ? CAPTURE_REQUEST_BODY_SIZE : 0;
   }
 }
