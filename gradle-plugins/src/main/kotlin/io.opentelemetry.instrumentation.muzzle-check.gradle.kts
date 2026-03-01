@@ -46,6 +46,17 @@ val muzzleBootstrap: Configuration by configurations.creating {
   isCanBeResolved = true
 }
 
+dependencies {
+  // Bootstrap dependencies: Required classes for instrumentation that run in the bootstrap classloader
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
+  add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support")
+
+  // Tooling dependencies: Required for muzzle verification and bytecode analysis
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
+  add("muzzleTooling", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+}
+
 val shadowModule by tasks.registering(ShadowJar::class) {
   from(zipTree(tasks.jar.get().archiveFile))
 
