@@ -101,7 +101,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Override
   public SqlDialect getSqlDialect(DbRequest request) {
-    String system = request.getDbInfo().getSystem();
+    String system = request.getDbInfo().getDbSystemName();
     if (system != null && DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEMS.contains(system)) {
       return DOUBLE_QUOTES_ARE_IDENTIFIERS;
     }
