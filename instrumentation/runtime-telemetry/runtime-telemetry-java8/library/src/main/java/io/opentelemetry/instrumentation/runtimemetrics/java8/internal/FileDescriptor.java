@@ -49,10 +49,21 @@ public final class FileDescriptor {
               .setUnit("{file_descriptor}")
               .buildWithCallback(
                   observableMeasurement -> {
-                    long openFileDescriptorCount =
-                        ((UnixOperatingSystemMXBean) osBean).getOpenFileDescriptorCount();
-                    if (openFileDescriptorCount >= 0) {
-                      observableMeasurement.record(openFileDescriptorCount);
+                    long value = ((UnixOperatingSystemMXBean) osBean).getOpenFileDescriptorCount();
+                    if (value >= 0) {
+                      observableMeasurement.record(value);
+                    }
+                  }));
+      observables.add(
+          meter
+              .upDownCounterBuilder("jvm.file_descriptor.limit")
+              .setDescription("Measure of max open file descriptors as reported by the JVM.")
+              .setUnit("{file_descriptor}")
+              .buildWithCallback(
+                  observableMeasurement -> {
+                    long value = ((UnixOperatingSystemMXBean) osBean).getMaxFileDescriptorCount();
+                    if (value >= 0) {
+                      observableMeasurement.record(value);
                     }
                   }));
     }

@@ -102,6 +102,12 @@ rules:
         type: updowncounter
         unit: "{file_descriptor}"
         desc: Number of open file descriptors as reported by the JVM.
+      # jvm.file_descriptor.limit (experimental)
+      MaxFileDescriptorCount:
+        metric: file_descriptor.limit
+        type: updowncounter
+        unit: "{file_descriptor}"
+        desc: Measure of max open file descriptors as reported by the JVM.
 
   - bean: java.nio:name=*,type=BufferPool
     prefix: jvm.buffer.
