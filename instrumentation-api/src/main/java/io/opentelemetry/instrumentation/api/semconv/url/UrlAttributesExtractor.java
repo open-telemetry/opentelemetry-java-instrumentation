@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.InternalUrlAttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -38,7 +39,9 @@ public final class UrlAttributesExtractor<REQUEST, RESPONSE>
     // the UrlAttributesExtractor will always emit new semconv
     internalExtractor =
         new InternalUrlAttributesExtractor<>(
-            getter, /* alternateSchemeProvider= */ request -> null);
+            getter,
+            /* alternateSchemeProvider= */ request -> null,
+            HttpConstants.SENSITIVE_QUERY_PARAMETERS);
   }
 
   @Override

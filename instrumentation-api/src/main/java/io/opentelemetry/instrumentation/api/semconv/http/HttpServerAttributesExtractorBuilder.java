@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ClientAddressAndPortExtractor;
@@ -40,6 +41,12 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
   Function<Context, String> httpRouteGetter = HttpServerRoute::get;
+  Set<String> sensitiveQueryParameters = HttpConstants.SENSITIVE_QUERY_PARAMETERS;
+
+  static {
+    Experimental.internalSetServerSensitiveQueryParameters(
+        (builder, params) -> builder.sensitiveQueryParameters = params);
+  }
 
   HttpServerAttributesExtractorBuilder(
       HttpServerAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
@@ -192,7 +199,9 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalUrlAttributesExtractor<REQUEST> buildUrlExtractor() {
     return new InternalUrlAttributesExtractor<>(
-        httpAttributesGetter, new ForwardedUrlSchemeProvider<>(httpAttributesGetter));
+        httpAttributesGetter,
+        new ForwardedUrlSchemeProvider<>(httpAttributesGetter),
+        sensitiveQueryParameters);
   }
 
   InternalNetworkAttributesExtractor<REQUEST, RESPONSE> buildNetworkExtractor() {
