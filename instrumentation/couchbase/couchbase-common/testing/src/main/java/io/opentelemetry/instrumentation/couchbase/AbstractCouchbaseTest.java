@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
@@ -111,7 +113,7 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected String networkType() {
-    return includesNetworkAttributes() ? "ipv4" : null;
+    return includesNetworkAttributes() && emitOldDatabaseSemconv() ? "ipv4" : null;
   }
 
   protected String networkPeerAddress() {
