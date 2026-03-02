@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import graphql.execution.ResultPath;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
