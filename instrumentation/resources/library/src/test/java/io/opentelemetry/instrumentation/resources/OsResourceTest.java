@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_DESCRIPTION;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_VERSION;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.AIX;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.DARWIN;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.DRAGONFLYBSD;
@@ -29,11 +30,13 @@ class OsResourceTest {
 
   @Test
   @SetSystemProperty(key = "os.name", value = "Linux 4.11")
+  @SetSystemProperty(key = "os.version", value = "5.10")
   void linux() {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(LINUX);
     assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
+    assertThat(resource.getAttribute(OS_VERSION)).isEqualTo("5.10");
   }
 
   @Test
