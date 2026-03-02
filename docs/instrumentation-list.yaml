@@ -12326,6 +12326,7 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-kafka-2.7
+    display_name: Spring Kafka
     description: This instrumentation enables consumer messaging spans for Spring
       Kafka listeners.
     semantic_conventions:
@@ -12403,8 +12404,11 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-pulsar-1.0
+    display_name: Spring Pulsar
     description: This instrumentation enables consumer messaging spans for Spring
       Pulsar listeners.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://spring.io/projects/spring-pulsar
     source_path: instrumentation/spring/spring-pulsar-1.0
     minimum_java_version: 17
@@ -12443,8 +12447,11 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-rabbit-1.0
+    display_name: Spring Rabbit
     description: This instrumentation enables consumer messaging spans for Spring
       RabbitMQ listeners.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://spring.io/projects/spring-amqp
     source_path: instrumentation/spring/spring-rabbit-1.0
     scope:
@@ -12470,8 +12477,12 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-rmi-4.0
+    display_name: Spring RMI
     description: This instrumentation enables RPC client and RPC server spans for
       Spring RMI applications.
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_SERVER_SPANS
     library_link: https://docs.spring.io/spring-framework/docs/4.0.x/javadoc-api/org/springframework/remoting/rmi/package-summary.html
     source_path: instrumentation/spring/spring-rmi-4.0
     scope:
@@ -12498,6 +12509,7 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: spring-scheduling-3.1
+    display_name: Spring Scheduling
     description: This instrumentation enables tracing for Spring Scheduling tasks.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html
     source_path: instrumentation/spring/spring-scheduling-3.1
@@ -12531,6 +12543,7 @@ libraries:
         - name: job.system
           type: STRING
   - name: spring-security-config-6.0
+    display_name: Spring Security
     description: |
       This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
       NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
@@ -12566,8 +12579,12 @@ libraries:
       type: string
       default: SCOPE_
   - name: spring-web-3.1
+    display_name: Spring Web
     description: |
       This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
@@ -12608,19 +12625,32 @@ libraries:
         - name: url.full
           type: STRING
   - name: spring-web-6.0
+    display_name: Spring Web
     description: |
-      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
+      This instrumentation enriches HTTP client spans with URL template information for Spring's RestTemplate 6.0+.
     library_link: https://github.com/spring-projects/spring-framework
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spring/spring-web/spring-web-6.0
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-web-6.0
     javaagent_target_versions:
     - org.springframework:spring-web:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enables the capture of experimental HTTP client telemetry, including URL template as the span name.
+      type: boolean
+      default: false
   - name: spring-webflux-5.0
+    display_name: Spring WebFlux
     description: |
-      This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also optionally enables experimental controller spans.
+      This instrumentation enriches HTTP server spans with route information for Spring WebFlux 5.0+. It also installs WebClient telemetry interceptors and enables controller spans (controller spans are disabled by default).
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
     scope:
       name: io.opentelemetry.spring-webflux-5.0
@@ -12674,8 +12704,14 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: spring-webflux-5.3
+    display_name: Spring WebFlux
     description: |
       This instrumentation provides a library integration for the Spring WebFlux WebClient and Webflux server versions 5.3+ that enables HTTP client and server spans and metrics.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
     scope:
@@ -12755,9 +12791,14 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: spring-webmvc-3.1
+    display_name: Spring WebMVC
     description: |
-      This instrumentation enables optional Controller and View spans for Spring WebMVC 3.1+.
+      This instrumentation enriches HTTP server spans with route information for Spring WebMVC 3.1+. It also enables controller spans (controller spans are disabled by default) and view spans (view spans are disabled by default).
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
+    - VIEW_SPANS
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
     scope:
       name: io.opentelemetry.spring-webmvc-3.1
@@ -12766,7 +12807,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
       description: |
-        Enables the capture of experimental span attributes `spring-webmvc-view-name` and `spring-webmvc.view.type`.
+        Enables the capture of experimental span attributes `spring-webmvc.view.name` and `spring-webmvc.view.type`.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
@@ -12797,9 +12838,15 @@ libraries:
         - name: spring-webmvc.view.type
           type: STRING
   - name: spring-webmvc-5.3
+    display_name: Spring WebMVC
     description: |
       This instrumentation provides a library integration for Spring WebMVC controllers, that enables the creation of HTTP server spans and metrics for requests processed by the Spring servlet container.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
     scope:
       name: io.opentelemetry.spring-webmvc-5.3
@@ -12857,9 +12904,14 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: spring-webmvc-6.0
+    display_name: Spring WebMVC
     description: |
-      This instrumentation enables optional Controller and View spans for Spring WebMVC 6.0+.
+      This instrumentation enriches HTTP server spans with route information for Spring WebMVC 6.0+. It also enables controller spans (controller spans are disabled by default) and view spans (view spans are disabled by default).
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
+    - VIEW_SPANS
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
     minimum_java_version: 17
     scope:
@@ -12870,7 +12922,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
       description: |
-        Enables the capture of experimental span attributes `spring-webmvc-view-name` and `spring-webmvc.view.type`.
+        Enables the capture of experimental span attributes `spring-webmvc.view.name` and `spring-webmvc.view.type`.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
@@ -12901,13 +12953,32 @@ libraries:
         - name: spring-webmvc.view.type
           type: STRING
   - name: spring-ws-2.0
+    display_name: Spring WS
+    description: |
+      This instrumentation enables controller spans for Spring Web Services 2.0+ endpoints (controller spans are disabled by default).
     library_link: https://spring.io/projects/spring-ws
     disabled_by_default: true
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/spring/spring-ws-2.0
     scope:
       name: io.opentelemetry.spring-ws-2.0
     javaagent_target_versions:
     - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   spymemcached:
   - name: spymemcached-2.12
     display_name: Spymemcached
