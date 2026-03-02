@@ -23,12 +23,12 @@ public final class GrpcClientNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(GrpcRequest grpcRequest) {
-    return grpcRequest.getLogicalHost();
+    return grpcRequest.getServerAddress();
   }
 
   @Override
   public Integer getServerPort(GrpcRequest grpcRequest) {
-    return grpcRequest.getLogicalPort();
+    return grpcRequest.getServerPort();
   }
 
   @Override
