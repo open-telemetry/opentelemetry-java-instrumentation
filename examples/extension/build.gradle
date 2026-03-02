@@ -1,3 +1,13 @@
+// plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
+// causing "No XmlService implementation found" in Gradle's classloader
+buildscript {
+  configurations.classpath {
+    resolutionStrategy {
+      force "org.codehaus.plexus:plexus-xml:4.0.4"
+    }
+  }
+}
+
 plugins {
   id "java"
 
@@ -10,7 +20,7 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.gradleup.shadow" version "9.3.1"
+  id "com.gradleup.shadow" version "9.3.2"
   id "com.diffplug.spotless" version "8.2.1"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "2.26.0-alpha-SNAPSHOT"

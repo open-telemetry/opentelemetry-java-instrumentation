@@ -13,8 +13,15 @@ buildscript {
   }
   dependencies {
     classpath "com.diffplug.spotless:spotless-plugin-gradle:8.2.1"
-    classpath "com.gradleup.shadow:shadow-gradle-plugin:9.3.1"
+    classpath "com.gradleup.shadow:shadow-gradle-plugin:9.3.2"
     classpath "io.opentelemetry.instrumentation:gradle-plugins:2.26.0-alpha-SNAPSHOT"
+    // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
+    // causing "No XmlService implementation found" in Gradle's classloader
+    constraints {
+      classpath("org.codehaus.plexus:plexus-xml") {
+        version { strictly "4.0.4" }
+      }
+    }
   }
 }
 
