@@ -95,6 +95,6 @@ public final class OkHttpTelemetryBuilder {
 
   /** Returns a new instance with the configured settings. */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(builder.build(), openTelemetry.getPropagators());
+    return new OkHttpTelemetry(builder.build(), openTelemetry.getPropagators(), openTelemetry);
   }
 }

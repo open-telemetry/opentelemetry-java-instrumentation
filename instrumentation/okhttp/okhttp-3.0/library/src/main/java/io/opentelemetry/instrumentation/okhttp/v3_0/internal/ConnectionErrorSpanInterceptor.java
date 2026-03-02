@@ -22,9 +22,16 @@ import okhttp3.Response;
 public final class ConnectionErrorSpanInterceptor implements Interceptor {
 
   private final Instrumenter<Chain, Response> instrumenter;
+  private final boolean storeContextForEventListener;
 
   public ConnectionErrorSpanInterceptor(Instrumenter<Chain, Response> instrumenter) {
+    this(instrumenter, false);
+  }
+
+  public ConnectionErrorSpanInterceptor(
+      Instrumenter<Chain, Response> instrumenter, boolean storeContextForEventListener) {
     this.instrumenter = instrumenter;
+    this.storeContextForEventListener = storeContextForEventListener;
   }
 
   @Override
@@ -44,8 +51,12 @@ public final class ConnectionErrorSpanInterceptor implements Interceptor {
       // only create a span when there wasn't any HTTP request
       if (HttpClientRequestResendCount.get(parentContext) == 0) {
         if (instrumenter.shouldStart(parentContext, chain)) {
-          InstrumenterUtil.startAndEnd(
-              instrumenter, parentContext, chain, response, error, startTime, Instant.now());
+          Context context =
+              InstrumenterUtil.startAndEnd(
+                  instrumenter, parentContext, chain, response, error, startTime, Instant.now());
+          if (storeContextForEventListener) {
+            NetworkTimingEventListener.saveContext(chain.call(), context);
+          }
         }
       }
     }
