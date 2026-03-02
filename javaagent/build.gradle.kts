@@ -162,34 +162,20 @@ tasks {
     archiveFileName.set("bootstrapLibs.jar")
   }
 
-  val relocateBaseJavaagentLibsTmp by registering(ShadowJar::class) {
+  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(baseJavaagentLibs)
 
     excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
-    // TODO: remove after updating contrib to 1.50.0
-    filesMatching("io/opentelemetry/contrib/gcp/resource/version.properties") {
-      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
 
-    archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
-  }
-
-  val relocateBaseJavaagentLibs by registering(Jar::class) {
-    dependsOn(relocateBaseJavaagentLibsTmp)
-
-    copyByteBuddy(relocateBaseJavaagentLibsTmp.get().archiveFile)
-
-    duplicatesStrategy = DuplicatesStrategy.FAIL
-
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
 
-  val relocateJavaagentLibsTmp by registering(ShadowJar::class) {
+  val relocateJavaagentLibs by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
@@ -197,26 +183,12 @@ tasks {
     exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
-    // TODO: remove after updating contrib to 1.50.0
-    filesMatching("io/opentelemetry/contrib/gcp/resource/version.properties") {
-      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
     filesMatching("META-INF/io/opentelemetry/instrumentation/**") {
       duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
-
-    archiveFileName.set("javaagentLibs-relocated-tmp.jar")
-  }
-
-  val relocateJavaagentLibs by registering(Jar::class) {
-    dependsOn(relocateJavaagentLibsTmp)
-
-    copyByteBuddy(relocateJavaagentLibsTmp.get().archiveFile)
-
-    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("javaagentLibs-relocated.jar")
   }
@@ -451,25 +423,6 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     exclude("META-INF/*.SF")
     exclude("META-INF/maven/**")
     exclude("META-INF/MANIFEST.MF")
-  }
-}
-
-fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
-  // Byte buddy jar includes classes compiled for java 5 at the root of the jar and the same classes
-  // compiled for java 8 under META-INF/versions/9. Here we move the classes from
-  // META-INF/versions/9/net/bytebuddy to net/bytebuddy to get rid of the duplicate classes.
-  from(zipTree(jar)) {
-    eachFile {
-      if (path.startsWith("net/bytebuddy/") &&
-        // this is our class that we have placed in the byte buddy package, need to preserve it
-        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")
-      ) {
-        exclude()
-      } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
-        path = path.removePrefix("META-INF/versions/9/")
-      }
-    }
-    includeEmptyDirs = false
   }
 }
 
