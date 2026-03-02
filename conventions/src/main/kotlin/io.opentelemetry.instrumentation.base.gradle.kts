@@ -28,7 +28,37 @@ plugins {
  */
 
 val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
+val pinLatestDeps = testLatestDeps && !resolveLatestDeps
 extra["testLatestDeps"] = testLatestDeps
+
+fun getPinnedVersions(): Map<String, String> {
+  if (!pinLatestDeps) return emptyMap()
+  val key = "latestDepPinnedVersions"
+  if (!rootProject.extra.has(key)) {
+    val file = rootProject.file(".github/config/latest-dep-versions.json")
+    @Suppress("UNCHECKED_CAST")
+    rootProject.extra[key] = if (file.exists()) {
+      groovy.json.JsonSlurper().parse(file) as Map<String, String>
+    } else {
+      emptyMap<String, String>()
+    }
+  }
+  @Suppress("UNCHECKED_CAST")
+  return rootProject.extra[key] as Map<String, String>
+}
+
+fun lookupPinnedVersion(group: String?, name: String, version: String?): String? {
+  if (!pinLatestDeps || group == null) return null
+  val pinned = getPinnedVersions()
+  return if (version == "latest.release") {
+    pinned["$group:$name"]
+  } else if (version != null && version.contains("+")) {
+    pinned["$group:$name#$version"] ?: pinned["$group:$name"]
+  } else {
+    null
+  }
+}
 
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {
@@ -79,8 +109,10 @@ configurations {
     configuration.dependencies.whenObjectAdded {
       val dep = copy()
       if (testLatestDeps) {
+        val extDep = this as ExternalDependency
+        val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, "latest.release")
         (dep as ExternalDependency).version {
-          require("latest.release")
+          require(pinnedVersion ?: "latest.release")
         }
       }
       testImplementation.dependencies.add(dep)
@@ -97,8 +129,10 @@ configurations {
       val dep = copy()
       val declaredVersion = dep.version
       if (declaredVersion != null) {
+        val extDep = this as ExternalDependency
+        val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, declaredVersion)
         (dep as ExternalDependency).version {
-          strictly(declaredVersion)
+          strictly(pinnedVersion ?: declaredVersion)
         }
       }
       testImplementation.dependencies.add(dep)
@@ -106,6 +140,19 @@ configurations {
   }
   named("compileOnly") {
     extendsFrom(library)
+  }
+
+  if (pinLatestDeps) {
+    configureEach {
+      if (isCanBeResolved) {
+        resolutionStrategy.eachDependency {
+          val pinnedVersion = lookupPinnedVersion(requested.group, requested.name, requested.version)
+          if (pinnedVersion != null) {
+            useVersion(pinnedVersion)
+          }
+        }
+      }
+    }
   }
 }
 
