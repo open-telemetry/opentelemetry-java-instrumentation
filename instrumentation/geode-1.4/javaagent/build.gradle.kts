@@ -11,7 +11,11 @@ muzzle {
 }
 
 dependencies {
-  library("org.apache.geode:geode-core:1.4.0")
+  library("org.apache.geode:geode-core:1.4.0") {
+    // jna 4.0.0 has invalid ZIP64 headers, broken on JDK 23+ (JDK-8313765)
+    exclude(group = "net.java.dev.jna", module = "jna")
+  }
+  compileOnly("net.java.dev.jna:jna:4.1.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
