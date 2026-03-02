@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static java.util.stream.Collectors.toMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
@@ -16,7 +17,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.AbstractDoubleAssert;
+import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.internal.Integers;
 import org.assertj.core.internal.Iterables;
 import org.assertj.core.internal.Objects;
@@ -153,43 +157,87 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
   }
 
   /**
-   * Verifies that every data point value is matched exactly by one of the matchers provided. Also,
-   * each matcher must match at least one data point.
+   * Verifies that every {@code int} data point value is matched exactly by one of the assertion
+   * consumers provided. Also, each assertion consumer must match at least one data point.
    *
-   * @param dataPointMatchers array of data point value matcher groups
+   * @param dataPointAssertions array of assertions to validate int data point values
    * @return this
    */
+  @SafeVarargs
+  @SuppressWarnings("varargs")
   @CanIgnoreReturnValue
-  public final MetricAssert hasDataPointsWithValues(DataPointMatcher... dataPointMatchers) {
+  public final MetricAssert hasDataPointsWithIntValues(
+      Consumer<AbstractLongAssert<?>>... dataPointAssertions) {
+    return hasTypedDataPointsWithValues(MetricAssert::asIntAssert, dataPointAssertions);
+  }
+
+  /**
+   * Verifies that every {@code double} data point value is matched exactly by one of the assertion
+   * consumers provided. Also, each assertion consumer must match at least one data point.
+   *
+   * @param dataPointAssertions array of assertions to validate double data point values
+   * @return this
+   */
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  @CanIgnoreReturnValue
+  public final MetricAssert hasDataPointsWithDoubleValues(
+      Consumer<AbstractDoubleAssert<?>>... dataPointAssertions) {
+    return hasTypedDataPointsWithValues(MetricAssert::asDoubleAssert, dataPointAssertions);
+  }
+
+  @SafeVarargs
+  @CanIgnoreReturnValue
+  private final <ASSERT_TYPE extends AbstractAssert<?, ?>>
+      MetricAssert hasTypedDataPointsWithValues(
+          Function<NumberDataPoint, ASSERT_TYPE> valueAssertFactory,
+          Consumer<ASSERT_TYPE>... dataPointAssertions) {
     return checkDataPoints(
         dataPoints -> {
           dataPointsCommonCheck(dataPoints);
 
-          boolean[] matchedSets = new boolean[dataPointMatchers.length];
+          boolean[] matchedAssertions = new boolean[dataPointAssertions.length];
 
           for (NumberDataPoint dataPoint : dataPoints) {
             int matchCount = 0;
-            for (int i = 0; i < dataPointMatchers.length; i++) {
-              if (dataPointMatchers[i].matches(dataPoint)) {
-                matchedSets[i] = true;
+            for (int i = 0; i < dataPointAssertions.length; i++) {
+              try {
+                dataPointAssertions[i].accept(valueAssertFactory.apply(dataPoint));
+                matchedAssertions[i] = true;
                 matchCount++;
+              } catch (AssertionError ignored) {
+                // Ignore assertion mismatch; keep checking next assertions
               }
             }
 
             info.description(
-                "for metric '%s' exactly one of the conditions: %s must be satisfied by the data point:\n%s",
-                actual.getName(), Arrays.asList(dataPointMatchers), dataPoint);
+                "for metric '%s' exactly one value assertion must be satisfied by the data point:\n%s",
+                actual.getName(), dataPoint);
             integers.assertEqual(info, matchCount, 1);
           }
 
-          // check each matcher was matched at least once
-          for (int i = 0; i < matchedSets.length; i++) {
+          // check each assertion was matched at least once
+          for (int i = 0; i < matchedAssertions.length; i++) {
             info.description(
-                "no data point for metric '%s' satisfied the condition: '%s'",
-                actual.getName(), dataPointMatchers[i]);
-            objects.assertEqual(info, matchedSets[i], true);
+                "no data point for metric '%s' satisfied value assertion at index %d",
+                actual.getName(), i);
+            objects.assertEqual(info, matchedAssertions[i], true);
           }
         });
+  }
+
+  private static AbstractLongAssert<?> asIntAssert(NumberDataPoint dataPoint) {
+    if (dataPoint.getValueCase() == NumberDataPoint.ValueCase.AS_INT) {
+      return assertThat(dataPoint.getAsInt());
+    }
+    throw new AssertionError("Data point does not have int value: " + dataPoint);
+  }
+
+  private static AbstractDoubleAssert<?> asDoubleAssert(NumberDataPoint dataPoint) {
+    if (dataPoint.getValueCase() == NumberDataPoint.ValueCase.AS_DOUBLE) {
+      return assertThat(dataPoint.getAsDouble());
+    }
+    throw new AssertionError("Data point does not have double value: " + dataPoint);
   }
 
   /**
