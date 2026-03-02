@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.failsafe.v3_0;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import dev.failsafe.CircuitBreaker;
@@ -18,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.Mockito;
 
 final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
   @RegisterExtension
@@ -52,7 +52,7 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
     // given
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicyConfig<Object> delegate =
-        dev.failsafe.RetryPolicy.builder()
+        RetryPolicy.builder()
             .handleResultIf(Objects::isNull)
             .withMaxAttempts(3)
             .build()
@@ -62,7 +62,7 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
     // when
     EventListener<ExecutionCompletedEvent<Object>> actual =
         failsafeTelemetry.createInstrumentedFailureListener(delegate, retryPolicyName);
-    ExecutionCompletedEvent<Object> event = Mockito.mock(ExecutionCompletedEvent.class);
+    ExecutionCompletedEvent<Object> event = mock(ExecutionCompletedEvent.class);
     when(event.getAttemptCount()).thenReturn(1);
     actual.accept(event);
 
@@ -85,7 +85,7 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
     // given
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicyConfig<Object> delegate =
-        dev.failsafe.RetryPolicy.builder()
+        RetryPolicy.builder()
             .handleResultIf(Objects::isNull)
             .withMaxAttempts(3)
             .build()
@@ -95,7 +95,7 @@ final class FailsafeTelemetryTest extends AbstractFailsafeInstrumentationTest {
     // when
     EventListener<ExecutionCompletedEvent<Object>> actual =
         failsafeTelemetry.createInstrumentedSuccessListener(delegate, retryPolicyName);
-    ExecutionCompletedEvent<Object> event = Mockito.mock(ExecutionCompletedEvent.class);
+    ExecutionCompletedEvent<Object> event = mock(ExecutionCompletedEvent.class);
     when(event.getAttemptCount()).thenReturn(1);
     actual.accept(event);
 
