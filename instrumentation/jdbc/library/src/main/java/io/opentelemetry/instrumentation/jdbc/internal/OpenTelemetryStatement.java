@@ -34,7 +34,6 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 
 class OpenTelemetryStatement<S extends Statement> implements Statement {
 
@@ -425,7 +424,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       throw t;
     }
     if (captureRowCount) {
-      return OpenTelemetryResultSet.wrapDeferred(rawRs, instrumenter, context, request, rowCountLimit);
+      return OpenTelemetryResultSet.wrapDeferred(
+          rawRs, instrumenter, context, request, rowCountLimit);
     }
     instrumenter.end(context, request, DbResponse.create(null), null);
     return OpenTelemetryResultSet.wrap(rawRs, this);

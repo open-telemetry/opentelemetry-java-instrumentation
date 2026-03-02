@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
@@ -40,8 +42,7 @@ public final class JdbcTransactionAttributesGetter
   @Nullable
   @Override
   public String getDbNamespace(DbRequest request) {
-    DbInfo dbInfo = request.getDbInfo();
-    return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
+    return request.getDbInfo().getName();
   }
 
   @Deprecated // to be removed in 3.0
@@ -61,9 +62,15 @@ public final class JdbcTransactionAttributesGetter
     return request.getBatchSize();
   }
 
+  @Override
+  public SqlDialect getSqlDialect(DbRequest request) {
+    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+  }
+
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getErrorType(
+      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }

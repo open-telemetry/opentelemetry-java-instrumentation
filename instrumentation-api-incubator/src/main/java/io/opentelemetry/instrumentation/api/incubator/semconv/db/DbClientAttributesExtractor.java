@@ -56,12 +56,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         AttributeKey.longKey("db.response.returned_rows");
   }
 
-  // Incubating attribute for db.response.returned_rows
-  private static final class DbIncubatingAttributes {
-    private static final AttributeKey<Long> DB_RESPONSE_RETURNED_ROWS =
-        AttributeKey.longKey("db.response.returned_rows");
-  }
-
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;

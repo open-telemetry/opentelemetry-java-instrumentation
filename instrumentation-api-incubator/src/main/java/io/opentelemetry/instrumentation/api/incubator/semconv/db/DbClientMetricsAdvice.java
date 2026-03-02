@@ -63,7 +63,6 @@ final class DbClientMetricsAdvice {
                 DB_NAMESPACE,
                 DB_OPERATION_NAME,
                 DB_QUERY_SUMMARY,
-                DB_RESPONSE_STATUS_CODE,
                 ERROR_TYPE,
                 NETWORK_PEER_ADDRESS,
                 NETWORK_PEER_PORT,

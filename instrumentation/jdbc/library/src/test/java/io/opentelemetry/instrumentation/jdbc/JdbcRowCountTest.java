@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jdbc.datasource;
+package io.opentelemetry.instrumentation.jdbc;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.jdbc.ConnectionWrapper;
+import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.sql.Connection;
@@ -48,13 +48,13 @@ class JdbcRowCountTest {
     }
   }
 
-  private Connection wrapWithRowCount() throws Exception {
+  private static Connection wrapWithRowCount() throws Exception {
     JdbcTelemetry telemetry =
         JdbcTelemetry.builder(testing.getOpenTelemetry()).setCaptureRowCount(true).build();
     return ConnectionWrapper.wrap(rawConnection, telemetry);
   }
 
-  private Connection wrapWithoutRowCount() throws Exception {
+  private static Connection wrapWithoutRowCount() throws Exception {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     return ConnectionWrapper.wrap(rawConnection, telemetry);
   }
