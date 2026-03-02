@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          persist-credentials: false
+          persist-credentials: false # we'll use a bot token for pushing changes
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -64,6 +64,7 @@ jobs:
             echo "has_diff=false" >> $GITHUB_OUTPUT
           fi
 
+      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
       - name: Use CLA approved github bot
         if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
