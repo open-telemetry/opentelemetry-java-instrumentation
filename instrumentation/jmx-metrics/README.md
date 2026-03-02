@@ -480,3 +480,38 @@ This version of JMX Metric Insight has a number of limitations.
 - MBean attributes with the same name but belonging to different MBeans described by a single metric rule must have the same type (long or double).
 - All MBeans which are described by the specified ObjectNames in a single rule must be registered with the same MBeanServer instance.
 - While MBeanServers and MBeans can be created dynamically by the application, it is assumed that they will live indefinitely. Their disappearance may not be recognized properly, and may lead to some memory leaks.
+
+## JMX metrics definitions recommendations
+
+The goals of pre-defined metrics-definitions are:
+
+- to provide a set of commonly used metrics for some known target systems, hence allowing users to capture essential metrics without configuration.
+- to provide a set of consistent and well-known metrics for some known target systems.
+- to serve as examples for users to extend those metric definitions.
+
+The pre-defined metrics definitions are not meant to be exhaustive and thus should focus on a limited set of essential metrics for each target system.
+
+To contribute to pre-defined metrics definitions or extend them through custom configuration, we recommend following the following guidelines:
+
+- align and reuse [semantic conventions metrics recommendations and definitions](https://opentelemetry.io/docs/specs/semconv/general/metrics/) when possible.
+- namespace metric names and metric attributes with the target system as prefix.
+- metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit, using unit conversion if needed.
+- metric name should not be the prefix of another metric, for example `request.duration` and `request.duration.last` should be avoided.
+- when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by a backend, for example
+  - `threadpool.thread.count`
+- when a metric is not exposed as "current value" and only exposed in JMX as aggregate values, capture those aggregate values with `.{aggregation}` suffix, examples:
+  - `request.duration.mean` or `request.duration.average`: choice should ideally align with the underlying implementation (MBean attribute name) to preserve implementation semantics.
+  - `request.duration.min`
+  - `request.duration.max`
+  - `request.duration.sum` : for the cumulative value, prefer "sum" over "total" for consistency.
+  - `request.duration.last` : for the last request duration
+  - For those pre-aggregated metrics:
+    - if pre-aggregation is `sum`, the metric type should be `counter` as metric can be aggregated
+    - otherwise, the metric type should be `gauge` as the metric can't be aggregated automatically:
+      - without knowledge of the metric pre-aggregation (encoded in name), for example: min and max.
+      - it will likely produce meaningless results: mean of mean, or mean across multiple instances.
+- when a metric represents an upper limit of a resource, use the `.limit` suffix, for example:
+  - `threadpool.thread.limit` to represent the upper limit of `threadpool.thread.count`
+- when metrics represent an upper and lower bounds or a resource, use the `.limit.upper` and `.limit.lower`suffixes, for example:
+  - `pool.limit.upper` to represent the upper limit of the pool size (maximum capacity)
+  - `pool.limit.lower` to represent the minimum number of threads that should be kept in the pool, even if there is no load.
