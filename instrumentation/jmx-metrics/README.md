@@ -500,11 +500,11 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 - when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by a backend, for example
   - `threadpool.thread.count`
 - when a metric is not exposed as "current value" and only exposed in JMX as aggregate values, capture those aggregate values with `.{aggregation}` suffix, examples:
-  - `request.duration.mean` (prefer "mean" over "average" for consistency)
+  - `request.duration.mean` or `request.duration.average`: choice should ideally align with the underlying implementation (MBean attribute name) to preserve implementation semantics.
   - `request.duration.min`
   - `request.duration.max`
-  - `request.duration.sum` (for the cumulative value, prefer "sum" over "total" for consistency)
-  - `request.duration.last` (for the last request duration)
+  - `request.duration.sum` : for the cumulative value, prefer "sum" over "total" for consistency.
+  - `request.duration.last` : for the last request duration
   - For those pre-aggregated metrics:
     - if pre-aggregation is `sum`, the metric type should be `counter` as metric can be aggregated
     - otherwise, the metric type should be `gauge` as the metric can't be aggregated automatically:
