@@ -10,7 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
 
 public final class GraphqlSingletons {

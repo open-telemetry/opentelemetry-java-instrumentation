@@ -498,7 +498,7 @@ targets:
       target: ':instrumentation:graphql-java:graphql-java-20.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:graphql-java:graphql-java-common:library'
+      target: ':instrumentation:graphql-java:graphql-java-common-12.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
