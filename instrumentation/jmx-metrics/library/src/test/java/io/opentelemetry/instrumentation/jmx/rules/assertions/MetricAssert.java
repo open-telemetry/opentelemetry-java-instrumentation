@@ -188,10 +188,8 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
 
   @SafeVarargs
   @CanIgnoreReturnValue
-  private final <ASSERT_TYPE extends AbstractAssert<?, ?>>
-      MetricAssert hasTypedDataPointsWithValues(
-          Function<NumberDataPoint, ASSERT_TYPE> valueAssertFactory,
-          Consumer<ASSERT_TYPE>... dataPointAssertions) {
+  private final <T extends AbstractAssert<?, ?>> MetricAssert hasTypedDataPointsWithValues(
+      Function<NumberDataPoint, T> valueAssertFactory, Consumer<T>... dataPointAssertions) {
     return checkDataPoints(
         dataPoints -> {
           dataPointsCommonCheck(dataPoints);
