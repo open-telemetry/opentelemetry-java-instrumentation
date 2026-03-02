@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.logging.Level.FINE;
+
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerInterceptor;
@@ -15,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -109,7 +110,7 @@ public final class GrpcTelemetry {
         interceptWithTargetMethod.invoke(null, builder, factory);
         return;
       } catch (Exception e) {
-        logger.log(Level.FINE, "Failed to use interceptWithTarget, falling back", e);
+        logger.log(FINE, "Failed to use interceptWithTarget, falling back", e);
       }
     }
 
