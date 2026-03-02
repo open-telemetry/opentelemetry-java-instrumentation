@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactor.kafka.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -22,7 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -193,7 +193,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
                 satisfies(
-                    AttributeKey.stringKey("messaging.client_id"),
+                    stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
@@ -213,7 +213,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
                 satisfies(
-                    AttributeKey.stringKey("messaging.client_id"),
+                    stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (Boolean.getBoolean("hasConsumerGroup")) {
@@ -232,7 +232,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
                 satisfies(
-                    AttributeKey.stringKey("messaging.client_id"),
+                    stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));

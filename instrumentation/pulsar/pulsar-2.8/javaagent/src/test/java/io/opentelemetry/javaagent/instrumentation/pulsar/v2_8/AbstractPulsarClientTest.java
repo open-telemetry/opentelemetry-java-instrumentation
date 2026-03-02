@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -21,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -385,9 +385,7 @@ abstract class AbstractPulsarClientTest {
 
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {
@@ -421,9 +419,7 @@ abstract class AbstractPulsarClientTest {
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
@@ -448,9 +444,7 @@ abstract class AbstractPulsarClientTest {
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {

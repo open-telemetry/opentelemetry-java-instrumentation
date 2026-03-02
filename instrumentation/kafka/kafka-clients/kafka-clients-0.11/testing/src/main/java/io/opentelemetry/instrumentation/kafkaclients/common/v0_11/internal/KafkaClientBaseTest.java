@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -193,9 +195,7 @@ public abstract class KafkaClientBaseTest {
     }
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -216,9 +216,7 @@ public abstract class KafkaClientBaseTest {
     }
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     return assertions;
   }
@@ -255,14 +253,12 @@ public abstract class KafkaClientBaseTest {
     }
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
 
     if (testMultiBaggage) {
-      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"));
-      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2"));
+      assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
+      assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }
     return assertions;
   }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -28,7 +29,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -217,8 +217,7 @@ class HttpServerAttributesExtractorTest {
             entry(HTTP_ROUTE, "/repositories/{id}"),
             entry(CLIENT_ADDRESS, "1.1.1.1"),
             entry(
-                AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
-                asList("123", "456")));
+                stringArrayKey("http.request.header.custom-request-header"), asList("123", "456")));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
@@ -230,7 +229,7 @@ class HttpServerAttributesExtractorTest {
             entry(HTTP_ROUTE, "/repositories/{repoId}"),
             entry(HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(
-                AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
+                stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
   }
 

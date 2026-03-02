@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -16,7 +17,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -144,8 +144,8 @@ class Slf4jToLog4jTest {
     List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
     attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMdc"));
     attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
-    attributeAsserts.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
-    attributeAsserts.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+    attributeAsserts.add(equalTo(stringKey("key1"), "val1"));
+    attributeAsserts.add(equalTo(stringKey("key2"), "val2"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -167,7 +167,7 @@ class Slf4jToLog4jTest {
     List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
     attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMarker"));
     attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
-    attributeAsserts.add(equalTo(AttributeKey.stringKey("log4j.marker"), markerName));
+    attributeAsserts.add(equalTo(stringKey("log4j.marker"), markerName));
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasAttributesSatisfyingExactly(attributeAsserts));

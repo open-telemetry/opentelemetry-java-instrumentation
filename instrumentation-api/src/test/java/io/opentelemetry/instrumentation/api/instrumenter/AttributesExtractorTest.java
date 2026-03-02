@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -25,8 +25,8 @@ class AttributesExtractorTest {
     @Override
     public void onStart(
         AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
-      attributes.put(AttributeKey.stringKey("animal"), request.get("animal"));
-      attributes.put(AttributeKey.stringKey("country"), request.get("country"));
+      attributes.put(stringKey("animal"), request.get("animal"));
+      attributes.put(stringKey("country"), request.get("country"));
     }
 
     @Override
@@ -37,11 +37,11 @@ class AttributesExtractorTest {
         @Nullable Map<String, String> response,
         @Nullable Throwable error) {
       if (response != null) {
-        attributes.put(AttributeKey.stringKey("food"), response.get("food"));
-        attributes.put(AttributeKey.stringKey("number"), request.get("number"));
+        attributes.put(stringKey("food"), response.get("food"));
+        attributes.put(stringKey("number"), request.get("number"));
       }
       if (error != null) {
-        attributes.put(AttributeKey.stringKey("full_error_class"), error.getClass().getName());
+        attributes.put(stringKey("full_error_class"), error.getClass().getName());
       }
     }
   }

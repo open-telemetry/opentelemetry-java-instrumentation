@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.rxjava.common.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -886,8 +886,7 @@ public abstract class AbstractRxJava3Test {
     }
     testing()
         .waitAndAssertSortedTraces(
-            Comparator.comparing(
-                span -> span.get(0).getAttributes().get(AttributeKey.longKey("iteration"))),
+            Comparator.comparing(span -> span.get(0).getAttributes().get(longKey("iteration"))),
             assertions);
     testing().clearData();
   }

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -39,8 +39,7 @@ class DistroVersionResourceProviderTest {
                       .getAttributes()
                       .asMap())
               .containsEntry(
-                  AttributeKey.stringKey("telemetry.distro.name"),
-                  "opentelemetry-spring-boot-starter")
+                  stringKey("telemetry.distro.name"), "opentelemetry-spring-boot-starter")
               .anySatisfy(
                   (key, val) -> {
                     assertThat(key.getKey()).isEqualTo("telemetry.distro.version");
