@@ -112,7 +112,13 @@ configurations {
         val extDep = this as ExternalDependency
         val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, "latest.release")
         (dep as ExternalDependency).version {
-          require(pinnedVersion ?: "latest.release")
+          // Use prefer instead of require when pinning so that strictly constraints
+          // from latestDepTestLibrary can still override the version
+          if (pinLatestDeps) {
+            prefer(pinnedVersion ?: "latest.release")
+          } else {
+            require(pinnedVersion ?: "latest.release")
+          }
         }
       }
       testImplementation.dependencies.add(dep)
