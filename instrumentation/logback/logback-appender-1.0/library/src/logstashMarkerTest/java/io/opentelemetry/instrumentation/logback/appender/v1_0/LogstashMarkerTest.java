@@ -14,9 +14,9 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import net.logstash.logback.marker.Markers;
@@ -85,7 +85,7 @@ class LogstashMarkerTest {
         .addMarker(Markers.append("field8", new Boolean[] {true, false, true}))
         .addMarker(Markers.appendArray("field9", 1, 2.0, true, "text"))
         .addMarker(Markers.appendRaw("field10", "raw value"))
-        .addMarker(Markers.append("field11", Arrays.asList(1, 2, 3)))
+        .addMarker(Markers.append("field11", asList(1, 2, 3)))
         .addMarker(Markers.appendEntries(entries))
         .log();
 
@@ -100,13 +100,13 @@ class LogstashMarkerTest {
                     equalTo(doubleKey("field2"), 2.0),
                     equalTo(stringKey("field3"), "text-1"),
                     equalTo(booleanKey("field4"), true),
-                    equalTo(longArrayKey("field5"), Arrays.asList(1L, 2L, 3L)),
-                    equalTo(doubleArrayKey("field6"), Arrays.asList(1.0, 2.0, 3.0)),
-                    equalTo(stringArrayKey("field7"), Arrays.asList("text-2", "text-3", "text-4")),
-                    equalTo(booleanArrayKey("field8"), Arrays.asList(true, false, true)),
-                    equalTo(stringArrayKey("field9"), Arrays.asList("1", "2.0", "true", "text")),
+                    equalTo(longArrayKey("field5"), asList(1L, 2L, 3L)),
+                    equalTo(doubleArrayKey("field6"), asList(1.0, 2.0, 3.0)),
+                    equalTo(stringArrayKey("field7"), asList("text-2", "text-3", "text-4")),
+                    equalTo(booleanArrayKey("field8"), asList(true, false, true)),
+                    equalTo(stringArrayKey("field9"), asList("1", "2.0", "true", "text")),
                     equalTo(stringKey("field10"), "raw value"),
-                    equalTo(stringArrayKey("field11"), Arrays.asList("1", "2", "3")),
+                    equalTo(stringArrayKey("field11"), asList("1", "2", "3")),
                     equalTo(longKey("map1"), 1L),
                     equalTo(doubleKey("map2"), 2.0),
                     equalTo(stringKey("map3"), "text-5")));

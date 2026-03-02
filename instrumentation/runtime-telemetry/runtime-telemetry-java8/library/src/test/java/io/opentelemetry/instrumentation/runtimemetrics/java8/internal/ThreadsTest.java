@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_STATE;
+import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -165,7 +165,7 @@ class ThreadsTest {
   @Test
   void getThreads() {
     Thread[] threads = Threads.getThreads();
-    Set<Thread> set = new HashSet<>(Arrays.asList(threads));
+    Set<Thread> set = new HashSet<>(asList(threads));
     assertThat(set).contains(Thread.currentThread());
   }
 

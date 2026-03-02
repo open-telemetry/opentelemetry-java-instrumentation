@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.javahttpserver;
 
+import static java.util.Arrays.asList;
+
 import com.sun.net.httpserver.Filter;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
@@ -12,7 +14,6 @@ import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetry;
 import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import java.util.Arrays;
 import java.util.List;
 
 public final class JavaHttpServerSingletons {
@@ -29,7 +30,7 @@ public final class JavaHttpServerSingletons {
         .configure(config);
     JavaHttpServerTelemetry serverTelemetry = serverBuilder.build();
 
-    FILTERS = Arrays.asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
+    FILTERS = asList(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
   }
 
   private JavaHttpServerSingletons() {}

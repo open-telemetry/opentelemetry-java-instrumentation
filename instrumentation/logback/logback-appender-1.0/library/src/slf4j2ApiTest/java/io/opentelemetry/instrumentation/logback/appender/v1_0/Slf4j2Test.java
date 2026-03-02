@@ -12,11 +12,11 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -113,9 +113,7 @@ class Slf4j2Test {
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
                 .hasAttributesSatisfying(
-                    equalTo(
-                        stringArrayKey("logback.marker"),
-                        Arrays.asList(markerName1, markerName2))));
+                    equalTo(stringArrayKey("logback.marker"), asList(markerName1, markerName2))));
   }
 
   @Test
@@ -140,7 +138,7 @@ class Slf4j2Test {
                 .hasAttributesSatisfying(
                     equalTo(
                         stringArrayKey("log.body.parameters"),
-                        Arrays.asList(
+                        asList(
                             "'world'",
                             String.valueOf(Math.PI),
                             String.valueOf(true),
