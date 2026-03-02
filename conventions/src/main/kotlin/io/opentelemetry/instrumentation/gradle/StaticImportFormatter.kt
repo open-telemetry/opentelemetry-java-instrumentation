@@ -22,6 +22,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
     val memberPattern: String,
     val lineExcludePattern: String? = null,
     val filePattern: String? = null,
+    val contentExcludePattern: String? = null,
   ) : Serializable
 
   override fun applyWithFile(input: String, source: File): String {
@@ -30,44 +31,51 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
       Rule(
         "ElementMatchers",
         "net.bytebuddy.matcher.ElementMatchers",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
       Rule(
         "AgentElementMatchers",
         "io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
       Rule("TimeUnit", "java.util.concurrent.TimeUnit", "[A-Z][A-Z_0-9]*"),
       Rule(
         "StandardCharsets",
         "java.nio.charset.StandardCharsets",
-        "[A-Z][A-Z_0-9]*"
+        "[A-Z][A-Z_0-9]*",
+      ),
+      Rule(
+        "Arrays",
+        "java.util.Arrays",
+        "asList",
+        // AbstractAssert defines asList(), so the static import would be ambiguous in subclasses.
+        contentExcludePattern = "extends AbstractAssert",
       ),
       Rule(
         "Collections",
         "java.util.Collections",
-        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*"
+        "singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*",
       ),
       Rule(
         "ArgumentMatchers",
         "org.mockito.ArgumentMatchers",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
       Rule(
         "Mockito",
         "org.mockito.Mockito",
-        "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings"
+        "mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings",
       ),
       Rule("Assertions", "org.assertj.core.api.Assertions", "assertThat"),
       Rule(
         "OpenTelemetryAssertions",
         "io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions",
-        "[a-z][a-zA-Z0-9]*"
+        "[a-z][a-zA-Z0-9]*",
       ),
       Rule(
         "SemconvStability",
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
-        "emit[a-zA-Z0-9]*"
+        "emit[a-zA-Z0-9]*",
       ),
       Rule(
         "SqlDialect",
@@ -89,6 +97,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
 
     for (rule in rules) {
       if (rule.filePattern != null && !Regex(rule.filePattern).containsMatchIn(source.name)) continue
+      if (rule.contentExcludePattern != null && content.contains(rule.contentExcludePattern)) continue
       val regex = Regex("\\b${rule.className}\\.(${rule.memberPattern})\\b")
       val lines = content.lines().toMutableList()
       for (i in lines.indices) {
@@ -98,6 +107,7 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         ) continue
         for (match in regex.findAll(lines[i])) {
           importsToAdd.add("import static ${rule.pkg}.${match.groupValues[1]};")
+
         }
         lines[i] = regex.replace(lines[i], "$1")
       }

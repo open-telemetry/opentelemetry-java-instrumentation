@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -33,7 +34,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -313,8 +313,7 @@ class SqlClientAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("db.namespace", "potatoes");
     request.put(
-        "db.query.texts",
-        Arrays.asList("INSERT INTO potato VALUES(1)", "INSERT INTO potato VALUES(2)"));
+        "db.query.texts", asList("INSERT INTO potato VALUES(1)", "INSERT INTO potato VALUES(2)"));
     request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
 
     Context context = Context.root();
