@@ -155,6 +155,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       this.getter = getter;
     }
 
+    @SuppressWarnings("deprecation") // getDbName is used for old semconv span names
     @Override
     public String extract(REQUEST request) {
       if (emitStableDatabaseSemconv()) {
@@ -165,9 +166,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         String operationName = getter.getDbOperationName(request);
         return computeSpanNameStable(getter, request, operationName, null, null);
       }
-      String namespace = getter.getDbNamespace(request);
+      String dbName = getter.getDbName(request);
       String operationName = getter.getDbOperationName(request);
-      return computeSpanName(namespace, operationName, null, null);
+      return computeSpanName(dbName, operationName, null, null);
     }
   }
 
@@ -180,9 +181,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       this.getter = getter;
     }
 
+    @SuppressWarnings("deprecation") // getDbName is used for old semconv span names
     @Override
     public String extract(REQUEST request) {
-      String namespace = getter.getDbNamespace(request);
       SqlDialect dialect = getter.getSqlDialect(request);
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
@@ -195,18 +196,20 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           String operationName = getter.getDbOperationName(request);
           return computeSpanNameStable(getter, request, operationName, null, null);
         }
+        String dbName = getter.getDbName(request);
         String operationName = getter.getDbOperationName(request);
-        return computeSpanName(namespace, operationName, null, null);
+        return computeSpanName(dbName, operationName, null, null);
       }
 
       if (!emitStableDatabaseSemconv()) {
+        String dbName = getter.getDbName(request);
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
-          return computeSpanName(namespace, null, null, null);
+          return computeSpanName(dbName, null, null, null);
         }
         SqlQuery analyzedQuery =
             SqlQueryAnalyzerUtil.analyze(rawQueryTexts.iterator().next(), dialect);
         return computeSpanName(
-            namespace,
+            dbName,
             analyzedQuery.getOperationName(),
             analyzedQuery.getCollectionName(),
             analyzedQuery.getStoredProcedureName());
@@ -256,14 +259,15 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       this.sqlDelegate = new SqlClientSpanNameExtractor<>(getter);
     }
 
+    @SuppressWarnings("deprecation") // getDbName is used for old semconv span names
     @Override
     public String extract(REQUEST request) {
       if (emitStableDatabaseSemconv()) {
         return sqlDelegate.extract(request);
       }
-      // For old semconv, use the generic span name format (operation + namespace)
+      // For old semconv, use the generic span name format (operation + db.name)
       // without collection name to preserve backward compatibility
-      String namespace = getter.getDbNamespace(request);
+      String dbName = getter.getDbName(request);
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
       String operationName = null;
       if (rawQueryTexts.size() == 1) {
@@ -275,7 +279,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       if (operationName == null) {
         operationName = getter.getDbOperationName(request);
       }
-      return computeSpanName(namespace, operationName, null, null);
+      return computeSpanName(dbName, operationName, null, null);
     }
   }
 }
