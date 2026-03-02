@@ -2795,8 +2795,6 @@ libraries:
           type: STRING
         - name: db.query.text
           type: STRING
-        - name: db.response.status_code
-          type: STRING
         - name: db.system.name
           type: STRING
         - name: error.type
@@ -2864,8 +2862,6 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
           type: STRING
         - name: db.system.name
           type: STRING
@@ -13173,11 +13169,38 @@ libraries:
           type: STRING
   twilio:
   - name: twilio-6.6
+    display_name: Twilio
+    description: |
+      This instrumentation enables client spans for Twilio SDK API calls such as sending messages and making phone calls.
+    library_link: https://github.com/twilio/twilio-java
     source_path: instrumentation/twilio-6.6
     scope:
       name: io.opentelemetry.twilio-6.6
     javaagent_target_versions:
     - com.twilio.sdk:twilio:(,8.0.0)
+    configurations:
+    - name: otel.instrumentation.twilio.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and `twilio.status`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes: []
+    - when: otel.instrumentation.twilio.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: twilio.account
+          type: STRING
+        - name: twilio.sid
+          type: STRING
+        - name: twilio.status
+          type: STRING
+        - name: twilio.type
+          type: STRING
   undertow:
   - name: undertow-1.4
     source_path: instrumentation/undertow-1.4
@@ -13469,8 +13492,6 @@ libraries:
           type: STRING
         - name: db.query.text
           type: STRING
-        - name: db.response.status_code
-          type: STRING
         - name: error.type
           type: STRING
         - name: server.address
@@ -13530,8 +13551,6 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
           type: STRING
         - name: error.type
           type: STRING
