@@ -34,6 +34,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 class OpenTelemetryStatement<S extends Statement> implements Statement {
 
@@ -94,8 +95,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     String processedSql = processQuery(sql);
-    ResultSet resultSet = wrapCall(sql, () -> delegate.executeQuery(processedSql));
-    return OpenTelemetryResultSet.wrap(resultSet, this, captureRowCount, rowCountLimit);
+    return executeSelect(sql, () -> delegate.executeQuery(processedSql));
   }
 
   @Override
@@ -214,8 +214,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    return OpenTelemetryResultSet.wrap(
-        delegate.getResultSet(), this, captureRowCount, rowCountLimit);
+    return OpenTelemetryResultSet.wrap(delegate.getResultSet(), this);
   }
 
   @Override
@@ -286,8 +285,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return OpenTelemetryResultSet.wrap(
-        delegate.getGeneratedKeys(), this, captureRowCount, rowCountLimit);
+    return OpenTelemetryResultSet.wrap(delegate.getGeneratedKeys(), this);
   }
 
   @Override
@@ -402,6 +400,37 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
     return delegate.enquoteNCharLiteral(val);
   }
 
+  /**
+   * Executes a SELECT query and returns a wrapped ResultSet. If row count capture is enabled, the
+   * span end is deferred to {@link ResultSet#close()} so the iterated row count can be recorded.
+   */
+  protected ResultSet executeSelect(String sql, ThrowingSupplier<ResultSet, SQLException> callable)
+      throws SQLException {
+    DbRequest request = DbRequest.create(dbInfo, sql, false);
+    return executeSelect(request, callable);
+  }
+
+  protected ResultSet executeSelect(
+      DbRequest request, ThrowingSupplier<ResultSet, SQLException> callable) throws SQLException {
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return OpenTelemetryResultSet.wrap(callable.call(), this);
+    }
+    Context context = instrumenter.start(parentContext, request);
+    ResultSet rawRs;
+    try (Scope ignored = context.makeCurrent()) {
+      rawRs = callable.call();
+    } catch (Throwable t) {
+      instrumenter.end(context, request, null, t);
+      throw t;
+    }
+    if (captureRowCount) {
+      return OpenTelemetryResultSet.wrapDeferred(rawRs, instrumenter, context, request, rowCountLimit);
+    }
+    instrumenter.end(context, request, DbResponse.create(null), null);
+    return OpenTelemetryResultSet.wrap(rawRs, this);
+  }
+
   protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
     DbRequest request = DbRequest.create(dbInfo, sql, false);
@@ -424,58 +453,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       this.instrumenter.end(context, request, null, t);
       throw t;
     }
-    DbResponse response = createDbResponse(result);
-    this.instrumenter.end(context, request, response, null);
+    this.instrumenter.end(context, request, DbResponse.create(null), null);
     return result;
-  }
-
-  private DbResponse createDbResponse(Object result) {
-    if (!captureRowCount) {
-      return DbResponse.create(null);
-    }
-
-    Long rowCount = extractRowCount(result);
-    if (rowCount != null && rowCount > rowCountLimit) {
-      return DbResponse.create(null);
-    }
-    return DbResponse.create(rowCount);
-  }
-
-  private static Long extractRowCount(Object result) {
-    if (result instanceof Integer) {
-      return ((Integer) result).longValue();
-    }
-    if (result instanceof Long) {
-      return (Long) result;
-    }
-    if (result instanceof int[]) {
-      int[] counts = (int[]) result;
-      long sum = 0;
-      for (int count : counts) {
-        if (count >= 0) {
-          sum += count;
-        }
-      }
-      return sum;
-    }
-    if (result instanceof long[]) {
-      long[] counts = (long[]) result;
-      long sum = 0;
-      for (long count : counts) {
-        if (count >= 0) {
-          sum += count;
-        }
-      }
-      return sum;
-    }
-    if (result instanceof ResultSet) {
-      ResultSet rs = (ResultSet) result;
-      if (rs instanceof OpenTelemetryResultSet) {
-        long count = ((OpenTelemetryResultSet) rs).getRowCount();
-        return count > 0 ? count : null;
-      }
-    }
-    return null;
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {

@@ -17,15 +17,8 @@ import java.sql.Statement;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@EnabledIfSystemProperty(
-    named = "otel.instrumentation.jdbc.experimental.capture-row-count.enabled",
-    matches = "true")
-@EnabledIfSystemProperty(
-    named = "otel.instrumentation.jdbc.experimental.row-count-limit",
-    matches = "100")
 class JdbcRowCountLimitTest {
 
   @RegisterExtension
@@ -72,7 +65,7 @@ class JdbcRowCountLimitTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName("SELECT")
+                    span.hasName("SELECT test_table")
                         .satisfies(
                             s ->
                                 assertThat(

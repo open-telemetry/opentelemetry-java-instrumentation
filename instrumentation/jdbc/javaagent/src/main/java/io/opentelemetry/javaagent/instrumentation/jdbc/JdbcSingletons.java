@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.Servi
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
@@ -25,6 +26,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Wrapper;
@@ -39,6 +41,9 @@ public final class JdbcSingletons {
   public static final boolean CAPTURE_QUERY_PARAMETERS;
   public static final boolean CAPTURE_ROW_COUNT;
   public static final long ROW_COUNT_LIMIT;
+
+  public static final VirtualField<ResultSet, ResultSetInfo> resultSetInfo =
+      VirtualField.find(ResultSet.class, ResultSetInfo.class);
 
   static {
     AttributesExtractor<DbRequest, DbResponse> servicePeerExtractor =

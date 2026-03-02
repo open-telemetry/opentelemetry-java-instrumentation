@@ -13,19 +13,16 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@EnabledIfSystemProperty(
-    named = "otel.instrumentation.jdbc.experimental.capture-row-count.enabled",
-    matches = "true")
 class JdbcRowCountInstrumentationTest {
 
   @RegisterExtension
@@ -50,7 +47,7 @@ class JdbcRowCountInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(ints = {0, 1, 5, 50, 100})
-  void rowCountForSelectWithH2(int expectedRows) throws Exception {
+  void rowCountForSelectWithStatement(int expectedRows) throws Exception {
     try (Statement stmt = connection.createStatement()) {
       stmt.execute("DELETE FROM test_table");
       for (int i = 0; i < expectedRows; i++) {
@@ -77,7 +74,43 @@ class JdbcRowCountInstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName("SELECT")
+                    span.hasName("SELECT test_table")
+                        .hasAttribute(
+                            equalTo(
+                                AttributeKey.longKey("db.response.returned_rows"),
+                                (long) expectedRows))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 1, 5, 50, 100})
+  void rowCountForSelectWithPreparedStatement(int expectedRows) throws Exception {
+    try (Statement stmt = connection.createStatement()) {
+      stmt.execute("DELETE FROM test_table");
+      for (int i = 0; i < expectedRows; i++) {
+        stmt.executeUpdate("INSERT INTO test_table VALUES (" + i + ", 'row" + i + "')");
+      }
+    }
+    testing.clearData();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM test_table");
+              ResultSet rs = ps.executeQuery()) {
+            int count = 0;
+            while (rs.next()) {
+              count++;
+            }
+            assertThat(count).isEqualTo(expectedRows);
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasName("SELECT test_table")
                         .hasAttribute(
                             equalTo(
                                 AttributeKey.longKey("db.response.returned_rows"),
@@ -85,7 +118,7 @@ class JdbcRowCountInstrumentationTest {
   }
 
   @Test
-  void rowCountForInsertUpdate() throws Exception {
+  void rowCountNotCapturedForDml() throws Exception {
     try (Statement stmt = connection.createStatement()) {
       stmt.execute("DELETE FROM test_table");
       stmt.executeUpdate("INSERT INTO test_table VALUES (1, 'test1')");
@@ -108,37 +141,12 @@ class JdbcRowCountInstrumentationTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName("UPDATE")
-                        .hasAttribute(
-                            equalTo(AttributeKey.longKey("db.response.returned_rows"), 3L))));
-  }
-
-  @Test
-  void rowCountForBatchOperations() throws Exception {
-    try (Statement stmt = connection.createStatement()) {
-      stmt.execute("DELETE FROM test_table");
-    }
-    testing.clearData();
-
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          try (Statement stmt = connection.createStatement()) {
-            stmt.addBatch("INSERT INTO test_table VALUES (1, 'batch1')");
-            stmt.addBatch("INSERT INTO test_table VALUES (2, 'batch2')");
-            stmt.addBatch("INSERT INTO test_table VALUES (3, 'batch3')");
-            int[] results = stmt.executeBatch();
-            assertThat(results).hasSize(3);
-          }
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("BATCH INSERT test_table")
-                        .hasAttribute(
-                            equalTo(AttributeKey.longKey("db.response.returned_rows"), 3L))));
+                    span.hasName("UPDATE test_table")
+                        .satisfies(
+                            s ->
+                                assertThat(
+                                        s.getAttributes()
+                                            .get(AttributeKey.longKey("db.response.returned_rows")))
+                                    .isNull())));
   }
 }

@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -103,49 +104,37 @@ public class JdbcAdviceScope {
       return;
     }
     scope.close();
-    DbResponse response = createDbResponse(result);
-    statementInstrumenter().end(context, request, response, throwable);
+
+    // For SELECT queries that return a ResultSet, defer span end to ResultSet.close() so we can
+    // count the rows iterated. The ResultSetInstrumentation will call endSpanForResultSet() later.
+    if (JdbcSingletons.CAPTURE_ROW_COUNT && throwable == null && result instanceof ResultSet) {
+      JdbcSingletons.resultSetInfo.set((ResultSet) result, new ResultSetInfo(context, request));
+      return;
+    }
+
+    statementInstrumenter().end(context, request, DbResponse.create(null), throwable);
   }
 
-  private static DbResponse createDbResponse(@Nullable Object result) {
-    if (!JdbcSingletons.CAPTURE_ROW_COUNT || result == null) {
-      return DbResponse.create(null);
+  /** Called by ResultSetInstrumentation when the ResultSet is closed. */
+  public static void endSpanForResultSet(ResultSet resultSet) {
+    ResultSetInfo info = JdbcSingletons.resultSetInfo.get(resultSet);
+    if (info == null) {
+      return;
     }
+    JdbcSingletons.resultSetInfo.set(resultSet, null);
 
-    Long rowCount = extractRowCount(result);
-    if (rowCount != null && rowCount > JdbcSingletons.ROW_COUNT_LIMIT) {
-      return DbResponse.create(null);
-    }
-    return DbResponse.create(rowCount);
+    long rowCount = info.getRowCount();
+    // rowCount > ROW_COUNT_LIMIT means we overflowed - omit the attribute
+    Long finalCount = rowCount <= JdbcSingletons.ROW_COUNT_LIMIT ? rowCount : null;
+    statementInstrumenter()
+        .end(info.getContext(), info.getRequest(), DbResponse.create(finalCount), null);
   }
 
-  private static Long extractRowCount(Object result) {
-    if (result instanceof Integer) {
-      return ((Integer) result).longValue();
+  /** Called by ResultSetInstrumentation on each successful next() call. */
+  public static void incrementResultSetRowCount(ResultSetInfo info) {
+    // Count one row past the limit so we can distinguish "exactly at limit" from "exceeded limit"
+    if (info.getRowCount() <= JdbcSingletons.ROW_COUNT_LIMIT) {
+      info.incrementRowCount();
     }
-    if (result instanceof Long) {
-      return (Long) result;
-    }
-    if (result instanceof int[]) {
-      int[] counts = (int[]) result;
-      long sum = 0;
-      for (int count : counts) {
-        if (count >= 0) {
-          sum += count;
-        }
-      }
-      return sum;
-    }
-    if (result instanceof long[]) {
-      long[] counts = (long[]) result;
-      long sum = 0;
-      for (long count : counts) {
-        if (count >= 0) {
-          sum += count;
-        }
-      }
-      return sum;
-    }
-    return null;
   }
 }
