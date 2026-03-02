@@ -34,6 +34,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 class OpenTelemetryStatement<S extends Statement> implements Statement {
 
@@ -41,8 +42,10 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final OpenTelemetryConnection connection;
   protected final DbInfo dbInfo;
   protected final String query;
-  protected final Instrumenter<DbRequest, Void> instrumenter;
+  protected final Instrumenter<DbRequest, DbResponse> instrumenter;
   protected final SqlCommenter sqlCommenter;
+  protected final boolean captureRowCount;
+  protected final long rowCountLimit;
 
   private final List<String> batchCommands = new ArrayList<>();
   protected long batchSize;
@@ -51,9 +54,19 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       S delegate,
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
-      Instrumenter<DbRequest, Void> instrumenter,
-      SqlCommenter sqlCommenter) {
-    this(delegate, connection, dbInfo, null, instrumenter, sqlCommenter);
+      Instrumenter<DbRequest, DbResponse> instrumenter,
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
+    this(
+        delegate,
+        connection,
+        dbInfo,
+        null,
+        instrumenter,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
   }
 
   OpenTelemetryStatement(
@@ -61,14 +74,18 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       String query,
-      Instrumenter<DbRequest, Void> instrumenter,
-      SqlCommenter sqlCommenter) {
+      Instrumenter<DbRequest, DbResponse> instrumenter,
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
     this.delegate = delegate;
     this.connection = connection;
     this.dbInfo = dbInfo;
     this.query = query;
     this.instrumenter = instrumenter;
     this.sqlCommenter = sqlCommenter;
+    this.captureRowCount = captureRowCount;
+    this.rowCountLimit = rowCountLimit;
   }
 
   private String processQuery(String sql) {
@@ -78,7 +95,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     String processedSql = processQuery(sql);
-    return wrapCall(sql, () -> delegate.executeQuery(processedSql));
+    return executeSelect(sql, () -> delegate.executeQuery(processedSql));
   }
 
   @Override
@@ -383,6 +400,37 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
     return delegate.enquoteNCharLiteral(val);
   }
 
+  /**
+   * Executes a SELECT query and returns a wrapped ResultSet. If row count capture is enabled, the
+   * span end is deferred to {@link ResultSet#close()} so the iterated row count can be recorded.
+   */
+  protected ResultSet executeSelect(String sql, ThrowingSupplier<ResultSet, SQLException> callable)
+      throws SQLException {
+    DbRequest request = DbRequest.create(dbInfo, sql, false);
+    return executeSelect(request, callable);
+  }
+
+  protected ResultSet executeSelect(
+      DbRequest request, ThrowingSupplier<ResultSet, SQLException> callable) throws SQLException {
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return OpenTelemetryResultSet.wrap(callable.call(), this);
+    }
+    Context context = instrumenter.start(parentContext, request);
+    ResultSet rawRs;
+    try (Scope ignored = context.makeCurrent()) {
+      rawRs = callable.call();
+    } catch (Throwable t) {
+      instrumenter.end(context, request, null, t);
+      throw t;
+    }
+    if (captureRowCount) {
+      return OpenTelemetryResultSet.wrapDeferred(rawRs, instrumenter, context, request, rowCountLimit);
+    }
+    instrumenter.end(context, request, DbResponse.create(null), null);
+    return OpenTelemetryResultSet.wrap(rawRs, this);
+  }
+
   protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
     DbRequest request = DbRequest.create(dbInfo, sql, false);
@@ -405,7 +453,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       this.instrumenter.end(context, request, null, t);
       throw t;
     }
-    this.instrumenter.end(context, request, null, null);
+    this.instrumenter.end(context, request, DbResponse.create(null), null);
     return result;
   }
 

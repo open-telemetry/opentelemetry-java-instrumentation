@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.DbResponse;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -274,10 +275,12 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
-    Instrumenter<DbRequest, Void> statementInstrumenter =
+    Instrumenter<DbRequest, DbResponse> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
 
     boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters(openTelemetry);
+    boolean captureRowCount = JdbcInstrumenterFactory.captureRowCount(openTelemetry);
+    long rowCountLimit = JdbcInstrumenterFactory.rowCountLimit(openTelemetry);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
 
@@ -287,7 +290,9 @@ public final class OpenTelemetryDriver implements Driver {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        getSqlCommenter(openTelemetry));
+        getSqlCommenter(openTelemetry),
+        captureRowCount,
+        rowCountLimit);
   }
 
   @Override

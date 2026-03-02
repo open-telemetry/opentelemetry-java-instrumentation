@@ -58,10 +58,20 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       String query,
-      Instrumenter<DbRequest, Void> instrumenter,
+      Instrumenter<DbRequest, DbResponse> instrumenter,
       boolean captureQueryParameters,
-      SqlCommenter sqlCommenter) {
-    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenter);
+      SqlCommenter sqlCommenter,
+      boolean captureRowCount,
+      long rowCountLimit) {
+    super(
+        delegate,
+        connection,
+        dbInfo,
+        query,
+        instrumenter,
+        sqlCommenter,
+        captureRowCount,
+        rowCountLimit);
     this.captureQueryParameters = captureQueryParameters;
     this.parameters = new HashMap<>();
   }
@@ -96,7 +106,7 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return OpenTelemetryResultSet.wrap(wrapCall(query, delegate::executeQuery), this);
+    return executeSelect(query, delegate::executeQuery);
   }
 
   @Override

@@ -43,6 +43,20 @@ configurations:
       passwords, personally identifiable information or protected health info.
     type: boolean
     default: false
+  - name: otel.instrumentation.jdbc.experimental.capture-row-count.enabled
+    description: >
+      Enables capturing the number of rows returned/affected by database operations as the
+      <code>db.response.returned_rows</code> span attribute and <code>db.client.response.returned_rows</code>
+      histogram metric. For SELECT queries, counts ResultSet.next() calls. For DML operations, captures
+      the executeUpdate() return value. May have performance impact for large result sets.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jdbc.experimental.row-count-limit
+    description: >
+      Maximum number of rows to count for the <code>db.response.returned_rows</code> attribute.
+      When this limit is exceeded, the attribute is omitted. Only applies when row count capture is enabled.
+    type: long
+    default: 10000
   - name: otel.instrumentation.jdbc-datasource.enabled
     description: Enables instrumentation of JDBC datasource connections.
     type: boolean

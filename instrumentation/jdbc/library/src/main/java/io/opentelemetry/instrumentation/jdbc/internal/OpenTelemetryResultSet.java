@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -27,33 +29,84 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 @SuppressWarnings({"UngroupedOverloads", "OverloadMethodsDeclarationOrder"})
 class OpenTelemetryResultSet implements ResultSet {
 
   private final ResultSet delegate;
-  private final Statement statement;
+  @Nullable private final Statement statement;
+  private final long rowCountLimit;
+  private long rowCount;
 
-  private OpenTelemetryResultSet(ResultSet delegate, Statement statement) {
+  // Set when the span end is deferred to this ResultSet's close()
+  @Nullable private final Instrumenter<DbRequest, DbResponse> instrumenter;
+  @Nullable private final Context context;
+  @Nullable private final DbRequest request;
+
+  private OpenTelemetryResultSet(
+      ResultSet delegate,
+      @Nullable Statement statement,
+      long rowCountLimit,
+      @Nullable Instrumenter<DbRequest, DbResponse> instrumenter,
+      @Nullable Context context,
+      @Nullable DbRequest request) {
     this.delegate = delegate;
     this.statement = statement;
+    this.rowCountLimit = rowCountLimit;
+    this.rowCount = 0;
+    this.instrumenter = instrumenter;
+    this.context = context;
+    this.request = request;
   }
 
+  /**
+   * Wraps a ResultSet for row count tracking only (no deferred span end). Used when captureRowCount
+   * is false or when the span has already been ended.
+   */
   public static ResultSet wrap(ResultSet delegate, Statement statement) {
     if (delegate == null) {
       return null;
     }
-    return new OpenTelemetryResultSet(delegate, statement);
+    return new OpenTelemetryResultSet(delegate, statement, Long.MAX_VALUE, null, null, null);
+  }
+
+  /**
+   * Wraps a ResultSet and defers the span end to {@link #close()}. The span will be ended with the
+   * count of rows iterated via {@link #next()}.
+   */
+  public static ResultSet wrapDeferred(
+      ResultSet delegate,
+      Instrumenter<DbRequest, DbResponse> instrumenter,
+      Context context,
+      DbRequest request,
+      long rowCountLimit) {
+    if (delegate == null) {
+      return null;
+    }
+    return new OpenTelemetryResultSet(
+        delegate, null, rowCountLimit, instrumenter, context, request);
   }
 
   @Override
   public boolean next() throws SQLException {
-    return delegate.next();
+    boolean hasNext = delegate.next();
+    // Count one row past the limit so we can distinguish "exactly at limit" from "exceeded limit"
+    // at close() time. Once rowCount > rowCountLimit we stop incrementing.
+    if (hasNext && rowCount <= rowCountLimit) {
+      rowCount++;
+    }
+    return hasNext;
   }
 
   @Override
   public void close() throws SQLException {
     delegate.close();
+    if (instrumenter != null && context != null && request != null) {
+      // rowCount > rowCountLimit means we overflowed - omit the attribute
+      Long finalCount = rowCount <= rowCountLimit ? rowCount : null;
+      instrumenter.end(context, request, DbResponse.create(finalCount), null);
+    }
   }
 
   @Override
