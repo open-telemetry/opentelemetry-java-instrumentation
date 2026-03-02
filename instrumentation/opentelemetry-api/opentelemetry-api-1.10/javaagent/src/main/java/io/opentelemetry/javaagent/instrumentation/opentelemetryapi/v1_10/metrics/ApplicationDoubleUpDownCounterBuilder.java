@@ -43,7 +43,8 @@ public class ApplicationDoubleUpDownCounterBuilder
       Consumer<application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement>
           applicationCallback) {
     return new ApplicationObservableDoubleUpDownCounter(
-        agentBuilder.buildWithCallback(
+        CallbackAnchor.anchor(
+            agentBuilder::buildWithCallback,
             agentMeasurement ->
                 applicationCallback.accept(
                     new ApplicationObservableDoubleMeasurement(agentMeasurement))));
