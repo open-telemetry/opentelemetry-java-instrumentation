@@ -84,7 +84,8 @@ class OpenTelemetryResultSet implements ResultSet {
     if (delegate == null) {
       return null;
     }
-    return new OpenTelemetryResultSet(delegate, null, rowCountLimit, instrumenter, context, request);
+    return new OpenTelemetryResultSet(
+        delegate, null, rowCountLimit, instrumenter, context, request);
   }
 
   @Override
