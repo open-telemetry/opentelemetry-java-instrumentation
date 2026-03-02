@@ -31,6 +31,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false # we'll use a bot token for pushing changes
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -62,6 +64,7 @@ jobs:
             echo "has_diff=false" >> $GITHUB_OUTPUT
           fi
 
+      # we need to create the bot token after the workflow is completed to avoid 1 hour expiration
       - name: Use CLA approved github bot
         if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
@@ -87,8 +90,10 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
           git push --force origin "$BRANCH_NAME"
+          git remote set-url origin "https://github.com/${{ github.repository }}.git"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'
