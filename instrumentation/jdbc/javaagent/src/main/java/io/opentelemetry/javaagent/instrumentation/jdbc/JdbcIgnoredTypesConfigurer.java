@@ -20,5 +20,9 @@ public class JdbcIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     builder.ignoreClass("org.apache.shardingsphere.shardingjdbc.jdbc.core.statement.");
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12065
     builder.ignoreClass("org.apache.shardingsphere.driver.jdbc.core.statement.");
+    // org.h2.tools classes (e.g. SimpleResultSet) implement ResultSet but are H2 utility types,
+    // not real driver ResultSets - skip them so they are not instrumented by
+    // ResultSetInstrumentation
+    builder.ignoreClass("org.h2.tools.");
   }
 }
