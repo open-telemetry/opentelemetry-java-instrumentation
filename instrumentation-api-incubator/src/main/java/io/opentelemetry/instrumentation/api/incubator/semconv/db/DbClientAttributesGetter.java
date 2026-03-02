@@ -45,6 +45,17 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   String getDbNamespace(REQUEST request);
 
   /**
+   * Returns the old db.name value. This is only used for old semantic conventions.
+   *
+   * @deprecated Use {@link #getDbNamespace(Object)} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  default String getDbName(REQUEST request) {
+    return getDbNamespace(request);
+  }
+
+  /**
    * Returns the database user name. This is only used for old semantic conventions.
    *
    * @deprecated There is no replacement at this time.
