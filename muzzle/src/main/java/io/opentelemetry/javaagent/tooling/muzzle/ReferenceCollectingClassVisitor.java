@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.EvictingQueue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
@@ -22,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Handle;
@@ -122,8 +125,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   private final Set<String> helperSuperClasses = new HashSet<>();
   private final VirtualFieldMappingsBuilderImpl virtualFieldMappingsBuilder =
       new VirtualFieldMappingsBuilderImpl();
-  private String refSourceClassName;
-  private Type refSourceType;
+  @Nullable private String refSourceClassName;
+  @Nullable private Type refSourceType;
 
   ReferenceCollectingClassVisitor(
       HelperClassPredicate helperClassPredicate, boolean isAdviceClass) {
@@ -217,9 +220,11 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     Type fieldType = Type.getType(descriptor);
 
     // remember that this field was declared in the currently visited helper class
+    String sourceClassName =
+        requireNonNull(refSourceClassName, "refSourceClassName must be set by visit() before use");
     addReference(
-        ClassRef.builder(refSourceClassName)
-            .addSource(refSourceClassName)
+        ClassRef.builder(sourceClassName)
+            .addSource(sourceClassName)
             .addField(new Source[0], new Flag[0], name, fieldType, /* isFieldDeclared= */ true)
             .build());
 
@@ -238,9 +243,12 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       Flag ownershipFlag = computeOwnershipFlag(access);
       Flag manifestationFlag = computeTypeManifestationFlag(access);
 
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
       addReference(
-          ClassRef.builder(refSourceClassName)
-              .addSource(refSourceClassName)
+          ClassRef.builder(sourceClassName)
+              .addSource(sourceClassName)
               .addMethod(
                   new Source[0],
                   new Flag[] {visibilityFlag, ownershipFlag, manifestationFlag},
@@ -340,8 +348,14 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
               : Type.getType("L" + owner + ";");
       Type fieldType = Type.getType(descriptor);
 
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
+      Type sourceType =
+          requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
+
       List<Flag> fieldFlags = new ArrayList<>();
-      fieldFlags.add(computeMinimumFieldAccess(refSourceType, ownerType));
+      fieldFlags.add(computeMinimumFieldAccess(sourceType, ownerType));
       fieldFlags.add(
           opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC
               ? OwnershipFlag.STATIC
@@ -349,10 +363,10 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
       addReference(
           ClassRef.builder(ownerType.getClassName())
-              .addSource(refSourceClassName, currentLineNumber)
-              .addFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .addSource(sourceClassName, currentLineNumber)
+              .addFlag(computeMinimumClassAccess(sourceType, ownerType))
               .addField(
-                  new Source[] {new Source(refSourceClassName, currentLineNumber)},
+                  new Source[] {new Source(sourceClassName, currentLineNumber)},
                   fieldFlags.toArray(new Flag[0]),
                   name,
                   fieldType,
@@ -363,8 +377,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
             ClassRef.builder(underlyingFieldType.getClassName())
-                .addSource(refSourceClassName, currentLineNumber)
-                .addFlag(computeMinimumClassAccess(refSourceType, underlyingFieldType))
+                .addSource(sourceClassName, currentLineNumber)
+                .addFlag(computeMinimumClassAccess(sourceType, underlyingFieldType))
                 .build());
       }
 
@@ -396,13 +410,19 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         return;
       }
 
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
+      Type sourceType =
+          requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
+
       { // ref for method return type
         Type returnType = underlyingType(methodType.getReturnType());
         if (returnType.getSort() == Type.OBJECT) {
           addReference(
               ClassRef.builder(returnType.getClassName())
-                  .addSource(refSourceClassName, currentLineNumber)
-                  .addFlag(computeMinimumClassAccess(refSourceType, returnType))
+                  .addSource(sourceClassName, currentLineNumber)
+                  .addFlag(computeMinimumClassAccess(sourceType, returnType))
                   .build());
         }
       }
@@ -412,8 +432,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         if (paramType.getSort() == Type.OBJECT) {
           addReference(
               ClassRef.builder(paramType.getClassName())
-                  .addSource(refSourceClassName, currentLineNumber)
-                  .addFlag(computeMinimumClassAccess(refSourceType, paramType))
+                  .addSource(sourceClassName, currentLineNumber)
+                  .addFlag(computeMinimumClassAccess(sourceType, paramType))
                   .build());
         }
       }
@@ -421,15 +441,15 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       List<Flag> methodFlags = new ArrayList<>();
       methodFlags.add(
           opcode == Opcodes.INVOKESTATIC ? OwnershipFlag.STATIC : OwnershipFlag.NON_STATIC);
-      methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType));
+      methodFlags.add(computeMinimumMethodAccess(sourceType, ownerType));
 
       addReference(
           ClassRef.builder(ownerType.getClassName())
-              .addSource(refSourceClassName, currentLineNumber)
+              .addSource(sourceClassName, currentLineNumber)
               .addFlag(isInterface ? ManifestationFlag.INTERFACE : ManifestationFlag.NON_INTERFACE)
-              .addFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .addFlag(computeMinimumClassAccess(sourceType, ownerType))
               .addMethod(
-                  new Source[] {new Source(refSourceClassName, currentLineNumber)},
+                  new Source[] {new Source(sourceClassName, currentLineNumber)},
                   methodFlags.toArray(new Flag[0]),
                   name,
                   methodType.getReturnType(),
@@ -443,10 +463,15 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
     public void visitTypeInsn(int opcode, String type) {
       Type typeObj = underlyingType(Type.getObjectType(type));
       if (typeObj.getSort() == Type.OBJECT) {
+        String sourceClassName =
+            requireNonNull(
+                refSourceClassName, "refSourceClassName must be set by visit() before use");
+        Type sourceType =
+            requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
         addReference(
             ClassRef.builder(typeObj.getClassName())
-                .addSource(refSourceClassName, currentLineNumber)
-                .addFlag(computeMinimumClassAccess(refSourceType, typeObj))
+                .addSource(sourceClassName, currentLineNumber)
+                .addFlag(computeMinimumClassAccess(sourceType, typeObj))
                 .build());
       }
 
@@ -459,23 +484,28 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         String descriptor,
         Handle bootstrapMethodHandle,
         Object... bootstrapMethodArguments) {
+      String sourceClassName =
+          requireNonNull(
+              refSourceClassName, "refSourceClassName must be set by visit() before use");
+      Type sourceType =
+          requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
+
       // This part might be unnecessary...
       addReference(
           ClassRef.builder(Utils.getClassName(bootstrapMethodHandle.getOwner()))
-              .addSource(refSourceClassName, currentLineNumber)
+              .addSource(sourceClassName, currentLineNumber)
               .addFlag(
                   computeMinimumClassAccess(
-                      refSourceType, Type.getObjectType(bootstrapMethodHandle.getOwner())))
+                      sourceType, Type.getObjectType(bootstrapMethodHandle.getOwner())))
               .build());
       for (Object arg : bootstrapMethodArguments) {
         if (arg instanceof Handle) {
           Handle handle = (Handle) arg;
           ClassRefBuilder classRefBuilder =
               ClassRef.builder(Utils.getClassName(handle.getOwner()))
-                  .addSource(refSourceClassName, currentLineNumber)
+                  .addSource(sourceClassName, currentLineNumber)
                   .addFlag(
-                      computeMinimumClassAccess(
-                          refSourceType, Type.getObjectType(handle.getOwner())));
+                      computeMinimumClassAccess(sourceType, Type.getObjectType(handle.getOwner())));
 
           if (handle.getTag() == Opcodes.H_INVOKEVIRTUAL
               || handle.getTag() == Opcodes.H_INVOKESTATIC
@@ -489,10 +519,10 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
                 handle.getTag() == Opcodes.H_INVOKESTATIC
                     ? OwnershipFlag.STATIC
                     : OwnershipFlag.NON_STATIC);
-            methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType));
+            methodFlags.add(computeMinimumMethodAccess(sourceType, ownerType));
 
             classRefBuilder.addMethod(
-                new Source[] {new Source(refSourceClassName, currentLineNumber)},
+                new Source[] {new Source(sourceClassName, currentLineNumber)},
                 methodFlags.toArray(new Flag[0]),
                 handle.getName(),
                 methodType.getReturnType(),
@@ -510,10 +540,15 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       if (value instanceof Type) {
         Type type = underlyingType((Type) value);
         if (type.getSort() == Type.OBJECT) {
+          String sourceClassName =
+              requireNonNull(
+                  refSourceClassName, "refSourceClassName must be set by visit() before use");
+          Type sourceType =
+              requireNonNull(refSourceType, "refSourceType must be set by visit() before use");
           addReference(
               ClassRef.builder(type.getClassName())
-                  .addSource(refSourceClassName, currentLineNumber)
-                  .addFlag(computeMinimumClassAccess(refSourceType, type))
+                  .addSource(sourceClassName, currentLineNumber)
+                  .addFlag(computeMinimumClassAccess(sourceType, type))
                   .build());
         }
       }
@@ -581,8 +616,8 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         // clear the last LDC <class> stack
         // note that FieldBackedProvider also check for an invalid context call in the runtime
         if (lastTwoClassConstants.remainingCapacity() == 0) {
-          Type type = lastTwoClassConstants.poll();
-          Type fieldType = lastTwoClassConstants.poll();
+          Type type = requireNonNull(lastTwoClassConstants.poll());
+          Type fieldType = requireNonNull(lastTwoClassConstants.poll());
 
           if (type.getSort() != Type.OBJECT) {
             throw new MuzzleCompilationException(
@@ -618,7 +653,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
       super.visitLdcInsn(value);
     }
 
-    private void registerOpcode(int opcode, Object value) {
+    private void registerOpcode(int opcode, @Nullable Object value) {
       // check if this is an LDC <class> instruction; if so, remember the class that was used
       // we need to remember last two LDC <class> instructions that were executed before
       // VirtualField.get() call

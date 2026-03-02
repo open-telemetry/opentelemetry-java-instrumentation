@@ -12,6 +12,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingSuperTypeMatcher;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -100,6 +101,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
     return new SafeInterfaceIterator(typeDefinition);
   }
 
+  @Nullable
   static TypeDefinition safeGetSuperClass(TypeDefinition typeDefinition) {
     try {
       return typeDefinition.getSuperClass();
@@ -157,7 +159,7 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
       implements Iterator<TypeDefinition>, Iterable<TypeDefinition> {
     private final TypeDefinition typeDefinition;
     @Nullable private final Iterator<TypeDescription.Generic> it;
-    private TypeDefinition next;
+    @Nullable private TypeDefinition next;
 
     private SafeInterfaceIterator(TypeDefinition typeDefinition) {
       this.typeDefinition = typeDefinition;
@@ -186,6 +188,9 @@ class SafeHasSuperTypeMatcher extends ElementMatcher.Junction.AbstractBase<TypeD
 
     @Override
     public TypeDefinition next() {
+      if (next == null) {
+        throw new NoSuchElementException();
+      }
       return next;
     }
 

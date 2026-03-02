@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
@@ -153,7 +154,9 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProperties sdkConfig =
+        requireNonNull(
+            AutoConfigureUtil.getConfig(autoConfiguredSdk), "SDK config must not be null");
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
@@ -253,8 +256,11 @@ public class AgentInstaller {
 
     VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
         VirtualFieldImplementationInstallerFactory.getInstance();
+    ClassLoader extensionsClassLoader =
+        requireNonNull(
+            Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
     for (EarlyInstrumentationModule earlyInstrumentationModule :
-        loadOrdered(EarlyInstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+        loadOrdered(EarlyInstrumentationModule.class, extensionsClassLoader)) {
 
       VirtualFieldImplementationInstaller contextProvider =
           virtualFieldInstallerFactory.create(
@@ -287,7 +293,7 @@ public class AgentInstaller {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
+      configurer.configure(builder, config);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();

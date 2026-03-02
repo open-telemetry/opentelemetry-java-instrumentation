@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassReader;
 
 public class DefineClassHandler implements Handler {
@@ -27,7 +28,7 @@ public class DefineClassHandler implements Handler {
     if (classBytes == null
         || (classBytes.length == 40
             && new String(classBytes, ISO_8859_1).startsWith("J9ROMCLASSCOOKIE"))) {
-      return null;
+      return DefineClassContextImpl.NOP;
     }
 
     Set<String> superNames = new HashSet<>();
@@ -85,9 +86,7 @@ public class DefineClassHandler implements Handler {
 
   @Override
   public void afterDefineClass(DefineClassContext context) {
-    if (context != null) {
-      context.exit();
-    }
+    context.exit();
   }
 
   /**
@@ -109,15 +108,15 @@ public class DefineClassHandler implements Handler {
   private static class DefineClassContextImpl implements DefineClassContext {
     private static final DefineClassContextImpl NOP = new DefineClassContextImpl();
 
-    private final DefineClassContextImpl previous;
-    String failedClassDotName;
-    Set<String> superDotNames;
+    @Nullable private final DefineClassContextImpl previous;
+    @Nullable String failedClassDotName;
+    @Nullable Set<String> superDotNames;
 
     private DefineClassContextImpl() {
       previous = null;
     }
 
-    private DefineClassContextImpl(DefineClassContextImpl previous) {
+    private DefineClassContextImpl(@Nullable DefineClassContextImpl previous) {
       this.previous = previous;
     }
 
@@ -130,7 +129,7 @@ public class DefineClassHandler implements Handler {
 
     @Override
     public void exit() {
-      defineClassContext.set(previous);
+      defineClassContext.set(previous != null ? previous : NOP);
     }
   }
 }
