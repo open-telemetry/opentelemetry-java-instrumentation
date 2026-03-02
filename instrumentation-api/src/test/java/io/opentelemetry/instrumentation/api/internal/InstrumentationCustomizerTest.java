@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
@@ -15,7 +16,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -185,10 +185,10 @@ class InstrumentationCustomizerTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
-                                equalTo(AttributeKey.stringKey("req2"), "req2_value"),
-                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
-                                equalTo(AttributeKey.stringKey("resp2"), "resp2_value"))));
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_value"))));
   }
 
   @Test
@@ -228,12 +228,12 @@ class InstrumentationCustomizerTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
-                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
-                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
-                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
-                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
-                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test

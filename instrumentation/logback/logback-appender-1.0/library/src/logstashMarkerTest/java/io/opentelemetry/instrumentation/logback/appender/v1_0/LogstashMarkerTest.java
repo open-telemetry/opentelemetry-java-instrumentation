@@ -5,9 +5,16 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,9 +59,9 @@ class LogstashMarkerTest {
                 .hasTotalAttributeCount(3) // 3 markers (event.name handled separately)
                 .hasEventName("MyEventName")
                 .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("field1"), "value1"),
-                    equalTo(AttributeKey.longKey("field2"), 2L),
-                    equalTo(AttributeKey.stringKey("field3"), "value3")));
+                    equalTo(stringKey("field1"), "value1"),
+                    equalTo(longKey("field2"), 2L),
+                    equalTo(stringKey("field3"), "value3")));
   }
 
   @Test
@@ -89,25 +96,20 @@ class LogstashMarkerTest {
                 // 14 fields (including map keys)
                 .hasTotalAttributeCount(14)
                 .hasAttributesSatisfying(
-                    equalTo(AttributeKey.longKey("field1"), 1L),
-                    equalTo(AttributeKey.doubleKey("field2"), 2.0),
-                    equalTo(AttributeKey.stringKey("field3"), "text-1"),
-                    equalTo(AttributeKey.booleanKey("field4"), true),
-                    equalTo(AttributeKey.longArrayKey("field5"), Arrays.asList(1L, 2L, 3L)),
-                    equalTo(AttributeKey.doubleArrayKey("field6"), Arrays.asList(1.0, 2.0, 3.0)),
-                    equalTo(
-                        AttributeKey.stringArrayKey("field7"),
-                        Arrays.asList("text-2", "text-3", "text-4")),
-                    equalTo(
-                        AttributeKey.booleanArrayKey("field8"), Arrays.asList(true, false, true)),
-                    equalTo(
-                        AttributeKey.stringArrayKey("field9"),
-                        Arrays.asList("1", "2.0", "true", "text")),
-                    equalTo(AttributeKey.stringKey("field10"), "raw value"),
-                    equalTo(AttributeKey.stringArrayKey("field11"), Arrays.asList("1", "2", "3")),
-                    equalTo(AttributeKey.longKey("map1"), 1L),
-                    equalTo(AttributeKey.doubleKey("map2"), 2.0),
-                    equalTo(AttributeKey.stringKey("map3"), "text-5")));
+                    equalTo(longKey("field1"), 1L),
+                    equalTo(doubleKey("field2"), 2.0),
+                    equalTo(stringKey("field3"), "text-1"),
+                    equalTo(booleanKey("field4"), true),
+                    equalTo(longArrayKey("field5"), Arrays.asList(1L, 2L, 3L)),
+                    equalTo(doubleArrayKey("field6"), Arrays.asList(1.0, 2.0, 3.0)),
+                    equalTo(stringArrayKey("field7"), Arrays.asList("text-2", "text-3", "text-4")),
+                    equalTo(booleanArrayKey("field8"), Arrays.asList(true, false, true)),
+                    equalTo(stringArrayKey("field9"), Arrays.asList("1", "2.0", "true", "text")),
+                    equalTo(stringKey("field10"), "raw value"),
+                    equalTo(stringArrayKey("field11"), Arrays.asList("1", "2", "3")),
+                    equalTo(longKey("map1"), 1L),
+                    equalTo(doubleKey("map2"), 2.0),
+                    equalTo(stringKey("map3"), "text-5")));
   }
 
   @Test

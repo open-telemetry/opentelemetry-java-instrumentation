@@ -5,6 +5,9 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -101,8 +104,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               (resource, config) ->
                   resource.merge(
                       Resource.create(
-                          Attributes.of(
-                              AttributeKey.booleanKey("keyFromResourceCustomizer"), false))));
+                          Attributes.of(booleanKey("keyFromResourceCustomizer"), false))));
     }
 
     @Bean
@@ -113,8 +115,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               (resource, config) ->
                   resource.merge(
                       Resource.create(
-                          Attributes.of(
-                              AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
+                          Attributes.of(booleanKey("keyFromResourceCustomizer"), true))));
     }
 
     @Bean
@@ -179,10 +180,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                         .assertServerGetRequest("/ping")
                         .hasResourceSatisfying(
                             r ->
-                                r.hasAttribute(
-                                        AttributeKey.booleanKey("keyFromResourceCustomizer"), true)
-                                    .hasAttribute(
-                                        AttributeKey.stringKey("attributeFromYaml"), "true")
+                                r.hasAttribute(booleanKey("keyFromResourceCustomizer"), true)
+                                    .hasAttribute(stringKey("attributeFromYaml"), "true")
                                     .hasAttribute(
                                         satisfies(SERVICE_INSTANCE_ID, val -> val.isNotBlank())))
                         .hasAttributesSatisfying(
@@ -192,8 +191,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(CLIENT_ADDRESS, s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
-                                AttributeKey.stringArrayKey("http.request.header.key"),
-                                singletonList("value")),
+                                stringArrayKey("http.request.header.key"), singletonList("value")),
                             satisfies(SERVER_PORT, val -> val.isNotZero()),
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),

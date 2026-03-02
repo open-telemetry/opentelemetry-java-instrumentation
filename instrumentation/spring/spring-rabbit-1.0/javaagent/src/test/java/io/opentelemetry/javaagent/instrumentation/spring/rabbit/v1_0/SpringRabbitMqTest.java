@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -20,7 +21,6 @@ import static java.util.Collections.singletonList;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -128,9 +128,7 @@ class SpringRabbitMqTest {
     }
     if (testHeaders) {
       assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-              singletonList("test")));
+          equalTo(stringArrayKey("messaging.header.Test_Message_Header"), singletonList("test")));
     }
     return assertions;
   }

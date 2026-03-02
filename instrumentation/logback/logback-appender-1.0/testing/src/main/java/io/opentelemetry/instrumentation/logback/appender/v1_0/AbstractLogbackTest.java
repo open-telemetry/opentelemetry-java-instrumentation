@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -17,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -205,10 +206,10 @@ public abstract class AbstractLogbackTest {
     assertions.addAll(
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
     assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testMdc"));
-    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+    assertions.add(equalTo(stringKey("key1"), "val1"));
+    assertions.add(equalTo(stringKey("key2"), "val2"));
     if (!expectEventName()) {
-      assertions.add(equalTo(AttributeKey.stringKey("event.name"), "MyEventName"));
+      assertions.add(equalTo(stringKey("event.name"), "MyEventName"));
     }
 
     testing()
@@ -241,8 +242,7 @@ public abstract class AbstractLogbackTest {
     }
     assertions.addAll(
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
-    assertions.add(
-        equalTo(AttributeKey.stringArrayKey("logback.marker"), singletonList(markerName)));
+    assertions.add(equalTo(stringArrayKey("logback.marker"), singletonList(markerName)));
 
     testing()
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));

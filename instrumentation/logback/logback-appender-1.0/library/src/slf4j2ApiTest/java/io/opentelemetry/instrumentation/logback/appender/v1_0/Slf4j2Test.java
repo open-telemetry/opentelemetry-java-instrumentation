@@ -5,10 +5,14 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
@@ -64,14 +68,14 @@ class Slf4j2Test {
                 .hasTotalAttributeCount(codeAttributesLogCount() + 8) // 8 key value pairs
                 .hasEventName("MyEventName")
                 .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("string key"), "string value"),
-                    equalTo(AttributeKey.booleanKey("boolean key"), true),
-                    equalTo(AttributeKey.longKey("byte key"), 1),
-                    equalTo(AttributeKey.longKey("short key"), 2),
-                    equalTo(AttributeKey.longKey("int key"), 3),
-                    equalTo(AttributeKey.longKey("long key"), 4),
-                    equalTo(AttributeKey.doubleKey("float key"), 5.0),
-                    equalTo(AttributeKey.doubleKey("double key"), 6.0)));
+                    equalTo(stringKey("string key"), "string value"),
+                    equalTo(booleanKey("boolean key"), true),
+                    equalTo(longKey("byte key"), 1),
+                    equalTo(longKey("short key"), 2),
+                    equalTo(longKey("int key"), 3),
+                    equalTo(longKey("long key"), 4),
+                    equalTo(doubleKey("float key"), 5.0),
+                    equalTo(doubleKey("double key"), 6.0)));
   }
 
   @Test
@@ -87,7 +91,7 @@ class Slf4j2Test {
         logRecord ->
             logRecord
                 .hasBody("test message")
-                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("key1"), "kvp-value")));
+                .hasAttributesSatisfying(equalTo(stringKey("key1"), "kvp-value")));
   }
 
   @Test
@@ -110,7 +114,7 @@ class Slf4j2Test {
                 .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
                 .hasAttributesSatisfying(
                     equalTo(
-                        AttributeKey.stringArrayKey("logback.marker"),
+                        stringArrayKey("logback.marker"),
                         Arrays.asList(markerName1, markerName2))));
   }
 
@@ -135,14 +139,14 @@ class Slf4j2Test {
                 .hasTotalAttributeCount(codeAttributesLogCount() + 2)
                 .hasAttributesSatisfying(
                     equalTo(
-                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        stringArrayKey("log.body.parameters"),
                         Arrays.asList(
                             "'world'",
                             String.valueOf(Math.PI),
                             String.valueOf(true),
                             String.valueOf(Long.MAX_VALUE))),
                     equalTo(
-                        AttributeKey.stringKey("log.body.template"),
+                        stringKey("log.body.template"),
                         "log message {} and {}, bool {}, long {}")));
   }
 }

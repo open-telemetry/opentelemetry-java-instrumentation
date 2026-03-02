@@ -5,10 +5,10 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.Arrays;
 import java.util.List;
@@ -78,6 +78,6 @@ public abstract class AbstractSpringStarterSmokeTest {
 
   static SpanDataAssert withSpanAssert(SpanDataAssert span) {
     return span.hasName("SpringComponent.withSpanMethod")
-        .hasAttribute(AttributeKey.stringKey("paramName"), "from-controller");
+        .hasAttribute(stringKey("paramName"), "from-controller");
   }
 }
