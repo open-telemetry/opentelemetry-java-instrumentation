@@ -18,7 +18,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testImplementation(project(":instrumentation:cassandra:cassandra-4-common:testing"))
+  testImplementation(project(":instrumentation:cassandra:cassandra-common-4.0:testing"))
 
   testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:cassandra:cassandra-4.4:javaagent"))

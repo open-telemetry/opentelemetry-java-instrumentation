@@ -120,6 +120,22 @@ class StaticImportFormatter : FormatterFunc, Serializable {
       content = lines.joinToString("\n")
     }
 
+    // Handle java.util.logging.Level: only rewrite Level.CONSTANT when the file already imports
+    // java.util.logging.Level (avoids false matches against Log4j2, SLF4J, etc.).
+    // The negative lookbehind (?<!\.) excludes qualified references like InternalLogger.Level.ERROR.
+    if (content.lines().any { it.trim() == "import java.util.logging.Level;" }) {
+      val regex = Regex("""(?<!\.)\bLevel\.([A-Z][A-Z_0-9]*)\b""")
+      val lines = content.lines().toMutableList()
+      for (i in lines.indices) {
+        if (lines[i].trimStart().startsWith("import ")) continue
+        for (match in regex.findAll(lines[i])) {
+          importsToAdd.add("import static java.util.logging.Level.${match.groupValues[1]};")
+        }
+        lines[i] = regex.replace(lines[i], "$1")
+      }
+      content = lines.joinToString("\n")
+    }
+
     // Handle nested value class references through the outer class, e.g.
     // DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA when only
     // DbIncubatingAttributes is imported (not the nested class directly).

@@ -1,5 +1,8 @@
+display_name: Spring Pulsar
 description: This instrumentation enables consumer messaging spans for Spring Pulsar listeners.
 library_link: https://spring.io/projects/spring-pulsar
+semantic_conventions:
+  - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >
