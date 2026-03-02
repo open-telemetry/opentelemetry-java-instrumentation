@@ -35,6 +35,31 @@ released that breaks our instrumentation tests.
 
 To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradlew` command line.
 
+#### Pinned latest dep versions
+
+By default, `testLatestDeps` builds use pinned dependency versions from
+`.github/config/latest-dep-versions.json` for reproducible results. This file is a flat JSON
+mapping of `group:artifact` (or `group:artifact#range` for constrained ranges) to a specific
+version.
+
+A [daily CI job](../../.github/workflows/update-latest-dep-versions.yml) resolves all dynamic
+versions and opens a PR if any have changed.
+
+To update the pinned versions locally:
+
+```
+./gradlew resolveLatestDepVersions -PtestLatestDeps=true -PresolveLatestDeps=true
+```
+
+To bypass pinning and resolve against the live latest versions (e.g. for debugging):
+
+```
+./gradlew test -PtestLatestDeps=true -PresolveLatestDeps=true
+```
+
+If a dependency is not present in the JSON file, it falls back to the original dynamic version
+(`latest.release` or declared range).
+
 ### Executing single test
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <TEST FILE NAME>` will run only the selected test.
