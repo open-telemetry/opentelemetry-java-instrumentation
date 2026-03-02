@@ -30,6 +30,9 @@ import org.apache.logging.log4j.message.Message;
 
 public final class Log4jHelper {
 
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(Log4jHelper.class.getName());
+
   private static final LogEventMapper<Map<String, String>> mapper;
   private static final boolean captureExperimentalAttributes;
   private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
@@ -48,6 +51,11 @@ public final class Log4jHelper {
     List<String> captureContextDataAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     boolean captureEventName = config.getBoolean("capture_event_name/development", false);
+    if (captureEventName) {
+      logger.warning(
+          "The otel.instrumentation.log4j-appender.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
+    }
 
     mapper =
         new LogEventMapper<>(

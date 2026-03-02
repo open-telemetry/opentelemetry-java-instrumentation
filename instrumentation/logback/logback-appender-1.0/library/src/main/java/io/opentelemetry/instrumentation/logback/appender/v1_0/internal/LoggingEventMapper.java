@@ -62,6 +62,8 @@ public final class LoggingEventMapper {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+
+  @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
@@ -79,6 +81,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("log.body.template");
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -205,6 +208,10 @@ public final class LoggingEventMapper {
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
     }
 
+    if (supportsKeyValuePairs) {
+      captureOtelEventName(builder, loggingEvent);
+    }
+
     if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
       captureKeyValuePairAttributes(builder, loggingEvent);
     }
@@ -317,11 +324,26 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
+  private static void captureOtelEventName(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
+    if (keyValuePairs != null) {
+      for (KeyValuePair keyValuePair : keyValuePairs) {
+        if (OTEL_EVENT_NAME_KEY.equals(keyValuePair.key) && keyValuePair.value != null) {
+          builder.setEventName(keyValuePair.value.toString());
+          break;
+        }
+      }
+    }
+  }
+
+  @NoMuzzle
   private void captureKeyValuePairAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
+        if (!OTEL_EVENT_NAME_KEY.equals(keyValuePair.key)) {
+          captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
+        }
       }
     }
   }

@@ -47,9 +47,12 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+
+  @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
@@ -201,6 +204,11 @@ public final class LogEventMapper<T> {
       builder.setBody(body);
     }
 
+    String eventName = mapMessage.get(OTEL_EVENT_NAME_KEY);
+    if (eventName != null && !eventName.isEmpty()) {
+      builder.setEventName(eventName);
+    }
+
     if (captureMapMessageAttributes) {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage
@@ -208,6 +216,7 @@ public final class LogEventMapper<T> {
           .forEach(
               (key, value) -> {
                 if (value != null
+                    && !key.equals(OTEL_EVENT_NAME_KEY)
                     && (!checkSpecialMapMessageAttribute
                         || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());

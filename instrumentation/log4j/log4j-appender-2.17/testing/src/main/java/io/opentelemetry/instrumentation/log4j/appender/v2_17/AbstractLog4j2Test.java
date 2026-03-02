@@ -283,6 +283,30 @@ public abstract class AbstractLog4j2Test {
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
   }
 
+  @Test
+  void testOtelEventNameInMapMessage() {
+    StringMapMessage message = new StringMapMessage();
+    message.put("otel.event.name", "MyEventName");
+    message.put("key1", "val1");
+    logger.info(message);
+
+    List<AttributeAssertion> assertions =
+        addCodeLocationAttributes("testOtelEventNameInMapMessage");
+    assertions.addAll(threadAttributesAssertions());
+    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "val1"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody((Value<?>) null)
+                    .hasEventName("MyEventName")
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
   private static void performLogging(
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
