@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
-import application.io.opentelemetry.api.metrics.ObservableLongGauge;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
 
-public final class ApplicationObservableLongGauge implements ObservableLongGauge {
+public final class ApplicationObservableLongGauge
+    implements application.io.opentelemetry.api.metrics.ObservableLongGauge {
 
-  private final io.opentelemetry.api.metrics.ObservableLongGauge agentGauge;
+  private final ObservableLongGauge agentGauge;
 
-  public ApplicationObservableLongGauge(
-      io.opentelemetry.api.metrics.ObservableLongGauge agentGauge) {
+  public ApplicationObservableLongGauge(ObservableLongGauge agentGauge) {
     this.agentGauge = agentGauge;
   }
 

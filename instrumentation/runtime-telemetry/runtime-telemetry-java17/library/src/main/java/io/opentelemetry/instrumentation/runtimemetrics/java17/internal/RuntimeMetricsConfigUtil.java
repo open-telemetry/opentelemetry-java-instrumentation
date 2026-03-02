@@ -20,7 +20,7 @@ public final class RuntimeMetricsConfigUtil {
 
   @Nullable
   public static RuntimeMetrics configure(
-      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry, String instrumentationMode) {
+      RuntimeMetricsBuilder builder, OpenTelemetry openTelemetry, boolean defaultEnabled) {
     /*
     By default, don't use any JFR metrics. May change this once semantic conventions are updated.
     If enabled, default to only the metrics not already covered by runtime-telemetry-java8
@@ -33,7 +33,7 @@ public final class RuntimeMetricsConfigUtil {
         .getBoolean("enabled", false)) {
       // default configuration
     } else if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry")
-        .getBoolean("enabled", instrumentationMode.equals("default"))) {
+        .getBoolean("enabled", defaultEnabled)) {
       // This only uses metrics gathered by JMX
       builder.disableAllFeatures();
     } else {

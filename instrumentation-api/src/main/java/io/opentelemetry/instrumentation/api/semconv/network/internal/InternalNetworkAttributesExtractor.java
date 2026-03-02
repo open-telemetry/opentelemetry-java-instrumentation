@@ -5,9 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
@@ -32,38 +40,33 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
     if (captureProtocolAttributes) {
+      attributes.put(NETWORK_TRANSPORT, lowercase(getter.getNetworkTransport(request, response)));
+      attributes.put(NETWORK_TYPE, lowercase(getter.getNetworkType(request, response)));
       attributes.put(
-          NetworkAttributes.NETWORK_TRANSPORT,
-          lowercase(getter.getNetworkTransport(request, response)));
+          NETWORK_PROTOCOL_NAME, lowercase(getter.getNetworkProtocolName(request, response)));
       attributes.put(
-          NetworkAttributes.NETWORK_TYPE, lowercase(getter.getNetworkType(request, response)));
-      attributes.put(
-          NetworkAttributes.NETWORK_PROTOCOL_NAME,
-          lowercase(getter.getNetworkProtocolName(request, response)));
-      attributes.put(
-          NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-          lowercase(getter.getNetworkProtocolVersion(request, response)));
+          NETWORK_PROTOCOL_VERSION, lowercase(getter.getNetworkProtocolVersion(request, response)));
     }
 
     if (captureLocalSocketAttributes) {
       String localAddress = getter.getNetworkLocalAddress(request, response);
       if (localAddress != null) {
-        attributes.put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, localAddress);
+        attributes.put(NETWORK_LOCAL_ADDRESS, localAddress);
 
         Integer localPort = getter.getNetworkLocalPort(request, response);
         if (localPort != null && localPort > 0) {
-          attributes.put(NetworkAttributes.NETWORK_LOCAL_PORT, (long) localPort);
+          attributes.put(NETWORK_LOCAL_PORT, (long) localPort);
         }
       }
     }
 
     String peerAddress = getter.getNetworkPeerAddress(request, response);
     if (peerAddress != null) {
-      attributes.put(NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress);
+      attributes.put(NETWORK_PEER_ADDRESS, peerAddress);
 
       Integer peerPort = getter.getNetworkPeerPort(request, response);
       if (peerPort != null && peerPort > 0) {
-        attributes.put(NetworkAttributes.NETWORK_PEER_PORT, (long) peerPort);
+        attributes.put(NETWORK_PEER_PORT, (long) peerPort);
       }
     }
   }

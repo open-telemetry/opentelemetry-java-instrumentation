@@ -79,6 +79,8 @@ libraries:
           type: STRING
         - name: url.query
           type: STRING
+        - name: url.query
+          type: VALUE
         - name: url.scheme
           type: STRING
         - name: user_agent.original
@@ -2401,14 +2403,6 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.query.summary
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
         - name: http.request.method
           type: STRING
         - name: http.response.status_code
@@ -2801,8 +2795,6 @@ libraries:
           type: STRING
         - name: db.query.text
           type: STRING
-        - name: db.response.status_code
-          type: STRING
         - name: db.system.name
           type: STRING
         - name: error.type
@@ -2870,8 +2862,6 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
           type: STRING
         - name: db.system.name
           type: STRING
@@ -3297,7 +3287,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3370,7 +3360,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3434,7 +3424,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -3499,7 +3489,7 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -4721,6 +4711,8 @@ libraries:
           type: STRING
         - name: url.query
           type: STRING
+        - name: url.query
+          type: VALUE
         - name: url.scheme
           type: STRING
         - name: user_agent.original
@@ -5437,12 +5429,24 @@ libraries:
     library_link: https://javalin.io/
     features:
     - HTTP_ROUTE
-    source_path: instrumentation/javalin-5.0
+    source_path: instrumentation/javalin/javalin-5.0
     minimum_java_version: 11
     scope:
       name: io.opentelemetry.javalin-5.0
     javaagent_target_versions:
-    - io.javalin:javalin:[5.0.0,)
+    - io.javalin:javalin:[5.0.0,7.0.0)
+  - name: javalin-7.0
+    description: This instrumentation enriches existing HTTP server spans with route
+      information, it does not emit any telemetry on its own.
+    library_link: https://javalin.io/
+    features:
+    - HTTP_ROUTE
+    source_path: instrumentation/javalin/javalin-7.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.javalin-7.0
+    javaagent_target_versions:
+    - io.javalin:javalin:[7.0.0,)
   jaxrs:
   - name: jaxrs-1.0
     display_name: JAX-RS 1.x
@@ -8173,6 +8177,8 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: db.operation
+          type: STRING
         - name: db.statement
           type: STRING
         - name: db.system
@@ -8196,6 +8202,8 @@ libraries:
         type: HISTOGRAM
         unit: s
         attributes:
+        - name: db.operation.name
+          type: STRING
         - name: db.system.name
           type: STRING
         - name: network.peer.address
@@ -8209,11 +8217,13 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: db.operation.name
+          type: STRING
         - name: db.query.text
           type: STRING
         - name: db.system.name
           type: STRING
-        - name: error
+        - name: error.type
           type: STRING
         - name: network.peer.address
           type: STRING
@@ -9671,7 +9681,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9715,7 +9725,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -9759,7 +9769,7 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database,service.peer
+    - when: otel.semconv-stability.opt-in=database
       metrics:
       - name: db.client.operation.duration
         description: Duration of database client operations.
@@ -12927,6 +12937,10 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
     - when: otel.instrumentation.spymemcached.experimental-span-attributes=true
       spans:
       - span_kind: CLIENT
@@ -12935,6 +12949,10 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
         - name: spymemcached.command.cancelled
           type: BOOLEAN
         - name: spymemcached.result
@@ -12950,6 +12968,10 @@ libraries:
           type: STRING
         - name: db.system.name
           type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -12959,6 +12981,10 @@ libraries:
           type: STRING
         - name: error.type
           type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   struts:
   - name: struts-2.3
     display_name: Apache Struts
@@ -13143,11 +13169,38 @@ libraries:
           type: STRING
   twilio:
   - name: twilio-6.6
+    display_name: Twilio
+    description: |
+      This instrumentation enables client spans for Twilio SDK API calls such as sending messages and making phone calls.
+    library_link: https://github.com/twilio/twilio-java
     source_path: instrumentation/twilio-6.6
     scope:
       name: io.opentelemetry.twilio-6.6
     javaagent_target_versions:
     - com.twilio.sdk:twilio:(,8.0.0)
+    configurations:
+    - name: otel.instrumentation.twilio.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and `twilio.status`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes: []
+    - when: otel.instrumentation.twilio.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: twilio.account
+          type: STRING
+        - name: twilio.sid
+          type: STRING
+        - name: twilio.status
+          type: STRING
+        - name: twilio.type
+          type: STRING
   undertow:
   - name: undertow-1.4
     source_path: instrumentation/undertow-1.4
@@ -13439,8 +13492,6 @@ libraries:
           type: STRING
         - name: db.query.text
           type: STRING
-        - name: db.response.status_code
-          type: STRING
         - name: error.type
           type: STRING
         - name: server.address
@@ -13500,8 +13551,6 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
           type: STRING
         - name: error.type
           type: STRING
@@ -13608,6 +13657,20 @@ libraries:
     - dev.zio:zio_2.13:[2.0.0,)
     - dev.zio:zio_3:[2.0.0,)
     - dev.zio:zio_2.12:[2.0.0,)
+  - name: zio-http-3.0
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
+    library_link: https://ziohttp.com/
+    features:
+    - HTTP_ROUTE
+    source_path: instrumentation/zio/zio-http-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.zio-http-3.0
+    javaagent_target_versions:
+    - dev.zio:zio-http_2.12:[3.0.0,)
+    - dev.zio:zio-http_3:[3.0.0,)
+    - dev.zio:zio-http_2.13:[3.0.0,)
 internal:
 - name: internal-application-logger
   source_path: instrumentation/internal/internal-application-logger
@@ -13702,6 +13765,10 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
   scope:
     name: io.opentelemetry.opentelemetry-api-1.57
+- name: opentelemetry-api-1.59
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.59
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.59
 - name: opentelemetry-extension-kotlin-1.0
   description: |
     Our Kotlin coroutine instrumentation relies on a shaded copy of the opentelemetry-extension-kotlin library. This can cause conflicts when the application itself also uses opentelemetry-extension-kotlin, because the shaded and unshaded versions store the OpenTelemetry context under different keys. To resolve this issue, this instrumentation modifies the application's copy of opentelemetry-extension-kotlin so that it delegates to the shaded version bundled within the agent.

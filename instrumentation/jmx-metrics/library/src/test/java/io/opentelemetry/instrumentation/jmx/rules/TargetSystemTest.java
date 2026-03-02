@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
@@ -28,14 +31,12 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -62,7 +63,7 @@ class TargetSystemTest {
 
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
-  private static Path testAppPath;
+  private static Path testWebAppPath;
 
   private static String otlpEndpoint;
 
@@ -77,10 +78,10 @@ class TargetSystemTest {
     otlpEndpoint = "http://host.testcontainers.internal:" + otlpServer.httpPort();
 
     TargetSystemTest.agentPath = getArtifactPath("io.opentelemetry.javaagent.path");
-    TargetSystemTest.testAppPath = getArtifactPath("io.opentelemetry.testapp.path");
+    TargetSystemTest.testWebAppPath = getArtifactPath("io.opentelemetry.testapp.path");
   }
 
-  private static Path getArtifactPath(String systemProperty) {
+  protected static Path getArtifactPath(String systemProperty) {
     String pathValue = System.getProperty(systemProperty);
     assertThat(pathValue).isNotNull();
     Path path = Paths.get(pathValue);
@@ -103,7 +104,7 @@ class TargetSystemTest {
         stop(targetDependency);
       }
     }
-    targetDependencies = Collections.emptyList();
+    targetDependencies = emptyList();
   }
 
   private static void stop(@Nullable GenericContainer<?> container) {
@@ -132,7 +133,7 @@ class TargetSystemTest {
   protected static List<String> javaPropertiesToJvmArgs(Map<String, String> config) {
     return config.entrySet().stream()
         .map(e -> String.format("-D%s=%s", e.getKey(), e.getValue()))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -157,9 +158,7 @@ class TargetSystemTest {
     // set yaml config files to test
     config.put(
         "otel.jmx.config",
-        yamlFiles.stream()
-            .map(TargetSystemTest::containerYamlPath)
-            .collect(Collectors.joining(",")));
+        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
     return config;
   }
 
@@ -169,7 +168,7 @@ class TargetSystemTest {
    * @param target target system to start
    */
   protected void startTarget(GenericContainer<?> target) {
-    startTarget(target, Collections.emptyList());
+    startTarget(target, emptyList());
   }
 
   /**
@@ -208,9 +207,14 @@ class TargetSystemTest {
     }
   }
 
+  protected static void copyTestAppToTarget(
+      Path from, GenericContainer<?> target, String targetPath) {
+    logger.info("copying test application {} to container {}", from, targetPath);
+    target.withCopyFileToContainer(MountableFile.forHostPath(from), targetPath);
+  }
+
   protected static void copyTestWebAppToTarget(GenericContainer<?> target, String targetPath) {
-    logger.info("copying test application {} to container {}", testAppPath, targetPath);
-    target.withCopyFileToContainer(MountableFile.forHostPath(testAppPath), targetPath);
+    copyTestAppToTarget(testWebAppPath, target, targetPath);
   }
 
   private static String yamlResourcePath(String yaml) {
@@ -269,7 +273,7 @@ class TargetSystemTest {
                           // TODO: disabling batch span exporter might help remove unwanted metrics
                           sm -> sm.getScope().getName().equals("io.opentelemetry.jmx"))
                       .flatMap(sm -> sm.getMetricsList().stream())
-                      .collect(Collectors.toList());
+                      .collect(toList());
 
               assertThat(metrics).describedAs("Metrics received but not from JMX").isNotEmpty();
 

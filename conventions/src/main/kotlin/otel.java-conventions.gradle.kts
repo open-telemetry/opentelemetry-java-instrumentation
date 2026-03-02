@@ -419,8 +419,12 @@ afterEvaluate {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "13.2.0"
+  toolVersion = "13.3.0"
   maxWarnings = 0
+}
+
+tasks.withType<Checkstyle> {
+  isShowViolations = true
 }
 
 dependencyCheck {

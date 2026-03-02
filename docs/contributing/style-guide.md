@@ -7,8 +7,7 @@ This project follows the
 
 ### Auto-formatting
 
-The build will fail if source code is not formatted according to Google Java
-Style.
+One of the CI checks will fail if source code is not formatted according to Google Java Style.
 
 Run the following command to reformat all files:
 
@@ -16,9 +15,9 @@ Run the following command to reformat all files:
 ./gradlew spotlessApply
 ```
 
-For IntelliJ users, an `.editorconfig` file is provided that IntelliJ will automatically use to
-adjust code formatting settings. However, it does not support all required rules, so you may still
-need to run `./gradlew spotlessApply` periodically.
+In addition to Google Java Style formatting, spotless applies
+[custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
+(e.g. rewriting `Objects.requireNonNull` to a static import).
 
 #### Pre-commit hook
 
@@ -41,39 +40,6 @@ To run these checks locally:
 ./gradlew checkstyleMain checkstyleTest
 ```
 
-### Static imports
-
-Consider statically importing the following commonly used methods and constants:
-
-- **Test methods**
-  - `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.*`
-  - `org.assertj.core.api.Assertions.*`
-  - `org.mockito.Mockito.*`
-  - `org.mockito.ArgumentMatchers.*`
-- **Utility methods**
-  - `io.opentelemetry.api.common.AttributeKey.*`
-  - `java.util.Arrays` - `asList`, `stream`
-  - `java.util.Collections` - `singleton*`, `empty*`, `unmodifiable*`, `synchronized*`, `checked*`
-  - `java.util.Objects` - `requireNonNull`
-  - `java.util.function.Function` - `identity`
-  - `java.util.stream.Collectors.*`
-- **Utility constants**
-  - `java.util.Locale.*`
-  - `java.util.concurrent.TimeUnit.*`
-  - `java.util.logging.Level.*`
-  - `java.nio.charset.StandardCharsets.*`
-- **ByteBuddy**
-  - `net.bytebuddy.matcher.ElementMatchers.*`
-  - `io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.*`
-- **OpenTelemetry semantic convention constants**
-  - All constants under `io.opentelemetry.semconv.**`, except for
-    `io.opentelemetry.semconv.SchemaUrls.*` constants
-
-Some of these are enforced by checkstyle rules:
-
-- Look for `RegexpSinglelineJava` in `checkstyle.xml`
-- Use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
-
 ## Java Language Conventions
 
 ### Visibility modifiers
@@ -95,6 +61,7 @@ packages contain implementation details that should not be used by external cons
 Prefer this order:
 
 - Static fields (final before non-final)
+- Static initializer
 - Instance fields (final before non-final)
 - Constructors
 - Methods
@@ -102,6 +69,11 @@ Prefer this order:
 
 **Method ordering**: Place calling methods above the methods they call. For example, place private
 methods below the non-private methods that use them.
+
+**Exception — static field initialization**: When a `static final` field is initialized by a
+private static method or a `static {}` block, it is acceptable to place the method or block
+immediately after the field to keep initialization logic co-located, even when this contradicts
+the general method ordering above.
 
 **Static utility classes**: Place the private constructor (used to prevent instantiation) after all
 methods.
@@ -148,6 +120,25 @@ Following the reasoning from
 
 - `Optional` shouldn't appear in public API signatures
 - Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
+
+## Semantic convention constants
+
+**Library instrumentation**: Copy semantic convention constants directly into library
+instrumentation classes rather than depending on the semconv artifact. Library instrumentation is
+used by end users, and this avoids exposing a dependency on the semconv artifact (which may change
+across versions). For example:
+
+```java
+// copied from MessagingIncubatingAttributes
+private static final AttributeKey<String> MESSAGING_SYSTEM =
+    AttributeKey.stringKey("messaging.system");
+```
+
+**Javaagent instrumentation**: Use the semconv constants from the semconv artifact directly. The
+javaagent bundles its own dependencies, so there is no risk of version conflicts for end users.
+
+**Tests**: Use the semconv constants from the semconv artifact directly. Test dependencies do not
+affect end users.
 
 ## Tooling conventions
 

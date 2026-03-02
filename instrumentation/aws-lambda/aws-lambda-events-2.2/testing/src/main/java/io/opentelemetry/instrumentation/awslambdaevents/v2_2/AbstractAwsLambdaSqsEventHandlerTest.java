@@ -11,6 +11,8 @@ import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -20,7 +22,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
-import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,12 +56,12 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   @Test
   void sameSource() {
     SQSEvent.SQSMessage message1 = newMessage();
-    message1.setAttributes(Collections.singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
+    message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
     message1.setMessageId("message1");
     message1.setEventSource("queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
-    message2.setAttributes(Collections.emptyMap());
+    message2.setAttributes(emptyMap());
     message2.setMessageId("message2");
     message2.setEventSource("queue1");
 
@@ -101,12 +102,12 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   @Test
   void differentSource() {
     SQSEvent.SQSMessage message1 = newMessage();
-    message1.setAttributes(Collections.singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
+    message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
     message1.setMessageId("message1");
     message1.setEventSource("queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
-    message2.setAttributes(Collections.emptyMap());
+    message2.setAttributes(emptyMap());
     message2.setMessageId("message2");
     message2.setEventSource("queue2");
 

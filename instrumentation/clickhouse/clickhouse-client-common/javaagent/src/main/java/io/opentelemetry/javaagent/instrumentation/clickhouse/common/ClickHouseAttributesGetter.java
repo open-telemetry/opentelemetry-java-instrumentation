@@ -5,13 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static java.util.Collections.singletonList;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.util.Collection;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter
-    implements DbClientAttributesGetter<ClickHouseDbRequest, Void> {
+    implements SqlClientAttributesGetter<ClickHouseDbRequest, Void> {
 
   private final Function<Throwable, String> errorCodeExtractor;
 
@@ -19,39 +24,22 @@ final class ClickHouseAttributesGetter
     this.errorCodeExtractor = errorCodeExtractor;
   }
 
-  @Nullable
   @Override
-  public String getDbQueryText(ClickHouseDbRequest request) {
-    if (request.getSqlQueryWithSummary() != null) {
-      return request.getSqlQueryWithSummary().getQueryText();
-    }
-    if (request.getSqlQuery() != null) {
-      return request.getSqlQuery().getQueryText();
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getDbOperationName(ClickHouseDbRequest request) {
-    if (request.getSqlQuery() != null) {
-      return request.getSqlQuery().getOperationName();
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getDbQuerySummary(ClickHouseDbRequest request) {
-    if (request.getSqlQueryWithSummary() != null) {
-      return request.getSqlQueryWithSummary().getQuerySummary();
-    }
-    return null;
+  public Collection<String> getRawQueryTexts(ClickHouseDbRequest request) {
+    return singletonList(request.getSql());
   }
 
   @Override
   public String getDbSystemName(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+    return DbSystemNameIncubatingValues.CLICKHOUSE;
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(ClickHouseDbRequest request) {
+    // "String literals must be enclosed in single quotes.
+    // Double quotes are not supported."
+    // https://clickhouse.com/docs/en/sql-reference/syntax#string
+    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
   @Nullable
@@ -66,7 +54,18 @@ final class ClickHouseAttributesGetter
 
   @Nullable
   @Override
-  public String getDbResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
+  public String getErrorType(
+      ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
+  }
+
+  @Override
+  public String getServerAddress(ClickHouseDbRequest request) {
+    return request.getHost();
+  }
+
+  @Override
+  public Integer getServerPort(ClickHouseDbRequest request) {
+    return request.getPort();
   }
 }

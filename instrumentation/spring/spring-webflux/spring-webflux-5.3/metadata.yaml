@@ -1,4 +1,10 @@
+display_name: Spring WebFlux
 description: >
   This instrumentation provides a library integration for the Spring WebFlux WebClient and Webflux
   server versions 5.3+ that enables HTTP client and server spans and metrics.
 library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS

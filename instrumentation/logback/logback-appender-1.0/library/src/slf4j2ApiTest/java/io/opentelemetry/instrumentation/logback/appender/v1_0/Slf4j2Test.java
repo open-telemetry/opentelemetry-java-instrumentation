@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.MarkerFactory;
 
 class Slf4j2Test {
@@ -71,6 +72,22 @@ class Slf4j2Test {
                     equalTo(AttributeKey.longKey("long key"), 4),
                     equalTo(AttributeKey.doubleKey("float key"), 5.0),
                     equalTo(AttributeKey.doubleKey("double key"), 6.0)));
+  }
+
+  @Test
+  void keyValuePairWinsOverMdc() {
+    MDC.put("key1", "mdc-value");
+    try {
+      logger.atInfo().setMessage("test message").addKeyValue("key1", "kvp-value").log();
+    } finally {
+      MDC.clear();
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("test message")
+                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("key1"), "kvp-value")));
   }
 
   @Test

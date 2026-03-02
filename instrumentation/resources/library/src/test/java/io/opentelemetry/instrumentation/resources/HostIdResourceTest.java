@@ -6,6 +6,11 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ID;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -18,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.DynamicTest;
@@ -56,8 +60,8 @@ class HostIdResourceTest {
   @TestFactory
   Collection<DynamicTest> createResourceLinux() {
     return Stream.of(
-            new LinuxTestCase("default", "test", path -> Collections.singletonList("test")),
-            new LinuxTestCase("empty file or error reading", null, path -> Collections.emptyList()))
+            new LinuxTestCase("default", "test", path -> singletonList("test")),
+            new LinuxTestCase("empty file or error reading", null, path -> emptyList()))
         .map(
             testCase ->
                 DynamicTest.dynamicTest(
@@ -68,7 +72,7 @@ class HostIdResourceTest {
 
                       assertHostId(testCase.expectedValue, hostIdResource);
                     }))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @TestFactory
@@ -93,7 +97,7 @@ class HostIdResourceTest {
 
                       assertHostId(testCase.expectedValue, hostIdResource);
                     }))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {
@@ -112,13 +116,12 @@ class HostIdResourceTest {
     HostIdResourceProvider provider = new HostIdResourceProvider();
     assertThat(
             provider.shouldApply(
-                DefaultConfigProperties.createFromMap(Collections.emptyMap()),
-                Resource.getDefault()))
+                DefaultConfigProperties.createFromMap(emptyMap()), Resource.getDefault()))
         .isTrue();
     assertThat(
             provider.shouldApply(
                 DefaultConfigProperties.createFromMap(
-                    Collections.singletonMap("otel.resource.attributes", "host.id=foo")),
+                    singletonMap("otel.resource.attributes", "host.id=foo")),
                 null))
         .isFalse();
   }

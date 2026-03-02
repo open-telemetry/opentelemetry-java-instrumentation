@@ -35,7 +35,8 @@ IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_Q
 // We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
 // and BACKTICK_QUOTED_STR are handled separately. Depending on the context they appear in they will
 // either be recorded as the identifier or replaced with ?.
-IDENTIFIER           = {UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)
+// The optional "@" {UNQUOTED_IDENTIFIER} suffix supports Oracle database link syntax (table@dblink).
+IDENTIFIER           = ({UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)) ("@" {UNQUOTED_IDENTIFIER})?
 BASIC_NUM            = [.+-]* [0-9] ([0-9] | [eE.+-])*
 HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
@@ -1093,13 +1094,21 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {DOUBLE_QUOTED_STR} {
-          if (dialect == SqlDialect.COUCHBASE) {
-            builder.append('?');
-          } else {
-            if (!insideComment) {
-              operation.handleIdentifier();
-            }
+          if (!insideComment) {
+            // Always notify the operation about double-quoted tokens regardless of dialect so
+            // that summarization works correctly even when the dialect treats them as string
+            // literals. For example, SELECT * FROM "my_table" should produce the summary
+            // "SELECT my_table" whether or not the dialect sanitizes the token.
+            //
+            // The operation's own state guards (e.g. identifierCaptured, captureTableList)
+            // ensure handleIdentifier() is a no-op when not structurally expected, so there
+            // is no risk of leaking sensitive string content into the summary.
+            operation.handleIdentifier();
+          }
+          if (dialect.doubleQuotesAreIdentifiers()) {
             appendCurrentFragment();
+          } else {
+            builder.append('?');
           }
           if (isOverLimit()) return YYEOF;
       }

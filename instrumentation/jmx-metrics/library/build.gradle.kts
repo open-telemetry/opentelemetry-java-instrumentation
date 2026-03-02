@@ -19,13 +19,16 @@ dependencies {
 tasks {
   test {
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
-    val testAppTask = project(":instrumentation:jmx-metrics:testing-webapp").tasks.named<War>("war")
+    val testAppTask = project(":instrumentation:jmx-metrics:testing-apps:testing-webapp").tasks.named<War>("war")
+    val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("camelTestAppJar")
 
     dependsOn(shadowTask)
     dependsOn(testAppTask)
+    dependsOn(camelTestAppTask)
 
     val agentJar = shadowTask.flatMap { it.archiveFile }
     val testAppWar = testAppTask.flatMap { it.archiveFile }
+    val camelTestAppJar = camelTestAppTask.flatMap { it.archiveFile }
 
     inputs.file(agentJar)
       .withPropertyName("javaagent")
@@ -33,11 +36,15 @@ tasks {
     inputs.file(testAppWar)
       .withPropertyName("testWebApp")
       .withNormalizer(ClasspathNormalizer::class)
+    inputs.file(camelTestAppJar)
+      .withPropertyName("camelTestApp")
+      .withNormalizer(ClasspathNormalizer::class)
 
     jvmArgumentProviders += CommandLineArgumentProvider {
       listOf(
         "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
         "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
+        "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
       )
     }
   }

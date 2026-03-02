@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -48,7 +49,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -165,7 +165,7 @@ public abstract class AbstractGrpcStreamingTest {
         .containsExactlyElementsOf(
             IntStream.rangeClosed(1, clientMessageCount)
                 .mapToObj(i -> "call " + i)
-                .collect(Collectors.toList()));
+                .collect(toList()));
     assertThat(clientReceived)
         .containsExactlyElementsOf(
             IntStream.rangeClosed(1, serverMessageCount)
@@ -174,7 +174,7 @@ public abstract class AbstractGrpcStreamingTest {
                     unused ->
                         IntStream.rangeClosed(1, clientMessageCount).mapToObj(i -> "call " + i))
                 .sorted()
-                .collect(Collectors.toList()));
+                .collect(toList()));
 
     List<Consumer<EventData>> clientEvents = new ArrayList<>();
     List<Consumer<EventData>> serverEvents = new ArrayList<>();

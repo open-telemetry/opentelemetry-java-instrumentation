@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
 
 enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   INSTANCE;
@@ -16,7 +17,7 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
     try {
       return message.message().getPropertyNames();
     } catch (Exception e) {
-      return Collections.emptyList();
+      return emptyList();
     }
   }
 

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -41,11 +43,11 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
     if (dbInfo == null) {
       return;
     }
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       attributes.put(DB_NAMESPACE, getName(dbInfo));
       attributes.put(DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
     }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
+    if (emitOldDatabaseSemconv()) {
       attributes.put(DB_USER, dbInfo.getUser());
       attributes.put(DB_NAME, getName(dbInfo));
       attributes.put(DB_CONNECTION_STRING, dbInfo.getShortUrl());
@@ -54,7 +56,6 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   }
 
   private static String getName(DbInfo dbInfo) {
-    String name = dbInfo.getName();
-    return name == null ? dbInfo.getDb() : name;
+    return dbInfo.getName();
   }
 }

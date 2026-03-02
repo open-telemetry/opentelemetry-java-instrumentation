@@ -28,8 +28,11 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -47,7 +50,6 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
@@ -386,7 +387,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           comparingRootSpanAttribute(HTTP_REQUEST_RESEND_COUNT),
           IntStream.range(0, options.getMaxRedirects())
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
-              .collect(Collectors.toList()));
+              .collect(toList()));
     } else {
       testing.waitAndAssertTraces(
           trace -> {
@@ -423,8 +424,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     String method = "GET";
     URI uri = resolveAddress("/to-secured");
 
-    int responseCode =
-        doRequest(method, uri, Collections.singletonMap(BASIC_AUTH_KEY, BASIC_AUTH_VAL));
+    int responseCode = doRequest(method, uri, singletonMap(BASIC_AUTH_KEY, BASIC_AUTH_VAL));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -545,8 +545,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
     URI uri = resolveAddress("/success");
     String method = "GET";
-    int responseCode =
-        doRequest(method, uri, Collections.singletonMap(TEST_REQUEST_HEADER, "test"));
+    int responseCode = doRequest(method, uri, singletonMap(TEST_REQUEST_HEADER, "test"));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -802,9 +801,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       () -> {
                         Span.current().setAttribute("test.request.id", index);
                         return doRequest(
-                            method,
-                            uri,
-                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                            method, uri, singletonMap("test-request-id", String.valueOf(index)));
                       });
               assertThat(result).isEqualTo(200);
             } catch (Throwable throwable) {
@@ -878,8 +875,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                                 return doRequestWithCallback(
                                     method,
                                     uri,
-                                    Collections.singletonMap(
-                                        "test-request-id", String.valueOf(index)),
+                                    singletonMap("test-request-id", String.valueOf(index)),
                                     () -> testing.runWithSpan("child", () -> {}));
                               });
                       assertThat(result.get()).isEqualTo(200);
@@ -957,8 +953,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       () -> {
                         Span.current().setAttribute("test.request.id", index);
                         return singleConnection.doRequest(
-                            path,
-                            Collections.singletonMap("test-request-id", String.valueOf(index)));
+                            path, singletonMap("test-request-id", String.valueOf(index)));
                       });
               assertThat(result).isEqualTo(200);
             } catch (Throwable throwable) {
@@ -1014,7 +1009,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             method,
             uri,
             // the time that server waits before completing the response
-            Collections.singletonMap("delay", String.valueOf(SECONDS.toMillis(1))));
+            singletonMap("delay", String.valueOf(SECONDS.toMillis(1))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1047,7 +1042,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             uri,
             // the time that server waits before completing the response, we expect the response
             // headers to arrive much sooner
-            Collections.singletonMap("delay", String.valueOf(SECONDS.toMillis(2))));
+            singletonMap("delay", String.valueOf(SECONDS.toMillis(2))));
 
     assertThat(responseCode).isEqualTo(200);
 
@@ -1176,7 +1171,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   private int doRequest(String method, URI uri) throws Exception {
-    return doRequest(method, uri, Collections.emptyMap());
+    return doRequest(method, uri, emptyMap());
   }
 
   private int doRequest(String method, URI uri, Map<String, String> headers) throws Exception {
@@ -1185,9 +1180,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   private int doReusedRequest(String method, URI uri) throws Exception {
-    REQUEST request = buildRequest(method, uri, Collections.emptyMap());
-    sendRequest(request, method, uri, Collections.emptyMap());
-    return sendRequest(request, method, uri, Collections.emptyMap());
+    REQUEST request = buildRequest(method, uri, emptyMap());
+    sendRequest(request, method, uri, emptyMap());
+    return sendRequest(request, method, uri, emptyMap());
   }
 
   private int doRequestWithExistingTracingHeaders(String method, URI uri) throws Exception {
@@ -1202,7 +1197,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   private HttpClientResult doRequestWithCallback(String method, URI uri, Runnable callback)
       throws Exception {
-    return doRequestWithCallback(method, uri, Collections.emptyMap(), callback);
+    return doRequestWithCallback(method, uri, emptyMap(), callback);
   }
 
   private HttpClientResult doRequestWithCallback(

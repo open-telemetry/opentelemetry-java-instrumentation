@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.resources;
 
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
@@ -13,10 +15,8 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectionModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ResourceModel;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Adds essential resource detectors to the resource model in declarative configuration, if they are
@@ -28,7 +28,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
   // opentelemetry_javaagent_distribution: adds "distro.name" and "distro.version" attributes
   // (DistroComponentProvider in this package)
   private static final List<String> REQUIRED_DETECTORS =
-      Collections.singletonList("opentelemetry_javaagent_distribution");
+      singletonList("opentelemetry_javaagent_distribution");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
@@ -49,7 +49,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
           Set<String> names =
               detectors.stream()
                   .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())
-                  .collect(Collectors.toSet());
+                  .collect(toSet());
 
           for (String name : REQUIRED_DETECTORS) {
             if (!names.contains(name)) {
