@@ -43,7 +43,14 @@ mapping of `group:artifact` (or `group:artifact#range` for constrained ranges) t
 version.
 
 A [daily CI job](../../.github/workflows/update-latest-dep-versions.yml) resolves all dynamic
-versions and opens a PR if any have changed.
+versions and opens a PR if any have changed. If CI fails on that PR, it typically means a new
+library version broke an instrumentation. To fix it:
+
+1. Create a branch from main
+2. Fix the instrumentation
+3. Update the pinned versions — either run the `resolveLatestDepVersions` command below to
+   update all versions, or manually bump just the offending entry in the JSON file
+4. Open a PR with both the fix and the version update so CI proves it works
 
 To update the pinned versions locally:
 
