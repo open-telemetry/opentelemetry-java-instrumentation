@@ -1,11 +1,19 @@
+display_name: Spring WebMVC
 description: >
-  This instrumentation enables optional Controller and View spans for Spring WebMVC 6.0+.
+  This instrumentation enriches HTTP server spans with route information for Spring WebMVC 6.0+.
+  It also enables controller spans (controller spans are disabled by default) and view spans
+  (view spans are disabled by default).
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+  - VIEW_SPANS
+library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
 configurations:
   - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
     type: boolean
     default: false
-    description: > 
-      Enables the capture of experimental span attributes `spring-webmvc-view-name` and
+    description: >
+      Enables the capture of experimental span attributes `spring-webmvc.view.name` and
       `spring-webmvc.view.type`.
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
     description: Enables the creation of experimental controller spans.
@@ -15,4 +23,3 @@ configurations:
     description: Enables the creation of experimental view spans.
     type: boolean
     default: false
-library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html

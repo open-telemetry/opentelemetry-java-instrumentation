@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.util.logging.Level.WARNING;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -18,7 +20,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.DistributionPropertyModel;
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -66,7 +67,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         try {
           return MAPPER.convertValue(javaagent, AgentDistributionConfig.class);
         } catch (IllegalArgumentException e) {
-          logger.log(Level.WARNING, "Failed to parse distribution.javaagent configuration", e);
+          logger.log(WARNING, "Failed to parse distribution.javaagent configuration", e);
         }
       }
     }

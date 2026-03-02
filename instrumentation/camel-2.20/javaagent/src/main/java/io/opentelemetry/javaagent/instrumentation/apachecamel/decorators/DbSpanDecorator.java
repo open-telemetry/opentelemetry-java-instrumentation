@@ -23,6 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -35,7 +36,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import java.net.URI;
@@ -46,8 +47,8 @@ import org.apache.camel.Exchange;
 
 class DbSpanDecorator extends BaseSpanDecorator {
 
-  private static final SqlQuerySanitizer sanitizer =
-      SqlQuerySanitizer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
+  private static final SqlQueryAnalyzer analyzer =
+      SqlQueryAnalyzer.create(AgentCommonConfig.get().isQuerySanitizationEnabled());
 
   private final String component;
   private final String system;
@@ -55,6 +56,14 @@ class DbSpanDecorator extends BaseSpanDecorator {
   DbSpanDecorator(String component, String system) {
     this.component = component;
     this.system = system;
+  }
+
+  @Override
+  public boolean shouldStartNewSpan() {
+    // Under stable database semconv, don't create Camel DB spans. The underlying database
+    // instrumentations (JDBC, Cassandra, MongoDB, etc.) produce more accurate spans with correct
+    // db.system.name, connection attributes, and dialect-aware query sanitization.
+    return !emitStableDatabaseSemconv();
   }
 
   @Override
@@ -149,9 +158,15 @@ class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      SqlQuery sqlQuery = emitOldDatabaseSemconv() ? sanitizer.sanitize(rawQueryText) : null;
+      // using the conservative default since the underlying database is unknown to camel
+      SqlQuery sqlQuery =
+          emitOldDatabaseSemconv()
+              ? analyzer.analyze(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+              : null;
       SqlQuery sqlQueryWithSummary =
-          emitStableDatabaseSemconv() ? sanitizer.sanitizeWithSummary(rawQueryText) : null;
+          emitStableDatabaseSemconv()
+              ? analyzer.analyzeWithSummary(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS)
+              : null;
 
       if (sqlQueryWithSummary != null) {
         attributes.put(DB_QUERY_TEXT, sqlQueryWithSummary.getQueryText());
