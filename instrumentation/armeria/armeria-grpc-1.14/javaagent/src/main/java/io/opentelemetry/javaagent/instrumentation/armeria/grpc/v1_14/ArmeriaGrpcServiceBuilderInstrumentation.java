@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.linecorp.armeria.server.grpc.GrpcServiceBuilder;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -36,7 +37,8 @@ public class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumenta
 
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This GrpcServiceBuilder builder) {
-      builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createServerInterceptor());
+      GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());
+      builder.intercept(Internal.createServerInterceptor(telemetry));
     }
   }
 }

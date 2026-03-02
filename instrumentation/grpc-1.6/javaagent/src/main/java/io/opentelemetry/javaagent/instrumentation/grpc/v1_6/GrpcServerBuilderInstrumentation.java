@@ -50,7 +50,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
       if (!Boolean.TRUE.equals(SERVER_BUILDER_INSTRUMENTED.get(serverBuilder))) {
-        serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
+        GrpcSingletons.configureServerBuilder(serverBuilder);
         SERVER_BUILDER_INSTRUMENTED.set(serverBuilder, true);
       }
       return callDepth;
