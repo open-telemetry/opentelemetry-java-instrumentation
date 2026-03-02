@@ -102,12 +102,12 @@ class OpenTelemetryDataSourceTest {
   }
 
   private static void assertDbInfo(DbInfo dbInfo) {
-    assertThat(dbInfo.getSystem()).isEqualTo(POSTGRESQL);
-    assertThat(dbInfo.getSubtype()).isNull();
-    assertThat(dbInfo.getShortUrl()).isEqualTo("postgresql://127.0.0.1:5432");
-    assertThat(dbInfo.getUser()).isNull();
-    assertThat(dbInfo.getName()).isEqualTo("dbname");
-    assertThat(dbInfo.getHost()).isEqualTo("127.0.0.1");
-    assertThat(dbInfo.getPort()).isEqualTo(5432);
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("postgresql");
+    assertThat(dbInfo.getDbConnectionString()).isEqualTo("postgresql://127.0.0.1:5432");
+    assertThat(dbInfo.getDbUser()).isNull();
+    assertThat(dbInfo.getDbName()).isEqualTo("dbname");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("dbname");
+    assertThat(dbInfo.getServerAddress()).isEqualTo("127.0.0.1");
+    assertThat(dbInfo.getServerPort()).isEqualTo(5432);
   }
 }

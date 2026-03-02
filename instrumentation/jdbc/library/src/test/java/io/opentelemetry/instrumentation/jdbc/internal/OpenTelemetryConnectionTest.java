@@ -101,13 +101,14 @@ class OpenTelemetryConnectionTest {
 
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
-        .system("my_system")
-        .subtype("my_sub_type")
-        .shortUrl("my_connection_string")
-        .user("my_user")
-        .name("my_name")
-        .host("my_host")
-        .port(1234)
+        .dbSystemName("my_system")
+        .dbSystem("my_system")
+        .dbConnectionString("my_connection_string")
+        .dbUser("my_user")
+        .dbName("my_name")
+        .dbNamespace("my_name")
+        .serverAddress("my_host")
+        .serverPort(1234)
         .build();
   }
 

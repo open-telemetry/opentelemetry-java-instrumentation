@@ -41,8 +41,30 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   // TODO: make this required to implement
   String getDbSystemName(REQUEST request);
 
+  /**
+   * Returns the old semconv {@code db.system} value. Defaults to {@link #getDbSystemName} for
+   * instrumentations where the old and new values are the same.
+   *
+   * @deprecated Use {@link #getDbSystemName} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  default String getDbSystem(REQUEST request) {
+    return getDbSystemName(request);
+  }
+
   @Nullable
   String getDbNamespace(REQUEST request);
+
+  /**
+   * Returns the old db.name value. This is only used for old semantic conventions.
+   *
+   * @deprecated Use {@link #getDbNamespace(Object)} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  default String getDbName(REQUEST request) {
+    return getDbNamespace(request);
+  }
 
   /**
    * Returns the database user name. This is only used for old semantic conventions.
