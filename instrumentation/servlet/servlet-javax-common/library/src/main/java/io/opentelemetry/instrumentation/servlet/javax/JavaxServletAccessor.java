@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.servlet.javax;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -89,7 +89,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   public List<String> getRequestParameterValues(
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
-    return values == null ? emptyList() : Arrays.asList(values);
+    return values == null ? emptyList() : asList(values);
   }
 
   @Override

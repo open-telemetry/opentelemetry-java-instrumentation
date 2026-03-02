@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
+import static java.util.Arrays.asList;
 import static jodd.http.HttpStatus.HTTP_FORBIDDEN;
 import static jodd.http.HttpStatus.HTTP_INTERNAL_ERROR;
 import static jodd.http.HttpStatus.HTTP_NOT_FOUND;
 import static jodd.http.HttpStatus.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
 import java.util.List;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
@@ -24,7 +24,7 @@ class JoddHttpHttpAttributesGetterTest {
 
   @Test
   void getMethod() {
-    for (String method : Arrays.asList("GET", "PUT", "POST", "PATCH")) {
+    for (String method : asList("GET", "PUT", "POST", "PATCH")) {
       assertThat(attributesGetter.getHttpRequestMethod(new HttpRequest().method(method)))
           .isEqualTo(method);
     }
@@ -62,8 +62,7 @@ class JoddHttpHttpAttributesGetterTest {
 
   @Test
   void getStatusCode() {
-    for (Integer code :
-        Arrays.asList(HTTP_OK, HTTP_FORBIDDEN, HTTP_INTERNAL_ERROR, HTTP_NOT_FOUND)) {
+    for (Integer code : asList(HTTP_OK, HTTP_FORBIDDEN, HTTP_INTERNAL_ERROR, HTTP_NOT_FOUND)) {
       assertThat(
               attributesGetter.getHttpResponseStatusCode(
                   null, new HttpResponse().statusCode(code), null))

@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
 import static io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletHeadersGetter.getHeaders;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.restlet.Request;
@@ -48,7 +48,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     if (headers == null) {
       return emptyList();
     }
-    return Arrays.asList(headers.getValuesArray(name, true));
+    return asList(headers.getValuesArray(name, true));
   }
 
   @Override
@@ -63,7 +63,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
     if (headers == null) {
       return emptyList();
     }
-    return Arrays.asList(headers.getValuesArray(name, true));
+    return asList(headers.getValuesArray(name, true));
   }
 
   @Nullable

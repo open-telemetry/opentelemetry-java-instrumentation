@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import java.lang.reflect.Type;
 import java.util.AbstractList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -75,19 +76,19 @@ class AttributeBindingFactory {
     // Simple array attribute types without conversion
     if (type == String[].class) {
       AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
-      return (setter, arg) -> setter.put(key, Arrays.asList((String[]) arg));
+      return (setter, arg) -> setter.put(key, asList((String[]) arg));
     }
     if (type == Long[].class) {
       AttributeKey<List<Long>> key = AttributeKey.longArrayKey(name);
-      return (setter, arg) -> setter.put(key, Arrays.asList((Long[]) arg));
+      return (setter, arg) -> setter.put(key, asList((Long[]) arg));
     }
     if (type == Double[].class) {
       AttributeKey<List<Double>> key = AttributeKey.doubleArrayKey(name);
-      return (setter, arg) -> setter.put(key, Arrays.asList((Double[]) arg));
+      return (setter, arg) -> setter.put(key, asList((Double[]) arg));
     }
     if (type == Boolean[].class) {
       AttributeKey<List<Boolean>> key = AttributeKey.booleanArrayKey(name);
-      return (setter, arg) -> setter.put(key, Arrays.asList((Boolean[]) arg));
+      return (setter, arg) -> setter.put(key, asList((Boolean[]) arg));
     }
 
     if (type == long[].class) {

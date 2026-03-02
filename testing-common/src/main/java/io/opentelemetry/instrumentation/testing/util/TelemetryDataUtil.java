@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.util;
 
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.groupingBy;
@@ -17,7 +18,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,12 +29,12 @@ import java.util.function.Supplier;
 public final class TelemetryDataUtil {
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
-    List<SpanKind> list = Arrays.asList(spanKinds);
+    List<SpanKind> list = asList(spanKinds);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getKind()));
   }
 
   public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
-    List<String> list = Arrays.asList(names);
+    List<String> list = asList(names);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
   }
 

@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -38,7 +39,6 @@ import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -274,7 +274,7 @@ class VertxSqlClientTest {
             "parent",
             () ->
                 pool.preparedQuery("insert into test values ($1, $2) returning *")
-                    .executeBatch(Arrays.asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
+                    .executeBatch(asList(Tuple.of(3, "Three"), Tuple.of(4, "Four"))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);

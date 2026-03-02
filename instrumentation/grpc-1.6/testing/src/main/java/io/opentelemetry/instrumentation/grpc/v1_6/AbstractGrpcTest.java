@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GR
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -64,7 +65,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -1438,7 +1438,7 @@ public abstract class AbstractGrpcTest {
 
   static List<AttributeAssertion> addExtraClientAttributes(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>();
-    result.addAll(Arrays.asList(assertions));
+    result.addAll(asList(assertions));
     if (Boolean.getBoolean("testLatestDeps")) {
       result.add(equalTo(NETWORK_TYPE, "ipv4"));
       result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));

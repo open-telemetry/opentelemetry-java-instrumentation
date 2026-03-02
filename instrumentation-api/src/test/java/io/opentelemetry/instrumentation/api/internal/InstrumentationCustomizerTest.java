@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +36,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -198,7 +198,7 @@ class InstrumentationCustomizerTest {
         customizer -> {
           customizerCalled.set(true);
           customizer.addAttributesExtractors(
-              Arrays.asList(new AttributesExtractor1(), new AttributesExtractor2()));
+              asList(new AttributesExtractor1(), new AttributesExtractor2()));
         });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =

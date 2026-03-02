@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 final class LambdaUtils {
@@ -16,7 +17,7 @@ final class LambdaUtils {
     CompletableResultCode traceFlush = openTelemetrySdk.getSdkTracerProvider().forceFlush();
     CompletableResultCode metricsFlush = openTelemetrySdk.getSdkMeterProvider().forceFlush();
     CompletableResultCode logsFlush = openTelemetrySdk.getSdkLoggerProvider().forceFlush();
-    CompletableResultCode.ofAll(Arrays.asList(traceFlush, metricsFlush, logsFlush))
+    CompletableResultCode.ofAll(asList(traceFlush, metricsFlush, logsFlush))
         .join(flushTimeout, unit);
   }
 

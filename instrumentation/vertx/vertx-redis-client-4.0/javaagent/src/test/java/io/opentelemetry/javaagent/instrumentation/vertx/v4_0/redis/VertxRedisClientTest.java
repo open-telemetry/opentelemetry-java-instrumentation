@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDI
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +34,6 @@ import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -78,11 +78,7 @@ class VertxRedisClientTest {
 
   @Test
   void setCommand() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -101,11 +97,7 @@ class VertxRedisClientTest {
 
   @Test
   void getCommand() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
     String value =
         redis.get("foo").toCompletionStage().toCompletableFuture().get(30, SECONDS).toString();
 
@@ -128,11 +120,7 @@ class VertxRedisClientTest {
 
   @Test
   void getCommandWithParent() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     CompletableFuture<String> future = new CompletableFuture<>();
     CompletableFuture<String> result =
@@ -180,11 +168,7 @@ class VertxRedisClientTest {
 
   @Test
   void commandWithNoArguments() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     String value =
         redis.randomkey().toCompletionStage().toCompletableFuture().get(30, SECONDS).toString();

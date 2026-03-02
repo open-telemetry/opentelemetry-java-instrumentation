@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
@@ -44,7 +45,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -424,7 +424,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(maybeStable(DB_SYSTEM), REDIS),
                 equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
                 equalTo(maybeStable(DB_OPERATION), "DEL")));

@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,7 +49,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -156,7 +156,7 @@ public abstract class AbstractSqsTracingTest {
                     span -> {
                       List<AttributeAssertion> attributes =
                           new ArrayList<>(
-                              Arrays.asList(
+                              asList(
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(
                                       AWS_SQS_QUEUE_URL,
@@ -194,7 +194,7 @@ public abstract class AbstractSqsTracingTest {
                     span -> {
                       List<AttributeAssertion> attributes =
                           new ArrayList<>(
-                              Arrays.asList(
+                              asList(
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(
                                       AWS_SQS_QUEUE_URL,
@@ -229,7 +229,7 @@ public abstract class AbstractSqsTracingTest {
                     span -> {
                       List<AttributeAssertion> attributes =
                           new ArrayList<>(
-                              Arrays.asList(
+                              asList(
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(
                                       AWS_SQS_QUEUE_URL,
@@ -340,7 +340,7 @@ public abstract class AbstractSqsTracingTest {
 
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               span.hasName("parent")
                                   .hasNoParent()

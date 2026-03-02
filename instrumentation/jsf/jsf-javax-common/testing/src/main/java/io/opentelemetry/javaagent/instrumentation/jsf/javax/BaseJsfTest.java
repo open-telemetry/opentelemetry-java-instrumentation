@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.util.Arrays.asList;
 import static java.util.Collections.addAll;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,7 +38,6 @@ import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
@@ -209,7 +209,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
       TraceAssert trace, int parentIndex, String spanName, Exception expectedException) {
     List<Consumer<SpanDataAssert>> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 span ->
                     span.hasName(spanName)
                         .hasKind(SpanKind.INTERNAL)

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.failsafe.v3_0.CircuitBreakerEvent
 import static io.opentelemetry.instrumentation.failsafe.v3_0.CircuitBreakerEventListenerBuilders.buildInstrumentedHalfOpenListener;
 import static io.opentelemetry.instrumentation.failsafe.v3_0.CircuitBreakerEventListenerBuilders.buildInstrumentedOpenListener;
 import static io.opentelemetry.instrumentation.failsafe.v3_0.CircuitBreakerEventListenerBuilders.buildInstrumentedSuccessListener;
+import static java.util.Arrays.asList;
 
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerConfig;
@@ -21,7 +22,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import java.util.Arrays;
 
 /** Entrypoint for instrumenting Failsafe components. */
 public final class FailsafeTelemetry {
@@ -102,7 +102,7 @@ public final class FailsafeTelemetry {
             .setDescription("Number of attempts for each execution.")
             .setUnit("{attempt}")
             .ofLongs()
-            .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
+            .setExplicitBucketBoundariesAdvice(asList(1L, 2L, 3L, 5L))
             .build();
     Attributes attributes = Attributes.of(RETRY_POLICY_NAME, retryPolicyName);
     return RetryPolicy.builder(userConfig)

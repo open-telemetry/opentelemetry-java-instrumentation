@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
@@ -21,7 +22,6 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,7 +66,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     message2.setEventSource("queue1");
 
     SQSEvent event = new SQSEvent();
-    event.setRecords(Arrays.asList(message1, message2));
+    event.setRecords(asList(message1, message2));
 
     handler().handleRequest(event, context);
 
@@ -112,7 +112,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     message2.setEventSource("queue2");
 
     SQSEvent event = new SQSEvent();
-    event.setRecords(Arrays.asList(message1, message2));
+    event.setRecords(asList(message1, message2));
 
     handler().handleRequest(event, context);
 

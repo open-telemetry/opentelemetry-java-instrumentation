@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.inte
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -17,7 +18,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -153,7 +153,7 @@ class ServicePeerResolverTest {
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
 
-    List<DeclarativeConfigProperties> entryList = Arrays.asList(entries);
+    List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
 
     return new ServicePeerResolver(otel);

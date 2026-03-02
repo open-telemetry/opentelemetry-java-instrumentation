@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.c3p0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetrics
 import io.opentelemetry.instrumentation.testing.junit.db.MockDriver;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
@@ -67,7 +67,7 @@ public abstract class AbstractC3p0InstrumentationTest {
     // then
     Set<String> metricNames =
         new HashSet<>(
-            Arrays.asList(
+            asList(
                 emitStableDatabaseSemconv()
                     ? "db.client.connection.count"
                     : "db.client.connections.usage",

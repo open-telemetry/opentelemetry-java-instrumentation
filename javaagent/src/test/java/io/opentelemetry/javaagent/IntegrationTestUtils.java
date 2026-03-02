@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -21,7 +22,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -188,7 +188,7 @@ public class IntegrationTestUtils {
     String separator = System.getProperty("file.separator");
     String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
-    List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));
+    List<String> vmArgsList = new ArrayList<>(asList(jvmArgs));
     vmArgsList.add(getAgentArgument());
 
     List<String> commands = new ArrayList<>();
@@ -197,7 +197,7 @@ public class IntegrationTestUtils {
     commands.add("-cp");
     commands.add(classpath);
     commands.add(mainClassName);
-    commands.addAll(Arrays.asList(mainMethodArgs));
+    commands.addAll(asList(mainMethodArgs));
     ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
     processBuilder.environment().putAll(envVars);
 

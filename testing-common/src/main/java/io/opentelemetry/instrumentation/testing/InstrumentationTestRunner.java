@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
@@ -29,7 +30,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -107,7 +107,7 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
+    waitAndAssertTraces(traceComparator, asList(assertions), true);
   }
 
   public final void waitAndAssertSortedTraces(
@@ -120,7 +120,7 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertTracesWithoutScopeVersionVerification(
       Consumer<TraceAssert>... assertions) {
-    waitAndAssertTracesWithoutScopeVersionVerification(Arrays.asList(assertions));
+    waitAndAssertTracesWithoutScopeVersionVerification(asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>>
@@ -131,7 +131,7 @@ public abstract class InstrumentationTestRunner {
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(Arrays.asList(assertions));
+    waitAndAssertTraces(asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
@@ -267,7 +267,7 @@ public abstract class InstrumentationTestRunner {
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertLogRecords(Consumer<LogRecordDataAssert>... assertions) {
-    waitAndAssertLogRecords(Arrays.asList(assertions));
+    waitAndAssertLogRecords(asList(assertions));
   }
 
   public final void waitAndAssertLogRecords(

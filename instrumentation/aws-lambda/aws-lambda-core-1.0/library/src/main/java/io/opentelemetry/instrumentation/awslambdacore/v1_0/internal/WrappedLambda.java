@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
+import static java.util.Arrays.asList;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,7 +93,7 @@ public final class WrappedLambda {
 
   public Method getRequestTargetMethod() {
 
-    List<Method> methods = Arrays.asList(targetClass.getMethods());
+    List<Method> methods = asList(targetClass.getMethods());
     Optional<Method> firstOptional =
         methods.stream()
             .filter((Method m) -> m.getName().equals(targetMethodName))

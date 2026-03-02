@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jaxrs;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -22,7 +23,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -205,7 +205,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               assertServerSpan(
                                   span,

@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,7 +29,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   // Databases where double quotes are exclusively identifiers and cannot be string literals.
   private static final Set<String> DOUBLE_QUOTES_FOR_IDENTIFIERS_SYSTEMS =
       new HashSet<>(
-          Arrays.asList(
+          asList(
               // "A string constant in SQL is an arbitrary sequence of characters
               // bounded by single quotes (')"
               // https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-STRINGS
