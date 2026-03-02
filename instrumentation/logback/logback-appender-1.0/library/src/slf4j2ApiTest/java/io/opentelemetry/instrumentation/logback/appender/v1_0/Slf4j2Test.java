@@ -113,9 +113,7 @@ class Slf4j2Test {
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
                 .hasAttributesSatisfying(
-                    equalTo(
-                        stringArrayKey("logback.marker"),
-                        asList(markerName1, markerName2))));
+                    equalTo(stringArrayKey("logback.marker"), asList(markerName1, markerName2))));
   }
 
   @Test
