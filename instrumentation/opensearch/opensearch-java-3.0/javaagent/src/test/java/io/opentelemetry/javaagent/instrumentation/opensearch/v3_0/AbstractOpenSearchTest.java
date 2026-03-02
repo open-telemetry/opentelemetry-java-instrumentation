@@ -37,7 +37,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.cluster.HealthResponse;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.testcontainers.OpensearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -45,6 +48,7 @@ import org.testcontainers.utility.DockerImageName;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractOpenSearchTest {
 
+  protected static final String INDEX_NAME = "test-search-index";
   protected OpenSearchClient openSearchClient;
   protected OpenSearchAsyncClient openSearchAsyncClient;
   protected OpensearchContainer opensearch;
@@ -74,6 +78,32 @@ abstract class AbstractOpenSearchTest {
     httpHost = URI.create(opensearch.getHttpHostAddress());
     openSearchClient = buildOpenSearchClient();
     openSearchAsyncClient = buildOpenSearchAsyncClient();
+
+    String documentId = "test-doc-1";
+
+    // Create index
+    CreateIndexRequest createIndexRequest =
+        CreateIndexRequest.of(
+            c ->
+                c.index(INDEX_NAME)
+                    .mappings(
+                        TypeMapping.of(
+                            t ->
+                                t.properties(
+                                    "message",
+                                    p ->
+                                        p.text(txt -> txt.fielddata(true).analyzer("standard"))))));
+
+    openSearchClient.indices().create(createIndexRequest);
+
+    TestDocument testDocument = TestDocument.create(documentId, "test message for search");
+    IndexRequest<TestDocument> indexRequest =
+        new IndexRequest.Builder<TestDocument>().index(INDEX_NAME).document(testDocument).build();
+
+    openSearchClient.index(indexRequest);
+
+    // Wait for indexing to complete
+    openSearchClient.indices().refresh(r -> r.index(INDEX_NAME));
   }
 
   @AfterAll

@@ -26,7 +26,12 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRequest request) {
-    return request.getMethod() + " " + request.getEndpoint();
+    if (request.getBody() == null) {
+      // fall back to method and endpoint if capturing the query body is disabled or if the body is
+      // not available for some reason
+      return request.getMethod() + " " + request.getEndpoint();
+    }
+    return request.getBody();
   }
 
   @Override

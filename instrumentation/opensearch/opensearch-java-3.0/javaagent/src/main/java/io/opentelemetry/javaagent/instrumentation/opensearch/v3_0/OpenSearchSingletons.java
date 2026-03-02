@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -14,6 +15,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public final class OpenSearchSingletons {
   private static final Instrumenter<OpenSearchRequest, Void> INSTRUMENTER = createInstrumenter();
+
+  public static final boolean CAPTURE_SEARCH_QUERY =
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "opensearch")
+          .getBoolean("capture_search_query", true);
 
   public static Instrumenter<OpenSearchRequest, Void> instrumenter() {
     return INSTRUMENTER;
