@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -12,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.ME
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,10 +82,17 @@ class ArmeriaGrpcTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "grpc"),
-                            equalTo(RPC_SERVICE, "example.Greeter"),
-                            equalTo(RPC_METHOD, "SayHello"),
-                            equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(maybeStable(RPC_SYSTEM), "grpc"),
+                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
+                            equalTo(
+                                RPC_METHOD,
+                                emitStableRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
+                            equalTo(
+                                RPC_GRPC_STATUS_CODE,
+                                emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
+                            equalTo(
+                                RPC_RESPONSE_STATUS_CODE,
+                                emitStableRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, (long) server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -101,10 +112,17 @@ class ArmeriaGrpcTest {
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "grpc"),
-                            equalTo(RPC_SERVICE, "example.Greeter"),
-                            equalTo(RPC_METHOD, "SayHello"),
-                            equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(maybeStable(RPC_SYSTEM), "grpc"),
+                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
+                            equalTo(
+                                RPC_METHOD,
+                                emitStableRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
+                            equalTo(
+                                RPC_GRPC_STATUS_CODE,
+                                emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
+                            equalTo(
+                                RPC_RESPONSE_STATUS_CODE,
+                                emitStableRpcSemconv() ? Status.Code.OK.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(

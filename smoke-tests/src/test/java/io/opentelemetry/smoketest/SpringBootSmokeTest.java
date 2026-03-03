@@ -5,6 +5,7 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
@@ -14,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
-import io.opentelemetry.api.common.AttributeKey;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -51,7 +51,7 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
                                 resource
                                     .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
                                     .hasAttribute(satisfies(OS_TYPE, a -> a.isNotNull()))
-                                    .hasAttribute(AttributeKey.stringKey("foo"), "bar")
+                                    .hasAttribute(stringKey("foo"), "bar")
                                     .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
                                     .hasAttribute(SERVICE_VERSION, "1.2.3")),
                 span -> span.hasName("WebController.withSpan")));

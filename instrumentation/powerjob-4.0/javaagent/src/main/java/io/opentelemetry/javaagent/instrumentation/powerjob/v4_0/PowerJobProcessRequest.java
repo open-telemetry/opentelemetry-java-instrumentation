@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
@@ -26,7 +27,7 @@ public final class PowerJobProcessRequest {
   private final String jobParams;
   private final String instanceParams;
   private static final List<Class<?>> KNOWN_PROCESSORS =
-      Arrays.asList(
+      asList(
           FileCleanupProcessor.class,
           BroadcastProcessor.class,
           MapReduceProcessor.class,

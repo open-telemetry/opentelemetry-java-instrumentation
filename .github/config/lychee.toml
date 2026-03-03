@@ -10,7 +10,9 @@ max_concurrency = 4
 include_fragments = true
 
 remap = [
-  "https://docs.oracle.com/(.*)#.*$ https://docs.oracle.com/$1"
+  "https://docs.oracle.com/(.*)#.*$ https://docs.oracle.com/$1",
+  # lychee doesn't understand scroll to text fragment anchors
+  "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/examples/extension/build.gradle#:~:text=extendedAgent https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/examples/extension/build.gradle"
 ]
 
 # excluding links to pull requests and issues is done for performance
