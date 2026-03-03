@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -37,9 +38,16 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (emitStableDatabaseSemconv()) {
       // even though not using the summary, this will use the same
       // sanitization logic that will be the default under 3.0
-      return analyzer.analyzeWithSummary(request.getQueryText()).getQueryText();
+      //
+      // "String literals are delimited by single quotation marks."
+      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
+      return analyzer
+          .analyzeWithSummary(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS)
+          .getQueryText();
     } else {
-      return analyzer.analyze(request.getQueryText()).getQueryText();
+      // "String literals are delimited by single quotation marks."
+      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
+      return analyzer.analyze(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS).getQueryText();
     }
   }
 

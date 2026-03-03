@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -12,7 +13,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +63,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getDouble("otel.instrumentation.example-instrumentation.double_key"))
         .isEqualTo(1.1);
     assertThat(bridge.getList("otel.instrumentation.example-instrumentation.list_key"))
-        .isEqualTo(Arrays.asList("value1", "value2"));
+        .isEqualTo(asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.example-instrumentation.map_key"))
         .isEqualTo(expectedMap);
 
@@ -93,9 +93,8 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(1.1);
     assertThat(
             bridge.getList(
-                "otel.instrumentation.other-instrumentation.list_key",
-                Arrays.asList("value1", "value2")))
-        .isEqualTo(Arrays.asList("value1", "value2"));
+                "otel.instrumentation.other-instrumentation.list_key", asList("value1", "value2")))
+        .isEqualTo(asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
   }
