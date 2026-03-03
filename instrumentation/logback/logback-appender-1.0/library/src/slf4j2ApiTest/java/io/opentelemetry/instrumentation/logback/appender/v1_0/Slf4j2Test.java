@@ -95,7 +95,7 @@ class Slf4j2Test {
                 .hasBody("log message 1")
                 .hasEventName("MyEventName")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 1)
-                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("key1"), "val1")));
+                .hasAttributesSatisfying(equalTo(stringKey("key1"), "val1")));
   }
 
   @Test
