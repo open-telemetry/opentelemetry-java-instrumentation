@@ -65,6 +65,7 @@ public final class ApacheHttpClientRequest {
     return delegate.getRequestLine().getMethod();
   }
 
+  @Nullable
   public String getUrl() {
     return uri != null ? uri.toString() : null;
   }
