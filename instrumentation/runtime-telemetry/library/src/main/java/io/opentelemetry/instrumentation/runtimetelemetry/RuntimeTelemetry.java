@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static java.util.logging.Level.WARNING;
+
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -58,7 +59,7 @@ public final class RuntimeTelemetry implements AutoCloseable {
   @Override
   public void close() {
     if (!isClosed.compareAndSet(false, true)) {
-      logger.log(Level.WARNING, "RuntimeTelemetry is already closed");
+      logger.log(WARNING, "RuntimeTelemetry is already closed");
       return;
     }
 
@@ -66,7 +67,7 @@ public final class RuntimeTelemetry implements AutoCloseable {
       try {
         jfrTelemetry.close();
       } catch (Exception e) {
-        logger.log(Level.WARNING, "Error closing JFR telemetry", e);
+        logger.log(WARNING, "Error closing JFR telemetry", e);
       }
     }
 
