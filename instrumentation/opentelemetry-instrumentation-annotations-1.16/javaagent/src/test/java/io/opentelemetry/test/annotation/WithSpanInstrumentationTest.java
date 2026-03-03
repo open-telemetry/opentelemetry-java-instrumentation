@@ -5,12 +5,12 @@
 
 package io.opentelemetry.test.annotation;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
@@ -324,8 +324,8 @@ class WithSpanInstrumentationTest {
 
     List<AttributeAssertion> assertions =
         new ArrayList<>(codeAttributeAssertions("withSpanAttributes"));
-    assertions.add(equalTo(AttributeKey.stringKey("implicitName"), "foo"));
-    assertions.add(equalTo(AttributeKey.stringKey("explicitName"), "bar"));
+    assertions.add(equalTo(stringKey("implicitName"), "foo"));
+    assertions.add(equalTo(stringKey("explicitName"), "bar"));
 
     testing.waitAndAssertTraces(
         trace ->
