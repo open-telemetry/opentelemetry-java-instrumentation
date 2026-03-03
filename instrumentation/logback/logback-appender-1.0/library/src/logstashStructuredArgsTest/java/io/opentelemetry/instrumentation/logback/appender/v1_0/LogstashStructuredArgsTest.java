@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +41,7 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("Basic structured arg: 123")
-                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("customer_id"), "123")));
+                .hasAttributesSatisfying(equalTo(stringKey("customer_id"), "123")));
   }
 
   @Test
@@ -49,7 +52,7 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("Processing order: order_id=ORD-456")
-                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("order_id"), "ORD-456")));
+                .hasAttributesSatisfying(equalTo(stringKey("order_id"), "ORD-456")));
   }
 
   @Test
@@ -64,8 +67,7 @@ class LogstashStructuredArgsTest {
             logRecord
                 .hasBody("Transaction: 789 amount: 99.99")
                 .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("customer_id"), "789"),
-                    equalTo(AttributeKey.doubleKey("amount"), 99.99)));
+                    equalTo(stringKey("customer_id"), "789"), equalTo(doubleKey("amount"), 99.99)));
   }
 
   @Test
@@ -88,9 +90,9 @@ class LogstashStructuredArgsTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfying(
-                equalTo(AttributeKey.longKey("user_id"), 12345L),
-                equalTo(AttributeKey.longKey("timestamp"), timestamp),
-                equalTo(AttributeKey.booleanKey("session_active"), true)));
+                equalTo(longKey("user_id"), 12345L),
+                equalTo(longKey("timestamp"), timestamp),
+                equalTo(booleanKey("session_active"), true)));
   }
 
   @Test
@@ -103,6 +105,6 @@ class LogstashStructuredArgsTest {
         logRecord ->
             logRecord
                 .hasBody("message: {foo=bar}")
-                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("foo"), "bar")));
+                .hasAttributesSatisfying(equalTo(stringKey("foo"), "bar")));
   }
 }

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -15,7 +15,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbSystemName(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override

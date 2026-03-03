@@ -1,0 +1,18 @@
+file_format: "1.0-rc.1"
+
+distribution:
+  javaagent:
+    indy/development: true
+    force_synchronous_agent_listeners/development: false
+    exclude_classes:
+      - com.example.excluded.Class1
+      - com.example.excluded.Class2
+    exclude_class_loaders:
+      - com.example.ExcludedClassLoader
+    instrumentation:
+      enabled:
+        - tomcat
+        - spring_webmvc
+        - armeria
+      disabled:
+        - armeria_grpc

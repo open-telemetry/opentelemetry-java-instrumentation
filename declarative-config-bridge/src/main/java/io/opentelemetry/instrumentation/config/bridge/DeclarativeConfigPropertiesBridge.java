@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
@@ -171,7 +170,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     DeclarativeConfigProperties target = baseNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
-        target = target.getStructured(segments[i], empty());
+        target = target.get(segments[i]);
       }
     }
     String lastPart = segments[segments.length - 1];

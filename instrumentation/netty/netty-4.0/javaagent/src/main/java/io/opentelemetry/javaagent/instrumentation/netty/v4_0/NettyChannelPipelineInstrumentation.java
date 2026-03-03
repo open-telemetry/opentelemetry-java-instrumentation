@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.VirtualFieldHelper.CHANNEL_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.NettyClientSingletons.sslInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -23,7 +23,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.AbstractNettyChannelPipelineInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientRequestTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientResponseTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.client.HttpClientTracingHandler;

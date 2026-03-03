@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +29,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +75,7 @@ class AwsLambdaSqsMessageHandlerTest {
     message2.setEventSource("queue1");
 
     SQSEvent event = new SQSEvent();
-    event.setRecords(Arrays.asList(message1, message2));
+    event.setRecords(asList(message1, message2));
 
     SQSBatchResponse response =
         new TestHandler(testing.getOpenTelemetrySdk()).handleRequest(event, context);

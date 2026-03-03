@@ -21,6 +21,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -28,7 +30,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -41,7 +42,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class CriteriaTest extends AbstractHibernateTest {
   private static Stream<Arguments> provideParameters() {
     List<Consumer<Query<Value>>> interactions =
-        Arrays.asList(Query::getResultList, Query::uniqueResult, Query::getSingleResultOrNull);
+        asList(Query::getResultList, Query::uniqueResult, Query::getSingleResultOrNull);
 
     return Stream.of(
         Arguments.of(named("getResultList", interactions.get(0))),
@@ -89,7 +90,7 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(

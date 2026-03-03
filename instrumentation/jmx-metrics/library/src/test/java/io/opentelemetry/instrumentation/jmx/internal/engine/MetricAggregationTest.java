@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.params.ParameterizedInvocationConstants.ARGUMENTS_PLACEHOLDER;
@@ -17,7 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -106,8 +106,7 @@ class MetricAggregationTest {
   }
 
   static List<MetricInfo.Type> metricTypes() {
-    return Arrays.asList(
-        MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
+    return asList(MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
   }
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)

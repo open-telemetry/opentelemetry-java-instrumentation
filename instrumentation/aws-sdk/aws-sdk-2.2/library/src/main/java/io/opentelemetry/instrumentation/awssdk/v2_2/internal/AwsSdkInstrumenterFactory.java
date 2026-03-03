@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -30,7 +31,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -59,23 +59,21 @@ public final class AwsSdkInstrumenterFactory {
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultAttributesExtractors =
-          Arrays.asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
+          asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedAttributesExtractors =
-          Arrays.asList(
+          asList(
               rpcAttributesExtractor,
               experimentalAttributesExtractor,
               httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultConsumerAttributesExtractors =
-          Arrays.asList(rpcAttributesExtractor, httpAttributesExtractor);
+      defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedConsumerAttributesExtractors =
-          Arrays.asList(
-              rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
+          asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;

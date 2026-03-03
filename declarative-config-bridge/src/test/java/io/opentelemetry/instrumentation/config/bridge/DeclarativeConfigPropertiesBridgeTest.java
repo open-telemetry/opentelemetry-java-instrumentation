@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
-import static java.util.Objects.requireNonNull;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalInstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,22 +21,10 @@ import org.junit.jupiter.api.Test;
 class DeclarativeConfigPropertiesBridgeTest {
 
   private ConfigProperties bridge;
-  private ConfigProperties emptyBridge;
 
   @BeforeEach
   void setup() {
     bridge = create(new DeclarativeConfigPropertiesBridgeBuilder());
-
-    OpenTelemetryConfigurationModel emptyModel =
-        new OpenTelemetryConfigurationModel()
-            .withAdditionalProperty(
-                "instrumentation/development", new ExperimentalInstrumentationModel());
-    SdkConfigProvider emptyConfigProvider =
-        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(emptyModel));
-    emptyBridge =
-        new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
   private static ConfigProperties create(DeclarativeConfigPropertiesBridgeBuilder builder) {
@@ -58,9 +44,6 @@ class DeclarativeConfigPropertiesBridgeTest {
     // asking for properties which don't exist or inaccessible shouldn't result in an error
     assertThat(bridge.getString("file_format")).isNull();
     assertThat(bridge.getString("file_format", "foo")).isEqualTo("foo");
-    assertThat(emptyBridge.getBoolean("otel.instrumentation.common.default-enabled")).isNull();
-    assertThat(emptyBridge.getBoolean("otel.instrumentation.common.default-enabled", true))
-        .isTrue();
 
     // common cases
     assertThat(bridge.getBoolean("otel.instrumentation.runtime-telemetry.enabled")).isFalse();
@@ -80,7 +63,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getDouble("otel.instrumentation.example-instrumentation.double_key"))
         .isEqualTo(1.1);
     assertThat(bridge.getList("otel.instrumentation.example-instrumentation.list_key"))
-        .isEqualTo(Arrays.asList("value1", "value2"));
+        .isEqualTo(asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.example-instrumentation.map_key"))
         .isEqualTo(expectedMap);
 
@@ -110,9 +93,8 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(1.1);
     assertThat(
             bridge.getList(
-                "otel.instrumentation.other-instrumentation.list_key",
-                Arrays.asList("value1", "value2")))
-        .isEqualTo(Arrays.asList("value1", "value2"));
+                "otel.instrumentation.other-instrumentation.list_key", asList("value1", "value2")))
+        .isEqualTo(asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
   }

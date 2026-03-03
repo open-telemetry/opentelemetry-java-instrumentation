@@ -41,8 +41,34 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   // TODO: make this required to implement
   String getDbSystemName(REQUEST request);
 
+  /**
+   * Returns the old semconv {@code db.system} value. Defaults to {@link #getDbSystemName} for
+   * instrumentations where the old and new values are the same.
+   *
+   * <p>Implementors whose old {@code db.system} value differs from the new {@code db.system.name}
+   * value <b>must override</b> this method; otherwise old-semconv spans will silently emit the new
+   * value for {@code db.system}.
+   *
+   * @deprecated Use {@link #getDbSystemName} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  default String getDbSystem(REQUEST request) {
+    return getDbSystemName(request);
+  }
+
   @Nullable
   String getDbNamespace(REQUEST request);
+
+  /**
+   * Returns the old db.name value. This is only used for old semantic conventions.
+   *
+   * @deprecated Use {@link #getDbNamespace(Object)} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  default String getDbName(REQUEST request) {
+    return getDbNamespace(request);
+  }
 
   /**
    * Returns the database user name. This is only used for old semantic conventions.
@@ -68,6 +94,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   // TODO: make this required to implement
   @Nullable
+  @Deprecated
   default String getDbResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
@@ -81,5 +108,21 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   // TODO: make this required to implement
   default Map<String, String> getDbQueryParameters(REQUEST request) {
     return emptyMap();
+  }
+
+  /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
+   * type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   */
+  @Nullable
+  // TODO remove the default implementation and make this required to implement
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
   }
 }

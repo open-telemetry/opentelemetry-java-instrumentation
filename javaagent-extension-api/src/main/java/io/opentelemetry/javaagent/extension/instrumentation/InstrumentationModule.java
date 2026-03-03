@@ -10,10 +10,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,13 +89,7 @@ public abstract class InstrumentationModule implements Ordered {
    * themselves on some other condition.
    */
   public boolean defaultEnabled() {
-    String mode =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
-            .getString("instrumentation_mode", "default");
-    if (!mode.equals("default") && !mode.equals("none")) {
-      throw new ConfigurationException("Unknown instrumentation mode: " + mode);
-    }
-    return mode.equals("default");
+    return AgentDistributionConfig.get().isInstrumentationDefaultEnabled();
   }
 
   /**
@@ -179,9 +171,7 @@ public abstract class InstrumentationModule implements Ordered {
     private static final boolean indyEnabled;
 
     static {
-      indyEnabled =
-          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "agent")
-              .getBoolean("indy/development", false);
+      indyEnabled = AgentDistributionConfig.get().isIndyEnabled();
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }

@@ -8,13 +8,13 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.Arrays.asList;
 
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Statistic;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractIterableAssert;
@@ -29,7 +29,7 @@ public abstract class AbstractMeterTest {
     // given
     AtomicReference<Double> number = new AtomicReference<>(12345.0);
     List<Measurement> measurements =
-        Arrays.asList(
+        asList(
             new Measurement(number::get, Statistic.TOTAL),
             new Measurement(number::get, Statistic.TOTAL_TIME),
             new Measurement(number::get, Statistic.COUNT),

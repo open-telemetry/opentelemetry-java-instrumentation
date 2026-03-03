@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
 
@@ -34,12 +36,15 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    if (configProperties != null) {
+    boolean declarativeConfigUsed = configProperties == null;
+
+    if (!declarativeConfigUsed) {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+      AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
     }
 
     setForceFlush(sdk);
@@ -55,7 +60,7 @@ public final class OpenTelemetryInstaller {
           CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
           CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
           CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
-          CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult, logsResult))
+          CompletableResultCode.ofAll(asList(traceResult, metricsResult, logsResult))
               .join(timeout, unit);
         });
   }
