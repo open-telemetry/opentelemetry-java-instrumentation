@@ -23,7 +23,7 @@ final class DataSourceMetrics {
   private static final Map<BasicDataSourceMXBean, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(
+  static void registerMetrics(
       OpenTelemetry openTelemetry, BasicDataSourceMXBean dataSource, String dataSourceName) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
@@ -51,10 +51,13 @@ final class DataSourceMetrics {
             maxIdleConnections,
             maxConnections);
 
-    dataSourceMetrics.put(dataSource, callback);
+    BatchCallback previousCallback = dataSourceMetrics.put(dataSource, callback);
+    if (previousCallback != null) {
+      previousCallback.close();
+    }
   }
 
-  public static void unregisterMetrics(BasicDataSourceMXBean dataSource) {
+  static void unregisterMetrics(BasicDataSourceMXBean dataSource) {
     BatchCallback callback = dataSourceMetrics.remove(dataSource);
     if (callback != null) {
       callback.close();
