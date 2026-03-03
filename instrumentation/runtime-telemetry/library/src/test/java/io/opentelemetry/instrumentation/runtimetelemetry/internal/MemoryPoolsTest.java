@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -22,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,7 +64,7 @@ class MemoryPoolsTest {
     when(nonHeapPoolBean.getType()).thenReturn(MemoryType.NON_HEAP);
     when(nonHeapPoolBean.getUsage()).thenReturn(nonHeapUsage);
     when(nonHeapPoolBean.getCollectionUsage()).thenReturn(nonHeapCollectionUsage);
-    beans = Arrays.asList(heapPoolBean, nonHeapPoolBean);
+    beans = asList(heapPoolBean, nonHeapPoolBean);
   }
 
   @Test

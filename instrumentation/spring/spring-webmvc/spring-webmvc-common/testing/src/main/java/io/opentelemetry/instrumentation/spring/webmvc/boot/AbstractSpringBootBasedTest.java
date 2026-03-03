@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
@@ -24,7 +25,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -220,8 +220,7 @@ public abstract class AbstractSpringBootBasedTest
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
-                AttributeKey.stringKey("spring-webmvc.view.type"),
-                experimental(RedirectView.class.getName())));
+                stringKey("spring-webmvc.view.type"), experimental(RedirectView.class.getName())));
     return span;
   }
 

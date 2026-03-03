@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import org.junit.jupiter.api.Test;
 
@@ -20,11 +21,11 @@ class UnsafeAttributesTest {
         new UnsafeAttributes().put("world", "earth").put("country", "japan").build();
 
     UnsafeAttributes attributes = new UnsafeAttributes();
-    attributes.put(AttributeKey.stringKey("animal"), "cat");
+    attributes.put(stringKey("animal"), "cat");
     attributes.put("needs_catnip", false);
     // Overwrites
     attributes.put("needs_catnip", true);
-    attributes.put(AttributeKey.longKey("lives"), 9);
+    attributes.put(longKey("lives"), 9);
     attributes.putAll(previous);
 
     assertThat((Attributes) attributes)

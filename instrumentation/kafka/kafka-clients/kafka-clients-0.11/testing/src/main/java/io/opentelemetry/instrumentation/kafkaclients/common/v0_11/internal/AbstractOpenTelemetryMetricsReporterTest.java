@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
@@ -24,7 +25,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,7 +63,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
   private static final Logger logger =
       LoggerFactory.getLogger(AbstractOpenTelemetryMetricsReporterTest.class);
 
-  private static final List<String> TOPICS = Arrays.asList("foo", "bar", "baz", "qux");
+  private static final List<String> TOPICS = asList("foo", "bar", "baz", "qux");
   private static final Random RANDOM = new Random();
 
   private static KafkaContainer kafka;
@@ -208,7 +208,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
     Set<String> expectedMetricNames =
         new HashSet<>(
-            Arrays.asList(
+            asList(
                 "kafka.consumer.commit_latency_avg",
                 "kafka.consumer.commit_latency_max",
                 "kafka.consumer.commit_rate",

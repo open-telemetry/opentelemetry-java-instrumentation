@@ -10,6 +10,7 @@ import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.FINER;
 import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.OFF;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -360,7 +360,7 @@ class PatchLoggerTest {
     // when
     PatchLogger logger = new PatchLogger(internalLogger);
     // then
-    assertThat(logger.getLevel()).isEqualTo(Level.OFF);
+    assertThat(logger.getLevel()).isEqualTo(OFF);
   }
 
   @Test
