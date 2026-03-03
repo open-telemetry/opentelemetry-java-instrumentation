@@ -13,7 +13,7 @@ dependencies {
   library("io.ktor:ktor-client-core:$ktorVersion")
   library("io.ktor:ktor-server-core:$ktorVersion")
 
-  api(project(":instrumentation:ktor:ktor-2-common:library"))
+  api(project(":instrumentation:ktor:ktor-common-2.0:library"))
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
 
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

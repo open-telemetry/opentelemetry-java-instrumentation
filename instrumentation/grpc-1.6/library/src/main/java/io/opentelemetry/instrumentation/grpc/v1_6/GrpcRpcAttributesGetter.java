@@ -47,6 +47,11 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, Status>
   }
 
   @Override
+  public String getRpcMethod(GrpcRequest request) {
+    return request.getMethod().getFullMethodName();
+  }
+
+  @Override
   @Nullable
   public Long getRequestSize(GrpcRequest request) {
     return request.getRequestSize();

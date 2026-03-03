@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -15,8 +16,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -110,7 +110,7 @@ class Slf4jToLog4jTest {
             attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
             if (logException) {
               attributeAsserts.addAll(
-                  Arrays.asList(
+                  asList(
                       equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
@@ -126,7 +126,7 @@ class Slf4jToLog4jTest {
   }
 
   private static List<AttributeAssertion> threadAttributesAssertions() {
-    return Arrays.asList(
+    return asList(
         equalTo(THREAD_NAME, Thread.currentThread().getName()),
         equalTo(THREAD_ID, Thread.currentThread().getId()));
   }
@@ -144,8 +144,8 @@ class Slf4jToLog4jTest {
     List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
     attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMdc"));
     attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
-    attributeAsserts.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
-    attributeAsserts.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+    attributeAsserts.add(equalTo(stringKey("key1"), "val1"));
+    attributeAsserts.add(equalTo(stringKey("key2"), "val2"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -167,7 +167,7 @@ class Slf4jToLog4jTest {
     List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
     attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMarker"));
     attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
-    attributeAsserts.add(equalTo(AttributeKey.stringKey("log4j.marker"), markerName));
+    attributeAsserts.add(equalTo(stringKey("log4j.marker"), markerName));
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasAttributesSatisfyingExactly(attributeAsserts));
