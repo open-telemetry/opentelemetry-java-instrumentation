@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.netty.v4.common;
+package io.opentelemetry.javaagent.instrumentation.netty.common.v4_0;
 
 import io.netty.channel.ChannelPromise;
 import io.opentelemetry.context.Context;

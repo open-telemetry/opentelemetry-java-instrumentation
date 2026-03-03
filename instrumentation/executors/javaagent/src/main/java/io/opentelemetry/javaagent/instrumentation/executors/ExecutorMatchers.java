@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
@@ -15,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +46,7 @@ final class ExecutorMatchers {
   static {
     Set<String> combined =
         new HashSet<>(
-            Arrays.asList(
+            asList(
                 "akka.actor.ActorSystemImpl$$anon$1",
                 "akka.dispatch.BalancingDispatcher",
                 "akka.dispatch.Dispatcher",
