@@ -61,6 +61,7 @@ rules:
         desc: The number of currently active sessions.
       maxActiveSessions:
         metric: session.active.limit
+        dropNegativeValues: true
         type: updowncounter
         unit: "{session}"
         desc: Maximum possible number of active sessions.
@@ -78,6 +79,7 @@ rules:
         metric: count
         desc: Total thread count of the thread pool.
       maxThreads:
+        dropNegativeValues: true
         metric: limit
         desc: Maximum possible number of threads in the thread pool.
       currentThreadsBusy:
