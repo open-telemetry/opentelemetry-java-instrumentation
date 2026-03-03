@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.ME
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -68,6 +69,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +80,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -807,6 +810,82 @@ public abstract class AbstractGrpcTest {
         arguments(Status.UNAVAILABLE.withDescription("some description")),
         arguments(Status.DATA_LOSS.withDescription("some description")),
         arguments(Status.NOT_FOUND.withDescription("some description")));
+  }
+
+  @Test
+  void unknownService() throws Exception {
+    // Create a server without GreeterService registered
+    Server server = configureServer(ServerBuilder.forPort(0)).build().start();
+    ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    assertThatThrownBy(() -> client.sayHello(request))
+        .isInstanceOfSatisfying(
+            StatusRuntimeException.class,
+            t -> assertThat(t.getStatus().getCode()).isEqualTo(Status.Code.UNIMPLEMENTED));
+
+    List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
+    spanAsserts.add(
+        span ->
+            span.hasName("example.Greeter/SayHello")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    addExtraClientAttributes(
+                        experimentalSatisfies(
+                            GRPC_RECEIVED_MESSAGE_COUNT,
+                            v -> assertThat(v).isEqualTo(0)),
+                        experimentalSatisfies(
+                            GRPC_SENT_MESSAGE_COUNT,
+                            v -> assertThat(v).isGreaterThan(0)),
+                        equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
+                        equalTo(
+                            RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                        equalTo(
+                            RPC_SERVICE,
+                            emitOldRpcSemconv() ? "example.Greeter" : null),
+                        equalTo(
+                            RPC_METHOD,
+                            emitStableRpcSemconv()
+                                ? "example.Greeter/SayHello"
+                                : "SayHello"),
+                        equalTo(
+                            RPC_GRPC_STATUS_CODE,
+                            emitOldRpcSemconv()
+                                ? (long) Status.Code.UNIMPLEMENTED.value()
+                                : null),
+                        equalTo(
+                            RPC_RESPONSE_STATUS_CODE,
+                            emitStableRpcSemconv()
+                                ? Status.Code.UNIMPLEMENTED.name()
+                                : null),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, (long) server.getPort()))));
+    if (emitStableRpcSemconv()) {
+      spanAsserts.add(
+          span ->
+              span.hasName("_OTHER")
+                  .hasKind(SpanKind.SERVER)
+                  .hasParent(trace.getSpan(0))
+                  .hasStatus(StatusData.error())
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "grpc"),
+                      equalTo(RPC_METHOD, "_OTHER"),
+                      equalTo(
+                          RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
+                      equalTo(
+                          RPC_RESPONSE_STATUS_CODE,
+                          Status.Code.UNIMPLEMENTED.name())));
+    }
+
+    testing()
+        .waitAndAssertTraces(
+            trace -> trace.hasSpansSatisfyingExactly(spanAsserts));
   }
 
   @Test
