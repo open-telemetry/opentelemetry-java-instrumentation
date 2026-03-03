@@ -11,7 +11,6 @@ import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -33,7 +32,7 @@ public final class GrpcSingletons {
 
   public static final ClientInterceptor CLIENT_INTERCEPTOR;
 
-  public static final ServerInterceptor SERVER_INTERCEPTOR;
+  private static final GrpcTelemetry GRPC_TELEMETRY;
 
   private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
 
@@ -56,7 +55,7 @@ public final class GrpcSingletons {
             .get("server")
             .getScalarList("request", String.class, emptyList());
 
-    GrpcTelemetry telemetry =
+    GRPC_TELEMETRY =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
@@ -64,8 +63,7 @@ public final class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    CLIENT_INTERCEPTOR = telemetry.createClientInterceptor();
-    SERVER_INTERCEPTOR = telemetry.createServerInterceptor();
+    CLIENT_INTERCEPTOR = GRPC_TELEMETRY.createClientInterceptor();
   }
 
   public static Context.Storage getStorage() {
@@ -75,6 +73,10 @@ public final class GrpcSingletons {
   public static Context.Storage setStorage(Context.Storage storage) {
     STORAGE_REFERENCE.compareAndSet(null, new ContextStorageBridge(storage));
     return getStorage();
+  }
+
+  public static void configureServerBuilder(ServerBuilder<?> serverBuilder) {
+    GRPC_TELEMETRY.configureServerBuilder(serverBuilder);
   }
 
   private GrpcSingletons() {}
