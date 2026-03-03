@@ -21,7 +21,7 @@ final class ConnectionPoolMetrics {
   private static final Map<DruidDataSourceMBean, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
 
-  public static void registerMetrics(
+  static void registerMetrics(
       OpenTelemetry openTelemetry, DruidDataSourceMBean dataSource, String dataSourceName) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
@@ -52,10 +52,13 @@ final class ConnectionPoolMetrics {
             maxIdleConnections,
             maxConnections);
 
-    dataSourceMetrics.put(dataSource, callback);
+    BatchCallback previousCallback = dataSourceMetrics.put(dataSource, callback);
+    if (previousCallback != null) {
+      previousCallback.close();
+    }
   }
 
-  public static void unregisterMetrics(DruidDataSourceMBean dataSource) {
+  static void unregisterMetrics(DruidDataSourceMBean dataSource) {
     BatchCallback callback = dataSourceMetrics.remove(dataSource);
     if (callback != null) {
       callback.close();
