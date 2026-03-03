@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.graphql.internal;
+package io.opentelemetry.instrumentation.graphql.common.v12_0.internal;
 
 import graphql.execution.instrumentation.InstrumentationState;
 import graphql.language.OperationDefinition.Operation;
