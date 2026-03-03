@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.sql.Connection;
@@ -70,8 +70,7 @@ class JdbcRowCountDisabledTest {
                         .satisfies(
                             s ->
                                 assertThat(
-                                        s.getAttributes()
-                                            .get(AttributeKey.longKey("db.response.returned_rows")))
+                                        s.getAttributes().get(longKey("db.response.returned_rows")))
                                     .isNull())));
   }
 }

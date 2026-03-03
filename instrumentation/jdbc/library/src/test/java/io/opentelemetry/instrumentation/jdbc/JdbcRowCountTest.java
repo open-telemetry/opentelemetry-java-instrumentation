@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -93,9 +93,7 @@ class JdbcRowCountTest {
                 span ->
                     span.hasName("SELECT test_table")
                         .hasAttribute(
-                            equalTo(
-                                AttributeKey.longKey("db.response.returned_rows"),
-                                (long) expectedRows))));
+                            equalTo(longKey("db.response.returned_rows"), (long) expectedRows))));
   }
 
   @ParameterizedTest
@@ -132,9 +130,7 @@ class JdbcRowCountTest {
                 span ->
                     span.hasName("SELECT test_table")
                         .hasAttribute(
-                            equalTo(
-                                AttributeKey.longKey("db.response.returned_rows"),
-                                (long) expectedRows))));
+                            equalTo(longKey("db.response.returned_rows"), (long) expectedRows))));
   }
 
   @Test
@@ -169,8 +165,7 @@ class JdbcRowCountTest {
                         .satisfies(
                             s ->
                                 assertThat(
-                                        s.getAttributes()
-                                            .get(AttributeKey.longKey("db.response.returned_rows")))
+                                        s.getAttributes().get(longKey("db.response.returned_rows")))
                                     .isNull())));
   }
 
@@ -215,8 +210,7 @@ class JdbcRowCountTest {
                         .satisfies(
                             s ->
                                 assertThat(
-                                        s.getAttributes()
-                                            .get(AttributeKey.longKey("db.response.returned_rows")))
+                                        s.getAttributes().get(longKey("db.response.returned_rows")))
                                     .isNull())));
   }
 
@@ -249,8 +243,7 @@ class JdbcRowCountTest {
                         .satisfies(
                             s ->
                                 assertThat(
-                                        s.getAttributes()
-                                            .get(AttributeKey.longKey("db.response.returned_rows")))
+                                        s.getAttributes().get(longKey("db.response.returned_rows")))
                                     .isNull())));
   }
 }
