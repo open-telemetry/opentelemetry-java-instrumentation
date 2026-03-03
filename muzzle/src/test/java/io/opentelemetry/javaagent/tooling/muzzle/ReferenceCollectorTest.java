@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
@@ -23,7 +24,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFl
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import muzzle.TestClasses;
@@ -219,12 +219,12 @@ class ReferenceCollectorTest {
 
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 TestHelperClasses.HelperInterface.class.getName(),
                 TestHelperClasses.Helper.class.getName()));
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 TestHelperClasses.HelperSuperClass.class.getName(),
                 TestHelperClasses.Helper.class.getName()));
   }
@@ -239,17 +239,17 @@ class ReferenceCollectorTest {
 
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 TestHelperClasses.HelperInterface.class.getName(),
                 TestHelperClasses.Helper.class.getName()));
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 TestHelperClasses.HelperSuperClass.class.getName(),
                 TestHelperClasses.Helper.class.getName()));
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 OtherTestHelperClasses.TestEnum.class.getName(),
                 OtherTestHelperClasses.TestEnum.class.getName() + "$1"));
 
@@ -291,19 +291,19 @@ class ReferenceCollectorTest {
     List<String> helperClasses = collector.getSortedHelperClasses();
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 TestHelperClasses.HelperInterface.class.getName(),
                 TestHelperClasses.Helper.class.getName()));
     assertThat(helperClasses)
         .containsSubsequence(
-            Arrays.asList(
+            asList(
                 TestHelperClasses.HelperSuperClass.class.getName(),
                 TestHelperClasses.Helper.class.getName()));
   }
 
   @SuppressWarnings("unused")
   private static List<Arguments> shouldCollectHelperClassesFromResourceFile() {
-    return Arrays.asList(
+    return asList(
         Arguments.of("Java SPI", "META-INF/services/test.resource.file"),
         Arguments.of(
             "AWS SDK v2 global interceptors file",
@@ -393,7 +393,7 @@ class ReferenceCollectorTest {
 
   @SuppressWarnings("unused")
   private static List<Arguments> shouldNotCollectVirtualFieldsForInvalidScenario() {
-    return Arrays.asList(
+    return asList(
         Arguments.of(
             "passing arbitrary variables or parameters to VirtualField.find()",
             VirtualFieldTestClasses.NotUsingClassRefAdvice.class.getName()),

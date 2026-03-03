@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.event;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.runner.JavaxBatchConfigRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -25,7 +26,7 @@ class JsrConfigCustomSpanEventTest extends CustomSpanEventTest {
   @Override
   protected void itemSpans(TraceAssert trace, List<Consumer<SpanDataAssert>> assertions) {
     assertions.addAll(
-        Arrays.asList(
+        asList(
             span ->
                 span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.ItemRead")
                     .hasKind(SpanKind.INTERNAL)

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,7 +17,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -198,7 +198,7 @@ class DbClientSpanNameExtractorTest {
     DbRequest dbRequest = new DbRequest();
 
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
-        .thenReturn(Arrays.asList("INSERT INTO table VALUES(1)", "INSERT INTO table VALUES(2)"));
+        .thenReturn(asList("INSERT INTO table VALUES(1)", "INSERT INTO table VALUES(2)"));
     if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
       when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
     }
