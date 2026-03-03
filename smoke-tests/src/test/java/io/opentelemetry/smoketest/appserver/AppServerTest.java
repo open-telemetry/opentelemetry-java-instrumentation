@@ -5,6 +5,8 @@
 
 package io.opentelemetry.smoketest.appserver;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -18,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -100,8 +101,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
                   assertServerSpan(span, path);
                   if (captureHeader) {
                     span.hasAttribute(
-                        AttributeKey.stringArrayKey("http.request.header.x-test-request"),
-                        List.of("test"));
+                        stringArrayKey("http.request.header.x-test-request"), List.of("test"));
                   }
                 },
                 span ->
@@ -164,8 +164,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
                 .hasEventsSatisfyingExactly(
                     event ->
                         event.hasAttributesSatisfying(
-                            equalTo(
-                                AttributeKey.stringKey("exception.message"), "This is expected"))));
+                            equalTo(stringKey("exception.message"), "This is expected"))));
   }
 
   @Test

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import ch.qos.logback.classic.LoggerContext;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
@@ -57,7 +57,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasTotalAttributeCount(codeAttributesLogCount() + 1)
-                    .hasAttributesSatisfying(
-                        equalTo(AttributeKey.stringKey("test-property"), "test-value")));
+                    .hasAttributesSatisfying(equalTo(stringKey("test-property"), "test-value")));
   }
 }

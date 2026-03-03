@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +57,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   // visible for testing
   static final List<String> DEFAULT_ANNOTATIONS =
-      Arrays.asList(
+      asList(
           "com.appoptics.api.ext.LogMethod",
           "com.newrelic.api.agent.Trace",
           "com.signalfx.tracing.api.Trace",

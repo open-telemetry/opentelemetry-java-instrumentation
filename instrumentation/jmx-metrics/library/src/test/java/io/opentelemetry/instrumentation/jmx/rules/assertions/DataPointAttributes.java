@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules.assertions;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
 
 /**
  * Utility class implementing convenience static methods to construct data point attribute matchers
@@ -48,6 +48,6 @@ public class DataPointAttributes {
    *     description off the algorithm used for matching
    */
   public static AttributeMatcherGroup attributeGroup(AttributeMatcher... attributes) {
-    return new AttributeMatcherGroup(Arrays.asList(attributes));
+    return new AttributeMatcherGroup(asList(attributes));
   }
 }
