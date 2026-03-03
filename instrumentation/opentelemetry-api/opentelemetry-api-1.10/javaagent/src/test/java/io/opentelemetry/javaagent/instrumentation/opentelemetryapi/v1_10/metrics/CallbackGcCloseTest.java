@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
@@ -121,7 +121,7 @@ class CallbackGcCloseTest {
   @Test
   void instrumentContinuesWhileCallbackAnchored() {
     Consumer<io.opentelemetry.api.metrics.ObservableLongMeasurement> callback =
-        result -> result.record(99, Attributes.of(AttributeKey.stringKey("key"), "value"));
+        result -> result.record(99, Attributes.of(stringKey("key"), "value"));
 
     meter.gaugeBuilder("test.gc.alive").ofLongs().buildWithCallback(callback);
 
