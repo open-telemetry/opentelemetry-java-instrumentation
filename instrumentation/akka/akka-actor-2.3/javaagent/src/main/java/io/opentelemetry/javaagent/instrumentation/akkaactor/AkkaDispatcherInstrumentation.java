@@ -32,7 +32,7 @@ public class AkkaDispatcherInstrumentation implements TypeInstrumentation {
         named("dispatch")
             .and(takesArgument(0, named("akka.actor.ActorCell")))
             .and(takesArgument(1, named("akka.dispatch.Envelope"))),
-        AkkaDispatcherInstrumentation.class.getName() + "$DispatchEnvelopeAdvice");
+        getClass().getName() + "$DispatchEnvelopeAdvice");
   }
 
   @SuppressWarnings("unused")

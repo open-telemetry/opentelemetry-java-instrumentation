@@ -18,10 +18,6 @@ public final class AkkaSchedulerTaskWrapper {
     }
   }
 
-  private static boolean isRunOnCloseTask(Runnable runnable) {
-    return RUN_ON_CLOSE_TASK_CLASS != null && RUN_ON_CLOSE_TASK_CLASS.isInstance(runnable);
-  }
-
   public static Runnable wrap(Runnable runnable) {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13066
     // Skip wrapping shutdown tasks. Shutdown process hangs when shutdown tasks are wrapped here.
@@ -31,6 +27,10 @@ public final class AkkaSchedulerTaskWrapper {
 
     Context context = Context.current();
     return context.wrap(runnable);
+  }
+
+  private static boolean isRunOnCloseTask(Runnable runnable) {
+    return RUN_ON_CLOSE_TASK_CLASS != null && RUN_ON_CLOSE_TASK_CLASS.isInstance(runnable);
   }
 
   private AkkaSchedulerTaskWrapper() {}
