@@ -20,6 +20,7 @@ public final class OsResource {
   private static final AttributeKey<String> OS_DESCRIPTION =
       AttributeKey.stringKey("os.description");
   private static final AttributeKey<String> OS_TYPE = AttributeKey.stringKey("os.type");
+  private static final AttributeKey<String> OS_VERSION = AttributeKey.stringKey("os.version");
 
   private static final Resource INSTANCE = buildResource();
 
@@ -58,6 +59,9 @@ public final class OsResource {
       version = System.getProperty("os.version");
     } catch (SecurityException e) {
       // Ignore
+    }
+    if (version != null) {
+      attributes.put(OS_VERSION, version);
     }
     String osDescription = version != null ? os + ' ' + version : os;
     attributes.put(OS_DESCRIPTION, osDescription);

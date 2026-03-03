@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -25,7 +26,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +114,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             });
 
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
@@ -130,7 +130,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("producer"),
                           span ->
                               span.hasName("testSingleTopic publish")
@@ -163,7 +163,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
               }
               assertions.addAll(
-                  Arrays.asList(
+                  asList(
                       span ->
                           span.hasName("testSingleTopic process")
                               .hasKind(SpanKind.CONSUMER)
@@ -180,7 +180,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
               }
               assertions.addAll(
-                  Arrays.asList(
+                  asList(
                       span ->
                           span.hasName("testSingleTopic process")
                               .hasKind(SpanKind.CONSUMER)
@@ -290,7 +290,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<AttributeAssertion> processAttributes =
-        Arrays.asList(
+        asList(
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "process"),

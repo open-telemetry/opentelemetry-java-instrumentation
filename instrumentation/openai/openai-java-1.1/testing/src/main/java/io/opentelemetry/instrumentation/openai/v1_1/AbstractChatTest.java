@@ -27,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
@@ -67,7 +68,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -264,7 +264,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
             .messages(
-                Arrays.asList(
+                asList(
                     createDeveloperMessage(
                         "You are an assistant which just answers every query with tomato"),
                     createUserMessage("Say something")))

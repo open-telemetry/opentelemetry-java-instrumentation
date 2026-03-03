@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -24,6 +26,17 @@ enum VertxSqlClientAttributesGetter
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
     return null;
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
+    // the underlying database is unknown, use the safer default that sanitizes double-quoted
+    // fragments as string literals (note that this can lead to incorrect summarization
+    // for databases that do use double quotes as identifiers)
+    //
+    // TODO do better in
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16254
+    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
   }
 
   @Deprecated // to be removed in 3.0

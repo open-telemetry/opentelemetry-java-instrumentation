@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -13,7 +14,6 @@ import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -101,10 +101,9 @@ class LogbackAppenderTest {
               // in the logback.xml file but are disabled with a property
               assertThat(attributes.size()).isEqualTo(3);
               assertThat(attributes.asMap())
-                  .containsEntry(AttributeKey.stringKey("key1"), "val1")
-                  .containsEntry(AttributeKey.stringKey("key2"), "val2")
-                  .containsEntry(
-                      AttributeKey.stringKey("log.body.template"), "test log message: {}");
+                  .containsEntry(stringKey("key1"), "val1")
+                  .containsEntry(stringKey("key2"), "val2")
+                  .containsEntry(stringKey("log.body.template"), "test log message: {}");
             });
 
     assertThat(listAppender.list)

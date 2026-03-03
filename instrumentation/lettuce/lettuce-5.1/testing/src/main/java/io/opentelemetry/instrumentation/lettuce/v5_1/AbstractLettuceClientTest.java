@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -14,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -81,7 +81,7 @@ public abstract class AbstractLettuceClientTest {
   }
 
   protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
-    return Arrays.asList(assertions);
+    return asList(assertions);
   }
 
   protected static void assertCommandEncodeEvents(SpanData span) {
