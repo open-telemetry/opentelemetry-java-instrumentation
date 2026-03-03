@@ -39,10 +39,11 @@ class FileDescriptorTest {
   }
 
   @Test
-  // verify that mock is called with the correct value
   void registerObservers() {
-    when(osBean.getOpenFileDescriptorCount()).thenReturn(42L);
-    when(osBean.getMaxFileDescriptorCount()).thenReturn(100L);
+    // we have to test for positive and negative values in the same test as the metric is only
+    // registered for positive values.
+    when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L, 42L);
+    when(osBean.getMaxFileDescriptorCount()).thenReturn(-1L, 100L);
     FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
 
     testing.waitAndAssertMetrics(
@@ -62,29 +63,5 @@ class FileDescriptorTest {
                 .hasUnit("{file_descriptor}")
                 .hasLongSumSatisfying(
                     sum -> sum.hasPointsSatisfying(point -> point.hasValue(100))));
-  }
-
-  @Test
-  // Verify that no metrics are emitted with non-zero values
-  void registerObservers_NegativeValue() {
-    when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L);
-    FileDescriptor.registerObservers(testing.getOpenTelemetry(), osBean);
-
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java8",
-        metric ->
-            metric
-                .hasName("jvm.file_descriptor.count")
-                .hasInstrumentationScope(EXPECTED_SCOPE)
-                .hasDescription("Number of open file descriptors as reported by the JVM.")
-                .hasUnit("{file_descriptor}")
-                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(0))),
-        metric ->
-            metric
-                .hasName("jvm.file_descriptor.limit")
-                .hasInstrumentationScope(EXPECTED_SCOPE)
-                .hasDescription("Measure of max open file descriptors as reported by the JVM.")
-                .hasUnit("{file_descriptor}")
-                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(0))));
   }
 }
