@@ -172,8 +172,10 @@ configurations {
   //    "latest.release" or "+" versions (e.g. transitive deps) gets pinned to a concrete
   //    version from the JSON file.
   if (testLatestDeps) {
+    // Only apply to test-related configurations, not build tool configurations like Zinc
+    // (the Scala compiler). Overriding scala-library in Zinc's configuration breaks compilation.
     configureEach {
-      if (isCanBeResolved) {
+      if (isCanBeResolved && (name.startsWith("test") || name.startsWith("latestDepTest"))) {
         resolutionStrategy.eachDependency {
           // latestDepTestLibrary overrides take priority over pinned versions
           val override = latestDepTestLibraryOverrides["${requested.group}:${requested.name}"]
