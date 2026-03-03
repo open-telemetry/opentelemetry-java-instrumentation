@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ID;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -17,7 +18,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -82,7 +82,7 @@ class HostIdResourceTest {
                 "default",
                 "test",
                 () ->
-                    Arrays.asList(
+                    asList(
                         "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
                         "    MachineGuid    REG_SZ    test")),
             new WindowsTestCase("short output", null, Collections::emptyList))

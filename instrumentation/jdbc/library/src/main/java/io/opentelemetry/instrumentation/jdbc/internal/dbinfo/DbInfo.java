@@ -38,9 +38,6 @@ public abstract class DbInfo {
   public abstract String getName();
 
   @Nullable
-  public abstract String getDb();
-
-  @Nullable
   public abstract String getHost();
 
   @Nullable
@@ -53,7 +50,6 @@ public abstract class DbInfo {
         .shortUrl(getShortUrl())
         .user(getUser())
         .name(getName())
-        .db(getDb())
         .host(getHost())
         .port(getPort());
   }
@@ -74,8 +70,6 @@ public abstract class DbInfo {
     public abstract Builder user(String user);
 
     public abstract Builder name(String name);
-
-    public abstract Builder db(String db);
 
     public abstract Builder host(String host);
 

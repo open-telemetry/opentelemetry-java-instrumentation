@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -61,7 +60,6 @@ class DbClientMetricsTest {
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(DB_RESPONSE_STATUS_CODE, "200")
             .put(ERROR_TYPE, "400")
             .put(NETWORK_PEER_ADDRESS, "1.2.3.4")
             .put(NETWORK_PEER_PORT, 8080)
@@ -104,7 +102,6 @@ class DbClientMetricsTest {
                                             equalTo(DB_QUERY_SUMMARY, "SELECT table"),
                                             equalTo(SERVER_ADDRESS, "localhost"),
                                             equalTo(SERVER_PORT, 1234),
-                                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                                             equalTo(ERROR_TYPE, "400"),
                                             equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
                                             equalTo(NETWORK_PEER_PORT, 8080))

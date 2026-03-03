@@ -353,6 +353,17 @@
   ],
   customManagers: [
     {
+      // keep SHA-pinned raw.githubusercontent.com URLs in mise.toml up to date
+      customType: 'regex',
+      datasourceTemplate: 'github-tags',
+      managerFilePatterns: [
+        '/^mise\\.toml$/',
+      ],
+      matchStrings: [
+        'https://raw\\.githubusercontent\\.com/(?<depName>[^/]+/[^/]+)/(?<currentDigest>[a-f0-9]{40})/.*#\\s*(?<currentValue>v\\S+)',
+      ],
+    },
+    {
       customType: 'regex',
       datasourceTemplate: 'java-version',
       managerFilePatterns: [

@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 
 import com.google.api.client.http.GenericUrl;
@@ -34,7 +35,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -107,7 +107,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(SERVER_ADDRESS, "localhost"),
                 satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
                 equalTo(URL_FULL, uri.toString()),

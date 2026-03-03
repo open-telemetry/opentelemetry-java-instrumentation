@@ -24,9 +24,9 @@ public final class ClickHouseInstrumenterFactory {
     return Instrumenter.<ClickHouseDbRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumenterName,
-            DbClientSpanNameExtractor.createForMigration(dbAttributesGetter))
+            DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.<ClickHouseDbRequest, Void>builder(dbAttributesGetter)
+            SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setTableAttribute(null)
                 .build())
         .addOperationMetrics(DbClientMetrics.get())

@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
@@ -107,9 +106,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
     if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_SYSTEM, getter.getDbSystemName(request));
+      attributes.put(DB_SYSTEM, getter.getDbSystem(request));
       attributes.put(DB_USER, getter.getUser(request));
-      attributes.put(DB_NAME, getter.getDbNamespace(request));
+      attributes.put(DB_NAME, getter.getDbName(request));
       attributes.put(DB_CONNECTION_STRING, getter.getConnectionString(request));
       attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION, getter.getDbOperationName(request));
@@ -136,21 +135,22 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     internalNetworkExtractor.onEnd(attributes, request, response);
-    onEndCommon(attributes, getter, response, error);
+    onEndCommon(attributes, getter, request, response, error);
   }
 
   static <REQUEST, RESPONSE> void onEndCommon(
       AttributesBuilder attributes,
       DbClientAttributesGetter<REQUEST, RESPONSE> getter,
+      REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     if (emitStableDatabaseSemconv()) {
-      if (error != null) {
-        attributes.put(ERROR_TYPE, error.getClass().getName());
+      String errorType = getter.getErrorType(request, response, error);
+      // fall back to exception class name
+      if (errorType == null && error != null) {
+        errorType = error.getClass().getName();
       }
-      if (error != null || response != null) {
-        attributes.put(DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(response, error));
-      }
+      attributes.put(ERROR_TYPE, errorType);
     }
   }
 
