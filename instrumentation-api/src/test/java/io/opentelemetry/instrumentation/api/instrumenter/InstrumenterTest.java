@@ -450,6 +450,44 @@ class InstrumenterTest {
   }
 
   @Test
+  void error_default_exception_event_extractor() {
+    // When no ExceptionEventExtractor is explicitly set, a default should be used
+    // that sets event name to instrumentationName + ".exception" and severity to WARN.
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildInstrumenter();
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
+
+    IllegalStateException error = new IllegalStateException("test");
+    instrumenter.end(context, REQUEST, RESPONSE, error);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
+
+    if (emitExceptionAsLogs()) {
+      List<LogRecordData> logs = otelTesting.getLogRecords();
+      assertThat(logs).hasSize(1);
+      LogRecordData log = logs.get(0);
+      assertThat(log.getSeverity()).isEqualTo(Severity.WARN);
+      assertThat(log.getEventName()).isEqualTo("test.exception");
+      assertThat(log.getAttributes().get(EXCEPTION_TYPE))
+          .isEqualTo("java.lang.IllegalStateException");
+      assertThat(log.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("test");
+      assertThat(log.getAttributes().get(EXCEPTION_STACKTRACE)).isNotNull();
+    }
+  }
+
+  @Test
   void client_parent() {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(

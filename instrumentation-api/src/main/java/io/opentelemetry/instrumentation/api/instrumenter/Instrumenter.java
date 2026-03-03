@@ -16,6 +16,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -104,10 +105,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer = builder.buildTracer();
-    this.logger =
-        emitExceptionAsLogs() && builder.exceptionEventExtractor != null
-            ? builder.buildLogger()
-            : null;
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
@@ -118,10 +115,20 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.operationListenerAttributesExtractors =
         builder.operationListenerAttributesExtractors.toArray(new AttributesExtractor[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
-    this.exceptionEventExtractor = builder.exceptionEventExtractor;
     this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
+
+    if (emitExceptionAsLogs()) {
+      this.logger = builder.buildLogger();
+      this.exceptionEventExtractor =
+          builder.exceptionEventExtractor != null
+              ? builder.exceptionEventExtractor
+              : defaultExceptionEventExtractor(builder.instrumentationName);
+    } else {
+      this.logger = null;
+      this.exceptionEventExtractor = builder.exceptionEventExtractor;
+    }
   }
 
   /**
@@ -348,6 +355,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
 
     logRecordBuilder.emit();
+  }
+
+  private static <REQUEST> InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor(
+      String instrumentationName) {
+    String eventName = instrumentationName + ".exception";
+    return (logRecordBuilder, context, request) -> {
+      logRecordBuilder.setEventName(eventName);
+      logRecordBuilder.setSeverity(Severity.WARN);
+    };
   }
 
   private static long getNanos(@Nullable Instant time) {
