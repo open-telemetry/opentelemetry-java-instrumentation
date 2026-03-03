@@ -969,7 +969,7 @@ targets:
       target: ':instrumentation:servlet:servlet-common:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:servlet:servlet-javax-common:library'
+      target: ':instrumentation:servlet:servlet-common-javax:library'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-batch-3.0:javaagent'
