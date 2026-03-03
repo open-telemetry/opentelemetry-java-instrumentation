@@ -76,7 +76,7 @@ class ApacheHttpClientTest {
   @Nested
   class ApacheClientHostRequestTest extends AbstractTest<BasicHttpRequest> {
     @Override
-    public BasicHttpRequest createRequest(String method, URI uri) {
+    BasicHttpRequest createRequest(String method, URI uri) {
       // also testing with an absolute path below
       return new BasicHttpRequest(method, fullPathFromUri(uri));
     }
