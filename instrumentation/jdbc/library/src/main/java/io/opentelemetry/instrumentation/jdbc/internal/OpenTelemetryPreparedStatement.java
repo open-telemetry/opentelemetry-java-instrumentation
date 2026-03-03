@@ -106,7 +106,8 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return executeSelect(query, delegate::executeQuery);
+    DbRequest request = DbRequest.create(dbInfo, query, null, parameters, true);
+    return executeSelect(request, delegate::executeQuery);
   }
 
   @Override
