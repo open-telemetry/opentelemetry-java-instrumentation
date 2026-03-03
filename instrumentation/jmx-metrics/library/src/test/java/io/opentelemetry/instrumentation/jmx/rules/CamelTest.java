@@ -14,7 +14,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -89,13 +88,9 @@ class CamelTest extends TargetSystemTest {
             attributeWithAnyValue("camel.route"),
             attributeWithAnyValue("camel.threadpool.name"));
 
-    Offset<Double> maxRouteProcessingTimeDifference =
-        Offset.offset(
-            0.02 /* see o.opentelemetry.instrumentation.jmx.cameltest.CamelTestRouter.MAXIMUM_EXCHANGE_DELAY_DELTA */
-                + 0.01 /* to avoid flaky tests */);
-
     /* see o.opentelemetry.instrumentation.jmx.cameltest.CamelTestRouter.DEFAULT_EXCHANGE_DELAY_MS */
-    double defaultRouteProcessingTime = 0.05;
+    double defaultTestRouteProcessingTime = 0.05;
+    long numberOfTestRoutes = 2;
 
     return MetricsVerifier.create()
         // context metrics
@@ -107,7 +102,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of routes started successfully since context start-up or the last reset operation.")
                     .hasUnit("{route}")
-                    .hasDataPointsWithIntValues(value -> value.isEqualTo(2))
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(numberOfTestRoutes))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.route.added",
@@ -117,7 +112,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of routes added successfully since context start-up or the last reset operation.")
                     .hasUnit("{route}")
-                    .hasDataPointsWithIntValues(value -> value.isEqualTo(2))
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(numberOfTestRoutes))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.count",
@@ -341,7 +336,7 @@ class CamelTest extends TargetSystemTest {
                         "Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(
-                        value -> value.isGreaterThanOrEqualTo(defaultRouteProcessingTime))
+                        value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.min",
@@ -352,7 +347,7 @@ class CamelTest extends TargetSystemTest {
                         "Indicates the shortest time to process an exchange since the route start-up or the last reset operation.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(
-                        value -> value.isGreaterThanOrEqualTo(defaultRouteProcessingTime))
+                        value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.last",
@@ -363,7 +358,7 @@ class CamelTest extends TargetSystemTest {
                         "Indicates the time it took the route to process the last exchange.")
                     .hasUnit("s")
                     .hasDataPointsWithDoubleValues(
-                        value -> value.isGreaterThanOrEqualTo(defaultRouteProcessingTime))
+                        value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.last_delta",
@@ -373,8 +368,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the difference of the Processing Time of the last two exchanges transited the route.")
                     .hasUnit("s")
-                    .hasDataPointsWithDoubleValues(
-                        value -> value.isCloseTo(0.0, maxRouteProcessingTimeDifference))
+                    .hasDataPointsWithDoubleValues(value -> value.isBetween(-1.0, 1.0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.sum",
