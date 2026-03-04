@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -48,8 +47,6 @@ public final class MongoInstrumenterFactory {
     return Instrumenter.<CommandStartedEvent, Void>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.create(new MongoNetworkAttributesGetter()))
         .addAttributesExtractor(attributesExtractor)
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

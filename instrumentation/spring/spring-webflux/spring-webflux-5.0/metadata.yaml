@@ -1,6 +1,11 @@
-description: > 
-  This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also
-  optionally enables experimental controller spans.
+display_name: Spring WebFlux
+description: >
+  This instrumentation enriches HTTP server spans with route information for Spring WebFlux 5.0+.
+  It also installs WebClient telemetry interceptors and enables controller spans (controller spans
+  are disabled by default).
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
 library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled

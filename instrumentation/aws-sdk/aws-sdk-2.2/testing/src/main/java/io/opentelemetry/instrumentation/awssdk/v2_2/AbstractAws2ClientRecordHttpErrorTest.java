@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -187,7 +188,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                           equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                           equalTo(AWS_REQUEST_ID, requestId),
                           equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                          equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
+                          equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(DYNAMODB)),
                           equalTo(maybeStable(DB_OPERATION), operation));
                       if (isRecordIndividualHttpErrorEnabled()) {
                         span.hasEventsSatisfyingExactly(

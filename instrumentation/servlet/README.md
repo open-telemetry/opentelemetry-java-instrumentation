@@ -18,7 +18,7 @@ They are divided into the following sub-modules:
 - `servlet-common` contains shared code for both `javax.servlet` and `jakarta.servlet` packages.
 - Version-specific modules contain the version-specific instrumentations and request/response
   accessor.
-  - `servlet-javax-common` contains instrumentations common for Servlet API versions `[2.2, 5)`
+  - `servlet-common-javax` contains instrumentations common for Servlet API versions `[2.2, 5)`
   - `servlet-2.2` contains instrumentation for Servlet API versions `[2.2, 3)`
   - `servlet-3.0` contains instrumentation for Servlet API versions `[3.0, 5)`
   - `servlet-5.0` contains instrumentation for Servlet API versions `[5,)`

@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 
 public final class VertxSqlInstrumenterFactory {
@@ -33,10 +32,8 @@ public final class VertxSqlInstrumenterFactory {
                         AgentCommonConfig.get().isQuerySanitizationEnabled())
                     .build())
             .addAttributesExtractor(
-                ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
-            .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
-                    VertxSqlClientNetAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
+                    VertxSqlClientAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
             .addOperationMetrics(DbClientMetrics.get());
 
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
