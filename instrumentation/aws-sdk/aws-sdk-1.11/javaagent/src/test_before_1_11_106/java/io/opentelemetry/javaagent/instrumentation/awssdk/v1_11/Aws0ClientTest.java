@@ -301,6 +301,7 @@ class Aws0ClientTest {
                             equalTo(URL_FULL, "https://s3.amazonaws.com"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
+                            equalTo(SERVER_PORT, 443L),
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
