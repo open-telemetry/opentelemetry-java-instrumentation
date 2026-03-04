@@ -132,7 +132,6 @@ public abstract class AbstractDubboTest {
                     "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response).isEqualTo("hello");
-
     testing()
         .waitAndAssertTraces(
             trace ->
