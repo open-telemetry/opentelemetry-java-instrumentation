@@ -838,32 +838,21 @@ public abstract class AbstractGrpcTest {
                 .hasAttributesSatisfyingExactly(
                     addExtraClientAttributes(
                         experimentalSatisfies(
-                            GRPC_RECEIVED_MESSAGE_COUNT,
-                            v -> assertThat(v).isEqualTo(0)),
+                            GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
                         experimentalSatisfies(
-                            GRPC_SENT_MESSAGE_COUNT,
-                            v -> assertThat(v).isGreaterThan(0)),
+                            GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                         equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                        equalTo(
-                            RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
-                        equalTo(
-                            RPC_SERVICE,
-                            emitOldRpcSemconv() ? "example.Greeter" : null),
+                        equalTo(RPC_SYSTEM_NAME, emitStableRpcSemconv() ? "grpc" : null),
+                        equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
                         equalTo(
                             RPC_METHOD,
-                            emitStableRpcSemconv()
-                                ? "example.Greeter/SayHello"
-                                : "SayHello"),
+                            emitStableRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
                         equalTo(
                             RPC_GRPC_STATUS_CODE,
-                            emitOldRpcSemconv()
-                                ? (long) Status.Code.UNIMPLEMENTED.value()
-                                : null),
+                            emitOldRpcSemconv() ? (long) Status.Code.UNIMPLEMENTED.value() : null),
                         equalTo(
                             RPC_RESPONSE_STATUS_CODE,
-                            emitStableRpcSemconv()
-                                ? Status.Code.UNIMPLEMENTED.name()
-                                : null),
+                            emitStableRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
                         equalTo(SERVER_ADDRESS, "localhost"),
                         equalTo(SERVER_PORT, (long) server.getPort()))));
     if (emitStableRpcSemconv()) {
@@ -876,16 +865,11 @@ public abstract class AbstractGrpcTest {
                   .hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "grpc"),
                       equalTo(RPC_METHOD, "_OTHER"),
-                      equalTo(
-                          RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
-                      equalTo(
-                          RPC_RESPONSE_STATUS_CODE,
-                          Status.Code.UNIMPLEMENTED.name())));
+                      equalTo(RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
+                      equalTo(RPC_RESPONSE_STATUS_CODE, Status.Code.UNIMPLEMENTED.name())));
     }
 
-    testing()
-        .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(spanAsserts));
+    testing().waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(spanAsserts));
   }
 
   @Test
