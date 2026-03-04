@@ -25,9 +25,6 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$module_name" == "graphql-java-common-12.0" ]]; then
     continue
   fi
-  if [[ "$module_name" == "servlet-javax-common" ]]; then
-    continue
-  fi
 
   # these are possibly problematic
   if [[ "$dir" == "instrumentation/grpc-1.6/library/src/main/java/io/grpc/override" ]]; then
@@ -43,13 +40,14 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
     continue
   fi
 
-  # some common modules don't have any base version
+  # some common modules don't have any base version (might have a variant instead, ex: javax)
   # - jdbc
   # - lettuce-common
   # - netty-common
   # - oshi
   # - resources
-  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "jdbc" && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" && "$module_name" != "oshi" && "$module_name" != "resources" ]]; then
+  # - servlet-common-javax
+  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "jdbc" && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" && "$module_name" != "oshi" && "$module_name" != "resources" && "$module_name" != "servlet-common-javax" ]]; then
     echo "module name doesn't have a base version: $dir"
     exit 1
   fi
