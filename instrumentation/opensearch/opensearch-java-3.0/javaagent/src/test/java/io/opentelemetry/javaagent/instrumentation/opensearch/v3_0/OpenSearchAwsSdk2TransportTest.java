@@ -29,11 +29,11 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
@@ -78,6 +78,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     server.stop();
   }
 
+  @BeforeEach
   void setupForHealthResponse() {
     server.beforeTestExecution(null);
 
@@ -104,42 +105,6 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, healthResponse));
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, healthResponse));
-  }
-
-  void setupForSearchResponse() {
-    server.beforeTestExecution(null); // Added this line
-
-    // Mock OpenSearch Search response, matching the TestDocument class structure
-    String searchResponseJson =
-        "{\n"
-            + "  \"took\": 5,\n"
-            + "  \"timed_out\": false,\n"
-            + "  \"_shards\": {\n"
-            + "    \"total\": 1,\n"
-            + "    \"successful\": 1,\n"
-            + "    \"skipped\": 0,\n"
-            + "    \"failed\": 0\n"
-            + "  },\n"
-            + "  \"hits\": {\n"
-            + "    \"total\": {\n"
-            + "      \"value\": 1,\n"
-            + "      \"relation\": \"eq\"\n"
-            + "    },\n"
-            + "    \"max_score\": 1.0,\n"
-            + "    \"hits\": [\n"
-            + "      {\n"
-            + "        \"_index\": \"my_index\",\n"
-            + "        \"_id\": \"1\",\n"
-            + "        \"_score\": 1.0,\n"
-            + "        \"_source\": {\n"
-            + "          \"id\": \"doc-1\",\n" // Corrected field
-            + "          \"message\": \"This is a test document.\"\n" // Corrected field
-            + "        }\n"
-            + "      }\n"
-            + "    ]\n"
-            + "  }\n"
-            + "}";
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.JSON_UTF_8, searchResponseJson));
   }
 
   @Override
@@ -187,15 +152,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
 
   @Test
   @Override
-  void shouldGetStatusWithTraces() throws IOException {
-    setupForHealthResponse();
-    super.shouldGetStatusWithTraces();
-  }
-
-  @Test
-  @Override
   void shouldGetStatusAsyncWithTraces() throws Exception {
-    setupForHealthResponse();
     CountDownLatch countDownLatch = new CountDownLatch(1);
 
     CompletableFuture<HealthResponse> responseCompletableFuture =
@@ -247,12 +204,5 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(1))));
-  }
-
-  @Test
-  @Override
-  void shouldRecordMetrics() throws IOException {
-    setupForHealthResponse();
-    super.shouldRecordMetrics();
   }
 }
