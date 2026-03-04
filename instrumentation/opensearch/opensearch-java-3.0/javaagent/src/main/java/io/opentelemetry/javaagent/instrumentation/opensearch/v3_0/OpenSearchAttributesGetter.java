@@ -28,7 +28,7 @@ final class OpenSearchAttributesGetter
   public String getDbQueryText(OpenSearchRequest request) {
     if (request.getBody() == null) {
       // fall back to method and endpoint if capturing the query body is disabled or if the body is
-      // not available for some reason
+      // not available
       return request.getMethod() + " " + request.getEndpoint();
     }
     return request.getBody();
