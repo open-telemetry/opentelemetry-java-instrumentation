@@ -11165,31 +11165,92 @@ libraries:
           type: STRING
   reactor:
   - name: reactor-3.1
+    display_name: Reactor
+    description: |
+      This instrumentation enables context propagation for Project Reactor reactive streams, it does not emit any telemetry on its own.
+    library_link: https://projectreactor.io/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/reactor/reactor-3.1
     scope:
       name: io.opentelemetry.reactor-3.1
     has_standalone_library: true
     javaagent_target_versions:
     - io.projectreactor:reactor-core:[3.1.0.RELEASE,)
-  - name: reactor-3.4
-    source_path: instrumentation/reactor/reactor-3.4
-    scope:
-      name: io.opentelemetry.reactor-3.4
-    javaagent_target_versions:
-    - io.projectreactor:reactor-core:[3.4.0,)
+    configurations:
+    - name: otel.instrumentation.reactor.experimental-span-attributes
+      description: |
+        Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive streams are cancelled.
+      type: boolean
+      default: false
   - name: reactor-kafka-1.0
+    display_name: Reactor Kafka
+    description: |
+      This instrumentation enables messaging spans for Reactor Kafka message consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://projectreactor.io/docs/kafka/release/reference/
     source_path: instrumentation/reactor/reactor-kafka-1.0
     scope:
       name: io.opentelemetry.reactor-kafka-1.0
     javaagent_target_versions:
     - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: reactor-netty-0.9
+    display_name: Reactor Netty
+    description: |
+      This instrumentation enables context propagation for Reactor Netty HTTP client, it does not emit any telemetry on its own.
+    library_link: https://projectreactor.io/docs/netty/release/reference/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/reactor/reactor-netty/reactor-netty-0.9
     scope:
       name: io.opentelemetry.reactor-netty-0.9
     javaagent_target_versions:
     - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
   - name: reactor-netty-1.0
+    display_name: Reactor Netty
+    description: |
+      This instrumentation enables HTTP client spans and HTTP client metrics for the Reactor Netty HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://projectreactor.io/docs/netty/release/reference/
     source_path: instrumentation/reactor/reactor-netty/reactor-netty-1.0
     scope:
       name: io.opentelemetry.reactor-netty-1.0
@@ -11198,8 +11259,35 @@ libraries:
     - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
     - io.projectreactor.netty:reactor-netty:[1.0.0,)
     configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     - name: otel.instrumentation.reactor-netty.connection-telemetry.enabled
-      description: Enable the creation of Connect and DNS spans.
+      description: Enables the creation of Connect and DNS spans.
       type: boolean
       default: false
     telemetry:
@@ -13854,6 +13942,14 @@ internal:
     name: io.opentelemetry.opentelemetry-instrumentation-api
   javaagent_target_versions:
   - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
+- name: reactor-3.4
+  description: |
+    This instrumentation provides a bridge between the agent's OpenTelemetry context and the application's OpenTelemetry context when using Reactor 3.4+ with ContextView API.
+  source_path: instrumentation/reactor/reactor-3.4
+  scope:
+    name: io.opentelemetry.reactor-3.4
+  javaagent_target_versions:
+  - io.projectreactor:reactor-core:[3.4.0,)
 - name: rxjava-1.0
   source_path: instrumentation/rxjava/rxjava-1.0
   scope:

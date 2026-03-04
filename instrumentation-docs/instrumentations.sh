@@ -214,6 +214,7 @@ readonly INSTRUMENTATIONS=(
   "ratpack:ratpack-1.4:javaagent:test"
   "ratpack:ratpack-1.7:javaagent:test"
   "ratpack:ratpack-1.7:library:test"
+  "reactor:reactor-kafka-1.0:javaagent:test"
   "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
   "rediscala-1.8:javaagent:test"
