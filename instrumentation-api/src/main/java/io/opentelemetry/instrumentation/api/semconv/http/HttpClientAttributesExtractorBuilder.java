@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -197,9 +196,5 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
         // network.{transport,type} are opt-in, network.protocol.* have HTTP-specific logic
         /* captureProtocolAttributes= */ false,
         /* captureLocalSocketAttributes= */ false);
-  }
-
-  InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
-    return new InternalServerAttributesExtractor<>(serverAddressAndPortExtractor);
   }
 }
