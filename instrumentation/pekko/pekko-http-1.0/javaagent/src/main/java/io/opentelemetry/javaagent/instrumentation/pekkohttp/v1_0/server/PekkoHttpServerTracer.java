@@ -100,12 +100,13 @@ public class PekkoHttpServerTracer
               PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
               Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
-                Context context = instrumenter().start(parentContext, request);
-                context = PekkoRouteHolder.init(context);
+                PekkoRouteHolder routeHolder = PekkoRouteHolder.create();
+                Context context = instrumenter().start(parentContext, request).with(routeHolder);
                 tracingRequest = new PekkoTracingRequest(context, request);
                 request =
                     (HttpRequest)
-                        request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest);
+                        request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest)
+                            .addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, routeHolder);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
@@ -144,15 +145,13 @@ public class PekkoHttpServerTracer
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
                 }
-                PekkoRouteHolder routeHolder = PekkoRouteHolder.get(tracingRequest.context);
-                if (routeHolder != null) {
-                  routeHolder.pushIfNotCompletelyMatched("*");
-                  HttpServerRoute.update(
-                      tracingRequest.context,
-                      HttpServerRouteSource.CONTROLLER,
-                      routeHolder.route());
-                }
-
+                String route = response.getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
+                    .map(PekkoRouteHolder::route)
+                    .orElse(null);
+                HttpServerRoute.update(
+                    tracingRequest.context,
+                    HttpServerRouteSource.CONTROLLER,
+                    route);
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);

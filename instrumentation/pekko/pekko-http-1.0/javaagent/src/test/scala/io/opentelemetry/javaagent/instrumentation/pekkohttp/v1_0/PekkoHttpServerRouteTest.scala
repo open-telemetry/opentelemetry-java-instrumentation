@@ -9,10 +9,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.testing.internal.armeria.client.WebClient
-import io.opentelemetry.testing.internal.armeria.common.{
-  AggregatedHttpRequest,
-  HttpMethod
-}
+import io.opentelemetry.testing.internal.armeria.common.{AggregatedHttpRequest, HttpMethod}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.server.Directives._
@@ -25,8 +22,8 @@ import org.junit.jupiter.params.provider.CsvSource
 
 import java.net.{URI, URISyntaxException}
 import java.util.function.Consumer
-import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future, Promise}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoHttpServerRouteTest {
@@ -255,6 +252,60 @@ class PekkoHttpServerRouteTest {
 
     test(route, "/api/v2/orders/order123/status", "GET /api/v2/orders/*/status")
   }
+
+  @Test def testAsyncPathMatching(): Unit = {
+    import system.dispatcher
+    val p1 = Promise[Unit]()
+    val p2 = Promise[Unit]()
+    val p3 = Promise[Unit]()
+
+    val route: Route = req => {
+      pathPrefix("a") { req => {
+        concat(
+          pathPrefix("b" / "c" / "d" / "e0" ) { _.complete("no") },
+          pathPrefix("b") { req =>
+            val ignored = Future {
+              pathPrefix("c") { req =>
+                Await.result(p2.future, 2.seconds)
+                pathPrefix("d") { req =>
+                  concat(
+                    pathPrefix("e1") {_.complete("no")},
+                    pathPrefix("e2") {_.complete("no")},
+                  )(req)
+                }(req)
+              }(req).onComplete(_ => p3.success(null))
+            }
+
+            concat(req => {
+              val ignored = Future {
+                pathPrefix("c") { req =>
+                  Await.result(p1.future, 2.seconds)
+                  pathPrefix("d") { req =>
+                    concat(
+                      pathPrefix("e1") {_.complete("no")},
+                      pathPrefix("e2") {_.complete("no")},
+                    )(req)
+                  }(req)
+                }(req).onComplete(_ => p2.success(null))
+              }
+
+              pathPrefix("g")(_.complete("no"))(req)
+              }, req => pathPrefix("c" / "d" / "e3") { req =>
+                p1.success(null)
+                Await.result(p3.future, 2.seconds)
+                req.complete("ok")
+              }(req)
+            )(req)
+          }
+        )(req)
+      }
+      }(req)
+    }
+
+    test(route, "/a/b/c/d/e3", "GET /a/b/c/d/e3")
+  }
+
+
 
   def test(
       route: Route,

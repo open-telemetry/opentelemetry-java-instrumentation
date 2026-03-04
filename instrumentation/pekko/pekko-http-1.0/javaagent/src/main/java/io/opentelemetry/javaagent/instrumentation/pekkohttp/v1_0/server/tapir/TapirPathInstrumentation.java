@@ -5,42 +5,40 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.pekko.http.scaladsl.server.RequestContext;
-import org.apache.pekko.http.scaladsl.server.RouteResult;
-import scala.Function1;
-import scala.concurrent.Future;
-import sttp.tapir.server.ServerEndpoint;
+import sttp.tapir.server.interceptor.Interceptor;
+import sttp.tapir.server.pekkohttp.PekkoHttpServerOptions;
 
 public class TapirPathInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter");
+    return implementsInterface(named("sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("toRoute").and(takesArgument(0, named("sttp.tapir.server.ServerEndpoint"))),
+        named("pekkoHttpServerOptions").and(takesArguments(0)),
         this.getClass().getName() + "$ApplyAdvice");
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "unchecked"}) // options.prependInterceptor takes higher-kinded type, not possible from java
   public static class ApplyAdvice {
     @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static Object onExit(
-        @Advice.Argument(0) ServerEndpoint<?, ?> endpoint,
-        @Advice.Return Function1<RequestContext, Future<RouteResult>> route) {
-      return new RouteWrapper(endpoint, route);
+        @Advice.Return PekkoHttpServerOptions options) {
+
+      return options.prependInterceptor((Interceptor) TapirRouteHandler.interceptor());
     }
   }
 }
