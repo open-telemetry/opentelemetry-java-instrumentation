@@ -22,16 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import java.io.IOException;
-import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
-import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
-import org.apache.hc.core5.http.HttpHost;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
-import org.opensearch.client.transport.OpenSearchTransport;
-import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 
 /**
  * Tests for capture-search-query=false configuration. This test class runs with
@@ -41,21 +36,6 @@ import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBui
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
-
-  @Override
-  protected OpenSearchTransport buildOpenSearchTransport(
-      HttpHost host,
-      PoolingAsyncClientConnectionManager connectionManager,
-      BasicCredentialsProvider credentialsProvider) {
-    return ApacheHttpClient5TransportBuilder.builder(host)
-        .setHttpClientConfigCallback(
-            httpClientBuilder ->
-                httpClientBuilder
-                    .setDefaultCredentialsProvider(credentialsProvider)
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider))
-        .build();
-  }
 
   @Test
   void shouldNotCaptureSearchQueryBodyWhenDisabled() throws IOException {

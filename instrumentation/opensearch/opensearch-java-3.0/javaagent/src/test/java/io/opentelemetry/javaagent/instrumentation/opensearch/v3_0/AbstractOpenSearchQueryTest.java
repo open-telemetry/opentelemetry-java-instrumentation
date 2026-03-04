@@ -29,6 +29,7 @@ import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 import org.opensearch.testcontainers.OpensearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -107,10 +108,19 @@ abstract class AbstractOpenSearchQueryTest {
         buildOpenSearchTransport(host, connectionManager, credentialsProvider));
   }
 
-  protected abstract OpenSearchTransport buildOpenSearchTransport(
+  protected OpenSearchTransport buildOpenSearchTransport(
       HttpHost host,
       PoolingAsyncClientConnectionManager connectionManager,
-      BasicCredentialsProvider credentialsProvider);
+      BasicCredentialsProvider credentialsProvider) {
+    return ApacheHttpClient5TransportBuilder.builder(host)
+        .setHttpClientConfigCallback(
+            httpClientBuilder ->
+                httpClientBuilder
+                    .setDefaultCredentialsProvider(credentialsProvider)
+                    .setConnectionManager(connectionManager)
+                    .setDefaultCredentialsProvider(credentialsProvider))
+        .build();
+  }
 
   @AfterAll
   void tearDown() {
