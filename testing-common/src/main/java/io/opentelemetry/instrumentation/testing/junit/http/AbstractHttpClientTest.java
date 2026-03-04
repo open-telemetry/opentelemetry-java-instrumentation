@@ -1102,11 +1102,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  if (attrs.get(SERVER_PORT) != null) {
-                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                    assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
-                  }
-                  // alternatively, peer port is not emitted -- and that's fine too
+                  int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                  assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
                 } else {
                   assertThat(attrs).containsEntry(SERVER_PORT, uriPort);
                 }

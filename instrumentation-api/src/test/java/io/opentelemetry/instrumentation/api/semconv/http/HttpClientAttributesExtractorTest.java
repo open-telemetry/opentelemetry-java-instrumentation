@@ -413,6 +413,55 @@ class HttpClientAttributesExtractorTest {
   }
 
   @Test
+  void shouldInferDefaultPortFromHttpScheme() {
+    Map<String, String> request = new HashMap<>();
+    request.put("urlFull", "http://github.com/repos");
+    request.put("serverAddress", "github.com");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsEntry(SERVER_ADDRESS, "github.com")
+        .containsEntry(SERVER_PORT, 80L);
+  }
+
+  @Test
+  void shouldInferDefaultPortFromHttpsScheme() {
+    Map<String, String> request = new HashMap<>();
+    request.put("urlFull", "https://github.com/repos");
+    request.put("serverAddress", "github.com");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsEntry(SERVER_ADDRESS, "github.com")
+        .containsEntry(SERVER_PORT, 443L);
+  }
+
+  @Test
+  void shouldNotInferDefaultPortWhenExplicitPortIsPresent() {
+    Map<String, String> request = new HashMap<>();
+    request.put("urlFull", "http://github.com:8080/repos");
+    request.put("serverAddress", "github.com");
+    request.put("serverPort", "8080");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder startAttributes = Attributes.builder();
+    extractor.onStart(startAttributes, Context.root(), request);
+    assertThat(startAttributes.build())
+        .containsEntry(SERVER_ADDRESS, "github.com")
+        .containsEntry(SERVER_PORT, 8080L);
+  }
+
+  @Test
   void shouldExtractPeerAddressEvenIfItDuplicatesServerAddress() {
     Map<String, String> request = new HashMap<>();
     request.put("networkPeerAddress", "1.2.3.4");
