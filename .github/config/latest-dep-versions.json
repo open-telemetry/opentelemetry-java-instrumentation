@@ -352,7 +352,7 @@
   "org.mongodb:mongodb-driver-async": "3.12.14",
   "org.mongodb:mongodb-driver-core": "5.6.4",
   "org.mongodb:mongodb-driver-reactivestreams": "5.6.4",
-  "org.mongodb:mongodb-driver-sync": "5.7.0-beta1",
+  "org.mongodb:mongodb-driver-sync": "5.6.4",
   "org.mybatis:mybatis": "3.5.19",
   "org.opensearch.client:opensearch-java": "3.6.0",
   "org.opensearch.client:opensearch-rest-client": "3.5.0",
