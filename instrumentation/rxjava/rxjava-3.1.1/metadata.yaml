@@ -1,0 +1,14 @@
+display_name: RxJava 3
+description: >
+  This instrumentation enables context propagation for RxJava 3 reactive streams and adds support
+  for @WithSpan annotations on methods that return RxJava 3 types. It does not emit any telemetry
+  on its own.
+library_link: https://github.com/ReactiveX/RxJava/tree/3.x
+features:
+  - CONTEXT_PROPAGATION
+configurations:
+  - name: otel.instrumentation.rxjava.experimental-span-attributes
+    description: >
+      Enables the experimental span attribute `rxjava.canceled`.
+    type: boolean
+    default: false
