@@ -88,7 +88,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
   val testExperimental by registering(Test::class) {
@@ -97,6 +96,11 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("hasConsumerGroup", testLatestDeps)
+  }
+
+  test {
+    systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
   check {
