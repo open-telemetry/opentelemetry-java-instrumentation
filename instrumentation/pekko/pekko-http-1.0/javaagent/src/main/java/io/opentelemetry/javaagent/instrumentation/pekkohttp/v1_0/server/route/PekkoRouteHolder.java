@@ -15,7 +15,8 @@ import org.apache.pekko.http.javadsl.model.AttributeKey;
 import org.apache.pekko.http.scaladsl.model.Uri;
 
 public class PekkoRouteHolder implements ImplicitContextKeyed {
-  public static final AttributeKey<PekkoRouteHolder> ATTRIBUTE_KEY = AttributeKey.create("opentelemetry-pekko-route", PekkoRouteHolder.class);
+  public static final AttributeKey<PekkoRouteHolder> ATTRIBUTE_KEY =
+      AttributeKey.create("opentelemetry-pekko-route", PekkoRouteHolder.class);
   private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
   private final LinkedList<String> paths = new LinkedList<>();
@@ -63,7 +64,9 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     boolean shouldAddFinalWildcard = lastUnmatchedPath != null && !lastUnmatchedPath.isEmpty();
     int size = shouldAddFinalWildcard ? 1 : 0;
     LinkedList<PekkoRouteHolder> routeHolders = new LinkedList<>();
-    for (PekkoRouteHolder routeHolder = this; routeHolder != null; routeHolder = routeHolder.parent) {
+    for (PekkoRouteHolder routeHolder = this;
+        routeHolder != null;
+        routeHolder = routeHolder.parent) {
       routeHolders.addFirst(routeHolder);
       for (String path : routeHolder.paths) {
         size += path.length();
@@ -104,6 +107,7 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.with(KEY, this);
   }
 
-  private PekkoRouteHolder(PekkoRouteHolder parent) {this.parent = parent;}
-
+  private PekkoRouteHolder(PekkoRouteHolder parent) {
+    this.parent = parent;
+  }
 }

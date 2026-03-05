@@ -29,33 +29,39 @@ public final class TapirRouteHandler<T, B> implements EndpointHandler<Future<T>,
   public static <T> EndpointInterceptor<Future<T>> interceptor() {
     return new EndpointInterceptor<Future<T>>() {
       @Override
-      public <B> EndpointHandler<Future<T>, B> apply(Responder<Future<T>, B> responder,
-          EndpointHandler<Future<T>, B> endpointHandler) {
+      public <B> EndpointHandler<Future<T>, B> apply(
+          Responder<Future<T>, B> responder, EndpointHandler<Future<T>, B> endpointHandler) {
         return new TapirRouteHandler<>(endpointHandler);
       }
     };
   }
-  
+
   private TapirRouteHandler(EndpointHandler<Future<T>, B> endpointHandler) {
     this.endpointHandler = endpointHandler;
   }
 
   @Override
-  public <A, U, I> Future<T> onDecodeSuccess(DecodeSuccessContext<Future<T>, A, U, I> ctx,
-      MonadError<Future<T>> monad, BodyListener<Future<T>, B> bodyListener) {
+  public <A, U, I> Future<T> onDecodeSuccess(
+      DecodeSuccessContext<Future<T>, A, U, I> ctx,
+      MonadError<Future<T>> monad,
+      BodyListener<Future<T>, B> bodyListener) {
     updateSpan(ctx.endpoint(), ctx.request());
     return endpointHandler.onDecodeSuccess(ctx, monad, bodyListener);
   }
 
   @Override
-  public <A> Future<T> onSecurityFailure(SecurityFailureContext<Future<T>, A> ctx,
-      MonadError<Future<T>> monad, BodyListener<Future<T>, B> bodyListener) {
+  public <A> Future<T> onSecurityFailure(
+      SecurityFailureContext<Future<T>, A> ctx,
+      MonadError<Future<T>> monad,
+      BodyListener<Future<T>, B> bodyListener) {
     updateSpan(ctx.endpoint(), ctx.request());
     return endpointHandler.onSecurityFailure(ctx, monad, bodyListener);
   }
 
   @Override
-  public Future<T> onDecodeFailure(DecodeFailureContext ctx, MonadError<Future<T>> monad,
+  public Future<T> onDecodeFailure(
+      DecodeFailureContext ctx,
+      MonadError<Future<T>> monad,
       BodyListener<Future<T>, B> bodyListener) {
     updateSpan(ctx.endpoint(), ctx.request());
     return endpointHandler.onDecodeFailure(ctx, monad, bodyListener);
@@ -65,21 +71,24 @@ public final class TapirRouteHandler<T, B> implements EndpointHandler<Future<T>,
     Object underlyingRequest = request.underlying();
     if (underlyingRequest instanceof RequestContext) {
       RequestContext pekkoCtx = (RequestContext) underlyingRequest;
-      pekkoCtx.request()
+      pekkoCtx
+          .request()
           .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
-          .ifPresent(routeHolder -> {
-            String path =
-                endpoint.showPathTemplate(
-                    (index, pc) ->
-                        pc.name().isDefined() ? "{" + pc.name().get() + "}"
-                            : "{param" + index + "}",
-                    Option.empty(),
-                    false,
-                    "*",
-                    Option.apply("*"),
-                    Option.apply("*"));
-            routeHolder.push(pekkoCtx.unmatchedPath(), EMPTY, path);
-          });
+          .ifPresent(
+              routeHolder -> {
+                String path =
+                    endpoint.showPathTemplate(
+                        (index, pc) ->
+                            pc.name().isDefined()
+                                ? "{" + pc.name().get() + "}"
+                                : "{param" + index + "}",
+                        Option.empty(),
+                        false,
+                        "*",
+                        Option.apply("*"),
+                        Option.apply("*"));
+                routeHolder.push(pekkoCtx.unmatchedPath(), EMPTY, path);
+              });
     }
   }
 }

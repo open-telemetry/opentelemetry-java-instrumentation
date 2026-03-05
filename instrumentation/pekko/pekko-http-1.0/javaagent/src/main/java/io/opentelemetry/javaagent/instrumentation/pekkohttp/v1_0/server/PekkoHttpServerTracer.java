@@ -105,7 +105,8 @@ public class PekkoHttpServerTracer
                 tracingRequest = new PekkoTracingRequest(context, request);
                 request =
                     (HttpRequest)
-                        request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest)
+                        request
+                            .addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest)
                             .addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, routeHolder);
               }
               // event if span wasn't started we need to push TracingRequest to match response
@@ -145,13 +146,13 @@ public class PekkoHttpServerTracer
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
                 }
-                String route = response.getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
-                    .map(PekkoRouteHolder::route)
-                    .orElse(null);
+                String route =
+                    response
+                        .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
+                        .map(PekkoRouteHolder::route)
+                        .orElse(null);
                 HttpServerRoute.update(
-                    tracingRequest.context,
-                    HttpServerRouteSource.CONTROLLER,
-                    route);
+                    tracingRequest.context, HttpServerRouteSource.CONTROLLER, route);
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);

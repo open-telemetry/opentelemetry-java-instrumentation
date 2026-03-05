@@ -31,12 +31,14 @@ public class TapirPathInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ApplyAdvice");
   }
 
-  @SuppressWarnings({"unused", "unchecked"}) // options.prependInterceptor takes higher-kinded type, not possible from java
+  @SuppressWarnings({
+    "unused",
+    "unchecked"
+  }) // options.prependInterceptor takes higher-kinded type, not possible from java
   public static class ApplyAdvice {
     @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static Object onExit(
-        @Advice.Return PekkoHttpServerOptions options) {
+    public static Object onExit(@Advice.Return PekkoHttpServerOptions options) {
 
       return options.prependInterceptor((Interceptor) TapirRouteHandler.interceptor());
     }

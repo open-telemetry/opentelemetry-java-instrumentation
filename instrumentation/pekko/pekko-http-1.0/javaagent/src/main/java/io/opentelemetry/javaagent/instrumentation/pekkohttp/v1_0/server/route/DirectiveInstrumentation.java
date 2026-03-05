@@ -28,8 +28,7 @@ public class DirectiveInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("tapply").and(takesArguments(1)),
-        this.getClass().getName() + "$ApplyAdvice");
+        named("tapply").and(takesArguments(1)), this.getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
