@@ -10,6 +10,7 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import java.util.LinkedList;
 import org.apache.pekko.http.javadsl.model.AttributeKey;
 import org.apache.pekko.http.scaladsl.model.Uri;
@@ -46,6 +47,16 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
         && !afterMatch.equals(beforeMatch)) {
       paths.add(pathToPush);
       lastUnmatchedPath = afterMatch;
+
+      // If there's nothing left to match, set this as the fallback route holder in case
+      // pekko cancels the user routes (e.g. in case of a request timeout).
+      // If the path is fully matched by multiple PekkoRouteHolders, the latest one wins,
+      // which is usually correct but not guaranteed to be.
+      if (afterMatch.isEmpty()) {
+        PekkoFallbackRouteHolder fallback =
+            PekkoFallbackRouteHolder.get(Java8BytecodeBridge.currentContext());
+        fallback.setFallback(this);
+      }
     }
     lastWasMatched = true;
   }

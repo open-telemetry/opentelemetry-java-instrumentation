@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoFallbackRouteHolder;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
 import java.util.List;
@@ -101,7 +102,11 @@ public class PekkoHttpServerTracer
               Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
                 PekkoRouteHolder routeHolder = PekkoRouteHolder.create();
-                Context context = instrumenter().start(parentContext, request).with(routeHolder);
+                Context context =
+                    instrumenter()
+                        .start(parentContext, request)
+                        .with(routeHolder)
+                        .with(new PekkoFallbackRouteHolder());
                 tracingRequest = new PekkoTracingRequest(context, request);
                 request =
                     (HttpRequest)
@@ -151,6 +156,13 @@ public class PekkoHttpServerTracer
                         .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
                         .map(PekkoRouteHolder::route)
                         .orElse(null);
+                if (route == null) {
+                  PekkoFallbackRouteHolder fallback =
+                      PekkoFallbackRouteHolder.get(tracingRequest.context);
+                  if (fallback != null) {
+                    route = fallback.route();
+                  }
+                }
                 HttpServerRoute.update(
                     tracingRequest.context, HttpServerRouteSource.CONTROLLER, route);
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
