@@ -293,7 +293,7 @@ public class YamlHelper {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("name", metric.getName());
     innerMetricMap.put("description", metric.getDescription());
-    innerMetricMap.put("instrument_type", metric.getInstrumentType());
+    innerMetricMap.put("instrument", metric.getInstrumentType());
     innerMetricMap.put("data_type", metric.getType());
     innerMetricMap.put("unit", metric.getUnit());
     innerMetricMap.put("attributes", getSortedAttributeMaps(metric.getAttributes()));

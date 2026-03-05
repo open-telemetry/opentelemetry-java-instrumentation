@@ -194,27 +194,23 @@ public class EmittedMetricsParser {
     }
 
     return switch (metricDataType) {
-      case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM" -> "HISTOGRAM";
-      case "LONG_GAUGE", "DOUBLE_GAUGE" ->
-          // Default to OBSERVABLE_GAUGE
-          // Note: Cannot distinguish between GAUGE and OBSERVABLE_GAUGE from MetricDataType alone
-          "OBSERVABLE_GAUGE";
+      case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM", "SUMMARY" -> "HISTOGRAM";
+      case "LONG_GAUGE", "DOUBLE_GAUGE" -> "gauge";
       case "LONG_SUM", "DOUBLE_SUM" -> {
         // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
         if (isMonotonic != null && isMonotonic) {
           // Monotonic sum = COUNTER or OBSERVABLE_COUNTER
           // Default to OBSERVABLE_COUNTER
-          yield "OBSERVABLE_COUNTER";
+          yield "counter";
         } else if (isMonotonic != null) {
           // Non-monotonic sum = UP_DOWN_COUNTER or OBSERVABLE_UP_DOWN_COUNTER
           // Default to OBSERVABLE_UP_DOWN_COUNTER
-          yield "OBSERVABLE_UP_DOWN_COUNTER";
+          yield "updowncounter";
         } else {
           // Unknown, default to COUNTER
-          yield "COUNTER";
+          yield "counter";
         }
       }
-      case "SUMMARY" -> "SUMMARY";
       default -> "UNKNOWN";
     };
   }
