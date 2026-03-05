@@ -6,7 +6,6 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
 }
 dependencies {
-  implementation(project(":instrumentation:ktor:ktor-common:library"))
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   compileOnly("io.ktor:ktor-client-core:2.0.0")
