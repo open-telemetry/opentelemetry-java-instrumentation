@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Representation of metrics emitted by an instrumentation. Includes context about whether emitted
@@ -95,6 +96,12 @@ public class EmittedMetrics {
     private String name;
     private String description;
     private String type;
+    private String instrumentType;
+
+    @Nullable
+    @JsonProperty("is_monotonic")
+    private Boolean isMonotonic;
+
     private String unit;
     private List<TelemetryAttribute> attributes;
 
@@ -107,6 +114,41 @@ public class EmittedMetrics {
       this.name = name;
       this.description = description;
       this.type = type;
+      this.instrumentType = "";
+      this.isMonotonic = null;
+      this.unit = unit;
+      this.attributes = attributes;
+    }
+
+    public Metric(
+        String name,
+        String description,
+        String type,
+        String instrumentType,
+        String unit,
+        List<TelemetryAttribute> attributes) {
+      this.name = name;
+      this.description = description;
+      this.type = type;
+      this.instrumentType = instrumentType;
+      this.isMonotonic = null;
+      this.unit = unit;
+      this.attributes = attributes;
+    }
+
+    public Metric(
+        String name,
+        String description,
+        String type,
+        String instrumentType,
+        @Nullable Boolean isMonotonic,
+        String unit,
+        List<TelemetryAttribute> attributes) {
+      this.name = name;
+      this.description = description;
+      this.type = type;
+      this.instrumentType = instrumentType;
+      this.isMonotonic = isMonotonic;
       this.unit = unit;
       this.attributes = attributes;
     }
@@ -115,6 +157,7 @@ public class EmittedMetrics {
       this.name = "";
       this.description = "";
       this.type = "";
+      this.instrumentType = "";
       this.unit = "";
       this.attributes = new ArrayList<>();
     }
@@ -143,6 +186,25 @@ public class EmittedMetrics {
       this.type = type;
     }
 
+    public String getInstrumentType() {
+      return instrumentType;
+    }
+
+    public void setInstrumentType(String instrumentType) {
+      this.instrumentType = instrumentType;
+    }
+
+    @Nullable
+    @JsonProperty("is_monotonic")
+    public Boolean getIsMonotonic() {
+      return isMonotonic;
+    }
+
+    @JsonProperty("is_monotonic")
+    public void setIsMonotonic(@Nullable Boolean isMonotonic) {
+      this.isMonotonic = isMonotonic;
+    }
+
     public String getUnit() {
       return unit;
     }
@@ -167,6 +229,8 @@ public class EmittedMetrics {
       private String name = "";
       private String description = "";
       private String type = "";
+      private String instrumentType = "";
+      @Nullable private Boolean isMonotonic = null;
       private String unit = "";
       private List<TelemetryAttribute> attributes = new ArrayList<>();
 
@@ -189,6 +253,18 @@ public class EmittedMetrics {
       }
 
       @CanIgnoreReturnValue
+      public Builder instrumentType(String instrumentType) {
+        this.instrumentType = instrumentType;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      public Builder isMonotonic(@Nullable Boolean isMonotonic) {
+        this.isMonotonic = isMonotonic;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
       public Builder unit(String unit) {
         this.unit = unit;
         return this;
@@ -201,7 +277,7 @@ public class EmittedMetrics {
       }
 
       public Metric build() {
-        return new Metric(name, description, type, unit, attributes);
+        return new Metric(name, description, type, instrumentType, isMonotonic, unit, attributes);
       }
     }
 

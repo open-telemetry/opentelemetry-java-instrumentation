@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * This class is responsible for parsing metric-* files from the `.telemetry` directory of an
@@ -123,7 +124,9 @@ public class EmittedMetricsParser {
             new EmittedMetrics.MetricsByScope(
                 scopeEntry.getKey(), new ArrayList<>(scopeEntry.getValue().values())));
       }
-      result.put(when, new EmittedMetrics(when, mergedScopes));
+      EmittedMetrics emittedMetrics = new EmittedMetrics(when, mergedScopes);
+      enrichMetricsWithInstrumentType(emittedMetrics);
+      result.put(when, emittedMetrics);
     }
     return result;
   }
@@ -161,9 +164,85 @@ public class EmittedMetricsParser {
         deduplicatedScopes.add(
             new EmittedMetrics.MetricsByScope(scope, new ArrayList<>(dedupedMetrics.values())));
       }
-      metricsMap.put(when, new EmittedMetrics(when, deduplicatedScopes));
+      EmittedMetrics emittedMetrics = new EmittedMetrics(when, deduplicatedScopes);
+      enrichMetricsWithInstrumentType(emittedMetrics);
+      metricsMap.put(when, emittedMetrics);
     }
     return metricsMap;
+  }
+
+  /**
+   * Infers the InstrumentType from the MetricDataType string and isMonotonic flag. Since MetricData
+   * only contains the aggregated type (e.g., LONG_SUM, DOUBLE_GAUGE), we can only partially infer
+   * the original instrument type.
+   *
+   * <p>Limitations:
+   *
+   * <ul>
+   *   <li>Cannot distinguish between COUNTER and OBSERVABLE_COUNTER
+   *   <li>Cannot distinguish between UP_DOWN_COUNTER and OBSERVABLE_UP_DOWN_COUNTER
+   *   <li>Cannot distinguish between GAUGE and OBSERVABLE_GAUGE
+   * </ul>
+   *
+   * @param metricDataType the MetricDataType string (e.g., "LONG_SUM", "DOUBLE_GAUGE")
+   * @param isMonotonic whether the metric is monotonic (for SUM types), null if not applicable
+   * @return the inferred InstrumentType string
+   */
+  private static String inferInstrumentType(String metricDataType, @Nullable Boolean isMonotonic) {
+    if (metricDataType == null || metricDataType.isEmpty()) {
+      return "UNKNOWN";
+    }
+
+    return switch (metricDataType) {
+      case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM" -> "HISTOGRAM";
+      case "LONG_GAUGE", "DOUBLE_GAUGE" ->
+          // Default to OBSERVABLE_GAUGE
+          // Note: Cannot distinguish between GAUGE and OBSERVABLE_GAUGE from MetricDataType alone
+          "OBSERVABLE_GAUGE";
+      case "LONG_SUM", "DOUBLE_SUM" -> {
+        // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
+        if (isMonotonic != null && isMonotonic) {
+          // Monotonic sum = COUNTER or OBSERVABLE_COUNTER
+          // Default to OBSERVABLE_COUNTER
+          yield "OBSERVABLE_COUNTER";
+        } else if (isMonotonic != null) {
+          // Non-monotonic sum = UP_DOWN_COUNTER or OBSERVABLE_UP_DOWN_COUNTER
+          // Default to OBSERVABLE_UP_DOWN_COUNTER
+          yield "OBSERVABLE_UP_DOWN_COUNTER";
+        } else {
+          // Unknown, default to COUNTER
+          yield "COUNTER";
+        }
+      }
+      case "SUMMARY" -> "SUMMARY";
+      default -> "UNKNOWN";
+    };
+  }
+
+  /**
+   * Populates the instrumentType field for each metric based on its MetricDataType and isMonotonic
+   * flag. This is called after parsing the YAML to enrich the metric data with inferred instrument
+   * types.
+   *
+   * @param metrics the EmittedMetrics object to enrich
+   */
+  private static void enrichMetricsWithInstrumentType(EmittedMetrics metrics) {
+    if (metrics.getMetricsByScope() == null) {
+      return;
+    }
+
+    for (EmittedMetrics.MetricsByScope scope : metrics.getMetricsByScope()) {
+      if (scope.getMetrics() == null) {
+        continue;
+      }
+
+      for (EmittedMetrics.Metric metric : scope.getMetrics()) {
+        if (metric.getInstrumentType() == null || metric.getInstrumentType().isEmpty()) {
+          String inferredType = inferInstrumentType(metric.getType(), metric.getIsMonotonic());
+          metric.setInstrumentType(inferredType);
+        }
+      }
+    }
   }
 
   private EmittedMetricsParser() {}
