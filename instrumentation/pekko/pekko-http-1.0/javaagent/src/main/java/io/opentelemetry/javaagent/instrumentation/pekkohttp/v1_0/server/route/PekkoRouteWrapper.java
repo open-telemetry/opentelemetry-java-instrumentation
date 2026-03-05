@@ -51,7 +51,7 @@ public class PekkoRouteWrapper implements Function1<RequestContext, Future<Route
                   if (tryResult.isSuccess() && childRouteHolder.hasRoute()) {
                     RouteResult result = tryResult.get();
                     if (result.getClass() == RouteResult.Complete.class) {
-                      HttpResponse response = ((RouteResult.Complete) result).getResponse();
+                      HttpResponse response = ((RouteResult.Complete) result).response();
                       if (!response.getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY).isPresent()) {
                         HttpResponse newResponse =
                             (HttpResponse)
