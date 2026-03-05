@@ -3,7 +3,7 @@
 buildscript {
   configurations.classpath {
     resolutionStrategy {
-      force "org.codehaus.plexus:plexus-xml:4.0.4"
+      force "org.codehaus.plexus:plexus-xml:4.1.1"
     }
   }
 }
