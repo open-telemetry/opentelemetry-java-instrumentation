@@ -23,39 +23,38 @@ final class ConnectionPoolMetrics {
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, DruidDataSourceMBean dataSource, String dataSourceName) {
-    DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
+    dataSourceMetrics.computeIfAbsent(
+        dataSource,
+        ds -> {
+          DbConnectionPoolMetrics metrics =
+              DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
 
-    ObservableLongMeasurement connections = metrics.connections();
-    ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
-    ObservableLongMeasurement maxIdleConnections = metrics.maxIdleConnections();
-    ObservableLongMeasurement maxConnections = metrics.maxConnections();
-    ObservableLongMeasurement pendingRequestsForConnection = metrics.pendingRequestsForConnection();
+          ObservableLongMeasurement connections = metrics.connections();
+          ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
+          ObservableLongMeasurement maxIdleConnections = metrics.maxIdleConnections();
+          ObservableLongMeasurement maxConnections = metrics.maxConnections();
+          ObservableLongMeasurement pendingRequestsForConnection =
+              metrics.pendingRequestsForConnection();
 
-    Attributes attributes = metrics.getAttributes();
-    Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
-    Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
+          Attributes attributes = metrics.getAttributes();
+          Attributes usedConnectionsAttributes = metrics.getUsedConnectionsAttributes();
+          Attributes idleConnectionsAttributes = metrics.getIdleConnectionsAttributes();
 
-    BatchCallback callback =
-        metrics.batchCallback(
-            () -> {
-              connections.record(dataSource.getActiveCount(), usedConnectionsAttributes);
-              connections.record(dataSource.getPoolingCount(), idleConnectionsAttributes);
-              pendingRequestsForConnection.record(dataSource.getWaitThreadCount(), attributes);
-              minIdleConnections.record(dataSource.getMinIdle(), attributes);
-              maxIdleConnections.record(dataSource.getMaxIdle(), attributes);
-              maxConnections.record(dataSource.getMaxActive(), attributes);
-            },
-            connections,
-            pendingRequestsForConnection,
-            minIdleConnections,
-            maxIdleConnections,
-            maxConnections);
-
-    BatchCallback previousCallback = dataSourceMetrics.put(dataSource, callback);
-    if (previousCallback != null) {
-      previousCallback.close();
-    }
+          return metrics.batchCallback(
+              () -> {
+                connections.record(ds.getActiveCount(), usedConnectionsAttributes);
+                connections.record(ds.getPoolingCount(), idleConnectionsAttributes);
+                pendingRequestsForConnection.record(ds.getWaitThreadCount(), attributes);
+                minIdleConnections.record(ds.getMinIdle(), attributes);
+                maxIdleConnections.record(ds.getMaxIdle(), attributes);
+                maxConnections.record(ds.getMaxActive(), attributes);
+              },
+              connections,
+              pendingRequestsForConnection,
+              minIdleConnections,
+              maxIdleConnections,
+              maxConnections);
+        });
   }
 
   static void unregisterMetrics(DruidDataSourceMBean dataSource) {
