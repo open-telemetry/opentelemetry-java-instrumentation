@@ -51,7 +51,15 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
   }
 
   named("compileXxlJob33TestJava", JavaCompile::class).configure {
@@ -68,5 +76,6 @@ tasks {
 
   check {
     dependsOn(testing.suites)
+    dependsOn(testExperimental)
   }
 }
