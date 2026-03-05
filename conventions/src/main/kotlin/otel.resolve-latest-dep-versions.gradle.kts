@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.VersionFilters
+
 tasks {
   val resolveLatestDepVersions by registering {
     group = "Help"
@@ -22,20 +24,8 @@ tasks {
         return false
       }
 
-      fun isPreRelease(version: String): Boolean {
-        return version.contains("-alpha", true)
-          || version.contains("-beta", true)
-          || version.contains("-rc", true)
-          || version.contains(".rc", true)
-          || version.contains("-m", true)
-          || version.contains(".m", true)
-          || version.contains(".alpha", true)
-          || version.contains(".beta", true)
-          || version.contains(".cr", true)
-      }
-
       fun recordVersion(key: String, version: String) {
-        if (isPreRelease(version)) {
+        if (VersionFilters.isUnstable(version)) {
           logger.info("Skipping pre-release version $key:$version")
           return
         }
@@ -76,13 +66,7 @@ tasks {
           project.dependencies.create("org.springframework.boot:spring-boot-dependencies:$range")
         )
         detached.resolutionStrategy.componentSelection.all {
-          val v = candidate.version
-          if (v.contains("-alpha", true) || v.contains("-beta", true) ||
-            v.contains("-rc", true) || v.contains(".rc", true) ||
-            v.contains("-m", true) || v.contains(".m", true) ||
-            v.contains(".alpha", true) || v.contains(".beta", true) ||
-            v.contains(".cr", true)
-          ) {
+          if (VersionFilters.isUnstable(candidate.version)) {
             reject("pre-release version")
           }
         }
