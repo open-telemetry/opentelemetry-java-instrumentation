@@ -70,7 +70,7 @@ public final class Servlet3Singletons {
     if (servlet) {
       return SERVLET_MAPPING_RESOLVER.get((Servlet) servletOrFilter);
     } else {
-      return FILTER_MAPPING_RESOLVER.get((Filter) servletOrFilter);
+      return FILTER_MAPPING_RESOLVER.get((Filter) servletOrFilter, MappingResolver.Factory.class);
     }
   }
 

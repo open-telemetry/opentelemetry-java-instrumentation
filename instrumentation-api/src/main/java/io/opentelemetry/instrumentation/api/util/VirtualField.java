@@ -45,6 +45,32 @@ public abstract class VirtualField<T, F> {
   @Nullable
   public abstract F get(T object);
 
+  /**
+   * Gets the value of this virtual field, returning {@code null} if the value is not an instance of
+   * {@code expectedType}.
+   *
+   * <p>When the same instrumentation is injected into multiple classloaders (e.g. an application
+   * classloader and a container's webapp classloader), each classloader defines its own copy of
+   * {@code F}. Normally each classloader would also have its own copy of {@code T}, producing
+   * separate {@link VirtualField} instances. The problem arises when multiple classloaders share
+   * the same {@code T} class (loaded by a common parent) — because {@link VirtualField} is keyed by
+   * {@code F}'s class <em>name</em>, they resolve to a single underlying field. A value written by
+   * one classloader's instrumentation is then visible to the other, but the object implements
+   * {@code F} as loaded by the writer's classloader, not the reader's — which will trigger a {@link
+   * ClassCastException} in the caller.
+   *
+   * <p>This overload guards against that by checking {@link Class#isInstance} before the value is
+   * returned. When the classloaders don't match, it returns {@code null} instead of throwing.
+   *
+   * @param expectedType the expected class of the field value, typically {@code F.class} as loaded
+   *     by the caller's classloader
+   */
+  @Nullable
+  public F get(T object, Class<? extends F> expectedType) {
+    F value = get(object);
+    return expectedType.isInstance(value) ? value : null;
+  }
+
   /** Sets the new value of this virtual field. */
   public abstract void set(T object, @Nullable F fieldValue);
 }
