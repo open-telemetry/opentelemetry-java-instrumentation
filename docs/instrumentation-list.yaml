@@ -2795,8 +2795,6 @@ libraries:
           type: STRING
         - name: db.query.text
           type: STRING
-        - name: db.response.status_code
-          type: STRING
         - name: db.system.name
           type: STRING
         - name: error.type
@@ -2864,8 +2862,6 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
           type: STRING
         - name: db.system.name
           type: STRING
@@ -11169,31 +11165,92 @@ libraries:
           type: STRING
   reactor:
   - name: reactor-3.1
+    display_name: Reactor
+    description: |
+      This instrumentation enables context propagation for Project Reactor reactive streams, it does not emit any telemetry on its own.
+    library_link: https://projectreactor.io/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/reactor/reactor-3.1
     scope:
       name: io.opentelemetry.reactor-3.1
     has_standalone_library: true
     javaagent_target_versions:
     - io.projectreactor:reactor-core:[3.1.0.RELEASE,)
-  - name: reactor-3.4
-    source_path: instrumentation/reactor/reactor-3.4
-    scope:
-      name: io.opentelemetry.reactor-3.4
-    javaagent_target_versions:
-    - io.projectreactor:reactor-core:[3.4.0,)
+    configurations:
+    - name: otel.instrumentation.reactor.experimental-span-attributes
+      description: |
+        Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive streams are cancelled.
+      type: boolean
+      default: false
   - name: reactor-kafka-1.0
+    display_name: Reactor Kafka
+    description: |
+      This instrumentation enables messaging spans for Reactor Kafka message consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://projectreactor.io/docs/kafka/release/reference/
     source_path: instrumentation/reactor/reactor-kafka-1.0
     scope:
       name: io.opentelemetry.reactor-kafka-1.0
     javaagent_target_versions:
     - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: reactor-netty-0.9
+    display_name: Reactor Netty
+    description: |
+      This instrumentation enables context propagation for Reactor Netty HTTP client, it does not emit any telemetry on its own.
+    library_link: https://projectreactor.io/docs/netty/release/reference/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/reactor/reactor-netty/reactor-netty-0.9
     scope:
       name: io.opentelemetry.reactor-netty-0.9
     javaagent_target_versions:
     - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
   - name: reactor-netty-1.0
+    display_name: Reactor Netty
+    description: |
+      This instrumentation enables HTTP client spans and HTTP client metrics for the Reactor Netty HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://projectreactor.io/docs/netty/release/reference/
     source_path: instrumentation/reactor/reactor-netty/reactor-netty-1.0
     scope:
       name: io.opentelemetry.reactor-netty-1.0
@@ -11202,8 +11259,35 @@ libraries:
     - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
     - io.projectreactor.netty:reactor-netty:[1.0.0,)
     configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     - name: otel.instrumentation.reactor-netty.connection-telemetry.enabled
-      description: Enable the creation of Connect and DNS spans.
+      description: Enables the creation of Connect and DNS spans.
       type: boolean
       default: false
     telemetry:
@@ -12330,6 +12414,7 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-kafka-2.7
+    display_name: Spring Kafka
     description: This instrumentation enables consumer messaging spans for Spring
       Kafka listeners.
     semantic_conventions:
@@ -12407,8 +12492,11 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-pulsar-1.0
+    display_name: Spring Pulsar
     description: This instrumentation enables consumer messaging spans for Spring
       Pulsar listeners.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://spring.io/projects/spring-pulsar
     source_path: instrumentation/spring/spring-pulsar-1.0
     minimum_java_version: 17
@@ -12447,8 +12535,11 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-rabbit-1.0
+    display_name: Spring Rabbit
     description: This instrumentation enables consumer messaging spans for Spring
       RabbitMQ listeners.
+    semantic_conventions:
+    - MESSAGING_SPANS
     library_link: https://spring.io/projects/spring-amqp
     source_path: instrumentation/spring/spring-rabbit-1.0
     scope:
@@ -12474,8 +12565,12 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-rmi-4.0
+    display_name: Spring RMI
     description: This instrumentation enables RPC client and RPC server spans for
       Spring RMI applications.
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_SERVER_SPANS
     library_link: https://docs.spring.io/spring-framework/docs/4.0.x/javadoc-api/org/springframework/remoting/rmi/package-summary.html
     source_path: instrumentation/spring/spring-rmi-4.0
     scope:
@@ -12502,6 +12597,7 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: spring-scheduling-3.1
+    display_name: Spring Scheduling
     description: This instrumentation enables tracing for Spring Scheduling tasks.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html
     source_path: instrumentation/spring/spring-scheduling-3.1
@@ -12535,6 +12631,7 @@ libraries:
         - name: job.system
           type: STRING
   - name: spring-security-config-6.0
+    display_name: Spring Security
     description: |
       This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
       NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
@@ -12570,8 +12667,12 @@ libraries:
       type: string
       default: SCOPE_
   - name: spring-web-3.1
+    display_name: Spring Web
     description: |
       This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
@@ -12612,19 +12713,32 @@ libraries:
         - name: url.full
           type: STRING
   - name: spring-web-6.0
+    display_name: Spring Web
     description: |
-      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
+      This instrumentation enriches HTTP client spans with URL template information for Spring's RestTemplate 6.0+.
     library_link: https://github.com/spring-projects/spring-framework
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spring/spring-web/spring-web-6.0
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-web-6.0
     javaagent_target_versions:
     - org.springframework:spring-web:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enables the capture of experimental HTTP client telemetry, including URL template as the span name.
+      type: boolean
+      default: false
   - name: spring-webflux-5.0
+    display_name: Spring WebFlux
     description: |
-      This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also optionally enables experimental controller spans.
+      This instrumentation enriches HTTP server spans with route information for Spring WebFlux 5.0+. It also installs WebClient telemetry interceptors and enables controller spans (controller spans are disabled by default).
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
     scope:
       name: io.opentelemetry.spring-webflux-5.0
@@ -12678,8 +12792,14 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: spring-webflux-5.3
+    display_name: Spring WebFlux
     description: |
       This instrumentation provides a library integration for the Spring WebFlux WebClient and Webflux server versions 5.3+ that enables HTTP client and server spans and metrics.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
     scope:
@@ -12759,9 +12879,14 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: spring-webmvc-3.1
+    display_name: Spring WebMVC
     description: |
-      This instrumentation enables optional Controller and View spans for Spring WebMVC 3.1+.
+      This instrumentation enriches HTTP server spans with route information for Spring WebMVC 3.1+. It also enables controller spans (controller spans are disabled by default) and view spans (view spans are disabled by default).
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
+    - VIEW_SPANS
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
     scope:
       name: io.opentelemetry.spring-webmvc-3.1
@@ -12770,7 +12895,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
       description: |
-        Enables the capture of experimental span attributes `spring-webmvc-view-name` and `spring-webmvc.view.type`.
+        Enables the capture of experimental span attributes `spring-webmvc.view.name` and `spring-webmvc.view.type`.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
@@ -12801,9 +12926,15 @@ libraries:
         - name: spring-webmvc.view.type
           type: STRING
   - name: spring-webmvc-5.3
+    display_name: Spring WebMVC
     description: |
       This instrumentation provides a library integration for Spring WebMVC controllers, that enables the creation of HTTP server spans and metrics for requests processed by the Spring servlet container.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
     scope:
       name: io.opentelemetry.spring-webmvc-5.3
@@ -12861,9 +12992,14 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: spring-webmvc-6.0
+    display_name: Spring WebMVC
     description: |
-      This instrumentation enables optional Controller and View spans for Spring WebMVC 6.0+.
+      This instrumentation enriches HTTP server spans with route information for Spring WebMVC 6.0+. It also enables controller spans (controller spans are disabled by default) and view spans (view spans are disabled by default).
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
+    - VIEW_SPANS
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
     minimum_java_version: 17
     scope:
@@ -12874,7 +13010,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
       description: |
-        Enables the capture of experimental span attributes `spring-webmvc-view-name` and `spring-webmvc.view.type`.
+        Enables the capture of experimental span attributes `spring-webmvc.view.name` and `spring-webmvc.view.type`.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
@@ -12905,13 +13041,32 @@ libraries:
         - name: spring-webmvc.view.type
           type: STRING
   - name: spring-ws-2.0
+    display_name: Spring WS
+    description: |
+      This instrumentation enables controller spans for Spring Web Services 2.0+ endpoints (controller spans are disabled by default).
     library_link: https://spring.io/projects/spring-ws
     disabled_by_default: true
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/spring/spring-ws-2.0
     scope:
       name: io.opentelemetry.spring-ws-2.0
     javaagent_target_versions:
     - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   spymemcached:
   - name: spymemcached-2.12
     display_name: Spymemcached
@@ -13173,11 +13328,38 @@ libraries:
           type: STRING
   twilio:
   - name: twilio-6.6
+    display_name: Twilio
+    description: |
+      This instrumentation enables client spans for Twilio SDK API calls such as sending messages and making phone calls.
+    library_link: https://github.com/twilio/twilio-java
     source_path: instrumentation/twilio-6.6
     scope:
       name: io.opentelemetry.twilio-6.6
     javaagent_target_versions:
     - com.twilio.sdk:twilio:(,8.0.0)
+    configurations:
+    - name: otel.instrumentation.twilio.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and `twilio.status`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes: []
+    - when: otel.instrumentation.twilio.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: twilio.account
+          type: STRING
+        - name: twilio.sid
+          type: STRING
+        - name: twilio.status
+          type: STRING
+        - name: twilio.type
+          type: STRING
   undertow:
   - name: undertow-1.4
     source_path: instrumentation/undertow-1.4
@@ -13195,12 +13377,47 @@ libraries:
     - com.vaadin:flow-server:[3.1.0,25.0.0)
   vertx:
   - name: vertx-http-client-3.0
+    display_name: Vert.x HTTP Client
+    description: |
+      This instrumentation enables HTTP client spans and HTTP client metrics for requests made using the Vert.x HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://vertx.io/docs/vertx-core/java/
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0
     scope:
       name: io.opentelemetry.vertx-http-client-3.0
       schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - io.vertx:vertx-core:[3.0.0,4.0.0)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -13234,13 +13451,80 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: vertx-http-client-4.0
+    display_name: Vert.x HTTP Client
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Vert.x HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://vertx.io/
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
     scope:
       name: io.opentelemetry.vertx-http-client-4.0
       schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - io.vertx:vertx-core:[4.0.0,5)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -13284,7 +13568,56 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: vertx-http-client-5.0
+    display_name: Vert.x HTTP Client
+    description: |
+      This instrumentation enables HTTP client spans and HTTP client metrics for Vert.x HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://vertx.io/docs/vertx-core/java/
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-5.0
     minimum_java_version: 11
     scope:
@@ -13292,6 +13625,34 @@ libraries:
       schema_url: https://opentelemetry.io/schemas/1.37.0
     javaagent_target_versions:
     - io.vertx:vertx-core:[5.0.0,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -13335,18 +13696,149 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: vertx-kafka-client-3.6
+    display_name: Vert.x Kafka Client
+    description: |
+      This instrumentation enables messaging spans for Kafka consumers using the Vert.x Kafka Client library.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://vertx.io/docs/vertx-kafka-client/java/
+    disabled_by_default: true
     source_path: instrumentation/vertx/vertx-kafka-client-3.6
     scope:
       name: io.opentelemetry.vertx-kafka-client-3.6
     javaagent_target_versions:
     - io.vertx:vertx-kafka-client:[3.5.1,)
+    configurations:
+    - name: otel.instrumentation.kafka.producer-propagation.enabled
+      description: Enable context propagation for Kafka message producers.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: vertx-redis-client-4.0
+    display_name: Vert.x Redis Client
+    description: |
+      This instrumentation enables database client spans and database client metrics for Redis operations using the Vert.x Redis Client library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://vertx.io/docs/vertx-redis-client/java/
     source_path: instrumentation/vertx/vertx-redis-client-4.0
     scope:
       name: io.opentelemetry.vertx-redis-client-4.0
     javaagent_target_versions:
     - io.vertx:vertx-redis-client:[4.0.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
     telemetry:
     - when: default
       spans:
@@ -13413,17 +13905,35 @@ libraries:
         - name: service.peer.name
           type: STRING
   - name: vertx-rx-java-3.5
+    display_name: Vert.x RxJava
+    description: |
+      This instrumentation enables context propagation for Vert.x RxJava 2 reactive streams, it does not emit any telemetry on its own.
+    library_link: https://vertx.io/docs/vertx-rx/java/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
       name: io.opentelemetry.vertx-rx-java-3.5
     javaagent_target_versions:
     - io.vertx:vertx-rx-java2:[3.5.0,)
   - name: vertx-sql-client-4.0
+    display_name: Vert.x SQL Client
+    description: |
+      This instrumentation enables database client spans and database client metrics for Vert.x SQL Client operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/eclipse-vertx/vertx-sql-client
     source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
     scope:
       name: io.opentelemetry.vertx-sql-client-4.0
     javaagent_target_versions:
     - io.vertx:vertx-sql-client:[4.0.0,5)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -13468,8 +13978,6 @@ libraries:
         - name: db.query.summary
           type: STRING
         - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
           type: STRING
         - name: error.type
           type: STRING
@@ -13480,12 +13988,24 @@ libraries:
         - name: service.peer.name
           type: STRING
   - name: vertx-sql-client-5.0
+    display_name: Vert.x SQL Client
+    description: |
+      This instrumentation enables database client spans and database client metrics for Vert.x SQL Client operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/eclipse-vertx/vertx-sql-client
     source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
     minimum_java_version: 11
     scope:
       name: io.opentelemetry.vertx-sql-client-5.0
     javaagent_target_versions:
     - io.vertx:vertx-sql-client:[5.0.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -13531,8 +14051,6 @@ libraries:
           type: STRING
         - name: db.query.text
           type: STRING
-        - name: db.response.status_code
-          type: STRING
         - name: error.type
           type: STRING
         - name: server.address
@@ -13542,6 +14060,12 @@ libraries:
         - name: service.peer.name
           type: STRING
   - name: vertx-web-3.0
+    display_name: Vert.x Web
+    description: |
+      This instrumentation enriches HTTP server spans with route information for Vert.x Web, it does not emit any telemetry on its own.
+    library_link: https://vertx.io/docs/vertx-web/java/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:
       name: io.opentelemetry.vertx-web-3.0
@@ -13764,6 +14288,14 @@ internal:
     name: io.opentelemetry.opentelemetry-instrumentation-api
   javaagent_target_versions:
   - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
+- name: reactor-3.4
+  description: |
+    This instrumentation provides a bridge between the agent's OpenTelemetry context and the application's OpenTelemetry context when using Reactor 3.4+ with ContextView API.
+  source_path: instrumentation/reactor/reactor-3.4
+  scope:
+    name: io.opentelemetry.reactor-3.4
+  javaagent_target_versions:
+  - io.projectreactor:reactor-core:[3.4.0,)
 - name: rxjava-1.0
   source_path: instrumentation/rxjava/rxjava-1.0
   scope:

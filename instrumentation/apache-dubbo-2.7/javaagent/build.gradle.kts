@@ -55,13 +55,23 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { sui
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,service.peer")
+  }
+}
+
+val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}BothSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup,service.peer")
   }
 }
 
 tasks {
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
   }
 }

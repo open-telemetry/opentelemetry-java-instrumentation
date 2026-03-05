@@ -57,7 +57,6 @@ class TargetSystemTest {
   private static final Logger targetSystemLogger = LoggerFactory.getLogger("targetSystem");
 
   private static final String AGENT_PATH = "/opentelemetry-instrumentation-javaagent.jar";
-  protected static final String APP_PATH = "/testapp.war";
 
   private static final Network network = Network.newNetwork();
 

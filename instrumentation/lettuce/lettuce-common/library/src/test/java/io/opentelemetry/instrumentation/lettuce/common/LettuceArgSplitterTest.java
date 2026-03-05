@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.lettuce.common;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,7 +42,7 @@ class LettuceArgSplitterTest {
                 "a complex list of args",
                 new Parameter(
                     "key<key> aSDFgh4321= 5 test value<val>",
-                    Arrays.asList("key", "aSDFgh4321=", "5", "test", "val")))));
+                    asList("key", "aSDFgh4321=", "5", "test", "val")))));
   }
 
   private static class Parameter {

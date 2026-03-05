@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -678,7 +679,7 @@ class AdviceTransformer {
         if (enterArgument != null) {
           newArgumentTypes[enterArgument.adviceIndex] = OBJECT_TYPE;
         }
-        List<Type> typeList = new ArrayList<>(Arrays.asList(newArgumentTypes));
+        List<Type> typeList = new ArrayList<>(asList(newArgumentTypes));
         // add Object array as the last argument, this array is used to pass info from the enter
         // advice
         typeList.add(OBJECT_ARRAY_TYPE);
