@@ -88,6 +88,10 @@ class CamelTest extends TargetSystemTest {
             attributeWithAnyValue("camel.route"),
             attributeWithAnyValue("camel.threadpool.name"));
 
+    /* see o.opentelemetry.instrumentation.jmx.cameltest.CamelTestRouter.DEFAULT_EXCHANGE_DELAY_MS */
+    double defaultTestRouteProcessingTime = 0.05;
+    long numberOfTestRoutes = 2;
+
     return MetricsVerifier.create()
         // context metrics
         .add(
@@ -98,6 +102,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of routes started successfully since context start-up or the last reset operation.")
                     .hasUnit("{route}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(numberOfTestRoutes))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.route.added",
@@ -107,6 +112,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of routes added successfully since context start-up or the last reset operation.")
                     .hasUnit("{route}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(numberOfTestRoutes))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.count",
@@ -116,6 +122,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.completed",
@@ -125,6 +132,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.failed.count",
@@ -134,6 +142,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.failed.handled",
@@ -143,6 +152,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.inflight",
@@ -152,6 +162,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges currently transiting the context.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.redelivered.count",
@@ -161,6 +172,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.redelivered.external",
@@ -170,6 +182,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.processing.duration.max",
@@ -179,6 +192,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the longest time to process an exchange since context start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.processing.duration.mean",
@@ -188,6 +202,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.processing.duration.min",
@@ -197,6 +212,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the shortest time to process an exchange since context start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isBetween(0.0, 1.0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.processing.duration.last",
@@ -205,6 +221,7 @@ class CamelTest extends TargetSystemTest {
                     .isGauge()
                     .hasDescription("Indicates the time it took to process the last exchange.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
         .add(
             "camel.context.exchange.processing.duration.last_delta",
@@ -223,6 +240,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total processing time to process all exchanges since context start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(contextAttributes))
         // route metrics
         .add(
@@ -233,6 +251,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges, passed or failed, that the route has processed since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.completed",
@@ -242,6 +261,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges the route has processed successfully since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.failed.count",
@@ -251,6 +271,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges that the route has failed to process since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.failed.handled",
@@ -260,6 +281,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges failed and handled by an ExceptionHandler in the route.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.inflight",
@@ -269,6 +291,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges currently transiting the route.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.redelivered.count",
@@ -278,6 +301,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.redelivered.external",
@@ -287,7 +311,12 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
+        /*
+        camel.route.exchange.processing.duration.* metrics values depend on delay generated by route
+        processing in io.opentelemetry.instrumentation.jmx.cameltest.CamelTestRouter class
+        */
         .add(
             "camel.route.exchange.processing.duration.max",
             metric ->
@@ -296,6 +325,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the longest time to process an exchange since the route start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isBetween(0.0, 1.0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.mean",
@@ -305,6 +335,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(
+                        value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.min",
@@ -314,6 +346,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the shortest time to process an exchange since the route start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(
+                        value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.last",
@@ -323,6 +357,8 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the time it took the route to process the last exchange.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(
+                        value -> value.isGreaterThanOrEqualTo(defaultTestRouteProcessingTime))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.last_delta",
@@ -332,6 +368,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the difference of the Processing Time of the last two exchanges transited the route.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isBetween(-1.0, 1.0))
                     .hasDataPointsWithAttributes(routeAttributes))
         .add(
             "camel.route.exchange.processing.duration.sum",
@@ -341,6 +378,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total processing time of all exchanges the selected processed since route start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThan(0.0))
                     .hasDataPointsWithAttributes(routeAttributes))
         // processor metrics
         .add(
@@ -351,6 +389,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -361,6 +400,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(1))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -371,6 +411,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -381,6 +422,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -391,6 +433,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the number of exchanges currently transiting the processor.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -401,6 +444,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -411,6 +455,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
+                    .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -421,6 +466,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the longest time to process an exchange since processor start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -431,6 +477,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the mean processing time for all exchanges processed since processor start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -441,6 +488,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the shortest time to process an exchange since processor start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -451,6 +499,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the time it took the selected processor to process the last exchange.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         .add(
@@ -471,6 +520,7 @@ class CamelTest extends TargetSystemTest {
                     .hasDescription(
                         "Indicates the total processing time to process all exchanges since start-up or the last reset operation.")
                     .hasUnit("s")
+                    .hasDataPointsWithDoubleValues(value -> value.isGreaterThanOrEqualTo(0.0))
                     .hasDataPointsWithAttributes(
                         processorAttributes, destinationAwareProcessorAttributes))
         // threadpool metrics
