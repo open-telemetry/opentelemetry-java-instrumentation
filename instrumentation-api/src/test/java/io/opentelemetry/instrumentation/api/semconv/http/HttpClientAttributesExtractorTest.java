@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -413,6 +414,7 @@ class HttpClientAttributesExtractorTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
   void shouldInferDefaultPortFromHttpScheme() {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", "http://github.com/repos");
@@ -429,6 +431,7 @@ class HttpClientAttributesExtractorTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
   void shouldInferDefaultPortFromHttpsScheme() {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", "https://github.com/repos");
@@ -445,6 +448,7 @@ class HttpClientAttributesExtractorTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
   void shouldNotInferDefaultPortWhenExplicitPortIsPresent() {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", "http://github.com:8080/repos");

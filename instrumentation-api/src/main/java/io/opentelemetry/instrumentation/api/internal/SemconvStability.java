@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -30,6 +33,8 @@ public final class SemconvStability {
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
 
+  private static final boolean v3Preview;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
@@ -42,6 +47,15 @@ public final class SemconvStability {
 
     boolean oldRpc = true;
     boolean stableRpc = false;
+
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    boolean v3PreviewValue = false;
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      v3PreviewValue =
+          ((ExtendedOpenTelemetry) openTelemetry)
+              .getInstrumentationConfig("common")
+              .getBoolean("v3_preview", false);
+    }
 
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
@@ -101,6 +115,8 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = oldRpc;
     emitStableRpcSemconv = stableRpc;
+
+    v3Preview = v3PreviewValue;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -170,6 +186,10 @@ public final class SemconvStability {
   public static String stableRpcSystemName(String oldRpcSystem) {
     String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
     return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
+  }
+
+  public static boolean v3Preview() {
+    return v3Preview;
   }
 
   private SemconvStability() {}

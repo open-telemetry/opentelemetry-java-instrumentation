@@ -15,11 +15,13 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.ToIntFunction;
@@ -61,6 +63,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final AddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor;
+  private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
   private final boolean redactQueryParameters;
 
@@ -73,6 +76,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         builder.knownMethods);
     internalNetworkExtractor = builder.buildNetworkExtractor();
     serverAddressAndPortExtractor = builder.serverAddressAndPortExtractor;
+    internalServerExtractor = builder.buildServerExtractor();
     resendCountIncrementer = builder.resendCountIncrementer;
     redactQueryParameters = builder.redactQueryParameters;
   }
@@ -83,16 +87,20 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     String fullUrl = stripSensitiveData(getter.getUrlFull(request));
 
-    AddressAndPort serverAddressAndPort = serverAddressAndPortExtractor.extract(request);
-    if (serverAddressAndPort.getAddress() != null) {
-      attributes.put(SERVER_ADDRESS, serverAddressAndPort.getAddress());
-      Integer port = serverAddressAndPort.getPort();
-      if (port == null || port <= 0) {
-        port = defaultPortForScheme(fullUrl);
+    if (SemconvStability.v3Preview()) {
+      AddressAndPort serverAddressAndPort = serverAddressAndPortExtractor.extract(request);
+      if (serverAddressAndPort.getAddress() != null) {
+        attributes.put(SERVER_ADDRESS, serverAddressAndPort.getAddress());
+        Integer port = serverAddressAndPort.getPort();
+        if (port == null || port <= 0) {
+          port = defaultPortForScheme(fullUrl);
+        }
+        if (port != null && port > 0) {
+          attributes.put(SERVER_PORT, (long) port);
+        }
       }
-      if (port != null && port > 0) {
-        attributes.put(SERVER_PORT, (long) port);
-      }
+    } else {
+      internalServerExtractor.onStart(attributes, request);
     }
 
     attributes.put(URL_FULL, fullUrl);
