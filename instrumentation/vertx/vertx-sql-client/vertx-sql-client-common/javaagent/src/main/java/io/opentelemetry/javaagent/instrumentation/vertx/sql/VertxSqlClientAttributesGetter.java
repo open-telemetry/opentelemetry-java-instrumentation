@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -24,7 +25,12 @@ enum VertxSqlClientAttributesGetter
       createResponseStatusExtractor();
 
   @Override
+  @Nullable
   public String getDbSystemName(VertxSqlClientRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      return request.getDbSystemName();
+    }
+    // preserving old behavior
     return null;
   }
 
