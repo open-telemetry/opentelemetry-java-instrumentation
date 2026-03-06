@@ -35,6 +35,11 @@ final class BridgedTraceFlags
   }
 
   @Override
+  public boolean isTraceIdRandom() {
+    return delegate.isTraceIdRandom();
+  }
+
+  @Override
   public String asHex() {
     return delegate.asHex();
   }
