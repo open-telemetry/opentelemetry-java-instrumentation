@@ -165,6 +165,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
 | Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
+| Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
@@ -200,6 +201,25 @@ Exceptions:
 ### [Naming] Getter Naming
 
 Public API getters should use `get*` (or `is*` for booleans).
+
+### [Style] Prefer Instance Creation Over Singletons
+
+Stateless implementations of telemetry interfaces — `TextMapGetter`, `TextMapSetter`,
+`*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`,
+`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) at the
+usage site instead of singleton patterns.
+
+Flag both forms:
+
+- **Enum singletons**: `enum MyGetter implements TextMapGetter<T> { INSTANCE; ... }`
+  referenced as `MyGetter.INSTANCE`.
+- **Classical singletons**: `private static final MyGetter INSTANCE = new MyGetter();`
+  with a static accessor, referenced as `MyGetter.getInstance()`.
+
+Preferred replacement: pass `new MyImpl()` directly where the implementation is consumed
+(e.g., as an argument to a builder or `Instrumenter` factory method). These are tiny
+stateless objects, so creating a fresh instance at each initialization site is fine even
+if the class is referenced from more than one place.
 
 ### [Semconv] Constants by Module Type
 
