@@ -131,8 +131,6 @@ testing {
   }
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
   if (!(findProperty("testLatestDeps") as Boolean)) {
     check {
@@ -144,15 +142,13 @@ tasks {
     }
   }
 
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", collectMetadata)
-  }
-
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -160,12 +156,23 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testV3Preview by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewBefore1_11_106 by registering(Test::class) {
+    testClassesDirs = testing.suites.named("test_before_1_11_106", JvmTestSuite::class).get().sources.output.classesDirs
+    classpath = testing.suites.named("test_before_1_11_106", JvmTestSuite::class).get().sources.runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testV3Preview, testV3PreviewBefore1_11_106)
   }
 
   if (findProperty("denyUnsafe") as Boolean) {

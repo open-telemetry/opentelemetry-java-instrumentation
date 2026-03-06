@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.Arrays.asList;
 
@@ -13,8 +15,11 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import java.util.HashSet;
@@ -57,6 +62,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final AddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor;
   private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
   private final boolean redactQueryParameters;
@@ -69,6 +75,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         builder.capturedResponseHeaders,
         builder.knownMethods);
     internalNetworkExtractor = builder.buildNetworkExtractor();
+    serverAddressAndPortExtractor = builder.serverAddressAndPortExtractor;
     internalServerExtractor = builder.buildServerExtractor();
     resendCountIncrementer = builder.resendCountIncrementer;
     redactQueryParameters = builder.redactQueryParameters;
@@ -78,9 +85,24 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalServerExtractor.onStart(attributes, request);
-
     String fullUrl = stripSensitiveData(getter.getUrlFull(request));
+
+    if (SemconvStability.v3Preview()) {
+      AddressAndPort serverAddressAndPort = serverAddressAndPortExtractor.extract(request);
+      if (serverAddressAndPort.getAddress() != null) {
+        attributes.put(SERVER_ADDRESS, serverAddressAndPort.getAddress());
+        Integer port = serverAddressAndPort.getPort();
+        if (port == null || port <= 0) {
+          port = defaultPortForScheme(fullUrl);
+        }
+        if (port != null && port > 0) {
+          attributes.put(SERVER_PORT, (long) port);
+        }
+      }
+    } else {
+      internalServerExtractor.onStart(attributes, request);
+    }
+
     attributes.put(URL_FULL, fullUrl);
 
     int resendCount = resendCountIncrementer.applyAsInt(parentContext);
@@ -214,5 +236,19 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       }
     }
     return false;
+  }
+
+  @Nullable
+  private static Integer defaultPortForScheme(@Nullable String url) {
+    if (url == null) {
+      return null;
+    }
+    if (url.startsWith("https://")) {
+      return 443;
+    }
+    if (url.startsWith("http://")) {
+      return 80;
+    }
+    return null;
   }
 }

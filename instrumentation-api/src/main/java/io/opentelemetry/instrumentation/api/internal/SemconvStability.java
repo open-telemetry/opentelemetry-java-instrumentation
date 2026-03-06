@@ -30,6 +30,8 @@ public final class SemconvStability {
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
 
+  private static final boolean v3Preview;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
@@ -42,6 +44,11 @@ public final class SemconvStability {
 
     boolean oldRpc = true;
     boolean stableRpc = false;
+
+    String v3PreviewValue = System.getProperty("otel.instrumentation.common.v3-preview");
+    if (v3PreviewValue == null) {
+      v3PreviewValue = System.getenv("OTEL_INSTRUMENTATION_COMMON_V3_PREVIEW");
+    }
 
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
@@ -101,6 +108,8 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = oldRpc;
     emitStableRpcSemconv = stableRpc;
+
+    v3Preview = "true".equals(v3PreviewValue);
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -170,6 +179,10 @@ public final class SemconvStability {
   public static String stableRpcSystemName(String oldRpcSystem) {
     String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
     return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
+  }
+
+  public static boolean v3Preview() {
+    return v3Preview;
   }
 
   private SemconvStability() {}
