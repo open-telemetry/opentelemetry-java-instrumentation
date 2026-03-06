@@ -42,6 +42,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -1102,8 +1103,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(SERVER_PORT)) {
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
-                  int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
-                  assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
+                  if (SemconvStability.v3Preview()) {
+                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                    assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
+                  } else if (attrs.get(SERVER_PORT) != null) {
+                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                    assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
+                  }
                 } else {
                   assertThat(attrs).containsEntry(SERVER_PORT, uriPort);
                 }
