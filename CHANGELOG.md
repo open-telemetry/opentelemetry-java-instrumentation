@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- `GrpcRequest.getMethod()` now returns `@Nullable` to support unregistered-service requests where
+  no `MethodDescriptor` is available
+  ([#16214](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16214))
+
 ## Version 2.25.0 (2026-02-13)
 
 ### ⚠️ Breaking changes to non-stable APIs
