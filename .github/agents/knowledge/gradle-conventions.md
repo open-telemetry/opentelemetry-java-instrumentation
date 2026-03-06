@@ -143,7 +143,8 @@ When a module has custom test tasks (e.g., `testStableSemconv`), system properti
 args that apply to **all** test tasks should be set once in a `withType<Test>().configureEach`
 block, not repeated on each individual task.
 
-When there is only one test task, `tasks.test { ... }` is fine.
+When there is only one test task, `tasks.test { ... }` is fine — do not convert it to
+`withType<Test>().configureEach` and do not flag it.
 
 **How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and a
 custom test task (e.g., `val testStableSemconv by registering(Test::class)`), check whether
