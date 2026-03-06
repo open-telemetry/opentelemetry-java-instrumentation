@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.javaagent.instrumentation.apachecamel.SpanDecorator;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,36 +24,26 @@ public class DecoratorRegistry {
     result.put("aws-sqs", new MessagingSpanDecorator("aws-sqs"));
     result.put("cometd", new MessagingSpanDecorator("cometd"));
     result.put("cometds", new MessagingSpanDecorator("cometds"));
-    result.put(
-        "cql",
-        new DbSpanDecorator("cql", DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA));
+    result.put("cql", new DbSpanDecorator("cql", DbSystemNameIncubatingValues.CASSANDRA));
     result.put("direct", new InternalSpanDecorator());
     result.put("direct-vm", new InternalSpanDecorator());
     result.put("disruptor", new InternalSpanDecorator());
     result.put("disruptor-vm", new InternalSpanDecorator());
     result.put(
         "elasticsearch",
-        new DbSpanDecorator(
-            "elasticsearch", DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH));
+        new DbSpanDecorator("elasticsearch", DbSystemNameIncubatingValues.ELASTICSEARCH));
     result.put(
-        "opensearch",
-        new DbSpanDecorator(
-            "opensearch", DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH));
+        "opensearch", new DbSpanDecorator("opensearch", DbSystemNameIncubatingValues.OPENSEARCH));
     result.put("http4", new Http4SpanDecorator());
     result.put("https4", new Https4SpanDecorator());
     result.put("http", new HttpSpanDecorator());
     result.put("ironmq", new MessagingSpanDecorator("ironmq"));
-    result.put(
-        "jdbc",
-        new DbSpanDecorator("jdbc", DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL));
+    result.put("jdbc", new DbSpanDecorator("jdbc", DbSystemNameIncubatingValues.OTHER_SQL));
     result.put("jetty", new HttpSpanDecorator());
     result.put("jms", new MessagingSpanDecorator("jms"));
     result.put("kafka", new KafkaSpanDecorator());
     result.put("log", new LogSpanDecorator());
-    result.put(
-        "mongodb",
-        new DbSpanDecorator(
-            "mongodb", DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB));
+    result.put("mongodb", new DbSpanDecorator("mongodb", DbSystemNameIncubatingValues.MONGODB));
     result.put("mqtt", new MessagingSpanDecorator("mqtt"));
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());
@@ -64,9 +54,7 @@ public class DecoratorRegistry {
     result.put("seda", new InternalSpanDecorator());
     result.put("servlet", new HttpSpanDecorator());
     result.put("sjms", new MessagingSpanDecorator("sjms"));
-    result.put(
-        "sql",
-        new DbSpanDecorator("sql", DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL));
+    result.put("sql", new DbSpanDecorator("sql", DbSystemNameIncubatingValues.OTHER_SQL));
     result.put("stomp", new MessagingSpanDecorator("stomp"));
     result.put("timer", new TimerSpanDecorator());
     result.put("undertow", new HttpSpanDecorator());

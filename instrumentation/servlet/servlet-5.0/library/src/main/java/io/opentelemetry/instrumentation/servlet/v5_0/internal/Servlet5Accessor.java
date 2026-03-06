@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
@@ -16,7 +17,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -111,7 +111,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   public List<String> getRequestParameterValues(
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
-    return values == null ? emptyList() : Arrays.asList(values);
+    return values == null ? emptyList() : asList(values);
   }
 
   @Override

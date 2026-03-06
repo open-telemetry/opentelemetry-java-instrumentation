@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -275,13 +274,7 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE, emitStableDatabaseSemconv() ? "60" : null),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "com.clickhouse.client.api.ServerException"
-                                    : null))));
+                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "60" : null))));
   }
 
   @Test

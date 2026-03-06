@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
@@ -22,7 +24,14 @@ final class CassandraSqlAttributesGetter
 
   @Override
   public String getDbSystemName(CassandraRequest request) {
-    return DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+    return DbSystemNameIncubatingValues.CASSANDRA;
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(CassandraRequest request) {
+    // "A string constant is an arbitrary sequence of characters enclosed by single-quote(')."
+    // https://cassandra.apache.org/doc/stable/cassandra/developing/cql/definitions.html#constants
+    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
   @Override

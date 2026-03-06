@@ -32,6 +32,9 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
+  private static final boolean EMIT_EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
+
   static RestTemplate restTemplate = buildClient(false);
   static RestTemplate restTemplateWithReadTimeout = buildClient(true);
 
@@ -103,9 +106,11 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
 
     // no enum value for TEST
     optionsBuilder.disableTestNonStandardHttpMethod();
-    optionsBuilder.setExpectedClientSpanNameMapper(
-        (uri, method) -> method + " " + getTemplate(uri));
-    optionsBuilder.setExpectedUrlTemplateMapper(SpringRestTemplateTest::getTemplate);
+    if (EMIT_EXPERIMENTAL_TELEMETRY) {
+      optionsBuilder.setExpectedClientSpanNameMapper(
+          (uri, method) -> method + " " + getTemplate(uri));
+      optionsBuilder.setExpectedUrlTemplateMapper(SpringRestTemplateTest::getTemplate);
+    }
   }
 
   private static String getTemplate(URI uri) {

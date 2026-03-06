@@ -106,7 +106,6 @@ class OpenTelemetryConnectionTest {
         .shortUrl("my_connection_string")
         .user("my_user")
         .name("my_name")
-        .db("my_db")
         .host("my_host")
         .port(1234)
         .build();
