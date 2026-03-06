@@ -125,4 +125,10 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
+
+  // TODO: make this required to implement
+  @Nullable
+  default Long getDbResponseReturnedRows(@Nullable RESPONSE response) {
+    return null;
+  }
 }
