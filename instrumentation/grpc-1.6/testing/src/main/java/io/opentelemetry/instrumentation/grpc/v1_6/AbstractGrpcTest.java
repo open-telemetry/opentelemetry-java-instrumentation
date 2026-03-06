@@ -855,21 +855,27 @@ public abstract class AbstractGrpcTest {
                             emitStableRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
                         equalTo(SERVER_ADDRESS, "localhost"),
                         equalTo(SERVER_PORT, (long) server.getPort()))));
-    if (emitStableRpcSemconv()) {
-      spanAsserts.add(
-          span ->
-              span.hasName("_OTHER")
-                  .hasKind(SpanKind.SERVER)
-                  .hasParent(trace.getSpan(0))
-                  .hasStatus(StatusData.error())
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(RPC_SYSTEM_NAME, "grpc"),
-                      equalTo(RPC_METHOD, "_OTHER"),
-                      equalTo(RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
-                      equalTo(RPC_RESPONSE_STATUS_CODE, Status.Code.UNIMPLEMENTED.name())));
-    }
 
-    testing().waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(spanAsserts));
+    testing()
+        .waitAndAssertTraces(
+            trace -> {
+              if (emitStableRpcSemconv()) {
+                spanAsserts.add(
+                    span ->
+                        span.hasName("_OTHER")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(RPC_METHOD, "_OTHER"),
+                                equalTo(RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
+                                equalTo(
+                                    RPC_RESPONSE_STATUS_CODE,
+                                    Status.Code.UNIMPLEMENTED.name())));
+              }
+              trace.hasSpansSatisfyingExactly(spanAsserts);
+            });
   }
 
   @Test
