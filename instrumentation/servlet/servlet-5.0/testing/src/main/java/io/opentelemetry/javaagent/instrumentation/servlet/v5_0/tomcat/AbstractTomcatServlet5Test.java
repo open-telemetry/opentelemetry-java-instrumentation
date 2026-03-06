@@ -65,6 +65,10 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
     super.configure(options);
     options.setContextPath("/tomcat-context");
     options.setTestError(testError());
+    if (isAgentTest()) {
+      // only test request body capture with agent as library does not support it yet
+      options.setTestRequestBodyCapture(true);
+    }
   }
 
   public boolean testError() {

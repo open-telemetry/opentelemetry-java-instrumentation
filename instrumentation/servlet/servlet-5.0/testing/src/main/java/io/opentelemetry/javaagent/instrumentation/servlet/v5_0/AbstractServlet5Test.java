@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -99,6 +100,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     addServlet(context, INDEXED_CHILD.getPath(), servlet);
     addServlet(context, CAPTURE_HEADERS.getPath(), servlet);
     addServlet(context, CAPTURE_PARAMETERS.getPath(), servlet);
+    addServlet(context, CAPTURE_BODY.getPath(), servlet);
     addServlet(context, HTML_PRINT_WRITER.getPath(), servlet);
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.getPath(), servlet);
   }
