@@ -27,8 +27,6 @@ echo "Checking ${TOTAL_TASKS} tasks..."
 INVALID_TASKS=()
 VALID_COUNT=0
 
-# Try to validate all tasks in a single Gradle invocation (fast path)
-echo "Running bulk validation..."
 set +e  # Temporarily disable exit on error
 ./gradlew "${ALL_TASKS[@]}" --dry-run --quiet > /tmp/gradle-validate.log 2>&1
 BULK_EXIT_CODE=$?
@@ -36,32 +34,35 @@ set -e  # Re-enable exit on error
 
 if [[ $BULK_EXIT_CODE -ne 0 ]]; then
   echo ""
-  echo "⚠️  Bulk validation failed. Running individual validation to identify broken tasks..."
+  echo "⚠️  Bulk validation failed. Analyzing error output..."
   echo ""
 
-  validate_task() {
-    local task_path="$1"
-
-    local output
-    output=$(./gradlew "$task_path" --dry-run --quiet 2>&1)
-    local exit_code=$?
-
-    if [[ $exit_code -eq 0 ]] && [[ ! "$output" =~ Task.*not\ found ]]; then
-      VALID_COUNT=$((VALID_COUNT + 1))
-      echo "✓ ${task_path}"
-      return 0
-    else
-      INVALID_TASKS+=("$task_path")
-      echo "✗ ${task_path} - TASK NOT FOUND"
-      return 1
+  # Gradle outputs errors like: "Cannot locate tasks that match ':instrumentation:...' as project '...' not found"
+  # or "Task ':instrumentation:...' not found in root project"
+  while IFS= read -r line; do
+    if [[ "$line" =~ Cannot\ locate\ tasks\ that\ match\ \'([^\']+)\' ]]; then
+      task_name="${BASH_REMATCH[1]}"
+      INVALID_TASKS+=("$task_name")
+      echo "✗ ${task_name} - TASK NOT FOUND"
+    elif [[ "$line" =~ Task\ \'([^\']+)\'\ not\ found ]]; then
+      task_name="${BASH_REMATCH[1]}"
+      INVALID_TASKS+=("$task_name")
+      echo "✗ ${task_name} - TASK NOT FOUND"
     fi
-  }
+  done < /tmp/gradle-validate.log
 
-  for task in "${ALL_TASKS[@]}"; do
-    validate_task "$task"
-  done
+  VALID_COUNT=$((TOTAL_TASKS - ${#INVALID_TASKS[@]}))
+
+  # If we couldn't parse any errors from the log, fall back to showing the log
+  if [[ ${#INVALID_TASKS[@]} -eq 0 ]]; then
+    echo "Could not parse task errors from validation output."
+    echo "Gradle error log:"
+    cat /tmp/gradle-validate.log
+    echo ""
+    echo "This might indicate a different type of failure (not a missing task)."
+    INVALID_TASKS+=("unknown - check log above")
+  fi
 else
-  # All tasks are valid (fast path succeeded)
   VALID_COUNT=$TOTAL_TASKS
   INVALID_TASKS=()
   echo "✓ All ${TOTAL_TASKS} tasks validated successfully"
