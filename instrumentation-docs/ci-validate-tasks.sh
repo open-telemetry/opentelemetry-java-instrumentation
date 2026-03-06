@@ -72,9 +72,6 @@ echo ""
 echo "======================================"
 echo "Validation Summary"
 echo "======================================"
-echo "Valid tasks: ${VALID_COUNT}"
-echo "Invalid tasks: ${#INVALID_TASKS[@]}"
-
 if [ ${#INVALID_TASKS[@]} -gt 0 ]; then
   echo ""
   echo "The following tasks are invalid:"
