@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor
+package io.opentelemetry.instrumentation.ktor.common.v2_0.internal
 
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class IpAddressUtilTest {

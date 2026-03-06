@@ -9,7 +9,6 @@ import io.ktor.features.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter
-import io.opentelemetry.instrumentation.ktor.isIpAddress
 
 internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
 
@@ -30,12 +29,4 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
   override fun getNetworkProtocolName(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) "http" else null
 
   override fun getNetworkProtocolVersion(request: ApplicationRequest, response: ApplicationResponse?): String? = if (request.httpVersion.startsWith("HTTP/")) request.httpVersion.substring("HTTP/".length) else null
-
-  override fun getNetworkPeerAddress(request: ApplicationRequest, response: ApplicationResponse?): String? {
-    val remote = request.local.remoteHost
-    if ("unknown" != remote && isIpAddress(remote)) {
-      return remote
-    }
-    return null
-  }
 }
