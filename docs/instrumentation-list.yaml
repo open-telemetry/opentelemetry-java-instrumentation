@@ -8804,6 +8804,45 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   liberty:
   - name: liberty-20.0
     source_path: instrumentation/liberty/liberty-20.0
