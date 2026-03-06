@@ -859,22 +859,28 @@ public abstract class AbstractGrpcTest {
     testing()
         .waitAndAssertTraces(
             trace -> {
+              List<Consumer<SpanDataAssert>> allAsserts = new ArrayList<>(spanAsserts);
               if (emitStableRpcSemconv()) {
-                spanAsserts.add(
+                allAsserts.add(
                     span ->
                         span.hasName("_OTHER")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
                                 equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(
+                                    RPC_GRPC_STATUS_CODE,
+                                    emitOldRpcSemconv()
+                                        ? (long) Status.Code.UNIMPLEMENTED.value()
+                                        : null),
                                 equalTo(RPC_METHOD, "_OTHER"),
                                 equalTo(RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
                                 equalTo(
-                                    RPC_RESPONSE_STATUS_CODE,
-                                    Status.Code.UNIMPLEMENTED.name())));
+                                    RPC_RESPONSE_STATUS_CODE, Status.Code.UNIMPLEMENTED.name())));
               }
-              trace.hasSpansSatisfyingExactly(spanAsserts);
+              trace.hasSpansSatisfyingExactly(allAsserts);
             });
   }
 
