@@ -56,7 +56,10 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
       throw new IllegalStateException("Expected unwrapped context");
     }
     this.agentContext = agentContext;
-    this.applicationContext = applicationContext;
+    this.applicationContext =
+        applicationContext != null
+            ? applicationContext
+            : application.io.opentelemetry.context.Context.root();
   }
 
   Context toAgentContext() {
