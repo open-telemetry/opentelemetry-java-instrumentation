@@ -96,11 +96,18 @@ enum ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
+    if (request.getRequest().getAuthority() == null) {
+      return null;
+    }
     return request.getRequest().getAuthority().getHostName();
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
+    if (request.getRequest().getAuthority() == null) {
+      return null;
+    }
     return request.getRequest().getAuthority().getPort();
   }
 

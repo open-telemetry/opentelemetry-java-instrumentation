@@ -29,7 +29,7 @@ public class PoolMasterActorInstrumentation implements TypeInstrumentation {
         namedOneOf(
             "akka$http$impl$engine$client$PoolMasterActor$$startPoolInterface",
             "akka$http$impl$engine$client$PoolMasterActor$$startPoolInterfaceActor"),
-        ClearContextAdvice.class.getName());
+        getClass().getName() + "$ClearContextAdvice");
   }
 
   @SuppressWarnings("unused")

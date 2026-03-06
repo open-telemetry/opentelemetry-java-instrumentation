@@ -31,7 +31,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableSet;
+import java.util.Set;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
@@ -119,7 +119,7 @@ class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
   protected void configure(HttpServerTestOptions options) {
     options.setTestException(false);
     options.disableTestNonStandardHttpMethod();
-    options.setHttpAttributes(endpoint -> ImmutableSet.of(NETWORK_PEER_PORT));
+    options.setHttpAttributes(endpoint -> Set.of(NETWORK_PEER_PORT));
   }
 
   private static Promise<HttpResponse> prepareResponse(ServerEndpoint endpoint) {

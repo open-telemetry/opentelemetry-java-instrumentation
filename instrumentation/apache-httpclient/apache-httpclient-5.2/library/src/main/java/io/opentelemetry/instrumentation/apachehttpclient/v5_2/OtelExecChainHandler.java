@@ -27,7 +27,7 @@ class OtelExecChainHandler implements ExecChainHandler {
   private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
 
-  public OtelExecChainHandler(
+  OtelExecChainHandler(
       Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,
       ContextPropagators propagators) {
     this.instrumenter = instrumenter;

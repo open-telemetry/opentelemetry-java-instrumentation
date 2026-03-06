@@ -20,15 +20,7 @@ class ExperimentalTestHelper {
   static final AttributeKey<Boolean> HYSTRIX_CIRCUIT_OPEN = booleanKey("hystrix.circuit_open");
 
   @Nullable
-  static String experimental(String value) {
-    if (isEnabled) {
-      return value;
-    }
-    return null;
-  }
-
-  @Nullable
-  static Boolean experimental(Boolean value) {
+  static <T> T experimental(T value) {
     if (isEnabled) {
       return value;
     }
