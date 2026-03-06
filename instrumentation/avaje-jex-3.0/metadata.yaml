@@ -4,4 +4,4 @@ description: >
   metrics.
 library_link: https://avaje.io/jex/
 features:
-  - HTTP_ROUTER
+  - HTTP_ROUTE
