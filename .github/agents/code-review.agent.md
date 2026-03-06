@@ -168,7 +168,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
-## Core Rules (Always In Force)
+## Core Rules (Always Enforce)
 
 ### [General] Engineering Correctness
 
@@ -219,10 +219,13 @@ If a new module is added, verify all of the following:
 4. `instrumentation-docs/instrumentations.sh` includes all test-task variants.
 5. `settings.gradle.kts` includes all subprojects in alphabetical order.
 6. `docs/supported-libraries.md` has an entry (`Auto-instrumented versions` is `N/A` for library-only).
-7. Module README exists with usage and dependency details.
-8. `.fossa.yml` regenerated via `./gradlew generateFossaConfiguration`.
-9. Muzzle `pass` blocks include `assertInverse.set(true)`.
-10. Correct Gradle plugin is applied for each module type.
+7. Javaagent README (may be in `javaagent/` or parent directory to share across versions)
+   documents configuration properties (if any) in a settings table.
+8. Library README exists with dependency and usage details (when there is a standalone
+   library instrumentation).
+9. `.fossa.yml` regenerated via `./gradlew generateFossaConfiguration`.
+10. Muzzle `pass` blocks include `assertInverse.set(true)`.
+11. Correct Gradle plugin is applied for each module type.
 
 ### [Config] Configuration Reading
 

@@ -180,3 +180,4 @@ When already present, verify:
 - `collectMetadata` is in `withType<Test>().configureEach` (or `tasks.test` if only one test
   task) — never on individual tasks.
 - `metadataConfig` is on each non-default task, not on the default `test` task.
+- The `metadataConfig` value matches at least one of the jvmArgs configured in the task
