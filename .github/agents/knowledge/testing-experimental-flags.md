@@ -2,21 +2,35 @@
 
 ## Quick Reference
 
-- Use when: reviewing `testExperimental` tasks or experimental span-attribute assertions
+- Use when: any `experimental` flag (e.g., `experimental-span-attributes`,
+  `emit-experimental-telemetry`, `experimental-metrics.enabled`) appears in JVM args or
+  system properties of a test task
 - Review focus: task wiring/metadata config and assertion patterns for flag-on vs flag-off behavior
 
 ## What `testExperimental` Is For
 
 Some instrumentation modules support extra attributes that are disabled by default because they
-are experimental (subject to change) or carry a performance cost. These attributes are gated
-behind a JVM property such as:
+are experimental (subject to change). These attributes are gated behind a JVM property such as:
 
 ```
 otel.instrumentation.<module>.experimental-span-attributes=true
+otel.instrumentation.http.client.emit-experimental-telemetry=true
+otel.instrumentation.<module>.experimental-metrics.enabled=true
 ```
 
 The `testExperimental` Gradle task runs the test suite with this flag enabled so that the
 experimental attribute assertions are exercised in CI.
+
+## Detecting and Fixing Missing `testExperimental` Tasks
+
+If any experimental flag appears in `withType<Test>().configureEach` or the default `test {}`
+block but there is no dedicated `testExperimental` task, fix it:
+
+1. Create a `testExperimental` task (see Gradle Task Setup below).
+2. Move the experimental flag out of the shared/default task config into `testExperimental`.
+3. Add a `private static final boolean EXPERIMENTAL_ATTRIBUTES` field to test classes.
+4. Wrap experimental attribute assertions with the `experimental()` helper.
+5. Wire the new task into `check`.
 
 ## Gradle Task Setup
 

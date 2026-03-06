@@ -105,6 +105,14 @@ Auto-fix boundaries:
   - obvious assertion API migrations (e.g., AssertJ preference)
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
+  - missing `testExperimental` task — when any experimental flag (e.g.,
+    `experimental-span-attributes`, `emit-experimental-telemetry`,
+    `experimental-metrics.enabled`) is set unconditionally on all test tasks (e.g., in
+    `withType<Test>().configureEach` or the default `test` task) instead of being isolated
+    in a dedicated `testExperimental` task,
+    create the task following the pattern in `testing-experimental-flags.md`, move the
+    experimental flag into it, and update test assertions to use the conditional
+    `experimental()` helper so both flag-on and flag-off modes are exercised
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
     to a library family with sibling version modules, it must list all siblings via
     `testInstrumentation`. Check `settings.gradle.kts` for sibling `:javaagent` modules
@@ -215,7 +223,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
 | Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | - |
 | Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-dual.md` |
-| Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions | `testing-experimental-flags.md` |
+| Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
 | Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
 | API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
 | Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
