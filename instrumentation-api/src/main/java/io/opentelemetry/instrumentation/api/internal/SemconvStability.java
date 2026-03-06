@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,13 +45,9 @@ public final class SemconvStability {
     boolean oldRpc = true;
     boolean stableRpc = false;
 
-    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    boolean v3PreviewValue = false;
-    if (openTelemetry instanceof ExtendedOpenTelemetry) {
-      v3PreviewValue =
-          ((ExtendedOpenTelemetry) openTelemetry)
-              .getInstrumentationConfig("common")
-              .getBoolean("v3_preview", false);
+    String v3PreviewValue = System.getProperty("otel.instrumentation.common.v3-preview");
+    if (v3PreviewValue == null) {
+      v3PreviewValue = System.getenv("OTEL_INSTRUMENTATION_COMMON_V3_PREVIEW");
     }
 
     String value = System.getProperty("otel.semconv-stability.opt-in");
@@ -116,7 +109,7 @@ public final class SemconvStability {
     emitOldRpcSemconv = oldRpc;
     emitStableRpcSemconv = stableRpc;
 
-    v3Preview = v3PreviewValue;
+    v3Preview = "true".equals(v3PreviewValue);
   }
 
   public static boolean emitOldDatabaseSemconv() {
