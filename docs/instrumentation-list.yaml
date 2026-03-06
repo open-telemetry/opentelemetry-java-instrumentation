@@ -11215,6 +11215,30 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
         - name: messaging.client_id
           type: STRING
         - name: messaging.destination.name
