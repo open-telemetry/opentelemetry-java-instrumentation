@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor
+package io.opentelemetry.instrumentation.ktor.common.v2_0.internal
 
 import java.util.regex.Pattern
 

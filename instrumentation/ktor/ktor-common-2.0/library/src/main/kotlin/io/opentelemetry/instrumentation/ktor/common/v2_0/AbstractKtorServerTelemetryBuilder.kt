@@ -39,7 +39,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
       DefaultHttpServerInstrumenterBuilder.create(
         instrumentationName,
         openTelemetry,
-        KtorHttpServerAttributesGetter.INSTANCE
+        KtorHttpServerAttributesGetter
       )
   }
 
