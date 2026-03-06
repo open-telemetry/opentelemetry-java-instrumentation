@@ -360,43 +360,43 @@ libraries:
       metrics:
       - name: db.client.connections.idle.max
         description: The maximum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: requests
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -407,9 +407,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -417,33 +417,33 @@ libraries:
           type: STRING
       - name: db.client.connection.idle.max
         description: The maximum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: request
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -616,6 +616,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: rpc.method
           type: STRING
         - name: rpc.service
@@ -1381,6 +1383,93 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: armeria-grpc-1.14
     description: |
       This instrumentation enables RPC client spans and metrics for the Armeria gRPC client, and RPC server spans and metrics for the Armeria gRPC server.
@@ -1416,6 +1505,32 @@ libraries:
         - name: rpc.service
           type: STRING
         - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=rpc
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
           type: STRING
         - name: server.address
           type: STRING
@@ -1500,6 +1615,41 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: async-http-client-1.9
     display_name: AsyncHttpClient
     description: |
@@ -1576,6 +1726,41 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: async-http-client-2.0
@@ -1662,6 +1847,49 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   avaje:
@@ -2095,7 +2323,7 @@ libraries:
         description: Measures number of input and output tokens used.
         instrument: HISTOGRAM
         data_type: HISTOGRAM
-        unit: token
+        unit: '{token}'
         attributes:
         - name: gen_ai.operation.name
           type: STRING
@@ -3264,8 +3492,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   - name: couchbase-3.1
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
@@ -4056,8 +4282,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   executors:
   - name: executors
     display_name: Java Executors
@@ -4096,7 +4320,7 @@ libraries:
         description: Count of circuit breaker executions.
         instrument: counter
         data_type: LONG_SUM
-        unit: execution
+        unit: '{execution}'
         attributes:
         - name: failsafe.circuit_breaker.name
           type: STRING
@@ -4106,7 +4330,7 @@ libraries:
         description: Count of circuit breaker state changes.
         instrument: counter
         data_type: LONG_SUM
-        unit: execution
+        unit: '{execution}'
         attributes:
         - name: failsafe.circuit_breaker.name
           type: STRING
@@ -4116,7 +4340,7 @@ libraries:
         description: Number of attempts for each execution.
         instrument: HISTOGRAM
         data_type: HISTOGRAM
-        unit: attempt
+        unit: '{attempt}'
         attributes:
         - name: failsafe.retry_policy.name
           type: STRING
@@ -4127,7 +4351,7 @@ libraries:
           one execution represents the total number of attempts.
         instrument: counter
         data_type: LONG_SUM
-        unit: execution
+        unit: '{execution}'
         attributes:
         - name: failsafe.retry_policy.name
           type: STRING
@@ -4855,6 +5079,75 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+    - when: otel.semconv-stability.opt-in=rpc
+      metrics:
+      - name: rpc.client.call.duration
+        description: Measures the duration of outbound remote procedure calls (RPC).
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.call.duration
+        description: Measures the duration of inbound remote procedure calls (RPC).
+        instrument: HISTOGRAM
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   guava:
   - name: guava-10.0
     description: |
@@ -5124,26 +5417,26 @@ libraries:
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: requests
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
@@ -5152,16 +5445,16 @@ libraries:
           obtain a connection from the pool.
         instrument: counter
         data_type: LONG_SUM
-        unit: timeouts
+        unit: '{timeouts}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -5189,9 +5482,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -5207,25 +5500,25 @@ libraries:
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: request
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -5234,7 +5527,7 @@ libraries:
           obtain a connection from the pool.
         instrument: counter
         data_type: LONG_SUM
-        unit: timeout
+        unit: '{timeout}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -5384,7 +5677,7 @@ libraries:
         description: The number of data files.
         instrument: counter
         data_type: LONG_SUM
-        unit: file
+        unit: '{file}'
         attributes:
         - name: iceberg.scan.state
           type: STRING
@@ -5406,7 +5699,7 @@ libraries:
         description: The number of data manifests.
         instrument: counter
         data_type: LONG_SUM
-        unit: file
+        unit: '{file}'
         attributes:
         - name: iceberg.scan.state
           type: STRING
@@ -5418,7 +5711,7 @@ libraries:
         description: The number of delete files.
         instrument: counter
         data_type: LONG_SUM
-        unit: file
+        unit: '{file}'
         attributes:
         - name: iceberg.delete_file.type
           type: STRING
@@ -5442,7 +5735,7 @@ libraries:
         description: The number of delete manifests.
         instrument: counter
         data_type: LONG_SUM
-        unit: file
+        unit: '{file}'
         attributes:
         - name: iceberg.scan.state
           type: STRING
@@ -6531,8 +6824,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6602,8 +6893,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   jetty:
   - name: jetty-8.0
     description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -8079,9 +8368,9 @@ libraries:
           type: LONG
       - name: http.server.active_requests
         description: Number of active HTTP server requests.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: requests
+        unit: '{requests}'
         attributes:
         - name: http.request.method
           type: STRING
@@ -8504,47 +8793,6 @@ libraries:
         - name: db.system
           type: STRING
         - name: error
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: network.type
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        instrument: HISTOGRAM
-        data_type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: error.type
           type: STRING
         - name: network.peer.address
           type: STRING
@@ -9932,7 +10180,7 @@ libraries:
         description: Measures number of input and output tokens used.
         instrument: HISTOGRAM
         data_type: HISTOGRAM
-        unit: token
+        unit: '{token}'
         attributes:
         - name: gen_ai.operation.name
           type: STRING
@@ -10146,27 +10394,27 @@ libraries:
       metrics:
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: requests
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -10177,9 +10425,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -10187,17 +10435,17 @@ libraries:
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: request
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -10238,7 +10486,7 @@ libraries:
         description: System disk operations
         instrument: counter
         data_type: LONG_SUM
-        unit: operations
+        unit: '{operations}'
         attributes:
         - name: device
           type: STRING
@@ -10246,7 +10494,7 @@ libraries:
           type: STRING
       - name: system.memory.usage
         description: System memory usage
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
         unit: By
         attributes:
@@ -10264,7 +10512,7 @@ libraries:
         description: System network errors
         instrument: counter
         data_type: LONG_SUM
-        unit: errors
+        unit: '{errors}'
         attributes:
         - name: device
           type: STRING
@@ -10284,7 +10532,7 @@ libraries:
         description: System network packets
         instrument: counter
         data_type: LONG_SUM
-        unit: packets
+        unit: '{packets}'
         attributes:
         - name: device
           type: STRING
@@ -10302,7 +10550,7 @@ libraries:
           type: STRING
       - name: runtime.java.memory
         description: Runtime Java memory
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
         unit: By
         attributes:
@@ -10322,7 +10570,7 @@ libraries:
         description: System disk operations
         instrument: counter
         data_type: LONG_SUM
-        unit: operations
+        unit: '{operations}'
         attributes:
         - name: device
           type: STRING
@@ -10330,7 +10578,7 @@ libraries:
           type: STRING
       - name: system.memory.usage
         description: System memory usage
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
         unit: By
         attributes:
@@ -10348,7 +10596,7 @@ libraries:
         description: System network errors
         instrument: counter
         data_type: LONG_SUM
-        unit: errors
+        unit: '{errors}'
         attributes:
         - name: device
           type: STRING
@@ -10368,7 +10616,7 @@ libraries:
         description: System network packets
         instrument: counter
         data_type: LONG_SUM
-        unit: packets
+        unit: '{packets}'
         attributes:
         - name: device
           type: STRING
@@ -10946,7 +11194,7 @@ libraries:
         description: Measures the number of received messages.
         instrument: counter
         data_type: LONG_SUM
-        unit: message
+        unit: '{message}'
         attributes:
         - name: messaging.destination.name
           type: STRING
@@ -11035,7 +11283,7 @@ libraries:
         description: Measures the number of received messages.
         instrument: counter
         data_type: LONG_SUM
-        unit: message
+        unit: '{message}'
         attributes:
         - name: messaging.destination.name
           type: STRING
@@ -11589,8 +11837,6 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: kafka.record.queue_time_ms
-          type: LONG
         - name: messaging.client_id
           type: STRING
         - name: messaging.destination.name
@@ -11848,8 +12094,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   resources:
   - name: resources
     source_path: instrumentation/resources
@@ -12175,55 +12419,6 @@ libraries:
         Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
       type: list
       default: ''
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: CONSUMER
-        attributes:
-        - name: messaging.batch.message_count
-          type: LONG
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.body.size
-          type: LONG
-        - name: messaging.message.id
-          type: STRING
-        - name: messaging.operation
-          type: STRING
-        - name: messaging.rocketmq.client_group
-          type: STRING
-        - name: messaging.rocketmq.message.delivery_timestamp
-          type: LONG
-        - name: messaging.rocketmq.message.group
-          type: STRING
-        - name: messaging.rocketmq.message.keys
-          type: STRING_ARRAY
-        - name: messaging.rocketmq.message.tag
-          type: STRING
-        - name: messaging.system
-          type: STRING
-      - span_kind: PRODUCER
-        attributes:
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.body.size
-          type: LONG
-        - name: messaging.message.id
-          type: STRING
-        - name: messaging.operation
-          type: STRING
-        - name: messaging.rocketmq.message.delivery_timestamp
-          type: LONG
-        - name: messaging.rocketmq.message.group
-          type: STRING
-        - name: messaging.rocketmq.message.keys
-          type: STRING_ARRAY
-        - name: messaging.rocketmq.message.tag
-          type: STRING
-        - name: messaging.rocketmq.message.type
-          type: STRING
-        - name: messaging.system
-          type: STRING
   runtime:
   - name: runtime-telemetry-java17
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java17
@@ -13675,43 +13870,43 @@ libraries:
       metrics:
       - name: db.client.connections.idle.max
         description: The maximum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.idle.min
         description: The minimum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.pending_requests
         description: The number of pending requests for an open connection, cumulative
           for the entire pool.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: requests
+        unit: '{requests}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -13722,9 +13917,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -13732,33 +13927,33 @@ libraries:
           type: STRING
       - name: db.client.connection.idle.max
         description: The maximum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.idle.min
         description: The minimum number of idle open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
       - name: db.client.connection.pending_requests
         description: The number of current pending requests for an open connection.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: request
+        unit: '{request}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -14532,18 +14727,18 @@ libraries:
       metrics:
       - name: db.client.connections.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
       - name: db.client.connections.usage
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connections
+        unit: '{connections}'
         attributes:
         - name: pool.name
           type: STRING
@@ -14554,9 +14749,9 @@ libraries:
       - name: db.client.connection.count
         description: The number of connections that are currently in state described
           by the state attribute.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
@@ -14564,9 +14759,9 @@ libraries:
           type: STRING
       - name: db.client.connection.max
         description: The maximum number of open connections allowed.
-        instrument: counter
+        instrument: updowncounter
         data_type: LONG_SUM
-        unit: connection
+        unit: '{connection}'
         attributes:
         - name: db.client.connection.pool.name
           type: STRING
