@@ -36,7 +36,7 @@ final class BridgedTraceFlags
 
   @Override
   public boolean isTraceIdRandom() {
-    return delegate.isTraceIdRandom();
+    return (delegate.asByte() & 0x02) != 0;
   }
 
   @Override
