@@ -13,6 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Response;
 
 /**
@@ -20,16 +21,40 @@ import org.eclipse.jetty.client.api.Response;
  * any time.
  */
 public final class JettyClientWrapUtil {
-  private static final Class<?>[] listenerInterfaces = {
-    Response.CompleteListener.class,
-    Response.FailureListener.class,
-    Response.SuccessListener.class,
-    Response.AsyncContentListener.class,
-    Response.ContentListener.class,
-    Response.HeadersListener.class,
-    Response.HeaderListener.class,
-    Response.BeginListener.class
-  };
+
+  // Response.DemandedContentListener was added in Jetty 9.4.24. In versions 9.4.24–9.4.43,
+  // AsyncContentListener and ContentListener do NOT extend DemandedContentListener, but Jetty's
+  // HttpReceiver.ContentListeners filters via instanceof DemandedContentListener. Without
+  // explicitly including it, the proxy fails the instanceof check and content is never delivered.
+  @Nullable
+  private static final Class<?> demandedContentListenerClass = loadDemandedContentListener();
+
+  private static final Class<?>[] listenerInterfaces = buildListenerInterfaces();
+
+  @Nullable
+  private static Class<?> loadDemandedContentListener() {
+    try {
+      return Class.forName("org.eclipse.jetty.client.api.Response$DemandedContentListener");
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
+  }
+
+  private static Class<?>[] buildListenerInterfaces() {
+    List<Class<?>> interfaces = new ArrayList<>();
+    interfaces.add(Response.CompleteListener.class);
+    interfaces.add(Response.FailureListener.class);
+    interfaces.add(Response.SuccessListener.class);
+    interfaces.add(Response.AsyncContentListener.class);
+    interfaces.add(Response.ContentListener.class);
+    interfaces.add(Response.HeadersListener.class);
+    interfaces.add(Response.HeaderListener.class);
+    interfaces.add(Response.BeginListener.class);
+    if (demandedContentListenerClass != null) {
+      interfaces.add(demandedContentListenerClass);
+    }
+    return interfaces.toArray(new Class<?>[0]);
+  }
 
   private JettyClientWrapUtil() {}
 
