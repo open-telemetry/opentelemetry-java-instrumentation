@@ -12419,6 +12419,55 @@ libraries:
         Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
       type: list
       default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rocketmq.client_group
+          type: STRING
+        - name: messaging.rocketmq.message.delivery_timestamp
+          type: LONG
+        - name: messaging.rocketmq.message.group
+          type: STRING
+        - name: messaging.rocketmq.message.keys
+          type: STRING_ARRAY
+        - name: messaging.rocketmq.message.tag
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.rocketmq.message.delivery_timestamp
+          type: LONG
+        - name: messaging.rocketmq.message.group
+          type: STRING
+        - name: messaging.rocketmq.message.keys
+          type: STRING_ARRAY
+        - name: messaging.rocketmq.message.tag
+          type: STRING
+        - name: messaging.rocketmq.message.type
+          type: STRING
+        - name: messaging.system
+          type: STRING
   runtime:
   - name: runtime-telemetry-java17
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java17

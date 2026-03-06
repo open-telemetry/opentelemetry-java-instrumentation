@@ -172,17 +172,8 @@ public class EmittedMetricsParser {
   }
 
   /**
-   * Infers the InstrumentType from the MetricDataType string and isMonotonic flag. Since MetricData
-   * only contains the aggregated type (e.g., LONG_SUM, DOUBLE_GAUGE), we can only partially infer
-   * the original instrument type.
-   *
-   * <p>Limitations:
-   *
-   * <ul>
-   *   <li>Cannot distinguish between COUNTER and OBSERVABLE_COUNTER
-   *   <li>Cannot distinguish between UP_DOWN_COUNTER and OBSERVABLE_UP_DOWN_COUNTER
-   *   <li>Cannot distinguish between GAUGE and OBSERVABLE_GAUGE
-   * </ul>
+   * Infers the InstrumentType from the MetricDataType string and isMonotonic flag, since MetricData
+   * only contains the aggregated type (e.g., LONG_SUM, DOUBLE_GAUGE)
    *
    * @param metricDataType the MetricDataType string (e.g., "LONG_SUM", "DOUBLE_GAUGE")
    * @param isMonotonic whether the metric is monotonic (for SUM types), null if not applicable
@@ -199,12 +190,8 @@ public class EmittedMetricsParser {
       case "LONG_SUM", "DOUBLE_SUM" -> {
         // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
         if (isMonotonic != null && isMonotonic) {
-          // Monotonic sum = COUNTER or OBSERVABLE_COUNTER
-          // Default to OBSERVABLE_COUNTER
           yield "counter";
         } else if (isMonotonic != null) {
-          // Non-monotonic sum = UP_DOWN_COUNTER or OBSERVABLE_UP_DOWN_COUNTER
-          // Default to OBSERVABLE_UP_DOWN_COUNTER
           yield "updowncounter";
         } else {
           // Unknown, default to COUNTER
