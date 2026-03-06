@@ -13,7 +13,7 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 

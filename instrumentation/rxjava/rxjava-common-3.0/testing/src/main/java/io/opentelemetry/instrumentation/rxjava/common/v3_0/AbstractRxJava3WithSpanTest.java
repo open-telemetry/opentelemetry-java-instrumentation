@@ -162,7 +162,7 @@ public abstract class AbstractRxJava3WithSpanTest {
   private static List<AttributeAssertion> canceledAttributesAssertions(String methodName) {
     List<AttributeAssertion> assertions =
         codeFunctionSuffixAssertions(".TracedWithSpan", methodName);
-    assertions.add(equalTo(RXJAVA_CANCELED, true));
+    assertions.add(equalTo(RXJAVA_CANCELED, ExperimentalTestHelper.experimentalCanceled(true)));
     return assertions;
   }
 

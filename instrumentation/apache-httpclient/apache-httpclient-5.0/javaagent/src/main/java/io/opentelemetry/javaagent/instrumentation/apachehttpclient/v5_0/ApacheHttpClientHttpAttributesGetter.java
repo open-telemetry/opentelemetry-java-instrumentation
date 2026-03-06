@@ -118,12 +118,21 @@ final class ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(HttpRequest request) {
-    return request.getAuthority().getHostName();
+    URIAuthority authority = request.getAuthority();
+    if (authority == null) {
+      return null;
+    }
+    return authority.getHostName();
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return request.getAuthority().getPort();
+    URIAuthority authority = request.getAuthority();
+    if (authority == null) {
+      return null;
+    }
+    return authority.getPort();
   }
 
   private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {

@@ -49,7 +49,7 @@ public final class ApacheHttpClientRequest {
   private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
-      return new URI(httpRequest.getUri().toString());
+      return httpRequest.getUri();
     } catch (URISyntaxException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;

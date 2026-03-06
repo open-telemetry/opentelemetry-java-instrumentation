@@ -1,0 +1,10 @@
+display_name: XXL-Job
+description: This instrumentation enables spans for XXL-Job task executions.
+library_link: https://github.com/xuxueli/xxl-job
+configurations:
+  - name: otel.instrumentation.xxl-job.experimental-span-attributes
+    description: >
+      Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`,
+      and `scheduling.xxl-job.job.id`.
+    type: boolean
+    default: false
