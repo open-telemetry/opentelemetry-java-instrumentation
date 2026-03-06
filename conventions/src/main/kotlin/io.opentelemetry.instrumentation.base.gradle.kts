@@ -56,7 +56,21 @@ fun lookupPinnedVersion(group: String?, name: String, version: String?): String?
   return if (version == "latest.release") {
     pinned["$group:$name"]
   } else if (version != null && version.contains("+")) {
-    pinned["$group:$name#$version"] ?: pinned["$group:$name"]
+    val rangeKey = "$group:$name#$version"
+    val rangeVersion = pinned[rangeKey]
+    if (rangeVersion != null) {
+      rangeVersion
+    } else {
+      // Range-specific key is missing from the pinned versions JSON.
+      // Do NOT fall back to the base key because it could be a different major version
+      // (e.g. base key resolves to 4.x but the range "2.+" expects 2.x).
+      // Run resolveLatestDepVersions to populate the missing key.
+      throw GradleException(
+        "Pinned version missing for range key \"$rangeKey\". " +
+          "Run ./gradlew resolveLatestDepVersions -PtestLatestDeps=true -PresolveLatestDeps=true " +
+          "to regenerate .github/config/latest-dep-versions.json"
+      )
+    }
   } else {
     null
   }
