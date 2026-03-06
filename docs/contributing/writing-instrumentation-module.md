@@ -209,7 +209,7 @@ public void transform(TypeTransformer transformer) {
         .and(takesArguments(2))
         .and(takesArgument(0, String.class))
         .and(takesArgument(1, named("org.my.library.MyLibraryClass"))),
-    this.getClass().getName() + "$MethodAdvice");
+    MyTypeInstrumentation.class.getName() + "$MethodAdvice");
 }
 ```
 
@@ -223,7 +223,7 @@ the `transform()` method.
 > You might have noticed in the example above that the advice class is being referenced as follows:
 >
 > ```java
-> this.getClass().getName() + "$MethodAdvice"
+> MyTypeInstrumentation.class.getName() + "$MethodAdvice"
 > ```
 >
 > Referring to the inner class and calling `getName()` would be easier to read and understand,

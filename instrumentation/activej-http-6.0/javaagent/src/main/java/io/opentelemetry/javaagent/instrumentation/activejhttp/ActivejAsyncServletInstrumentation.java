@@ -47,7 +47,7 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("serve"))
             .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
-        this.getClass().getName() + "$ServeAdvice");
+        ActivejAsyncServletInstrumentation.class.getName() + "$ServeAdvice");
   }
 
   @SuppressWarnings("unused")
