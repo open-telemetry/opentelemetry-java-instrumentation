@@ -12,8 +12,11 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.List;
+import java.util.logging.Logger;
 
 public final class LogbackSingletons {
+
+  private static final Logger logger = Logger.getLogger(LogbackSingletons.class.getName());
 
   private static final LoggingEventMapper mapper;
 
@@ -40,6 +43,11 @@ public final class LogbackSingletons {
     List<String> captureMdcAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     boolean captureEventName = config.getBoolean("capture_event_name/development", false);
+    if (captureEventName) {
+      logger.warning(
+          "The otel.instrumentation.logback-appender.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
+    }
 
     mapper =
         LoggingEventMapper.builder()

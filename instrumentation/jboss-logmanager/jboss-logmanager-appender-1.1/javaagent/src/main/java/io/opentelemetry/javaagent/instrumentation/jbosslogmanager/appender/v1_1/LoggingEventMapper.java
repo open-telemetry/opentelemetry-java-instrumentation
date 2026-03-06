@@ -27,10 +27,14 @@ import org.jboss.logmanager.MDC;
 
 public final class LoggingEventMapper {
 
+  private static final java.util.logging.Logger julLogger =
+      java.util.logging.Logger.getLogger(LoggingEventMapper.class.getName());
+
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  @Deprecated // removing support for MDC-based event name since it's not scoped narrowly
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
@@ -54,6 +58,11 @@ public final class LoggingEventMapper {
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
+    if (captureEventName) {
+      julLogger.warning(
+          "The otel.instrumentation.jboss-logmanager.experimental.capture-event-name setting is"
+              + " deprecated and will be removed in a future version.");
+    }
   }
 
   public void capture(Logger logger, ExtLogRecord record) {

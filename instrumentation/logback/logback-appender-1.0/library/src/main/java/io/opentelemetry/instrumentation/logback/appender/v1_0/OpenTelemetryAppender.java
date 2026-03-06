@@ -96,6 +96,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
             .setCaptureEventName(captureEventName)
             .build();
+    if (captureEventName) {
+      addWarn(
+          "The captureEventName setting is deprecated and will be removed in a future version.");
+    }
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
   }
