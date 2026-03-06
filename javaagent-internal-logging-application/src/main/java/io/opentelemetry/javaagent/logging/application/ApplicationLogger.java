@@ -12,7 +12,7 @@ final class ApplicationLogger implements InternalLogger {
 
   private final InMemoryLogStore inMemoryLogStore;
   private final String name;
-  private volatile InternalLogger actual;
+  @Nullable private volatile InternalLogger actual;
 
   ApplicationLogger(InMemoryLogStore inMemoryLogStore, String name) {
     this.inMemoryLogStore = inMemoryLogStore;
