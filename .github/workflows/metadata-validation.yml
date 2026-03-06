@@ -31,5 +31,5 @@ jobs:
         run: ./gradlew :instrumentation-docs:runAnalysis
 
       - name: Validate instrumentation task list
-        run: ./instrumentation-docs/ci-validate-tasks.sh
+        run: ./.github/scripts/metadata-ci-validate-tasks.sh
 

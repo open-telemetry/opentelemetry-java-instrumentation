@@ -27,6 +27,6 @@ else
   echo ""
   echo "✗ Validation failed!"
   echo ""
-  echo "Please check the error output above and fix or remove invalid tasks from instrumentation-docs/instrumentations.sh"
+  echo "Please check the error output above and fix or remove invalid tasks from .github/scripts/instrumentations.sh"
   exit 1
 fi
