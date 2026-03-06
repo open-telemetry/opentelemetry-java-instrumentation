@@ -7,20 +7,12 @@ package io.opentelemetry.instrumentation.xxljob;
 
 import javax.annotation.Nullable;
 
-public class ExperimentalTestHelper {
+class ExperimentalTestHelper {
   private static final boolean isEnabled =
       Boolean.getBoolean("otel.instrumentation.xxl-job.experimental-span-attributes");
 
   @Nullable
-  public static String experimental(String value) {
-    if (isEnabled) {
-      return value;
-    }
-    return null;
-  }
-
-  @Nullable
-  public static Long experimental(long value) {
+  static <T> T experimental(T value) {
     if (isEnabled) {
       return value;
     }
