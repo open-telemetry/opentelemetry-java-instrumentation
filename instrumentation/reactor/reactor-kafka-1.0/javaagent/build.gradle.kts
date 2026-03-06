@@ -96,6 +96,7 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("hasConsumerGroup", testLatestDeps)
   }
 
   test {
