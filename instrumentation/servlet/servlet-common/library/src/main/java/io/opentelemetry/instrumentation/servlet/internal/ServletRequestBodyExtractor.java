@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
@@ -23,8 +24,8 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
-  public static final AttributeKey<String> SPAN_BODY_ATTRIBUTE =
-      AttributeKey.stringKey("http.request.body.text");
+  public static final AttributeKey<?> SPAN_BODY_ATTRIBUTE =
+      AttributeKey.valueKey("http.request.body.content");
   public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
@@ -49,7 +50,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
 
     String body = getRequestBodyValue(accessor, requestServletRequestContext.request());
     if (body != null) {
-      attributes.put(SPAN_BODY_ATTRIBUTE, body);
+      attributes.put(SPAN_BODY_ATTRIBUTE.getKey(), Value.of(body.getBytes(UTF_8)));
     }
   }
 

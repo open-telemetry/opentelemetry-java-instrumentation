@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -194,7 +197,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     }
     String body = ServletRequestBodyExtractor.getRequestBodyValue(accessor, request);
     if (body != null) {
-      serverSpan.setAttribute(ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE, body);
+      // TODO: this is a bit ugly but we don't have a better way to set the body attribute
+      serverSpan.setAllAttributes(
+          Attributes.builder()
+              .put(
+                  ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE.getKey(),
+                  Value.of(body.getBytes(UTF_8)))
+              .build());
     }
   }
 
