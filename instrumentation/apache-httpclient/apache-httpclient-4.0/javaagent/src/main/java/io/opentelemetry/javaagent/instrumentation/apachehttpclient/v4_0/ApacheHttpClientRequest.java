@@ -90,7 +90,11 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   public Integer getServerPort() {
-    return uri == null ? null : uri.getPort();
+    if (uri == null) {
+      return null;
+    }
+    int port = uri.getPort();
+    return port != -1 ? port : null;
   }
 
   @Nullable
