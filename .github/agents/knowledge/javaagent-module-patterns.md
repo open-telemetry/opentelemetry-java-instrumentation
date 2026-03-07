@@ -157,6 +157,11 @@ public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
   version does not need a comment — the version is obvious from the module name. Do not
   suggest adding one.
 - Prefer **one landmark class** per version boundary — choose the most stable/specific class.
+- **Always include a positive `hasClassesNamed(...)` match.** A `classLoaderMatcher()` that
+  only uses `not(hasClassesNamed(...))` will match every class loader where the excluded
+  class is absent — including class loaders where the target library is not present at all.
+  Always start with a positive `hasClassesNamed(...)` for a class from the target library,
+  then chain `.and(not(...))` to exclude newer versions.
 - Pair with **muzzle config** (`assertInverse.set(true)`) for full coverage.
 - Use `hasClassesNamed(...)` (from `AgentElementMatchers`) — not raw ByteBuddy matchers.
 - `classLoaderMatcher()` runs against **every class loader** in the JVM before type matching

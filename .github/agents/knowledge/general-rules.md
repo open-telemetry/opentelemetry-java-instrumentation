@@ -64,6 +64,8 @@ Exceptions:
   The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
   check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
   required to fix an Error Prone error — not speculatively.
+- Per Google Java Style, `UPPER_CASE` naming is only for true constants (deeply immutable
+  values). `static final` fields holding mutable objects should be `camelCase`.
 
 ## [Naming] Getter Naming
 

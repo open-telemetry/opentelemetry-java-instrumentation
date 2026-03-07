@@ -151,6 +151,9 @@ Auto-fix boundaries:
   - behavior-changing logic without clear intent
   - architecture decisions that require cross-module agreement
   - broad refactors spanning many modules without explicit request
+- Never change:
+  - literal type suffixes (e.g., `200` → `200L` or vice-versa) — Java widens
+    automatically; both forms compile identically and the change is noise
 
 Comment formatting rules:
 
