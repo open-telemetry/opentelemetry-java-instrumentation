@@ -59,11 +59,7 @@ fun capVersionRange(group: String, module: String, versionRange: String): String
   val pinnedVersion = muzzlePinnedVersions["$group:$module"] ?: return versionRange
   // Skip pre-release versions — Maven considers them lower than the release
   // (e.g. "6.0-rc2" < "6.0"), which would create an invalid range.
-  val lowerVersion = pinnedVersion.lowercase()
-  if (lowerVersion.contains("rc") || lowerVersion.contains("alpha") ||
-    lowerVersion.contains("beta") || lowerVersion.contains("-m") ||
-    lowerVersion.contains(".m") || lowerVersion.contains("-dev") ||
-    lowerVersion.contains("snapshot")) {
+  if (!AcceptableVersions.isStable(pinnedVersion)) {
     return versionRange
   }
   // Replace the open upper bound with the pinned version (inclusive)
