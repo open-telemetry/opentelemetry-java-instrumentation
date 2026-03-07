@@ -30,6 +30,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
+| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned | `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
@@ -103,6 +104,16 @@ Preferred:
 ```java
 attributes.put(SOME_KEY, getSomething());
 ```
+
+## [Style] Nullability Correctness
+
+Use `@Nullable` annotations accurately throughout the codebase:
+
+- **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
+- **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
+- **Don't add null guards for non-nullable parameters**: trust the framework's
+  nullability contracts. Defensive null guards are acceptable in public APIs, but not
+  in internal implementation code like.
 
 ## [Semconv] Constants by Module Type
 

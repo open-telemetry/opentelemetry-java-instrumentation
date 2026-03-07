@@ -130,6 +130,10 @@ Auto-fix boundaries:
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters)
+  - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
+    these contradict the framework’s nullability contract; remove the guard. Conversely,
+    if a call site passes `null` or a method returns `null`, add `@Nullable` to the
+    parameter or return type instead of adding a null guard in the caller/callee.
   - getter/setter/boolean-getter naming convention violations (`get*`, `set*`, `is*`) and
     other API convention fixes (e.g. missing `@CanIgnoreReturnValue`, wrong method signature)
     in **non-stable modules** (module `gradle.properties` does not contain
