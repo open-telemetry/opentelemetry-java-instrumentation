@@ -47,23 +47,20 @@ val muzzlePinnedVersions: Map<String, String> by lazy {
 }
 
 /**
- * Cap an open-ended Maven version range using the pinned version for the given artifact.
- * E.g. "[4.1,)" becomes "[4.1,1.68.0]" if 1.68.0 is the pinned version.
- * Ranges that already have an upper bound are left unchanged.
+ * Resolve the pinned upper bound as an Aether Version for a muzzle-checked artifact.
+ * Returns null if no pinned version exists or the version is a pre-release.
  */
-fun capVersionRange(group: String, module: String, versionRange: String): String {
-  // Only cap ranges with open upper bounds ending with ",)"
-  if (!versionRange.endsWith(",)")) {
-    return versionRange
-  }
-  val pinnedVersion = muzzlePinnedVersions["$group:$module"] ?: return versionRange
-  // Skip pre-release versions — Maven considers them lower than the release
-  // (e.g. "6.0-rc2" < "6.0"), which would create an invalid range.
+fun resolveUpperBound(group: String, module: String, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Version? {
+  val pinnedVersion = muzzlePinnedVersions["$group:$module"] ?: return null
   if (!AcceptableVersions.isStable(pinnedVersion)) {
-    return versionRange
+    return null
   }
-  // Replace the open upper bound with the pinned version (inclusive)
-  return versionRange.removeSuffix(",)") + ",$pinnedVersion]"
+  val artifact = DefaultArtifact(group, module, "jar", "[$pinnedVersion,$pinnedVersion]")
+  val result = system.resolveVersionRange(session, VersionRangeRequest().apply {
+    repositories = repos
+    this.artifact = artifact
+  })
+  return result.highestVersion
 }
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
@@ -390,20 +387,19 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 
   val directiveGroup = muzzleDirective.group.get()
   val directiveModule = muzzleDirective.module.get()
-  val allVersionsRange = capVersionRange(directiveGroup, directiveModule, "[,)")
+  val upperBound = resolveUpperBound(directiveGroup, directiveModule, system, session, repos)
   val allVersionsArtifact = DefaultArtifact(
     directiveGroup,
     directiveModule,
     muzzleDirective.classifier.get(),
     "jar",
-    allVersionsRange)
-  val cappedRange = capVersionRange(directiveGroup, directiveModule, muzzleDirective.versions.get())
+    "[,)")
   val directiveArtifact = DefaultArtifact(
     directiveGroup,
     directiveModule,
     muzzleDirective.classifier.get(),
     "jar",
-    cappedRange)
+    muzzleDirective.versions.get())
 
   val allRangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -419,7 +415,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 
   allRangeResult.versions.removeAll(rangeResult.versions)
 
-  for (version in filterVersions(allRangeResult, muzzleDirective.normalizedSkipVersions)) {
+  for (version in filterVersions(allRangeResult, muzzleDirective.normalizedSkipVersions, upperBound)) {
     val inverseDirective = objects.newInstance(MuzzleDirective::class).apply {
       name.set(muzzleDirective.name)
       group.set(muzzleDirective.group)
@@ -437,18 +433,23 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
   return inverseDirectives
 }
 
-fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>) = sequence {
+fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version? = null) = sequence {
   val predicate = AcceptableVersions(skipVersions)
-  if (predicate.test(range.lowestVersion)) {
+  fun accept(version: Version?): Boolean {
+    if (!predicate.test(version)) return false
+    if (upperBound != null && version != null && version > upperBound) return false
+    return true
+  }
+  if (accept(range.lowestVersion)) {
     yield(range.lowestVersion.toString())
   }
-  if (predicate.test(range.highestVersion)) {
+  if (accept(range.highestVersion)) {
     yield(range.highestVersion.toString())
   }
 
   val copy: List<Version> = range.versions.shuffled()
   for (version in copy) {
-    if (predicate.test(version)) {
+    if (accept(version)) {
       yield(version.toString())
     }
   }
@@ -457,13 +458,13 @@ fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>) = seque
 fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>) = sequence<Artifact> {
   val group = muzzleDirective.group.get()
   val module = muzzleDirective.module.get()
-  val cappedRange = capVersionRange(group, module, muzzleDirective.versions.get())
+  val upperBound = resolveUpperBound(group, module, system, session, repos)
   val directiveArtifact: Artifact = DefaultArtifact(
     group,
     module,
     muzzleDirective.classifier.get(),
     "jar",
-    cappedRange)
+    muzzleDirective.versions.get())
 
   val rangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -471,7 +472,7 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   }
   val rangeResult = system.resolveVersionRange(session, rangeRequest)
 
-  val allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions)
+  val allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions, upperBound)
     .map {
       DefaultArtifact(
         muzzleDirective.group.get(),
