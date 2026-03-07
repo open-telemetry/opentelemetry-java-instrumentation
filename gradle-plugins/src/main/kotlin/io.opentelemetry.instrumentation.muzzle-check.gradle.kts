@@ -34,6 +34,34 @@ plugins {
 // Select a random set of versions to test
 val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit", 10)
 
+// Read pinned latest-dep versions to cap muzzle's open-ended version ranges,
+// preventing failures when new library versions are released to Maven Central.
+val muzzlePinnedVersions: Map<String, String> by lazy {
+  val file = rootProject.file(".github/config/latest-dep-versions.json")
+  @Suppress("UNCHECKED_CAST")
+  if (file.exists()) {
+    groovy.json.JsonSlurper().parse(file) as Map<String, String>
+  } else {
+    emptyMap()
+  }
+}
+
+/**
+ * Cap an open-ended Maven version range using the pinned version for the given artifact.
+ * E.g. "[4.1,)" becomes "[4.1,1.68.0]" if 1.68.0 is the pinned version.
+ * Ranges that already have an upper bound are left unchanged.
+ */
+fun capVersionRange(group: String, module: String, versionRange: String): String {
+  // Only cap ranges with open upper bounds: ending with ",)" or ",]"
+  // (in practice open ranges always use ")" but handle both)
+  if (!versionRange.endsWith(",)")) {
+    return versionRange
+  }
+  val pinnedVersion = muzzlePinnedVersions["$group:$module"] ?: return versionRange
+  // Replace the open upper bound with the pinned version (inclusive)
+  return versionRange.removeSuffix(",)") + ",$pinnedVersion]"
+}
+
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
 
 val muzzleTooling: Configuration by configurations.creating {
@@ -356,18 +384,22 @@ fun createClassLoaderForTask(muzzleTaskFiles: FileCollection, muzzleBootstrapSha
 fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Set<MuzzleDirective> {
   val inverseDirectives = mutableSetOf<MuzzleDirective>()
 
+  val directiveGroup = muzzleDirective.group.get()
+  val directiveModule = muzzleDirective.module.get()
+  val allVersionsRange = capVersionRange(directiveGroup, directiveModule, "[,)")
   val allVersionsArtifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
+    directiveGroup,
+    directiveModule,
     muzzleDirective.classifier.get(),
     "jar",
-    "[,)")
+    allVersionsRange)
+  val cappedRange = capVersionRange(directiveGroup, directiveModule, muzzleDirective.versions.get())
   val directiveArtifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
+    directiveGroup,
+    directiveModule,
     muzzleDirective.classifier.get(),
     "jar",
-    muzzleDirective.versions.get())
+    cappedRange)
 
   val allRangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -419,12 +451,15 @@ fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>) = seque
 }.distinct().take(RANGE_COUNT_LIMIT)
 
 fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>) = sequence<Artifact> {
+  val group = muzzleDirective.group.get()
+  val module = muzzleDirective.module.get()
+  val cappedRange = capVersionRange(group, module, muzzleDirective.versions.get())
   val directiveArtifact: Artifact = DefaultArtifact(
-    muzzleDirective.group.get(),
-    muzzleDirective.module.get(),
+    group,
+    module,
     muzzleDirective.classifier.get(),
     "jar",
-    muzzleDirective.versions.get())
+    cappedRange)
 
   val rangeRequest = VersionRangeRequest().apply {
     repositories = repos
