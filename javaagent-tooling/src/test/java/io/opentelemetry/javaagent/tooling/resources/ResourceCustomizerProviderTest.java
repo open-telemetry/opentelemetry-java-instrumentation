@@ -25,39 +25,41 @@ class ResourceCustomizerProviderTest {
 
   @Test
   void customize() {
-    new ResourceCustomizerProvider()
-        .customize(
-            new DeclarativeConfigurationCustomizer() {
-              @Override
-              public void addModelCustomizer(
-                  Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>
-                      customizer) {
-                OpenTelemetryConfigurationModel configurationModel =
-                    customizer.apply(new OpenTelemetryConfigurationModel());
+    new ResourceCustomizerProvider().customize(new AssertingCustomizer(objectMapper));
+  }
 
-                try {
-                  assertThat(objectMapper.writeValueAsString(configurationModel.getResource()))
-                      .isEqualTo(
-                          "{\"attributes\":[],\"detection/development\":{\"detectors\":[{\"opentelemetry_javaagent_distribution\":null}]}}");
-                } catch (JsonProcessingException e) {
-                  throw new AssertionError(e);
-                }
-              }
+  private static class AssertingCustomizer implements DeclarativeConfigurationCustomizer {
+    private final ObjectMapper objectMapper;
 
-              @Override
-              public <T extends SpanExporter> void addSpanExporterCustomizer(
-                  Class<T> exporterType,
-                  BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+    AssertingCustomizer(ObjectMapper objectMapper) {
+      this.objectMapper = objectMapper;
+    }
 
-              @Override
-              public <T extends MetricExporter> void addMetricExporterCustomizer(
-                  Class<T> exporterType,
-                  BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+    @Override
+    public void addModelCustomizer(
+        Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel> customizer) {
+      OpenTelemetryConfigurationModel configurationModel =
+          customizer.apply(new OpenTelemetryConfigurationModel());
 
-              @Override
-              public <T extends LogRecordExporter> void addLogRecordExporterCustomizer(
-                  Class<T> exporterType,
-                  BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
-            });
+      try {
+        assertThat(objectMapper.writeValueAsString(configurationModel.getResource()))
+            .isEqualTo(
+                "{\"attributes\":[],\"detection/development\":{\"detectors\":[{\"opentelemetry_javaagent_distribution\":null}]}}");
+      } catch (JsonProcessingException e) {
+        throw new AssertionError(e);
+      }
+    }
+
+    @Override
+    public <T extends SpanExporter> void addSpanExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+
+    @Override
+    public <T extends MetricExporter> void addMetricExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+
+    @Override
+    public <T extends LogRecordExporter> void addLogRecordExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
   }
 }

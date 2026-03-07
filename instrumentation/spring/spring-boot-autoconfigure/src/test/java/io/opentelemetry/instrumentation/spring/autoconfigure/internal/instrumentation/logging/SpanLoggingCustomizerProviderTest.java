@@ -72,31 +72,40 @@ class SpanLoggingCustomizerProviderTest {
       DeclarativeConfigLoggingExporterAutoConfiguration.SpanLoggingCustomizerProvider provider) {
     List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>> customizers =
         new ArrayList<>();
-    provider.customize(
-        new DeclarativeConfigurationCustomizer() {
-          @Override
-          public void addModelCustomizer(
-              Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>
-                  customizer) {
-            customizers.add(customizer);
-          }
-
-          @Override
-          public <T extends SpanExporter> void addSpanExporterCustomizer(
-              Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
-
-          @Override
-          public <T extends MetricExporter> void addMetricExporterCustomizer(
-              Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
-
-          @Override
-          public <T extends LogRecordExporter> void addLogRecordExporterCustomizer(
-              Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
-        });
+    provider.customize(new ModelCustomizerCollector(customizers));
     for (Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel> customizer :
         customizers) {
       model = customizer.apply(model);
     }
     return model;
+  }
+
+  private static class ModelCustomizerCollector implements DeclarativeConfigurationCustomizer {
+    private final List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>>
+        customizers;
+
+    ModelCustomizerCollector(
+        List<Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel>>
+            customizers) {
+      this.customizers = customizers;
+    }
+
+    @Override
+    public void addModelCustomizer(
+        Function<OpenTelemetryConfigurationModel, OpenTelemetryConfigurationModel> customizer) {
+      customizers.add(customizer);
+    }
+
+    @Override
+    public <T extends SpanExporter> void addSpanExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+
+    @Override
+    public <T extends MetricExporter> void addMetricExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
+
+    @Override
+    public <T extends LogRecordExporter> void addLogRecordExporterCustomizer(
+        Class<T> exporterType, BiFunction<T, DeclarativeConfigProperties, T> customizer) {}
   }
 }

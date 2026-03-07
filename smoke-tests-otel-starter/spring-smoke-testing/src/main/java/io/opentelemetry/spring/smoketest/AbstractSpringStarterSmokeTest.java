@@ -34,8 +34,8 @@ public abstract class AbstractSpringStarterSmokeTest {
           "Node may not be available.",
           "Could not configure topics",
           "(id: -1 rack: null isFenced: false) disconnected",
-          // SDK 1.60.0 bug: warns unconditionally even when otel.experimental.config.file is not
-          // set (inverted condition in maybeConfigureFromFile)
+          // TODO remove this ignored warning after next OpenTelemetry SDK release
+          // see https://github.com/open-telemetry/opentelemetry-java/pull/8157
           "otel.experimental.config.file is deprecated");
 
   @Autowired protected OpenTelemetry openTelemetry;
