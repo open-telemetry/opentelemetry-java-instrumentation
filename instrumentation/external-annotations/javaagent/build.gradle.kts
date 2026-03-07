@@ -55,7 +55,7 @@ tasks {
     }
     include("**/ConfiguredTraceAnnotationsTest.*")
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
     )
   }
 
@@ -81,7 +81,7 @@ tasks {
     }
     include("**/TracedMethodsExclusionTest.*")
     jvmArgs(
-      "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
+      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
     )
   }
 
