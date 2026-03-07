@@ -60,6 +60,10 @@ Exceptions:
 - `@SuppressWarnings` at method level is preferred over class level for tighter scope, but
   if more than one method in the class needs the same suppression, class-level is fine.
   Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
+- **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
+  The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
+  check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
+  required to fix an Error Prone error — not speculatively.
 
 ## [Naming] Getter Naming
 
