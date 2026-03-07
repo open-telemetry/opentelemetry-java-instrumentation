@@ -52,12 +52,20 @@ val muzzlePinnedVersions: Map<String, String> by lazy {
  * Ranges that already have an upper bound are left unchanged.
  */
 fun capVersionRange(group: String, module: String, versionRange: String): String {
-  // Only cap ranges with open upper bounds: ending with ",)" or ",]"
-  // (in practice open ranges always use ")" but handle both)
+  // Only cap ranges with open upper bounds ending with ",)"
   if (!versionRange.endsWith(",)")) {
     return versionRange
   }
   val pinnedVersion = muzzlePinnedVersions["$group:$module"] ?: return versionRange
+  // Skip pre-release versions — Maven considers them lower than the release
+  // (e.g. "6.0-rc2" < "6.0"), which would create an invalid range.
+  val lowerVersion = pinnedVersion.lowercase()
+  if (lowerVersion.contains("rc") || lowerVersion.contains("alpha") ||
+    lowerVersion.contains("beta") || lowerVersion.contains("-m") ||
+    lowerVersion.contains(".m") || lowerVersion.contains("-dev") ||
+    lowerVersion.contains("snapshot")) {
+    return versionRange
+  }
   // Replace the open upper bound with the pinned version (inclusive)
   return versionRange.removeSuffix(",)") + ",$pinnedVersion]"
 }
