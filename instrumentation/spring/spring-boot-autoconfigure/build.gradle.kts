@@ -6,6 +6,12 @@ plugins {
 base.archivesName.set("opentelemetry-spring-boot-autoconfigure")
 group = "io.opentelemetry.instrumentation"
 
+tasks.withType<JavaCompile>().configureEach {
+  // Suppress deprecation warnings for DeclarativeConfigPropertiesBridgeBuilder usage
+  // This is intentional as we still support the deprecated API for backward compatibility
+  options.compilerArgs.add("-Xlint:-deprecation")
+}
+
 val springBootVersion =
   "2.7.18" // AutoConfiguration is added in 2.7.0, but can be used with older versions
 
