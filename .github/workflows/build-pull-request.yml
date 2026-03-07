@@ -51,18 +51,12 @@ jobs:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
   required-status-check:
-    # test-latest-deps is now included in the required status checks because
+    # test-latest-deps and muzzle are included in the required status checks because
     # latest dependency versions are pinned (see .github/config/latest-dep-versions.json),
-    # so test-latest-deps should no longer fail due to newly released library versions.
-    #
-    # (muzzle can also fail when a new library version is released to maven central
-    # but that happens much less often)
+    # so they should no longer fail due to newly released library versions.
     #
     # only the "common" checks are required for release branch PRs in order to avoid any unnecessary
     # release branch maintenance (especially for patches)
-    #
-    # TODO also add test-latest-deps as a required status check in the GitHub branch protection
-    # settings (requires repo admin)
     needs:
       - common
       - test-latest-deps
