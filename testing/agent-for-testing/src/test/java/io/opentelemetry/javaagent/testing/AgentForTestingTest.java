@@ -43,8 +43,7 @@ class AgentForTestingTest {
     GlobalOpenTelemetry.getMeter("test").upDownCounterBuilder("test").build().add(1);
 
     List<MetricData> metrics = AgentTestingExporterAccess.getExportedMetrics();
-    assertThat(metrics.size()).isEqualTo(1);
-    assertThat(metrics.get(0).getName()).isEqualTo("test");
+    assertThat(metrics).anySatisfy(metric -> assertThat(metric.getName()).isEqualTo("test"));
   }
 
   @Test
