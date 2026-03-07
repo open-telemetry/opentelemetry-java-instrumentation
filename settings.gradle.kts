@@ -32,12 +32,28 @@ dependencyResolutionManagement {
   }
 
   versionCatalogs {
+    val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+    val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
+    val pinLatestDeps = latestDepTest && !resolveLatestDeps
+
+    @Suppress("UNCHECKED_CAST")
+    val pinnedVersions: Map<String, String> = if (pinLatestDeps) {
+      val file = file(".github/config/latest-dep-versions.json")
+      if (file.exists()) {
+        groovy.json.JsonSlurper().parse(file) as Map<String, String>
+      } else {
+        emptyMap()
+      }
+    } else {
+      emptyMap()
+    }
+
     fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
-      val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
       create(name) {
+        val pinnedVersion = pinnedVersions["org.springframework.boot:spring-boot-dependencies#$maxVersion"]
         val version =
           gradle.startParameter.projectProperties["${name}Version"]
-            ?: (if (latestDepTest) maxVersion else minVersion)
+            ?: (if (latestDepTest) (pinnedVersion ?: maxVersion) else minVersion)
         plugin("versions", "org.springframework.boot").version(version)
       }
     }

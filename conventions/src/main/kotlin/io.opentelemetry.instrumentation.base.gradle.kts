@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.VersionFilters
+
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
 plugins {
@@ -21,39 +23,65 @@ plugins {
  *     described above.
  *
  * - latestDepTestLibrary: A dependency on a library for testing when testing of latest dependency
- *   version is enabled. This dependency will be added as-is to testImplementation, but only if
- *   -PtestLatestDeps=true. The version will not be modified but it will be given highest
- *   precedence. Use this to restrict the latest version dependency from the default `+`, for
- *   example to restrict to just a major version by specifying `2.+`.
+ *   version is enabled. This dependency will be added to testImplementation only if
+ *   -PtestLatestDeps=true. Its version overrides the `latest.release` from library/testLibrary
+ *   via resolutionStrategy.eachDependency (which takes highest precedence in Gradle). Use this
+ *   to restrict the latest version to a specific range, e.g. `2.+` to stay on major version 2.
  */
 
 val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
+val pinLatestDeps = testLatestDeps && !resolveLatestDeps
 extra["testLatestDeps"] = testLatestDeps
+
+fun getPinnedVersions(): Map<String, String> {
+  if (!pinLatestDeps) return emptyMap()
+  val key = "latestDepPinnedVersions"
+  if (!rootProject.extra.has(key)) {
+    val file = rootProject.file(".github/config/latest-dep-versions.json")
+    @Suppress("UNCHECKED_CAST")
+    rootProject.extra[key] = if (file.exists()) {
+      groovy.json.JsonSlurper().parse(file) as Map<String, String>
+    } else {
+      emptyMap<String, String>()
+    }
+  }
+  @Suppress("UNCHECKED_CAST")
+  return rootProject.extra[key] as Map<String, String>
+}
+
+fun lookupPinnedVersion(group: String?, name: String, version: String?): String? {
+  if (!pinLatestDeps || group == null) return null
+  val pinned = getPinnedVersions()
+  return if (version == "latest.release") {
+    pinned["$group:$name"]
+  } else if (version != null && version.contains("+")) {
+    val rangeKey = "$group:$name#$version"
+    val rangeVersion = pinned[rangeKey]
+    if (rangeVersion != null) {
+      rangeVersion
+    } else {
+      // Range-specific key is missing from the pinned versions JSON.
+      // Do NOT fall back to the base key because it could be a different major version
+      // (e.g. base key resolves to 4.x but the range "2.+" expects 2.x).
+      // Run resolveLatestDepVersions to populate the missing key.
+      throw GradleException(
+        "Pinned version missing for range key \"$rangeKey\". " +
+          "Run ./gradlew resolveLatestDepVersions -PtestLatestDeps=true -PresolveLatestDeps=true " +
+          "to regenerate .github/config/latest-dep-versions.json"
+      )
+    }
+  } else {
+    null
+  }
+}
 
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
-    val version = context.details.id.version
-    if (version.contains("-alpha", true)
-      || version.contains("-beta", true)
-      || version.contains("-rc", true)
-      || version.contains(".rc", true)
-      || version.contains("-m", true) // e.g. spring milestones are published to grails repo
-      || version.contains(".m", true) // e.g. lettuce
-      || version.contains(".alpha", true) // e.g. netty
-      || version.contains(".beta", true) // e.g. hibernate
-      || version.contains(".cr", true) // e.g. hibernate
-      || version.endsWith("-nf-execution") // graphql
-      || GIT_SHA_PATTERN.matches(version) // graphql
-      || DATETIME_PATTERN.matches(version) // graphql
-    ) {
+    if (VersionFilters.isUnstable(context.details.id.version)) {
       context.details.status = "milestone"
     }
-  }
-
-  companion object {
-    private val GIT_SHA_PATTERN = Regex("^.*-[0-9a-f]{7,}$")
-    private val DATETIME_PATTERN = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}.*$")
   }
 }
 
@@ -73,14 +101,20 @@ configurations {
 
   val testImplementation by getting
 
+  // Collect latestDepTestLibrary overrides so we can apply them via resolutionStrategy.
+  // This map is populated during configuration and read during resolution.
+  val latestDepTestLibraryOverrides = mutableMapOf<String, String>()
+
   listOf(library, testLibrary).forEach { configuration ->
     // We use whenObjectAdded and copy into the real configurations instead of extension to allow
     // mutating the version for latest dep tests.
     configuration.dependencies.whenObjectAdded {
       val dep = copy()
       if (testLatestDeps) {
+        val extDep = this as ExternalDependency
+        val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, "latest.release")
         (dep as ExternalDependency).version {
-          require("latest.release")
+          require(pinnedVersion ?: "latest.release")
         }
       }
       testImplementation.dependencies.add(dep)
@@ -93,12 +127,31 @@ configurations {
       }
     }
 
+    // latestDepTestLibrary lets modules restrict the latest version to a specific range
+    // (e.g. "3.+" to stay on major version 3). These constraints must beat the
+    // require("latest.release") from library/testLibrary above.
+    //
+    // We can't use strictly() on the dependency itself because it conflicts with require()
+    // from library/testLibrary (Gradle rejects conflicting strict/require constraints).
+    // We can't use prefer() on library/testLibrary either because prefer() is too weak and
+    // loses against the original library() version from compileOnly.
+    //
+    // Instead, we collect latestDepTestLibrary versions here and apply them via
+    // resolutionStrategy.eachDependency below, which overrides all other constraints.
     latestDepTestLibrary.dependencies.whenObjectAdded {
       val dep = copy()
       val declaredVersion = dep.version
       if (declaredVersion != null) {
+        val extDep = this as ExternalDependency
+        val pinnedVersion = lookupPinnedVersion(extDep.group, extDep.name, declaredVersion)
+        val resolvedVersion = pinnedVersion ?: declaredVersion
+        // Record the override; the actual version forcing happens in eachDependency below.
+        // We use require() here (not strictly()) because strictly() would conflict with
+        // the require() from library/testLibrary for the same artifact. The eachDependency
+        // callback enforces the final version regardless.
+        latestDepTestLibraryOverrides["${extDep.group}:${extDep.name}"] = resolvedVersion
         (dep as ExternalDependency).version {
-          strictly(declaredVersion)
+          require(resolvedVersion)
         }
       }
       testImplementation.dependencies.add(dep)
@@ -106,6 +159,37 @@ configurations {
   }
   named("compileOnly") {
     extendsFrom(library)
+  }
+
+  // Apply version overrides via resolutionStrategy which takes highest precedence.
+  // This handles two cases:
+  // 1. latestDepTestLibraryOverrides: modules that restrict latest deps to a version range
+  //    (e.g. spring-boot-starter-test:3.+ while latest is 4.x). These must override
+  //    the require("latest.release") from library/testLibrary.
+  // 2. pinLatestDeps pinned versions: when pinning is enabled, any dependency still using
+  //    "latest.release" or "+" versions (e.g. transitive deps) gets pinned to a concrete
+  //    version from the JSON file.
+  if (testLatestDeps) {
+    // Only apply to test-related configurations, not build tool configurations like Zinc
+    // (the Scala compiler). Overriding scala-library in Zinc's configuration breaks compilation.
+    configureEach {
+      if (isCanBeResolved && (name.startsWith("test") || name.startsWith("latestDepTest"))) {
+        resolutionStrategy.eachDependency {
+          // latestDepTestLibrary overrides take priority over pinned versions
+          val override = latestDepTestLibraryOverrides["${requested.group}:${requested.name}"]
+          if (override != null) {
+            useVersion(override)
+            return@eachDependency
+          }
+          if (pinLatestDeps) {
+            val pinnedVersion = lookupPinnedVersion(requested.group, requested.name, requested.version)
+            if (pinnedVersion != null) {
+              useVersion(pinnedVersion)
+            }
+          }
+        }
+      }
+    }
   }
 }
 
