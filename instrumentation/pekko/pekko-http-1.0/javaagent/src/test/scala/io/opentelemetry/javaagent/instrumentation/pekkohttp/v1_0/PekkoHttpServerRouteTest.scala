@@ -25,8 +25,8 @@ import org.junit.jupiter.params.provider.CsvSource
 
 import java.net.{URI, URISyntaxException}
 import java.util.function.Consumer
-import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future, Promise}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoHttpServerRouteTest {
@@ -254,6 +254,51 @@ class PekkoHttpServerRouteTest {
       }
 
     test(route, "/api/v2/orders/order123/status", "GET /api/v2/orders/*/status")
+  }
+
+  @Test def testAsyncPathMatching(): Unit = {
+    import system.dispatcher
+    val p1 = Promise[Unit]()
+    val p2 = Promise[Unit]()
+    val p3 = Promise[Unit]()
+
+    val route: Route = req => {
+      pathPrefix("a") { req =>
+        {
+          concat(
+            pathPrefix("b") { req =>
+              val ignored = Future {
+                pathPrefix("c") { req =>
+                  Await.result(p2.future, 2.seconds)
+                  path("d") { complete("no") }(req)
+                }(req).onComplete(_ => p3.success(null))
+              }
+
+              concat(
+                req => {
+                  val ignored = Future {
+                    pathPrefix("c") { req =>
+                      Await.result(p1.future, 2.seconds)
+                      path("d") { complete("no") }(req)
+                    }(req).onComplete(_ => p2.success(null))
+                  }
+
+                  pathPrefix("g")(_.complete("no"))(req)
+                },
+                req =>
+                  path("c" / "d") { req =>
+                    p1.success(null)
+                    Await.result(p3.future, 2.seconds)
+                    req.complete("ok")
+                  }(req)
+              )(req)
+            }
+          )(req)
+        }
+      }(req)
+    }
+
+    test(route, "/a/b/c/d", "GET /a/b/c/d")
   }
 
   def test(

@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoFallbackRouteHolder;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
 import java.util.List;
@@ -100,12 +101,18 @@ public class PekkoHttpServerTracer
               PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
               Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
-                Context context = instrumenter().start(parentContext, request);
-                context = PekkoRouteHolder.init(context);
+                PekkoRouteHolder routeHolder = PekkoRouteHolder.create();
+                Context context =
+                    instrumenter()
+                        .start(parentContext, request)
+                        .with(routeHolder)
+                        .with(new PekkoFallbackRouteHolder());
                 tracingRequest = new PekkoTracingRequest(context, request);
                 request =
                     (HttpRequest)
-                        request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest);
+                        request
+                            .addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest)
+                            .addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, routeHolder);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
@@ -144,15 +151,20 @@ public class PekkoHttpServerTracer
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
                 }
-                PekkoRouteHolder routeHolder = PekkoRouteHolder.get(tracingRequest.context);
-                if (routeHolder != null) {
-                  routeHolder.pushIfNotCompletelyMatched("*");
-                  HttpServerRoute.update(
-                      tracingRequest.context,
-                      HttpServerRouteSource.CONTROLLER,
-                      routeHolder.route());
+                String route =
+                    response
+                        .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
+                        .map(PekkoRouteHolder::route)
+                        .orElse(null);
+                if (route == null) {
+                  PekkoFallbackRouteHolder fallback =
+                      PekkoFallbackRouteHolder.get(tracingRequest.context);
+                  if (fallback != null) {
+                    route = fallback.route();
+                  }
                 }
-
+                HttpServerRoute.update(
+                    tracingRequest.context, HttpServerRouteSource.CONTROLLER, route);
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);
