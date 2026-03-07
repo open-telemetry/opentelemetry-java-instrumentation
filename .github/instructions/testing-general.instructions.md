@@ -19,6 +19,6 @@ For span attribute assertions, prefer `hasAttributesSatisfyingExactly(...)` with
 
 For detailed examples and review checks, see:
 
-- `.github/agents/knowledge/testing-general.md`
+- `.github/agents/knowledge/general-rules.md`
 - `.github/agents/knowledge/testing-experimental-flags.md`
-- `.github/agents/knowledge/testing-semconv-dual.md`
+- `.github/agents/knowledge/testing-semconv-stability.md`

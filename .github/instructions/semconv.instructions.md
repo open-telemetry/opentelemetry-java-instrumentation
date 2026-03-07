@@ -16,4 +16,4 @@ In `javaagent/src/main` and tests, semconv constants (stable and incubating) may
 
 For dual-mode semconv tests and `maybeStable()` boundaries, see:
 
-- `.github/agents/knowledge/testing-semconv-dual.md`
+- `.github/agents/knowledge/testing-semconv-stability.md`

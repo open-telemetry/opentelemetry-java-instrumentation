@@ -19,6 +19,5 @@ Never use `--rerun-tasks`. You may use `--rerun`.
 
 For detailed patterns, see:
 
-- `.github/agents/knowledge/testing-gradle-tasks.md`
-- `.github/agents/knowledge/build-conventions.md`
+- `.github/agents/knowledge/gradle-conventions.md`
 - `.github/agents/knowledge/testing-experimental-flags.md`
