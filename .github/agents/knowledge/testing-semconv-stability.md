@@ -32,6 +32,8 @@ All methods are in `io.opentelemetry.instrumentation.api.internal.SemconvStabili
 ## Gradle Test Task Setup
 
 Every instrumentation module with Semconv versioning **must** define a `testStableSemconv` task.
+Only add it to modules whose tests actually exercise semconv attributes — not to sibling
+submodules (e.g. unit-test modules) that don't touch semconv.
 
 A `testBothSemconv` task (testing the `/dup` mode) is **only required for the RPC domain**.
 Database, code, and service-peer domains do not need a `testBothSemconv` task — only

@@ -127,6 +127,12 @@ Auto-fix boundaries:
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
     enum singleton or classical singleton pattern with `new MyImpl()` at the usage site
     and remove the `INSTANCE` field/enum
+  - `hasAttributesSatisfying(...)` calls in test assertions — replace with
+    `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
+    variant silently ignores unexpected attributes)
+  - non-empty `hasAttributes(...)` calls in test assertions — replace with
+    `hasAttributesSatisfyingExactly(...)` for consistency with the rest of the codebase.
+    Do **not** convert `hasAttributes(Attributes.empty())` — that is acceptable as-is.
   - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters)

@@ -87,6 +87,8 @@ Preferred replacement: pass `new MyImpl()` directly where the implementation is 
 (e.g., as an argument to a builder or `Instrumenter` factory method). These are tiny
 stateless objects, so creating a fresh instance at each initialization site is fine even
 if the class is referenced from more than one place.
+If the implementation is a private nested class, marking it as `final` is not
+necessary and it is preferred to omit the `final` keyword.
 
 ## [Style] No Redundant Null Guards on Attribute Puts
 
@@ -115,9 +117,6 @@ Use `@Nullable` annotations accurately throughout the codebase:
 
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
-- **Don't add null guards for non-nullable parameters**: trust the framework's
-  nullability contracts. Defensive null guards are acceptable in public APIs, but not
-  in internal implementation code like.
 
 ## [Semconv] Constants by Module Type
 
@@ -161,4 +160,7 @@ declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
 - JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
 - Test classes and methods should be package-private (no `public`).
 - Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
-  attribute checks.
+  attribute checks. Prefer `hasAttributesSatisfyingExactly` over `hasAttributesSatisfying`
+  because it is more precise — the non-exact variant silently ignores unexpected attributes.
+  Prefer `hasAttributesSatisfyingExactly` over non-empty `hasAttributes(...)` for consistency.
+  `hasAttributes(Attributes.empty())` is acceptable.
