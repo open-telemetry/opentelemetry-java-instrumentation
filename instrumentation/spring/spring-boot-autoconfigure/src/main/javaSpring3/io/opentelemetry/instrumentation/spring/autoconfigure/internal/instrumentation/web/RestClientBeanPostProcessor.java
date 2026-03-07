@@ -9,6 +9,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -34,18 +36,26 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
       RestClient restClient, OpenTelemetry openTelemetry) {
     ClientHttpRequestInterceptor instrumentationInterceptor = getInterceptor(openTelemetry);
 
-    return restClient
-        .mutate()
-        .requestInterceptors(
-            interceptors -> {
-              if (interceptors.stream()
-                  .noneMatch(
-                      interceptor ->
-                          interceptor.getClass() == instrumentationInterceptor.getClass())) {
-                interceptors.add(0, instrumentationInterceptor);
-              }
-            })
-        .build();
+    AtomicBoolean interceptorAdded = new AtomicBoolean(false);
+    RestClient.Builder result =
+        restClient
+            .mutate()
+            .requestInterceptors(
+                interceptors -> {
+                  if (isInterceptorNotPresent(interceptors, instrumentationInterceptor)) {
+                    interceptors.add(0, instrumentationInterceptor);
+                    interceptorAdded.set(true);
+                  }
+                });
+
+    return interceptorAdded.get() ? result.build() : restClient;
+  }
+
+  private static boolean isInterceptorNotPresent(
+      List<ClientHttpRequestInterceptor> interceptors,
+      ClientHttpRequestInterceptor instrumentationInterceptor) {
+    return interceptors.stream()
+        .noneMatch(interceptor -> interceptor.getClass() == instrumentationInterceptor.getClass());
   }
 
   static ClientHttpRequestInterceptor getInterceptor(OpenTelemetry openTelemetry) {
