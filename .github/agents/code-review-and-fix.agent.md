@@ -127,6 +127,9 @@ Auto-fix boundaries:
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
     enum singleton or classical singleton pattern with `new MyImpl()` at the usage site
     and remove the `INSTANCE` field/enum
+  - redundant `if (value != null)` guards around `AttributesBuilder.put()` calls —
+    `put` is a no-op for null values, so remove the conditional and pass the value
+    directly (same for span, log, and metrics attribute setters)
   - getter/setter/boolean-getter naming convention violations (`get*`, `set*`, `is*`) and
     other API convention fixes (e.g. missing `@CanIgnoreReturnValue`, wrong method signature)
     in **non-stable modules** (module `gradle.properties` does not contain
@@ -203,132 +206,16 @@ If no findings:
 
 ## Knowledge Loading
 
-Always apply:
+Always load:
 
-- General engineering judgment
 - `docs/contributing/style-guide.md`
-- Core rules in this file
+- `knowledge/general-rules.md` — review checklist and core rules
 
-Load knowledge files only when their scope trigger applies.
+Load other knowledge files only when their scope trigger applies.
+Use the **Knowledge File** column in the checklist table.
 Use the **Knowledge File** column below.
 
-## Review Checklist
+## Review Checklist and Core Rules
 
-Use category tags like `[Style]`, `[Naming]`, `[Javaagent]`, `[Testing]`.
-
-When a "Knowledge File" is listed, load it from `knowledge/` before reviewing that category.
-
-| Category | Rule | Scope Trigger | Knowledge File |
-| --- | --- | --- | --- |
-| General | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments | Always | - |
-| Style | Style guide | Always | - |
-| Naming | Getter naming (`get` / `is`) | Always | - |
-| Naming | Module/package naming | New or renamed modules/packages | `naming-modules.md` |
-| Javaagent | Advice patterns | `@Advice` classes | `javaagent-advice-patterns.md` |
-| Javaagent | Module structure patterns | `InstrumentationModule`, `TypeInstrumentation`, `Singletons` | `javaagent-module-patterns.md` |
-| Semconv | Library vs javaagent semconv constant usage | Semconv constants/assertions | - |
-| Semconv | Dual semconv testing | `SemconvStability`, `maybeStable`, semconv Gradle tasks | `testing-semconv-dual.md` |
-| Testing | Experimental flag tests | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties | `testing-experimental-flags.md` |
-| Library | TelemetryBuilder/getter/setter patterns | Library instrumentation classes | `library-patterns.md` |
-| API | Deprecation and breaking-change policy | Public API changes | `api-deprecation-policy.md` |
-| Config | Config property stability/renames/removals | `otel.instrumentation.*` property changes, `DeclarativeConfigUtil` or `ConfigProperties` usage | `config-property-stability.md` |
-| Build | Gradle conventions, muzzle, test tasks, plugins | `build.gradle.kts`, `settings.gradle.kts` | `gradle-conventions.md` |
-| Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | - |
-| Architecture | Library vs javaagent boundaries | Always | - |
-| NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
-
-## Core Rules (Always Enforce)
-
-### [General] Engineering Correctness
-
-Fix or flag real defects, including:
-
-- logic errors
-- concurrency hazards
-- resource leaks
-- copy/paste mistakes
-- incorrect comments
-- unsafe error handling
-- high-risk edge cases
-- dead code
-- security regressions
-
-Only fix or flag substantive problems, not stylistic preference.
-
-### [Style] Style Guide
-
-Read and apply `docs/contributing/style-guide.md`.
-
-Exceptions:
-
-- FQCN is acceptable when class-name collision makes import impossible.
-- `@SuppressWarnings` at method level is preferred over class level for tighter scope, but
-  if more than one method in the class needs the same suppression, class-level is fine.
-  Do not flag class-level `@SuppressWarnings` when multiple methods use the suppressed API.
-
-### [Naming] Getter Naming
-
-Public API getters should use `get*` (or `is*` for booleans).
-
-### [Style] Prefer Instance Creation Over Singletons
-
-Stateless implementations of telemetry interfaces — `TextMapGetter`, `TextMapSetter`,
-`*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`,
-`HttpServerResponseMutator` — should use instance creation (`new MyGetter()`) at the
-usage site instead of singleton patterns.
-
-Flag both forms:
-
-- **Enum singletons**: `enum MyGetter implements TextMapGetter<T> { INSTANCE; ... }`
-  referenced as `MyGetter.INSTANCE`.
-- **Classical singletons**: `private static final MyGetter INSTANCE = new MyGetter();`
-  with a static accessor, referenced as `MyGetter.getInstance()`.
-
-Preferred replacement: pass `new MyImpl()` directly where the implementation is consumed
-(e.g., as an argument to a builder or `Instrumenter` factory method). These are tiny
-stateless objects, so creating a fresh instance at each initialization site is fine even
-if the class is referenced from more than one place.
-
-### [Semconv] Constants by Module Type
-
-- `library/src/main/`: incubating semconv constants (from
-  `io.opentelemetry.semconv.incubating`) must be copied locally as `private static final`
-  fields with a `// copied from <ClassName>` comment. Stable semconv constants (from
-  `io.opentelemetry.semconv`) may be imported directly.
-- `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
-  directly.
-- tests: all semconv artifact constants are allowed.
-
-### [NewModule] New Instrumentation Checklist
-
-If a new module is added, verify all of the following:
-
-1. `metadata.yaml` includes required fields and config metadata.
-2. `build.gradle.kts` custom test tasks follow `gradle-conventions.md`.
-3. `testExperimental` task exists when module emits experimental span attributes.
-4. `instrumentation-docs/instrumentations.sh` includes all test-task variants.
-5. `settings.gradle.kts` includes all subprojects in alphabetical order.
-6. `docs/supported-libraries.md` has an entry (`Auto-instrumented versions` is `N/A` for
-   library-only).
-7. Javaagent README (may be in `javaagent/` or parent directory to share across versions)
-   documents configuration properties (if any) in a settings table.
-8. Library README exists with dependency and usage details (when there is a standalone
-   library instrumentation).
-9. `.fossa.yml` regenerated via `./gradlew generateFossaConfiguration`.
-10. Muzzle `pass` blocks include `assertInverse.set(true)`.
-11. Correct Gradle plugin is applied for each module type.
-
-### [Config] Configuration Reading
-
-`DeclarativeConfigUtil` is the standard way to read instrumentation configuration in javaagent
-code. Flat `ConfigProperties` is only used directly in `AgentDistributionConfig` for
-instrumentation enable/disable bootstrapping (`otel.instrumentation.<name>.enabled`,
-`otel.instrumentation.common.default-enabled`). All other config reads go through the
-declarative API. Do not flag `DeclarativeConfigUtil` usage as incorrect.
-
-### [Testing] General Test Patterns
-
-- JUnit 5, AssertJ assertions (not JUnit `assertEquals`/`assertTrue`).
-- Test classes and methods should be package-private (no `public`).
-- Use `span.hasAttributesSatisfyingExactly(...)` with `equalTo(...)`/`satisfies(...)` for
-  attribute checks.
+Load `knowledge/general-rules.md` — it contains the review checklist table and all
+core rules that apply to every review.

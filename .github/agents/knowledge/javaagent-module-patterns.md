@@ -34,7 +34,7 @@ public class MyLibrary10InstrumentationModule extends InstrumentationModule {
   `OkHttp3InstrumentationModule`, `JedisInstrumentationModule`).
 - Constructor `super()` arguments: the **first** (main) name must equal the Gradle module
   directory name excluding version suffix. Names use **kebab-case**. See
-  [naming-modules.md](naming-modules.md) for the full naming convention.
+  [module-naming.md](module-naming.md) for the full naming convention.
 - `typeInstrumentations()` returns the list of `TypeInstrumentation` implementations — use
   `Arrays.asList(...)`.
 
