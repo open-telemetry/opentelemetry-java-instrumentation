@@ -24,8 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
- * Regression test for empty response body when OTel instrumentation wraps Jetty HttpClient
- * listeners on Jetty 9.4.24–~9.4.43.
+ * Regression test for
+ * https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16405 Empty response
+ * body when OTel instrumentation wraps Jetty HttpClient listeners on Jetty 9.4.24–~9.4.43.
  *
  * <p>In those versions, {@code AsyncContentListener} and {@code ContentListener} do NOT extend
  * {@code DemandedContentListener}. Jetty's {@code HttpReceiver.ContentListeners} filters via {@code
