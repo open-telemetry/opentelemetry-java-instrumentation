@@ -29,10 +29,10 @@ public class AkkaActorCellInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invoke").and(takesArgument(0, named("akka.dispatch.Envelope"))),
-        AkkaActorCellInstrumentation.class.getName() + "$InvokeAdvice");
+        getClass().getName() + "$InvokeAdvice");
     transformer.applyAdviceToMethod(
         named("systemInvoke").and(takesArgument(0, named("akka.dispatch.sysmsg.SystemMessage"))),
-        AkkaActorCellInstrumentation.class.getName() + "$SystemInvokeAdvice");
+        getClass().getName() + "$SystemInvokeAdvice");
   }
 
   @SuppressWarnings("unused")

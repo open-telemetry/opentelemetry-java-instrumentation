@@ -38,7 +38,7 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
         named("systemEnqueue")
             .and(takesArgument(0, named("akka.actor.ActorRef")))
             .and(takesArgument(1, named("akka.dispatch.sysmsg.SystemMessage"))),
-        AkkaDefaultSystemMessageQueueInstrumentation.class.getName() + "$DispatchSystemAdvice");
+        getClass().getName() + "$DispatchSystemAdvice");
   }
 
   @SuppressWarnings("unused")

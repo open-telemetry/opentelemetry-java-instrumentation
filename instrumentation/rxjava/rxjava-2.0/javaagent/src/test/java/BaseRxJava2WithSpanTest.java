@@ -42,7 +42,7 @@ public abstract class BaseRxJava2WithSpanTest {
 
   private static List<AttributeAssertion> assertCancelled(String method) {
     List<AttributeAssertion> assertions = codeFunctionSuffixAssertions("TracedWithSpan", method);
-    assertions.add(equalTo(RXJAVA_CANCELED, true));
+    assertions.add(equalTo(RXJAVA_CANCELED, ExperimentalTestHelper.experimentalCanceled(true)));
     return assertions;
   }
 
