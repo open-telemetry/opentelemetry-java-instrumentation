@@ -121,6 +121,11 @@ These metrics are enabled with `emitExperimentalMetrics()`:
 
 **JFR-based (Java 17+ only):**
 
+> **Warning**: JFR events might not be available for all JVMs or with a GraalVM native image,
+> therefore limiting the produced metrics. The original implementation was done for Hotspot. OpenJ9
+> currently (Nov. 2025) only has the VM-level JFR implementation. So events emitted at the Java
+> level (ie. in jdk.jfr) will not be present. Meaning, jdk.SocketRead, jdk.SocketWrite won't work.
+
 | Metric | Description |
 | -------- | ----------- |
 | `jvm.cpu.context_switch` | Context switch rate |
