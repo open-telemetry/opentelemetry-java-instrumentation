@@ -5,12 +5,12 @@
 
 package io.opentelemetry.opencensusshim;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opencensus.trace.AttributeValue;
 import io.opencensus.trace.Tracing;
 import io.opencensus.trace.samplers.Samplers;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
@@ -83,32 +83,26 @@ class JavaagentInstrumentationTest {
                 sa ->
                     sa.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
+                        .hasAttribute(booleanKey("outer"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
                         .hasParent(ta.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("middle"), true)
+                        .hasAttribute(booleanKey("middle"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull)),
                 // inner span
                 sa ->
                     sa.hasName("inner-span")
                         .hasParent(ta.getSpan(1))
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
+                        .hasAttribute(booleanKey("inner"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 
   @Test
@@ -158,32 +152,26 @@ class JavaagentInstrumentationTest {
                 sa ->
                     sa.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
+                        .hasAttribute(booleanKey("outer"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
                         .hasParent(ta.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("middle"), true)
+                        .hasAttribute(booleanKey("middle"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull)),
                 // inner span
                 sa ->
                     sa.hasName("inner-span")
                         .hasParent(ta.getSpan(1))
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
+                        .hasAttribute(booleanKey("inner"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 
   @Test
@@ -218,11 +206,11 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("otel-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true),
+                        .hasAttribute(booleanKey("present-on-otel"), true),
                 span ->
                     span.hasName("oc-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true)));
+                        .hasAttribute(booleanKey("present-on-oc"), true)));
   }
 
   @Test
@@ -252,11 +240,11 @@ class JavaagentInstrumentationTest {
                 span ->
                     span.hasName("oc-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("present-on-oc"), true),
+                        .hasAttribute(booleanKey("present-on-oc"), true),
                 span ->
                     span.hasName("otel-span")
                         .hasParent(trace.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("present-on-otel"), true)));
+                        .hasAttribute(booleanKey("present-on-otel"), true)));
   }
 
   @Test
@@ -298,31 +286,25 @@ class JavaagentInstrumentationTest {
                 sa ->
                     sa.hasName("outer-span")
                         .hasNoParent()
-                        .hasAttribute(AttributeKey.booleanKey("outer"), true)
+                        .hasAttribute(booleanKey("outer"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
+                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
                     sa.hasName("mid-span")
                         .hasParent(ta.getSpan(0))
-                        .hasAttribute(AttributeKey.booleanKey("middle"), true)
+                        .hasAttribute(booleanKey("middle"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
+                            satisfies(booleanKey("inner"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull)),
                 // inner span
                 sa ->
                     sa.hasName("inner-span")
                         .hasParent(ta.getSpan(1))
-                        .hasAttribute(AttributeKey.booleanKey("inner"), true)
+                        .hasAttribute(booleanKey("inner"), true)
                         .hasAttributesSatisfying(
-                            satisfies(
-                                AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            satisfies(
-                                AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
+                            satisfies(booleanKey("middle"), AbstractBooleanAssert::isNull),
+                            satisfies(booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 }

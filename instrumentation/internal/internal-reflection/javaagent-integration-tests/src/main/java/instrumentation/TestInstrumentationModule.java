@@ -5,6 +5,7 @@
 
 package instrumentation;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
@@ -13,7 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
-import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -31,7 +31,7 @@ public class TestInstrumentationModule extends InstrumentationModule
   @Override
   public List<String> getAdditionalHelperClassNames() {
     // makes the class from instrumentation from the instrumented class with inlined advice
-    return Arrays.asList("instrumentation.TestHelperClass");
+    return asList("instrumentation.TestHelperClass");
   }
 
   @Override

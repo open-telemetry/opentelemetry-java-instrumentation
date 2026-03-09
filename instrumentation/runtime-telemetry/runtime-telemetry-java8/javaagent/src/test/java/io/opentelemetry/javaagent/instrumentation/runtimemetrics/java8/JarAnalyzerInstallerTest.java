@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.runtimemetrics.java8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.stream.Collectors.toList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
@@ -52,20 +52,16 @@ class JarAnalyzerInstallerTest {
                     .containsEntry("package.type", "jar")
                     .containsEntry("package.checksum_algorithm", "SHA1")
                     .hasEntrySatisfying(
-                        AttributeKey.stringKey("package.checksum"),
-                        value -> assertThat(value).isNotNull())
+                        stringKey("package.checksum"), value -> assertThat(value).isNotNull())
                     .hasEntrySatisfying(
-                        AttributeKey.stringKey("package.path"),
-                        value -> assertThat(value).isNotNull())
+                        stringKey("package.path"), value -> assertThat(value).isNotNull())
                     .satisfies(
                         attributes -> {
-                          String packageName =
-                              attributes.get(AttributeKey.stringKey("package.name"));
+                          String packageName = attributes.get(stringKey("package.name"));
                           if (packageName != null) {
                             assertThat(packageName).matches(".*:.*");
                           }
-                          String packageVersion =
-                              attributes.get(AttributeKey.stringKey("package.version"));
+                          String packageVersion = attributes.get(stringKey("package.version"));
                           if (packageVersion != null) {
                             assertThat(packageVersion).matches(".*\\..*");
                           }

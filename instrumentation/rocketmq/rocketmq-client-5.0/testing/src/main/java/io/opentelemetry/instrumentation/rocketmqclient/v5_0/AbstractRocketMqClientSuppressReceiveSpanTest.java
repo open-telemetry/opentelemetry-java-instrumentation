@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -24,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
-import java.util.Arrays;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -114,7 +114,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 .hasParent(trace.getSpan(0))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
@@ -132,7 +132,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
+                                    equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(

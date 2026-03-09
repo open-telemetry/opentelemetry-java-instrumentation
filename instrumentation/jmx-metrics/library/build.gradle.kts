@@ -17,6 +17,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
   test {
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val testAppTask = project(":instrumentation:jmx-metrics:testing-apps:testing-webapp").tasks.named<War>("war")

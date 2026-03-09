@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.59.0"
+val otelSdkVersion = "1.60.1"
 val otelContribVersion = "1.54.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -38,7 +38,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.48.0"
-val byteBuddyVersion = "1.18.5"
+val byteBuddyVersion = "1.18.7"
 val asmVersion = "9.9.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.6.0",
   "commons-io:commons-io:2.21.0",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.5",
+  "commons-logging:commons-logging:1.3.6",
   "commons-validator:commons-validator:1.10.1",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
