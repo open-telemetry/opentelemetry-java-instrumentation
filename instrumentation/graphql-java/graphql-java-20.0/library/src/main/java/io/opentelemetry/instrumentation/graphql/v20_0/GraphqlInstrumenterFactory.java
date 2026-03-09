@@ -11,7 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
 
 final class GraphqlInstrumenterFactory {
 

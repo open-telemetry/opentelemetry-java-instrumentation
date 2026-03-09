@@ -39,9 +39,11 @@ class FileDescriptorTest {
   }
 
   @Test
-  // verify that mock is called with the correct value
   void registerObservers() {
-    when(osBean.getOpenFileDescriptorCount()).thenReturn(42L);
+    // we have to test for positive and negative values in the same test as the metric is only
+    // registered for positive values.
+    when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L, 42L);
+    when(osBean.getMaxFileDescriptorCount()).thenReturn(-1L, 100L);
     FileDescriptor.registerObservers(testing.getOpenTelemetry().getMeter("test"), osBean);
 
     testing.waitAndAssertMetrics(
@@ -55,24 +57,18 @@ class FileDescriptorTest {
                         .hasUnit("{file_descriptor}")
                         .hasLongSumSatisfying(
                             sum -> sum.hasPointsSatisfying(point -> point.hasValue(42)))));
-  }
-
-  @Test
-  // Verify that no metrics are emitted with non-zero values
-  void registerObservers_NegativeValue() {
-    when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L);
-    FileDescriptor.registerObservers(testing.getOpenTelemetry().getMeter("test"), osBean);
 
     testing.waitAndAssertMetrics(
         "test",
-        "jvm.file_descriptor.count",
+        "jvm.file_descriptor.limit",
         metrics ->
-            metrics.allSatisfy(
+            metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
-                        .hasDescription("Number of open file descriptors as reported by the JVM.")
+                        .hasDescription(
+                            "Measure of max open file descriptors as reported by the JVM.")
                         .hasUnit("{file_descriptor}")
                         .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(0)))));
+                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(100)))));
   }
 }
