@@ -30,7 +30,7 @@ public abstract class AbstractFailsafeInstrumentationTest {
   protected abstract RetryPolicy<Object> configure(RetryPolicy<Object> userRetryPolicy);
 
   @Test
-  public void captureCircuitBreakerMetrics() {
+  void captureCircuitBreakerMetrics() {
     // given
     CircuitBreaker<Object> userCircuitBreaker =
         CircuitBreaker.builder()
