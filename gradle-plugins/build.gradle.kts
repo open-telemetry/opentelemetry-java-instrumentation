@@ -43,6 +43,7 @@ dependencies {
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
+    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
     exclude(group = "org.codehaus.plexus", module = "plexus-xml")
   }
 
