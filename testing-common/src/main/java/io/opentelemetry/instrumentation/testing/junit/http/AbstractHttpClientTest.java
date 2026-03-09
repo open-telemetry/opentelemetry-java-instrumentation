@@ -1104,10 +1104,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 int uriPort = uri.getPort();
                 if (uriPort <= 0) {
                   if (SemconvStability.v3Preview()) {
-                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                    int effectivePort = defaultPortForScheme(uri.getScheme());
                     assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
                   } else if (attrs.get(SERVER_PORT) != null) {
-                    int effectivePort = "https".equals(uri.getScheme()) ? 443 : 80;
+                    int effectivePort = defaultPortForScheme(uri.getScheme());
                     assertThat(attrs).containsEntry(SERVER_PORT, effectivePort);
                   }
                 } else {
@@ -1214,5 +1214,15 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   protected final URI resolveAddress(String path) {
     return URI.create("http://localhost:" + server.httpPort() + path);
+  }
+
+  private static int defaultPortForScheme(String scheme) {
+    if ("https".equals(scheme)) {
+      return 443;
+    }
+    if ("http".equals(scheme)) {
+      return 80;
+    }
+    throw new IllegalArgumentException("Unexpected URI scheme: " + scheme);
   }
 }

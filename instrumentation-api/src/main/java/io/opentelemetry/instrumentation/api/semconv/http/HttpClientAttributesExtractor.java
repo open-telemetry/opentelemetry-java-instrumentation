@@ -87,13 +87,13 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       AddressAndPort serverAddressAndPort = serverAddressAndPortExtractor.extract(request);
       if (serverAddressAndPort.getAddress() != null) {
         attributes.put(SERVER_ADDRESS, serverAddressAndPort.getAddress());
-        Integer port = serverAddressAndPort.getPort();
-        if (port == null || port <= 0) {
-          port = defaultPortForScheme(fullUrl);
-        }
-        if (port != null && port > 0) {
-          attributes.put(SERVER_PORT, (long) port);
-        }
+      }
+      Integer port = serverAddressAndPort.getPort();
+      if (port == null || port <= 0) {
+        port = defaultPortForScheme(fullUrl);
+      }
+      if (port != null && port > 0) {
+        attributes.put(SERVER_PORT, (long) port);
       }
     } else {
       internalServerExtractor.onStart(attributes, request);
