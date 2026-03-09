@@ -89,15 +89,18 @@ public final class CommonConfig {
             .get("client")
             .getBoolean("emit_experimental_telemetry/development", false);
 
-    DeclarativeConfigProperties httpConfig = commonConfig.get("http");
-    Boolean oldRedact = httpConfig.get("client").getBoolean("redact_query_parameters/development");
+    Boolean oldRedact =
+        commonConfig.get("http").get("client").getBoolean("redact_query_parameters/development");
     if (oldRedact != null) {
       logger.warning(
-          "otel.instrumentation.common.http.client.redact_query_parameters is deprecated. "
-              + "Use otel.instrumentation.common.http.sensitive_query_parameters instead.");
+          "otel.instrumentation.http.client.experimental.redact-query-parameters is deprecated. "
+              + "Use otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters instead.");
     }
     List<String> newConfigValue =
-        httpConfig.getScalarList("sensitive_query_parameters/development", String.class);
+        generalConfig
+            .get("sanitization")
+            .get("url")
+            .getScalarList("sensitive_query_parameters/development", String.class);
 
     if (newConfigValue != null) {
       sensitiveQueryParameters = new HashSet<>(newConfigValue);
