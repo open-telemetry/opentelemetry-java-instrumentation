@@ -40,14 +40,11 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2")
-
-  // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
-  // causing "No XmlService implementation found" in Gradle's classloader
-  constraints {
-    implementation("org.codehaus.plexus:plexus-xml") {
-      version { strictly("4.0.4") }
-    }
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2") {
+    // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
+    // causing "No XmlService implementation found" in Gradle's classloader
+    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
+    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
   }
 
   testImplementation("org.assertj:assertj-core:3.27.7")
