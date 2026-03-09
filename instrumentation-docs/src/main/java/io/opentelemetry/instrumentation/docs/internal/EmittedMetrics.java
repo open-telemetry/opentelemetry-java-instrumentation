@@ -96,7 +96,6 @@ public class EmittedMetrics {
     private String name;
     private String description;
     private String type;
-    private String instrumentType;
 
     @Nullable
     @JsonProperty("is_monotonic")
@@ -114,7 +113,6 @@ public class EmittedMetrics {
       this.name = name;
       this.description = description;
       this.type = type;
-      this.instrumentType = "";
       this.isMonotonic = null;
       this.unit = unit;
       this.attributes = attributes;
@@ -124,30 +122,12 @@ public class EmittedMetrics {
         String name,
         String description,
         String type,
-        String instrumentType,
-        String unit,
-        List<TelemetryAttribute> attributes) {
-      this.name = name;
-      this.description = description;
-      this.type = type;
-      this.instrumentType = instrumentType;
-      this.isMonotonic = null;
-      this.unit = unit;
-      this.attributes = attributes;
-    }
-
-    public Metric(
-        String name,
-        String description,
-        String type,
-        String instrumentType,
         @Nullable Boolean isMonotonic,
         String unit,
         List<TelemetryAttribute> attributes) {
       this.name = name;
       this.description = description;
       this.type = type;
-      this.instrumentType = instrumentType;
       this.isMonotonic = isMonotonic;
       this.unit = unit;
       this.attributes = attributes;
@@ -157,7 +137,6 @@ public class EmittedMetrics {
       this.name = "";
       this.description = "";
       this.type = "";
-      this.instrumentType = "";
       this.unit = "";
       this.attributes = new ArrayList<>();
     }
@@ -187,11 +166,38 @@ public class EmittedMetrics {
     }
 
     public String getInstrumentType() {
-      return instrumentType;
+      return inferInstrumentType(this.type, this.isMonotonic);
     }
 
-    public void setInstrumentType(String instrumentType) {
-      this.instrumentType = instrumentType;
+    /**
+     * Infers the InstrumentType from the MetricDataType string and isMonotonic flag.
+     *
+     * @param metricDataType the MetricDataType string (e.g., "LONG_SUM", "DOUBLE_GAUGE")
+     * @param isMonotonic whether the metric is monotonic (for SUM types), null if not applicable
+     * @return the inferred InstrumentType string
+     */
+    private static String inferInstrumentType(
+        String metricDataType, @Nullable Boolean isMonotonic) {
+      if (metricDataType == null || metricDataType.isEmpty()) {
+        return "";
+      }
+
+      return switch (metricDataType) {
+        case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM", "SUMMARY" -> "histogram";
+        case "LONG_GAUGE", "DOUBLE_GAUGE" -> "gauge";
+        case "LONG_SUM", "DOUBLE_SUM" -> {
+          // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
+          if (isMonotonic != null && isMonotonic) {
+            yield "counter";
+          } else if (isMonotonic != null) {
+            yield "updowncounter";
+          } else {
+            // Unknown, default to counter
+            yield "counter";
+          }
+        }
+        default -> "";
+      };
     }
 
     @Nullable
@@ -229,7 +235,6 @@ public class EmittedMetrics {
       private String name = "";
       private String description = "";
       private String type = "";
-      private String instrumentType = "";
       @Nullable private Boolean isMonotonic = null;
       private String unit = "";
       private List<TelemetryAttribute> attributes = new ArrayList<>();
@@ -253,12 +258,6 @@ public class EmittedMetrics {
       }
 
       @CanIgnoreReturnValue
-      public Builder instrumentType(String instrumentType) {
-        this.instrumentType = instrumentType;
-        return this;
-      }
-
-      @CanIgnoreReturnValue
       public Builder isMonotonic(@Nullable Boolean isMonotonic) {
         this.isMonotonic = isMonotonic;
         return this;
@@ -277,7 +276,7 @@ public class EmittedMetrics {
       }
 
       public Metric build() {
-        return new Metric(name, description, type, instrumentType, isMonotonic, unit, attributes);
+        return new Metric(name, description, type, isMonotonic, unit, attributes);
       }
     }
 

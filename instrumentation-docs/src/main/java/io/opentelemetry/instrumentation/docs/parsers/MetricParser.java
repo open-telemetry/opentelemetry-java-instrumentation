@@ -120,7 +120,6 @@ public class MetricParser {
                             metric.getName(),
                             metric.getDescription(),
                             metric.getType(),
-                            metric.getInstrumentType(),
                             metric.getIsMonotonic(),
                             metric.getUnit()));
             if (metric.getAttributes() != null) {
@@ -153,7 +152,6 @@ public class MetricParser {
                   .name(aggInfo.name)
                   .description(aggInfo.description)
                   .type(aggInfo.type)
-                  .instrumentType(aggInfo.instrumentType)
                   .isMonotonic(aggInfo.isMonotonic)
                   .unit(aggInfo.unit)
                   .attributes(new ArrayList<>(aggInfo.attributes))
@@ -168,7 +166,6 @@ public class MetricParser {
       final String name;
       final String description;
       final String type;
-      final String instrumentType;
       @Nullable final Boolean isMonotonic;
       final String unit;
       final Set<TelemetryAttribute> attributes = new HashSet<>();
@@ -177,13 +174,11 @@ public class MetricParser {
           String name,
           String description,
           String type,
-          String instrumentType,
           @Nullable Boolean isMonotonic,
           String unit) {
         this.name = name;
         this.description = description;
         this.type = type;
-        this.instrumentType = instrumentType;
         this.isMonotonic = isMonotonic;
         this.unit = unit;
       }

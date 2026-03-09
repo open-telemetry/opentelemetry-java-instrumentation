@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 
 /**
  * This class is responsible for parsing metric-* files from the `.telemetry` directory of an
@@ -124,9 +123,7 @@ public class EmittedMetricsParser {
             new EmittedMetrics.MetricsByScope(
                 scopeEntry.getKey(), new ArrayList<>(scopeEntry.getValue().values())));
       }
-      EmittedMetrics emittedMetrics = new EmittedMetrics(when, mergedScopes);
-      enrichMetricsWithInstrumentType(emittedMetrics);
-      result.put(when, emittedMetrics);
+      result.put(when, new EmittedMetrics(when, mergedScopes));
     }
     return result;
   }
@@ -164,68 +161,9 @@ public class EmittedMetricsParser {
         deduplicatedScopes.add(
             new EmittedMetrics.MetricsByScope(scope, new ArrayList<>(dedupedMetrics.values())));
       }
-      EmittedMetrics emittedMetrics = new EmittedMetrics(when, deduplicatedScopes);
-      enrichMetricsWithInstrumentType(emittedMetrics);
-      metricsMap.put(when, emittedMetrics);
+      metricsMap.put(when, new EmittedMetrics(when, deduplicatedScopes));
     }
     return metricsMap;
-  }
-
-  /**
-   * Infers the InstrumentType from the MetricDataType string and isMonotonic flag, since MetricData
-   * only contains the aggregated type (e.g., LONG_SUM, DOUBLE_GAUGE)
-   *
-   * @param metricDataType the MetricDataType string (e.g., "LONG_SUM", "DOUBLE_GAUGE")
-   * @param isMonotonic whether the metric is monotonic (for SUM types), null if not applicable
-   * @return the inferred InstrumentType string
-   */
-  private static String inferInstrumentType(String metricDataType, @Nullable Boolean isMonotonic) {
-    if (metricDataType == null || metricDataType.isEmpty()) {
-      return "UNKNOWN";
-    }
-
-    return switch (metricDataType) {
-      case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM", "SUMMARY" -> "histogram";
-      case "LONG_GAUGE", "DOUBLE_GAUGE" -> "gauge";
-      case "LONG_SUM", "DOUBLE_SUM" -> {
-        // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
-        if (isMonotonic != null && isMonotonic) {
-          yield "counter";
-        } else if (isMonotonic != null) {
-          yield "updowncounter";
-        } else {
-          // Unknown, default to counter
-          yield "counter";
-        }
-      }
-      default -> "UNKNOWN";
-    };
-  }
-
-  /**
-   * Populates the instrumentType field for each metric based on its MetricDataType and isMonotonic
-   * flag. This is called after parsing the YAML to enrich the metric data with inferred instrument
-   * types.
-   *
-   * @param metrics the EmittedMetrics object to enrich
-   */
-  private static void enrichMetricsWithInstrumentType(EmittedMetrics metrics) {
-    if (metrics.getMetricsByScope() == null) {
-      return;
-    }
-
-    for (EmittedMetrics.MetricsByScope scope : metrics.getMetricsByScope()) {
-      if (scope.getMetrics() == null) {
-        continue;
-      }
-
-      for (EmittedMetrics.Metric metric : scope.getMetrics()) {
-        if (metric.getInstrumentType() == null || metric.getInstrumentType().isEmpty()) {
-          String inferredType = inferInstrumentType(metric.getType(), metric.getIsMonotonic());
-          metric.setInstrumentType(inferredType);
-        }
-      }
-    }
   }
 
   private EmittedMetricsParser() {}
