@@ -105,14 +105,6 @@ Auto-fix boundaries:
   - obvious assertion API migrations (e.g., AssertJ preference)
   - deterministic semconv constant handling aligned with repository rules
   - missing test-task wiring patterns with clear canonical form
-  - missing `testExperimental` task — when any experimental flag (e.g.,
-    `experimental-span-attributes`, `emit-experimental-telemetry`,
-    `experimental-metrics.enabled`) is set unconditionally on all test tasks (e.g., in
-    `withType<Test>().configureEach` or the default `test` task) instead of being isolated
-    in a dedicated `testExperimental` task,
-    create the task following the pattern in `testing-experimental-flags.md`, move the
-    experimental flag into it, and update test assertions to use the conditional
-    `experimental()` helper so both flag-on and flag-off modes are exercised
   - missing `testInstrumentation` cross-version references — when a javaagent module belongs
     to a library family with sibling version modules, it must list all siblings via
     `testInstrumentation`. Check `settings.gradle.kts` for sibling `:javaagent` modules
@@ -150,6 +142,8 @@ Auto-fix boundaries:
     to delegate to the new one, and add a `@deprecated` Javadoc tag naming the replacement.
     For stable modules, annotate instead: the fix requires a broader compatibility decision.
 - Do not auto-fix (report in summary instead):
+  - missing `testExperimental` task — when experimental flags are set unconditionally
+    on all test tasks instead of being isolated in a dedicated task
   - behavior-changing logic without clear intent
   - architecture decisions that require cross-module agreement
   - broad refactors spanning many modules without explicit request
