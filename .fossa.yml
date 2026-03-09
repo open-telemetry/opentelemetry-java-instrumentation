@@ -672,9 +672,6 @@ targets:
       target: ':instrumentation:ktor:ktor-3.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:ktor:ktor-common:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:ktor:ktor-common-2.0:library'
     - type: gradle
       path: ./
