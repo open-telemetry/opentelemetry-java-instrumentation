@@ -56,13 +56,12 @@ dependencies {
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.3.0")
   implementation("com.google.guava:guava:33.5.0-jre")
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2")
-  // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
-  // causing "No XmlService implementation found" in Gradle's classloader
-  constraints {
-    implementation("org.codehaus.plexus:plexus-xml") {
-      version { strictly("4.0.4") }
-    }
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2") {
+    // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
+    // causing "No XmlService implementation found" in Gradle's classloader
+    // We exclude it here because our current usages of the shadow plugin don't require it, the
+    // failure happens in spdx-gradle-plugin that can continue using and older version of plexus-xml
+    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.3.2")
