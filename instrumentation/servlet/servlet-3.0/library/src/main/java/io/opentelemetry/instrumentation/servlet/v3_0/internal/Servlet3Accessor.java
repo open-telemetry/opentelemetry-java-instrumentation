@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.servlet.v3_0.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.servlet.common.javax.JavaxServletAccessor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
-import io.opentelemetry.instrumentation.servlet.javax.JavaxServletAccessor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

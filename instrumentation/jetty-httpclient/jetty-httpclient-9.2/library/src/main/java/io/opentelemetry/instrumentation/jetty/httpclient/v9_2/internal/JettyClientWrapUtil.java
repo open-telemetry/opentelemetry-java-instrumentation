@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
@@ -20,16 +21,33 @@ import org.eclipse.jetty.client.api.Response;
  * any time.
  */
 public final class JettyClientWrapUtil {
-  private static final Class<?>[] listenerInterfaces = {
-    Response.CompleteListener.class,
-    Response.FailureListener.class,
-    Response.SuccessListener.class,
-    Response.AsyncContentListener.class,
-    Response.ContentListener.class,
-    Response.HeadersListener.class,
-    Response.HeaderListener.class,
-    Response.BeginListener.class
-  };
+
+  private static final Class<?>[] listenerInterfaces = buildListenerInterfaces();
+
+  private static Class<?>[] buildListenerInterfaces() {
+    List<Class<?>> interfaces =
+        new ArrayList<>(
+            asList(
+                Response.CompleteListener.class,
+                Response.FailureListener.class,
+                Response.SuccessListener.class,
+                Response.AsyncContentListener.class,
+                Response.ContentListener.class,
+                Response.HeadersListener.class,
+                Response.HeaderListener.class,
+                Response.BeginListener.class));
+    // Response.DemandedContentListener was added in Jetty 9.4.24. In versions 9.4.24–9.4.43,
+    // AsyncContentListener and ContentListener do NOT extend DemandedContentListener, but Jetty's
+    // HttpReceiver.ContentListeners filters via instanceof DemandedContentListener. Without
+    // explicitly including it, the proxy fails the instanceof check and content is never delivered.
+    try {
+      interfaces.add(
+          Class.forName("org.eclipse.jetty.client.api.Response$DemandedContentListener"));
+    } catch (ClassNotFoundException ignored) {
+      // ignored
+    }
+    return interfaces.toArray(new Class<?>[0]);
+  }
 
   private JettyClientWrapUtil() {}
 
