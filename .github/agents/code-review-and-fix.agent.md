@@ -125,8 +125,10 @@ Auto-fix boundaries:
   - singleton-to-instance-creation conversion for stateless telemetry interface
     implementations (`TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
     `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`) — replace
-    enum singleton or classical singleton pattern with `new MyImpl()` at the usage site
-    and remove the `INSTANCE` field/enum
+    enum singleton or classical singleton pattern with `new MyImpl()` at each usage site
+    and remove the `INSTANCE` field/enum. Do **not** extract a shared instance field;
+    inline `new MyImpl()` directly at every call site (the class is tiny, stateless,
+    and only called during initialization)
   - `hasAttributesSatisfying(...)` calls in test assertions — replace with
     `hasAttributesSatisfyingExactly(...)` because it is more precise (the non-exact
     variant silently ignores unexpected attributes)
