@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -48,6 +49,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -259,13 +261,13 @@ class InstrumenterTest {
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);
-      LogRecordData log = logs.get(0);
-      assertThat(log.getSeverity()).isEqualTo(Severity.ERROR);
-      assertThat(log.getEventName()).isEqualTo("http.server.request.exception");
-      assertThat(log.getAttributes().get(EXCEPTION_TYPE))
-          .isEqualTo("java.lang.IllegalStateException");
-      assertThat(log.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("test");
-      assertThat(log.getAttributes().get(EXCEPTION_STACKTRACE)).isNotNull();
+      assertThat(logs.get(0))
+          .hasSeverity(Severity.ERROR)
+          .hasEventName("http.server.request.exception")
+          .hasAttributesSatisfyingExactly(
+              equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+              equalTo(EXCEPTION_MESSAGE, "test"),
+              satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
     }
   }
 
@@ -391,13 +393,13 @@ class InstrumenterTest {
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);
-      LogRecordData log = logs.get(0);
-      assertThat(log.getSeverity()).isEqualTo(Severity.WARN);
-      assertThat(log.getEventName()).isEqualTo("http.client.request.exception");
-      assertThat(log.getAttributes().get(EXCEPTION_TYPE))
-          .isEqualTo("java.lang.IllegalStateException");
-      assertThat(log.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("test");
-      assertThat(log.getAttributes().get(EXCEPTION_STACKTRACE)).isNotNull();
+      assertThat(logs.get(0))
+          .hasSeverity(Severity.WARN)
+          .hasEventName("http.client.request.exception")
+          .hasAttributesSatisfyingExactly(
+              equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+              equalTo(EXCEPTION_MESSAGE, "test"),
+              satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
     }
   }
 
@@ -438,14 +440,14 @@ class InstrumenterTest {
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);
-      LogRecordData log = logs.get(0);
-      // Should be WARN (from setExceptionEventExtractor), not ERROR (from CONSUMER span kind)
-      assertThat(log.getSeverity()).isEqualTo(Severity.WARN);
-      assertThat(log.getEventName()).isEqualTo("messaging.client.operation.exception");
-      assertThat(log.getAttributes().get(EXCEPTION_TYPE))
-          .isEqualTo("java.lang.IllegalStateException");
-      assertThat(log.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("test");
-      assertThat(log.getAttributes().get(EXCEPTION_STACKTRACE)).isNotNull();
+      assertThat(logs.get(0))
+          // Should be WARN (from setExceptionEventExtractor), not ERROR (from CONSUMER span kind)
+          .hasSeverity(Severity.WARN)
+          .hasEventName("messaging.client.operation.exception")
+          .hasAttributesSatisfyingExactly(
+              equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+              equalTo(EXCEPTION_MESSAGE, "test"),
+              satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
     }
   }
 
@@ -477,13 +479,13 @@ class InstrumenterTest {
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);
-      LogRecordData log = logs.get(0);
-      assertThat(log.getSeverity()).isEqualTo(Severity.WARN);
-      assertThat(log.getEventName()).isEqualTo("test.exception");
-      assertThat(log.getAttributes().get(EXCEPTION_TYPE))
-          .isEqualTo("java.lang.IllegalStateException");
-      assertThat(log.getAttributes().get(EXCEPTION_MESSAGE)).isEqualTo("test");
-      assertThat(log.getAttributes().get(EXCEPTION_STACKTRACE)).isNotNull();
+      assertThat(logs.get(0))
+          .hasSeverity(Severity.WARN)
+          .hasEventName("test.exception")
+          .hasAttributesSatisfyingExactly(
+              equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+              equalTo(EXCEPTION_MESSAGE, "test"),
+              satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull));
     }
   }
 
