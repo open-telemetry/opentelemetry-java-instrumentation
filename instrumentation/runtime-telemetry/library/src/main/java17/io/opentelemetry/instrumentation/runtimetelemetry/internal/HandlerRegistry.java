@@ -56,6 +56,8 @@ final class HandlerRegistry {
 
         case "G1 Old Generation", "PS MarkSweep", "MarkSweepCompact" ->
             handlers.add(new OldGarbageCollectionHandler(meter, name));
+
+        default -> {}
       }
     }
 
