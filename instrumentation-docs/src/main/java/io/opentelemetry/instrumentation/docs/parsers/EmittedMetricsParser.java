@@ -185,7 +185,7 @@ public class EmittedMetricsParser {
     }
 
     return switch (metricDataType) {
-      case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM", "SUMMARY" -> "HISTOGRAM";
+      case "HISTOGRAM", "EXPONENTIAL_HISTOGRAM", "SUMMARY" -> "histogram";
       case "LONG_GAUGE", "DOUBLE_GAUGE" -> "gauge";
       case "LONG_SUM", "DOUBLE_SUM" -> {
         // Use isMonotonic flag to distinguish between COUNTER and UP_DOWN_COUNTER
@@ -194,7 +194,7 @@ public class EmittedMetricsParser {
         } else if (isMonotonic != null) {
           yield "updowncounter";
         } else {
-          // Unknown, default to COUNTER
+          // Unknown, default to counter
           yield "counter";
         }
       }
