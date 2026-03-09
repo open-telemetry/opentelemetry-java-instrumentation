@@ -137,9 +137,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
+        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -253,9 +252,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasParent(trace.getSpan(0))));
 
     assertThat(testing.metrics())
+        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
@@ -356,9 +354,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             receiveAttributes(topic, msgId.toString(), false))));
 
     assertThat(testing.metrics())
+        .filteredOn(metric -> !metric.getName().startsWith("otel.sdk."))
         .satisfiesExactlyInAnyOrder(
-            metric -> assertThat(metric).hasName("otel.sdk.span.started"),
-            metric -> assertThat(metric).hasName("otel.sdk.span.live"),
             metric ->
                 assertThat(metric)
                     .hasName("messaging.receive.duration")
