@@ -405,9 +405,9 @@ class InstrumenterTest {
 
   @Test
   void consumer_error_with_explicit_severity() {
-    // Verifies that severity comes from setExceptionEventExtractor, not from span kind.
-    // A CONSUMER span would get ERROR from span-kind logic, but
-    // "messaging.client.operation.exception" should always be WARN.
+    // Verifies that log event severity comes from setExceptionEventExtractor, not from span status.
+    // The span gets ERROR status (because there's an error), but the exception log event
+    // should use the extractor's severity (WARN), not mirror the span status.
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
             otelTesting.getOpenTelemetry(), "test", unused -> "span");
@@ -441,7 +441,7 @@ class InstrumenterTest {
       List<LogRecordData> logs = otelTesting.getLogRecords();
       assertThat(logs).hasSize(1);
       assertThat(logs.get(0))
-          // Should be WARN (from setExceptionEventExtractor), not ERROR (from CONSUMER span kind)
+          // Should be WARN (from setExceptionEventExtractor), not ERROR (from span status)
           .hasSeverity(Severity.WARN)
           .hasEventName("messaging.client.operation.exception")
           .hasAttributesSatisfyingExactly(

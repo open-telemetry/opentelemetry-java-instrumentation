@@ -127,7 +127,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
               : defaultExceptionEventExtractor(builder.instrumentationName);
     } else {
       this.logger = null;
-      this.exceptionEventExtractor = builder.exceptionEventExtractor;
+      this.exceptionEventExtractor = null;
     }
   }
 
