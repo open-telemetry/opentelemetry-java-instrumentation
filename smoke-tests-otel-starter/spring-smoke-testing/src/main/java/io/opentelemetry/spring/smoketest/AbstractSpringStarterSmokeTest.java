@@ -33,10 +33,7 @@ public abstract class AbstractSpringStarterSmokeTest {
           "Registering converter from interface java.util.List to interface org.springframework.data.domain.Vector as reading converter although it doesn't convert from a store-supported type; You might want to check your annotation setup at the converter implementation",
           "Node may not be available.",
           "Could not configure topics",
-          "(id: -1 rack: null isFenced: false) disconnected",
-          // TODO remove this ignored warning after next OpenTelemetry SDK release
-          // see https://github.com/open-telemetry/opentelemetry-java/pull/8157
-          "otel.experimental.config.file is deprecated");
+          "(id: -1 rack: null isFenced: false) disconnected");
 
   @Autowired protected OpenTelemetry openTelemetry;
 
