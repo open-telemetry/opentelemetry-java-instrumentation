@@ -254,6 +254,83 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   alibaba:
   - name: alibaba-druid-1.0
     description: |
@@ -647,6 +724,44 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-2.0
     display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -724,6 +839,42 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
@@ -941,6 +1092,44 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-5.2
     display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
@@ -1156,6 +1345,91 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: armeria-grpc-1.14
     description: |
       This instrumentation enables RPC client spans and metrics for the Armeria gRPC client, and RPC server spans and metrics for the Armeria gRPC server.
@@ -1191,6 +1465,32 @@ libraries:
         - name: rpc.service
           type: STRING
         - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=rpc
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
           type: STRING
         - name: server.address
           type: STRING
@@ -1274,6 +1574,40 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
+        - name: url.full
+          type: STRING
   - name: async-http-client-1.9
     display_name: AsyncHttpClient
     description: |
@@ -1349,6 +1683,40 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   - name: async-http-client-2.0
@@ -1434,6 +1802,48 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=service.peer
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: service.peer.name
+          type: STRING
         - name: url.full
           type: STRING
   avaje:
@@ -3021,8 +3431,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   - name: couchbase-3.1
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
@@ -3806,8 +4214,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   executors:
   - name: executors
     display_name: Java Executors
@@ -4581,6 +4987,73 @@ libraries:
         - name: rpc.service
           type: STRING
         - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=rpc
+      metrics:
+      - name: rpc.client.call.duration
+        description: Measures the duration of outbound remote procedure calls (RPC).
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.call.duration
+        description: Measures the duration of inbound remote procedure calls (RPC).
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.method
+          type: STRING
+        - name: rpc.response.status_code
+          type: STRING
+        - name: rpc.system.name
           type: STRING
         - name: server.address
           type: STRING
@@ -6231,8 +6704,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6301,8 +6772,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   jetty:
   - name: jetty-8.0
     description: This instrumentation enables HTTP server spans and HTTP server metrics
@@ -7395,8 +7864,6 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
-        - name: network.peer.address
-          type: STRING
         - name: network.protocol.version
           type: STRING
         - name: server.address
@@ -7424,8 +7891,6 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: http.route
-          type: STRING
-        - name: network.peer.address
           type: STRING
         - name: network.protocol.version
           type: STRING
@@ -7733,6 +8198,8 @@ libraries:
           type: LONG
         - name: http.route
           type: STRING
+        - name: network.peer.address
+          type: STRING
         - name: network.protocol.version
           type: STRING
         - name: server.address
@@ -7837,6 +8304,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: http.route
+          type: STRING
+        - name: network.peer.address
           type: STRING
         - name: network.protocol.version
           type: STRING
@@ -8229,8 +8698,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -11215,8 +11682,6 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: kafka.record.queue_time_ms
-          type: LONG
         - name: messaging.client_id
           type: STRING
         - name: messaging.destination.name
@@ -11493,8 +11958,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-        - name: network.type
-          type: STRING
   resources:
   - name: resources
     source_path: instrumentation/resources
@@ -11881,26 +12344,62 @@ libraries:
     has_standalone_library: true
   rxjava:
   - name: rxjava-2.0
+    display_name: RxJava
+    description: |
+      This instrumentation enables context propagation for RxJava 2 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 2 types. It does not emit any telemetry on its own.
+    library_link: https://github.com/ReactiveX/RxJava/tree/2.x
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/rxjava/rxjava-2.0
     scope:
       name: io.opentelemetry.rxjava-2.0
     has_standalone_library: true
     javaagent_target_versions:
     - io.reactivex.rxjava2:rxjava:[2.0.6,)
+    configurations:
+    - name: otel.instrumentation.rxjava.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `rxjava.canceled`.
+      type: boolean
+      default: false
   - name: rxjava-3.0
+    display_name: RxJava
+    description: |
+      This instrumentation enables context propagation for RxJava 3 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 3 types. It does not emit any telemetry on its own.
+    library_link: https://github.com/ReactiveX/RxJava/tree/3.x
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/rxjava/rxjava-3.0
     scope:
       name: io.opentelemetry.rxjava-3.0
     has_standalone_library: true
     javaagent_target_versions:
     - io.reactivex.rxjava3:rxjava:[3.0.0,3.1.0]
+    configurations:
+    - name: otel.instrumentation.rxjava.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `rxjava.canceled`.
+      type: boolean
+      default: false
   - name: rxjava-3.1.1
+    display_name: RxJava
+    description: |
+      This instrumentation enables context propagation for RxJava 3 reactive streams and adds support for @WithSpan annotations on methods that return RxJava 3 types. It does not emit any telemetry on its own.
+    library_link: https://github.com/ReactiveX/RxJava/tree/3.x
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/rxjava/rxjava-3.1.1
     scope:
       name: io.opentelemetry.rxjava-3.1.1
     has_standalone_library: true
     javaagent_target_versions:
     - io.reactivex.rxjava3:rxjava:[3.1.1,)
+    configurations:
+    - name: otel.instrumentation.rxjava.experimental-span-attributes
+      description: |
+        Enables the experimental span attribute `rxjava.canceled`.
+      type: boolean
+      default: false
   scala:
   - name: scala-fork-join-2.8
     display_name: Scala ForkJoinPool
@@ -14160,23 +14659,119 @@ libraries:
     - org.apache.wicket:wicket:[8.0.0,]
   xxl:
   - name: xxl-job-1.9.2
+    display_name: XXL-Job
+    description: This instrumentation enables spans for XXL-Job task executions.
+    library_link: https://github.com/xuxueli/xxl-job
     source_path: instrumentation/xxl-job/xxl-job-1.9.2
     scope:
       name: io.opentelemetry.xxl-job-1.9.2
     javaagent_target_versions:
     - com.xuxueli:xxl-job-core:[1.9.2, 2.1.2)
+    configurations:
+    - name: otel.instrumentation.xxl-job.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and `scheduling.xxl-job.job.id`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.xxl-job.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.xxl-job.glue.type
+          type: STRING
+        - name: scheduling.xxl-job.job.id
+          type: LONG
   - name: xxl-job-2.1.2
+    display_name: XXL-Job
+    description: This instrumentation enables spans for XXL-Job task executions.
+    library_link: https://github.com/xuxueli/xxl-job
     source_path: instrumentation/xxl-job/xxl-job-2.1.2
     scope:
       name: io.opentelemetry.xxl-job-2.1.2
     javaagent_target_versions:
     - com.xuxueli:xxl-job-core:[2.1.2,2.3.0)
+    configurations:
+    - name: otel.instrumentation.xxl-job.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and `scheduling.xxl-job.job.id`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.xxl-job.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.xxl-job.glue.type
+          type: STRING
+        - name: scheduling.xxl-job.job.id
+          type: LONG
   - name: xxl-job-2.3.0
+    display_name: XXL-Job
+    description: This instrumentation enables spans for XXL-Job task executions.
+    library_link: https://github.com/xuxueli/xxl-job
     source_path: instrumentation/xxl-job/xxl-job-2.3.0
     scope:
       name: io.opentelemetry.xxl-job-2.3.0
     javaagent_target_versions:
     - com.xuxueli:xxl-job-core:[2.3.0,)
+    configurations:
+    - name: otel.instrumentation.xxl-job.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and `scheduling.xxl-job.job.id`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.xxl-job.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.xxl-job.glue.type
+          type: STRING
+        - name: scheduling.xxl-job.job.id
+          type: LONG
   zio:
   - name: zio-2.0
     source_path: instrumentation/zio/zio-2.0
@@ -14321,6 +14916,12 @@ internal:
   javaagent_target_versions:
   - io.projectreactor:reactor-core:[3.4.0,)
 - name: rxjava-1.0
+  display_name: RxJava
+  description: |
+    This instrumentation enables context propagation for RxJava 1 reactive streams. It does not emit any telemetry on its own.
+  library_link: https://github.com/ReactiveX/RxJava/tree/1.x
+  features:
+  - CONTEXT_PROPAGATION
   source_path: instrumentation/rxjava/rxjava-1.0
   scope:
     name: io.opentelemetry.rxjava-1.0
