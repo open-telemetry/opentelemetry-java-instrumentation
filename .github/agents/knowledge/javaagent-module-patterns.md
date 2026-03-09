@@ -227,7 +227,6 @@ Javaagent modules hold their `Instrumenter` instances and shared resources in a 
 - The instrumentation name string (second argument to `builder()`) should match the Gradle
   module path: `"io.opentelemetry.<module-name>"` (e.g., `"io.opentelemetry.jedis-4.0"`).
 - Provide a static accessor method (typically named `instrumenter()`).
-- `VirtualField` declarations (see below) also belong here as `public static final` fields.
 
 ## CallDepth (Preventing Recursive Instrumentation)
 
@@ -248,8 +247,13 @@ for associating OpenTelemetry context or state with library objects.
 
 ### Rules
 
-- **Declare as `static final`** — call `VirtualField.find(Carrier.class, Value.class)` once
-  and store it. Never call `find()` inside advice methods on the hot path.
+- Call `VirtualField.find(Carrier.class, Value.class)` with class literals.
+- **Inside `@Advice` methods** these calls are **rewritten at bytecode transformation time**
+  by `VirtualFieldFindRewriter` into direct static calls to generated implementations —
+  they are never executed at runtime. It is perfectly fine to call `VirtualField.find()`
+  inside advice methods; do **not** extract them into helper classes or static final fields.
+- **Outside advice** (helper classes, singletons, etc.) the call executes at runtime, so
+  declare the result as a `static final` field to avoid repeated lookups.
 - The first type parameter is the "carrier" class (the library object); the second is the
   attached value type.
 - Uses weak-key semantics: when the carrier is garbage-collected, the value is released.
