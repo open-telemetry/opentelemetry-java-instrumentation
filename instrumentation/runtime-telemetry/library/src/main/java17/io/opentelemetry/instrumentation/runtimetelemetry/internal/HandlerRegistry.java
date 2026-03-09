@@ -35,7 +35,6 @@ final class HandlerRegistry {
 
   private HandlerRegistry() {}
 
-  @SuppressWarnings("StatementSwitchToExpressionSwitch")
   static List<RecordedEventHandler> getHandlers(
       Meter meter, Predicate<JfrFeature> featurePredicate, boolean useLegacyCpuCountMetric) {
 
@@ -43,28 +42,20 @@ final class HandlerRegistry {
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();
       switch (name) {
-        case "G1 Young Generation":
+        case "G1 Young Generation" -> {
           handlers.add(new G1HeapSummaryHandler(meter));
           handlers.add(new G1GarbageCollectionHandler(meter));
-          break;
+        }
 
-        case "Copy":
-          handlers.add(new YoungGarbageCollectionHandler(meter, name));
-          break;
+        case "Copy" -> handlers.add(new YoungGarbageCollectionHandler(meter, name));
 
-        case "PS Scavenge":
+        case "PS Scavenge" -> {
           handlers.add(new YoungGarbageCollectionHandler(meter, name));
           handlers.add(new ParallelHeapSummaryHandler(meter));
-          break;
+        }
 
-        case "G1 Old Generation":
-        case "PS MarkSweep":
-        case "MarkSweepCompact":
-          handlers.add(new OldGarbageCollectionHandler(meter, name));
-          break;
-
-        default:
-          // If none of the above GCs are detected, no action.
+        case "G1 Old Generation", "PS MarkSweep", "MarkSweepCompact" ->
+            handlers.add(new OldGarbageCollectionHandler(meter, name));
       }
     }
 
