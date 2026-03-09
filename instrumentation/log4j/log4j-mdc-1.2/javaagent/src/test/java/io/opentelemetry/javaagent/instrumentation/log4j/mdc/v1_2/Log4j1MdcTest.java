@@ -75,7 +75,8 @@ class Log4j1MdcTest {
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
     assertThat(events.get(0).getMDC("trace_id")).isEqualTo(span1.getSpanContext().getTraceId());
     assertThat(events.get(0).getMDC("span_id")).isEqualTo(span1.getSpanContext().getSpanId());
-    assertThat(events.get(0).getMDC("trace_flags")).isEqualTo("01");
+    assertThat(events.get(0).getMDC("trace_flags"))
+        .isEqualTo(span1.getSpanContext().getTraceFlags().asHex());
 
     assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
     assertThat(events.get(1).getMDC("trace_id")).isNull();
@@ -87,7 +88,8 @@ class Log4j1MdcTest {
     events.get(2).getMDCCopy();
     assertThat(events.get(2).getMDC("trace_id")).isEqualTo(span2.getSpanContext().getTraceId());
     assertThat(events.get(2).getMDC("span_id")).isEqualTo(span2.getSpanContext().getSpanId());
-    assertThat(events.get(2).getMDC("trace_flags")).isEqualTo("01");
+    assertThat(events.get(2).getMDC("trace_flags"))
+        .isEqualTo(span2.getSpanContext().getTraceFlags().asHex());
   }
 
   @Test

@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.0.1"
+    id("com.github.jk1.dependency-license-report") version "3.1.1"
     id("com.google.cloud.tools.jib") version "3.5.3"
     id("com.gradle.plugin-publish") version "2.1.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
@@ -430,7 +430,6 @@ include(":instrumentation:ktor:ktor-common-2.0:library")
 include(":instrumentation:ktor:ktor-3.0:javaagent")
 include(":instrumentation:ktor:ktor-3.0:library")
 include(":instrumentation:ktor:ktor-3.0:testing")
-include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
