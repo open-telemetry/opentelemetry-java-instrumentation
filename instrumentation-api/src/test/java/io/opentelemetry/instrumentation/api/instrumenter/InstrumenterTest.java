@@ -774,21 +774,23 @@ class InstrumenterTest {
   }
 
   @Test
-  void shouldStartSuppressesException() {
+  void startSuppressesException() {
     AtomicReference<Boolean> extractorCalled = new AtomicReference<>(false);
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
-                otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .buildInstrumenter(
-                request -> {
+                otelTesting.getOpenTelemetry(),
+                "test",
+                unused -> {
                   extractorCalled.set(true);
-                  throw new RuntimeException("span kind extractor error");
-                });
+                  throw new RuntimeException("span name extractor error");
+                })
+            .buildInstrumenter();
 
-    boolean result = instrumenter.shouldStart(Context.root(), REQUEST);
+    Context parentContext = Context.root();
+    Context result = instrumenter.start(parentContext, REQUEST);
 
     assertThat(extractorCalled.get()).isTrue();
-    assertThat(result).isFalse();
+    assertThat(result).isSameAs(parentContext);
   }
 
   @Test
