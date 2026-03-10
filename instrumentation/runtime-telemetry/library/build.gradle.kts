@@ -69,6 +69,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
   // Configure testJava17 compilation for Java 17
   named<JavaCompile>("compileTestJava17Java") {
     dependsOn("compileJava17Java")
