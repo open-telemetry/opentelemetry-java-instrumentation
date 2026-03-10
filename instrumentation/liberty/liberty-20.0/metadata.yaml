@@ -1,0 +1,8 @@
+display_name: Liberty
+description: >
+  This instrumentation enables HTTP server spans and metrics for IBM WebSphere Liberty application
+  server.
+library_link: https://openliberty.io/
+semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS

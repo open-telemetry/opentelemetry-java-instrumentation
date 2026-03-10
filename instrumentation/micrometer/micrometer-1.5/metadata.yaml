@@ -1,1 +1,24 @@
+display_name: Micrometer
 disabled_by_default: true
+description: >
+  This instrumentation enables a Micrometer MeterRegistry that bridges Micrometer metrics to the
+  OpenTelemetry Metrics SDK. It is disabled by default because it may produce metrics that overlap
+  with metrics already captured by other instrumentations.
+library_link: https://micrometer.io/
+configurations:
+  - name: otel.instrumentation.micrometer.prometheus-mode.enabled
+    description: >
+      Enables Prometheus mode to match Micrometer PrometheusMeterRegistry naming conventions.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.micrometer.base-time-unit
+    description: >
+      Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms, s,
+      min, h, d.
+    type: string
+    default: s
+  - name: otel.instrumentation.micrometer.histogram-gauges.enabled
+    description: >
+      Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+    type: boolean
+    default: false
