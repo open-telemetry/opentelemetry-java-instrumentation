@@ -12553,6 +12553,152 @@ libraries:
       type: int
       default: 10
     telemetry:
+    - when: Java17
+      metrics:
+      - name: jvm.buffer.count
+        description: Number of buffers in the pool.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{buffer}'
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.buffer.memory.limit
+        description: Measure of total memory capacity of buffers.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.buffer.memory.used
+        description: Measure of memory used by buffers.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.buffer.pool.name
+          type: STRING
+      - name: jvm.class.count
+        description: Number of classes currently loaded.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.class.loaded
+        description: Number of classes loaded since JVM start.
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.class.unloaded
+        description: Number of classes unloaded since JVM start.
+        instrument: counter
+        data_type: LONG_SUM
+        unit: '{class}'
+        attributes: []
+      - name: jvm.cpu.count
+        description: Number of processors available to the Java virtual machine.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{cpu}'
+        attributes: []
+      - name: jvm.cpu.longlock
+        description: Long lock times
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes: []
+      - name: jvm.cpu.recent_utilization
+        description: Recent CPU utilization for the process as reported by the JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '1'
+        attributes: []
+      - name: jvm.cpu.time
+        description: CPU time used by the process as reported by the JVM.
+        instrument: counter
+        data_type: DOUBLE_SUM
+        unit: s
+        attributes: []
+      - name: jvm.gc.duration
+        description: Duration of JVM garbage collection actions.
+        instrument: histogram
+        data_type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: jvm.gc.action
+          type: STRING
+        - name: jvm.gc.name
+          type: STRING
+      - name: jvm.memory.committed
+        description: Measure of memory committed.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.init
+        description: Measure of initial memory requested.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.limit
+        description: Measure of max obtainable memory.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.used
+        description: Measure of memory used.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.memory.used_after_last_gc
+        description: Measure of memory used, as measured after the most recent garbage
+          collection event on this pool.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: By
+        attributes:
+        - name: jvm.memory.pool.name
+          type: STRING
+        - name: jvm.memory.type
+          type: STRING
+      - name: jvm.system.cpu.utilization
+        description: Recent CPU utilization for the whole system as reported by the
+          JVM.
+        instrument: gauge
+        data_type: DOUBLE_GAUGE
+        unit: '1'
+        attributes: []
+      - name: jvm.thread.count
+        description: Number of executing platform threads.
+        instrument: updowncounter
+        data_type: LONG_SUM
+        unit: '{thread}'
+        attributes:
+        - name: jvm.thread.daemon
+          type: BOOLEAN
+        - name: jvm.thread.state
+          type: STRING
     - when: default
       metrics:
       - name: jvm.buffer.count
