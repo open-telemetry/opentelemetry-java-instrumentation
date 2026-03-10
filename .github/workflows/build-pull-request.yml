@@ -54,9 +54,6 @@ jobs:
     # test-latest-deps and muzzle are included in the required status checks because
     # latest dependency versions are pinned (see .github/config/latest-dep-versions.json),
     # so they should no longer fail due to newly released library versions.
-    #
-    # only the "common" checks are required for release branch PRs in order to avoid any unnecessary
-    # release branch maintenance (especially for patches)
     needs:
       - common
       - test-latest-deps
@@ -67,12 +64,7 @@ jobs:
     steps:
       - if: |
           needs.common.result != 'success' ||
-          (
-            !startsWith(github.base_ref, 'release/') &&
-            (
-              needs.test-latest-deps.result != 'success' ||
-              needs.muzzle.result != 'success' ||
-              needs.markdown-lint-check.result != 'success'
-            )
-          )
+          needs.test-latest-deps.result != 'success' ||
+          needs.muzzle.result != 'success' ||
+          needs.markdown-lint-check.result != 'success'
         run: exit 1 # fail

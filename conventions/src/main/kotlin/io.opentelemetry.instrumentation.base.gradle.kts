@@ -1,4 +1,4 @@
-import io.opentelemetry.instrumentation.gradle.VersionFilters
+import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 
 /** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
 
@@ -59,7 +59,7 @@ fun lookupPinnedVersion(group: String?, name: String, version: String?): String?
   if (!pinLatestDeps || group == null) return null
   val pinned = getPinnedVersions()
   return if (version == "latest.release") {
-    pinned["$group:$name"]
+    pinned["$group:$name#+"]
   } else if (version != null && version.contains("+")) {
     val rangeKey = "$group:$name#$version"
     val rangeVersion = pinned[rangeKey]
@@ -84,7 +84,7 @@ fun lookupPinnedVersion(group: String?, name: String, version: String?): String?
 @CacheableRule
 abstract class TestLatestDepsRule : ComponentMetadataRule {
   override fun execute(context: ComponentMetadataContext) {
-    if (VersionFilters.isUnstable(context.details.id.version)) {
+    if (!AcceptableVersions.isStable(context.details.id.version)) {
       context.details.status = "milestone"
     }
   }

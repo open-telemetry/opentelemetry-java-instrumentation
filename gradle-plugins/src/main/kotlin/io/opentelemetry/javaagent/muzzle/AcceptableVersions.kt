@@ -42,6 +42,7 @@ class AcceptableVersions(private val skipVersions: Collection<String>) :
         || versionString.contains("public_draft")
         || versionString.contains("snapshot")
         || versionString.contains("test")
+        || versionString.endsWith("-nf-execution") // graphql
         || versionString.startsWith("0.0.0-")
         || GIT_SHA_PATTERN.matches(versionString)
         || DATETIME_PATTERN.matches(versionString)
