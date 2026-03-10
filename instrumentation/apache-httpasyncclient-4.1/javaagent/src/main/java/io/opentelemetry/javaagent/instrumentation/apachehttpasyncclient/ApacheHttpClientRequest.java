@@ -79,13 +79,18 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
+  @Nullable
   public String getServerAddress() {
-    return uri != null ? uri.getHost() : null;
+    if (uri != null) {
+      return uri.getHost();
+    }
+    return target != null ? target.getHostName() : null;
   }
 
+  @Nullable
   public Integer getServerPort() {
     if (uri == null) {
-      return null;
+      return target != null ? target.getPort() : null;
     }
     int port = uri.getPort();
     if (port != -1) {

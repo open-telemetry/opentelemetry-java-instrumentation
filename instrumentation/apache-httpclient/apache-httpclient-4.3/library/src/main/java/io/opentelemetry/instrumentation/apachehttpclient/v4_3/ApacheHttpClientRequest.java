@@ -89,12 +89,18 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   String getServerAddress() {
-    return uri == null ? null : uri.getHost();
+    if (uri != null) {
+      return uri.getHost();
+    }
+    return target != null ? target.getHostName() : null;
   }
 
   @Nullable
   Integer getServerPort() {
-    return uri == null ? null : uri.getPort();
+    if (uri != null) {
+      return uri.getPort();
+    }
+    return target != null ? target.getPort() : null;
   }
 
   @Nullable
