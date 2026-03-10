@@ -5,19 +5,24 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.slf4j.MarkerFactory;
 
 class Slf4j2Test {
@@ -63,14 +68,30 @@ class Slf4j2Test {
                 .hasTotalAttributeCount(codeAttributesLogCount() + 8) // 8 key value pairs
                 .hasEventName("MyEventName")
                 .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("string key"), "string value"),
-                    equalTo(AttributeKey.booleanKey("boolean key"), true),
-                    equalTo(AttributeKey.longKey("byte key"), 1),
-                    equalTo(AttributeKey.longKey("short key"), 2),
-                    equalTo(AttributeKey.longKey("int key"), 3),
-                    equalTo(AttributeKey.longKey("long key"), 4),
-                    equalTo(AttributeKey.doubleKey("float key"), 5.0),
-                    equalTo(AttributeKey.doubleKey("double key"), 6.0)));
+                    equalTo(stringKey("string key"), "string value"),
+                    equalTo(booleanKey("boolean key"), true),
+                    equalTo(longKey("byte key"), 1),
+                    equalTo(longKey("short key"), 2),
+                    equalTo(longKey("int key"), 3),
+                    equalTo(longKey("long key"), 4),
+                    equalTo(doubleKey("float key"), 5.0),
+                    equalTo(doubleKey("double key"), 6.0)));
+  }
+
+  @Test
+  void keyValuePairWinsOverMdc() {
+    MDC.put("key1", "mdc-value");
+    try {
+      logger.atInfo().setMessage("test message").addKeyValue("key1", "kvp-value").log();
+    } finally {
+      MDC.clear();
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("test message")
+                .hasAttributesSatisfying(equalTo(stringKey("key1"), "kvp-value")));
   }
 
   @Test
@@ -92,9 +113,7 @@ class Slf4j2Test {
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
                 .hasAttributesSatisfying(
-                    equalTo(
-                        AttributeKey.stringArrayKey("logback.marker"),
-                        Arrays.asList(markerName1, markerName2))));
+                    equalTo(stringArrayKey("logback.marker"), asList(markerName1, markerName2))));
   }
 
   @Test
@@ -118,14 +137,14 @@ class Slf4j2Test {
                 .hasTotalAttributeCount(codeAttributesLogCount() + 2)
                 .hasAttributesSatisfying(
                     equalTo(
-                        AttributeKey.stringArrayKey("log.body.parameters"),
-                        Arrays.asList(
+                        stringArrayKey("log.body.parameters"),
+                        asList(
                             "'world'",
                             String.valueOf(Math.PI),
                             String.valueOf(true),
                             String.valueOf(Long.MAX_VALUE))),
                     equalTo(
-                        AttributeKey.stringKey("log.body.template"),
+                        stringKey("log.body.template"),
                         "log message {} and {}, bool {}, long {}")));
   }
 }

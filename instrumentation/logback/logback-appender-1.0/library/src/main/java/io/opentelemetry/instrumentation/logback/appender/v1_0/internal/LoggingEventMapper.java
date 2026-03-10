@@ -5,39 +5,36 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -135,7 +132,7 @@ public final class LoggingEventMapper {
       setTimestampFromInstant(builder, loggingEvent);
     } else {
       long timestamp = loggingEvent.getTimeStamp();
-      builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+      builder.setTimestamp(timestamp, MILLISECONDS);
     }
 
     // level
@@ -154,7 +151,7 @@ public final class LoggingEventMapper {
       throwable = ((ThrowableProxy) throwableProxy).getThrowable();
     }
     if (throwable != null) {
-      setThrowable(builder, throwable);
+      builder.setException(throwable);
     }
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
@@ -173,7 +170,7 @@ public final class LoggingEventMapper {
         String fileName = firstStackElement.getFileName();
         int lineNumber = firstStackElement.getLineNumber();
 
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILEPATH, fileName);
           }
@@ -183,7 +180,7 @@ public final class LoggingEventMapper {
             builder.setAttribute(CODE_LINENO, (long) lineNumber);
           }
         }
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILE_PATH, fileName);
           }
@@ -279,20 +276,7 @@ public final class LoggingEventMapper {
 
   private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
-        LOG_BODY_PARAMETERS,
-        Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
-  }
-
-  private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
-    if (builder instanceof ExtendedLogRecordBuilder) {
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
-    } else {
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
-    }
+        LOG_BODY_PARAMETERS, Arrays.stream(arguments).map(String::valueOf).collect(toList()));
   }
 
   private static Severity levelToSeverity(Level level) {
@@ -451,7 +435,7 @@ public final class LoggingEventMapper {
       LogRecordBuilder builder, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     Marker marker = loggingEvent.getMarker();
     if (marker != null && (!skipLogstashMarkers || !isLogstashMarker(marker))) {
-      builder.setAttribute(LOG_MARKER, Collections.singletonList(marker.getName()));
+      builder.setAttribute(LOG_MARKER, singletonList(marker.getName()));
     }
   }
 
@@ -744,16 +728,6 @@ public final class LoggingEventMapper {
     public Builder setCaptureArguments(boolean captureArguments) {
       this.captureArguments = captureArguments;
       return this;
-    }
-
-    /**
-     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-     *     deprecated and will be removed in a future release.
-     */
-    @Deprecated
-    @CanIgnoreReturnValue
-    public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-      return setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
     }
 
     @CanIgnoreReturnValue

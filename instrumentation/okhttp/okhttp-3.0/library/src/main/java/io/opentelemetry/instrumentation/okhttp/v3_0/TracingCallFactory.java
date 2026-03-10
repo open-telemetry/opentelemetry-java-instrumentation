@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,22 +24,17 @@ class TracingCallFactory implements Call.Factory {
 
   private static final VirtualField<Request, Context> contextsByRequest =
       VirtualField.find(Request.class, Context.class);
+  private static final boolean supportsTags = supportsTags();
 
   // We use old-school reflection here, rather than MethodHandles because Android doesn't support
   // MethodHandles until API 26.
   @Nullable private static Method timeoutMethod;
-  @Nullable private static Method cloneMethod;
 
   static {
     try {
       timeoutMethod = Call.class.getMethod("timeout");
     } catch (NoSuchMethodException e) {
       timeoutMethod = null;
-    }
-    try {
-      cloneMethod = Call.class.getDeclaredMethod("clone");
-    } catch (NoSuchMethodException e) {
-      cloneMethod = null;
     }
   }
 
@@ -48,17 +44,52 @@ class TracingCallFactory implements Call.Factory {
     this.okHttpClient = okHttpClient;
   }
 
+  // tags with class type are supported since OkHttp 3.11.0
+  private static boolean supportsTags() {
+    try {
+      Request.class.getMethod("tag", Class.class);
+      Request.Builder.class.getMethod("tag", Class.class, Object.class);
+      return true;
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
+  }
+
   @Nullable
   static Context getCallingContextForRequest(Request request) {
+    if (supportsTags) {
+      return getContextFromRequestTag(request);
+    }
     return contextsByRequest.get(request);
+  }
+
+  @NoMuzzle
+  private static Context getContextFromRequestTag(Request request) {
+    return request.tag(Context.class);
   }
 
   @Override
   public Call newCall(Request request) {
     Context callingContext = Context.current();
-    Request requestCopy = request.newBuilder().build();
-    contextsByRequest.set(requestCopy, callingContext);
-    return new TracingCall(okHttpClient.newCall(requestCopy), callingContext);
+    Request requestWithContext = attachContextToRequest(request, callingContext);
+    return new TracingCall(okHttpClient.newCall(requestWithContext), callingContext);
+  }
+
+  private static Request attachContextToRequest(Request request, Context context) {
+    Request.Builder builder = request.newBuilder();
+    if (supportsTags) {
+      setContextToRequestTag(builder, context);
+    }
+    Request newRequest = builder.build();
+    if (!supportsTags) {
+      contextsByRequest.set(newRequest, context);
+    }
+    return newRequest;
+  }
+
+  @NoMuzzle
+  private static void setContextToRequestTag(Request.Builder builder, Context context) {
+    builder.tag(Context.class, context);
   }
 
   static class TracingCall implements Call {
@@ -76,17 +107,10 @@ class TracingCallFactory implements Call.Factory {
     }
 
     @Override
-    public Call clone() throws CloneNotSupportedException {
-      if (cloneMethod == null) {
-        return (Call) super.clone();
-      }
-      try {
-        // we pull the current context here, because the cloning might be happening in a different
-        // context than the original call creation.
-        return new TracingCall((Call) cloneMethod.invoke(delegate), Context.current());
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        return (Call) super.clone();
-      }
+    public Call clone() {
+      // we pull the current context here, because the cloning might be happening in a different
+      // context than the original call creation.
+      return new TracingCall(delegate.clone(), Context.current());
     }
 
     @Override

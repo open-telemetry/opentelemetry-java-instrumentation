@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.SEVERE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.javaagent.extension.AgentListener;
@@ -19,7 +20,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -30,7 +30,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    ExtendedDeclarativeConfigProperties config =
+    DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jmx");
 
     if (config.getBoolean("enabled", true)) {
@@ -43,8 +43,10 @@ public class JmxMetricInsightInstaller implements AgentListener {
       config.getScalarList("config", String.class, emptyList()).stream()
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
+
       config
-          .getScalarList("target_system", String.class, emptyList())
+          .get("target")
+          .getScalarList("system", String.class, emptyList())
           .forEach(target -> addClasspathRules(target, jmx));
 
       jmx.build().start();
@@ -56,7 +58,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(path);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(Level.SEVERE, "Error while loading JMX configuration from " + path, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from " + path, e);
     }
   }
 
@@ -68,8 +70,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
       builder.addRules(input);
     } catch (RuntimeException e) {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
-      logger.log(
-          Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
+      logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
   }
 }

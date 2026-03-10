@@ -7,12 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
+import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.ArrayList;
@@ -22,9 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MethodConfiguration {
@@ -42,14 +41,14 @@ public class MethodConfiguration {
   }
 
   private static List<TypeInstrumentation> parse(OpenTelemetry openTelemetry) {
-    ExtendedDeclarativeConfigProperties config =
+    DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "methods");
     // First try structured declarative config (YAML format)
     List<DeclarativeConfigProperties> includeList = config.getStructuredList("include");
     if (includeList != null) {
       return includeList.stream()
           .flatMap(MethodConfiguration::parseMethodInstrumentation)
-          .collect(Collectors.toList());
+          .collect(toList());
     }
 
     // Fall back to old string property format
@@ -65,7 +64,7 @@ public class MethodConfiguration {
       DeclarativeConfigProperties config) {
     String clazz = config.getString("class");
     if (isNullOrEmpty(clazz)) {
-      logger.log(Level.WARNING, "Invalid methods configuration - class name missing: {0}", config);
+      logger.log(WARNING, "Invalid methods configuration - class name missing: {0}", config);
       return Stream.empty();
     }
 
@@ -73,8 +72,7 @@ public class MethodConfiguration {
     for (DeclarativeConfigProperties method : config.getStructuredList("methods", emptyList())) {
       String methodName = method.getString("name");
       if (isNullOrEmpty(methodName)) {
-        logger.log(
-            Level.WARNING, "Invalid methods configuration - method name missing: {0}", method);
+        logger.log(WARNING, "Invalid methods configuration - method name missing: {0}", method);
         continue;
       }
       String spanKind = method.getString("span_kind", "INTERNAL");
@@ -85,14 +83,14 @@ public class MethodConfiguration {
             .add(methodName);
       } catch (IllegalArgumentException e) {
         logger.log(
-            Level.WARNING,
+            WARNING,
             "Invalid methods configuration - unknown span_kind: {0} for method: {1}",
             new Object[] {spanKind, methodName});
       }
     }
 
     if (methodNames.isEmpty()) {
-      logger.log(Level.WARNING, "Invalid methods configuration - no methods defined: {0}", config);
+      logger.log(WARNING, "Invalid methods configuration - no methods defined: {0}", config);
       return Stream.empty();
     }
 
@@ -111,6 +109,6 @@ public class MethodConfiguration {
             e ->
                 new MethodInstrumentation(
                     e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

@@ -22,11 +22,11 @@ public final class RpcClientAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the RPC client attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      RpcAttributesGetter<REQUEST> getter) {
+      RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     return new RpcClientAttributesExtractor<>(getter);
   }
 
-  private RpcClientAttributesExtractor(RpcAttributesGetter<REQUEST> getter) {
+  private RpcClientAttributesExtractor(RpcAttributesGetter<REQUEST, RESPONSE> getter) {
     super(getter);
   }
 

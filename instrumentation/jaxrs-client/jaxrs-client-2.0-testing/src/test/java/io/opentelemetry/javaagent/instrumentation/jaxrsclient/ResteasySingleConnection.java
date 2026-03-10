@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -13,7 +16,6 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -30,14 +32,14 @@ class ResteasySingleConnection implements SingleConnection {
     this.port = port;
     this.client =
         new ResteasyClientBuilder()
-            .establishConnectionTimeout(5000, TimeUnit.MILLISECONDS)
+            .establishConnectionTimeout(5000, MILLISECONDS)
             .connectionPoolSize(1)
             .build();
   }
 
   @Override
   public int doRequest(String path, Map<String, String> headers) throws ExecutionException {
-    String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
+    String requestId = requireNonNull(headers.get(REQUEST_ID_HEADER));
 
     URI uri;
     try {

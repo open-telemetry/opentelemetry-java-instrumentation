@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import static graphql.execution.instrumentation.InstrumentationState.ofState;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
@@ -26,9 +28,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationState;
-import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationState;
 import java.util.concurrent.CompletionStage;
 
 final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation {
@@ -125,8 +126,8 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
     Span span = Span.fromContext(context);
     for (GraphQLError error : dataFetcherResult.getErrors()) {
       AttributesBuilder attributes = Attributes.builder();
-      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
-      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, error.getMessage());
+      attributes.put(EXCEPTION_TYPE, String.valueOf(error.getErrorType()));
+      attributes.put(EXCEPTION_MESSAGE, error.getMessage());
 
       span.addEvent("exception", attributes.build());
     }

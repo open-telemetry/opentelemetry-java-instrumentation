@@ -30,8 +30,8 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
     configureSdkClient(builder);
     ClientOverrideConfiguration overrideConfiguration =
         ClientOverrideConfiguration.builder()
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build();
 
     builder.overrideConfiguration(overrideConfiguration);

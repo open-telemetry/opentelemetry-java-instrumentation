@@ -60,7 +60,6 @@ class ResteasyFilterTest extends JaxRsFilterTest<Void> {
   @Override
   protected TestResponse makeRequest(String url) throws Exception {
     MockHttpRequest request = MockHttpRequest.post(url);
-    ;
     request.contentType(MediaType.TEXT_PLAIN_TYPE);
     request.content(new byte[0]);
 

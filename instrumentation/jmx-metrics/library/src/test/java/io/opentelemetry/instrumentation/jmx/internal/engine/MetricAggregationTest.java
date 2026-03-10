@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.params.ParameterizedInvocationConstants.ARGUMENTS_PLACEHOLDER;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -15,8 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,8 +106,7 @@ class MetricAggregationTest {
   }
 
   static List<MetricInfo.Type> metricTypes() {
-    return Arrays.asList(
-        MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
+    return asList(MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
   }
 
   @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
@@ -116,7 +116,7 @@ class MetricAggregationTest {
     theServer.registerMBean(new Hello(42), bean);
 
     String metricName = generateMetricName(metricType);
-    startTestMetric(metricName, bean.toString(), Collections.emptyList(), metricType);
+    startTestMetric(metricName, bean.toString(), emptyList(), metricType);
     waitAndAssertMetric(
         metricName, metricType, point -> point.hasValue(42).hasAttributes(Attributes.empty()));
   }
@@ -129,7 +129,7 @@ class MetricAggregationTest {
 
     String bean = getObjectName("*", null).toString();
     String metricName = generateMetricName(metricType);
-    startTestMetric(metricName, bean, Collections.emptyList(), metricType);
+    startTestMetric(metricName, bean, emptyList(), metricType);
 
     // last-value aggregation produces an unpredictable result unless a single mbean instance is
     // used
@@ -151,7 +151,7 @@ class MetricAggregationTest {
 
     String bean = getObjectName("*", "*").toString();
     String metricName = generateMetricName(metricType);
-    startTestMetric(metricName, bean, Collections.emptyList(), metricType);
+    startTestMetric(metricName, bean, emptyList(), metricType);
 
     // last-value aggregation produces an unpredictable result unless a single mbean instance is
     // used
@@ -174,7 +174,7 @@ class MetricAggregationTest {
     String bean = getObjectName("*", "*").toString();
 
     List<MetricAttribute> attributes =
-        Collections.singletonList(
+        singletonList(
             new MetricAttribute(
                 "test.metric.param", MetricAttributeExtractor.fromObjectNameParameter("b")));
     String metricName = generateMetricName(metricType);
@@ -237,8 +237,7 @@ class MetricAggregationTest {
     BeanAttributeExtractor beanExtractor = BeanAttributeExtractor.fromName("Value");
     MetricExtractor extractor = new MetricExtractor(beanExtractor, metricInfo, attributes);
     extractors.add(extractor);
-    MetricDef metricDef =
-        new MetricDef(BeanGroup.forBeans(Collections.singletonList(mbean)), extractors);
+    MetricDef metricDef = new MetricDef(BeanGroup.forBeans(singletonList(mbean)), extractors);
 
     metricConfiguration.addMetricDef(metricDef);
     metricInsight.startLocal(metricConfiguration);

@@ -27,6 +27,6 @@ class Aws2ClientDynamodbTest extends AbstractAws2ClientCoreTest {
                 .setCaptureExperimentalSpanAttributes(true)
                 .setUseConfiguredPropagatorForMessaging(isSqsAttributeInjectionEnabled())
                 .build()
-                .newExecutionInterceptor());
+                .createExecutionInterceptor());
   }
 }

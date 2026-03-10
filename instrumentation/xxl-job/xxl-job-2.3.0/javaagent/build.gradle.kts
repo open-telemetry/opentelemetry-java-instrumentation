@@ -17,7 +17,6 @@ otelJava {
 }
 
 dependencies {
-  library("org.apache.groovy:groovy")
   library("com.xuxueli:xxl-job-core:2.3.0") {
     exclude("org.codehaus.groovy", "groovy")
   }
@@ -26,6 +25,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
+  testImplementation("org.apache.groovy:groovy")
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
 
   // latest version is tested in a separate test suite
@@ -51,7 +51,15 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
   }
 
   named("compileXxlJob33TestJava", JavaCompile::class).configure {
@@ -68,5 +76,6 @@ tasks {
 
   check {
     dependsOn(testing.suites)
+    dependsOn(testExperimental)
   }
 }

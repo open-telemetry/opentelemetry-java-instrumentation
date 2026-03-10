@@ -6,17 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystemName(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Override
@@ -26,12 +25,12 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getDbQueryText(JedisRequest request) {
-    return request.getStatement();
+    return request.getQueryText();
   }
 
   @Override
   public String getDbOperationName(JedisRequest request) {
-    return request.getOperation();
+    return request.getOperationName();
   }
 
   @Override

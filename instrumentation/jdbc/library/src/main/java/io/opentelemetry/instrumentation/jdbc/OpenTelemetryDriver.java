@@ -64,6 +64,7 @@ public final class OpenTelemetryDriver implements Driver {
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
     Boolean enabled =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
@@ -237,7 +238,7 @@ public final class OpenTelemetryDriver implements Driver {
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
-      if (driver instanceof io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver) {
+      if (driver instanceof OpenTelemetryDriver) {
         OpenTelemetryDriver openTelemetryDriver = (OpenTelemetryDriver) driver;
         openTelemetryDriver.setOpenTelemetry(openTelemetry);
       }

@@ -32,7 +32,7 @@ public final class ApacheHttpClientRequest {
   }
 
   /** Returns the actual {@link HttpRequest} being executed by the client. */
-  public HttpRequest getDelegate() {
+  public HttpRequest getRequest() {
     return delegate;
   }
 
@@ -49,7 +49,7 @@ public final class ApacheHttpClientRequest {
   private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
-      return new URI(httpRequest.getUri().toString());
+      return httpRequest.getUri();
     } catch (URISyntaxException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;

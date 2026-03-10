@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -101,6 +101,7 @@ class GwtTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
 
@@ -144,7 +145,8 @@ class GwtTest {
 
     // click a button to trigger calling java code
     driver.findElement(By.className("greeting.button")).click();
-    assertEquals(driver.findElement(By.className("message.received")).getText(), "Hello, Otel");
+    assertThat(driver.findElement(By.className("message.received")).getText())
+        .isEqualTo("Hello, Otel");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -166,7 +168,7 @@ class GwtTest {
 
     // click a button to trigger calling java code
     driver.findElement(By.className("error.button")).click();
-    assertEquals(driver.findElement(By.className("error.received")).getText(), "Error");
+    assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
 
     testing.waitAndAssertTraces(
         trace ->

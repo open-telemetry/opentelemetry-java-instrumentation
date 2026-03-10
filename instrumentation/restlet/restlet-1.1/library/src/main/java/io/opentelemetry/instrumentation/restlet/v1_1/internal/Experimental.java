@@ -19,6 +19,12 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<RestletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
 
+  /**
+   * Sets whether experimental HTTP telemetry should be emitted.
+   *
+   * @param builder the telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       RestletTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {

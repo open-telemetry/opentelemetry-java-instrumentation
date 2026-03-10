@@ -19,7 +19,7 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:servlet:servlet-common:javaagent"))
-  implementation(project(":instrumentation:servlet:servlet-javax-common:library"))
+  implementation(project(":instrumentation:servlet:servlet-common-javax:library"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:servlet-api:2.2")
@@ -31,4 +31,8 @@ dependencies {
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-server:7.+") // see servlet-3.0 module
   latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:7.+") // see servlet-3.0 module
+}
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

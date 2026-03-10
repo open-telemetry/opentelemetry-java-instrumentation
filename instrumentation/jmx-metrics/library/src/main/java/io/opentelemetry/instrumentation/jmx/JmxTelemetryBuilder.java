@@ -49,28 +49,6 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds built-in JMX rules from classpath resource.
-   *
-   * @param target name of target in /jmx/rules/{target}.yaml classpath resource
-   * @return builder instance
-   * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
-   * @deprecated use {@link #addRules(InputStream)} instead
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addClassPathRules(String target) {
-    String resourcePath = String.format("jmx/rules/%s.yaml", target);
-    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
-    logger.log(FINE, "Adding JMX config from classpath {0}", resourcePath);
-    try (InputStream inputStream = classLoader.getResourceAsStream(resourcePath)) {
-      return addRules(inputStream);
-    } catch (IOException e) {
-      throw new IllegalArgumentException(
-          "Unable to load JMX rules from resource " + resourcePath, e);
-    }
-  }
-
-  /**
    * Adds JMX rules from input stream
    *
    * @param input input to read rules from
@@ -104,20 +82,6 @@ public final class JmxTelemetryBuilder {
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
     }
-  }
-
-  /**
-   * Adds custom JMX rules from file system path
-   *
-   * @param path path to yaml file
-   * @return builder instance
-   * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
-   * @deprecated use {@link #addRules(Path)} instead
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addCustomRules(Path path) {
-    return addRules(path);
   }
 
   public JmxTelemetry build() {

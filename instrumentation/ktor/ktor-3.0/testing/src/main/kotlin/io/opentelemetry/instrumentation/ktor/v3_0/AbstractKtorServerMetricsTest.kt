@@ -25,6 +25,7 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import org.assertj.core.api.ThrowingConsumer
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments

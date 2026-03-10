@@ -15,6 +15,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -22,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -115,7 +117,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -124,8 +126,26 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")));
+                                DB_QUERY_SUMMARY,
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }),
+                            satisfies(
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value")));
 
           } else {
             trace.hasSpansSatisfyingExactly(
@@ -146,7 +166,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -155,8 +175,26 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                                DB_QUERY_SUMMARY,
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }),
+                            satisfies(
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -226,11 +264,11 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(0)),
                 // persist test has an extra query for getting id of inserted element
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -239,8 +277,26 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                                DB_QUERY_SUMMARY,
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }),
+                            satisfies(
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -254,7 +310,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -263,8 +319,26 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"))));
+                                DB_QUERY_SUMMARY,
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }),
+                            satisfies(
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value"))));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -299,11 +373,11 @@ class EntityManagerTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
                             equalTo(maybeStable(DB_NAME), "db1"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -312,8 +386,26 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                                DB_QUERY_SUMMARY,
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }),
+                            satisfies(
+                                maybeStable(DB_OPERATION),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
+                                    val.isInstanceOf(String.class);
+                                  }
+                                }),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -343,7 +435,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasStatus(StatusData.unset())
                         .hasEvents(emptyList()),
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
   }

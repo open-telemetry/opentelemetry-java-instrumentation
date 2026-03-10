@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static java.util.stream.Collectors.toList;
+
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
@@ -15,7 +17,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 final class StreamListener {
@@ -96,10 +97,7 @@ final class StreamListener {
             .created(0)
             .model(model)
             .id(responseId)
-            .choices(
-                choiceBuffers.stream()
-                    .map(StreamedMessageBuffer::toChoice)
-                    .collect(Collectors.toList()));
+            .choices(choiceBuffers.stream().map(StreamedMessageBuffer::toChoice).collect(toList()));
 
     if (usage != null) {
       result.usage(usage);

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEvent.SWITCHING_PROTOCOLS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import com.twitter.finagle.Http;
@@ -26,7 +27,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableMap;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ class ServerH2Test extends AbstractServerTest {
                 ProtocolSpecificEvent.SWITCHING_PROTOCOLS_FROM_KEY,
                 "HTTP/1.1",
                 ProtocolSpecificEvent.SWITCHING_PROTOCOLS_TO_KEY,
-                Collections.singletonList("h2c")));
+                singletonList("h2c")));
   }
 
   @Test
@@ -76,7 +76,7 @@ class ServerH2Test extends AbstractServerTest {
                         TEST_USER_AGENT,
                         HttpHeaderNames.X_FORWARDED_FOR.toString(),
                         TEST_CLIENT_IP))),
-            com.twitter.util.Duration.fromSeconds(20));
+            Duration.fromSeconds(20));
 
     Await.result(client.close(), Duration.fromSeconds(5));
 

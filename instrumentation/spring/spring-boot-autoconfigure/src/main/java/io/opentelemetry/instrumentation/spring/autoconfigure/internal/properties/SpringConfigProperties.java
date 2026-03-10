@@ -5,13 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.api.internal.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,14 +99,14 @@ public class SpringConfigProperties implements ConfigProperties {
   private static Map<String, String> createMapForListProperty(
       String key, List<String> springList, ConfigProperties configProperties) {
     if (!springList.isEmpty()) {
-      return Collections.singletonMap(key, String.join(",", springList));
+      return singletonMap(key, String.join(",", springList));
     } else {
       String otelList = configProperties.getString(key);
       if (otelList != null) {
-        return Collections.singletonMap(key, otelList);
+        return singletonMap(key, otelList);
       }
     }
-    return Collections.emptyMap();
+    return emptyMap();
   }
 
   private static ConfigProperties createCustomizedListProperties(
@@ -220,8 +222,7 @@ public class SpringConfigProperties implements ConfigProperties {
     if (value == null) {
       return otelSdkProperties.getDuration(name);
     }
-    return DefaultConfigProperties.createFromMap(Collections.singletonMap(name, value))
-        .getDuration(name);
+    return DefaultConfigProperties.createFromMap(singletonMap(name, value)).getDuration(name);
   }
 
   @SuppressWarnings("unchecked") // reading map loses generic type

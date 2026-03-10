@@ -238,6 +238,37 @@ public abstract class AbstractLog4j2Test {
   }
 
   @Test
+  void testStringMapMessageWinsOverContextData() {
+    ThreadContext.put("key1", "context-value");
+    StringMapMessage message = new StringMapMessage();
+    message.put("key1", "message-value");
+    try {
+      logger.info(message);
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    // currently, context data uses "key1" while MapMessage uses "log4j.map_message.key1"
+    // once the "log4j.map_message" prefix is removed, both will share the same key "key1"
+    // and the MapMessage value should win (context data is captured first, MapMessage second)
+    List<AttributeAssertion> assertions =
+        addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
+    assertions.addAll(threadAttributesAssertions());
+    assertions.add(equalTo(stringKey("key1"), "context-value"));
+    assertions.add(equalTo(stringKey("log4j.map_message.key1"), "message-value"));
+
+    testing()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasBody((Value<?>) null)
+                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                    .hasSeverity(Severity.INFO)
+                    .hasSeverityText("INFO")
+                    .hasAttributesSatisfyingExactly(assertions));
+  }
+
+  @Test
   void testMarker() {
     String markerName = "aMarker";
     Marker marker = MarkerManager.getMarker(markerName);

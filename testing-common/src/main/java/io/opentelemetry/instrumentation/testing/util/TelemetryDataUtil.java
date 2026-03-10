@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.testing.util;
 
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +18,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,17 +25,16 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public final class TelemetryDataUtil {
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
-    List<SpanKind> list = Arrays.asList(spanKinds);
+    List<SpanKind> list = asList(spanKinds);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getKind()));
   }
 
   public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
-    List<String> list = Arrays.asList(names);
+    List<String> list = asList(names);
     return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
   }
 
@@ -47,7 +49,7 @@ public final class TelemetryDataUtil {
     List<List<SpanData>> traces =
         new ArrayList<>(
             spans.stream()
-                .collect(Collectors.groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
+                .collect(groupingBy(SpanData::getTraceId, LinkedHashMap::new, toList()))
                 .values());
     sortTraces(traces);
     for (int i = 0; i < traces.size(); i++) {
@@ -59,7 +61,7 @@ public final class TelemetryDataUtil {
 
   public static List<List<SpanData>> waitForTraces(Supplier<List<SpanData>> supplier, int number)
       throws InterruptedException, TimeoutException {
-    return waitForTraces(supplier, number, 20, TimeUnit.SECONDS);
+    return waitForTraces(supplier, number, 20, SECONDS);
   }
 
   public static List<List<SpanData>> waitForTraces(
@@ -106,7 +108,7 @@ public final class TelemetryDataUtil {
   }
 
   private static long elapsedSeconds(long startTime) {
-    return TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
+    return NANOSECONDS.toSeconds(System.nanoTime() - startTime);
   }
 
   // must be called under tracesLock

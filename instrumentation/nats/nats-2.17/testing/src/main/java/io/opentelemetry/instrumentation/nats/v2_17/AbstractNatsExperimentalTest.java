@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -13,13 +14,16 @@ import io.nats.client.Dispatcher;
 import io.nats.client.Message;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private int clientId;
 
@@ -44,7 +48,7 @@ public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
                   NatsMessage.builder().subject("sub").headers(headers).data("x").build();
               connection.publish(message);
             });
-    connection.closeDispatcher(dispatcher);
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
     // then
     testing()
@@ -61,8 +65,7 @@ public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
                                     "sub",
                                     clientId,
                                     equalTo(
-                                        AttributeKey.stringArrayKey(
-                                            "messaging.header.captured_header"),
+                                        stringArrayKey("messaging.header.captured_header"),
                                         singletonList("value")))),
                     span ->
                         span.hasName("sub process")

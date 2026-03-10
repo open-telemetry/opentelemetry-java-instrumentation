@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -26,32 +25,28 @@ public final class MongoInstrumenterFactory {
       new MongoAttributesExtractor();
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      String instrumentationName,
-      boolean statementSanitizationEnabled) {
+      OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
         instrumentationName,
-        statementSanitizationEnabled,
+        querySanitizationEnabled,
         DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
   }
 
   public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
-      boolean statementSanitizationEnabled,
+      boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
 
     MongoDbAttributesGetter dbAttributesGetter =
-        new MongoDbAttributesGetter(statementSanitizationEnabled, maxNormalizedQueryLength);
+        new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
         new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
 
     return Instrumenter.<CommandStartedEvent, Void>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(
-            ServerAttributesExtractor.create(new MongoNetworkAttributesGetter()))
         .addAttributesExtractor(attributesExtractor)
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

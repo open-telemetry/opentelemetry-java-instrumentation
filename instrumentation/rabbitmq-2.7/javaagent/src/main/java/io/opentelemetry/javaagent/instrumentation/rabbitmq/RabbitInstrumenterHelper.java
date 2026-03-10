@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.RabbitSingletons.CHANNEL_AND_METHOD_CONTEXT_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Command;
@@ -14,7 +16,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.Map;
 
 public class RabbitInstrumenterHelper {
@@ -33,11 +34,10 @@ public class RabbitInstrumenterHelper {
 
   public void onPublish(Span span, String exchange, String routingKey) {
     String exchangeName = normalizeExchangeName(exchange);
-    span.setAttribute(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, exchangeName);
+    span.setAttribute(MESSAGING_DESTINATION_NAME, exchangeName);
     span.updateName(exchangeName + " publish");
     if (routingKey != null && !routingKey.isEmpty()) {
-      span.setAttribute(
-          MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      span.setAttribute(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       span.setAttribute(RABBITMQ_COMMAND, "basic.publish");

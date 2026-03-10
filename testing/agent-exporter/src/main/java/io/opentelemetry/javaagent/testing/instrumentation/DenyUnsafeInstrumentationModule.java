@@ -34,7 +34,6 @@ public class DenyUnsafeInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean defaultEnabled() {
-    // using a system property here will enable the instrumentation when declarative config is used
-    return Boolean.getBoolean("otel.instrumentation.deny-unsafe.enabled");
+    return Boolean.getBoolean("otel.javaagent.testing.deny-unsafe");
   }
 }

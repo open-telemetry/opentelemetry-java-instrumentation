@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1.internal.server;
 
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelOutboundHandler;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 
 /**
@@ -16,11 +18,10 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler
  * any time.
  */
 public class HttpServerTracingHandler
-    extends CombinedChannelDuplexHandler<
-        HttpServerRequestTracingHandler, HttpServerResponseTracingHandler> {
+    extends CombinedChannelDuplexHandler<ChannelInboundHandler, ChannelOutboundHandler> {
 
   public HttpServerTracingHandler(
-      Instrumenter<NettyRequest, HttpResponse> instrumenter,
+      Instrumenter<NettyCommonRequest, HttpResponse> instrumenter,
       HttpServerResponseBeforeCommitHandler responseBeforeCommitHandler,
       ProtocolEventHandler protocolEventHandler) {
     super(

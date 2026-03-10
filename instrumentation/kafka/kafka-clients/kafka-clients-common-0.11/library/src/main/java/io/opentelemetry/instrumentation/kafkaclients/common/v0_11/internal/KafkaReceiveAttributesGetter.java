@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.TopicPartition;
@@ -26,9 +28,7 @@ enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaRece
   @Nullable
   public String getDestination(KafkaReceiveRequest request) {
     Set<String> topics =
-        request.getRecords().partitions().stream()
-            .map(TopicPartition::topic)
-            .collect(Collectors.toSet());
+        request.getRecords().partitions().stream().map(TopicPartition::topic).collect(toSet());
     // only return topic when there's exactly one in the batch
     return topics.size() == 1 ? topics.iterator().next() : null;
   }
@@ -91,7 +91,7 @@ enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaRece
             consumerRecord ->
                 StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
         .filter(header -> header.value() != null)
-        .map(header -> new String(header.value(), StandardCharsets.UTF_8))
-        .collect(Collectors.toList());
+        .map(header -> new String(header.value(), UTF_8))
+        .collect(toList());
   }
 }

@@ -29,8 +29,8 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
       ConnectionFactory connectionFactory = (ConnectionFactory) bean;
       OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
       return R2dbcTelemetry.builder(openTelemetry)
-          .setStatementSanitizationEnabled(
-              InstrumentationConfigUtil.isStatementSanitizationEnabled(openTelemetry, "r2dbc"))
+          .setQuerySanitizationEnabled(
+              InstrumentationConfigUtil.isQuerySanitizationEnabled(openTelemetry, "r2dbc"))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }

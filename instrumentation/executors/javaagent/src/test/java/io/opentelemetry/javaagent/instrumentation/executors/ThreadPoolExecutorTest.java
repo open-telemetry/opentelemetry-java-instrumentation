@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -15,7 +17,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ class ThreadPoolExecutorTest {
     try (Scope ignored = baggage.makeCurrent()) {
       executor.execute(task);
     }
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
 
     assertThat(executor.sameTaskBefore).isTrue();
     await().untilAsserted(() -> assertThat(executor.sameTaskAfter).isTrue());
@@ -52,7 +53,7 @@ class ThreadPoolExecutorTest {
     final AtomicBoolean sameTaskAfter = new AtomicBoolean();
 
     RunnableCheckingThreadPoolExecutor(Runnable expectedTask) {
-      super(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+      super(1, 1, 0L, MILLISECONDS, new LinkedBlockingQueue<>());
       this.expectedTask = expectedTask;
     }
 

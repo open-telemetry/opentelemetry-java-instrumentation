@@ -52,7 +52,7 @@ final class SpringSchedulingInstrumentationAspect {
                 CodeSpanNameExtractor.create(codedAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codedAttributesGetter));
     if (DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "spring_scheduling")
-        .getBoolean("experimental-span-attributes/development", false)) {
+        .getBoolean("experimental_span_attributes/development", false)) {
       builder.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_scheduling"));
     }

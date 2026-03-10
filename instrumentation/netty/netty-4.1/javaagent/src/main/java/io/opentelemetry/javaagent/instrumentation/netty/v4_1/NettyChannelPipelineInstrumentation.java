@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.VirtualFieldHelper.CHANNEL_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons.serverTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -26,7 +25,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.AbstractNettyChannelPipelineInstrumentation;
 import net.bytebuddy.asm.Advice;
 
 public class NettyChannelPipelineInstrumentation
@@ -97,15 +96,11 @@ public class NettyChannelPipelineInstrumentation
       ChannelHandler ourHandler = null;
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
-        ourHandler =
-            serverTelemetry()
-                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+        ourHandler = NettyServerSingletons.createCombinedHandler();
       } else if (handler instanceof HttpRequestDecoder) {
-        ourHandler = serverTelemetry().createRequestHandler();
+        ourHandler = NettyServerSingletons.createRequestHandler();
       } else if (handler instanceof HttpResponseEncoder) {
-        ourHandler =
-            serverTelemetry()
-                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+        ourHandler = NettyServerSingletons.createCombinedHandler();
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
         ourHandler = clientHandlerFactory().createCombinedHandler();

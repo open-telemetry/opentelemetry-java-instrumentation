@@ -27,6 +27,6 @@ class SecretsManagerClientTest extends AbstractSecretsManagerClientTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .build()
-            .newRequestHandler());
+            .createRequestHandler());
   }
 }

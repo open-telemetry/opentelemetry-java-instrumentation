@@ -43,7 +43,7 @@ public final class MetaDataCollector {
 
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
-      Pattern.compile("(.*?/instrumentation/.*?)(/javaagent|/library|/testing)");
+      Pattern.compile("(.*?/instrumentation/.*)(/javaagent|/library|/testing|/.*?-testing)");
 
   private static final YAMLMapper YAML =
       YAMLMapper.builder(
@@ -58,7 +58,7 @@ public final class MetaDataCollector {
       Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind,
-      java.util.Set<InstrumentationScopeInfo> instrumentationScopes)
+      Set<InstrumentationScopeInfo> instrumentationScopes)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
@@ -177,8 +177,21 @@ public final class MetaDataCollector {
           metricInfo.name = metric.getName();
           metricInfo.description = metric.getDescription();
           metricInfo.type = metric.getType().toString();
-          metricInfo.unit = sanitizeUnit(metric.getUnit());
+          metricInfo.unit = metric.getUnit();
           metricInfo.attributes = new ArrayList<>();
+
+          // Capture isMonotonic for SUM types to help infer instrument type
+          switch (metric.getType()) {
+            case LONG_SUM:
+              metricInfo.isMonotonic = metric.getLongSumData().isMonotonic();
+              break;
+            case DOUBLE_SUM:
+              metricInfo.isMonotonic = metric.getDoubleSumData().isMonotonic();
+              break;
+            default:
+              metricInfo.isMonotonic = null;
+              break;
+          }
 
           metric.getData().getPoints().stream()
               .findFirst()
@@ -239,10 +252,6 @@ public final class MetaDataCollector {
     YAML.writeValue(outputPath.toFile(), scopesData);
   }
 
-  private static String sanitizeUnit(String unit) {
-    return unit == null ? null : unit.replace("{", "").replace("}", "");
-  }
-
   private MetaDataCollector() {}
 
   static class SpanData {
@@ -280,6 +289,10 @@ public final class MetaDataCollector {
     public String name;
     public String description;
     public String type;
+
+    @JsonProperty("is_monotonic")
+    public Boolean isMonotonic;
+
     public String unit;
     public List<AttributeInfo> attributes;
   }

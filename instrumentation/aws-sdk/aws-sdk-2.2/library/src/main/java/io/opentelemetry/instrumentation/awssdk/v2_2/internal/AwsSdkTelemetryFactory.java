@@ -9,8 +9,8 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.ExtendedDeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import java.util.List;
@@ -35,11 +35,11 @@ public final class AwsSdkTelemetryFactory {
     AwsSdkTelemetryFactory factory = new AwsSdkTelemetryFactory(useLegacyLibraryConfig);
 
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    ExtendedDeclarativeConfigProperties commonConfig =
+    DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    ExtendedDeclarativeConfigProperties messaging = commonConfig.get("messaging");
+    DeclarativeConfigProperties messaging = commonConfig.get("messaging");
 
-    ExtendedDeclarativeConfigProperties awsSdk =
+    DeclarativeConfigProperties awsSdk =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
 
     return AwsSdkTelemetry.builder(openTelemetry)
@@ -81,10 +81,12 @@ public final class AwsSdkTelemetryFactory {
         .build();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   private List<String> legacyListValue(String key) {
     return useLegacyLibraryConfig ? ConfigPropertiesUtil.getList(key, emptyList()) : emptyList();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated config property
   private boolean legacyBooleanValue(String key) {
     return useLegacyLibraryConfig && ConfigPropertiesUtil.getBoolean(key, false);
   }

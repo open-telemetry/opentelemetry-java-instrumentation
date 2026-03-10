@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
@@ -25,13 +26,14 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-@ClearSystemProperty(key = ConfigurationFile.CONFIGURATION_FILE_PROPERTY)
+@ClearSystemProperty(key = "otel.javaagent.configuration-file")
 class ConfigurationPropertiesSupplierTest {
 
   @BeforeEach
   @AfterEach
   void setUp() {
     GlobalOpenTelemetry.resetForTest();
+    AgentDistributionConfig.resetForTest();
     ConfigurationFile.resetForTest();
   }
 
@@ -42,7 +44,7 @@ class ConfigurationPropertiesSupplierTest {
     // given
     Path configFile = tempDir.resolve("test-config.properties");
     Files.write(configFile, singleton("otel.instrumentation.custom.key = 42"));
-    System.setProperty(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, configFile.toString());
+    System.setProperty("otel.javaagent.configuration-file", configFile.toString());
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =

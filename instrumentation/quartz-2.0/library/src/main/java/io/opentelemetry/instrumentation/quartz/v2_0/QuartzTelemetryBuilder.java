@@ -59,21 +59,6 @@ public final class QuartzTelemetryBuilder {
   }
 
   /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(Function)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public QuartzTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<JobExecutionContext>,
-              ? extends SpanNameExtractor<? super JobExecutionContext>>
-          spanNameExtractorCustomizer) {
-    return setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
-  }
-
-  /**
    * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
    * one.
    */

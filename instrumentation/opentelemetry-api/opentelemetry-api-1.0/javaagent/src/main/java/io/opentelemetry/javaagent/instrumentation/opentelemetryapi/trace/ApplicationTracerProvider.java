@@ -5,22 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
-import application.io.opentelemetry.api.trace.Tracer;
-import application.io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.api.trace.TracerProvider;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
-public class ApplicationTracerProvider implements TracerProvider {
+public class ApplicationTracerProvider
+    implements application.io.opentelemetry.api.trace.TracerProvider {
 
   private static final MethodHandle TRACE_PROVIDER_14 = getApplicationTracerProvider14();
 
   protected final ApplicationTracerFactory tracerFactory;
-  protected final io.opentelemetry.api.trace.TracerProvider agentTracerProvider;
+  protected final TracerProvider agentTracerProvider;
 
   protected ApplicationTracerProvider(
-      ApplicationTracerFactory tracerFactory,
-      io.opentelemetry.api.trace.TracerProvider agentTracerProvider) {
+      ApplicationTracerFactory tracerFactory, TracerProvider agentTracerProvider) {
     this.tracerFactory = tracerFactory;
     this.agentTracerProvider = agentTracerProvider;
   }
@@ -32,19 +31,18 @@ public class ApplicationTracerProvider implements TracerProvider {
           Class.forName(
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace.ApplicationTracerProvider14");
       return MethodHandles.lookup()
-          .findConstructor(
-              clazz,
-              MethodType.methodType(void.class, io.opentelemetry.api.trace.TracerProvider.class));
+          .findConstructor(clazz, MethodType.methodType(void.class, TracerProvider.class));
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException exception) {
       return null;
     }
   }
 
-  public static TracerProvider create(
-      io.opentelemetry.api.trace.TracerProvider agentTracerProvider) {
+  public static application.io.opentelemetry.api.trace.TracerProvider create(
+      TracerProvider agentTracerProvider) {
     if (TRACE_PROVIDER_14 != null) {
       try {
-        return (TracerProvider) TRACE_PROVIDER_14.invoke(agentTracerProvider);
+        return (application.io.opentelemetry.api.trace.TracerProvider)
+            TRACE_PROVIDER_14.invoke(agentTracerProvider);
       } catch (Throwable throwable) {
         throw new IllegalStateException("Failed to create ApplicationTracerProvider", throwable);
       }
@@ -54,12 +52,13 @@ public class ApplicationTracerProvider implements TracerProvider {
   }
 
   @Override
-  public Tracer get(String instrumentationName) {
+  public application.io.opentelemetry.api.trace.Tracer get(String instrumentationName) {
     return tracerFactory.newTracer(agentTracerProvider.get(instrumentationName));
   }
 
   @Override
-  public Tracer get(String instrumentationName, String instrumentationVersion) {
+  public application.io.opentelemetry.api.trace.Tracer get(
+      String instrumentationName, String instrumentationVersion) {
     return tracerFactory.newTracer(
         agentTracerProvider.get(instrumentationName, instrumentationVersion));
   }

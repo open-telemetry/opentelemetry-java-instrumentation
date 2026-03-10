@@ -22,18 +22,26 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }

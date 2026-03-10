@@ -5,16 +5,21 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
+ *
+ * @deprecated allows library configuration via system properties and environment variables, which
+ *     will be removed in 3.0.
  */
+@Deprecated
 public final class ConfigPropertiesUtil {
 
   /**
@@ -106,10 +111,7 @@ public final class ConfigPropertiesUtil {
   }
 
   private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 
   private static String toEnvVarName(String propertyName) {

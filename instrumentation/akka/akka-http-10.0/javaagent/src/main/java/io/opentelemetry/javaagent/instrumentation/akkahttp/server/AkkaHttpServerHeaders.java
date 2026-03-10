@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
+import static java.util.stream.Collectors.toList;
+
 import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -13,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 enum AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
@@ -23,7 +24,7 @@ enum AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
   public Iterable<String> keys(HttpRequest httpRequest) {
     return StreamSupport.stream(httpRequest.getHeaders().spliterator(), false)
         .map(HttpHeader::lowercaseName)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TimerMillisecondsTest extends AbstractTimerMillisecondsTest {
@@ -21,7 +22,7 @@ class TimerMillisecondsTest extends AbstractTimerMillisecondsTest {
         @Override
         OpenTelemetryMeterRegistryBuilder configureOtelRegistry(
             OpenTelemetryMeterRegistryBuilder registry) {
-          return registry.setBaseTimeUnit(TimeUnit.MILLISECONDS);
+          return registry.setBaseTimeUnit(MILLISECONDS);
         }
       };
 

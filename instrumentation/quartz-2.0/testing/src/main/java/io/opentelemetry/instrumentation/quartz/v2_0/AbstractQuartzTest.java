@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -35,6 +35,9 @@ import org.quartz.impl.StdSchedulerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
+  protected static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
+
   protected abstract void configureScheduler(Scheduler scheduler);
 
   private Scheduler scheduler;
@@ -43,7 +46,7 @@ public abstract class AbstractQuartzTest {
 
   @BeforeAll
   void startScheduler() throws Exception {
-    scheduler = createScheduler("default");
+    scheduler = createScheduler();
     configureScheduler(scheduler);
     scheduler.start();
   }
@@ -62,7 +65,9 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
-    assertions.add(equalTo(AttributeKey.stringKey("job.system"), "quartz"));
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      assertions.add(equalTo(stringKey("job.system"), "quartz"));
+    }
 
     getTesting()
         .waitAndAssertTraces(
@@ -89,7 +94,9 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
-    assertions.add(equalTo(AttributeKey.stringKey("job.system"), "quartz"));
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      assertions.add(equalTo(stringKey("job.system"), "quartz"));
+    }
 
     getTesting()
         .waitAndAssertTraces(
@@ -104,11 +111,11 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfyingExactly(assertions)));
   }
 
-  private static Scheduler createScheduler(String name) throws Exception {
+  private static Scheduler createScheduler() throws Exception {
     StdSchedulerFactory factory = new StdSchedulerFactory();
     Properties properties = new Properties();
     properties.load(AbstractQuartzTest.class.getResourceAsStream("/org/quartz/quartz.properties"));
-    properties.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, name);
+    properties.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "default");
     factory.initialize(properties);
     return factory.getScheduler();
   }

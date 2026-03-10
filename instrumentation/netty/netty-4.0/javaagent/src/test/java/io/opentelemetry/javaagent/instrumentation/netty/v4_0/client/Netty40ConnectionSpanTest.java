@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -16,7 +17,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -43,7 +44,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -69,7 +69,7 @@ class Netty40ConnectionSpanTest {
   @AfterAll
   static void cleanupSpec() throws InterruptedException, ExecutionException, TimeoutException {
     eventLoopGroup.shutdownGracefully();
-    server.stop().get(10, TimeUnit.SECONDS);
+    server.stop().get(10, SECONDS);
   }
 
   static Bootstrap buildBootstrap() {
@@ -90,6 +90,7 @@ class Netty40ConnectionSpanTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void successfulRequest() throws Exception {
     // when
     URI uri = URI.create("http://localhost:" + server.httpPort() + "/success");
@@ -109,7 +110,7 @@ class Netty40ConnectionSpanTest {
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
                       equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(PEER_SERVICE, "test-peer-service"),
+                      equalTo(maybeStablePeerService(), "test-peer-service"),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(NETWORK_PEER_PORT, uri.getPort()),
@@ -175,6 +176,6 @@ class Netty40ConnectionSpanTest {
     CompletableFuture<Integer> result = new CompletableFuture<Integer>();
     channel.pipeline().addLast(new ClientHandler(result));
     channel.writeAndFlush(request).get();
-    return result.get(20, TimeUnit.SECONDS);
+    return result.get(20, SECONDS);
   }
 }

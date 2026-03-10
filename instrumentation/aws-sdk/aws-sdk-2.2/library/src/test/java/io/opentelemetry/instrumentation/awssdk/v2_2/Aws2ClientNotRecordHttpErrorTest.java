@@ -23,7 +23,7 @@ class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpError
                 .setCaptureExperimentalSpanAttributes(true)
                 .setRecordIndividualHttpError(isRecordIndividualHttpErrorEnabled())
                 .build()
-                .newExecutionInterceptor());
+                .createExecutionInterceptor());
   }
 
   @Override

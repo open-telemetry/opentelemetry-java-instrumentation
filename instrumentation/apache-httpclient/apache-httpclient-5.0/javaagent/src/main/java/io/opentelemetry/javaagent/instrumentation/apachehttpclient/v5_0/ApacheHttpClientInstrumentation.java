@@ -345,8 +345,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope scope = (AdviceScope) enterResult[0];

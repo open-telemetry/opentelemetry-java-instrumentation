@@ -23,7 +23,7 @@ Below is an example of a declarative configuration YAML file that enables tracin
 method:
 
 ```yaml
-file_format: "1.0-rc.1"
+file_format: "1.0"
 instrumentation/development:
   java:
     methods:

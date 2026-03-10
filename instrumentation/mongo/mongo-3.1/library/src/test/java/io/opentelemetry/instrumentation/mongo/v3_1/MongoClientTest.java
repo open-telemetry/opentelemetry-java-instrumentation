@@ -18,7 +18,7 @@ class MongoClientTest extends AbstractMongo31ClientTest {
   @Override
   protected void configureMongoClientOptions(MongoClientOptions.Builder options) {
     options.addCommandListener(
-        MongoTelemetry.create(testing().getOpenTelemetry()).newCommandListener());
+        MongoTelemetry.create(testing().getOpenTelemetry()).createCommandListener());
   }
 
   @Override

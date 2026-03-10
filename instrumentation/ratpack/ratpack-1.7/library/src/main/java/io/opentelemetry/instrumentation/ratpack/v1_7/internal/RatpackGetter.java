@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
+import static java.util.Collections.emptyIterator;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Collections;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 import ratpack.http.Request;
@@ -35,7 +36,7 @@ enum RatpackGetter implements TextMapGetter<Request> {
   @Override
   public Iterator<String> getAll(@Nullable Request request, String key) {
     if (request == null) {
-      return Collections.emptyIterator();
+      return emptyIterator();
     }
     return request.getHeaders().getAll(key).iterator();
   }

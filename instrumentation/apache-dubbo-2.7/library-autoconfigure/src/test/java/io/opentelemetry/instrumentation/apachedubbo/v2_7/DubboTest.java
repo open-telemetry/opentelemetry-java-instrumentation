@@ -20,7 +20,7 @@ class DubboTest extends AbstractDubboTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
+  protected boolean hasServicePeerName() {
     return false;
   }
 }

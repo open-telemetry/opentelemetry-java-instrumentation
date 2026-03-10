@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,7 +17,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -34,12 +36,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
@@ -63,7 +63,7 @@ class InstrumentationCustomizerTest {
                   entry("req2", "req2_value"),
                   entry("req2_2", "req2_2_value"),
                   entry("req3", "req3_value"))
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+              .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   private static final Map<String, String> RESPONSE =
       Collections.unmodifiableMap(
@@ -72,7 +72,7 @@ class InstrumentationCustomizerTest {
                   entry("resp2", "resp2_value"),
                   entry("resp2_2", "resp2_2_value"),
                   entry("resp3", "resp3_value"))
-              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+              .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
   @Mock private OperationListener operationListener;
   @Mock private ContextCustomizer<Object> contextCustomizer;
@@ -185,10 +185,10 @@ class InstrumentationCustomizerTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
-                                equalTo(AttributeKey.stringKey("req2"), "req2_value"),
-                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
-                                equalTo(AttributeKey.stringKey("resp2"), "resp2_value"))));
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_value"))));
   }
 
   @Test
@@ -198,7 +198,7 @@ class InstrumentationCustomizerTest {
         customizer -> {
           customizerCalled.set(true);
           customizer.addAttributesExtractors(
-              Arrays.asList(new AttributesExtractor1(), new AttributesExtractor2()));
+              asList(new AttributesExtractor1(), new AttributesExtractor2()));
         });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
@@ -228,12 +228,12 @@ class InstrumentationCustomizerTest {
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("req1"), "req1_value"),
-                                equalTo(AttributeKey.stringKey("req2"), "req2_2_value"),
-                                equalTo(AttributeKey.stringKey("req3"), "req3_value"),
-                                equalTo(AttributeKey.stringKey("resp1"), "resp1_value"),
-                                equalTo(AttributeKey.stringKey("resp2"), "resp2_2_value"),
-                                equalTo(AttributeKey.stringKey("resp3"), "resp3_value"))));
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test

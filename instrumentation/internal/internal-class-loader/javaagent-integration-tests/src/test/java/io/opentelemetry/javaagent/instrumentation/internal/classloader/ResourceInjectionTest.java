@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.io.BufferedReader;
@@ -13,7 +14,6 @@ import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -26,7 +26,7 @@ class ResourceInjectionTest {
 
   private static String readLine(URL url) throws Exception {
     try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8))) {
+        new BufferedReader(new InputStreamReader(url.openStream(), UTF_8))) {
       return reader.readLine().trim();
     }
   }

@@ -37,7 +37,7 @@ public class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter
     public static void onEnter(@Advice.This GrpcClientBuilder builder) {
-      builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).newClientInterceptor());
+      builder.intercept(GrpcTelemetry.create(GlobalOpenTelemetry.get()).createClientInterceptor());
     }
   }
 }

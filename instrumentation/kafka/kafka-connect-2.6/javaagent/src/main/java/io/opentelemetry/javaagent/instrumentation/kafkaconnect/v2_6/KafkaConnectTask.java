@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static java.util.stream.Collectors.toCollection;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 public final class KafkaConnectTask {
@@ -24,9 +25,7 @@ public final class KafkaConnectTask {
   }
 
   private Set<String> getTopics() {
-    return records.stream()
-        .map(SinkRecord::topic)
-        .collect(Collectors.toCollection(LinkedHashSet::new));
+    return records.stream().map(SinkRecord::topic).collect(toCollection(LinkedHashSet::new));
   }
 
   public String getDestinationName() {

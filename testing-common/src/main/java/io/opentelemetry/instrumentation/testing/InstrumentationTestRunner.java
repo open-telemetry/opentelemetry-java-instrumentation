@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -19,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
@@ -26,18 +30,16 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionFactory;
@@ -95,8 +97,7 @@ public abstract class InstrumentationTestRunner {
 
   public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
     try {
-      return TelemetryDataUtil.waitForTraces(
-          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
+      return TelemetryDataUtil.waitForTraces(this::getExportedSpans, numberOfTraces, 20, SECONDS);
     } catch (TimeoutException | InterruptedException e) {
       throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
     }
@@ -106,7 +107,7 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
+    waitAndAssertTraces(traceComparator, asList(assertions), true);
   }
 
   public final void waitAndAssertSortedTraces(
@@ -119,7 +120,7 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertTracesWithoutScopeVersionVerification(
       Consumer<TraceAssert>... assertions) {
-    waitAndAssertTracesWithoutScopeVersionVerification(Arrays.asList(assertions));
+    waitAndAssertTracesWithoutScopeVersionVerification(asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>>
@@ -130,7 +131,7 @@ public abstract class InstrumentationTestRunner {
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(Arrays.asList(assertions));
+    waitAndAssertTraces(asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
@@ -263,10 +264,28 @@ public abstract class InstrumentationTestRunner {
     return getExportedLogRecords();
   }
 
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertLogRecords(Consumer<LogRecordDataAssert>... assertions) {
+    waitAndAssertLogRecords(asList(assertions));
+  }
+
+  public final void waitAndAssertLogRecords(
+      Iterable<? extends Consumer<LogRecordDataAssert>> assertions) {
+    List<Consumer<LogRecordDataAssert>> assertionsList = new ArrayList<>();
+    assertions.forEach(assertionsList::add);
+
+    List<LogRecordData> logRecordDataList = waitForLogRecords(assertionsList.size());
+    Iterator<Consumer<LogRecordDataAssert>> assertionIterator = assertionsList.iterator();
+    for (LogRecordData logRecordData : logRecordDataList) {
+      assertionIterator.next().accept(assertThat(logRecordData));
+    }
+  }
+
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
     return getExportedMetrics().stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**

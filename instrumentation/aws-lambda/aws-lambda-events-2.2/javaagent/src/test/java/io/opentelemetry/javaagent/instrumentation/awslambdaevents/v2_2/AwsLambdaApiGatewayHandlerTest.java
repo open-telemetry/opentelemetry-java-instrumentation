@@ -10,6 +10,8 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -20,7 +22,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -83,8 +84,8 @@ class AwsLambdaApiGatewayHandlerTest {
                         .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
                         .hasParentSpanId("0000000000000456")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-2024"),
-                            equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"),
+                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
                             equalTo(URL_FULL, "http://localhost:2024/hello/world"),

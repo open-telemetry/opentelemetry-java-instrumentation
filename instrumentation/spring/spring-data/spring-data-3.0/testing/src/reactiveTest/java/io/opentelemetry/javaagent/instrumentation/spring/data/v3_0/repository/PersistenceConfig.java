@@ -11,12 +11,12 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.HOST;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PASSWORD;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.USER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.Option;
-import java.nio.charset.StandardCharsets;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -53,7 +53,7 @@ public class PersistenceConfig {
             new ByteArrayResource(
                 ("CREATE TABLE customer (id INT PRIMARY KEY, firstname VARCHAR(100) NOT NULL, lastname VARCHAR(100) NOT NULL);"
                         + "INSERT INTO customer (id, firstname, lastname) VALUES ('1', 'First', 'Last');")
-                    .getBytes(StandardCharsets.UTF_8))));
+                    .getBytes(UTF_8))));
 
     return initializer;
   }

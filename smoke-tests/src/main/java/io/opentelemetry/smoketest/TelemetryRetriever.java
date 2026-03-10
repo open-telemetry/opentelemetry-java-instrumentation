@@ -6,6 +6,8 @@
 package io.opentelemetry.smoketest;
 
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.testing.internal.TelemetryConverter;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
@@ -23,10 +25,8 @@ import io.opentelemetry.testing.internal.protobuf.util.JsonFormat;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class TelemetryRetriever implements AutoCloseable {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -69,9 +69,7 @@ public class TelemetryRetriever implements AutoCloseable {
   }
 
   private static <R, T> List<T> convert(Collection<R> items, Function<R, List<T>> converter) {
-    return items.stream()
-        .flatMap(item -> converter.apply(item).stream())
-        .collect(Collectors.toList());
+    return items.stream().flatMap(item -> converter.apply(item).stream()).collect(toList());
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"}) // fine
@@ -96,7 +94,7 @@ public class TelemetryRetriever implements AutoCloseable {
                   throw new IllegalStateException(e);
                 }
               })
-          .collect(Collectors.toList());
+          .collect(toList());
     } catch (InterruptedException | JsonProcessingException e) {
       throw new IllegalStateException(e);
     }
@@ -115,7 +113,7 @@ public class TelemetryRetriever implements AutoCloseable {
 
       previousSize = content.length();
       System.out.println("Current content size " + previousSize);
-      TimeUnit.MILLISECONDS.sleep(500);
+      MILLISECONDS.sleep(500);
     }
 
     if ("true".equals(System.getenv("debug"))) {

@@ -53,7 +53,9 @@ class TelemetryParser {
                 singleton("io.opentelemetry.javaagent.couchbase-3.1")),
             entry("io.opentelemetry.couchbase-3.1.6", singleton("com.couchbase.client.jvm")),
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
-            entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")));
+            entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")),
+            // servlet-5.0 tests use jetty-12.0 instrumentation
+            entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")));
   }
 
   /**

@@ -1,0 +1,5 @@
+description: >
+  This instrumentation enables context propagation for Scala fork-join tasks, it does not emit any
+  telemetry on its own.
+display_name: Scala ForkJoinPool
+library_link: https://www.scala-lang.org/api/2.12.0/scala/concurrent/forkjoin/package$$ForkJoinPool$.html

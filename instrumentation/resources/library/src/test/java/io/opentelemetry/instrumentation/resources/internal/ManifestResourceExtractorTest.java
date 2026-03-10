@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources.internal;
 
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.resources.Resource;
@@ -14,7 +15,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -67,7 +67,7 @@ class ManifestResourceExtractorTest {
                       assertThat(resource.getAttribute(SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
                     }))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private static InputStream openClasspathResource(String resource) {

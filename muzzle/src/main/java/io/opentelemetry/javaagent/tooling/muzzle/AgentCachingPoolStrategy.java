@@ -5,16 +5,18 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -52,8 +54,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 
-  private static final boolean REFLECTION_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.internal-reflection.enabled", true);
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;
@@ -102,11 +102,11 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         ClassInjector.UsingInstrumentation.redefineModule(
             instrumentation,
             javaBase,
-            Collections.emptySet(),
-            Collections.emptyMap(),
-            Collections.singletonMap("java.lang", Collections.singleton(currentModule)),
-            Collections.emptySet(),
-            Collections.emptyMap());
+            emptySet(),
+            emptyMap(),
+            singletonMap("java.lang", singleton(currentModule)),
+            emptySet(),
+            emptyMap());
       }
     }
     try {
@@ -623,12 +623,6 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
           Class<?> clazz = classRef.get();
           if (clazz != null) {
             for (Class<?> interfaceClass : clazz.getInterfaces()) {
-              // virtual field accessors are removed by internal-reflection instrumentation
-              // we do this extra check for tests run with internal-reflection disabled
-              if (!REFLECTION_ENABLED
-                  && VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)) {
-                continue;
-              }
               // using raw type
               result.add(newTypeDescription(interfaceClass));
             }

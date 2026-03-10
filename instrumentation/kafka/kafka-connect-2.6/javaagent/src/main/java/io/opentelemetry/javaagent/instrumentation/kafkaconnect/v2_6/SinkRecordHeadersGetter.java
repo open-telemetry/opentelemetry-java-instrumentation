@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import java.nio.charset.StandardCharsets;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
@@ -43,7 +43,7 @@ enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
 
     Object value = header.value();
     if (value instanceof byte[]) {
-      return new String((byte[]) value, StandardCharsets.UTF_8);
+      return new String((byte[]) value, UTF_8);
     }
     return value.toString();
   }

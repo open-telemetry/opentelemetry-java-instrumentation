@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.config.bridge;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import javax.annotation.Nullable;
 
 /**
  * A {@link ConfigProvider} implementation backed by {@link ConfigProperties}.
@@ -30,7 +29,6 @@ public final class ConfigPropertiesBackedConfigProvider implements ConfigProvide
             configProperties);
   }
 
-  @Nullable
   @Override
   public DeclarativeConfigProperties getInstrumentationConfig() {
     return instrumentationConfig;

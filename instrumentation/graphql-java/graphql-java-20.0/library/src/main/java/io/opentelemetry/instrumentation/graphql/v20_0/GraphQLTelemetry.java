@@ -9,7 +9,7 @@ import graphql.execution.instrumentation.Instrumentation;
 import graphql.schema.DataFetchingEnvironment;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
 
 @SuppressWarnings({"AbbreviationAsWordInName", "MemberName"})
 public final class GraphQLTelemetry {
@@ -47,7 +47,7 @@ public final class GraphQLTelemetry {
   /**
    * Returns a new {@link Instrumentation} that generates telemetry for received GraphQL requests.
    */
-  public Instrumentation newInstrumentation() {
+  public Instrumentation createInstrumentation() {
     return new OpenTelemetryInstrumentation(
         helper, dataFetcherInstrumenter, createSpansForTrivialDataFetcher);
   }

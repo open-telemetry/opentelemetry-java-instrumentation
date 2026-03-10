@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 
 import grails.boot.GrailsApp;
 import grails.boot.config.GrailsAutoConfiguration;
@@ -28,7 +29,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +95,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     @Override
     public Collection<Class> classes() {
       // java compiler does not see groovy classes
-      return Arrays.asList(
+      return asList(
           load("test.TestController"), load("test.ErrorController"), load("test.UrlMappings"));
     }
 

@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.javaagent.extension.matcher.internal.DelegatingMatcher;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -47,7 +48,7 @@ public class LoggingFailSafeMatcher<T> extends ElementMatcher.Junction.AbstractB
     try {
       return matcher.matches(target);
     } catch (Throwable e) {
-      logger.log(Level.FINE, description, e);
+      logger.log(FINE, description, e);
       return false;
     }
   }

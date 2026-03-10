@@ -5,15 +5,21 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -32,12 +38,10 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -149,7 +153,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   void testSetCommandUsingFutureGetWithTimeout() throws Exception {
     RedisFuture<String> redisFuture =
         testing().runWithSpan("parent", () -> asyncCommands.set("TESTSETKEY", "TESTSETVAL"));
-    String res = redisFuture.get(3, TimeUnit.SECONDS);
+    String res = redisFuture.get(3, SECONDS);
 
     assertThat(res).isEqualTo("OK");
 
@@ -159,18 +163,19 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("SET")
+                        span.hasName(spanName("SET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "SET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
@@ -193,28 +198,30 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               redisFuture.thenAccept(consumer);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
+    assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
     testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
-                              span.hasName("GET")
+                              span.hasName(spanName("GET"))
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
-                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(
+                                              NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                           equalTo(NETWORK_PEER_ADDRESS, ip),
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
-                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                          equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
+                                          equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                          equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
+                                          equalTo(maybeStable(DB_OPERATION), "GET")))
                                   .satisfies(
                                       AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
@@ -271,35 +278,37 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               redisFuture.handleAsync(firstStage).thenApply(secondStage);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(successStr);
+    assertThat(future.get(10, SECONDS)).isEqualTo(successStr);
 
     testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
-                              span.hasName("GET")
+                              span.hasName(spanName("GET"))
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
-                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(
+                                              NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                           equalTo(NETWORK_PEER_ADDRESS, ip),
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
-                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(maybeStable(DB_SYSTEM), REDIS),
                                           equalTo(
-                                              maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
+                                              maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
+                                          equalTo(maybeStable(DB_OPERATION), "GET")))
                                   .satisfies(
                                       AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
               if (testCallback()) {
                 spanAsserts.addAll(
-                    Arrays.asList(
+                    asList(
                         span ->
                             span.hasName("callback1")
                                 .hasKind(SpanKind.INTERNAL)
@@ -337,28 +346,30 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
               redisFuture.whenCompleteAsync(biConsumer);
             });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isNotNull();
+    assertThat(future.get(10, SECONDS)).isNotNull();
 
     testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                           span ->
-                              span.hasName("RANDOMKEY")
+                              span.hasName(spanName("RANDOMKEY"))
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       addExtraAttributes(
-                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(
+                                              NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                           equalTo(NETWORK_PEER_ADDRESS, ip),
                                           equalTo(NETWORK_PEER_PORT, port),
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
-                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                          equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
+                                          equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                          equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
+                                          equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")))
                                   .satisfies(
                                       AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
@@ -400,41 +411,43 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           return null;
         });
 
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(testHashMap);
+    assertThat(future.get(10, SECONDS)).isEqualTo(testHashMap);
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("HMSET")
+                        span.hasName(spanName("HMSET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
-                                        "HMSET TESTHM firstname ? lastname ? age ?")))
+                                        "HMSET TESTHM firstname ? lastname ? age ?"),
+                                    equalTo(maybeStable(DB_OPERATION), "HMSET")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("HGETALL")
+                        span.hasName(spanName("HGETALL"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                                     equalTo(NETWORK_PEER_ADDRESS, ip),
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
+                                    equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
+                                    equalTo(maybeStable(DB_OPERATION), "HGETALL")))
                             .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }

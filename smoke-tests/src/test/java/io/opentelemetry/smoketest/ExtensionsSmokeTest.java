@@ -6,13 +6,14 @@
 package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
+@DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class ExtensionsSmokeTest {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtensionsSmokeTest.class);
@@ -81,8 +83,7 @@ class ExtensionsSmokeTest {
       Thread.sleep(100);
     }
 
-    List<String> appOutput =
-        Arrays.asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
+    List<String> appOutput = asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
     assertThat(appOutput)
         .describedAs("return value instrumentation")
         .contains("return value has been modified");

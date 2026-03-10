@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -23,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -64,7 +65,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return;
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+    for (Logger logger : loggerContext.getLoggerList()) {
       logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
     }
   }
@@ -198,18 +199,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureArguments = captureArguments;
   }
 
-  /**
-   * Sets whether the Logstash attributes should be set to logs.
-   *
-   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
-   * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-   *     deprecated and will be removed in a future release.
-   */
-  @Deprecated
-  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
-  }
-
   /** Sets whether the Logstash marker attributes should be captured. */
   public void setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
     this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;
@@ -284,9 +273,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   // copied from SDK's DefaultConfigProperties
   private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 }

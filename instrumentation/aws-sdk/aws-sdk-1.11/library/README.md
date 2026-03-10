@@ -45,7 +45,7 @@ public class AwsSdkConfiguration {
         .withRequestHandlers(
             AwsSdkTelemetry.builder(openTelemetry)
                 .build()
-                .newRequestHandler())
+                .createRequestHandler())
         .build();
   }
 

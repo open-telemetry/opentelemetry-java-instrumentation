@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import javax.annotation.Nullable;
+
 public interface AgentStarter {
 
   /**
@@ -24,5 +26,6 @@ public interface AgentStarter {
    *
    * @return class loader that is capable of loading configured extensions
    */
+  @Nullable
   ClassLoader getExtensionClassLoader();
 }
