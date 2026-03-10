@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -132,7 +131,7 @@ class S3ClientTest extends AbstractS3ClientTest {
                                 equalTo(URL_FULL, "https://s3.amazonaws.com"),
                                 equalTo(HTTP_REQUEST_METHOD, "HEAD"),
                                 equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
-                                equalTo(SERVER_PORT, v3Preview() ? 443L : null),
+                                equalTo(SERVER_PORT, 443L),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "HeadBucket"),
