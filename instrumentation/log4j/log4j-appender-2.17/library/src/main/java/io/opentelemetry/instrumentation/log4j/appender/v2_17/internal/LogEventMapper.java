@@ -10,18 +10,12 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -135,7 +129,7 @@ public final class LogEventMapper<T> {
     }
 
     if (throwable != null) {
-      setThrowable(builder, throwable);
+      builder.setException(throwable);
     }
 
     if (captureExperimentalAttributes) {
@@ -250,18 +244,6 @@ public final class LogEventMapper<T> {
   public static AttributeKey<String> getMapMessageAttributeKey(String key) {
     return mapMessageAttributeKeyCache.computeIfAbsent(
         key, k -> AttributeKey.stringKey("log4j.map_message." + k));
-  }
-
-  private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
-    if (builder instanceof ExtendedLogRecordBuilder) {
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
-    } else {
-      builder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
-      builder.setAttribute(EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      builder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
-    }
   }
 
   private static Severity levelToSeverity(Level level) {

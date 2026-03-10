@@ -12,7 +12,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -82,8 +81,7 @@ public final class LoggingEventMapper {
 
     Throwable throwable = record.getThrown();
     if (throwable != null) {
-      // this cast is safe within java agent instrumentation
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
+      builder.setException(throwable);
     }
     captureMdcAttributes(builder);
 
