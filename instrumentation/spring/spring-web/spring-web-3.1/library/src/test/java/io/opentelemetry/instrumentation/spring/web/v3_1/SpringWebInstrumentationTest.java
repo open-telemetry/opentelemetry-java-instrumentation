@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +27,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<String>> {
+class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
@@ -46,11 +45,11 @@ public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEnt
         .add(
             SpringWebTelemetry.builder(testing.getOpenTelemetry())
                 .setCapturedRequestHeaders(
-                    Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+                    singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
                 .setCapturedResponseHeaders(
-                    Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+                    singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
                 .build()
-                .newInterceptor());
+                .createInterceptor());
   }
 
   @Override

@@ -14,17 +14,32 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:graphql-java:graphql-java-20.0:library"))
-  implementation(project(":instrumentation:graphql-java:graphql-java-common:library"))
+  implementation(project(":instrumentation:graphql-java:graphql-java-common-12.0:library"))
 
   library("com.graphql-java:graphql-java:20.0")
 
   testInstrumentation(project(":instrumentation:graphql-java:graphql-java-12.0:javaagent"))
 
-  testImplementation(project(":instrumentation:graphql-java:graphql-java-common:testing"))
+  testImplementation(project(":instrumentation:graphql-java:graphql-java-common-12.0:testing"))
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testDataFetcher by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
+  }
+
+  check {
+    dependsOn(testDataFetcher)
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

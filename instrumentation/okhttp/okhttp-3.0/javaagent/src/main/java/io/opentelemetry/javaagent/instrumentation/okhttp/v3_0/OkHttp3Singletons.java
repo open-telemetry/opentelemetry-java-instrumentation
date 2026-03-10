@@ -10,9 +10,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.ConnectionErrorSpanInterceptor;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.TracingInterceptor;
+import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import okhttp3.Interceptor;
 import okhttp3.Response;
@@ -20,6 +22,8 @@ import okhttp3.Response;
 /** Holder of singleton interceptors for adding to instrumented clients. */
 public final class OkHttp3Singletons {
 
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
+      VirtualField.find(Runnable.class, PropagatedContext.class);
   private static final Instrumenter<Interceptor.Chain, Response> INSTRUMENTER =
       JavaagentHttpClientInstrumenters.create(
           OkHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));

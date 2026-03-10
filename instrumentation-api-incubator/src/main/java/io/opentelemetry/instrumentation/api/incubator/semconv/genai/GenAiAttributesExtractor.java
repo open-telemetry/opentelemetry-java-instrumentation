@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -52,7 +51,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
       stringArrayKey("gen_ai.response.finish_reasons");
   private static final AttributeKey<String> GEN_AI_RESPONSE_ID = stringKey("gen_ai.response.id");
   static final AttributeKey<String> GEN_AI_RESPONSE_MODEL = stringKey("gen_ai.response.model");
-  static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
+  static final AttributeKey<String> GEN_AI_PROVIDER_NAME = stringKey("gen_ai.provider.name");
   static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS = longKey("gen_ai.usage.input_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_OUTPUT_TOKENS =
       longKey("gen_ai.usage.output_tokens");
@@ -71,21 +70,18 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, GEN_AI_OPERATION_NAME, getter.getOperationName(request));
-    internalSet(attributes, GEN_AI_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
-    internalSet(attributes, GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
-    internalSet(
-        attributes, GEN_AI_REQUEST_ENCODING_FORMATS, getter.getRequestEncodingFormats(request));
-    internalSet(
-        attributes, GEN_AI_REQUEST_FREQUENCY_PENALTY, getter.getRequestFrequencyPenalty(request));
-    internalSet(attributes, GEN_AI_REQUEST_MAX_TOKENS, getter.getRequestMaxTokens(request));
-    internalSet(
-        attributes, GEN_AI_REQUEST_PRESENCE_PENALTY, getter.getRequestPresencePenalty(request));
-    internalSet(attributes, GEN_AI_REQUEST_STOP_SEQUENCES, getter.getRequestStopSequences(request));
-    internalSet(attributes, GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
-    internalSet(attributes, GEN_AI_REQUEST_TOP_K, getter.getRequestTopK(request));
-    internalSet(attributes, GEN_AI_REQUEST_TOP_P, getter.getRequestTopP(request));
+    attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
+    attributes.put(GEN_AI_PROVIDER_NAME, getter.getSystem(request));
+    attributes.put(GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
+    attributes.put(GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
+    attributes.put(GEN_AI_REQUEST_ENCODING_FORMATS, getter.getRequestEncodingFormats(request));
+    attributes.put(GEN_AI_REQUEST_FREQUENCY_PENALTY, getter.getRequestFrequencyPenalty(request));
+    attributes.put(GEN_AI_REQUEST_MAX_TOKENS, getter.getRequestMaxTokens(request));
+    attributes.put(GEN_AI_REQUEST_PRESENCE_PENALTY, getter.getRequestPresencePenalty(request));
+    attributes.put(GEN_AI_REQUEST_STOP_SEQUENCES, getter.getRequestStopSequences(request));
+    attributes.put(GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
+    attributes.put(GEN_AI_REQUEST_TOP_K, getter.getRequestTopK(request));
+    attributes.put(GEN_AI_REQUEST_TOP_P, getter.getRequestTopP(request));
   }
 
   @Override
@@ -99,11 +95,9 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     if (finishReasons != null && !finishReasons.isEmpty()) {
       attributes.put(GEN_AI_RESPONSE_FINISH_REASONS, finishReasons);
     }
-    internalSet(attributes, GEN_AI_RESPONSE_ID, getter.getResponseId(request, response));
-    internalSet(attributes, GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
-    internalSet(
-        attributes, GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
-    internalSet(
-        attributes, GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
+    attributes.put(GEN_AI_RESPONSE_ID, getter.getResponseId(request, response));
+    attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
+    attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
+    attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
   }
 }

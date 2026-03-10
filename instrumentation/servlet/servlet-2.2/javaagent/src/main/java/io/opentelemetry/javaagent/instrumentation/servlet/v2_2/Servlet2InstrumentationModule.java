@@ -6,19 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
-import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Servlet2InstrumentationModule extends InstrumentationModule {
+public class Servlet2InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   private static final String BASE_PACKAGE = "javax.servlet";
 
   public Servlet2InstrumentationModule() {
@@ -33,7 +35,7 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new Servlet2HttpServletResponseInstrumentation(),
         new ServletAndFilterInstrumentation(BASE_PACKAGE, adviceClassName(".Servlet2Advice")),
         new HttpServletResponseInstrumentation(
@@ -42,5 +44,10 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
 
   private static String adviceClassName(String suffix) {
     return Servlet2InstrumentationModule.class.getPackage().getName() + suffix;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

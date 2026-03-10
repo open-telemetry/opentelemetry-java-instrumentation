@@ -12,8 +12,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static java.util.Collections.singletonList;
 
-import java.util.Collections;
 import play.libs.F;
 import play.mvc.Results;
 import play.routing.RoutingDsl;
@@ -86,7 +86,7 @@ class PlayAsyncServerTest extends PlayServerTest {
                                           .toScala()
                                           .withHeaders(
                                               JavaConverters.asScalaIteratorConverter(
-                                                      Collections.singletonList(header).iterator())
+                                                      singletonList(header).iterator())
                                                   .asScala()
                                                   .toSeq()));
                                 })))

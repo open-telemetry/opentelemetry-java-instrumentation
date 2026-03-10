@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -13,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -42,7 +44,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Netty41ConnectionSpanTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -105,7 +107,7 @@ class Netty41ConnectionSpanTest {
     CompletableFuture<Integer> result = new CompletableFuture<>();
     channel.pipeline().addLast(new ClientHandler(result));
     channel.writeAndFlush(request).get();
-    return result.get(20, TimeUnit.SECONDS);
+    return result.get(20, SECONDS);
   }
 
   @Test
@@ -126,7 +128,8 @@ class Netty41ConnectionSpanTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -137,7 +140,8 @@ class Netty41ConnectionSpanTest {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server")
@@ -167,7 +171,8 @@ class Netty41ConnectionSpanTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -195,6 +200,7 @@ class Netty41ConnectionSpanTest {
                                 k ->
                                     k.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo("127.0.0.1"),
-                                        v -> assertThat(v).isNull())))));
+                                        v -> assertThat(v).isNull())),
+                            equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 }

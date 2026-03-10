@@ -13,7 +13,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.instrumentation.netty.v4.common.NettyFutureInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.NettyFutureInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -45,5 +45,10 @@ public class NettyInstrumentationModule extends InstrumentationModule
         new NettyFutureInstrumentation(),
         new NettyChannelPipelineInstrumentation(),
         new AbstractChannelHandlerContextInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

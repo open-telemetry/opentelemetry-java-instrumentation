@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -43,6 +44,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
 
   public abstract AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder client);
@@ -83,12 +85,12 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
             "CreateBucket",
             "PUT",
             (Function<AmazonS3, Object>) c -> c.createBucket("testbucket"),
-            singletonList(equalTo(stringKey("aws.bucket.name"), "testbucket"))),
+            singletonList(equalTo(AWS_S3_BUCKET, "testbucket"))),
         Arguments.of(
             "GetObject",
             "GET",
             (Function<AmazonS3, Object>) c -> c.getObject("someBucket", "someKey"),
-            singletonList(equalTo(stringKey("aws.bucket.name"), "someBucket"))));
+            singletonList(equalTo(AWS_S3_BUCKET, "someBucket"))));
   }
 
   @Test
@@ -129,7 +131,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.bucket.name"), "someBucket"),
+                                equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
   }
 
@@ -174,7 +176,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.bucket.name"), "someBucket"),
+                                equalTo(AWS_S3_BUCKET, "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
   }
 }

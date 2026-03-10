@@ -69,7 +69,7 @@ abstract class MuzzleDirective {
     excludedInstrumentationNames.add(excludeString)
   }
 
-  fun skip(vararg version: String?) {
+  fun skip(vararg version: String) {
     skipVersions.addAll(*version)
   }
 

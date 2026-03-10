@@ -1,0 +1,5 @@
+display_name: HikariCP
+description: This instrumentation enables database connection pool metrics for HikariCP.
+library_link: https://github.com/brettwooldridge/HikariCP
+semantic_conventions:
+  - DATABASE_POOL_METRICS

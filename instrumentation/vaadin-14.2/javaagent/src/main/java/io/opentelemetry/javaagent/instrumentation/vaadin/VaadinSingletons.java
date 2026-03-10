@@ -47,13 +47,15 @@ public class VaadinSingletons {
             // add context for tracking nested request handler calls
             .addContextCustomizer(
                 (context, vaadinHandlerRequest, startAttributes) ->
-                    context.with(REQUEST_HANDLER_CONTEXT_KEY, Boolean.TRUE))
+                    context.with(REQUEST_HANDLER_CONTEXT_KEY, true))
             .buildInstrumenter();
 
+    RpcCodeAttributesGetter rpcCodeAttributesGetter = new RpcCodeAttributesGetter();
     RPC_INSTRUMENTER =
         Instrumenter.<VaadinRpcRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinSingletons::rpcSpanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .addAttributesExtractor(CodeAttributesExtractor.create(rpcCodeAttributesGetter))
             .buildInstrumenter();
 
     SERVICE_INSTRUMENTER =

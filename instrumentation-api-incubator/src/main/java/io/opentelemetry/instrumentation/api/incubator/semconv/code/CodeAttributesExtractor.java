@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -22,9 +24,9 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -40,11 +42,28 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    StringBuilder sb = new StringBuilder();
     Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
-      internalSet(attributes, CODE_NAMESPACE, cls.getName());
+      sb.append(cls.getName());
+
+      if (emitOldCodeSemconv()) {
+        attributes.put(CODE_NAMESPACE, cls.getName());
+      }
     }
-    internalSet(attributes, CODE_FUNCTION, getter.getMethodName(request));
+    String methodName = getter.getMethodName(request);
+    if (methodName != null) {
+      if (sb.length() > 0) {
+        sb.append(".");
+      }
+      sb.append(methodName);
+      if (emitOldCodeSemconv()) {
+        attributes.put(CODE_FUNCTION, methodName);
+      }
+    }
+    if (emitStableCodeSemconv() && sb.length() > 0) {
+      attributes.put(CODE_FUNCTION_NAME, sb.toString());
+    }
   }
 
   @Override

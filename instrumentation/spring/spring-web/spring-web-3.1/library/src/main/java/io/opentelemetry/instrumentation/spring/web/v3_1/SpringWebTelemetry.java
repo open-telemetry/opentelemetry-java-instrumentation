@@ -15,15 +15,12 @@ import org.springframework.web.client.RestTemplate;
 /** Entrypoint for instrumenting Spring {@link org.springframework.web.client.RestTemplate}. */
 public final class SpringWebTelemetry {
 
-  /** Returns a new {@link SpringWebTelemetry} configured with the given {@link OpenTelemetry}. */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  /**
-   * Returns a new {@link SpringWebTelemetryBuilder} configured with the given {@link
-   * OpenTelemetry}.
-   */
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringWebTelemetryBuilder(openTelemetry);
   }
@@ -35,14 +32,13 @@ public final class SpringWebTelemetry {
   }
 
   /**
-   * Returns a new {@link ClientHttpRequestInterceptor} that can be used with {@link
-   * RestTemplate#getInterceptors()}. For example:
+   * Returns an interceptor for instrumenting {@link RestTemplate} requests.
    *
    * <pre>{@code
-   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).newInterceptor());
+   * restTemplate.getInterceptors().add(SpringWebTelemetry.create(openTelemetry).createInterceptor());
    * }</pre>
    */
-  public ClientHttpRequestInterceptor newInterceptor() {
+  public ClientHttpRequestInterceptor createInterceptor() {
     return new RestTemplateInterceptor(instrumenter);
   }
 }

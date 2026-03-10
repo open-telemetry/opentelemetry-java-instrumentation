@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -19,7 +22,6 @@ import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,11 +34,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class KubernetesClientTest {
 
   private static final String TEST_USER_AGENT = "test-user-agent";
@@ -47,6 +51,14 @@ class KubernetesClientTest {
   private final MockWebServerExtension mockWebServer = new MockWebServerExtension();
 
   private CoreV1Api coreV1Api;
+
+  @Nullable
+  private static String experimental(String value) {
+    if (Boolean.getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes")) {
+      return value;
+    }
+    return null;
+  }
 
   @BeforeEach
   void beforeEach() {
@@ -89,9 +101,25 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
-                                AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
-                            equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
+                                stringKey("kubernetes-client.namespace"),
+                                experimental("namespace")),
+                            equalTo(stringKey("kubernetes-client.name"), experimental("name")))));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kubernetes-client-7.0",
+        "http.client.request.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasDescription("Duration of HTTP client requests.")
+                        .hasUnit("s")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point -> point.hasSumGreaterThan(0.0)))));
   }
 
   @Test
@@ -101,10 +129,7 @@ class KubernetesClientTest {
     ApiException exception = null;
     try {
       testing.runWithSpan(
-          "parent",
-          () -> {
-            coreV1Api.connectGetNamespacedPodProxy("name", "namespace", "path");
-          });
+          "parent", () -> coreV1Api.connectGetNamespacedPodProxy("name", "namespace", "path"));
     } catch (ApiException e) {
       exception = e;
     }
@@ -136,10 +161,12 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
-                                AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
-                            equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
+                                stringKey("kubernetes-client.namespace"),
+                                experimental("namespace")),
+                            equalTo(stringKey("kubernetes-client.name"), experimental("name")))));
   }
 
   @Test
@@ -151,21 +178,20 @@ class KubernetesClientTest {
 
     testing.runWithSpan(
         "parent",
-        () -> {
-          coreV1Api.connectGetNamespacedPodProxyAsync(
-              "name",
-              "namespace",
-              "path",
-              new ApiCallbackTemplate() {
-                @Override
-                public void onSuccess(
-                    String result, int statusCode, Map<String, List<String>> responseHeaders) {
-                  responseBodyReference.set(result);
-                  countDownLatch.countDown();
-                  testing.runWithSpan("callback", () -> {});
-                }
-              });
-        });
+        () ->
+            coreV1Api.connectGetNamespacedPodProxyAsync(
+                "name",
+                "namespace",
+                "path",
+                new ApiCallbackTemplate() {
+                  @Override
+                  public void onSuccess(
+                      String result, int statusCode, Map<String, List<String>> responseHeaders) {
+                    responseBodyReference.set(result);
+                    countDownLatch.countDown();
+                    testing.runWithSpan("callback", () -> {});
+                  }
+                }));
 
     countDownLatch.await();
 
@@ -190,9 +216,11 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(
-                                AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
-                            equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),
+                                stringKey("kubernetes-client.namespace"),
+                                experimental("namespace")),
+                            equalTo(stringKey("kubernetes-client.name"), experimental("name"))),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -210,21 +238,20 @@ class KubernetesClientTest {
 
     testing.runWithSpan(
         "parent",
-        () -> {
-          coreV1Api.connectGetNamespacedPodProxyAsync(
-              "name",
-              "namespace",
-              "path",
-              new ApiCallbackTemplate() {
-                @Override
-                public void onFailure(
-                    ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
-                  exceptionReference.set(e);
-                  countDownLatch.countDown();
-                  testing.runWithSpan("callback", () -> {});
-                }
-              });
-        });
+        () ->
+            coreV1Api.connectGetNamespacedPodProxyAsync(
+                "name",
+                "namespace",
+                "path",
+                new ApiCallbackTemplate() {
+                  @Override
+                  public void onFailure(
+                      ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+                    exceptionReference.set(e);
+                    countDownLatch.countDown();
+                    testing.runWithSpan("callback", () -> {});
+                  }
+                }));
 
     countDownLatch.await();
 
@@ -251,10 +278,12 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
-                                AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
-                            equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),
+                                stringKey("kubernetes-client.namespace"),
+                                experimental("namespace")),
+                            equalTo(stringKey("kubernetes-client.name"), experimental("name"))),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

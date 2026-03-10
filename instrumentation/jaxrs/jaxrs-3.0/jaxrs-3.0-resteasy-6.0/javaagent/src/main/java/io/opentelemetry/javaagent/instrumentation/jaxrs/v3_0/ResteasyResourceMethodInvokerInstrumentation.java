@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.ResteasySingletons.INVOKER_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -39,8 +39,7 @@ public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrum
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This ResourceMethodInvoker resourceInvoker) {
 
-      String name =
-          VirtualField.find(ResourceMethodInvoker.class, String.class).get(resourceInvoker);
+      String name = INVOKER_NAME.get(resourceInvoker);
       ResteasySpanName.INSTANCE.updateServerSpanName(Java8BytecodeBridge.currentContext(), name);
     }
   }

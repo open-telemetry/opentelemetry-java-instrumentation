@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 /** Instrumentation module for webflux-based applications that use spring-security-config. */
@@ -27,8 +26,8 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
   }
 
   @Override
-  public boolean defaultEnabled(ConfigProperties config) {
-    return super.defaultEnabled(config)
+  public boolean defaultEnabled() {
+    return super.defaultEnabled()
         /*
          * Since the only thing this module currently does is capture enduser attributes,
          * the module can be completely disabled if enduser attributes are disabled.

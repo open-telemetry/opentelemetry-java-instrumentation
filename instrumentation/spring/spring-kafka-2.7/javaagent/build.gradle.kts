@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -29,6 +30,7 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -40,22 +42,20 @@ testing {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
         // the "library" configuration is not recognized by the test suite plugin
+        val springKafkaVersion = if (latestDepTest) "latest.release" else "2.7.0"
+        val springBootVersion = if (latestDepTest) "latest.release" else "2.5.3"
+        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+
         if (latestDepTest) {
-          implementation("org.springframework.kafka:spring-kafka:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter:latest.release")
-        } else {
-          implementation("org.springframework.kafka:spring-kafka:2.7.0")
-          implementation("org.springframework.boot:spring-boot-starter-test:2.5.3")
-          implementation("org.springframework.boot:spring-boot-starter:2.5.3")
+          implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
         }
       }
 
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
           }
@@ -66,16 +66,27 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", latestDepTest)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+
+  test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimental)
   }
 }
 

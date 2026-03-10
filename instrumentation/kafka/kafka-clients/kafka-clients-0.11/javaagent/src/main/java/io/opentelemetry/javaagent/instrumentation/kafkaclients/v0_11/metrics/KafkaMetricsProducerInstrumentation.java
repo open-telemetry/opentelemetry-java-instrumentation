@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -39,9 +41,11 @@ public class KafkaMetricsProducerInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ConstructorMapAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) Map<String, Object> config) {
+    public static Map<String, Object> onEnter(
+        @Advice.Argument(0) Map<String, Object> originalConfig) {
+      Map<String, Object> config = originalConfig;
 
       // In versions of spring-kafka prior to 2.5.0.RC1, when the `ProducerPerThread`
       //  of DefaultKafkaProducerFactory is set to true, the `config` object entering
@@ -61,6 +65,7 @@ public class KafkaMetricsProducerInstrumentation implements TypeInstrumentation 
       // ensure config is a mutable map and avoid concurrency conflicts
       config = new HashMap<>(config);
       enhanceConfig(config);
+      return config;
     }
   }
 

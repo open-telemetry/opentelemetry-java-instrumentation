@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,14 +39,17 @@ class R2dbcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FactoryAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false) ConnectionFactory factory,
+    public static ConnectionFactory methodExit(
+        @Advice.Return @Nullable ConnectionFactory factory,
         @Advice.Argument(0) ConnectionFactoryOptions factoryOptions) {
 
-      if (factory != null) {
-        factory = R2dbcSingletons.telemetry().wrapConnectionFactory(factory, factoryOptions);
+      if (factory == null) {
+        return null;
       }
+
+      return R2dbcSingletons.telemetry().wrapConnectionFactory(factory, factoryOptions);
     }
   }
 }

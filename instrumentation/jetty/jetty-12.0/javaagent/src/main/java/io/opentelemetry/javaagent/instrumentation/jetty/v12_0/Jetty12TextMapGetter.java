@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import java.util.Iterator;
 import org.eclipse.jetty.server.Request;
 
-enum Jetty12TextMapGetter implements ExtendedTextMapGetter<Request> {
+enum Jetty12TextMapGetter implements TextMapGetter<Request> {
   INSTANCE;
 
   @Override

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetryBuilder;
 import java.util.function.Function;
@@ -40,6 +41,7 @@ public final class SpringWebfluxBuilderUtil {
     return serverBuilderExtractor;
   }
 
+  @Initializer
   public static void setServerBuilderExtractor(
       Function<
               SpringWebfluxServerTelemetryBuilder,
@@ -55,6 +57,7 @@ public final class SpringWebfluxBuilderUtil {
     return clientBuilderExtractor;
   }
 
+  @Initializer
   public static void setClientBuilderExtractor(
       Function<
               SpringWebfluxClientTelemetryBuilder,

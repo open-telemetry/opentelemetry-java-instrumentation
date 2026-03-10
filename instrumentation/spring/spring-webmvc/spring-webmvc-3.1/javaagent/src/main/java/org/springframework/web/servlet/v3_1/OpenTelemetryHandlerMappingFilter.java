@@ -6,6 +6,8 @@
 package org.springframework.web.servlet.v3_1;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
+import static java.util.Objects.requireNonNull;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -19,8 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.servlet.Filter;
@@ -122,7 +122,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
   private boolean findMapping(HttpServletRequest request) {
     try {
       // handlerMapping already null-checked above
-      for (HandlerMapping mapping : Objects.requireNonNull(handlerMappings)) {
+      for (HandlerMapping mapping : requireNonNull(handlerMappings)) {
         HandlerExecutionChain handler = mapping.getHandler(request);
         if (handler != null) {
           return true;
@@ -206,7 +206,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       parseAndCacheMh.invoke(request);
       return true;
     } catch (Throwable throwable) {
-      logger.log(Level.FINE, "Failed calling parseAndCache", throwable);
+      logger.log(FINE, "Failed calling parseAndCache", throwable);
       return false;
     }
   }

@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
+import static java.util.Collections.singletonList;
+
 import com.linecorp.armeria.client.WebClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
@@ -22,12 +23,10 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   protected WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(
         ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(
-                Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(
-                Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+            .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+            .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build()
-            .newDecorator());
+            .createDecorator());
   }
 
   @Override

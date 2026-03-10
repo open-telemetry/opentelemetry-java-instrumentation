@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.xxljob;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.xxljob.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
@@ -13,18 +16,19 @@ import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.handler.IJobHandler;
 import com.xxl.job.core.log.XxlJobFileAppender;
 import com.xxl.job.core.thread.JobThread;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractXxlJobTest {
@@ -37,13 +41,24 @@ public abstract class AbstractXxlJobTest {
     XxlJobFileAppender.initLogPath("build/xxljob/log");
   }
 
+  private void trigger(JobThread jobThread) {
+    trigger(jobThread, null);
+  }
+
+  protected void trigger(JobThread jobThread, String executorParams) {
+    TriggerParam triggerParam = new TriggerParam();
+    triggerParam.setExecutorTimeout(0);
+    if (executorParams != null) {
+      triggerParam.setExecutorParams(executorParams);
+    }
+    jobThread.pushTriggerQueue(triggerParam);
+    jobThread.start();
+  }
+
   @Test
   void testGlueJob() {
     JobThread jobThread = new JobThread(1, getGlueJobHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "CustomizedGroovyHandler.execute",
         StatusData.unset(),
@@ -53,14 +68,11 @@ public abstract class AbstractXxlJobTest {
     jobThread.toStop("Test finish");
   }
 
+  @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Shell scripts require /bin/sh")
   @Test
   void testScriptJob() {
     JobThread jobThread = new JobThread(2, getScriptJobHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorParams("");
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread, "");
     checkXxlJobWithoutCodeAttributes("GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
     jobThread.toStop("Test finish");
   }
@@ -68,10 +80,7 @@ public abstract class AbstractXxlJobTest {
   @Test
   void testSimpleJob() {
     JobThread jobThread = new JobThread(3, getCustomizeHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "SimpleCustomizedHandler.execute",
         StatusData.unset(),
@@ -81,21 +90,22 @@ public abstract class AbstractXxlJobTest {
     jobThread.toStop("Test finish");
   }
 
+  protected Class<?> getReflectObjectClass() {
+    return ReflectiveMethodsFactory.ReflectObject.class;
+  }
+
   @Test
   public void testMethodJob() {
     // method handle is null if test is not supported by tested version of the library
     Assumptions.assumeTrue(getMethodHandler() != null);
 
     JobThread jobThread = new JobThread(4, getMethodHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "ReflectObject.echo",
         StatusData.unset(),
         GlueTypeEnum.BEAN,
-        "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject",
+        getReflectObjectClass().getName(),
         "echo");
     jobThread.toStop("Test finish");
   }
@@ -103,10 +113,7 @@ public abstract class AbstractXxlJobTest {
   @Test
   void testFailedJob() {
     JobThread jobThread = new JobThread(5, getCustomizeFailedHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "CustomizedFailedHandler.execute",
         StatusData.error(),
@@ -140,17 +147,16 @@ public abstract class AbstractXxlJobTest {
                         .hasAttributesSatisfyingExactly(assertions)));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void checkXxlJob(
       String spanName,
       StatusData statusData,
       GlueTypeEnum glueType,
-      String codeNamespace,
-      String codeFunction) {
+      String codeClass,
+      String codeMethod) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace));
-    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, codeFunction));
+    attributeAssertions.addAll(
+        SemconvCodeStabilityUtil.codeFunctionAssertions(codeClass, codeMethod));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }
@@ -159,14 +165,15 @@ public abstract class AbstractXxlJobTest {
       String spanName, StatusData statusData, GlueTypeEnum glueType, int jobId) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(AttributeKey.longKey("scheduling.xxl-job.job.id"), jobId));
+    attributeAssertions.add(
+        equalTo(longKey("scheduling.xxl-job.job.id"), experimental((long) jobId)));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }
 
   private static List<AttributeAssertion> attributeAssertions(GlueTypeEnum glueType) {
     return asList(
-        equalTo(AttributeKey.stringKey("job.system"), "xxl-job"),
-        equalTo(AttributeKey.stringKey("scheduling.xxl-job.glue.type"), glueType.getDesc()));
+        equalTo(stringKey("job.system"), experimental("xxl-job")),
+        equalTo(stringKey("scheduling.xxl-job.glue.type"), experimental(glueType.getDesc())));
   }
 }

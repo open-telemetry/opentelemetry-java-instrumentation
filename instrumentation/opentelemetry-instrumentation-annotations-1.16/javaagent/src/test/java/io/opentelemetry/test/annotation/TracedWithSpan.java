@@ -13,6 +13,12 @@ import java.util.concurrent.CompletionStage;
 
 public class TracedWithSpan {
 
+  TracedWithSpan() {}
+
+  // used to verify that constructor with @WithSpan annotation doesn't break instrumentation
+  @WithSpan
+  TracedWithSpan(String unused) {}
+
   @WithSpan
   public String otel() {
     return "hello!";

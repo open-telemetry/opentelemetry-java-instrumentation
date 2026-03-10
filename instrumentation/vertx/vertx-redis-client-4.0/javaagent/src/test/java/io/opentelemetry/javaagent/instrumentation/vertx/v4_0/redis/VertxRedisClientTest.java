@@ -6,19 +6,23 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,9 +34,7 @@ import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -63,7 +65,7 @@ class VertxRedisClientTest {
     vertx = Vertx.vertx();
     client = Redis.createClient(vertx, "redis://" + host + ":" + port + "/1");
     RedisConnection connection =
-        client.connect().toCompletionStage().toCompletableFuture().get(30, TimeUnit.SECONDS);
+        client.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
     redis = RedisAPI.api(connection);
   }
 
@@ -76,11 +78,7 @@ class VertxRedisClientTest {
 
   @Test
   void setCommand() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, TimeUnit.SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -89,22 +87,19 @@ class VertxRedisClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.vertx-redis-client-4.0",
+          metric -> metric.hasName("db.client.operation.duration"));
+    }
   }
 
   @Test
   void getCommand() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, TimeUnit.SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
     String value =
-        redis
-            .get("foo")
-            .toCompletionStage()
-            .toCompletableFuture()
-            .get(30, TimeUnit.SECONDS)
-            .toString();
+        redis.get("foo").toCompletionStage().toCompletableFuture().get(30, SECONDS).toString();
 
     assertThat(value).isEqualTo("bar");
 
@@ -125,11 +120,7 @@ class VertxRedisClientTest {
 
   @Test
   void getCommandWithParent() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, TimeUnit.SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     CompletableFuture<String> future = new CompletableFuture<>();
     CompletableFuture<String> result =
@@ -151,7 +142,7 @@ class VertxRedisClientTest {
                       }
                     }));
 
-    String value = result.get(30, TimeUnit.SECONDS);
+    String value = result.get(30, SECONDS);
     assertThat(value).isEqualTo("bar");
 
     testing.waitAndAssertTraces(
@@ -177,19 +168,10 @@ class VertxRedisClientTest {
 
   @Test
   void commandWithNoArguments() throws Exception {
-    redis
-        .set(Arrays.asList("foo", "bar"))
-        .toCompletionStage()
-        .toCompletableFuture()
-        .get(30, TimeUnit.SECONDS);
+    redis.set(asList("foo", "bar")).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     String value =
-        redis
-            .randomkey()
-            .toCompletionStage()
-            .toCompletableFuture()
-            .get(30, TimeUnit.SECONDS)
-            .toString();
+        redis.randomkey().toCompletionStage().toCompletableFuture().get(30, SECONDS).toString();
 
     assertThat(value).isEqualTo("foo");
 
@@ -210,27 +192,29 @@ class VertxRedisClientTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
+  private static AttributeAssertion[] redisSpanAttributes(String operation, String queryText) {
     // not testing database/dup
     if (emitStableDatabaseSemconv()) {
       return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM_NAME, "redis"),
-        equalTo(DB_QUERY_TEXT, statement),
+        equalTo(DB_SYSTEM_NAME, REDIS),
+        equalTo(DB_QUERY_TEXT, queryText),
         equalTo(DB_OPERATION_NAME, operation),
         equalTo(DB_NAMESPACE, "1"),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(maybeStablePeerService(), "test-peer-service"),
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };
     } else {
       return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM, "redis"),
-        equalTo(DB_STATEMENT, statement),
+        equalTo(DB_SYSTEM, REDIS),
+        equalTo(DB_STATEMENT, queryText),
         equalTo(DB_OPERATION, operation),
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(maybeStablePeerService(), "test-peer-service"),
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };

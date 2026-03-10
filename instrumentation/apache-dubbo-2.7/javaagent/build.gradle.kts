@@ -40,15 +40,38 @@ testing {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+}
+
+val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}StableSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,service.peer")
+  }
+}
+
+val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}BothSemconv") {
+    testClassesDirs = suite.sources.output.classesDirs
+    classpath = suite.sources.runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup,service.peer")
+  }
 }
 
 tasks {
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
   }
 }

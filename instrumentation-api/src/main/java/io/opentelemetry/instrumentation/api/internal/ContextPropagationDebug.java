@@ -32,20 +32,15 @@ public final class ContextPropagationDebug {
   private static final boolean FAIL_ON_CONTEXT_LEAK;
 
   static {
-    boolean agentDebugEnabled = ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false);
-
-    THREAD_PROPAGATION_DEBUGGER =
-        ConfigPropertiesUtil.getBoolean(
-            "otel.javaagent.experimental.thread-propagation-debugger.enabled", agentDebugEnabled);
-    FAIL_ON_CONTEXT_LEAK =
-        ConfigPropertiesUtil.getBoolean("otel.javaagent.testing.fail-on-context-leak", false);
+    THREAD_PROPAGATION_DEBUGGER = DebugUtil.isThreadPropagationDebugEnabled();
+    FAIL_ON_CONTEXT_LEAK = Boolean.getBoolean("otel.javaagent.testing.fail-on-context-leak");
   }
 
   // context to which debug locations were added
   private final Context sourceContext;
   private final List<Propagation> locations;
   // context after adding debug locations
-  private Context wrappedContext;
+  @Nullable private Context wrappedContext;
 
   private ContextPropagationDebug(Context sourceContext) {
     this.sourceContext = sourceContext;
@@ -139,10 +134,10 @@ public final class ContextPropagationDebug {
   }
 
   private static class Propagation {
-    public final String carrierClassName;
-    public final StackTraceElement[] location;
+    final String carrierClassName;
+    final StackTraceElement[] location;
 
-    public Propagation(String carrierClassName, StackTraceElement[] location) {
+    Propagation(String carrierClassName, StackTraceElement[] location) {
       this.carrierClassName = carrierClassName;
       this.location = location;
     }

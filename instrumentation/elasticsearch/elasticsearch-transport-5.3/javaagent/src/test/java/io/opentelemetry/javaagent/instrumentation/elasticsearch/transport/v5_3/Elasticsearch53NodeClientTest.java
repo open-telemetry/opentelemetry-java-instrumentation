@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3;
 
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
 import java.io.File;
-import java.util.Collections;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.client.Client;
@@ -20,6 +21,7 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.transport.Netty3Plugin;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,7 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
     testNode =
         new Node(
             new Environment(InternalSettingsPreparer.prepareSettings(settings)),
-            Collections.singletonList(Netty3Plugin.class)) {};
+            singletonList(Netty3Plugin.class)) {};
     startNode(testNode);
 
     client = testNode.client();
@@ -73,8 +75,8 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          Collections.singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
+                          singletonMap(
+                              "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
     testing.clearData();
@@ -88,5 +90,10 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
   @Override
   public Client client() {
     return client;
+  }
+
+  @Test
+  void testDurationMetric() throws Exception {
+    metricAssertion("io.opentelemetry.elasticsearch-transport-5.3");
   }
 }

@@ -18,11 +18,9 @@ import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,7 +35,7 @@ class ForwardedHostAddressAndPortExtractorTest {
   @InjectMocks ForwardedHostAddressAndPortExtractor<String> underTest;
 
   @ParameterizedTest
-  @ArgumentsSource(ForwardedArgs.class)
+  @MethodSource("forwardedArgs")
   void shouldParseForwarded(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
     when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(headers);
@@ -49,40 +47,36 @@ class ForwardedHostAddressAndPortExtractorTest {
     assertThat(sink.getPort()).isEqualTo(expectedPort);
   }
 
-  static final class ForwardedArgs implements ArgumentsProvider {
+  private static Stream<Arguments> forwardedArgs() {
+    return Stream.of(
+        // empty/invalid headers
+        arguments(singletonList(""), null, null),
+        arguments(singletonList("host="), null, null),
+        arguments(singletonList("host=;"), null, null),
+        arguments(singletonList("host=\""), null, null),
+        arguments(singletonList("host=\"\""), null, null),
+        arguments(singletonList("host=\"example.com"), null, null),
+        arguments(singletonList("by=1.2.3.4, test=abc"), null, null),
+        arguments(singletonList("host=example.com"), "example.com", null),
+        arguments(singletonList("host=\"example.com\""), "example.com", null),
+        arguments(singletonList("host=example.com; test=abc:1234"), "example.com", null),
+        arguments(singletonList("host=\"example.com\"; test=abc:1234"), "example.com", null),
+        arguments(singletonList("host=example.com:port"), "example.com", null),
+        arguments(singletonList("host=\"example.com:port\""), "example.com", null),
+        arguments(singletonList("host=example.com:42"), "example.com", 42),
+        arguments(singletonList("host=\"example.com:42\""), "example.com", 42),
+        arguments(singletonList("host=example.com:42; test=abc:1234"), "example.com", 42),
+        arguments(singletonList("host=\"example.com:42\"; test=abc:1234"), "example.com", 42),
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
-      return Stream.of(
-          // empty/invalid headers
-          arguments(singletonList(""), null, null),
-          arguments(singletonList("host="), null, null),
-          arguments(singletonList("host=;"), null, null),
-          arguments(singletonList("host=\""), null, null),
-          arguments(singletonList("host=\"\""), null, null),
-          arguments(singletonList("host=\"example.com"), null, null),
-          arguments(singletonList("by=1.2.3.4, test=abc"), null, null),
-          arguments(singletonList("host=example.com"), "example.com", null),
-          arguments(singletonList("host=\"example.com\""), "example.com", null),
-          arguments(singletonList("host=example.com; test=abc:1234"), "example.com", null),
-          arguments(singletonList("host=\"example.com\"; test=abc:1234"), "example.com", null),
-          arguments(singletonList("host=example.com:port"), "example.com", null),
-          arguments(singletonList("host=\"example.com:port\""), "example.com", null),
-          arguments(singletonList("host=example.com:42"), "example.com", 42),
-          arguments(singletonList("host=\"example.com:42\""), "example.com", 42),
-          arguments(singletonList("host=example.com:42; test=abc:1234"), "example.com", 42),
-          arguments(singletonList("host=\"example.com:42\"; test=abc:1234"), "example.com", 42),
-
-          // multiple headers
-          arguments(
-              asList("proto=https", "host=example.com", "host=github.com:1234"),
-              "example.com",
-              null));
-    }
+        // multiple headers
+        arguments(
+            asList("proto=https", "host=example.com", "host=github.com:1234"),
+            "example.com",
+            null));
   }
 
   @ParameterizedTest
-  @ArgumentsSource(HostArgs.class)
+  @MethodSource("hostArgs")
   @SuppressWarnings("MockitoDoSetup")
   void shouldParseForwardedHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
@@ -97,7 +91,7 @@ class ForwardedHostAddressAndPortExtractorTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(HostArgs.class)
+  @MethodSource("hostArgs")
   @SuppressWarnings("MockitoDoSetup")
   void shouldParsePseudoAuthority(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
@@ -113,7 +107,7 @@ class ForwardedHostAddressAndPortExtractorTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(HostArgs.class)
+  @MethodSource("hostArgs")
   @SuppressWarnings("MockitoDoSetup")
   void shouldParseHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
@@ -129,24 +123,20 @@ class ForwardedHostAddressAndPortExtractorTest {
     assertThat(sink.getPort()).isEqualTo(expectedPort);
   }
 
-  static final class HostArgs implements ArgumentsProvider {
+  private static Stream<Arguments> hostArgs() {
+    return Stream.of(
+        // empty/invalid headers
+        arguments(singletonList(""), null, null),
+        arguments(singletonList("\""), null, null),
+        arguments(singletonList("\"\""), null, null),
+        arguments(singletonList("example.com"), "example.com", null),
+        arguments(singletonList("example.com:port"), "example.com", null),
+        arguments(singletonList("example.com:42"), "example.com", 42),
+        arguments(singletonList("\"example.com\""), "example.com", null),
+        arguments(singletonList("\"example.com:port\""), "example.com", null),
+        arguments(singletonList("\"example.com:42\""), "example.com", 42),
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
-      return Stream.of(
-          // empty/invalid headers
-          arguments(singletonList(""), null, null),
-          arguments(singletonList("\""), null, null),
-          arguments(singletonList("\"\""), null, null),
-          arguments(singletonList("example.com"), "example.com", null),
-          arguments(singletonList("example.com:port"), "example.com", null),
-          arguments(singletonList("example.com:42"), "example.com", 42),
-          arguments(singletonList("\"example.com\""), "example.com", null),
-          arguments(singletonList("\"example.com:port\""), "example.com", null),
-          arguments(singletonList("\"example.com:42\""), "example.com", 42),
-
-          // multiple headers
-          arguments(asList("example.com", "github.com:1234"), "example.com", null));
-    }
+        // multiple headers
+        arguments(asList("example.com", "github.com:1234"), "example.com", null));
   }
 }

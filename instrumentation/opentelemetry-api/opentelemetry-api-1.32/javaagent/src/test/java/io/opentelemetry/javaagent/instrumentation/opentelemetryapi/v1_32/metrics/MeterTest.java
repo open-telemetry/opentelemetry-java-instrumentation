@@ -77,6 +77,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->
@@ -112,6 +113,7 @@ class MeterTest {
                         .hasInstrumentationScope(
                             InstrumentationScopeInfo.builder(instrumentationName)
                                 .setVersion("1.2.3")
+                                .setSchemaUrl("http://schema.org")
                                 .build())
                         .hasHistogramSatisfying(
                             histogram ->

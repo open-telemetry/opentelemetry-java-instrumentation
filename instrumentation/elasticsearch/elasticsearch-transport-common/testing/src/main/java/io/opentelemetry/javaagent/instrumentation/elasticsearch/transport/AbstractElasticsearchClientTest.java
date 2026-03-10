@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractElasticsearchClientTest {
 
-  protected static final long TIMEOUT = TimeUnit.SECONDS.toMillis(10);
+  protected static final long TIMEOUT = SECONDS.toMillis(10);
 
   protected static final AttributeKey<String> ELASTICSEARCH_ACTION =
       AttributeKey.stringKey("elasticsearch.action");
@@ -43,6 +44,9 @@ abstract class AbstractElasticsearchClientTest {
       AttributeKey.stringKey("elasticsearch.id");
   protected static final AttributeKey<Long> ELASTICSEARCH_VERSION =
       AttributeKey.longKey("elasticsearch.version");
+
+  protected static final String EXPERIMENTAL_FLAG =
+      "otel.instrumentation.elasticsearch.experimental-span-attributes";
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -96,6 +100,20 @@ abstract class AbstractElasticsearchClientTest {
     return result.get();
   }
 
+  protected static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return null;
+    }
+    return value;
+  }
+
+  protected static Long experimental(long value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return null;
+    }
+    return value;
+  }
+
   static class Result<RESPONSE> {
     private final CountDownLatch latch = new CountDownLatch(1);
     private RESPONSE response;
@@ -113,7 +131,7 @@ abstract class AbstractElasticsearchClientTest {
 
     RESPONSE get() {
       try {
-        latch.await(1, TimeUnit.MINUTES);
+        latch.await(1, MINUTES);
       } catch (InterruptedException exception) {
         Thread.currentThread().interrupt();
       }

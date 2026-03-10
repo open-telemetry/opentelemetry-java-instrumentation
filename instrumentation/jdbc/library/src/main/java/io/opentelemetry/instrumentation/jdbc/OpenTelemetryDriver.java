@@ -23,7 +23,10 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -60,6 +63,35 @@ public final class OpenTelemetryDriver implements Driver {
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
+
+  @SuppressWarnings("deprecation") // using deprecated config property
+  private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
+    Boolean enabled =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+            .get("sqlcommenter/development")
+            .getBoolean("enabled");
+    if (enabled == null) {
+      enabled =
+          ConfigPropertiesUtil.getBoolean(
+              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled");
+    }
+    if (enabled == null) {
+      enabled =
+          DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
+              .get("database")
+              .get("sqlcommenter/development")
+              .getBoolean("enabled");
+    }
+    if (enabled == null) {
+      enabled =
+          ConfigPropertiesUtil.getBoolean(
+              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled");
+    }
+    if (enabled == null) {
+      enabled = false; // default value
+    }
+    return SqlCommenter.builder().setEnabled(enabled).build();
+  }
 
   static {
     try {
@@ -206,7 +238,7 @@ public final class OpenTelemetryDriver implements Driver {
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
-      if (driver instanceof io.opentelemetry.instrumentation.jdbc.OpenTelemetryDriver) {
+      if (driver instanceof OpenTelemetryDriver) {
         OpenTelemetryDriver openTelemetryDriver = (OpenTelemetryDriver) driver;
         openTelemetryDriver.setOpenTelemetry(openTelemetry);
       }
@@ -244,7 +276,18 @@ public final class OpenTelemetryDriver implements Driver {
 
     Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter);
+
+    boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters(openTelemetry);
+    Instrumenter<DbRequest, Void> transactionInstrumenter =
+        JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
+
+    return OpenTelemetryConnection.create(
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        getSqlCommenter(openTelemetry));
   }
 
   @Override

@@ -6,8 +6,25 @@
 package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.jsp.JspSpanAssertions.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -15,13 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
@@ -35,19 +45,16 @@ import org.apache.jasper.JasperException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static JspSpanAssertions spanAsserts;
 
@@ -103,7 +110,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   }
 
   @ParameterizedTest(name = "GET {0}")
-  @ArgumentsSource(NonErroneousArgs.class)
+  @MethodSource("nonErroneousArgs")
   void testNonErroneousGet(
       String testName, String jspFileName, String jspClassName, String jspClassNamePrefix) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
@@ -137,14 +144,11 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .build())));
   }
 
-  static class NonErroneousArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("no java jsp", "/nojava.jsp", "nojava_jsp", ""),
-          Arguments.of("basic loop jsp", "/common/loop.jsp", "loop_jsp", "common."),
-          Arguments.of("invalid HTML markup", "/invalidMarkup.jsp", "invalidMarkup_jsp", ""));
-    }
+  private static Stream<Arguments> nonErroneousArgs() {
+    return Stream.of(
+        Arguments.of("no java jsp", "/nojava.jsp", "nojava_jsp", ""),
+        Arguments.of("basic loop jsp", "/common/loop.jsp", "loop_jsp", "common."),
+        Arguments.of("invalid HTML markup", "/invalidMarkup.jsp", "invalidMarkup_jsp", ""));
   }
 
   @Test
@@ -163,23 +167,19 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(UrlAttributes.URL_QUERY, queryString),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(URL_PATH, route),
+                            equalTo(URL_QUERY, queryString),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                            equalTo(HTTP_ROUTE, route),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     spanAsserts.assertCompileSpan(
                         span,
@@ -236,7 +236,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   }
 
   @ParameterizedTest(name = "GET jsp with {0}")
-  @ArgumentsSource(ErroneousRuntimeErrorsArgs.class)
+  @MethodSource("erroneousRuntimeErrorsArgs")
   void testErroneousRuntimeErrorsGet(
       String testName,
       String jspFileName,
@@ -277,25 +277,22 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .build())));
   }
 
-  static class ErroneousRuntimeErrorsArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of(
-              "java runtime error",
-              "/runtimeError.jsp",
-              "runtimeError_jsp",
-              ArithmeticException.class,
-              false),
-          Arguments.of(
-              "invalid write",
-              "/invalidWrite.jsp",
-              "invalidWrite_jsp",
-              IndexOutOfBoundsException.class,
-              true),
-          Arguments.of(
-              "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
-    }
+  private static Stream<Arguments> erroneousRuntimeErrorsArgs() {
+    return Stream.of(
+        Arguments.of(
+            "java runtime error",
+            "/runtimeError.jsp",
+            "runtimeError_jsp",
+            ArithmeticException.class,
+            false),
+        Arguments.of(
+            "invalid write",
+            "/invalidWrite.jsp",
+            "invalidWrite_jsp",
+            IndexOutOfBoundsException.class,
+            true),
+        Arguments.of(
+            "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
   }
 
   @Test
@@ -397,7 +394,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(CompileErrorsArgs.class)
+  @MethodSource("compileErrorsArgs")
   void testCompileErrorShouldNotProduceRenderTracesAndSpans(
       String jspFileName, String jspClassName, String jspClassNamePrefix) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
@@ -425,31 +422,29 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
+                                            EXCEPTION_TYPE,
                                             JasperException.class.getCanonicalName()),
                                         satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                            EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class)),
                                         satisfies(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
+                                            EXCEPTION_MESSAGE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("jsp.classFQCN"),
-                                "org.apache.jsp." + jspClassNamePrefix + jspClassName),
+                                experimental(
+                                    "org.apache.jsp." + jspClassNamePrefix + jspClassName)),
                             equalTo(
                                 stringKey("jsp.compiler"),
-                                "org.apache.jasper.compiler.JDTCompiler"))));
+                                experimental("org.apache.jasper.compiler.JDTCompiler")))));
   }
 
-  static class CompileErrorsArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("/compileError.jsp", "compileError_jsp", ""),
-          Arguments.of(
-              "/forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
-    }
+  private static Stream<Arguments> compileErrorsArgs() {
+    return Stream.of(
+        Arguments.of("/compileError.jsp", "compileError_jsp", ""),
+        Arguments.of(
+            "/forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
   }
 
   @ParameterizedTest
@@ -468,21 +463,17 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, "/" + getContextPath() + staticFile),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)))));
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(URL_PATH, "/" + getContextPath() + staticFile),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                            equalTo(HTTP_ROUTE, route),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 }

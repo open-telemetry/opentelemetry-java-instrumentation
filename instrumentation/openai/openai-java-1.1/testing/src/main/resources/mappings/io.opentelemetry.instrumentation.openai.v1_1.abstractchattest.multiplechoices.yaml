@@ -1,0 +1,93 @@
+---
+id: 70f4798c-823c-4c9e-a4a3-e24a6b9127cd
+name: chat_completions
+request:
+  url: /chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o-mini",
+        "n" : 2
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |
+    {
+      "id": "chatcmpl-BpWbKuQyOoSly6MBvlpKJHistgsL8",
+      "object": "chat.completion",
+      "created": 1751619746,
+      "model": "gpt-4o-mini-2024-07-18",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "South Atlantic Ocean.",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        },
+        {
+          "index": 1,
+          "message": {
+            "role": "assistant",
+            "content": "Atlantic Ocean.",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 7,
+        "total_tokens": 29,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "service_tier": "default",
+      "system_fingerprint": "fp_34a54ae93c"
+    }
+  headers:
+    Date: "Fri, 04 Jul 2025 09:02:26 GMT"
+    Content-Type: application/json
+    access-control-expose-headers: X-Request-ID
+    openai-organization: test_organization
+    openai-processing-ms: "343"
+    openai-version: 2020-10-01
+    x-envoy-upstream-service-time: "413"
+    x-ratelimit-limit-requests: "5000"
+    x-ratelimit-limit-tokens: "4000000"
+    x-ratelimit-remaining-requests: "4999"
+    x-ratelimit-remaining-tokens: "3999981"
+    x-ratelimit-reset-requests: 12ms
+    x-ratelimit-reset-tokens: 0s
+    x-request-id: req_7cb43a6e44148ccef5cf49e3affa5d99
+    strict-transport-security: max-age=31536000; includeSubDomains; preload
+    cf-cache-status: DYNAMIC
+    Set-Cookie: test_set_cookie
+    X-Content-Type-Options: nosniff
+    Server: cloudflare
+    CF-RAY: 959d71936f0df5fd-NRT
+    alt-svc: h3=":443"; ma=86400
+uuid: 70f4798c-823c-4c9e-a4a3-e24a6b9127cd
+persistent: true
+insertionIndex: 8

@@ -5,22 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import static java.util.Collections.emptyIterator;
+import static java.util.stream.Collectors.toList;
+
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.HttpString;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
-enum UndertowExchangeGetter implements ExtendedTextMapGetter<HttpServerExchange> {
+enum UndertowExchangeGetter implements TextMapGetter<HttpServerExchange> {
   INSTANCE;
 
   @Override
   public Iterable<String> keys(HttpServerExchange carrier) {
     return carrier.getRequestHeaders().getHeaderNames().stream()
         .map(HttpString::toString)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
@@ -31,6 +32,6 @@ enum UndertowExchangeGetter implements ExtendedTextMapGetter<HttpServerExchange>
   @Override
   public Iterator<String> getAll(HttpServerExchange carrier, String key) {
     HeaderValues headerValues = carrier.getRequestHeaders().get(key);
-    return headerValues != null ? headerValues.iterator() : Collections.emptyIterator();
+    return headerValues != null ? headerValues.iterator() : emptyIterator();
   }
 }

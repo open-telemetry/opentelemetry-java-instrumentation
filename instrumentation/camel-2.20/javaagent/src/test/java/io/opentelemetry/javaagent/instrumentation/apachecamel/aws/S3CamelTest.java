@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 class S3CamelTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger(S3CamelTest.class);
 
@@ -37,7 +37,7 @@ class S3CamelTest {
   }
 
   @Test
-  public void camelS3ProducerToCamelSqsConsumer() {
+  void camelS3ProducerToCamelSqsConsumer() {
     String queueName = "s3SqsCamelTest";
     String bucketName = "bucket-test-s3-sqs-camel";
 

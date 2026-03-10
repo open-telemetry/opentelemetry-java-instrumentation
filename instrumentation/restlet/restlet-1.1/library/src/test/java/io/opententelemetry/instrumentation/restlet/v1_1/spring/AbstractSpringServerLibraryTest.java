@@ -35,7 +35,7 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
             .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build();
 
-    Filter tracingFilter = telemetry.newFilter(path);
+    Filter tracingFilter = telemetry.createFilter(path);
     Filter statusFilter = new StatusFilter(component.getContext(), false, null, null);
 
     tracingFilter.setNext(statusFilter);

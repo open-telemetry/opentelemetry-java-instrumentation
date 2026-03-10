@@ -70,6 +70,7 @@ public final class HelperResources {
    * Returns a {@link URL} that can be used to retrieve the content of the resource at {@code path},
    * or {@code null} if no resource could be found at {@code path}.
    */
+  @Nullable
   public static URL loadOne(ClassLoader classLoader, String path) {
     List<URL> resources = loadAll(classLoader, path);
     return resources.isEmpty() ? null : resources.get(0);

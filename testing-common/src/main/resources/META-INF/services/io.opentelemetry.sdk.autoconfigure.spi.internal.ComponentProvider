@@ -1,0 +1,4 @@
+io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider
+

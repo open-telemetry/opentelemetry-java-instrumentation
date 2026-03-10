@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -39,8 +40,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 public abstract class AbstractVaadinTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
@@ -50,7 +51,7 @@ public abstract class AbstractVaadinTest
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private BrowserWebDriverContainer<?> browser;
+  private BrowserWebDriverContainer browser;
 
   @SpringBootApplication
   @EnableVaadin("test.vaadin")
@@ -75,8 +76,7 @@ public abstract class AbstractVaadinTest
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer<>()
-            .withCapabilities(new ChromeOptions())
+        new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
 
@@ -170,7 +170,11 @@ public abstract class AbstractVaadinTest
                         assertThat(spans.get(spans.size() - 1))
                             .hasName("EventRpcHandler.handle/click")
                             .hasParent(spans.get(spans.size() - 2))
-                            .hasKind(SpanKind.INTERNAL);
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionAssertions(
+                                    "com.vaadin.flow.server.communication.rpc.EventRpcHandler",
+                                    "handle"));
                       });
             });
   }

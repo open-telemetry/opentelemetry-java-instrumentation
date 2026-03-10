@@ -25,6 +25,6 @@ class KinesisClientTest extends AbstractKinesisClientTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .build()
-            .newRequestHandler());
+            .createRequestHandler());
   }
 }

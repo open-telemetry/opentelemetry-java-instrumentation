@@ -16,7 +16,9 @@ import com.netflix.hystrix.HystrixInvokableInfo;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
@@ -48,28 +50,30 @@ public class HystrixCommandInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return(readOnly = false) Observable<?> result,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Observable<?> result,
+        @Advice.Thrown @Nullable Throwable throwable) {
 
       HystrixRequest request = HystrixRequest.create(command, "execute");
-      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 
   @SuppressWarnings("unused")
   public static class FallbackAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    public static Observable<?> stopSpan(
         @Advice.This HystrixInvokableInfo<?> command,
-        @Advice.Return(readOnly = false) Observable<?> result,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Return @Nullable Observable<?> result,
+        @Advice.Thrown @Nullable Throwable throwable) {
 
       HystrixRequest request = HystrixRequest.create(command, "fallback");
-      result = Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
+      return Observable.create(new TracedOnSubscribe<>(result, instrumenter(), request));
     }
   }
 }

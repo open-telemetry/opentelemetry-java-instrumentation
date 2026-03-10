@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
-
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -23,47 +20,60 @@ import javax.annotation.Nullable;
  * OpenTelemetry specification.
  */
 public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
+    extends DbClientAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Get the raw SQL statement. The value returned by this method is later sanitized by the {@link
-   * SqlClientAttributesExtractor} before being set as span attribute.
-   *
-   * @deprecated Use {@link #getRawQueryText(Object)} instead.
+   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
    */
-  @Deprecated
+  @Override
   @Nullable
-  default String getRawStatement(REQUEST request) {
+  default String getDbOperationName(REQUEST request) {
     return null;
   }
 
   /**
-   * Get the raw SQL query text. The value returned by this method is later sanitized by the {@link
-   * SqlClientAttributesExtractor} before being set as span attribute.
-   *
-   * @deprecated Use {@link #getRawQueryTexts(Object)} instead.
+   * SqlClientAttributesExtractor will try to populate db.query.text based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the query text.
    */
-  @Deprecated
+  @Override
   @Nullable
-  default String getRawQueryText(REQUEST request) {
-    return getRawStatement(request);
+  default String getDbQueryText(REQUEST request) {
+    return null;
   }
 
   /**
-   * Get the raw SQL query texts. The values returned by this method is later sanitized by the
+   * SqlClientAttributesExtractor will try to populate db.query.summary based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the query summary.
+   */
+  @Override
+  @Nullable
+  default String getDbQuerySummary(REQUEST request) {
+    return null;
+  }
+
+  /** Returns the SQL dialect used by the database. */
+  SqlDialect getSqlDialect(REQUEST request);
+
+  /**
+   * Get the raw SQL query texts. The values returned by this method are later sanitized by the
    * {@link SqlClientAttributesExtractor} before being set as span attribute.
    *
    * <p>If {@code request} is not a batch query, then this method should return a collection with a
    * single element.
    */
-  // TODO: make this required to implement
-  default Collection<String> getRawQueryTexts(REQUEST request) {
-    String rawQueryText = getRawQueryText(request);
-    return rawQueryText == null ? emptySet() : singleton(rawQueryText);
-  }
+  Collection<String> getRawQueryTexts(REQUEST request);
 
+  /**
+   * Returns whether the query is parameterized. Prepared statements are always considered
+   * parameterized even if no parameters are bound. By using a parameterized query the user is
+   * giving a strong signal that any sensitive data will be passed as parameter values, and so the
+   * query does not need to be sanitized. See <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
+   * of db.query.text</a>.
+   */
   // TODO: make this required to implement
-  default Long getBatchSize(REQUEST request) {
-    return null;
+  default boolean isParameterizedQuery(REQUEST request) {
+    return false;
   }
 }

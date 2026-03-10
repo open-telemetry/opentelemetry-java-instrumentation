@@ -25,9 +25,12 @@ public final class Experimental {
   private static volatile BiConsumer<ArmeriaServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
-  @Nullable
-  private static volatile BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService;
-
+  /**
+   * Sets whether experimental HTTP client telemetry should be emitted.
+   *
+   * @param builder the client telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       ArmeriaClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalClientTelemetry != null) {
@@ -35,17 +38,16 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets whether experimental HTTP server telemetry should be emitted.
+   *
+   * @param builder the server telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       ArmeriaServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalServerTelemetry != null) {
       setEmitExperimentalServerTelemetry.accept(builder, emitExperimentalTelemetry);
-    }
-  }
-
-  public static void setClientPeerService(
-      ArmeriaClientTelemetryBuilder builder, String peerService) {
-    if (setClientPeerService != null) {
-      setClientPeerService.accept(builder, peerService);
     }
   }
 
@@ -57,11 +59,6 @@ public final class Experimental {
   public static void internalSetEmitExperimentalServerTelemetry(
       BiConsumer<ArmeriaServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
-  }
-
-  public static void internalSetClientPeerService(
-      BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService) {
-    Experimental.setClientPeerService = setClientPeerService;
   }
 
   private Experimental() {}

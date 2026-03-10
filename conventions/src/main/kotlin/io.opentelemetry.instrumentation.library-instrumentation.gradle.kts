@@ -10,3 +10,11 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }
+
+testing {
+  suites.withType(JvmTestSuite::class).configureEach {
+    dependencies {
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+    }
+  }
+}

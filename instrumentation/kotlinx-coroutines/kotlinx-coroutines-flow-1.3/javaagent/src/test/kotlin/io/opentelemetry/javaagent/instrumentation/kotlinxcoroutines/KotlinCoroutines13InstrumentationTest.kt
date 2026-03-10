@@ -27,13 +27,11 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
-import org.junit.jupiter.params.provider.ArgumentsProvider
-import org.junit.jupiter.params.provider.ArgumentsSource
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.Executors
 import java.util.stream.Stream
 
@@ -58,7 +56,7 @@ class KotlinCoroutines13InstrumentationTest {
   val tracer = testing.openTelemetry.getTracer("test")
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `traced across channels`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
       val producer = produce {
@@ -110,7 +108,7 @@ class KotlinCoroutines13InstrumentationTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `traced mono with context propagation operator`(dispatcherWrapper: DispatcherWrapper) {
     runTest(dispatcherWrapper) {
       val currentContext = Context.current()
@@ -145,7 +143,7 @@ class KotlinCoroutines13InstrumentationTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `traced flux`(dispatcherWrapper: DispatcherWrapper) {
     runTest(dispatcherWrapper) {
       flux(dispatcherWrapper.dispatcher) {
@@ -198,17 +196,15 @@ class KotlinCoroutines13InstrumentationTest {
     }
   }
 
-  class DispatchersSource : ArgumentsProvider {
-    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = Stream.of(
-      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-      // Closeable arguments with no way to avoid it.
-      arguments(DispatcherWrapper(Dispatchers.Default)),
-      arguments(DispatcherWrapper(Dispatchers.IO)),
-      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-    )
-  }
+  private fun dispatchersSourceArguments(): Stream<Arguments> = Stream.of(
+    // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+    // Closeable arguments with no way to avoid it.
+    arguments(DispatcherWrapper(Dispatchers.Default)),
+    arguments(DispatcherWrapper(Dispatchers.IO)),
+    arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+    arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+    arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+  )
 
   class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {
     override fun toString(): String = dispatcher.toString()

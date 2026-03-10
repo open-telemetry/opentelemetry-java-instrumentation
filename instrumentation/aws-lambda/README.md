@@ -7,5 +7,8 @@ We provide two packages for instrumenting AWS lambda functions.
   `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a
   Spring Boot application on Lambda.
 
-- [aws-lambda-events-2.2](./aws-lambda-events-2.2/library) provides full instrumentation of the Lambda library, including standard
-  and custom event types, from `aws-lambda-java-events` 2.2+.
+- [aws-lambda-events-2.2](./aws-lambda-events-2.2/library) (Library instrumentation is deprecated) provides instrumentation of the Lambda library,
+  including standard and custom event types, from `aws-lambda-java-events` 2.2+.
+
+- [aws-lambda-events-3.11](./aws-lambda-events-2.2/library) provides instrumentation of the Lambda library, including standard and custom event
+  types, from `aws-lambda-java-events` 3.11+.

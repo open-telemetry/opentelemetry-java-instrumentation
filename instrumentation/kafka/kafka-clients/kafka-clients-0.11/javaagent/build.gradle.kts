@@ -21,7 +21,7 @@ dependencies {
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
-  testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
 }
 
@@ -30,12 +30,12 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testPropagationDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("KafkaClientPropagationDisabledTest")
     }
@@ -44,10 +44,26 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     include("**/KafkaClientSuppressReceiveSpansTest.*")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
   test {
@@ -59,7 +75,15 @@ tasks {
   }
 
   check {
-    dependsOn(testPropagationDisabled)
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testPropagationDisabled, testReceiveSpansDisabled, testExperimental)
+  }
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// kafka 4.1 requires java 11
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }

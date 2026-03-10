@@ -23,7 +23,7 @@ public abstract class AbstractSpringServerTest extends AbstractRestletServerTest
   protected void setupServer(Component component) {
     ApplicationContext context = new ClassPathXmlApplicationContext(getConfigurationName());
     router = (Router) context.getBean("testRouter");
-    Server server = (Server) context.getBean("testServer", new Object[] {"http", port});
+    Server server = (Server) context.getBean("testServer", "http", port);
     component.getServers().add(server);
   }
 

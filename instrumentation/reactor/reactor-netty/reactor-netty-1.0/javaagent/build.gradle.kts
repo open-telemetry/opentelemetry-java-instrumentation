@@ -45,6 +45,8 @@ dependencies {
 
 tasks {
   val testConnectionSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("ReactorNettyConnectionSpanTest")
       includeTestsMatching("ReactorNettyClientSslTest")
@@ -56,6 +58,19 @@ tasks {
   }
 
   test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
+    filter {
+      excludeTestsMatching("ReactorNettyConnectionSpanTest")
+      excludeTestsMatching("ReactorNettyClientSslTest")
+    }
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")
@@ -63,6 +78,6 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }

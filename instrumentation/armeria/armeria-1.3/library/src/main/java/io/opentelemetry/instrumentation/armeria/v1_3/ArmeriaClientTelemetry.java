@@ -15,13 +15,12 @@ import java.util.function.Function;
 /** Entrypoint for instrumenting Armeria clients. */
 public final class ArmeriaClientTelemetry {
 
-  /**
-   * Returns a new {@link ArmeriaClientTelemetry} configured with the given {@link OpenTelemetry}.
-   */
+  /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ArmeriaClientTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
+  /** Returns a builder configured with the given {@link OpenTelemetry} instance. */
   public static ArmeriaClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ArmeriaClientTelemetryBuilder(openTelemetry);
   }
@@ -32,11 +31,8 @@ public final class ArmeriaClientTelemetry {
     this.instrumenter = instrumenter;
   }
 
-  /**
-   * Returns a new {@link HttpClient} decorator for use with methods like {@link
-   * com.linecorp.armeria.client.ClientBuilder#decorator(Function)}.
-   */
-  public Function<? super HttpClient, ? extends HttpClient> newDecorator() {
+  /** Returns a decorator for instrumenting Armeria clients. */
+  public Function<HttpClient, HttpClient> createDecorator() {
     return client -> new OpenTelemetryClient(client, instrumenter);
   }
 }

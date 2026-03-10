@@ -93,7 +93,6 @@ public final class ClasspathUtils {
     jarOutputStream.closeEntry();
   }
 
-  // Moved this to a java class because groovy was adding a hard ref to classLoader
   public static boolean isClassLoaded(String className, ClassLoader classLoader) {
     try {
       Method findLoadedClassMethod =

@@ -85,6 +85,29 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
+}
+
+if (findProperty("testLatestDeps") as Boolean) {
+  configurations.named("latestDepTestRuntimeClasspath") {
+    resolutionStrategy {
+      eachDependency {
+        // finatra 24.2.0 doesn't work with jackson 2.20.0
+        if (requested.group.startsWith("com.fasterxml.jackson")) {
+          useVersion("2.19.2")
+        }
+      }
+    }
   }
 }

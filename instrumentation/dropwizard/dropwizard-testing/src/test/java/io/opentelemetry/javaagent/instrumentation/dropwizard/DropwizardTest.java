@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -129,10 +128,9 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
   @Override
   protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
-    span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
+      SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    return span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
         .hasKind(INTERNAL);
-    return span;
   }
 
   public static class TestApp extends Application<Configuration> {

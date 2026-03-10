@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
+import static java.util.Arrays.asList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.Arrays;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RestletInstrumentationModule extends InstrumentationModule {
+public class RestletInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public RestletInstrumentationModule() {
     super("restlet", "restlet-2.0");
@@ -20,6 +23,11 @@ public class RestletInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(new ServerInstrumentation(), new RouteInstrumentation());
+    return asList(new ServerInstrumentation(), new RouteInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

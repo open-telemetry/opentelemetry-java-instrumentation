@@ -14,6 +14,7 @@ import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -34,9 +35,10 @@ class GraphqlInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AddInstrumentationAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Instrumentation instrumentation) {
-      instrumentation = addInstrumentation(instrumentation);
+    public static Instrumentation onExit(@Advice.Return Instrumentation instrumentation) {
+      return addInstrumentation(instrumentation);
     }
   }
 }

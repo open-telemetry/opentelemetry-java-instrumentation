@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.service;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.FILTER_MAPPING_RESOLVER;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterConfig;
 import net.bytebuddy.asm.Advice;
@@ -20,7 +20,7 @@ public class JakartaServletFilterInitAdvice {
     if (filterConfig == null) {
       return;
     }
-    VirtualField.find(Filter.class, MappingResolver.Factory.class)
-        .set(filter, new JakartaServletFilterMappingResolverFactory(filterConfig));
+    FILTER_MAPPING_RESOLVER.set(
+        filter, new JakartaServletFilterMappingResolverFactory(filterConfig));
   }
 }

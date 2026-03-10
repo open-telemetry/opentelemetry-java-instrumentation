@@ -12,6 +12,10 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.NamedQuery;
 
+@SuppressWarnings({
+  "deprecation",
+  "removal"
+}) // GenericGenerator is deprecated for removal in hibernate 7
 @Entity
 @Table
 @NamedQuery(name = "TestNamedQuery", query = "from Value")

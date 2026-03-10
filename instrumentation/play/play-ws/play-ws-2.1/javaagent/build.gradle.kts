@@ -67,7 +67,17 @@ tasks {
     enabled = testLatestDeps
   }
 
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
   check {
     dependsOn(testing.suites)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

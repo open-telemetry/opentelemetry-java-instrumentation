@@ -1,7 +1,6 @@
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
-  id("otel.japicmp-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
@@ -24,5 +23,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-azure-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
+  implementation("io.opentelemetry.contrib:opentelemetry-samplers")
 }

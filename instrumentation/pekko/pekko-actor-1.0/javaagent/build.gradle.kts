@@ -42,3 +42,9 @@ if (findProperty("testLatestDeps") as Boolean) {
     }
   }
 }
+
+if (findProperty("denyUnsafe") as Boolean) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
+}

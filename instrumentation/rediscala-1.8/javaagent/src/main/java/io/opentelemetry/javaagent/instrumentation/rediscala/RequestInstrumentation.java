@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.RediscalaSingletons.instrumenter;
@@ -20,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -61,50 +61,67 @@ public class RequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) RedisCommand<?, ?> cmd,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, cmd)) {
-        return;
+      private AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, cmd);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(RedisCommand<?, ?> cmd) {
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, cmd)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, cmd);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void end(
+          Object action,
+          RedisCommand<?, ?> cmd,
+          Future<Object> responseFuture,
+          Throwable throwable) {
+        scope.close();
+
+        ExecutionContext ctx = null;
+        if (action instanceof ActorRequest) {
+          ctx = ((ActorRequest) action).executionContext();
+        } else if (action instanceof Request) {
+          ctx = ((Request) action).executionContext();
+        } else if (action instanceof BufferedRequest) {
+          ctx = ((BufferedRequest) action).executionContext();
+        } else if (action instanceof RoundRobinPoolRequest) {
+          ctx = ((RoundRobinPoolRequest) action).executionContext();
+        }
+
+        if (throwable != null) {
+          instrumenter().end(context, cmd, null, throwable);
+        } else {
+          responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
+        }
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?> cmd) {
+      return AdviceScope.start(cmd);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.This Object action,
         @Advice.Argument(0) RedisCommand<?, ?> cmd,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return(readOnly = false) Future<Object> responseFuture) {
-
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      ExecutionContext ctx = null;
-      if (action instanceof ActorRequest) {
-        ctx = ((ActorRequest) action).executionContext();
-      } else if (action instanceof Request) {
-        ctx = ((Request) action).executionContext();
-      } else if (action instanceof BufferedRequest) {
-        ctx = ((BufferedRequest) action).executionContext();
-      } else if (action instanceof RoundRobinPoolRequest) {
-        ctx = ((RoundRobinPoolRequest) action).executionContext();
-      }
-
-      if (throwable != null) {
-        instrumenter().end(context, cmd, null, throwable);
-      } else {
-        responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
+        @Advice.Enter @Nullable AdviceScope adviceScope,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return Future<Object> responseFuture) {
+      if (adviceScope != null) {
+        adviceScope.end(action, cmd, responseFuture, throwable);
       }
     }
   }

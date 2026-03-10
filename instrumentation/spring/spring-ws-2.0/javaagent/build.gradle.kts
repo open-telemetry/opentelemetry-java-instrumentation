@@ -1,6 +1,6 @@
 plugins {
-  id("org.unbroken-dome.xjc")
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -11,21 +11,6 @@ muzzle {
     // broken versions, jars don't contain classes
     skip("3.0.11.RELEASE", "3.1.0")
     assertInverse.set(true)
-  }
-}
-
-sourceSets {
-  test {
-    resources {
-      srcDirs("src/test/schema")
-    }
-  }
-}
-
-tasks {
-  named<Checkstyle>("checkstyleTest") {
-    // exclude generated web service classes
-    exclude("**/hello_web_service/**")
   }
 }
 
@@ -46,16 +31,33 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+  testImplementation("javax.activation:activation:1.1.1")
   testImplementation("com.google.guava:guava")
+  testImplementation(project(":instrumentation:spring:spring-ws-2.0:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }
 
 configurations.testRuntimeClasspath {

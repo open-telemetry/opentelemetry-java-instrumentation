@@ -12,6 +12,12 @@ import java.util.concurrent.CompletionStage;
 @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 public class TracedWithSpan {
 
+  public TracedWithSpan() {}
+
+  // used to verify that constructor with @WithSpan annotation doesn't break instrumentation
+  @io.opentelemetry.extension.annotations.WithSpan
+  public TracedWithSpan(String unused) {}
+
   @io.opentelemetry.extension.annotations.WithSpan
   public String otel() {
     return "hello!";

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -13,7 +14,6 @@ import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -67,6 +67,7 @@ class LogbackAppenderTest {
         "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
     properties.put(
         "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
 
     SpringApplication app =
         new SpringApplication(
@@ -81,7 +82,7 @@ class LogbackAppenderTest {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
     try {
-      LoggerFactory.getLogger("test").info("test log message");
+      LoggerFactory.getLogger("test").info("test log message: {}", "arg");
     } finally {
       MDC.clear();
     }
@@ -93,15 +94,16 @@ class LogbackAppenderTest {
             // be added a second time by LogbackAppenderApplicationListener
             logRecord -> {
               assertThat(logRecord.getInstrumentationScopeInfo().getName()).isEqualTo("test");
-              assertThat(logRecord.getBodyValue().asString()).contains("test log message");
+              assertThat(logRecord.getBodyValue().asString()).contains("test log message: arg");
 
               Attributes attributes = logRecord.getAttributes();
               // key1 and key2, the code attributes should not be present because they are enabled
               // in the logback.xml file but are disabled with a property
-              assertThat(attributes.size()).isEqualTo(2);
+              assertThat(attributes.size()).isEqualTo(3);
               assertThat(attributes.asMap())
-                  .containsEntry(AttributeKey.stringKey("key1"), "val1")
-                  .containsEntry(AttributeKey.stringKey("key2"), "val2");
+                  .containsEntry(stringKey("key1"), "val1")
+                  .containsEntry(stringKey("key2"), "val2")
+                  .containsEntry(stringKey("log.body.template"), "test log message: {}");
             });
 
     assertThat(listAppender.list)
@@ -109,7 +111,7 @@ class LogbackAppenderTest {
             event ->
                 assertThat(event)
                     .satisfies(
-                        e -> assertThat(e.getMessage()).isEqualTo("test log message"),
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message: {}"),
                         e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
   }
 

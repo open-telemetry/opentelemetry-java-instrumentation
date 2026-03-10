@@ -30,8 +30,8 @@ class Aws2SqsSuppressReceiveSpansDefaultPropagatorTest extends Aws2SqsSuppressRe
     configureSdkClient(builder);
     ClientOverrideConfiguration overrideConfiguration =
         ClientOverrideConfiguration.builder()
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
-            .addExecutionInterceptor(telemetry.newExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build();
     builder.overrideConfiguration(overrideConfiguration);
     SqsClient client = configureSqsClient(builder.build());

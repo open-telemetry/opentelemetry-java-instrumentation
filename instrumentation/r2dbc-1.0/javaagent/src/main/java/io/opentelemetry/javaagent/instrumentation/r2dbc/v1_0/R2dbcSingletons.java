@@ -6,26 +6,40 @@
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcNetAttributesGetter;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetryBuilder;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.Experimental;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.R2dbcSqlAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 
 public final class R2dbcSingletons {
 
-  private static final R2dbcTelemetry TELEMETRY =
-      R2dbcTelemetry.builder(GlobalOpenTelemetry.get())
-          .setStatementSanitizationEnabled(
-              AgentInstrumentationConfig.get()
-                  .getBoolean(
-                      "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
-                      AgentCommonConfig.get().isStatementSanitizationEnabled()))
-          .addAttributesExtractor(
-              PeerServiceAttributesExtractor.create(
-                  R2dbcNetAttributesGetter.INSTANCE,
-                  AgentCommonConfig.get().getPeerServiceResolver()))
-          .build();
+  private static final R2dbcTelemetry TELEMETRY;
+
+  static {
+    R2dbcTelemetryBuilder builder =
+        R2dbcTelemetry.builder(GlobalOpenTelemetry.get())
+            .setQuerySanitizationEnabled(
+                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
+                    .get("statement_sanitizer")
+                    .getBoolean("enabled", AgentCommonConfig.get().isQuerySanitizationEnabled()))
+            .addAttributesExtractor(
+                ServicePeerAttributesExtractor.create(
+                    R2dbcSqlAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()));
+    Experimental.setEnableSqlCommenter(
+        builder,
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "r2dbc")
+            .get("sqlcommenter/development")
+            .getBoolean("enabled", AgentCommonConfig.get().isSqlCommenterEnabled()));
+    Experimental.customizeSqlCommenter(
+        builder,
+        sqlCommenterBuilder ->
+            SqlCommenterCustomizerHolder.getCustomizer().customize(sqlCommenterBuilder));
+    TELEMETRY = builder.build();
+  }
 
   public static R2dbcTelemetry telemetry() {
     return TELEMETRY;

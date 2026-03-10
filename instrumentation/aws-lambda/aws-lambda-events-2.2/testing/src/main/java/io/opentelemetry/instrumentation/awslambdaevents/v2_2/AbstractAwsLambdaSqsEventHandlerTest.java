@@ -7,8 +7,13 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -16,11 +21,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   private static final String AWS_TRACE_HEADER =
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
 
-  protected abstract RequestHandler<SQSEvent, Void> handler();
+  protected abstract RequestHandler<SQSEvent, ?> handler();
 
   protected abstract InstrumentationExtension testing();
 
@@ -55,17 +56,17 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   @Test
   void sameSource() {
     SQSEvent.SQSMessage message1 = newMessage();
-    message1.setAttributes(Collections.singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
+    message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
     message1.setMessageId("message1");
     message1.setEventSource("queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
-    message2.setAttributes(Collections.emptyMap());
+    message2.setAttributes(emptyMap());
     message2.setMessageId("message2");
     message2.setEventSource("queue1");
 
     SQSEvent event = new SQSEvent();
-    event.setRecords(Arrays.asList(message1, message2));
+    event.setRecords(asList(message1, message2));
 
     handler().handleRequest(event, context);
 
@@ -77,16 +78,13 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                                equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
                         span.hasName("queue1 process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                        .AWS_SQS),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
                                 links ->
@@ -104,17 +102,17 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   @Test
   void differentSource() {
     SQSEvent.SQSMessage message1 = newMessage();
-    message1.setAttributes(Collections.singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
+    message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
     message1.setMessageId("message1");
     message1.setEventSource("queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
-    message2.setAttributes(Collections.emptyMap());
+    message2.setAttributes(emptyMap());
     message2.setMessageId("message2");
     message2.setEventSource("queue2");
 
     SQSEvent event = new SQSEvent();
-    event.setRecords(Arrays.asList(message1, message2));
+    event.setRecords(asList(message1, message2));
 
     handler().handleRequest(event, context);
 
@@ -126,16 +124,13 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                                equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
                         span.hasName("multiple_sources process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                        .AWS_SQS),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
                                 links ->

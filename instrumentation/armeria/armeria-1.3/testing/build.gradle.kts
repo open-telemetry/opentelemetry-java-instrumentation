@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("com.linecorp.armeria:armeria:1.3.0")
   api("com.linecorp.armeria:armeria-junit4:1.3.0")

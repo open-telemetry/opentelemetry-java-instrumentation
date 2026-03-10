@@ -5,12 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkPojo;
 import software.amazon.awssdk.http.ContentStreamProvider;
@@ -23,7 +27,6 @@ class Serializer {
 
   @Nullable
   String serialize(Object target) {
-
     if (target == null) {
       return null;
     }
@@ -35,7 +38,18 @@ class Serializer {
       return serialize((Collection<?>) target);
     }
     if (target instanceof Map) {
-      return serialize(((Map<?, ?>) target).keySet());
+      return serialize(
+          ((Map<?, ?>) target).entrySet(),
+          entry -> {
+            String value = serialize(entry.getValue());
+            if (value == null) {
+              value =
+                  entry.getValue() instanceof Collection || entry.getValue() instanceof Map
+                      ? "[]"
+                      : "{}";
+            }
+            return entry.getKey().toString() + ":" + value;
+          });
     }
     // simple type
     return target.toString();
@@ -62,7 +76,15 @@ class Serializer {
   }
 
   private String serialize(Collection<?> collection) {
-    String serialized = collection.stream().map(this::serialize).collect(Collectors.joining(","));
+    return serialize(collection, this::serialize);
+  }
+
+  private static <T> String serialize(Collection<T> collection, Function<T, String> serializer) {
+    String serialized = collection.stream().map(serializer).collect(joining(","));
     return (StringUtils.isEmpty(serialized) ? null : "[" + serialized + "]");
+  }
+
+  List<String> serializeCollection(Collection<?> collection) {
+    return collection.stream().map(this::serialize).collect(toList());
   }
 }

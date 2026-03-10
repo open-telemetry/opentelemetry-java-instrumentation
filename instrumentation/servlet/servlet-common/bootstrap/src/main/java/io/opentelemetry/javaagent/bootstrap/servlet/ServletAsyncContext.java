@@ -19,6 +19,7 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
   private boolean isAsyncListenerAttached;
   private Throwable throwable;
   private Object response;
+  private Context context;
 
   public static Context init(Context context) {
     if (context.get(CONTEXT_KEY) != null) {
@@ -44,12 +45,19 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
     }
   }
 
-  public static Throwable getAsyncException(@Nullable Context context) {
+  public static Throwable getAsyncException(Context context, @Nullable Throwable error) {
+    Throwable result = null;
     ServletAsyncContext servletAsyncContext = get(context);
-    return servletAsyncContext != null ? servletAsyncContext.throwable : null;
+    if (servletAsyncContext != null) {
+      result = servletAsyncContext.throwable;
+      // clear the stored exception after reading it
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16129
+      servletAsyncContext.throwable = null;
+    }
+    return error != null ? error : result;
   }
 
-  public static void recordAsyncException(@Nullable Context context, Throwable throwable) {
+  public static void recordAsyncException(Context context, Throwable throwable) {
     ServletAsyncContext servletAsyncContext = get(context);
     if (servletAsyncContext != null) {
       servletAsyncContext.throwable = throwable;
@@ -61,11 +69,20 @@ public class ServletAsyncContext implements ImplicitContextKeyed {
     return servletAsyncContext != null ? servletAsyncContext.response : null;
   }
 
-  public static void setAsyncListenerResponse(@Nullable Context context, Object response) {
+  public static void setAsyncListenerResponse(Context context, Object response) {
     ServletAsyncContext servletAsyncContext = get(context);
     if (servletAsyncContext != null) {
       servletAsyncContext.response = response;
+      servletAsyncContext.context = context;
     }
+  }
+
+  public static Context getAsyncListenerContext(Context context) {
+    ServletAsyncContext servletAsyncContext = get(context);
+    if (servletAsyncContext != null) {
+      return servletAsyncContext.context;
+    }
+    return null;
   }
 
   @Override

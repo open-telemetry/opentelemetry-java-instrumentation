@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -25,10 +27,8 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.jms.Connection;
@@ -57,15 +57,13 @@ import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public class Jms2InstrumentationTest {
+class Jms2InstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -90,12 +88,10 @@ public class Jms2InstrumentationTest {
     config.setSecurityEnabled(false);
     config.setPersistenceEnabled(false);
     config.setQueueConfigurations(
-        Collections.singletonList(
-            new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
+        singletonList(new CoreQueueConfiguration("someQueue", "someQueue", null, true)));
     config.setAcceptorConfigurations(
         new HashSet<>(
-            Collections.singletonList(
-                new TransportConfiguration(InVMAcceptorFactory.class.getName()))));
+            singletonList(new TransportConfiguration(InVMAcceptorFactory.class.getName()))));
 
     server = HornetQServers.newHornetQServer(config);
     server.start();
@@ -136,7 +132,7 @@ public class Jms2InstrumentationTest {
     }
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
+  @MethodSource("destinationArguments")
   @ParameterizedTest
   void testMessageConsumer(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
@@ -196,7 +192,7 @@ public class Jms2InstrumentationTest {
                             messagingTempDestination(isTemporary))));
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
+  @MethodSource("destinationArguments")
   @ParameterizedTest
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
@@ -221,7 +217,7 @@ public class Jms2InstrumentationTest {
     testing.runWithSpan("producer parent", () -> producer.send(destination, sentMessage));
 
     // then
-    TextMessage receivedMessage = receivedMessageFuture.get(10, TimeUnit.SECONDS);
+    TextMessage receivedMessage = receivedMessageFuture.get(10, SECONDS);
     assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
 
     String messageId = receivedMessage.getJMSMessageID();
@@ -253,7 +249,7 @@ public class Jms2InstrumentationTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @ArgumentsSource(EmptyReceiveArgumentsProvider.class)
+  @MethodSource("emptyReceiveArguments")
   @ParameterizedTest
   void shouldNotEmitTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
@@ -279,38 +275,30 @@ public class Jms2InstrumentationTest {
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
-  static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> emptyReceiveArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    MessageReceiver receive = consumer -> consumer.receive(100);
+    MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      MessageReceiver receive = consumer -> consumer.receive(100);
-      MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
-
-      return Stream.of(
-          arguments(topic, receive),
-          arguments(queue, receive),
-          arguments(topic, receiveNoWait),
-          arguments(queue, receiveNoWait));
-    }
+    return Stream.of(
+        arguments(topic, receive),
+        arguments(queue, receive),
+        arguments(topic, receiveNoWait),
+        arguments(queue, receiveNoWait));
   }
 
-  static final class DestinationsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> destinationArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    DestinationFactory tempTopic = Session::createTemporaryTopic;
+    DestinationFactory tempQueue = Session::createTemporaryQueue;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      DestinationFactory tempTopic = Session::createTemporaryTopic;
-      DestinationFactory tempQueue = Session::createTemporaryQueue;
-
-      return Stream.of(
-          arguments(topic, "someTopic", false),
-          arguments(queue, "someQueue", false),
-          arguments(tempTopic, "(temporary)", true),
-          arguments(tempQueue, "(temporary)", true));
-    }
+    return Stream.of(
+        arguments(topic, "someTopic", false),
+        arguments(queue, "someQueue", false),
+        arguments(tempTopic, "(temporary)", true),
+        arguments(tempQueue, "(temporary)", true));
   }
 
   @FunctionalInterface

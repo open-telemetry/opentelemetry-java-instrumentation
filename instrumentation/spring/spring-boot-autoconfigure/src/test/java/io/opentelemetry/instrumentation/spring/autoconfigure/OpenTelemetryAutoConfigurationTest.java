@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -17,7 +20,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.AutoConfigureListener;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -26,7 +28,7 @@ import org.springframework.context.annotation.Bean;
 /** Spring Boot auto configuration test for {@link OpenTelemetryAutoConfiguration}. */
 class OpenTelemetryAutoConfigurationTest {
   @TestConfiguration
-  static class CustomTracerConfiguration {
+  static class CustomOtelConfiguration {
     @Bean
     public OpenTelemetry customOpenTelemetry() {
       return OpenTelemetry.noop();
@@ -48,7 +50,7 @@ class OpenTelemetryAutoConfigurationTest {
       "when Application Context contains OpenTelemetry bean should NOT initialize openTelemetry")
   void customOpenTelemetry() {
     this.contextRunner
-        .withUserConfiguration(CustomTracerConfiguration.class)
+        .withUserConfiguration(CustomOtelConfiguration.class)
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
             context ->
@@ -99,7 +101,8 @@ class OpenTelemetryAutoConfigurationTest {
                                   "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
                                   "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
-                                  "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider");
+                                  "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
+                                  "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider");
                         }));
   }
 
@@ -125,12 +128,11 @@ class OpenTelemetryAutoConfigurationTest {
       "when Application Context DOES NOT contain OpenTelemetry bean but SpanExporter should initialize openTelemetry")
   void initializeOpenTelemetryWithCustomProviders() {
     OtlpSpanExporterProvider spanExporterProvider =
-        Mockito.mock(
+        mock(
             OtlpSpanExporterProvider.class,
             withSettings().extraInterfaces(AutoConfigureListener.class));
-    Mockito.when(spanExporterProvider.getName()).thenReturn("custom");
-    Mockito.when(spanExporterProvider.createExporter(any()))
-        .thenReturn(Mockito.mock(SpanExporter.class));
+    when(spanExporterProvider.getName()).thenReturn("custom");
+    when(spanExporterProvider.createExporter(any())).thenReturn(mock(SpanExporter.class));
 
     this.contextRunner
         .withBean(
@@ -142,7 +144,7 @@ class OpenTelemetryAutoConfigurationTest {
         .withPropertyValues("otel.traces.exporter=custom")
         .run(context -> assertThat(context).hasBean("openTelemetry"));
 
-    Mockito.verify(spanExporterProvider).afterAutoConfigure(any());
+    verify(spanExporterProvider).afterAutoConfigure(any());
   }
 
   @Test
@@ -151,10 +153,8 @@ class OpenTelemetryAutoConfigurationTest {
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withPropertyValues("otel.sdk.disabled=false")
         .run(
-            context -> {
-              assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class);
-              assertThat(context).hasBean("openTelemetry");
-            });
+            context ->
+                assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
   }
 
   @Test

@@ -14,10 +14,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -44,10 +43,9 @@ public final class R2dbcInstrumenterBuilder {
   }
 
   public Instrumenter<DbExecution, Void> build(
-      Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
-          spanNameExtractorTransformer,
-      boolean statementSanitizationEnabled) {
-    SpanNameExtractor<? super DbExecution> spanNameExtractor =
+      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer,
+      boolean querySanitizationEnabled) {
+    SpanNameExtractor<DbExecution> spanNameExtractor =
         spanNameExtractorTransformer.apply(
             DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE));
 
@@ -55,9 +53,8 @@ public final class R2dbcInstrumenterBuilder {
             openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(R2dbcSqlAttributesGetter.INSTANCE)
-                .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setQuerySanitizationEnabled(querySanitizationEnabled)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
         .addAttributesExtractors(additionalExtractors)
         .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());

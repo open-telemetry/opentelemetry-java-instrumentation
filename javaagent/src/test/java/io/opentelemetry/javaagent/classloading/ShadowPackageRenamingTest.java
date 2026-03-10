@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.classloading;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -13,16 +14,15 @@ import io.opentelemetry.javaagent.IntegrationTestUtils;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-public class ShadowPackageRenamingTest {
+class ShadowPackageRenamingTest {
 
   private static final List<String> AGENT_PACKAGE_PREFIXES =
-      Arrays.asList(
+      asList(
           "io.opentelemetry.instrumentation.api",
           // jackson
           "com.fasterxml.jackson",

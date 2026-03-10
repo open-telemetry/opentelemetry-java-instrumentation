@@ -13,18 +13,20 @@ import java.net.http.HttpClient;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class JavaHttpClientTest extends AbstractJavaHttpClientTest {
+class JavaHttpClientTest {
 
-  @RegisterExtension
-  static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+  abstract static class AbstractTest extends AbstractJavaHttpClientTest {
+    @RegisterExtension
+    static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  @Override
-  protected HttpClient configureHttpClient(HttpClient httpClient) {
-    return httpClient;
+    @Override
+    protected HttpClient configureHttpClient(HttpClient httpClient) {
+      return httpClient;
+    }
   }
 
   @Nested
-  static class Http1ClientTest extends JavaHttpClientTest {
+  class Http1ClientTest extends AbstractTest {
 
     @Override
     protected void configureHttpClientBuilder(HttpClient.Builder httpClientBuilder) {
@@ -33,7 +35,7 @@ public abstract class JavaHttpClientTest extends AbstractJavaHttpClientTest {
   }
 
   @Nested
-  static class Http2ClientTest extends JavaHttpClientTest {
+  class Http2ClientTest extends AbstractTest {
 
     @Override
     protected void configureHttpClientBuilder(HttpClient.Builder httpClientBuilder) {

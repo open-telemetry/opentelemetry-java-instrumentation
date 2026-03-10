@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.github.netmikey.logunit.api.LogCapturer;
+import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -19,9 +21,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // Testing deprecated API for backward compatibility
 class RuntimeMetricsTest {
 
-  @RegisterExtension LogCapturer logs = LogCapturer.create().captureForType(RuntimeMetrics.class);
+  @RegisterExtension LogCapturer logs = LogCapturer.create().captureForType(RuntimeTelemetry.class);
 
   private InMemoryMetricReader reader;
   private OpenTelemetrySdk sdk;
@@ -72,10 +75,9 @@ class RuntimeMetricsTest {
   @Test
   void builder() {
     try (var jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
-      assertThat(jfrTelemetry.getOpenTelemetry()).isSameAs(sdk);
-      assertThat(jfrTelemetry.getJfrRuntimeMetrics().getRecordedEventHandlers())
+      assertThat(getJfrRuntimeMetrics(jfrTelemetry).getRecordedEventHandlers())
           .hasSizeGreaterThan(0)
-          .allSatisfy(handler -> assertThat(handler.getFeature().isDefaultEnabled()).isTrue());
+          .allSatisfy(handler -> assertThat(isDefaultEnabled(handler.getFeature())).isTrue());
     }
   }
 
@@ -84,15 +86,14 @@ class RuntimeMetricsTest {
     try (RuntimeMetrics jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
       // Track whether RecordingStream has been closed
       AtomicBoolean recordingStreamClosed = new AtomicBoolean(false);
-      jfrTelemetry
-          .getJfrRuntimeMetrics()
+      getJfrRuntimeMetrics(jfrTelemetry)
           .getRecordingStream()
           .onClose(() -> recordingStreamClosed.set(true));
 
       assertThat(reader.collectAllMetrics()).isNotEmpty();
 
       jfrTelemetry.close();
-      logs.assertDoesNotContain("RuntimeMetrics is already closed");
+      logs.assertDoesNotContain("RuntimeTelemetry is already closed");
       assertThat(recordingStreamClosed.get()).isTrue();
 
       // clear all metrics that might have arrived after close
@@ -103,7 +104,22 @@ class RuntimeMetricsTest {
       assertThat(reader.collectAllMetrics()).isEmpty();
 
       jfrTelemetry.close();
-      logs.assertContains("RuntimeMetrics is already closed");
+      logs.assertContains("RuntimeTelemetry is already closed");
     }
+  }
+
+  // Helper to access the unified module's state
+  private static JfrConfig.JfrRuntimeMetrics getJfrRuntimeMetrics(RuntimeMetrics runtimeMetrics) {
+    return (JfrConfig.JfrRuntimeMetrics) runtimeMetrics.getJfrRuntimeMetrics();
+  }
+
+  // Java17 legacy defaults: all non-overlapping features
+  // plus CPU_COUNT_METRICS (which is emitted as cpu.count.limit)
+  private static boolean isDefaultEnabled(
+      io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature feature) {
+    return !feature.overlapsWithJmx()
+        || feature
+            == io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature
+                .CPU_COUNT_METRICS;
   }
 }

@@ -24,8 +24,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        named("processPush"), GraphInterpreterInstrumentation.class.getName() + "$PushAdvice");
+    transformer.applyAdviceToMethod(named("processPush"), getClass().getName() + "$PushAdvice");
   }
 
   @SuppressWarnings("unused")

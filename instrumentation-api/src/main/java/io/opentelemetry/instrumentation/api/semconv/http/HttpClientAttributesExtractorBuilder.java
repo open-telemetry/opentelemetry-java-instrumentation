@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
@@ -38,11 +39,11 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   List<String> capturedResponseHeaders = emptyList();
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
   ToIntFunction<Context> resendCountIncrementer = HttpClientRequestResendCount::getAndIncrement;
-  boolean redactQueryParameters;
+  Set<String> sensitiveQueryParameters = HttpConstants.SENSITIVE_QUERY_PARAMETERS;
 
   static {
-    Experimental.internalSetRedactHttpClientQueryParameters(
-        (builder, redact) -> builder.redactQueryParameters = redact);
+    Experimental.internalSetClientSensitiveQueryParameters(
+        (builder, params) -> builder.sensitiveQueryParameters = params);
   }
 
   HttpClientAttributesExtractorBuilder(

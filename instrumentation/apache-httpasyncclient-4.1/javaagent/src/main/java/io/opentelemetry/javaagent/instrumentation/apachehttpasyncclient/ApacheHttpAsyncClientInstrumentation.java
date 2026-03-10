@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpException;
@@ -57,25 +59,29 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
             .and(takesArgument(1, named("org.apache.http.nio.protocol.HttpAsyncResponseConsumer")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext")))
             .and(takesArgument(3, named("org.apache.http.concurrent.FutureCallback"))),
-        ApacheHttpAsyncClientInstrumentation.class.getName() + "$ClientAdvice");
+        getClass().getName() + "$ClientAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ClientAdvice {
 
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 0, index = 0),
+      @ToArgument(value = 3, index = 1)
+    })
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
+    public static Object[] methodEnter(
+        @Advice.Argument(0) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) HttpContext httpContext,
-        @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
+        @Advice.Argument(3) FutureCallback<?> futureCallback) {
 
       Context parentContext = currentContext();
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
-      requestProducer =
+      HttpAsyncRequestProducer modifiedRequestProducer =
           new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
-      futureCallback = wrappedFutureCallback;
+      return new Object[] {modifiedRequestProducer, wrappedFutureCallback};
     }
   }
 

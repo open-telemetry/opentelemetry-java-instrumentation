@@ -5,6 +5,12 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID;
@@ -24,7 +30,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -33,13 +38,6 @@ import java.util.Map;
 
 // until old database semconv are dropped in 3.0
 public class SemconvStabilityUtil {
-
-  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
-  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
-  private static final AttributeKey<String> DB_COLLECTION_NAME =
-      AttributeKey.stringKey("db.collection.name");
 
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
 
@@ -69,7 +67,7 @@ public class SemconvStabilityUtil {
   @SuppressWarnings("unchecked")
   public static <T> AttributeKey<T> maybeStable(AttributeKey<T> oldKey) {
     // not testing database/dup
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return (AttributeKey<T>) oldToNewMap.get(oldKey);
     }
     return oldKey;
@@ -77,7 +75,7 @@ public class SemconvStabilityUtil {
 
   public static String maybeStableDbSystemName(String oldDbSystemName) {
     // not testing database/dup
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return SemconvStability.stableDbSystemName(oldDbSystemName);
     }
     return oldDbSystemName;

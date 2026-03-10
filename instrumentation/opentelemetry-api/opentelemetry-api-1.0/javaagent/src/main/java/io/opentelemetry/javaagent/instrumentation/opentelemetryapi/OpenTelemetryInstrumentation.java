@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.logging.Logger;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -58,11 +59,10 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false)
-            application.io.opentelemetry.api.OpenTelemetry openTelemetry) {
-      openTelemetry = ApplicationOpenTelemetry.INSTANCE;
+    public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
+      return ApplicationOpenTelemetry.INSTANCE;
     }
   }
 

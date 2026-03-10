@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.metrics;
 
-import application.io.opentelemetry.api.incubator.metrics.ExtendedLongHistogram;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongHistogram;
 
 final class ApplicationLongHistogram140Incubator extends ApplicationLongHistogram
-    implements ExtendedLongHistogram {
+    implements application.io.opentelemetry.api.incubator.metrics.ExtendedLongHistogram {
 
-  private final io.opentelemetry.api.metrics.LongHistogram agentHistogram;
+  private final LongHistogram agentHistogram;
 
   ApplicationLongHistogram140Incubator(LongHistogram agentHistogram) {
     super(agentHistogram);
@@ -21,7 +21,6 @@ final class ApplicationLongHistogram140Incubator extends ApplicationLongHistogra
 
   @Override
   public boolean isEnabled() {
-    return ((io.opentelemetry.api.incubator.metrics.ExtendedLongHistogram) agentHistogram)
-        .isEnabled();
+    return ((ExtendedLongHistogram) agentHistogram).isEnabled();
   }
 }

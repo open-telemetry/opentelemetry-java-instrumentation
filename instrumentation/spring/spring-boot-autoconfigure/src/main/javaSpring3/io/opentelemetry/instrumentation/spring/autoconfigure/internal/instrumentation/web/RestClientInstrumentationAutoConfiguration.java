@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,31 +19,28 @@ import org.springframework.web.client.RestClient;
 /**
  * Configures {@link RestClient} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to {@link RestClient} beans after initialization.
+ * <p>Adds OpenTelemetry instrumentation to {@link RestClient} beans after initialization.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
-@ConditionalOnClass(RestClient.class)
+@ConditionalOnClass({RestClient.class, RestClientCustomizer.class})
 @AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration
 public class RestClientInstrumentationAutoConfiguration {
 
   @Bean
   static RestClientBeanPostProcessor otelRestClientBeanPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
-    return new RestClientBeanPostProcessor(openTelemetryProvider, configPropertiesProvider);
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+    return new RestClientBeanPostProcessor(openTelemetryProvider);
   }
 
   @Bean
   RestClientCustomizer otelRestClientCustomizer(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<OpenTelemetry> openTelemetryProvider) {
     return builder ->
         builder.requestInterceptor(
-            RestClientBeanPostProcessor.getInterceptor(
-                openTelemetryProvider.getObject(), configPropertiesProvider.getObject()));
+            RestClientBeanPostProcessor.getInterceptor(openTelemetryProvider.getObject()));
   }
 }

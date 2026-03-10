@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.graphql.v12_0;
 
 import graphql.GraphQL;
-import io.opentelemetry.instrumentation.graphql.AbstractGraphqlTest;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.AbstractGraphqlTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -23,7 +23,10 @@ class GraphqlTest extends AbstractGraphqlTest {
 
   @Override
   protected void configure(GraphQL.Builder builder) {
-    GraphQLTelemetry telemetry = GraphQLTelemetry.builder(testing.getOpenTelemetry()).build();
-    builder.instrumentation(telemetry.newInstrumentation());
+    GraphQLTelemetry telemetry =
+        GraphQLTelemetry.builder(testing.getOpenTelemetry())
+            .setAddOperationNameToSpanName(true)
+            .build();
+    builder.instrumentation(telemetry.createInstrumentation());
   }
 }

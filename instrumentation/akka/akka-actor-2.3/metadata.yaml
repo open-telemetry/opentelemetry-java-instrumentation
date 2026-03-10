@@ -1,0 +1,5 @@
+display_name: Akka Actors
+description: This instrumentation provides context propagation for Akka actors, it does not emit any telemetry on its own.
+library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
+features:
+  - CONTEXT_PROPAGATION

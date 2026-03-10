@@ -8,6 +8,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
+  testImplementation("org.testcontainers:testcontainers")
 }
 
 tasks {
@@ -16,6 +17,8 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

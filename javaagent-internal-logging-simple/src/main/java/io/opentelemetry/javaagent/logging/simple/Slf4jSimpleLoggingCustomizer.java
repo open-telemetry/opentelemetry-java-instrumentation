@@ -31,12 +31,12 @@ public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
   }
 
   @Override
-  public void init(EarlyInitAgentConfig earlyConfig) {
+  public void init() {
     setSystemPropertyDefault(SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY, "true");
     setSystemPropertyDefault(
         SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY, SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT);
 
-    if (earlyConfig.getBoolean("otel.javaagent.debug", false)) {
+    if (EarlyInitAgentConfig.get().isDebug()) {
       setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
       setSystemPropertyDefault(SIMPLE_LOGGER_PREFIX + "okhttp3.internal.http2", "INFO");
       setSystemPropertyDefault(

@@ -11,13 +11,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.Local;
 
 /**
  * Default context instrumentation.
@@ -37,18 +36,60 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+      private final Jaxrs2HandlerData handlerData;
+
+      private AdviceScope(Context context, Scope scope, Jaxrs2HandlerData handlerData) {
+        this.context = context;
+        this.scope = scope;
+        this.handlerData = handlerData;
+      }
+
+      @Nullable
+      public static AdviceScope enter(Class<?> filterClass, Method method) {
+
+        Context parentContext = Context.current();
+        Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(filterClass, method);
+
+        HttpServerRoute.update(
+            parentContext,
+            HttpServerRouteSource.CONTROLLER,
+            JaxrsServerSpanNaming.SERVER_SPAN_NAME,
+            handlerData);
+
+        if (!instrumenter().shouldStart(parentContext, handlerData)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, handlerData);
+        return new AdviceScope(context, context.makeCurrent(), handlerData);
+      }
+
+      public void exit(Throwable throwable) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void createGenericSpan(
-        @Advice.This ContainerRequestContext requestContext,
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope) {
+    public static AdviceScope createGenericSpan(
+        @Advice.This ContainerRequestContext requestContext) {
+
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null) {
-        return;
+        return null;
       }
 
       Class<?> filterClass =
           (Class<?>) requestContext.getProperty(JaxrsConstants.ABORT_FILTER_CLASS);
+      if (filterClass == null) {
+        return null;
+      }
+
       Method method = null;
       try {
         method = filterClass.getMethod("filter", ContainerRequestContext.class);
@@ -57,39 +98,20 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         // can only be aborted inside the filter method
       }
 
-      if (filterClass == null || method == null) {
-        return;
+      if (method == null) {
+        return null;
       }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      handlerData = new Jaxrs2HandlerData(filterClass, method);
-
-      HttpServerRoute.update(
-          parentContext,
-          HttpServerRouteSource.CONTROLLER,
-          JaxrsServerSpanNaming.SERVER_SPAN_NAME,
-          handlerData);
-
-      if (!instrumenter().shouldStart(parentContext, handlerData)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, handlerData);
-      scope = context.makeCurrent();
+      return AdviceScope.enter(filterClass, method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
-      scope.close();
-      instrumenter().end(context, handlerData, null, throwable);
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
+      }
     }
   }
 }

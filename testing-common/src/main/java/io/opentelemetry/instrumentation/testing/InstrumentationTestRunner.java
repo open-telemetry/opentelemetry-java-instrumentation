@@ -6,28 +6,40 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionFactory;
@@ -42,15 +54,29 @@ import org.awaitility.core.ConditionTimeoutException;
  */
 public abstract class InstrumentationTestRunner {
 
-  private final TestInstrumenters testInstrumenters;
+  private final OpenTelemetry openTelemetry;
+  // Lazy initialized so that test runners can load without triggering Instrumenter construction
+  // in the OpenTelemetry API bridging tests where some of the newer OpenTelemetry APIs used by
+  // Instrumenter are absent.
+  @Nullable private TestInstrumenters testInstrumenters;
+  protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
+  protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
+
+  /**
+   * Stores traces by scope, where each scope contains a map of span kinds to a map of attribute
+   * keys to their types. This is used to collect metadata about the spans emitted during tests.
+   */
+  protected Map<
+          InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+      tracesByScope = new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
-    testInstrumenters = new TestInstrumenters(openTelemetry);
+    this.openTelemetry = openTelemetry;
   }
 
   public abstract void beforeTestClass();
 
-  public abstract void afterTestClass();
+  public abstract void afterTestClass() throws IOException;
 
   public abstract void clearAllExportedData();
 
@@ -71,8 +97,7 @@ public abstract class InstrumentationTestRunner {
 
   public final List<List<SpanData>> waitForTraces(int numberOfTraces) {
     try {
-      return TelemetryDataUtil.waitForTraces(
-          this::getExportedSpans, numberOfTraces, 20, TimeUnit.SECONDS);
+      return TelemetryDataUtil.waitForTraces(this::getExportedSpans, numberOfTraces, 20, SECONDS);
     } catch (TimeoutException | InterruptedException e) {
       throw new AssertionError("Error waiting for " + numberOfTraces + " traces", e);
     }
@@ -82,7 +107,7 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(traceComparator, Arrays.asList(assertions), true);
+    waitAndAssertTraces(traceComparator, asList(assertions), true);
   }
 
   public final void waitAndAssertSortedTraces(
@@ -95,7 +120,7 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertTracesWithoutScopeVersionVerification(
       Consumer<TraceAssert>... assertions) {
-    waitAndAssertTracesWithoutScopeVersionVerification(Arrays.asList(assertions));
+    waitAndAssertTracesWithoutScopeVersionVerification(asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>>
@@ -106,7 +131,7 @@ public abstract class InstrumentationTestRunner {
   @SafeVarargs
   @SuppressWarnings("varargs")
   public final void waitAndAssertTraces(Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(Arrays.asList(assertions));
+    waitAndAssertTraces(asList(assertions));
   }
 
   public final <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
@@ -135,6 +160,10 @@ public abstract class InstrumentationTestRunner {
       traces.sort(traceComparator);
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedSpans(traces);
+    }
   }
 
   /**
@@ -155,6 +184,10 @@ public abstract class InstrumentationTestRunner {
                         data ->
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedMetrics(getExportedMetrics());
+    }
   }
 
   @SafeVarargs
@@ -172,6 +205,56 @@ public abstract class InstrumentationTestRunner {
                 .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
           }
         });
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedMetrics(getExportedMetrics());
+    }
+  }
+
+  private void collectEmittedMetrics(List<MetricData> metrics) {
+    for (MetricData metric : metrics) {
+      Map<String, MetricData> scopeMap =
+          this.metricsByScope.computeIfAbsent(
+              metric.getInstrumentationScopeInfo(), m -> new HashMap<>());
+
+      if (!scopeMap.containsKey(metric.getName())) {
+        scopeMap.put(metric.getName(), metric);
+      }
+
+      InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
+      if (!scopeInfo.getName().equals("test")) {
+        instrumentationScopes.add(scopeInfo);
+      }
+    }
+  }
+
+  private void collectEmittedSpans(List<List<SpanData>> spans) {
+    for (List<SpanData> spanList : spans) {
+      for (SpanData span : spanList) {
+        Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> scopeMap =
+            this.tracesByScope.computeIfAbsent(
+                span.getInstrumentationScopeInfo(), m -> new HashMap<>());
+
+        Map<InternalAttributeKeyImpl<?>, AttributeType> spanKindMap =
+            scopeMap.computeIfAbsent(span.getKind(), s -> new HashMap<>());
+
+        for (Map.Entry<AttributeKey<?>, Object> key : span.getAttributes().asMap().entrySet()) {
+          if (!(key.getKey() instanceof InternalAttributeKeyImpl)) {
+            // We only collect internal attributes, so skip any non-internal attributes.
+            continue;
+          }
+          InternalAttributeKeyImpl<?> keyImpl = (InternalAttributeKeyImpl<?>) key.getKey();
+          if (!spanKindMap.containsKey(keyImpl)) {
+            spanKindMap.put(keyImpl, key.getValue() != null ? key.getKey().getType() : null);
+          }
+        }
+
+        InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
+        if (!scopeInfo.getName().equals("test")) {
+          instrumentationScopes.add(scopeInfo);
+        }
+      }
+    }
   }
 
   public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
@@ -181,10 +264,28 @@ public abstract class InstrumentationTestRunner {
     return getExportedLogRecords();
   }
 
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertLogRecords(Consumer<LogRecordDataAssert>... assertions) {
+    waitAndAssertLogRecords(asList(assertions));
+  }
+
+  public final void waitAndAssertLogRecords(
+      Iterable<? extends Consumer<LogRecordDataAssert>> assertions) {
+    List<Consumer<LogRecordDataAssert>> assertionsList = new ArrayList<>();
+    assertions.forEach(assertionsList::add);
+
+    List<LogRecordData> logRecordDataList = waitForLogRecords(assertionsList.size());
+    Iterator<Consumer<LogRecordDataAssert>> assertionIterator = assertionsList.iterator();
+    for (LogRecordData logRecordData : logRecordDataList) {
+      assertionIterator.next().accept(assertThat(logRecordData));
+    }
+  }
+
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
     return getExportedMetrics().stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -207,7 +308,7 @@ public abstract class InstrumentationTestRunner {
    */
   public final <T, E extends Throwable> T runWithSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithSpan(spanName, callback);
+    return getTestInstrumenters().runWithSpan(spanName, callback);
   }
 
   /**
@@ -230,7 +331,7 @@ public abstract class InstrumentationTestRunner {
    */
   public final <T, E extends Throwable> T runWithHttpClientSpan(
       String spanName, ThrowingSupplier<T, E> callback) throws E {
-    return testInstrumenters.runWithHttpClientSpan(spanName, callback);
+    return getTestInstrumenters().runWithHttpClientSpan(spanName, callback);
   }
 
   /**
@@ -252,13 +353,20 @@ public abstract class InstrumentationTestRunner {
    */
   public final <T, E extends Throwable> T runWithHttpServerSpan(ThrowingSupplier<T, E> callback)
       throws E {
-    return testInstrumenters.runWithHttpServerSpan(callback);
+    return getTestInstrumenters().runWithHttpServerSpan(callback);
   }
 
   /** Runs the provided {@code callback} inside the scope of a non-recording span. */
   public final <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
       throws E {
-    return testInstrumenters.runWithNonRecordingSpan(callback);
+    return getTestInstrumenters().runWithNonRecordingSpan(callback);
+  }
+
+  private TestInstrumenters getTestInstrumenters() {
+    if (testInstrumenters == null) {
+      testInstrumenters = new TestInstrumenters(openTelemetry);
+    }
+    return testInstrumenters;
   }
 
   private static void awaitUntilAsserted(Runnable runnable) {

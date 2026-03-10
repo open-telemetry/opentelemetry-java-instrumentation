@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
@@ -44,7 +45,7 @@ public final class HttpClientResult {
   }
 
   public int get() throws Throwable {
-    if (!valueReady.await(timeout, TimeUnit.MILLISECONDS)) {
+    if (!valueReady.await(timeout, MILLISECONDS)) {
       throw new TimeoutException("Timed out waiting for response in " + timeout + "ms");
     }
     if (throwable != null) {

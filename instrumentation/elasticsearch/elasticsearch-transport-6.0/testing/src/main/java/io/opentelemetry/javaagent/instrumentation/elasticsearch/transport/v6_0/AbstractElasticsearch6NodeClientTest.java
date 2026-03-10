@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
+import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
 import java.io.File;
-import java.util.Collections;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.client.Client;
@@ -17,6 +17,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +68,8 @@ public abstract class AbstractElasticsearch6NodeClientTest
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          Collections.singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
+                          singletonMap(
+                              "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
     testing.clearData();
@@ -97,5 +98,10 @@ public abstract class AbstractElasticsearch6NodeClientTest
         .setWaitForYellowStatus()
         .execute()
         .actionGet(TIMEOUT);
+  }
+
+  @Test
+  void testDurationMetric() throws Exception {
+    metricAssertion("io.opentelemetry.elasticsearch-transport-6.0");
   }
 }

@@ -1,0 +1,16 @@
+description: >
+  This instrumentation enables database client spans and database client metrics for the Lettuce
+  Redis client.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/redis/lettuce
+configurations:
+  - name: otel.instrumentation.lettuce.experimental.command-encoding-events.enabled
+    description: Enables capturing `redis.encode.start` and `redis.encode.end` span events.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true

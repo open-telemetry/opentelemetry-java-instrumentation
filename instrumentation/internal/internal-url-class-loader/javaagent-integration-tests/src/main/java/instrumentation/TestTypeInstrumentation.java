@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -34,9 +35,10 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetHostNameAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(@Advice.Return(readOnly = false) String hostName) {
-      hostName = "not-the-host-name";
+    public static String methodExit() {
+      return "not-the-host-name";
     }
   }
 }

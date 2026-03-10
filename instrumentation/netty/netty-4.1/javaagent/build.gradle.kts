@@ -44,18 +44,20 @@ dependencies {
 
 tasks {
   val testConnectionSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Netty41ConnectionSpanTest")
       includeTestsMatching("Netty41ClientSslTest")
     }
     include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-
     jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
@@ -63,8 +65,19 @@ tasks {
     }
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+    filter {
+      excludeTestsMatching("Netty41ConnectionSpanTest")
+      excludeTestsMatching("Netty41ClientSslTest")
+    }
+  }
+
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }
 

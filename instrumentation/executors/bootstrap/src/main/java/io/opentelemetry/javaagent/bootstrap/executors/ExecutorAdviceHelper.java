@@ -24,7 +24,7 @@ public final class ExecutorAdviceHelper {
    * to re-enable the propagation.
    */
   public static void disablePropagation() {
-    propagationDisabled.set(Boolean.TRUE);
+    propagationDisabled.set(true);
   }
 
   /**

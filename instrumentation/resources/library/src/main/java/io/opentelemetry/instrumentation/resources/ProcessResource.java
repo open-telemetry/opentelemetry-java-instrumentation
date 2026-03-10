@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.resources;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.resources.internal.ProcessArguments;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.io.File;
@@ -92,7 +93,10 @@ public final class ProcessResource {
       attributes.put(PROCESS_EXECUTABLE_PATH, executablePath.toString());
 
       String[] args = ProcessArguments.getProcessArguments();
-      // This will only work with Java 9+ but provides everything except the executablePath.
+      // This will only work with Java 9+ and Linux but provides everything except the
+      // executablePath.
+      // Argument array may be empty on Java 9+ when the command line is too long, see
+      // https://bugs.openjdk.org/browse/JDK-8345117
       if (args.length > 0) {
         List<String> commandArgs = new ArrayList<>(args.length + 1);
         commandArgs.add(executablePath.toString());
@@ -100,7 +104,7 @@ public final class ProcessResource {
           commandArgs.add(scrub(arg));
         }
         attributes.put(PROCESS_COMMAND_ARGS, commandArgs);
-      } else { // Java 8
+      } else { // Java 8 or Windows or long command line
         StringBuilder commandLine = new StringBuilder(executablePath);
         for (String arg : runtime.getInputArguments()) {
           commandLine.append(' ').append(scrub(arg));

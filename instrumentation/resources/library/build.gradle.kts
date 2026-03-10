@@ -8,14 +8,13 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
   testCompileOnly("com.google.auto.service:auto-service-annotations")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
-
-  testImplementation("org.junit.jupiter:junit-jupiter-api")
 }
 
 for (version in mrJarVersions) {
@@ -87,10 +86,8 @@ testing {
 tasks {
   test {
     dependsOn(jar)
-    doFirst {
-      // use the final jar instead of directories with built classes to test the mrjar functionality
-      classpath = jar.get().outputs.files + classpath
-    }
+    // use the final jar instead of directories with built classes to test the mrjar functionality
+    classpath = project.files(jar) + classpath
     systemProperty("testSecret", "test")
     systemProperty("testPassword", "test")
     systemProperty("testNotRedacted", "test")

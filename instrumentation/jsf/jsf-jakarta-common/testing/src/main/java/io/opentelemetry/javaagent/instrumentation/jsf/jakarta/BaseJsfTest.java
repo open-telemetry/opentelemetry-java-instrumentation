@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -36,10 +37,8 @@ import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -48,12 +47,9 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
 
@@ -102,7 +98,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(PathTestArgs.class)
+  @CsvSource({"hello.jsf, *.jsf", "faces/hello.xhtml, faces/*"})
   void testPath(String path, String route) {
     AggregatedHttpResponse response =
         client.get(address.resolve(path).toString()).aggregate().join();
@@ -133,14 +129,6 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(TEST_CLIENT_IP),
                                         v -> assertThat(v).isNull())))));
-  }
-
-  static class PathTestArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("hello.xhtml", "*.xhtml"), Arguments.of("faces/hello.xhtml", "faces/*"));
-    }
   }
 
   @Test
@@ -277,7 +265,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
       TraceAssert trace, int parentIndex, String spanName, Exception expectedException) {
     List<Consumer<SpanDataAssert>> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 span ->
                     span.hasName(spanName)
                         .hasKind(SpanKind.INTERNAL)

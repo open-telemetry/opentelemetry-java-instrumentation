@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.liberty;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletResponseContext;
 
 public class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {
 
@@ -35,10 +35,7 @@ public class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RES
     }
     scope.close();
 
-    if (throwable == null) {
-      throwable = AppServerBridge.getException(context);
-    }
-
+    throwable = AppServerBridge.getException(context, throwable);
     ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
     if (throwable != null || mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, requestContext, responseContext, throwable);

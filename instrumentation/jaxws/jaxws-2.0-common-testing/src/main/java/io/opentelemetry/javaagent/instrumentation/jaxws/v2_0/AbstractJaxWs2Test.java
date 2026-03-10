@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -16,13 +17,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.hello.HelloServiceImpl;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.test.hello_web_service.Hello2Request;
 import io.opentelemetry.test.hello_web_service.Hello2Response;
 import io.opentelemetry.test.hello_web_service.HelloRequest;
 import io.opentelemetry.test.hello_web_service.HelloResponse;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -40,7 +39,6 @@ import org.springframework.util.ClassUtils;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
   public static final InstrumentationExtension testing =
@@ -114,7 +112,7 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               span.hasName(serverSpanName(testMethod.methodName()))
                                   .hasNoParent()
@@ -131,12 +129,8 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
                             .hasParent(trace.getSpan(1))
                             .hasKind(SpanKind.INTERNAL)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    HelloServiceImpl.class.getName()),
-                                equalTo(
-                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                    testMethod.methodName())));
+                                codeFunctionAssertions(
+                                    HelloServiceImpl.class, testMethod.methodName())));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);
@@ -156,7 +150,7 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
             trace -> {
               List<Consumer<SpanDataAssert>> assertions =
                   new ArrayList<>(
-                      Arrays.asList(
+                      asList(
                           span ->
                               span.hasName(serverSpanName(testMethod.methodName()))
                                   .hasNoParent()
@@ -177,12 +171,8 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
                             .hasStatus(StatusData.error())
                             .hasException(expectedException)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    HelloServiceImpl.class.getName()),
-                                equalTo(
-                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                    testMethod.methodName())));
+                                codeFunctionAssertions(
+                                    HelloServiceImpl.class, testMethod.methodName())));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);

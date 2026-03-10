@@ -30,8 +30,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Configures the messaging headers that will be captured as span attributes.
    *
    * <p>The messaging header values will be captured under the {@code messaging.header.<name>}
-   * attribute key. The {@code <name>} part in the attribute key is the normalized header name:
-   * lowercase, with dashes replaced by underscores.
+   * attribute key. The {@code <name>} part in the attribute key is the header name with dashes
+   * replaced by underscores.
    *
    * @param capturedHeaders A list of messaging header names.
    */

@@ -142,8 +142,9 @@ public final class OpenTelemetryHttpClient extends HttpClient {
       instrumenter.end(context, request, null, t);
       throw t;
     }
-    future = future.whenComplete(new ResponseConsumer(instrumenter, context, request));
-    future = CompletableFutureWrapper.wrap(future, parentContext);
+    future =
+        CompletableFutureWrapper.wrap(future, parentContext)
+            .whenComplete(new ResponseConsumer(instrumenter, context, request));
     return future;
   }
 }

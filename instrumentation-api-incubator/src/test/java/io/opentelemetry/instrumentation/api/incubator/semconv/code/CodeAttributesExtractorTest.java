@@ -5,15 +5,19 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
-import java.util.Collections;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -58,11 +62,18 @@ class CodeAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-            entry(CodeIncubatingAttributes.CODE_FUNCTION, "doSomething"));
+    Attributes attributes = startAttributes.build();
+    SemconvCodeStabilityUtil.codeFunctionAssertions(TestClass.class, "doSomething");
 
+    if (emitStableCodeSemconv()) {
+      assertThat(attributes)
+          .containsEntry(CODE_FUNCTION_NAME, TestClass.class.getName() + ".doSomething");
+    }
+    if (emitOldCodeSemconv()) {
+      assertThat(attributes)
+          .containsEntry(CODE_NAMESPACE, TestClass.class.getName())
+          .containsEntry(CODE_FUNCTION, "doSomething");
+    }
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
@@ -74,7 +85,7 @@ class CodeAttributesExtractorTest {
 
     // when
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onStart(attributes, Context.root(), Collections.emptyMap());
+    underTest.onStart(attributes, Context.root(), emptyMap());
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();

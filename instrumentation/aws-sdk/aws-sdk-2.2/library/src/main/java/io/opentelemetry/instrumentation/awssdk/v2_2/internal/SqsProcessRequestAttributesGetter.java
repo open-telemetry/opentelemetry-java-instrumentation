@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -92,6 +94,6 @@ enum SqsProcessRequestAttributesGetter
   @Override
   public List<String> getMessageHeader(SqsProcessRequest request, String name) {
     String value = request.getMessage().getMessageAttribute(name);
-    return value != null ? Collections.singletonList(value) : Collections.emptyList();
+    return value != null ? singletonList(value) : emptyList();
   }
 }

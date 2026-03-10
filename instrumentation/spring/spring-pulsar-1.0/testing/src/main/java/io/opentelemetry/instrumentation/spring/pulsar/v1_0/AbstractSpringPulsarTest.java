@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
@@ -27,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.assertj.core.api.AbstractLongAssert;
@@ -42,7 +42,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.pulsar.annotation.PulsarListener;
 import org.springframework.pulsar.core.PulsarTemplate;
-import org.testcontainers.containers.PulsarContainer;
+import org.testcontainers.pulsar.PulsarContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -51,6 +51,8 @@ public abstract class AbstractSpringPulsarTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  static final String EXPERIMENTAL_FLAG =
+      "otel.instrumentation.pulsar.experimental-span-attributes";
   static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
   static PulsarContainer pulsarContainer;
@@ -93,7 +95,7 @@ public abstract class AbstractSpringPulsarTest {
         () -> {
           pulsarTemplate.send(OTEL_TOPIC, "test");
         });
-    latch.await(10, TimeUnit.SECONDS);
+    latch.await(10, SECONDS);
     assertSpringPulsar();
   }
 
@@ -121,7 +123,14 @@ public abstract class AbstractSpringPulsarTest {
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(MESSAGE_TYPE, "normal"));
+        equalTo(MESSAGE_TYPE, experimental("normal")));
+  }
+
+  protected static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return null;
+    }
+    return value;
   }
 
   protected List<AttributeAssertion> processAttributes() {

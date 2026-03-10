@@ -1,0 +1,146 @@
+---
+id: a8b0778b-ab38-4613-a895-1aa6ccd6d3dc
+name: model_anthropicclaude-3-5-sonnet-20240620-v10_invoke
+request:
+  url: /model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "anthropic_version" : "bedrock-2023-05-31",
+        "max_tokens" : 1000,
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "type" : "text",
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        } ],
+        "tools" : [ {
+          "name" : "get_current_weather",
+          "description" : "Get the current weather in a given location.",
+          "input_schema" : {
+            "type" : "object",
+            "properties" : {
+              "location" : {
+                "type" : "string",
+                "description" : "The name of the city"
+              }
+            },
+            "required" : [ "location" ]
+          }
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"id\":\"msg_bdrk_01NdmffKLuUYbyFNtwpjMmSt\",\"type\":\"message\",\"role\"\
+    :\"assistant\",\"model\":\"claude-3-5-sonnet-20240620\",\"content\":[{\"type\"\
+    :\"text\",\"text\":\"To answer your question about the weather in Seattle and\
+    \ San Francisco today, I'll need to use the get_current_weather function for both\
+    \ cities. Let me do that for you now.\"},{\"type\":\"tool_use\",\"id\":\"toolu_bdrk_015PLUD5nxagZrH4aFH6Bhhh\"\
+    ,\"name\":\"get_current_weather\",\"input\":{\"location\":\"Seattle\"}},{\"type\"\
+    :\"tool_use\",\"id\":\"toolu_bdrk_017jBjA1yJfoXcQTtrpyxZaz\",\"name\":\"get_current_weather\"\
+    ,\"input\":{\"location\":\"San Francisco\"}}],\"stop_reason\":\"tool_use\",\"\
+    stop_sequence\":null,\"usage\":{\"input_tokens\":380,\"output_tokens\":133}}"
+  headers:
+    Date: "Fri, 09 May 2025 03:51:00 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: c78a71f7-9a14-435e-a476-fc094671d7ef
+    X-Amzn-Bedrock-Invocation-Latency: "3165"
+    X-Amzn-Bedrock-Output-Token-Count: "133"
+    X-Amzn-Bedrock-Input-Token-Count: "380"
+uuid: a8b0778b-ab38-4613-a895-1aa6ccd6d3dc
+persistent: true
+insertionIndex: 86
+---
+id: 24a31482-89e9-4c00-8de1-787244f48e1a
+name: model_anthropicclaude-3-5-sonnet-20240620-v10_invoke
+request:
+  url: /model/anthropic.claude-3-5-sonnet-20240620-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "anthropic_version" : "bedrock-2023-05-31",
+        "max_tokens" : 1000,
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "type" : "text",
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        }, {
+          "role" : "assistant",
+          "content" : [ {
+            "type" : "text",
+            "text" : "To answer your question about the weather in Seattle and San Francisco today, I'll need to use the get_current_weather function for both cities. Let me do that for you now."
+          }, {
+            "type" : "tool_use",
+            "id" : "toolu_bdrk_015PLUD5nxagZrH4aFH6Bhhh",
+            "name" : "get_current_weather",
+            "input" : {
+              "location" : "Seattle"
+            }
+          }, {
+            "type" : "tool_use",
+            "id" : "toolu_bdrk_017jBjA1yJfoXcQTtrpyxZaz",
+            "name" : "get_current_weather",
+            "input" : {
+              "location" : "San Francisco"
+            }
+          } ]
+        }, {
+          "role" : "user",
+          "content" : [ {
+            "type" : "tool_result",
+            "tool_use_id" : "toolu_bdrk_015PLUD5nxagZrH4aFH6Bhhh",
+            "content" : "50 degrees and raining"
+          }, {
+            "type" : "tool_result",
+            "tool_use_id" : "toolu_bdrk_017jBjA1yJfoXcQTtrpyxZaz",
+            "content" : "70 degrees and sunny"
+          } ]
+        } ],
+        "tools" : [ {
+          "name" : "get_current_weather",
+          "description" : "Get the current weather in a given location.",
+          "input_schema" : {
+            "type" : "object",
+            "properties" : {
+              "location" : {
+                "type" : "string",
+                "description" : "The name of the city"
+              }
+            },
+            "required" : [ "location" ]
+          }
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"id\":\"msg_bdrk_01WLbL5d9nHRJm6ySFDsurmA\",\"type\":\"message\",\"role\"\
+    :\"assistant\",\"model\":\"claude-3-5-sonnet-20240620\",\"content\":[{\"type\"\
+    :\"text\",\"text\":\"Thank you for your patience. I've retrieved the current weather\
+    \ information for both cities. Here's the weather report for Seattle and San Francisco\
+    \ today:\\n\\nSeattle: 50 degrees and raining\\nSan Francisco: 70 degrees and\
+    \ sunny\\n\\nAs you can see, the weather conditions are quite different in these\
+    \ two cities today. Seattle is experiencing cooler temperatures with rain, which\
+    \ is fairly typical for the Pacific Northwest. On the other hand, San Francisco\
+    \ is enjoying a warmer, sunny day, which is pleasant for outdoor activities.\\\
+    n\\nIs there anything else you'd like to know about the weather in these or any\
+    \ other cities?\"}],\"stop_reason\":\"end_turn\",\"stop_sequence\":null,\"usage\"\
+    :{\"input_tokens\":590,\"output_tokens\":132}}"
+  headers:
+    Date: "Fri, 09 May 2025 03:51:05 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 6046d692-9f1b-4a14-842c-76a8d4e5a367
+    X-Amzn-Bedrock-Invocation-Latency: "3918"
+    X-Amzn-Bedrock-Output-Token-Count: "132"
+    X-Amzn-Bedrock-Input-Token-Count: "590"
+uuid: 24a31482-89e9-4c00-8de1-787244f48e1a
+persistent: true
+insertionIndex: 87

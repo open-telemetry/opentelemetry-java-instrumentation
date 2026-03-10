@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSp
 import io.opentelemetry.instrumentation.couchbase.springdata.TestDocument;
 import io.opentelemetry.instrumentation.couchbase.springdata.TestRepository;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.Couchbase26Util;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.List;
 
 class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryTest {
 
@@ -23,8 +21,8 @@ class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryT
   }
 
   @Override
-  protected List<AttributeAssertion> couchbaseAttributes() {
-    return Couchbase26Util.couchbaseAttributes();
+  protected boolean includesNetworkAttributes() {
+    return true;
   }
 
   @Override

@@ -6,15 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -22,7 +22,7 @@ public final class NettyClientSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.netty-3.8";
 
-  private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<NettyRequest, HttpResponse> INSTRUMENTER;
   private static final Instrumenter<NettyConnectionRequest, Channel> CONNECTION_INSTRUMENTER;
 
   static {
@@ -42,13 +42,13 @@ public final class NettyClientSingletons {
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(NettyConnectHttpAttributesGetter.INSTANCE))
             .addAttributesExtractor(
-                HttpClientPeerServiceAttributesExtractor.create(
-                    NettyConnectHttpAttributesGetter.INSTANCE,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                HttpClientServicePeerAttributesExtractor.create(
+                    NettyConnectHttpAttributesGetter.INSTANCE, GlobalOpenTelemetry.get()))
+            .setSchemaUrl(SchemaUrls.V1_37_0)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
+  public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 

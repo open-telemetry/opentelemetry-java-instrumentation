@@ -8,16 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.finatra
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   HttpServerInstrumentationExtension,
   HttpServerTestOptions,
   ServerEndpoint
 }
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.concurrent.Executors
@@ -70,9 +69,9 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
       )
       .hasKind(SpanKind.INTERNAL)
       .hasAttributesSatisfyingExactly(
-        equalTo(
-          CodeIncubatingAttributes.CODE_NAMESPACE,
-          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
+        codeFunctionPrefixAssertions(
+          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController",
+          "apply"
         )
       )
 

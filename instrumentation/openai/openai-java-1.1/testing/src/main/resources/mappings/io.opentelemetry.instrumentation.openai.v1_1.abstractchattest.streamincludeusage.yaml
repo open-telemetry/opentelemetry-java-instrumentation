@@ -1,0 +1,64 @@
+---
+id: 10de19b3-3332-49b4-924b-b5087c4726ae
+name: chat_completions
+request:
+  url: /chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o-mini",
+        "stream_options" : {
+          "include_usage" : true
+        },
+        "stream" : true
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |+
+    data: {"id":"chatcmpl-BuYt76LLPdlwJfNjE13YCfKt4dKQG","object":"chat.completion.chunk","created":1752820177,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}],"usage":null}
+
+    data: {"id":"chatcmpl-BuYt76LLPdlwJfNjE13YCfKt4dKQG","object":"chat.completion.chunk","created":1752820177,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":"South"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+    data: {"id":"chatcmpl-BuYt76LLPdlwJfNjE13YCfKt4dKQG","object":"chat.completion.chunk","created":1752820177,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" Atlantic"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+    data: {"id":"chatcmpl-BuYt76LLPdlwJfNjE13YCfKt4dKQG","object":"chat.completion.chunk","created":1752820177,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" Ocean"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+    data: {"id":"chatcmpl-BuYt76LLPdlwJfNjE13YCfKt4dKQG","object":"chat.completion.chunk","created":1752820177,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null}
+
+    data: {"id":"chatcmpl-BuYt76LLPdlwJfNjE13YCfKt4dKQG","object":"chat.completion.chunk","created":1752820177,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[],"usage":{"prompt_tokens":22,"completion_tokens":3,"total_tokens":25,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}}
+
+    data: [DONE]
+
+  headers:
+    Date: "Fri, 18 Jul 2025 06:29:37 GMT"
+    Content-Type: text/event-stream; charset=utf-8
+    access-control-expose-headers: X-Request-ID
+    openai-organization: test_organization
+    openai-processing-ms: "265"
+    openai-project: proj_Pf1eM5R55Z35wBy4rt8PxAGq
+    openai-version: 2020-10-01
+    x-envoy-upstream-service-time: "268"
+    x-ratelimit-limit-requests: "5000"
+    x-ratelimit-limit-tokens: "4000000"
+    x-ratelimit-remaining-requests: "4999"
+    x-ratelimit-remaining-tokens: "3999982"
+    x-ratelimit-reset-requests: 12ms
+    x-ratelimit-reset-tokens: 0s
+    x-request-id: req_43c78dbd24f6666bf6a60a13854cf611
+    strict-transport-security: max-age=31536000; includeSubDomains; preload
+    cf-cache-status: DYNAMIC
+    Set-Cookie: test_set_cookie
+    X-Content-Type-Options: nosniff
+    Server: cloudflare
+    CF-RAY: 960fecfc3f95e375-NRT
+    alt-svc: h3=":443"; ma=86400
+uuid: 10de19b3-3332-49b4-924b-b5087c4726ae
+persistent: true
+insertionIndex: 16

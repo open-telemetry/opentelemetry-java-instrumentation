@@ -13,4 +13,16 @@
     <vulnerabilityName>CVE-2023-45142</vulnerabilityName>
     <vulnerabilityName>CVE-2023-47108</vulnerabilityName>
   </suppress>
+  <suppress>
+    <!-- detected CVE is for a different project https://www.cve.org/CVERecord?id=CVE-2018-17046 -->
+    <packageUrl>pkg:maven/codes.rafael.asmjdkbridge/asm-jdk-bridge@0.0.9</packageUrl>
+    <vulnerabilityName>CVE-2018-17046</vulnerabilityName>
+  </suppress>
+  <suppress>
+    <!-- detected CVEs are json-java not groovy-json, https://www.cve.org/CVERecord?id=CVE-2022-45688
+      https://nvd.nist.gov/vuln/detail/cve-2023-5072 -->
+    <packageUrl>pkg:maven/org.codehaus.groovy/groovy-json@3.0.25</packageUrl>
+    <vulnerabilityName>CVE-2022-45688</vulnerabilityName>
+    <vulnerabilityName>CVE-2023-5072</vulnerabilityName>
+  </suppress>
 </suppressions>

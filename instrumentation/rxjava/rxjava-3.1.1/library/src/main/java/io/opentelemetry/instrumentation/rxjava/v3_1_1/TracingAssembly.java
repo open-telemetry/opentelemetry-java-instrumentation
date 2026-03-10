@@ -26,10 +26,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
-import io.opentelemetry.instrumentation.rxjava.v3.common.RxJava3AsyncOperationEndStrategy;
-import io.opentelemetry.instrumentation.rxjava.v3.common.TracingCompletableObserver;
-import io.opentelemetry.instrumentation.rxjava.v3.common.TracingMaybeObserver;
-import io.opentelemetry.instrumentation.rxjava.v3.common.TracingSingleObserver;
+import io.opentelemetry.instrumentation.rxjava.common.v3_0.RxJava3AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.rxjava.common.v3_0.TracingCompletableObserver;
+import io.opentelemetry.instrumentation.rxjava.common.v3_0.TracingMaybeObserver;
+import io.opentelemetry.instrumentation.rxjava.common.v3_0.TracingSingleObserver;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Flowable;
@@ -58,6 +58,7 @@ import org.reactivestreams.Subscriber;
  *
  * <p>Instrumentation can be disabled by calling the {@link TracingAssembly#disable()} method.
  */
+@SuppressWarnings("SuppressWarningsWithoutExplanation") // RxJavaPlugins uses raw types
 public final class TracingAssembly {
 
   @SuppressWarnings("rawtypes")
@@ -98,6 +99,10 @@ public final class TracingAssembly {
       oldOnParallelAssembly;
 
   @GuardedBy("TracingAssembly.class")
+  @Nullable
+  private static Function<? super Runnable, ? extends Runnable> oldScheduleHandler;
+
+  @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
   public static TracingAssembly create() {
@@ -122,6 +127,8 @@ public final class TracingAssembly {
 
       enableObservable();
 
+      enableWrappedScheduleHandler();
+
       enableCompletable();
 
       enableSingle();
@@ -145,6 +152,8 @@ public final class TracingAssembly {
       }
 
       disableObservable();
+
+      disableWrappedScheduleHandler();
 
       disableCompletable();
 
@@ -184,6 +193,25 @@ public final class TracingAssembly {
                 return new TracingCompletableObserver(observer, context);
               }
             }));
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void enableWrappedScheduleHandler() {
+    oldScheduleHandler = RxJavaPlugins.getScheduleHandler();
+    RxJavaPlugins.setScheduleHandler(
+        runnable -> {
+          Context context = Context.current();
+          Runnable wrappedRunnable =
+              () -> {
+                try (Scope ignored = context.makeCurrent()) {
+                  runnable.run();
+                }
+              };
+          // If there was a previous handler, apply it to our wrapped runnable
+          return oldScheduleHandler != null
+              ? oldScheduleHandler.apply(wrappedRunnable)
+              : wrappedRunnable;
+        });
   }
 
   @GuardedBy("TracingAssembly.class")
@@ -274,6 +302,12 @@ public final class TracingAssembly {
   private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void disableWrappedScheduleHandler() {
+    RxJavaPlugins.setScheduleHandler(oldScheduleHandler);
+    oldScheduleHandler = null;
   }
 
   @GuardedBy("TracingAssembly.class")

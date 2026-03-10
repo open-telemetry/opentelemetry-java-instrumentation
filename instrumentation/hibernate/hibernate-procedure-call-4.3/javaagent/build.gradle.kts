@@ -17,6 +17,7 @@ dependencies {
   implementation(project(":instrumentation:hibernate:hibernate-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
+  testImplementation(project(":instrumentation:hibernate:testing"))
   // Added to ensure cross compatibility:
   testInstrumentation(project(":instrumentation:hibernate:hibernate-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:hibernate:hibernate-4.0:javaagent"))
@@ -33,15 +34,25 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }

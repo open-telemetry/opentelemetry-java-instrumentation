@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.HTTP_CLIENT_OPTIONS;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.http.HttpClientOptions;
@@ -36,7 +36,7 @@ public class HttpClientImplInstrumentation implements TypeInstrumentation {
     public static void attachHttpClientOptions(
         @Advice.This HttpClientImpl client,
         @Advice.FieldValue("options") HttpClientOptions options) {
-      VirtualField.find(HttpClientImpl.class, HttpClientOptions.class).set(client, options);
+      HTTP_CLIENT_OPTIONS.set(client, options);
     }
   }
 }

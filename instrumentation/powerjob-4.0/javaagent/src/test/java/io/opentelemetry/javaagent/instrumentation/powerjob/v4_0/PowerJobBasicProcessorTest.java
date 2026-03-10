@@ -5,24 +5,27 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.zaxxer.hikari.HikariDataSource;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
@@ -38,6 +41,9 @@ import tech.powerjob.worker.log.OmsLogger;
 class PowerJobBasicProcessorTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.powerjob.experimental-span-attributes");
 
   private static final String BASIC_PROCESSOR = "BasicProcessor";
   private static final String BROADCAST_PROCESSOR = "BroadcastProcessor";
@@ -58,17 +64,19 @@ class PowerJobBasicProcessorTest {
     BasicProcessor testBasicProcessor = new TestBasicProcessor();
     testBasicProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(String.format("%s.process", TestBasicProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            TestBasicProcessor.class.getName(), jobId, jobParam, BASIC_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format("%s.process", TestBasicProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                TestBasicProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                BASIC_PROCESSOR))));
   }
 
   @Test
@@ -79,21 +87,20 @@ class PowerJobBasicProcessorTest {
     BasicProcessor testBasicFailProcessor = new TestBasicFailProcessor();
     testBasicFailProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format("%s.process", TestBasicFailProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.error())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            TestBasicFailProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            BASIC_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format(
+                                "%s.process", TestBasicFailProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                TestBasicFailProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                BASIC_PROCESSOR))));
   }
 
   @Test
@@ -104,21 +111,20 @@ class PowerJobBasicProcessorTest {
     BasicProcessor testBroadcastProcessor = new TestBroadcastProcessor();
     testBroadcastProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format("%s.process", TestBroadcastProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            TestBroadcastProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            BROADCAST_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format(
+                                "%s.process", TestBroadcastProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                TestBroadcastProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                BROADCAST_PROCESSOR))));
   }
 
   @Test
@@ -129,21 +135,20 @@ class PowerJobBasicProcessorTest {
     BasicProcessor testMapProcessProcessor = new TestMapProcessProcessor();
     testMapProcessProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format("%s.process", TestMapProcessProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            TestMapProcessProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            MAP_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format(
+                                "%s.process", TestMapProcessProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                TestMapProcessProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                MAP_PROCESSOR))));
   }
 
   @Test
@@ -154,24 +159,23 @@ class PowerJobBasicProcessorTest {
     BasicProcessor testMapReduceProcessProcessor = new TestMapReduceProcessProcessor();
     testMapReduceProcessProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format(
-                            "%s.process", TestMapReduceProcessProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            TestMapReduceProcessProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            MAP_REDUCE_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format(
+                                "%s.process", TestMapReduceProcessProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                TestMapReduceProcessProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                MAP_REDUCE_PROCESSOR))));
   }
 
+  @DisabledOnOs(value = OS.WINDOWS, disabledReason = "ShellProcessor requires /bin/sh")
   @Test
   void testShellProcessor() throws Exception {
     long jobId = 1;
@@ -182,17 +186,18 @@ class PowerJobBasicProcessorTest {
     BasicProcessor shellProcessor = new ShellProcessor();
     shellProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(String.format("%s.process", ShellProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            ShellProcessor.class.getName(), jobId, jobParam, SHELL_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(String.format("%s.process", ShellProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                ShellProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                SHELL_PROCESSOR))));
   }
 
   @Test
@@ -205,18 +210,17 @@ class PowerJobBasicProcessorTest {
     BasicProcessor pythonProcessor = new PythonProcessor();
     pythonProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                // not asserting status as it is either unset or error depending on whether python
-                // is available or not
-                span.hasName(String.format("%s.process", PythonProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            PythonProcessor.class.getName(), jobId, jobParam, PYTHON_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  // not asserting status as it is either unset or error depending on whether python
+                  // is available or not
+                  span.hasName(String.format("%s.process", PythonProcessor.class.getSimpleName()))
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasAttributesSatisfyingExactly(
+                          attributeAssertions(
+                              PythonProcessor.class.getName(), jobId, jobParam, PYTHON_PROCESSOR));
+                }));
   }
 
   @Test
@@ -229,17 +233,15 @@ class PowerJobBasicProcessorTest {
     BasicProcessor httpProcessor = new HttpProcessor();
     httpProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(String.format("%s.process", HttpProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.error())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            HttpProcessor.class.getName(), jobId, jobParam, HTTP_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(String.format("%s.process", HttpProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                HttpProcessor.class.getName(), jobId, jobParam, HTTP_PROCESSOR))));
   }
 
   @Test
@@ -257,21 +259,19 @@ class PowerJobBasicProcessorTest {
     BasicProcessor fileCleanupProcessor = new FileCleanupProcessor();
     fileCleanupProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format("%s.process", FileCleanupProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            FileCleanupProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            FILE_CLEANUP_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format("%s.process", FileCleanupProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                FileCleanupProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                FILE_CLEANUP_PROCESSOR))));
   }
 
   @Test
@@ -285,22 +285,20 @@ class PowerJobBasicProcessorTest {
     BasicProcessor springDatasourceSqlProcessor = new SpringDatasourceSqlProcessor(dataSource);
     springDatasourceSqlProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format(
-                            "%s.process", SpringDatasourceSqlProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.error())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            SpringDatasourceSqlProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            SPRING_DATASOURCE_SQL_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format(
+                                "%s.process", SpringDatasourceSqlProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                SpringDatasourceSqlProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                SPRING_DATASOURCE_SQL_PROCESSOR))));
   }
 
   @Test
@@ -313,22 +311,20 @@ class PowerJobBasicProcessorTest {
     BasicProcessor dynamicDatasourceSqlProcessor = new DynamicDatasourceSqlProcessor();
     dynamicDatasourceSqlProcessor.process(taskContext);
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName(
-                        String.format(
-                            "%s.process", DynamicDatasourceSqlProcessor.class.getSimpleName()))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.error())
-                    .hasAttributesSatisfyingExactly(
-                        attributeAssertions(
-                            DynamicDatasourceSqlProcessor.class.getName(),
-                            jobId,
-                            jobParam,
-                            DYNAMIC_DATASOURCE_SQL_PROCESSOR));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            String.format(
+                                "%s.process", DynamicDatasourceSqlProcessor.class.getSimpleName()))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                DynamicDatasourceSqlProcessor.class.getName(),
+                                jobId,
+                                jobParam,
+                                DYNAMIC_DATASOURCE_SQL_PROCESSOR))));
   }
 
   private static TaskContext genTaskContext(long jobId, String jobParam) {
@@ -338,20 +334,23 @@ class PowerJobBasicProcessorTest {
     return taskContext;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(
       String codeNamespace, long jobId, String jobParam, String jobType) {
-    List<AttributeAssertion> attributeAssertions =
-        new ArrayList<>(
-            asList(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "process"),
-                equalTo(AttributeKey.stringKey("job.system"), "powerjob"),
-                equalTo(AttributeKey.longKey("scheduling.powerjob.job.id"), jobId),
-                equalTo(AttributeKey.stringKey("scheduling.powerjob.job.type"), jobType)));
-    if (!StringUtils.isNullOrEmpty(jobParam)) {
-      attributeAssertions.add(
-          equalTo(AttributeKey.stringKey("scheduling.powerjob.job.param"), jobParam));
+    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
+
+    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      attributeAssertions.addAll(
+          new ArrayList<>(
+              asList(
+                  equalTo(stringKey("job.system"), "powerjob"),
+                  equalTo(longKey("scheduling.powerjob.job.id"), jobId),
+                  equalTo(stringKey("scheduling.powerjob.job.type"), jobType))));
+    }
+
+    attributeAssertions.addAll(codeFunctionAssertions(codeNamespace, "process"));
+
+    if (!StringUtils.isNullOrEmpty(jobParam) && EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+      attributeAssertions.add(equalTo(stringKey("scheduling.powerjob.job.param"), jobParam));
     }
     return attributeAssertions;
   }

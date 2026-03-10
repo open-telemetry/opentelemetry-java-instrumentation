@@ -7,37 +7,39 @@ package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.extannotations.ExternalAnnotationSingletons.instrumenter;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
@@ -55,7 +57,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   // visible for testing
   static final List<String> DEFAULT_ANNOTATIONS =
-      Arrays.asList(
+      asList(
           "com.appoptics.api.ext.LogMethod",
           "com.newrelic.api.agent.Trace",
           "com.signalfx.tracing.api.Trace",
@@ -66,11 +68,6 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           "kamon.annotation.api.Trace",
           "org.springframework.cloud.sleuth.annotation.NewSpan");
 
-  private static final String TRACE_ANNOTATIONS_CONFIG =
-      "otel.instrumentation.external-annotations.include";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.external-annotations.exclude-methods";
-
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
 
@@ -79,7 +76,9 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
 
   public ExternalAnnotationInstrumentation() {
     Set<String> additionalTraceAnnotations =
-        configureAdditionalTraceAnnotations(AgentInstrumentationConfig.get());
+        configureAdditionalTraceAnnotations(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "external_annotations"));
 
     if (additionalTraceAnnotations.isEmpty()) {
       classLoaderOptimization = none();
@@ -109,23 +108,30 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)),
+        isAnnotatedWith(traceAnnotationMatcher).and(not(excludedMethodsMatcher)).and(isMethod()),
         ExternalAnnotationInstrumentation.class.getName() + "$ExternalAnnotationAdvice");
   }
 
   // visible for testing
-  static Set<String> configureAdditionalTraceAnnotations(InstrumentationConfig config) {
-    String configString = config.getString(TRACE_ANNOTATIONS_CONFIG);
+  static Set<String> configureAdditionalTraceAnnotations(DeclarativeConfigProperties config) {
+    // First try structured declarative config (YAML list format)
+    List<String> list = config.getScalarList("include", String.class);
+    if (list != null) {
+      return new HashSet<>(list);
+    }
+
+    // Fall back to old string property format for backward compatibility
+    String configString = config.getString("include");
     if (configString == null) {
-      return Collections.unmodifiableSet(new HashSet<>(DEFAULT_ANNOTATIONS));
+      return new HashSet<>(DEFAULT_ANNOTATIONS);
     } else if (configString.isEmpty()) {
-      return Collections.emptySet();
+      return emptySet();
     } else if (!configString.matches(CONFIG_FORMAT)) {
       logger.log(
           WARNING,
           "Invalid trace annotations config \"{0}\". Must match 'package.Annotation$Name;*'.",
           configString);
-      return Collections.emptySet();
+      return emptySet();
     } else {
       Set<String> annotations = new HashSet<>();
       String[] annotationClasses = configString.split(";", -1);
@@ -134,7 +140,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           annotations.add(annotationClass.trim());
         }
       }
-      return Collections.unmodifiableSet(annotations);
+      return annotations;
     }
   }
 
@@ -146,19 +152,19 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
-        MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+        MethodsConfigurationParser.parseExcludeMethods(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "external_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> classMather =
-          isDeclaredBy(ElementMatchers.named(className));
+      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
 
-      ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher = none();
-      for (String methodName : entry.getValue()) {
-        excludedMethodsMatcher = excludedMethodsMatcher.or(ElementMatchers.named(methodName));
+      Set<String> methodNames = entry.getValue();
+      if (!methodNames.isEmpty()) {
+        matcher = matcher.and(namedOneOf(methodNames.toArray(new String[0])));
       }
 
-      result = result.or(classMather.and(excludedMethodsMatcher));
+      result = result.or(matcher);
     }
 
     return result;
@@ -167,36 +173,48 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExternalAnnotationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Origin("#t") Class<?> declaringClass,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final ClassAndMethod classAndMethod;
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = ClassAndMethod.create(declaringClass, methodName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(ClassAndMethod classAndMethod, Context context, Scope scope) {
+        this.classAndMethod = classAndMethod;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Class<?> declaringClass, String methodName) {
+        Context parentContext = Context.current();
+        ClassAndMethod classAndMethod = ClassAndMethod.create(declaringClass, methodName);
+        if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, classAndMethod);
+        return new AdviceScope(classAndMethod, context, context.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, classAndMethod, null, throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(declaringClass, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      scope.close();
-      instrumenter().end(context, request, null, throwable);
     }
   }
 }

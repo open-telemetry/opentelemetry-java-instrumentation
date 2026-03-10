@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 
 final class CapturedHttpHeadersUtil {
 
@@ -25,7 +26,7 @@ final class CapturedHttpHeadersUtil {
   static String[] lowercase(List<String> names) {
     return names.stream()
         .map(s -> s.toLowerCase(Locale.ROOT))
-        .collect(Collectors.toList())
+        .collect(toList())
         .toArray(new String[0]);
   }
 

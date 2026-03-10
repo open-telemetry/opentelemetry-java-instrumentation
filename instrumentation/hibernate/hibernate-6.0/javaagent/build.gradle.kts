@@ -28,24 +28,98 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
   testImplementation("org.hsqldb:hsqldb:2.0.0")
-  testImplementation("org.springframework.data:spring-data-jpa:3.0.0")
+  testImplementation(project(":instrumentation:hibernate:testing"))
+  testLibrary("org.springframework.data:spring-data-jpa:3.0.0")
 }
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    val hibernate6Test by registering(JvmTestSuite::class) {
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+      }
+      dependencies {
+        implementation("com.h2database:h2:1.4.197")
+        implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation(project(":instrumentation:hibernate:testing"))
+        if (latestDepTest) {
+          implementation("org.hibernate:hibernate-core:6.+")
+        } else {
+          implementation("org.hibernate:hibernate-core:6.0.0.Final")
+        }
+      }
+    }
+
+    val hibernate7Test by registering(JvmTestSuite::class) {
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+      }
+      dependencies {
+        implementation("com.h2database:h2:1.4.197")
+        implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation(project(":instrumentation:hibernate:testing"))
+        if (latestDepTest) {
+          implementation("org.hibernate:hibernate-core:7.+")
+        } else {
+          implementation("org.hibernate:hibernate-core:7.0.0.Final")
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  named("compileHibernate7TestJava", JavaCompile::class).configure {
+    options.release.set(17)
+  }
+  val testJavaVersion =
+    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
+      ?: JavaVersion.current()
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named("hibernate7Test", Test::class).configure {
+      enabled = false
+    }
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+  }
+
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      }
+    }
+
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named("hibernate7TestStableSemconv", Test::class).configure {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
   }
 }

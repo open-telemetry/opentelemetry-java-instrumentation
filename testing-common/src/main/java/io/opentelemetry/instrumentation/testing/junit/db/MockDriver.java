@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static org.mockito.Mockito.mock;
+
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -13,7 +15,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
-import org.mockito.Mockito;
 
 public final class MockDriver implements Driver {
   private static final MockDriver INSTANCE = new MockDriver();
@@ -24,7 +25,7 @@ public final class MockDriver implements Driver {
 
   @Override
   public Connection connect(String url, Properties info) {
-    return Mockito.mock(Connection.class);
+    return mock(Connection.class);
   }
 
   @Override

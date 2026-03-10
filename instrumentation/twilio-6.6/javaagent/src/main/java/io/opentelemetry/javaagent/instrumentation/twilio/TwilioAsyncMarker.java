@@ -18,7 +18,7 @@ public final class TwilioAsyncMarker {
       ContextKey.named("opentelemetry-instrumentation-twilio-async-marker");
 
   public static Context markAsync(Context context) {
-    return context.with(MARKER_KEY, Boolean.TRUE);
+    return context.with(MARKER_KEY, true);
   }
 
   public static boolean isMarkedAsync(Context context) {

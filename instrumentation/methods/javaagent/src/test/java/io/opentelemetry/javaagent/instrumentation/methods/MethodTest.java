@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
@@ -18,7 +17,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.naming.NoInitialContextException;
 import javax.naming.directory.InitialDirContext;
@@ -26,13 +24,11 @@ import javax.naming.ldap.InitialLdapContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class MethodTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void methodTraced() {
     assertThat(new ConfigTracedCallable().call()).isEqualTo("Hello!");
@@ -43,8 +39,7 @@ class MethodTest {
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, ConfigTracedCallable.class.getName()),
-                            equalTo(CODE_FUNCTION, "call"))));
+                            codeFunctionAssertions(ConfigTracedCallable.class, "call"))));
   }
 
   @Test
@@ -70,8 +65,7 @@ class MethodTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, InitialDirContext.class.getName()),
-                            equalTo(CODE_FUNCTION, "search"))));
+                            codeFunctionAssertions(InitialDirContext.class, "search"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -92,7 +86,7 @@ class MethodTest {
     assertThat(traced.span).isNotNull().satisfies(span -> assertThat(span.isRecording()).isTrue());
 
     traced.countDownLatch.countDown();
-    assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("Hello!");
+    assertThat(future.get(10, SECONDS)).isEqualTo("Hello!");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -101,8 +95,8 @@ class MethodTest {
                     span.hasName("ConfigTracedCompletableFuture.getResult")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, ConfigTracedCompletableFuture.class.getName()),
-                            equalTo(CODE_FUNCTION, "getResult"))));
+                            codeFunctionAssertions(
+                                ConfigTracedCompletableFuture.class, "getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {

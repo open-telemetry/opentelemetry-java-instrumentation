@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static java.util.Collections.singleton;
+
 import io.opentelemetry.instrumentation.jaxrs.v3_0.test.JaxRsApplicationPathTestApplication;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.ServletException;
-import java.util.Collections;
 import org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer;
 
 // ServletContainerInitializer isn't automatically called due to the way this test is set up,
@@ -20,7 +21,7 @@ public class JerseyStartupListener implements ServletContextListener {
     try {
       new JerseyServletContainerInitializer()
           .onStartup(
-              Collections.singleton(JaxRsApplicationPathTestApplication.class),
+              singleton(JaxRsApplicationPathTestApplication.class),
               servletContextEvent.getServletContext());
     } catch (ServletException exception) {
       throw new IllegalStateException(exception);

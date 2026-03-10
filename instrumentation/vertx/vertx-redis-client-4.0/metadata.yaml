@@ -1,0 +1,17 @@
+display_name: Vert.x Redis Client
+description: >
+  This instrumentation enables database client spans and database client metrics for Redis operations
+  using the Vert.x Redis Client library.
+library_link: https://vertx.io/docs/vertx-redis-client/java/
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""

@@ -20,15 +20,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.computeDbInfo;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -47,31 +44,10 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final DataSource delegate;
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
+  private final boolean captureQueryParameters;
+  private final SqlCommenter sqlCommenter;
   private volatile DbInfo cachedDbInfo;
-
-  /**
-   * Create a OpenTelemetry DataSource wrapping another DataSource.
-   *
-   * @param delegate the DataSource to wrap
-   */
-  @Deprecated
-  public OpenTelemetryDataSource(DataSource delegate) {
-    this(delegate, GlobalOpenTelemetry.get());
-  }
-
-  /**
-   * Create a OpenTelemetry DataSource wrapping another DataSource. This constructor is primarily
-   * used by dependency injection frameworks.
-   *
-   * @param delegate the DataSource to wrap
-   * @param openTelemetry the OpenTelemetry instance to setup for
-   */
-  @Deprecated
-  public OpenTelemetryDataSource(DataSource delegate, OpenTelemetry openTelemetry) {
-    this.delegate = delegate;
-    this.dataSourceInstrumenter = createDataSourceInstrumenter(openTelemetry, true);
-    this.statementInstrumenter = createStatementInstrumenter(openTelemetry);
-  }
 
   /**
    * Create a OpenTelemetry DataSource wrapping another DataSource.
@@ -79,28 +55,48 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
    * @param delegate the DataSource to wrap
    * @param dataSourceInstrumenter the DataSource Instrumenter to use
    * @param statementInstrumenter the Statement Instrumenter to use
+   * @param sqlCommenter helper class for augment sql queries with a comment containing the tracing
+   *     information
    */
   OpenTelemetryDataSource(
       DataSource delegate,
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
-      Instrumenter<DbRequest, Void> statementInstrumenter) {
+      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
+      boolean captureQueryParameters,
+      SqlCommenter sqlCommenter) {
     this.delegate = delegate;
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
+    this.captureQueryParameters = captureQueryParameters;
+    this.sqlCommenter = sqlCommenter;
   }
 
   @Override
   public Connection getConnection() throws SQLException {
     Connection connection = wrapCall(delegate::getConnection);
     DbInfo dbInfo = getDbInfo(connection);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        sqlCommenter);
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        sqlCommenter);
   }
 
   @Override

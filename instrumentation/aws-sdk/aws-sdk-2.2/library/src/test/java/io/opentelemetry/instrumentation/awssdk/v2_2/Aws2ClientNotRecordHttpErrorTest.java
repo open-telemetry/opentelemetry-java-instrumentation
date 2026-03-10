@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
-public class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTest {
+class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTest {
   @RegisterExtension
   public static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
@@ -23,7 +23,7 @@ public class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHt
                 .setCaptureExperimentalSpanAttributes(true)
                 .setRecordIndividualHttpError(isRecordIndividualHttpErrorEnabled())
                 .build()
-                .newExecutionInterceptor());
+                .createExecutionInterceptor());
   }
 
   @Override

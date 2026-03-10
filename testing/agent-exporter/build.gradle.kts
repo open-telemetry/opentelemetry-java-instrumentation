@@ -12,10 +12,15 @@ dependencies {
   compileOnly("com.google.auto.service:auto-service")
 
   compileOnly(project(":instrumentation-api"))
+  compileOnly(project(":instrumentation-api-incubator"))
   compileOnly(project(":javaagent-extension-api"))
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
 
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 }

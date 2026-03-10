@@ -9,10 +9,23 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 public final class XxlJobHelper {
   private final Instrumenter<XxlJobProcessRequest, Void> instrumenter;
   private final Predicate<Object> failedStatusPredicate;
+
+  public static class XxlJobScope {
+    private final XxlJobProcessRequest request;
+    private final Context context;
+    private final Scope scope;
+
+    private XxlJobScope(XxlJobProcessRequest request, Context context, Scope scope) {
+      this.request = request;
+      this.context = context;
+      this.scope = scope;
+    }
+  }
 
   private XxlJobHelper(
       Instrumenter<XxlJobProcessRequest, Void> instrumenter,
@@ -27,31 +40,25 @@ public final class XxlJobHelper {
     return new XxlJobHelper(instrumenter, failedStatusPredicate);
   }
 
-  public Context startSpan(Context parentContext, XxlJobProcessRequest request) {
+  @Nullable
+  public XxlJobScope startSpan(XxlJobProcessRequest request) {
+    Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return null;
     }
-    return instrumenter.start(parentContext, request);
+    Context context = instrumenter.start(parentContext, request);
+    return new XxlJobScope(request, context, context.makeCurrent());
   }
 
-  public void stopSpan(
-      Object result,
-      XxlJobProcessRequest request,
-      Throwable throwable,
-      Scope scope,
-      Context context) {
+  public void endSpan(
+      @Nullable XxlJobScope scope, @Nullable Object result, @Nullable Throwable throwable) {
     if (scope == null) {
       return;
     }
     if (failedStatusPredicate.test(result)) {
-      request.setFailed();
+      scope.request.setFailed();
     }
-    scope.close();
-    instrumenter.end(context, request, null, throwable);
-  }
-
-  public void stopSpan(
-      XxlJobProcessRequest request, Throwable throwable, Scope scope, Context context) {
-    stopSpan(null, request, throwable, scope, context);
+    scope.scope.close();
+    instrumenter.end(scope.context, scope.request, null, throwable);
   }
 }

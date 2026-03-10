@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
@@ -82,7 +83,7 @@ final class ApacheHttpClientHttpAttributesGetter
   // minimize memory overhead by not using streams
   private static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
-      return Collections.emptyList();
+      return emptyList();
     }
     List<String> headersList = new ArrayList<>(headers.length);
     for (Header header : headers) {
@@ -117,12 +118,21 @@ final class ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(HttpRequest request) {
-    return request.getAuthority().getHostName();
+    URIAuthority authority = request.getAuthority();
+    if (authority == null) {
+      return null;
+    }
+    return authority.getHostName();
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return request.getAuthority().getPort();
+    URIAuthority authority = request.getAuthority();
+    if (authority == null) {
+      return null;
+    }
+    return authority.getPort();
   }
 
   private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {

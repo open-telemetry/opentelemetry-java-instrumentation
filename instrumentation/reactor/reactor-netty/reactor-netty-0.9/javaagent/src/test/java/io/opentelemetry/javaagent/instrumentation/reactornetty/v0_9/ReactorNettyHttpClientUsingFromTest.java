@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import java.util.concurrent.TimeUnit;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import org.junit.jupiter.api.condition.OS;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 
@@ -23,11 +26,20 @@ class ReactorNettyHttpClientUsingFromTest extends AbstractReactorNettyHttpClient
                     tcpClient.doOnConnected(
                         connection ->
                             connection.addHandlerLast(
-                                new ReadTimeoutHandler(
-                                    READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)));
+                                new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS)));
               }
               return tcpClient.option(
                   ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECTION_TIMEOUT.toMillis());
             });
+  }
+
+  @Override
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
+
+    // Disable remote connection tests on Windows due to reactor-netty creating extra spans
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.setTestRemoteConnection(false);
+    }
   }
 }

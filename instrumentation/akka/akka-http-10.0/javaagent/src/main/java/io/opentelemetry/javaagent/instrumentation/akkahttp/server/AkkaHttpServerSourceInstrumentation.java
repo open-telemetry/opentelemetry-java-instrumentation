@@ -14,6 +14,8 @@ import akka.stream.scaladsl.Flow;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,10 +35,11 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class AkkaBindAndHandleAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapHandler(
-        @Advice.Argument(value = 0, readOnly = false) Flow<HttpRequest, HttpResponse, ?> handler) {
-      handler = AkkaFlowWrapper.wrap(handler);
+    public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
+        @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
+      return AkkaFlowWrapper.wrap(handler);
     }
   }
 }

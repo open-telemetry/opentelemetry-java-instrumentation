@@ -5,4 +5,4 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-public class Vaadin142Test extends AbstractVaadin14Test {}
+class Vaadin142Test extends AbstractVaadin14Test {}

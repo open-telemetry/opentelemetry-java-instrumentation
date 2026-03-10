@@ -11,7 +11,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.lang.reflect.Method;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -98,7 +97,7 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
           public void visitMethodInsn(
               int opcode, String owner, String name, String descriptor, boolean isInterface) {
             pushOpcode(opcode);
-            if (Utils.getInternalName(FIND_VIRTUAL_FIELD_METHOD.getDeclaringClass()).equals(owner)
+            if (Type.getInternalName(FIND_VIRTUAL_FIELD_METHOD.getDeclaringClass()).equals(owner)
                 && FIND_VIRTUAL_FIELD_METHOD.getName().equals(name)
                 && Type.getMethodDescriptor(FIND_VIRTUAL_FIELD_METHOD).equals(descriptor)) {
               logger.log(

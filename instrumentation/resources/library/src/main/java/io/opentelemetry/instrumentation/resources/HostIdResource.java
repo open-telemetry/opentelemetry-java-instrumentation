@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -14,12 +16,10 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
@@ -111,7 +111,7 @@ public final class HostIdResource {
       return lines;
     } catch (IOException e) {
       logger.log(FINE, "Failed to read /etc/machine-id", e);
-      return Collections.emptyList();
+      return emptyList();
     }
   }
 
@@ -145,13 +145,13 @@ public final class HostIdResource {
                 + " Output: "
                 + String.join("\n", output));
 
-        return Collections.emptyList();
+        return emptyList();
       }
 
       return output;
     } catch (IOException | InterruptedException e) {
       logger.log(FINE, "Failed to read Windows registry", e);
-      return Collections.emptyList();
+      return emptyList();
     }
   }
 
@@ -159,8 +159,7 @@ public final class HostIdResource {
     List<String> result = new ArrayList<>();
 
     try (BufferedReader processOutputReader =
-        new BufferedReader(
-            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8))) {
       String readLine;
 
       while ((readLine = processOutputReader.readLine()) != null) {

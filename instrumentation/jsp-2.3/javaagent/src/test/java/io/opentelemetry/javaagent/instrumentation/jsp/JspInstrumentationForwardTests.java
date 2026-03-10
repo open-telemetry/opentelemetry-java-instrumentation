@@ -7,6 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.jsp;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -14,12 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.io.File;
@@ -30,18 +36,15 @@ import org.apache.jasper.JasperException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static JspSpanAssertions spanAsserts;
 
@@ -97,7 +100,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
   }
 
   @ParameterizedTest(name = "Forward to {0}")
-  @ArgumentsSource(NonErroneousGetForwardArgs.class)
+  @MethodSource("nonErroneousGetForwardArgs")
   void testNonErroneousGetForwardTo(
       String name,
       String forwardFromFileName,
@@ -152,27 +155,24 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .build())));
   }
 
-  static class NonErroneousGetForwardArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of(
-              "no java jsp",
-              "/forwards/forwardToNoJavaJsp.jsp",
-              "/nojava.jsp",
-              "forwardToNoJavaJsp_jsp",
-              "forwards.",
-              "nojava_jsp",
-              ""),
-          Arguments.of(
-              "normal java jsp",
-              "/forwards/forwardToSimpleJava.jsp",
-              "/common/loop.jsp",
-              "forwardToSimpleJava_jsp",
-              "forwards.",
-              "loop_jsp",
-              "common."));
-    }
+  private static Stream<Arguments> nonErroneousGetForwardArgs() {
+    return Stream.of(
+        Arguments.of(
+            "no java jsp",
+            "/forwards/forwardToNoJavaJsp.jsp",
+            "/nojava.jsp",
+            "forwardToNoJavaJsp_jsp",
+            "forwards.",
+            "nojava_jsp",
+            ""),
+        Arguments.of(
+            "normal java jsp",
+            "/forwards/forwardToSimpleJava.jsp",
+            "/common/loop.jsp",
+            "forwardToSimpleJava_jsp",
+            "forwards.",
+            "loop_jsp",
+            "common."));
   }
 
   @Test
@@ -418,22 +418,18 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
-                            equalTo(UrlAttributes.URL_PATH, route),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 404),
-                            satisfies(
-                                UserAgentAttributes.USER_AGENT_ORIGINAL,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(HttpAttributes.HTTP_ROUTE, route),
-                            equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, port),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(URL_PATH, route),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
+                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                            equalTo(HTTP_ROUTE, route),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     spanAsserts.assertCompileSpan(
                         span,

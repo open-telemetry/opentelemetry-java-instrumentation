@@ -5,13 +5,7 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -22,15 +16,10 @@ import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.LongAssertConsumer;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -110,40 +99,32 @@ public abstract class AbstractCouchbaseTest {
         BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort);
   }
 
-  protected SpanDataAssert assertCouchbaseSpan(SpanDataAssert span, String operation) {
-    return assertCouchbaseSpan(span, operation, null);
+  /** Override to return true in subclasses that include network attributes (e.g., 2.6+). */
+  protected boolean includesNetworkAttributes() {
+    return false;
   }
 
-  protected SpanDataAssert assertCouchbaseSpan(
-      SpanDataAssert span, String operation, String bucketName) {
-    return assertCouchbaseSpan(span, operation, operation, bucketName, null);
+  /**
+   * Override to return true in subclasses where experimental attributes are enabled (when
+   * otel.instrumentation.couchbase.experimental-span-attributes=true).
+   */
+  protected boolean includesExperimentalAttributes() {
+    return Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  protected SpanDataAssert assertCouchbaseSpan(
-      SpanDataAssert span, String spanName, String operation, String bucketName, String statement) {
-    span.hasName(spanName).hasKind(SpanKind.CLIENT);
-
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(
-        equalTo(maybeStable(DB_SYSTEM), DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
-    if (operation != null) {
-      assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
-    }
-    if (bucketName != null) {
-      assertions.add(equalTo(maybeStable(DB_NAME), bucketName));
-    }
-    if (statement != null) {
-      assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
-    }
-    assertions.addAll(couchbaseAttributes());
-
-    span.hasAttributesSatisfyingExactly(assertions);
-
-    return span;
+  protected String networkType() {
+    return includesNetworkAttributes() && emitOldDatabaseSemconv() ? "ipv4" : null;
   }
 
-  protected List<AttributeAssertion> couchbaseAttributes() {
-    return Collections.emptyList();
+  protected String networkPeerAddress() {
+    return includesNetworkAttributes() ? "127.0.0.1" : null;
+  }
+
+  protected LongAssertConsumer networkPeerPort() {
+    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  }
+
+  protected StringAssertConsumer experimentalAttribute() {
+    return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 }

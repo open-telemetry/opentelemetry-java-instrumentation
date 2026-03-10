@@ -7,19 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.VirtualFieldHelper.CONNECTION_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 
 public class ChannelFutureListenerInstrumentation implements TypeInstrumentation {
@@ -54,14 +53,11 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
        - To capture scope only in case of error.
        */
       Throwable cause = future.getCause();
-      if (cause == null) {
+      if (cause == null || future.getChannel() == null) {
         return null;
       }
 
-      VirtualField<Channel, NettyConnectionContext> virtualField =
-          VirtualField.find(Channel.class, NettyConnectionContext.class);
-
-      NettyConnectionContext connectionContext = virtualField.get(future.getChannel());
+      NettyConnectionContext connectionContext = CONNECTION_CONTEXT.get(future.getChannel());
       if (connectionContext == null) {
         return null;
       }

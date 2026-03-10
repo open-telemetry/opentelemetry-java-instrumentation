@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import reactor.core.CoreSubscriber;
@@ -66,7 +66,7 @@ class HooksTest {
             .subscribeOn(Schedulers.single())
             .subscribe();
 
-    TimeUnit.MILLISECONDS.sleep(100);
+    MILLISECONDS.sleep(100);
 
     disposable.dispose();
     operator.resetOnEachOperator();

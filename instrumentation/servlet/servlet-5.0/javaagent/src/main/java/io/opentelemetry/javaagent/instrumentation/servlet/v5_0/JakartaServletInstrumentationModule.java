@@ -5,20 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 
+import static java.util.Arrays.asList;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletOutputStreamInstrumentation;
-import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class JakartaServletInstrumentationModule extends InstrumentationModule {
+public class JakartaServletInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   private static final String BASE_PACKAGE = "jakarta.servlet";
 
   public JakartaServletInstrumentationModule() {
@@ -27,7 +30,7 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
+    return asList(
         new AsyncContextInstrumentation(
             BASE_PACKAGE, adviceClassName(".async.AsyncDispatchAdvice")),
         new AsyncContextStartInstrumentation(
@@ -49,5 +52,10 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
 
   private static String adviceClassName(String suffix) {
     return JakartaServletInstrumentationModule.class.getPackage().getName() + suffix;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

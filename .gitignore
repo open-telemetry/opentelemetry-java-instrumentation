@@ -45,6 +45,7 @@ out/
 ######################
 .vscode
 **/bin/
+.metals
 
 # Others #
 ##########
@@ -57,6 +58,7 @@ derby.log
 hs_err_pid*
 replay_pid*
 .attach_pid*
+.telemetry*
+.lycheecache
 
-!java-agent/benchmark/releases/*.jar
-
+build-scan.txt

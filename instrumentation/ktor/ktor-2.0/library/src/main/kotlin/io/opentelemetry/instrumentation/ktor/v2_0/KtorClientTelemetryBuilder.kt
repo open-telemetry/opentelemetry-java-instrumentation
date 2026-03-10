@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.ktor.v2_0
 
+import io.opentelemetry.instrumentation.ktor.common.v2_0.AbstractKtorClientTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
-import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorClientTelemetryBuilder
 
 class KtorClientTelemetryBuilder : AbstractKtorClientTelemetryBuilder(INSTRUMENTATION_NAME) {
 

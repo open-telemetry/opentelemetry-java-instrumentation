@@ -6,7 +6,7 @@ Provides OpenTelemetry instrumentation for [gRPC](https://grpc.io/).
 
 ### Add the following dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-grpc-1.6).
+Replace `OPENTELEMETRY_VERSION` with the [latest release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-grpc-1.6).
 
 For Maven, add the following to your `pom.xml` dependencies:
 
@@ -34,12 +34,12 @@ The instrumentation library provides the implementation of `ClientInterceptor` a
 // For client-side, attach the interceptor to your channel builder.
 void configureClientInterceptor(OpenTelemetry openTelemetry, NettyChannelBuilder nettyChannelBuilder) {
   GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
-  nettyChannelBuilder.intercept(grpcTelemetry.newClientInterceptor());
+  nettyChannelBuilder.intercept(grpcTelemetry.createClientInterceptor());
 }
 
 // For server-side, attatch the interceptor to your service.
 ServerServiceDefinition configureServerInterceptor(OpenTelemetry openTelemetry, ServerServiceDefinition serviceDefinition) {
   GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
-  return ServerInterceptors.intercept(serviceDefinition, grpcTelemetry.newServerInterceptor());
+  return ServerInterceptors.intercept(serviceDefinition, grpcTelemetry.createServerInterceptor());
 }
 ```

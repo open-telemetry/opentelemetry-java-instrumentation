@@ -8,13 +8,13 @@ package io.opentelemetry.spring.smoketest;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsAutoConfiguration;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -22,10 +22,15 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /** Spring has a test container integration, but that doesn't work for Spring Boot 2 */
-public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringStarterSmokeTest {
+public abstract class AbstractJvmKafkaSpringStarterSmokeTest
+    extends AbstractKafkaSpringStarterSmokeTest {
   static KafkaContainer kafka;
 
   private ApplicationContextRunner contextRunner;
+
+  protected abstract Class<?> kafkaProducerFactoryCustomizerClass();
+
+  protected abstract Class<?> kafkaAutoConfigurationClass();
 
   @BeforeAll
   static void setUpKafka() {
@@ -50,9 +55,11 @@ public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringS
             .withConfiguration(
                 AutoConfigurations.of(
                     OpenTelemetryAutoConfiguration.class,
+                    ThreadDetailsAutoConfiguration.class,
                     SpringSmokeOtelConfiguration.class,
-                    KafkaAutoConfiguration.class,
+                    kafkaAutoConfigurationClass(),
                     KafkaInstrumentationAutoConfiguration.class,
+                    kafkaProducerFactoryCustomizerClass(),
                     KafkaConfig.class))
             .withPropertyValues(
                 "otel.instrumentation.kafka.experimental-span-attributes=true",
@@ -63,7 +70,7 @@ public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringS
                 "spring.kafka.producer.transaction-id-prefix=test-");
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we lose parameter types for the KafkaTemplate
   @Override
   @Test
   void shouldInstrumentProducerAndConsumer() {

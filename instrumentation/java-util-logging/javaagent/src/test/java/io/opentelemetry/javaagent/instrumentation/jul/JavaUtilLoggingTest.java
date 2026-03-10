@@ -11,13 +11,19 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import io.opentelemetry.testing.internal.armeria.common.annotation.Nullable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -27,6 +33,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JavaUtilLoggingTest {
+  private static final boolean isExperimentalAttributesEnabled =
+      Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes");
 
   private static final Logger logger = Logger.getLogger("abc");
 
@@ -49,20 +57,12 @@ class JavaUtilLoggingTest {
   @MethodSource("provideParameters")
   public void test(boolean withParam, boolean logException, boolean withParent)
       throws InterruptedException {
-    test(Level.FINE, Logger::fine, withParam, logException, withParent, null, null, null);
+    test(FINE, Logger::fine, withParam, logException, withParent, null, null, null);
+    testing.clearData();
+    test(INFO, Logger::info, withParam, logException, withParent, "abc", Severity.INFO, "INFO");
     testing.clearData();
     test(
-        Level.INFO,
-        Logger::info,
-        withParam,
-        logException,
-        withParent,
-        "abc",
-        Severity.INFO,
-        "INFO");
-    testing.clearData();
-    test(
-        Level.WARNING,
+        WARNING,
         Logger::warning,
         withParam,
         logException,
@@ -72,7 +72,7 @@ class JavaUtilLoggingTest {
         "WARNING");
     testing.clearData();
     test(
-        Level.SEVERE,
+        SEVERE,
         Logger::severe,
         withParam,
         logException,
@@ -117,8 +117,8 @@ class JavaUtilLoggingTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
+                equalTo(THREAD_ID, experimental(Thread.currentThread().getId())),
                 equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
@@ -126,8 +126,8 @@ class JavaUtilLoggingTest {
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
+                equalTo(THREAD_NAME, experimental(Thread.currentThread().getName())),
+                equalTo(THREAD_ID, experimental(Thread.currentThread().getId())));
       }
 
       if (withParent) {
@@ -163,5 +163,21 @@ class JavaUtilLoggingTest {
   @FunctionalInterface
   interface LoggerMethod {
     void call(Logger logger, String msg);
+  }
+
+  @Nullable
+  public static String experimental(String value) {
+    if (isExperimentalAttributesEnabled) {
+      return value;
+    }
+    return null;
+  }
+
+  @Nullable
+  public static Long experimental(long value) {
+    if (isExperimentalAttributesEnabled) {
+      return value;
+    }
+    return null;
   }
 }

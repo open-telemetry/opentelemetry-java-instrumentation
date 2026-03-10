@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 class InstrumenterExtractionTest {
   @Test
-  public void useCustomContext() {
+  void useCustomContext() {
     AwsLambdaFunctionInstrumenter instr =
         AwsLambdaFunctionInstrumenterFactory.createInstrumenter(
             OpenTelemetry.propagating(

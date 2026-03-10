@@ -14,6 +14,7 @@ import io.grpc.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,15 +42,11 @@ public class GrpcContextInstrumentation implements TypeInstrumentation {
       return GrpcSingletons.getStorage();
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void onExit(
-        @Advice.Return(readOnly = false) Context.Storage storage,
-        @Advice.Enter Context.Storage ourStorage) {
-      if (ourStorage != null) {
-        storage = ourStorage;
-      } else {
-        storage = GrpcSingletons.setStorage(storage);
-      }
+    public static Context.Storage onExit(
+        @Advice.Return Context.Storage originalStorage, @Advice.Enter Context.Storage ourStorage) {
+      return ourStorage != null ? ourStorage : GrpcSingletons.setStorage(originalStorage);
     }
   }
 }

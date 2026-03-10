@@ -27,17 +27,9 @@ muzzle {
     assertInverse.set(true)
   }
 }
-
-otelJava {
-  maxJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 dependencies {
-  compileOnly("dev.zio:zio_$scalaVersion:$zioVersion")
-
-  testImplementation("dev.zio:zio_$scalaVersion:$zioVersion")
-
-  latestDepTestLibrary("dev.zio:zio_$scalaVersion:latest.release")
+  library("dev.zio:zio_$scalaVersion:$zioVersion")
+  testCompileOnly("org.scala-lang:scala-library:2.12.20")
 }
 
 tasks {

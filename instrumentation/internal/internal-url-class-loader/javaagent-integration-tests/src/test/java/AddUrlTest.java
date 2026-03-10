@@ -46,8 +46,6 @@ class AddUrlTest {
       super(new URL[0], null);
     }
 
-    // silence CodeNarc. URLClassLoader#addURL is protected, this method is public
-    @SuppressWarnings("UnnecessaryOverridingMethod")
     @Override
     public void addURL(URL url) {
       super.addURL(url);

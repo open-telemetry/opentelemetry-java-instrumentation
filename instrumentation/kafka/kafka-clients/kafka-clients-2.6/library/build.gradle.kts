@@ -9,8 +9,8 @@ dependencies {
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
 
-  testImplementation("org.testcontainers:kafka")
-  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-kafka")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 
   testCompileOnly("com.google.auto.value:auto-value-annotations")
   testAnnotationProcessor("com.google.auto.value:auto-value")
@@ -20,25 +20,15 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
+}
 
-  val testReceiveSpansDisabled by registering(Test::class) {
-    filter {
-      includeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      includeTestsMatching("WrapperSuppressReceiveSpansTest")
-    }
-    include("**/InterceptorsSuppressReceiveSpansTest.*", "**/WrapperSuppressReceiveSpansTest.*")
-  }
+val latestDepTest = findProperty("testLatestDeps") as Boolean
 
-  test {
-    filter {
-      excludeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      excludeTestsMatching("WrapperSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(testReceiveSpansDisabled)
+// kafka 4.1 requires java 11
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }

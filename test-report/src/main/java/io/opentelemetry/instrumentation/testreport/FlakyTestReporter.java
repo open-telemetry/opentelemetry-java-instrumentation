@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.testreport;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.FileVisitResult.CONTINUE;
+import static java.util.Collections.singletonList;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.sheets.v4.Sheets;
@@ -18,7 +19,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +32,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,13 +66,19 @@ public class FlakyTestReporter {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       return builder.parse(testReport.toFile());
     } catch (Exception exception) {
-      throw new IllegalStateException("failed to parse test report " + testReport, exception);
+      System.err.println("Failed to parse test report " + testReport);
+      exception.printStackTrace();
+      return null;
     }
   }
 
   @SuppressWarnings("JavaTimeDefaultTimeZone")
   private void scanTestFile(Path testReport) {
     Document doc = parse(testReport);
+    if (doc == null) {
+      return;
+    }
+
     doc.getDocumentElement().normalize();
     testCount += Integer.parseInt(doc.getDocumentElement().getAttribute("tests"));
     skippedCount += Integer.parseInt(doc.getDocumentElement().getAttribute("skipped"));
@@ -201,7 +206,7 @@ public class FlakyTestReporter {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             String name = file.getFileName().toString();
-            if (name.startsWith("TEST-") && name.endsWith(".xml")) {
+            if (name.startsWith("TEST-") && name.endsWith(".xml") && file.toFile().length() > 0) {
               scanTestFile(file);
             }
 
@@ -256,11 +261,10 @@ public class FlakyTestReporter {
       return;
     }
 
-    NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+    NetHttpTransport transport = new NetHttpTransport.Builder().build();
     GoogleCredentials credentials =
-        GoogleCredentials.fromStream(
-                new ByteArrayInputStream(accessKey.getBytes(StandardCharsets.UTF_8)))
-            .createScoped(Collections.singletonList(SheetsScopes.SPREADSHEETS));
+        GoogleCredentials.fromStream(new ByteArrayInputStream(accessKey.getBytes(UTF_8)))
+            .createScoped(singletonList(SheetsScopes.SPREADSHEETS));
     Sheets service =
         new Sheets.Builder(
                 transport,
@@ -277,7 +281,8 @@ public class FlakyTestReporter {
       row.add(flakyTest.testName);
       row.add(buildScanUrl);
       row.add(jobUrl);
-      row.add(flakyTest.message);
+      // there is a limit of 50000 characters in a single cell
+      row.add(abbreviate(flakyTest.message, 10000));
       data.add(row);
     }
 
@@ -289,6 +294,14 @@ public class FlakyTestReporter {
         .append(SPREADSHEET_ID, "Sheet1!A:F", valueRange)
         .setValueInputOption("USER_ENTERED")
         .execute();
+  }
+
+  private static String abbreviate(String text, int maxLength) {
+    if (text.length() > maxLength) {
+      return text.substring(0, maxLength - 3) + "...";
+    }
+
+    return text;
   }
 
   public static void main(String... args) throws Exception {

@@ -21,10 +21,18 @@ dependencies {
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-  testImplementation("org.testcontainers:junit-jupiter")
-  testImplementation("org.testcontainers:kafka")
-  testImplementation("org.testcontainers:mongodb")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-kafka")
+  testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
+
+  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  if (testLatestDeps) {
+    // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
+    // are not in sync
+    testImplementation("org.mongodb:mongodb-driver-sync:latest.release")
+  }
 }
 
 springBoot {
@@ -52,13 +60,9 @@ tasks {
   checkstyleAotTest {
     isEnabled = false
   }
-}
-
-// To be able to execute the tests as GraalVM native executables
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
+  bootJar {
+    enabled = false
+  }
 }
 
 graalvmNative {
@@ -71,4 +75,10 @@ graalvmNative {
     useJUnitPlatform()
     setForkEvery(1)
   }
+}
+
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata").configure {
+  enabled = false
 }

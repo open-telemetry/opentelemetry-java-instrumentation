@@ -23,13 +23,13 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.TextMessage;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms1InstrumentationTest extends AbstractJms1Test {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void testMessageConsumer(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
       throws JMSException {

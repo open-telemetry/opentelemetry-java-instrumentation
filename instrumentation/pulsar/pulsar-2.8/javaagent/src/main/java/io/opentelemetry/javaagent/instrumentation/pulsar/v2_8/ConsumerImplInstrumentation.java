@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Consumer;
@@ -137,12 +138,13 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       return Timer.start();
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void after(
-        @Advice.Enter Timer timer,
+    public static CompletableFuture<Message<?>> after(
         @Advice.This Consumer<?> consumer,
-        @Advice.Return(readOnly = false) CompletableFuture<Message<?>> future) {
-      future = wrap(future, timer, consumer);
+        @Advice.Return CompletableFuture<Message<?>> future,
+        @Advice.Enter Timer timer) {
+      return wrap(future, timer, consumer);
     }
   }
 
@@ -154,12 +156,13 @@ public class ConsumerImplInstrumentation implements TypeInstrumentation {
       return Timer.start();
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void after(
-        @Advice.Enter Timer timer,
+    public static CompletableFuture<Messages<?>> after(
         @Advice.This Consumer<?> consumer,
-        @Advice.Return(readOnly = false) CompletableFuture<Messages<?>> future) {
-      future = wrapBatch(future, timer, consumer);
+        @Advice.Return CompletableFuture<Messages<?>> future,
+        @Advice.Enter Timer timer) {
+      return wrapBatch(future, timer, consumer);
     }
   }
 }

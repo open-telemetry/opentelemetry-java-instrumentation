@@ -6,17 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.v11_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.JettyHandlerInstrumentation;
-import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Jetty11InstrumentationModule extends InstrumentationModule {
+public class Jetty11InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public Jetty11InstrumentationModule() {
     super("jetty", "jetty-11.0");
@@ -29,9 +31,14 @@ public class Jetty11InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(
+    return singletonList(
         new JettyHandlerInstrumentation(
             "jakarta.servlet",
             Jetty11InstrumentationModule.class.getPackage().getName() + ".Jetty11HandlerAdvice"));
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
