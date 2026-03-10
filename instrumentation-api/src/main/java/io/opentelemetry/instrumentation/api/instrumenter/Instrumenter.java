@@ -7,13 +7,9 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
@@ -29,8 +25,6 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.InternalExceptionEventExtractor;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.Instant;
 import javax.annotation.Nullable;
 
@@ -340,20 +334,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
     LogRecordBuilder logRecordBuilder = logger.logRecordBuilder();
     logRecordBuilder.setContext(context);
     exceptionEventExtractor.extract(logRecordBuilder, context, request);
-
-    if (logRecordBuilder instanceof ExtendedLogRecordBuilder) {
-      ((ExtendedLogRecordBuilder) logRecordBuilder).setException(throwable);
-    } else {
-      logRecordBuilder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
-      String message = throwable.getMessage();
-      if (message != null) {
-        logRecordBuilder.setAttribute(EXCEPTION_MESSAGE, message);
-      }
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      logRecordBuilder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
-    }
-
+    logRecordBuilder.setException(throwable);
     logRecordBuilder.emit();
   }
 
