@@ -30,7 +30,8 @@ public class ApplicationMeter115 extends ApplicationMeter {
             weak ->
                 agentMeter.batchCallback(
                     weak, unwrap(observableMeasurement), unwrap(additionalMeasurements)),
-            callback));
+            callback),
+        () -> CallbackAnchor.remove(callback));
   }
 
   private static ObservableMeasurement unwrap(

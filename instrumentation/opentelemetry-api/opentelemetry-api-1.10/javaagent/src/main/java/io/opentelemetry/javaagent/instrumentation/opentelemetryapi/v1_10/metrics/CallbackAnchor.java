@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metric
 import io.opentelemetry.javaagent.bootstrap.WeakRefConsumer;
 import io.opentelemetry.javaagent.bootstrap.WeakRefRunnable;
 import java.lang.ref.WeakReference;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -39,7 +39,7 @@ public final class CallbackAnchor {
 
   // Anchors callbacks to this class's lifecycle. Since this class is injected as a helper into each
   // application class loader, callbacks are naturally tied to their class loader's lifecycle.
-  private static final List<Object> callbacks = new CopyOnWriteArrayList<>();
+  private static final Set<Object> callbacks = ConcurrentHashMap.newKeySet();
 
   public static <T, R extends AutoCloseable> R anchor(
       Function<Consumer<T>, R> buildFn, Consumer<T> callback) {
@@ -57,6 +57,10 @@ public final class CallbackAnchor {
     R instrument = buildFn.apply(weak);
     weak.closeWhenCollected(instrument);
     return instrument;
+  }
+
+  public static void remove(Object callback) {
+    callbacks.remove(callback);
   }
 
   private CallbackAnchor() {}
