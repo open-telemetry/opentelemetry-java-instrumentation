@@ -90,13 +90,16 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   String getServerAddress() {
-    return uri == null ? null : uri.getHost();
+    if (uri != null) {
+      return uri.getHost();
+    }
+    return target != null ? target.getHostName() : null;
   }
 
   @Nullable
   Integer getServerPort() {
     if (uri == null) {
-      return null;
+      return target != null ? target.getPort() : null;
     }
     return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
   }
