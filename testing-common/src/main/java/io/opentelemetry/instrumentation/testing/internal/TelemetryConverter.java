@@ -388,9 +388,9 @@ public class TelemetryConverter {
       case VALUE_NOT_SET:
         return EMPTY_VALUE;
       case STRING_VALUE_STRINDEX:
-      default:
         throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
     }
+    throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
 
   private static boolean isDouble(List<NumberDataPoint> points) {
