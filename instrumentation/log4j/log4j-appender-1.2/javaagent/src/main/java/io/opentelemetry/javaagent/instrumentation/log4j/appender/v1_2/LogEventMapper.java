@@ -10,9 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -20,14 +17,11 @@ import static java.util.stream.Collectors.toMap;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.time.Instant;
 import java.util.Hashtable;
 import java.util.List;
@@ -107,15 +101,7 @@ public final class LogEventMapper {
 
     // throwable
     if (throwable != null) {
-      if (builder instanceof ExtendedLogRecordBuilder) {
-        ((ExtendedLogRecordBuilder) builder).setException(throwable);
-      } else {
-        builder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
-        builder.setAttribute(EXCEPTION_MESSAGE, throwable.getMessage());
-        StringWriter writer = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(writer));
-        builder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
-      }
+      builder.setException(throwable);
     }
 
     captureMdcAttributes(builder);

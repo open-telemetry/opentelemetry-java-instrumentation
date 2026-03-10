@@ -10,9 +10,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -23,15 +20,12 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.ThrowableProxy;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -157,7 +151,7 @@ public final class LoggingEventMapper {
       throwable = ((ThrowableProxy) throwableProxy).getThrowable();
     }
     if (throwable != null) {
-      setThrowable(builder, throwable);
+      builder.setException(throwable);
     }
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
@@ -283,18 +277,6 @@ public final class LoggingEventMapper {
   private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
         LOG_BODY_PARAMETERS, Arrays.stream(arguments).map(String::valueOf).collect(toList()));
-  }
-
-  private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
-    if (builder instanceof ExtendedLogRecordBuilder) {
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
-    } else {
-      builder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
-      builder.setAttribute(EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      builder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
-    }
   }
 
   private static Severity levelToSeverity(Level level) {
