@@ -454,7 +454,7 @@ class InstrumenterTest {
   @Test
   void error_default_exception_event_extractor() {
     // When no ExceptionEventExtractor is explicitly set, a default should be used
-    // that sets event name to instrumentationName + ".exception" and severity to WARN.
+    // that sets event name to "exception" and severity to WARN.
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
@@ -481,7 +481,7 @@ class InstrumenterTest {
       assertThat(logs).hasSize(1);
       assertThat(logs.get(0))
           .hasSeverity(Severity.WARN)
-          .hasEventName("test.exception")
+          .hasEventName("exception")
           .hasAttributesSatisfyingExactly(
               equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
               equalTo(EXCEPTION_MESSAGE, "test"),

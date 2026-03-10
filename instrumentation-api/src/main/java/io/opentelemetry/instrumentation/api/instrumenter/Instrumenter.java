@@ -118,7 +118,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       this.exceptionEventExtractor =
           builder.exceptionEventExtractor != null
               ? builder.exceptionEventExtractor
-              : defaultExceptionEventExtractor(builder.instrumentationName);
+              : defaultExceptionEventExtractor();
     } else {
       this.logger = null;
       this.exceptionEventExtractor = null;
@@ -338,11 +338,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
     logRecordBuilder.emit();
   }
 
-  private static <REQUEST> InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor(
-      String instrumentationName) {
-    String eventName = instrumentationName + ".exception";
+  private static <REQUEST> InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor() {
     return (logRecordBuilder, context, request) -> {
-      logRecordBuilder.setEventName(eventName);
+      logRecordBuilder.setEventName("exception");
       logRecordBuilder.setSeverity(Severity.WARN);
     };
   }
