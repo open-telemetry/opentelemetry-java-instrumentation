@@ -26,6 +26,15 @@ class UrlParser {
   }
 
   @Nullable
+  static String getScheme(String url) {
+    int schemeEndIndex = url.indexOf(':');
+    if (schemeEndIndex == -1) {
+      return null;
+    }
+    return url.substring(0, schemeEndIndex);
+  }
+
+  @Nullable
   static Integer getPort(String url) {
 
     int hostStartIndex = getHostStartIndex(url);

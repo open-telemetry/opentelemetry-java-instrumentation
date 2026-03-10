@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static java.util.Collections.emptyList;
 
 import io.netty.handler.codec.http.HttpVersion;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -98,7 +99,14 @@ final class ReactorNettyHttpClientAttributesGetter
   @Override
   public Integer getServerPort(HttpClientRequest request) {
     String resourceUrl = request.resourceUrl();
-    return resourceUrl == null ? null : UrlParser.getPort(resourceUrl);
+    if (resourceUrl == null) {
+      return null;
+    }
+    Integer port = UrlParser.getPort(resourceUrl);
+    if (port != null) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(UrlParser.getScheme(resourceUrl));
   }
 
   @Nullable

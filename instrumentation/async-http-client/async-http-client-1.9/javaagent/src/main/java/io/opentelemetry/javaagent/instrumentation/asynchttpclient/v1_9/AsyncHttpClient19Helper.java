@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import com.ning.http.client.Request;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHttpClientHelper;
+import javax.annotation.Nullable;
 
 final class AsyncHttpClient19Helper implements AsyncHttpClientHelper {
 
@@ -25,8 +27,13 @@ final class AsyncHttpClient19Helper implements AsyncHttpClientHelper {
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(Request request) {
-    return request.getUri().getPort();
+    int port = request.getUri().getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(request.getUri().getScheme());
   }
 
   @Override
