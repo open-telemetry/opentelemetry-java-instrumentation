@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws;
 
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -51,8 +50,8 @@ final class PlayWsClientHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(Request request) {
-    return HttpConstants.portOrDefaultFromScheme(
-        request.getUri().getPort(), () -> request.getUri().getScheme());
+    // Returns the effective port directly; scheme fallback is not needed.
+    return request.getUri().getPort();
   }
 
   @Override

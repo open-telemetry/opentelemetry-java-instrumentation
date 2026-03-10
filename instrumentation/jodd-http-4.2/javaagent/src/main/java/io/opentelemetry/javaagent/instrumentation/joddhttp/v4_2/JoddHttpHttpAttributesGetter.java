@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -71,6 +70,7 @@ final class JoddHttpHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return HttpConstants.portOrDefaultFromScheme(request.port(), request::protocol);
+    // Returns the effective port directly; scheme fallback is not needed.
+    return request.port();
   }
 }
