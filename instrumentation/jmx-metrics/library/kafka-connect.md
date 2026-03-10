@@ -35,14 +35,14 @@ State values: destroyed, failed, paused, restarting, running, unassigned.
 
 ## Worker rebalance metrics
 
-| Metric Name                                    | Type          | Unit        | Attributes                           | Description                                                                     |
-|------------------------------------------------|---------------|-------------|--------------------------------------|---------------------------------------------------------------------------------|
-| kafka.connect.worker.rebalance.completed.count | Counter       | {rebalance} |                                      | The number of rebalances completed by this worker.                              |
-| kafka.connect.worker.rebalance.protocol        | UpDownCounter | 1           | kafka.connect.protocol.state         | The Connect protocol used by this cluster.                                      |
-| kafka.connect.worker.rebalance.epoch           | Counter       | {epoch}     |                                      | The epoch or generation number of this worker.                                  |
-| kafka.connect.worker.rebalance.time.average    | Gauge         | s           |                                      | The average time in milliseconds spent by this worker to rebalance.             |
-| kafka.connect.worker.rebalance.time.max        | Gauge         | s           |                                      | The maximum time in milliseconds spent by this worker to rebalance.             |
-| kafka.connect.worker.rebalance.active          | UpDownCounter | 1           | kafka.connect.worker.rebalance.state | Whether this worker is currently rebalancing.                                   |
+| Metric Name                                    | Type          | Unit        | Attributes                           | Description                                                    |
+|------------------------------------------------|---------------|-------------|--------------------------------------|----------------------------------------------------------------|
+| kafka.connect.worker.rebalance.completed.count | Counter       | {rebalance} |                                      | The number of rebalances completed by this worker.             |
+| kafka.connect.worker.rebalance.protocol        | UpDownCounter | 1           | kafka.connect.protocol.state         | The Connect protocol used by this cluster.                     |
+| kafka.connect.worker.rebalance.epoch           | Counter       | {epoch}     |                                      | The epoch or generation number of this worker.                 |
+| kafka.connect.worker.rebalance.time.average    | Gauge         | s           |                                      | The average time in seconds spent by this worker to rebalance. |
+| kafka.connect.worker.rebalance.time.max        | Gauge         | s           |                                      | The maximum time in seconds spent by this worker to rebalance. |
+| kafka.connect.worker.rebalance.active          | UpDownCounter | 1           | kafka.connect.worker.rebalance.state | Whether this worker is currently rebalancing.                  |
 
 ## Connector metrics
 
@@ -60,9 +60,9 @@ All metrics include `kafka.connect.connector` and `kafka.connect.task.id`. Attri
 | --- | --- | --- | --- | --- |
 | kafka.connect.task.batch.size.average | Gauge | {record} | | The average number of records in the batches the task has processed so far. |
 | kafka.connect.task.batch.size.max | Gauge | {record} | | The number of records in the largest batch the task has processed so far. |
-| kafka.connect.task.offset.commit.time.average | Gauge | s | | The average time in milliseconds taken by this task to commit offsets. |
+| kafka.connect.task.offset.commit.time.average | Gauge | s | | The average time in seconds taken by this task to commit offsets. |
 | kafka.connect.task.offset.commit.failure.ratio | Gauge | 1 | | The average ratio of this task's offset commit attempts that failed. |
-| kafka.connect.task.offset.commit.time.max | Gauge | s | | The maximum time in milliseconds taken by this task to commit offsets. |
+| kafka.connect.task.offset.commit.time.max | Gauge | s | | The maximum time in seconds taken by this task to commit offsets. |
 | kafka.connect.task.running.ratio | Gauge | 1 | | The fraction of time this task has spent in the running state. |
 | kafka.connect.task.status | UpDownCounter | 1 | kafka.connect.task.state | The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values. |
 
@@ -89,8 +89,8 @@ Attributes: `kafka.connect.connector`, `kafka.connect.task.id`.
 
 | Metric Name | Type | Unit | Attributes | Description |
 | --- | --- | --- | --- | --- |
-| kafka.connect.source.poll.batch.time.average | Gauge | s | | The average time in milliseconds taken by this task to poll for a batch of source records. |
-| kafka.connect.source.poll.batch.time.max | Gauge | s | | The maximum time in milliseconds taken by this task to poll for a batch of source records. |
+| kafka.connect.source.poll.batch.time.average | Gauge | s | | The average time in seconds taken by this task to poll for a batch of source records. |
+| kafka.connect.source.poll.batch.time.max | Gauge | s | | The maximum time in seconds taken by this task to poll for a batch of source records. |
 | kafka.connect.source.record.active.count | UpDownCounter | {record} | | The number of records that have been produced by this task but not yet completely written to Kafka. |
 | kafka.connect.source.record.poll.count | Counter | {record} | | The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker. |
 | kafka.connect.source.record.write.count | Counter | {record} | | The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations. |

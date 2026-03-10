@@ -5,17 +5,23 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
+import io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping;
+import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
+import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +56,8 @@ class KafkaConnectTest extends TargetSystemTest {
   private static final String DLQ_TOPIC = "connect-dead-letter";
   private static final Set<String> OPTIONAL_APACHE_METRICS = new HashSet<>();
 
+  private static final WebClient client = WebClient.of();
+
   static {
     // Apache Kafka Connect 3.8 file connectors do not expose these metrics.
     Collections.addAll(
@@ -64,37 +72,30 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void kafkaConnectRulesUseBasicMetricTypes() throws Exception {
-    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config = loadKafkaConnectConfig();
+    JmxConfig config = loadKafkaConnectConfig();
 
     assertThat(config.getRules())
         .allSatisfy(
             rule -> {
-              assertThat(rule.getMetricType())
-                  .isNotEqualTo(
-                      io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.STATE);
+              assertThat(rule.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE);
               rule.getMapping()
                   .values()
                   .forEach(
                       metric ->
-                          assertThat(metric.getMetricType())
-                              .isNotEqualTo(
-                                  io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo
-                                      .Type.STATE));
+                          assertThat(metric.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE));
             });
   }
 
   @Test
   void statusStateMappingsPresent() throws Exception {
-    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config = loadKafkaConnectConfig();
+    JmxConfig config = loadKafkaConnectConfig();
 
-    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule connectorRule =
+    JmxRule connectorRule =
         getRuleForBean(config, "kafka.connect:type=connector-metrics,connector=*");
 
-    io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping connectorStateMapping =
-        getMetric(connectorRule, "status").getStateMapping();
+    StateMapping connectorStateMapping = getMetric(connectorRule, "status").getStateMapping();
     assertThat(getMetric(connectorRule, "status").getMetricType())
-        .isEqualTo(
-            io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.UPDOWNCOUNTER);
+        .isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
     assertThat(connectorStateMapping.isEmpty()).isFalse();
     assertThat(connectorStateMapping.getStateKeys())
         .contains(
@@ -112,14 +113,12 @@ class KafkaConnectTest extends TargetSystemTest {
     assertThat(connectorStateMapping.getStateValue("PAUSED")).isEqualTo("paused");
     assertThat(connectorStateMapping.getStateValue("UNKNOWN")).isEqualTo("unknown");
 
-    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule connectorTaskRule =
+    JmxRule connectorTaskRule =
         getRuleForBean(config, "kafka.connect:type=connector-task-metrics,connector=*,task=*");
 
-    io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping taskStateMapping =
-        getMetric(connectorTaskRule, "status").getStateMapping();
+    StateMapping taskStateMapping = getMetric(connectorTaskRule, "status").getStateMapping();
     assertThat(getMetric(connectorTaskRule, "status").getMetricType())
-        .isEqualTo(
-            io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo.Type.UPDOWNCOUNTER);
+        .isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
     assertThat(taskStateMapping.isEmpty()).isFalse();
     assertThat(taskStateMapping.getStateKeys())
         .contains(
@@ -195,8 +194,7 @@ class KafkaConnectTest extends TargetSystemTest {
     verifyMetrics(createKafkaConnectMetricsVerifier());
   }
 
-  private io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig loadKafkaConnectConfig()
-      throws Exception {
+  private JmxConfig loadKafkaConnectConfig() throws Exception {
     try (InputStream input =
         getClass().getClassLoader().getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
       assertThat(input).isNotNull();
@@ -205,13 +203,12 @@ class KafkaConnectTest extends TargetSystemTest {
   }
 
   private Set<String> loadKafkaConnectMetricNames(boolean includeOptional) throws Exception {
-    io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config = loadKafkaConnectConfig();
+    JmxConfig config = loadKafkaConnectConfig();
     Set<String> metricNames = new TreeSet<>();
-    for (io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule rule : config.getRules()) {
+    for (JmxRule rule : config.getRules()) {
       String prefix = rule.getPrefix();
-      for (Map.Entry<String, io.opentelemetry.instrumentation.jmx.internal.yaml.Metric> entry :
-          rule.getMapping().entrySet()) {
-        io.opentelemetry.instrumentation.jmx.internal.yaml.Metric metric = entry.getValue();
+      for (Map.Entry<String, Metric> entry : rule.getMapping().entrySet()) {
+        Metric metric = entry.getValue();
         String baseName =
             metric == null || metric.getMetric() == null ? entry.getKey() : metric.getMetric();
         metricNames.add(prefix == null ? baseName : prefix + baseName);
@@ -300,31 +297,455 @@ class KafkaConnectTest extends TargetSystemTest {
         "listeners=http://0.0.0.0:" + CONNECT_PORT);
   }
 
-  private MetricsVerifier createKafkaConnectMetricsVerifier() throws Exception {
-    Set<String> metricNames = loadKafkaConnectMetricNames(false);
-
-    MetricsVerifier verifier = MetricsVerifier.create().disableStrictMode();
-    for (String metricName : metricNames) {
-      verifier.add(metricName, metric -> {});
-    }
-    return verifier;
+  private static MetricsVerifier createKafkaConnectMetricsVerifier() {
+    return MetricsVerifier.create()
+        // Worker metrics
+        .add(
+            "kafka.connect.worker.connector.count",
+            metric ->
+                metric
+                    .hasDescription("The number of connectors run in this worker.")
+                    .hasUnit("{connector}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "kafka.connect.worker.connector.startup.count",
+            metric ->
+                metric
+                    .hasDescription("The number of connector starts for this worker.")
+                    .hasUnit("{startup}")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(
+                        attributeWithAnyValue("kafka.connect.worker.connector.startup.result")))
+        .add(
+            "kafka.connect.worker.task.count",
+            metric ->
+                metric
+                    .hasDescription("The number of currently running tasks for this worker.")
+                    .hasUnit("{task}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "kafka.connect.worker.task.startup.count",
+            metric ->
+                metric
+                    .hasDescription("The number of task starts for this worker.")
+                    .hasUnit("{startup}")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(
+                        attributeWithAnyValue("kafka.connect.worker.task.startup.result")))
+        // Worker connector task metrics
+        .add(
+            "kafka.connect.worker.connector.task.count",
+            metric ->
+                metric
+                    .hasDescription("The number of tasks of the connector on the worker by state.")
+                    .hasUnit("{task}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.worker.connector.task.state"))))
+        // Worker rebalance metrics
+        .add(
+            "kafka.connect.worker.rebalance.completed.count",
+            metric ->
+                metric
+                    .hasDescription("The number of rebalances completed by this worker.")
+                    .hasUnit("{rebalance}")
+                    .isCounter()
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "kafka.connect.worker.rebalance.protocol",
+            metric ->
+                metric
+                    .hasDescription("The Connect protocol used by this cluster.")
+                    .hasUnit("1")
+                    .isUpDownCounter()
+                    .hasDataPointsWithOneAttribute(
+                        attributeWithAnyValue("kafka.connect.protocol.state")))
+        .add(
+            "kafka.connect.worker.rebalance.epoch",
+            metric ->
+                metric
+                    .hasDescription("The epoch or generation number of this worker.")
+                    .hasUnit("{epoch}")
+                    .isCounter()
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "kafka.connect.worker.rebalance.time.average",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The average time in seconds spent by this worker to rebalance.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "kafka.connect.worker.rebalance.time.max",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The maximum time in seconds spent by this worker to rebalance.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "kafka.connect.worker.rebalance.active",
+            metric ->
+                metric
+                    .hasDescription("Whether this worker is currently rebalancing.")
+                    .hasUnit("1")
+                    .isUpDownCounter()
+                    .hasDataPointsWithOneAttribute(
+                        attributeWithAnyValue("kafka.connect.worker.rebalance.state")))
+        // Connector metrics
+        .add(
+            "kafka.connect.connector.status",
+            metric ->
+                metric
+                    .hasDescription(
+                        "Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.")
+                    .hasUnit("1")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.connector.state"))))
+        // Connector task metrics
+        .add(
+            "kafka.connect.task.batch.size.average",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The average number of records in the batches the task has processed so far.")
+                    .hasUnit("{record}")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.batch.size.max",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of records in the largest batch the task has processed so far.")
+                    .hasUnit("{record}")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.offset.commit.failure.ratio",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The average ratio of this task's offset commit attempts that failed.")
+                    .hasUnit("1")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.running.ratio",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The fraction of time this task has spent in the running state.")
+                    .hasUnit("1")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.status",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.")
+                    .hasUnit("1")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"),
+                            attributeWithAnyValue("kafka.connect.task.state"))))
+        // Sink task metrics
+        .add(
+            "kafka.connect.sink.offset.commit.completed.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of offset commit completions that were completed successfully.")
+                    .hasUnit("{commit}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.offset.commit.seq",
+            metric ->
+                metric
+                    .hasDescription("The current sequence number for offset commits.")
+                    .hasUnit("{sequence}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.offset.commit.skipped.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of offset commit completions that were received too late and skipped/ignored.")
+                    .hasUnit("{commit}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.partition.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of topic partitions assigned to this task belonging to the named sink connector in this worker.")
+                    .hasUnit("{partition}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.put.batch.time.average",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The average time taken by this task to put a batch of sinks records.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.put.batch.time.max",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The maximum time taken by this task to put a batch of sinks records.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.record.active.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.")
+                    .hasUnit("{record}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.record.read.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.sink.record.send.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        // Source task metrics
+        .add(
+            "kafka.connect.source.poll.batch.time.average",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The average time in seconds taken by this task to poll for a batch of source records.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.source.poll.batch.time.max",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The maximum time in seconds taken by this task to poll for a batch of source records.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.source.record.active.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of records that have been produced by this task but not yet completely written to Kafka.")
+                    .hasUnit("{record}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.source.record.poll.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.source.record.write.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        // Task error metrics
+        .add(
+            "kafka.connect.task.error.deadletterqueue.produce.failure.count",
+            metric ->
+                metric
+                    .hasDescription("The number of failed writes to the dead letter queue.")
+                    .hasUnit("{failure}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.deadletterqueue.produce.request.count",
+            metric ->
+                metric
+                    .hasDescription("The number of attempted writes to the dead letter queue.")
+                    .hasUnit("{request}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.last.error.timestamp",
+            metric ->
+                metric
+                    .hasDescription("The epoch timestamp when this task last encountered an error.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.logged.count",
+            metric ->
+                metric
+                    .hasDescription("The number of errors that were logged.")
+                    .hasUnit("{error}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.record.error.count",
+            metric ->
+                metric
+                    .hasDescription("The number of record processing errors in this task.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.record.failure.count",
+            metric ->
+                metric
+                    .hasDescription("The number of record processing failures in this task.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.record.skipped.count",
+            metric ->
+                metric
+                    .hasDescription("The number of records skipped due to errors.")
+                    .hasUnit("{record}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))))
+        .add(
+            "kafka.connect.task.error.retry.count",
+            metric ->
+                metric
+                    .hasDescription("The number of operations retried.")
+                    .hasUnit("{retry}")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("kafka.connect.connector"),
+                            attributeWithAnyValue("kafka.connect.task.id"))));
   }
 
-  private static io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule getRuleForBean(
-      io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig config, String bean) {
+  private static JmxRule getRuleForBean(JmxConfig config, String bean) {
     return config.getRules().stream()
         .filter(rule -> rule.getBeans().contains(bean))
         .findFirst()
         .orElseThrow(() -> new AssertionError("Missing rule for bean " + bean));
   }
 
-  private static io.opentelemetry.instrumentation.jmx.internal.yaml.Metric getMetric(
-      io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule rule, String metricKey) {
-    io.opentelemetry.instrumentation.jmx.internal.yaml.Metric metric =
-        rule.getMapping().get(metricKey);
-    if (metric == null) {
-      throw new AssertionError("Missing metric " + metricKey + " in rule " + rule.getBeans());
-    }
+  private static Metric getMetric(JmxRule rule, String metricKey) {
+    Metric metric = rule.getMapping().get(metricKey);
+    assertThat(metric)
+        .describedAs("Missing metric " + metricKey + " in rule " + rule.getBeans())
+        .isNotNull();
     return metric;
   }
 
@@ -332,11 +753,10 @@ class KafkaConnectTest extends TargetSystemTest {
     return "http://" + container.getHost() + ":" + container.getMappedPort(CONNECT_PORT);
   }
 
-  private static void createConnector(String connectUrl, String connectorConfigJson)
-      throws Exception {
-    HttpResponseData response =
-        sendRequest("POST", connectUrl + "/connectors", connectorConfigJson);
-    assertThat(response.statusCode).isIn(200, 201, 409);
+  private static void createConnector(String connectUrl, String connectorConfigJson) {
+    AggregatedHttpResponse response =
+        sendRequest(HttpMethod.POST, connectUrl + "/connectors", connectorConfigJson);
+    assertThat(response.status().code()).isIn(200, 201, 409);
   }
 
   private static void awaitConnectorRunning(String connectUrl, String connectorName) {
@@ -345,68 +765,22 @@ class KafkaConnectTest extends TargetSystemTest {
         .pollInterval(Duration.ofSeconds(1))
         .untilAsserted(
             () -> {
-              HttpResponseData response =
-                  sendRequest("GET", connectUrl + "/connectors/" + connectorName + "/status", null);
-              assertThat(response.statusCode).isEqualTo(200);
-              assertThat(response.body).contains("\"state\":\"RUNNING\"");
+              AggregatedHttpResponse response =
+                  sendRequest(
+                      HttpMethod.GET,
+                      connectUrl + "/connectors/" + connectorName + "/status",
+                      null);
+              assertThat(response.status().code()).isEqualTo(200);
+              assertThat(response.contentUtf8()).contains("\"state\":\"RUNNING\"");
             });
   }
 
-  private static HttpResponseData sendRequest(String method, String url, String body)
-      throws IOException {
-    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-    connection.setRequestMethod(method);
-    connection.setConnectTimeout((int) Duration.ofSeconds(15).toMillis());
-    connection.setReadTimeout((int) Duration.ofSeconds(30).toMillis());
-    connection.setDoInput(true);
-    if (body != null) {
-      connection.setDoOutput(true);
-      connection.setRequestProperty("Content-Type", "application/json");
-      byte[] bytes = body.getBytes(UTF_8);
-      connection.setRequestProperty("Content-Length", Integer.toString(bytes.length));
-      try (OutputStream output = connection.getOutputStream()) {
-        output.write(bytes);
-      }
-    }
-    int statusCode = connection.getResponseCode();
-    String responseBody = readResponse(connection);
-    connection.disconnect();
-    return new HttpResponseData(statusCode, responseBody);
-  }
-
-  private static String readResponse(HttpURLConnection connection) throws IOException {
-    InputStream stream =
-        connection.getResponseCode() >= 400
-            ? connection.getErrorStream()
-            : connection.getInputStream();
-    if (stream == null) {
-      return "";
-    }
-    try {
-      ByteArrayOutputStream output = new ByteArrayOutputStream();
-      byte[] buffer = new byte[1024];
-      int read;
-      while ((read = stream.read(buffer)) != -1) {
-        output.write(buffer, 0, read);
-      }
-      return output.toString(UTF_8.name());
-    } finally {
-      try {
-        stream.close();
-      } catch (IOException ignored) {
-        // best effort cleanup
-      }
-    }
-  }
-
-  private static class HttpResponseData {
-    private final int statusCode;
-    private final String body;
-
-    private HttpResponseData(int statusCode, String body) {
-      this.statusCode = statusCode;
-      this.body = body;
-    }
+  private static AggregatedHttpResponse sendRequest(HttpMethod method, String url, String body) {
+    AggregatedHttpRequest request =
+        body != null
+            ? AggregatedHttpRequest.of(method, url, MediaType.JSON, body)
+            : AggregatedHttpRequest.of(method, url);
+    return client.execute(request).aggregate().join();
   }
 
   private static String sourceConnectorConfig() {

@@ -101,6 +101,7 @@ rules:
       connect-protocol:
         metric: protocol
         type: updowncounter
+        unit: "1"
         desc: The Connect protocol used by this cluster.
         metricAttribute:
           kafka.connect.protocol.state:
@@ -119,14 +120,14 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The average time in milliseconds spent by this worker to rebalance.
+        desc: The average time in seconds spent by this worker to rebalance.
       # kafka.connect.worker.rebalance.time.max
       rebalance-max-time-ms:
         metric: time.max
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The maximum time in milliseconds spent by this worker to rebalance.
+        desc: The maximum time in seconds spent by this worker to rebalance.
       # kafka.connect.worker.rebalance.active
       rebalancing:
         metric: active
@@ -147,6 +148,7 @@ rules:
       status:
         metric: status
         type: updowncounter
+        unit: "1"
         desc: Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.
         metricAttribute:
           kafka.connect.connector.state:
@@ -183,7 +185,7 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The average time in milliseconds taken by this task to commit offsets.
+        desc: The average time in seconds taken by this task to commit offsets.
       # kafka.connect.task.offset.commit.failure.ratio
       offset-commit-failure-percentage:
         metric: offset.commit.failure.ratio
@@ -197,7 +199,7 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The maximum time in milliseconds taken by this task to commit offsets.
+        desc: The maximum time in seconds taken by this task to commit offsets.
       # kafka.connect.task.running.ratio
       running-ratio:
         metric: running.ratio
@@ -208,6 +210,7 @@ rules:
       status:
         metric: status
         type: updowncounter
+        unit: "1"
         desc: The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.
         metricAttribute:
           kafka.connect.task.state:
@@ -218,7 +221,6 @@ rules:
             restarting: [restarting, RESTARTING]
             destroyed: [destroyed, DESTROYED]
             unknown: "*"
-      # kafka.connect.task.class
 
   - bean: kafka.connect:type=sink-task-metrics,connector=*,task=*
     prefix: kafka.connect.sink.
@@ -301,14 +303,14 @@ rules:
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The average time in milliseconds taken by this task to poll for a batch of source records.
+        desc: The average time in seconds taken by this task to poll for a batch of source records.
       # kafka.connect.source.poll.batch.time.max
       poll-batch-max-time-ms:
         metric: poll.batch.time.max
         type: gauge
         sourceUnit: ms
         unit: s
-        desc: The maximum time in milliseconds taken by this task to poll for a batch of source records.
+        desc: The maximum time in seconds taken by this task to poll for a batch of source records.
       # kafka.connect.source.record.active.count
       source-record-active-count:
         metric: record.active.count
