@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.testing;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -48,7 +48,9 @@ public abstract class AbstractSqlCommenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("SELECT dbname").hasParent(trace.getSpan(0))));
+                    span ->
+                        span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
+                            .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -81,7 +83,10 @@ public abstract class AbstractSqlCommenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("INSERT dbname.test").hasParent(trace.getSpan(0))));
+                    span ->
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "INSERT test" : "INSERT dbname.test")
+                            .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -116,10 +121,7 @@ public abstract class AbstractSqlCommenterTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName(
-                                SemconvStability.emitStableDatabaseSemconv()
-                                    ? "BATCH INSERT dbname.test"
-                                    : "dbname")
+                        span.hasName(emitStableDatabaseSemconv() ? "BATCH INSERT test" : "dbname")
                             .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(2);
@@ -149,7 +151,9 @@ public abstract class AbstractSqlCommenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("SELECT dbname").hasParent(trace.getSpan(0))));
+                    span ->
+                        span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname")
+                            .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -182,7 +186,10 @@ public abstract class AbstractSqlCommenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("INSERT dbname.test").hasParent(trace.getSpan(0))));
+                    span ->
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "INSERT test" : "INSERT dbname.test")
+                            .hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");

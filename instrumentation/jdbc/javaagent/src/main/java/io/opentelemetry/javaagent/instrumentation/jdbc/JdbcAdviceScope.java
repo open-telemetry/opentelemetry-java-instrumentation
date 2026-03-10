@@ -78,13 +78,14 @@ public class JdbcAdviceScope {
       }
       Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
       Map<String, String> parameters = JdbcData.getParameters((PreparedStatement) statement);
-      return DbRequest.create(statement, sql, batchSize, parameters);
+      return DbRequest.create(statement, sql, batchSize, parameters, true);
     } else {
       JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);
       if (batchInfo == null) {
         return DbRequest.create(statement, null);
       } else {
-        return DbRequest.create(statement, batchInfo.getStatements(), batchInfo.getBatchSize());
+        return DbRequest.create(
+            statement, batchInfo.getQueryTexts(), batchInfo.getBatchSize(), false);
       }
     }
   }

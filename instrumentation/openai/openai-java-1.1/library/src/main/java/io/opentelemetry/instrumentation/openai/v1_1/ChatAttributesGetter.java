@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
@@ -14,7 +15,6 @@ import com.openai.models.chat.completions.ChatCompletionCreateParams.ResponseFor
 import com.openai.models.completions.CompletionUsage;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 
 enum ChatAttributesGetter
@@ -135,7 +135,7 @@ enum ChatAttributesGetter
     }
     return response.choices().stream()
         .map(choice -> choice.finishReason().asString())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

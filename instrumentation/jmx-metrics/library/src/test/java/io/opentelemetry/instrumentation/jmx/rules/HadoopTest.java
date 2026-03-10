@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.io.IOException;
@@ -14,9 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -29,7 +29,7 @@ class HadoopTest extends TargetSystemTest {
 
   @Test
   void testMetrics_Hadoop2x() throws URISyntaxException, IOException {
-    List<String> yamlFiles = Collections.singletonList("hadoop.yaml");
+    List<String> yamlFiles = singletonList("hadoop.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
@@ -61,7 +61,7 @@ class HadoopTest extends TargetSystemTest {
       data =
           lines
               .map(line -> line.replace(ENDPOINT_PLACEHOLDER, getOtlpEndpoint()))
-              .collect(Collectors.joining("\n"));
+              .collect(joining("\n"));
     }
 
     return data;
@@ -69,7 +69,7 @@ class HadoopTest extends TargetSystemTest {
 
   @Test
   void testMetrics_Hadoop3x() throws URISyntaxException, IOException {
-    List<String> yamlFiles = Collections.singletonList("hadoop.yaml");
+    List<String> yamlFiles = singletonList("hadoop.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 

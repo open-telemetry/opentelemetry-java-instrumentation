@@ -7,13 +7,14 @@ muzzle {
     group.set("org.apache.httpcomponents.client5")
     module.set("httpclient5")
     versions.set("[5.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
   library("org.apache.httpcomponents.client5:httpclient5:5.0")
   // https://issues.apache.org/jira/browse/HTTPCORE-653
-  library("org.apache.httpcomponents.core5:httpcore5:5.0.3")
+  testImplementation("org.apache.httpcomponents.core5:httpcore5:5.0.3")
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
@@ -22,9 +23,17 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

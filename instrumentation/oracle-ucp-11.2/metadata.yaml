@@ -1,2 +1,7 @@
-description: The Oracle Universal Connection Pool (UCP) instrumentation generates connection pool metrics.
+description: >
+  The Oracle Universal Connection Pool (UCP) instrumentation enables database connection pool
+  metrics for Oracle UCP data sources.
+display_name: Oracle UCP
+semantic_conventions:
+  - DATABASE_POOL_METRICS
 library_link: https://docs.oracle.com/database/121/JJUCP/

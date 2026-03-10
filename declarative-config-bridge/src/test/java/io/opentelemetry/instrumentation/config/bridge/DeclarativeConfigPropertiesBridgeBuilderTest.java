@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
@@ -15,9 +16,9 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.internal.ExtendedOpenTelemetrySdk;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 @SuppressWarnings("DoNotMockAutoValue")
 class DeclarativeConfigPropertiesBridgeBuilderTest {
@@ -26,7 +27,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
     ConfigProperties configPropertiesMock = mock(ConfigProperties.class);
     AutoConfiguredOpenTelemetrySdk sdkMock = mock(AutoConfiguredOpenTelemetrySdk.class);
     try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
+        mockStatic(AutoConfigureUtil.class)) {
       autoConfigureUtilMock
           .when(() -> AutoConfigureUtil.getConfig(sdkMock))
           .thenReturn(configPropertiesMock);
@@ -52,13 +53,13 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
     when(configProviderMock.getInstrumentationConfig()).thenReturn(instrumentationConfigMock);
 
     AutoConfiguredOpenTelemetrySdk sdkMock = mock(AutoConfiguredOpenTelemetrySdk.class);
+    ExtendedOpenTelemetrySdk extendedOpenTelemetrySdk = mock(ExtendedOpenTelemetrySdk.class);
+    when(sdkMock.getOpenTelemetrySdk()).thenReturn(extendedOpenTelemetrySdk);
+    when(extendedOpenTelemetrySdk.getConfigProvider()).thenReturn(configProviderMock);
 
     try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
+        mockStatic(AutoConfigureUtil.class)) {
       autoConfigureUtilMock.when(() -> AutoConfigureUtil.getConfig(sdkMock)).thenReturn(null);
-      autoConfigureUtilMock
-          .when(() -> AutoConfigureUtil.getConfigProvider(sdkMock))
-          .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
           new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
@@ -70,15 +71,15 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
   @Test
   void shouldUseConfigProviderForDeclarativeConfiguration_noInstrumentationConfig() {
     AutoConfiguredOpenTelemetrySdk sdkMock = mock(AutoConfiguredOpenTelemetrySdk.class);
+    ExtendedOpenTelemetrySdk extendedOpenTelemetrySdk = mock(ExtendedOpenTelemetrySdk.class);
+    when(sdkMock.getOpenTelemetrySdk()).thenReturn(extendedOpenTelemetrySdk);
     ConfigProvider configProviderMock = mock(ConfigProvider.class);
+    when(extendedOpenTelemetrySdk.getConfigProvider()).thenReturn(configProviderMock);
     when(configProviderMock.getInstrumentationConfig()).thenReturn(null);
 
     try (MockedStatic<AutoConfigureUtil> autoConfigureUtilMock =
-        Mockito.mockStatic(AutoConfigureUtil.class)) {
+        mockStatic(AutoConfigureUtil.class)) {
       autoConfigureUtilMock.when(() -> AutoConfigureUtil.getConfig(sdkMock)).thenReturn(null);
-      autoConfigureUtilMock
-          .when(() -> AutoConfigureUtil.getConfigProvider(sdkMock))
-          .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
           new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);

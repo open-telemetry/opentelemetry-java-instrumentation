@@ -5,12 +5,12 @@
 
 package com.example.javaagent.instrumentation;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -36,7 +36,7 @@ public final class DemoServlet3InstrumentationModule extends InstrumentationModu
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return AgentElementMatchers.hasClassesNamed("javax.servlet.http.HttpServlet");
+    return hasClassesNamed("javax.servlet.http.HttpServlet");
   }
 
   @Override

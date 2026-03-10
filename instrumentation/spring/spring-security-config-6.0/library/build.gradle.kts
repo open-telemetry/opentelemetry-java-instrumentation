@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -15,6 +16,9 @@ dependencies {
   latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+
+  // SpringExtension in spring-test 7 requires JUnit 6
+  testImplementation(platform("org.junit:junit-bom:6.0.1"))
 
   testLibrary("org.springframework:spring-test:6.0.0")
 }

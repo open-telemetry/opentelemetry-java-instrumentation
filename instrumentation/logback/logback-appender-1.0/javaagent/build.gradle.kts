@@ -47,7 +47,6 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
-  testImplementation("org.awaitility:awaitility")
 }
 
 tasks.withType<Test>().configureEach {

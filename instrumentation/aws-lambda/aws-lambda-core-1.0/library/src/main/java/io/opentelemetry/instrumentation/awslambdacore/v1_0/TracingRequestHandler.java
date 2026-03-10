@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static java.util.Collections.emptyMap;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import io.opentelemetry.context.Scope;
@@ -12,9 +15,7 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A base class similar to {@link RequestHandler} but will automatically trace invocations of {@link
@@ -83,7 +84,7 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
       throw t;
     } finally {
       instrumenter.end(otelContext, request, output, error);
-      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, TimeUnit.NANOSECONDS);
+      LambdaUtils.forceFlush(openTelemetrySdk, flushTimeoutNanos, NANOSECONDS);
     }
   }
 
@@ -94,6 +95,6 @@ public abstract class TracingRequestHandler<I, O> implements RequestHandler<I, O
    * default, returns empty headers.
    */
   protected Map<String, String> extractHttpHeaders(I input) {
-    return Collections.emptyMap();
+    return emptyMap();
   }
 }

@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -54,6 +52,9 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
+  /** Returns the SQL dialect used by the database. */
+  SqlDialect getSqlDialect(REQUEST request);
+
   /**
    * Get the raw SQL query texts. The values returned by this method are later sanitized by the
    * {@link SqlClientAttributesExtractor} before being set as span attribute.
@@ -63,14 +64,16 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
    */
   Collection<String> getRawQueryTexts(REQUEST request);
 
+  /**
+   * Returns whether the query is parameterized. Prepared statements are always considered
+   * parameterized even if no parameters are bound. By using a parameterized query the user is
+   * giving a strong signal that any sensitive data will be passed as parameter values, and so the
+   * query does not need to be sanitized. See <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
+   * of db.query.text</a>.
+   */
   // TODO: make this required to implement
-  @Nullable
-  default Long getBatchSize(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  default Map<String, String> getQueryParameters(REQUEST request) {
-    return Collections.emptyMap();
+  default boolean isParameterizedQuery(REQUEST request) {
+    return false;
   }
 }

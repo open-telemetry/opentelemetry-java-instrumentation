@@ -33,7 +33,7 @@ public final class ElasticsearchRest7TelemetryBuilder {
   private Function<
           SpanNameExtractor<ElasticsearchRestRequest>,
           ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
-      spanNameExtractorTransformer = Function.identity();
+      spanNameExtractorCustomizer = Function.identity();
 
   ElasticsearchRest7TelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -69,14 +69,17 @@ public final class ElasticsearchRest7TelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public ElasticsearchRest7TelemetryBuilder setSpanNameExtractor(
+  public ElasticsearchRest7TelemetryBuilder setSpanNameExtractorCustomizer(
       Function<
               SpanNameExtractor<ElasticsearchRestRequest>,
               ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
-          spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+          spanNameExtractorCustomizer) {
+    this.spanNameExtractorCustomizer = spanNameExtractorCustomizer;
     return this;
   }
 
@@ -90,7 +93,7 @@ public final class ElasticsearchRest7TelemetryBuilder {
             openTelemetry,
             INSTRUMENTATION_NAME,
             attributesExtractors,
-            spanNameExtractorTransformer,
+            spanNameExtractorCustomizer,
             knownMethods,
             false);
 

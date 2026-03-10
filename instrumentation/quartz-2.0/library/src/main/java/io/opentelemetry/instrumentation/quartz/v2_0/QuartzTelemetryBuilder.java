@@ -29,7 +29,7 @@ public final class QuartzTelemetryBuilder {
   private Function<
           SpanNameExtractor<JobExecutionContext>,
           ? extends SpanNameExtractor<? super JobExecutionContext>>
-      spanNameExtractorTransformer = Function.identity();
+      spanNameExtractorCustomizer = Function.identity();
 
   QuartzTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -58,14 +58,17 @@ public final class QuartzTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
-  public QuartzTelemetryBuilder setSpanNameExtractor(
+  public QuartzTelemetryBuilder setSpanNameExtractorCustomizer(
       Function<
               SpanNameExtractor<JobExecutionContext>,
               ? extends SpanNameExtractor<? super JobExecutionContext>>
-          spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+          spanNameExtractorCustomizer) {
+    this.spanNameExtractorCustomizer = spanNameExtractorCustomizer;
     return this;
   }
 
@@ -74,7 +77,7 @@ public final class QuartzTelemetryBuilder {
    */
   public QuartzTelemetry build() {
     SpanNameExtractor<? super JobExecutionContext> spanNameExtractor =
-        spanNameExtractorTransformer.apply(new QuartzSpanNameExtractor());
+        spanNameExtractorCustomizer.apply(new QuartzSpanNameExtractor());
 
     InstrumenterBuilder<JobExecutionContext, Void> instrumenter =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor);

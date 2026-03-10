@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v7_0;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singleton;
+
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0.NodeFactory;
-import java.util.Collections;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.Node;
@@ -17,8 +19,8 @@ class Elasticsearch7NodeFactory implements NodeFactory {
   public Node newNode(Settings settings) {
     return new Node(
         InternalSettingsPreparer.prepareEnvironment(
-            settings, Collections.emptyMap(), null, () -> "default node name"),
-        Collections.singleton(Netty4Plugin.class),
+            settings, emptyMap(), null, () -> "default node name"),
+        singleton(Netty4Plugin.class),
         true) {};
   }
 }

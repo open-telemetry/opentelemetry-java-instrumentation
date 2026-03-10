@@ -25,7 +25,7 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.17.8"
+val byteBuddyVersion = "1.18.7"
 val aetherVersion = "1.1.0"
 
 dependencies {
@@ -40,11 +40,16 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.2.2")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.3.2") {
+    // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
+    // causing "No XmlService implementation found" in Gradle's classloader
+    exclude(group = "org.codehaus.plexus", module = "plexus-utils")
+    exclude(group = "org.codehaus.plexus", module = "plexus-xml")
+  }
 
-  testImplementation("org.assertj:assertj-core:3.27.6")
+  testImplementation("org.assertj:assertj-core:3.27.7")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
   implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing-webflux7"))
 
   compileOnly("org.springframework:spring-webflux:5.0.0.RELEASE")
 

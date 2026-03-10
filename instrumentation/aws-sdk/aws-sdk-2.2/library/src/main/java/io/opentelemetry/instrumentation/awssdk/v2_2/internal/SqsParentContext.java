@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Collections.singletonMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.Collections;
 import java.util.Map;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -68,9 +69,7 @@ public final class SqsParentContext {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
         .extract(
-            Context.root(),
-            Collections.singletonMap("X-Amzn-Trace-Id", traceHeader),
-            StringMapGetter.INSTANCE);
+            Context.root(), singletonMap("X-Amzn-Trace-Id", traceHeader), StringMapGetter.INSTANCE);
   }
 
   public static Context ofMessage(SqsMessage message, TracingExecutionInterceptor config) {
@@ -79,13 +78,13 @@ public final class SqsParentContext {
 
   static Context ofMessage(
       SqsMessage message, TextMapPropagator messagingPropagator, boolean shouldUseXrayPropagator) {
-    io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.root();
+    Context parentContext = Context.root();
 
     if (messagingPropagator != null) {
       parentContext = ofMessageAttributes(message.messageAttributes(), messagingPropagator);
     }
 
-    if (shouldUseXrayPropagator && parentContext == io.opentelemetry.context.Context.root()) {
+    if (shouldUseXrayPropagator && parentContext == Context.root()) {
       parentContext = ofSystemAttributes(message.attributesAsStrings());
     }
 

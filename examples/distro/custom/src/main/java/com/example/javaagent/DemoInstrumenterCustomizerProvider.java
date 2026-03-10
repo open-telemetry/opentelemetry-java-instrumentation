@@ -66,7 +66,7 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
     customizer.addAttributesExtractor(new DemoAttributesExtractor());
     customizer.addOperationMetrics(new DemoMetrics());
     customizer.addContextCustomizer(new DemoContextCustomizer());
-    customizer.setSpanNameExtractor(
+    customizer.setSpanNameExtractorCustomizer(
         unused -> (SpanNameExtractor<Object>) object -> "CustomHTTP/" + object.toString());
   }
 

@@ -13,7 +13,11 @@ dependencies {
 
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.2.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
+
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // see spring-cloud-gateway-4.3* module
 }
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
@@ -24,10 +28,8 @@ tasks.withType<Test>().configureEach {
 
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", latestDepTest)
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 if (latestDepTest) {
   // spring 6 requires java 17

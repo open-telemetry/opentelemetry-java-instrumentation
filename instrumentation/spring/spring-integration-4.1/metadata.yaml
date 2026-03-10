@@ -1,3 +1,4 @@
+display_name: Spring Integration
 description: This instrumentation enables producer and consumer messaging spans for Spring Integration.
 library_link: https://spring.io/projects/spring-integration
 configurations:
@@ -10,10 +11,10 @@ configurations:
     default: false
   - name: otel.instrumentation.spring-integration.global-channel-interceptor-patterns
     type: list
-    description: An array of Spring channel name patterns that will be intercepted.
+    description: A list of Spring channel name patterns that will be intercepted.
     default: "*"
   - name: otel.instrumentation.messaging.experimental.capture-headers
     type: list
-    description: Allows configuring headers to capture as span attributes.
+    description: A comma-separated list of header names to capture as span attributes.
     default: ''
 

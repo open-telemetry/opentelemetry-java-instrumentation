@@ -11,13 +11,12 @@ import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.ExtensionClassLoader;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 @AutoService(IgnoredTypesConfigurer.class)
 public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {
+  public void configure(IgnoredTypesBuilder builder) {
     configureIgnoredTypes(builder);
     configureIgnoredClassLoaders(builder);
     configureIgnoredTasks(builder);
@@ -157,6 +156,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     builder.ignoreTaskClass("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor");
     builder.ignoreTaskClass("org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor");
+    builder.ignoreTaskClass("org.apache.tomcat.util.net.AprEndpoint$SocketProcessor");
 
     // HttpConnection implements Runnable. When async request is completed HttpConnection
     // may be sent to process next request while context from previous request hasn't been

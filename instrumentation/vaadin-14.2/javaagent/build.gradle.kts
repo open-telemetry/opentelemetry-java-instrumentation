@@ -21,7 +21,13 @@ muzzle {
   pass {
     group.set("com.vaadin")
     module.set("flow-server")
-    versions.set("[3.1.0,)")
+    versions.set("[3.1.0,25.0.0)")
+  }
+  // not supported yet
+  fail {
+    group.set("com.vaadin")
+    module.set("flow-server")
+    versions.set("[25.0.0,)")
   }
 }
 
@@ -34,7 +40,6 @@ dependencies {
   compileOnly("com.vaadin:flow-server:2.2.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))

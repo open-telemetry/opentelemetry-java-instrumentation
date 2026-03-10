@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +33,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -40,13 +40,14 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsBaseTest {
 
   @Override
   protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
                 trace ->
                     trace.hasSpansSatisfyingExactly(
@@ -118,7 +119,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
 
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
                 trace -> {
                   List<Consumer<SpanDataAssert>> spanAsserts =

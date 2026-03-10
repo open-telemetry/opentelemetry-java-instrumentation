@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.SpringWsSingletons.instrumenter;
+import static java.util.Objects.requireNonNull;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -53,12 +54,15 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final SpringWsRequest request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final SpringWsRequest request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
-          CallDepth callDepth, SpringWsRequest request, Context context, Scope scope) {
+          CallDepth callDepth,
+          @Nullable SpringWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -88,7 +92,8 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
           return;
         }
         scope.close();
-        instrumenter().end(context, request, null, throwable);
+        // scope non-null implies context and request are both non-null (see enter method above)
+        instrumenter().end(requireNonNull(context), requireNonNull(request), null, throwable);
       }
     }
 

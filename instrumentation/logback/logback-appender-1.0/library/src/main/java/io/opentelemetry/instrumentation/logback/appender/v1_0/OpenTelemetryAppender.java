@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -23,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -35,6 +36,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
+  private boolean captureTemplate = false;
   private boolean captureArguments = false;
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
@@ -63,7 +65,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return;
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
-    for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
+    for (Logger logger : loggerContext.getLoggerList()) {
       logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
     }
   }
@@ -88,6 +90,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
             .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
@@ -178,24 +181,22 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
+   * Sets whether the message template should be captured in logs if arguments are provided.
+   *
+   * @param captureTemplate whether the message template should be captured in logs if arguments are
+   *     provided
+   */
+  public void setCaptureTemplate(boolean captureTemplate) {
+    this.captureTemplate = captureTemplate;
+  }
+
+  /**
    * Sets whether the arguments should be set to logs.
    *
    * @param captureArguments To enable or disable capturing logger arguments
    */
   public void setCaptureArguments(boolean captureArguments) {
     this.captureArguments = captureArguments;
-  }
-
-  /**
-   * Sets whether the Logstash attributes should be set to logs.
-   *
-   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
-   * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-   *     deprecated and will be removed in a future release.
-   */
-  @Deprecated
-  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
   }
 
   /** Sets whether the Logstash marker attributes should be captured. */
@@ -272,9 +273,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   // copied from SDK's DefaultConfigProperties
   private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values)
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 }

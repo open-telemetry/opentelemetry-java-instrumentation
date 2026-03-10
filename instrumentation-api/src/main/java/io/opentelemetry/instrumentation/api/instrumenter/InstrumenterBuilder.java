@@ -5,11 +5,15 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -35,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -48,11 +51,6 @@ import javax.annotation.Nullable;
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
-
-  private static final SpanSuppressionStrategy spanSuppressionStrategy =
-      SpanSuppressionStrategy.fromConfig(
-          ConfigPropertiesUtil.getString(
-              "otel.instrumentation.experimental.span-suppression-strategy"));
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -357,7 +355,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                   String url = provider.internalGetSchemaUrl();
                   return url == null ? Stream.of() : Stream.of(url);
                 })
-            .collect(Collectors.toSet());
+            .collect(toSet());
     switch (computedSchemaUrls.size()) {
       case 0:
         return null;
@@ -374,7 +372,28 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   SpanSuppressor buildSpanSuppressor() {
     return new SpanSuppressors.ByContextKey(
-        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+        SpanSuppressionStrategy.fromConfig(getSpanSuppressionStrategy())
+            .create(getSpanKeysFromAttributesExtractors()));
+  }
+
+  @Nullable
+  private String getSpanSuppressionStrategy() {
+    // we cannot use DeclarativeConfigUtil here because it's not available in instrumentation-api
+    DeclarativeConfigProperties commonConfig = empty();
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      commonConfig =
+          ((ExtendedOpenTelemetry) openTelemetry)
+              .getConfigProvider()
+              .getInstrumentationConfig("common");
+    }
+
+    @SuppressWarnings("deprecation") // using deprecated config property
+    String result =
+        commonConfig.getString(
+            "span_suppression_strategy/development",
+            ConfigPropertiesUtil.getString(
+                "otel.instrumentation.experimental.span-suppression-strategy", ""));
+    return result.isEmpty() ? null : result;
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
@@ -386,7 +405,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               SpanKey spanKey = provider.internalGetSpanKey();
               return spanKey == null ? Stream.of() : Stream.of(spanKey);
             })
-        .collect(Collectors.toSet());
+        .collect(toSet());
   }
 
   private void propagateOperationListenersToOnEnd() {
@@ -437,10 +456,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
 
             @Override
-            public void setSpanNameExtractor(
-                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
+            public void setSpanNameExtractorCustomizer(
+                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer) {
               builder.spanNameExtractor =
-                  spanNameExtractorTransformer.apply(builder.spanNameExtractor);
+                  spanNameExtractorCustomizer.apply(builder.spanNameExtractor);
+            }
+
+            @Override
+            public void setSpanStatusExtractorCustomizer(
+                UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+                    spanStatusExtractorCustomizer) {
+              builder.spanStatusExtractor =
+                  spanStatusExtractorCustomizer.apply(builder.spanStatusExtractor);
             }
           });
     }

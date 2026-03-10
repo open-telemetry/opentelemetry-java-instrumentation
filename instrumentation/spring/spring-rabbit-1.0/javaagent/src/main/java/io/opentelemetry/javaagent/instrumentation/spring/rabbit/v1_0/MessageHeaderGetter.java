@@ -19,7 +19,10 @@ enum MessageHeaderGetter implements TextMapGetter<Message> {
 
   @Nullable
   @Override
-  public String get(Message carrier, String key) {
+  public String get(@Nullable Message carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     Object value = carrier.getMessageProperties().getHeaders().get(key);
     return value == null ? null : value.toString();
   }

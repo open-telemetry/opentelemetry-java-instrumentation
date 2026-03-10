@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.security.config.v6_0.servlet;
 
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.instrumentation.spring.security.config.v6_0.servlet.EnduserAttributesCapturingServletFilter;
-import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +64,7 @@ class HttpSecurityInstrumentationTest {
         .newInstance(
             processor,
             authenticationBuilder,
-            Collections.singletonMap(ApplicationContext.class, applicationContext));
+            singletonMap(ApplicationContext.class, applicationContext));
   }
 
   private static Class<?> getObjectPostProcessorClass() throws ClassNotFoundException {

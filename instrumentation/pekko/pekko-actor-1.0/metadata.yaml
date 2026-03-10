@@ -1,0 +1,5 @@
+display_name: Pekko Actors
+description: This instrumentation provides context propagation for Pekko actors, it does not emit any telemetry on its own.
+library_link: https://pekko.apache.org/docs/pekko/current/typed/index.html
+features:
+  - CONTEXT_PROPAGATION

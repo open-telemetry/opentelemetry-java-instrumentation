@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.couchbase.springdata;
 
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
-import java.util.Collections;
 import java.util.List;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +32,7 @@ class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   @Override
   protected List<String> getBootstrapHosts() {
-    return Collections.singletonList("127.0.0.1");
+    return singletonList("127.0.0.1");
   }
 
   @Override

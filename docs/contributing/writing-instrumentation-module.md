@@ -407,6 +407,7 @@ In order to preserve compatibility with both instrumentation strategies, we have
 from the advice method annotations.
 
 We have three sets of instrumentation modules:
+
 - "inlined only": only compatible with "inlined", `isIndyModule` returns `false`.
 - "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`, advices are modified with `AdviceTransformer` to be made "indy native" or "inlined" at runtime.
 - "indy native": only compatible with "indy" `isIndyModule` returns `true`.

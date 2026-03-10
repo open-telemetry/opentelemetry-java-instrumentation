@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -24,11 +25,5 @@ dependencies {
 if (findProperty("testLatestDeps") as Boolean) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
-  }
-}
-
-tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }

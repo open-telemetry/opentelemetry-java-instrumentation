@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
   id("otel.library-instrumentation")
@@ -18,22 +17,38 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
   test {
-    // get packaged agent jar for testing
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
+    val testAppTask = project(":instrumentation:jmx-metrics:testing-apps:testing-webapp").tasks.named<War>("war")
+    val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("camelTestAppJar")
+
     dependsOn(shadowTask)
-
-    val testAppTask = project(":instrumentation:jmx-metrics:testing-webapp").tasks.named<War>("war")
     dependsOn(testAppTask)
+    dependsOn(camelTestAppTask)
 
-    inputs.files(layout.files(shadowTask))
+    val agentJar = shadowTask.flatMap { it.archiveFile }
+    val testAppWar = testAppTask.flatMap { it.archiveFile }
+    val camelTestAppJar = camelTestAppTask.flatMap { it.archiveFile }
+
+    inputs.file(agentJar)
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
+    inputs.file(testAppWar)
+      .withPropertyName("testWebApp")
+      .withNormalizer(ClasspathNormalizer::class)
+    inputs.file(camelTestAppJar)
+      .withPropertyName("camelTestApp")
+      .withNormalizer(ClasspathNormalizer::class)
 
-    doFirst {
-      jvmArgs(
-        "-Dio.opentelemetry.javaagent.path=${shadowTask.archiveFile.get()}",
-        "-Dio.opentelemetry.testapp.path=${testAppTask.get().archiveFile.get().asFile.absolutePath}"
+    jvmArgumentProviders += CommandLineArgumentProvider {
+      listOf(
+        "-Dio.opentelemetry.javaagent.path=${agentJar.get().asFile.absolutePath}",
+        "-Dio.opentelemetry.testapp.path=${testAppWar.get().asFile.absolutePath}",
+        "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJar.get().asFile.absolutePath}",
       )
     }
   }

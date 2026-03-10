@@ -5,13 +5,13 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,8 +26,8 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
         .image(
             jdk ->
                 String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20251009.18389598594",
-                    jdk))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-%s",
+                    jdk, TestImageVersions.GRPC_VERSION))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server started.*"));
   }
 
@@ -50,8 +50,7 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
                           .hasResourceSatisfying(
                               resource ->
                                   resource.hasAttribute(
-                                      TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                      getAgentVersion())),
+                                      TELEMETRY_DISTRO_VERSION, getAgentVersion())),
                   span -> span.hasName("TestService.withSpan")));
 
       // Verify correct traceIds are logged via MDC instrumentation

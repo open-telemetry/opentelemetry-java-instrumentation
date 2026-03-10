@@ -5,12 +5,13 @@
 
 package io.opentelemetry.instrumentation.javahttpserver;
 
+import static java.util.Collections.emptyList;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
 import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -41,7 +42,7 @@ enum JavaHttpServerAttributesGetter
 
   @Override
   public List<String> getHttpRequestHeader(HttpExchange exchange, String name) {
-    return exchange.getRequestHeaders().getOrDefault(name, Collections.emptyList());
+    return exchange.getRequestHeaders().getOrDefault(name, emptyList());
   }
 
   @Nullable
@@ -55,7 +56,7 @@ enum JavaHttpServerAttributesGetter
   @Override
   public List<String> getHttpResponseHeader(
       HttpExchange exchange, @Nullable HttpExchange res, String name) {
-    return exchange.getResponseHeaders().getOrDefault(name, Collections.emptyList());
+    return exchange.getResponseHeaders().getOrDefault(name, emptyList());
   }
 
   @Override

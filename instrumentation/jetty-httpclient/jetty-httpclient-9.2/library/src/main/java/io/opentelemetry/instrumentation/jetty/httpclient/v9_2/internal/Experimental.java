@@ -20,6 +20,12 @@ public final class Experimental {
   private static volatile BiConsumer<JettyClientTelemetryBuilder, Boolean>
       setEmitExperimentalTelemetry;
 
+  /**
+   * Sets whether experimental HTTP telemetry should be emitted.
+   *
+   * @param builder the telemetry builder
+   * @param emitExperimentalTelemetry {@code true} to emit experimental telemetry
+   */
   public static void setEmitExperimentalTelemetry(
       JettyClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {

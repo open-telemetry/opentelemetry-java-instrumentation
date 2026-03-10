@@ -53,7 +53,9 @@ class TelemetryParser {
                 singleton("io.opentelemetry.javaagent.couchbase-3.1")),
             entry("io.opentelemetry.couchbase-3.1.6", singleton("com.couchbase.client.jvm")),
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
-            entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")));
+            entry("io.opentelemetry.couchbase-3.4", singleton("com.couchbase.client.jvm")),
+            // servlet-5.0 tests use jetty-12.0 instrumentation
+            entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")));
   }
 
   /**
@@ -71,6 +73,26 @@ class TelemetryParser {
   static boolean scopeIsValid(String telemetryScope, String moduleScope) {
     return telemetryScope.equals(moduleScope)
         || scopeAllowList.getOrDefault(moduleScope, emptySet()).contains(telemetryScope);
+  }
+
+  /**
+   * Normalizes the 'when' condition from the given content by stripping quotes and whitespace.
+   *
+   * @param content the content containing the 'when' condition
+   * @return normalized when condition
+   */
+  static String normalizeWhenCondition(String content) {
+    if (content == null) {
+      return "";
+    }
+
+    String when = content.substring(0, content.indexOf('\n'));
+    String whenCondition = when.replace("when: ", "").strip();
+    // Remove surrounding quotes if present (to avoid double-quoting in output)
+    if (whenCondition.startsWith("\"") && whenCondition.endsWith("\"")) {
+      whenCondition = whenCondition.substring(1, whenCondition.length() - 1);
+    }
+    return whenCondition;
   }
 
   private TelemetryParser() {}

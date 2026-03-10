@@ -81,7 +81,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void exit(Throwable throwable) {
+      public void exit(@Nullable Throwable throwable) {
         scope.close();
         listenerInstrumenter().end(context, request, null, throwable);
       }

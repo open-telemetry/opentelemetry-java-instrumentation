@@ -51,6 +51,7 @@ dependencies {
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
   implementation("org.ow2.asm:asm-util")
+  implementation("com.fasterxml.jackson.core:jackson-databind")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
@@ -62,8 +63,6 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("com.google.guava:guava")
-  testImplementation("org.junit-pioneer:junit-pioneer")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {
@@ -103,22 +102,29 @@ testing {
       }
     }
 
-    val testPatchBytecodeVersion by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-tooling"))
-        implementation("net.bytebuddy:byte-buddy-dep")
-
-        // Used by byte-buddy but not brought in as a transitive dependency.
-        compileOnly("com.google.code.findbugs:annotations")
-      }
-    }
-
     val testConfigFile by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":javaagent-tooling"))
         // requires mockito-inline
         implementation("uk.org.webcompere:system-stubs-jupiter")
+      }
+    }
+
+    val testDistributionConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-extension-api"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation(project(":javaagent-tooling"))
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+      }
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs(
+              "-Dotel.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
+            )
+          }
+        }
       }
     }
   }
@@ -140,7 +146,7 @@ tasks {
   // TODO this should live in jmh-conventions
   named<JavaCompile>("jmhCompileGeneratedClasses") {
     options.errorprone {
-      isEnabled.set(false)
+      enabled.set(false)
     }
   }
 

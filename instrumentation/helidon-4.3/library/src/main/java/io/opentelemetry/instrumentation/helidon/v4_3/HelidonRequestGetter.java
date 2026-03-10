@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 
 import io.helidon.http.Header;
 import io.helidon.http.HeaderNames;
@@ -23,7 +24,9 @@ enum HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
     if (req == null) {
       return emptyList();
     }
-    return () -> req.headers().stream().map(Header::name).iterator();
+    // Materialize the stream to avoid Helidon's HeaderIterator bug where customHeadersIterator
+    // can be null when iterating through the lazy iterator
+    return req.headers().stream().map(Header::name).collect(toList());
   }
 
   @Override

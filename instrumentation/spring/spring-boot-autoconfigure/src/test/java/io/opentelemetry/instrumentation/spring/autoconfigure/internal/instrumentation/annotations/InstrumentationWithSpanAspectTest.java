@@ -11,7 +11,6 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -19,7 +18,6 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -102,19 +100,17 @@ class InstrumentationWithSpanAspectTest {
     testing.runWithSpan("parent", () -> withSpanTester.testWithSpanWithValue());
 
     // then
-    List<List<SpanData>> traces = testing.waitForTraces(1);
-    assertThat(traces)
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-                    span ->
-                        span.hasName("greatestSpanEver")
-                            .hasKind(INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                codeFunctionAssertions(
-                                    unproxiedTesterClassName, "testWithSpanWithValue"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                span ->
+                    span.hasName("greatestSpanEver")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            codeFunctionAssertions(
+                                unproxiedTesterClassName, "testWithSpanWithValue"))));
   }
 
   @Test

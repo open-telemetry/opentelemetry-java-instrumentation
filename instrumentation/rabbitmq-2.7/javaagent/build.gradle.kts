@@ -26,12 +26,25 @@ dependencies {
   testLibrary("io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
-  jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") ?: "false")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") ?: "false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }

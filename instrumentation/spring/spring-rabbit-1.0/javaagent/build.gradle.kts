@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -12,6 +13,8 @@ muzzle {
   }
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 dependencies {
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
 
@@ -21,6 +24,12 @@ dependencies {
   testLibrary("org.springframework.amqp:spring-rabbit:2.1.7.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.22.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter:1.5.22.RELEASE")
+  // spring-retry is required by org.springframework.amqp:spring-rabbit:4.0.0
+  testLibrary("org.springframework.retry:spring-retry")
+
+  if (latestDepTest) {
+    testLibrary("org.springframework.boot:spring-boot-starter-amqp:latest.release")
+  }
 }
 
 tasks {
@@ -29,8 +38,6 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 // spring 6 requires java 17
 if (latestDepTest) {

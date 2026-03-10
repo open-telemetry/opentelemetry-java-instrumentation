@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.instrumentation.resources.CgroupV2ContainerIdExtractor.V2_CGROUP_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -15,7 +16,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -94,8 +94,6 @@ class CgroupV2ContainerIdExtractorTest {
   private static List<String> fileToListOfLines(String filename) {
     InputStream in =
         CgroupV2ContainerIdExtractorTest.class.getClassLoader().getResourceAsStream(filename);
-    return new BufferedReader(new InputStreamReader(in, UTF_8))
-        .lines()
-        .collect(Collectors.toList());
+    return new BufferedReader(new InputStreamReader(in, UTF_8)).lines().collect(toList());
   }
 }

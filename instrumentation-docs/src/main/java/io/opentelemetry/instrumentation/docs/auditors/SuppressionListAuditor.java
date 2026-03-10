@@ -99,7 +99,7 @@ public class SuppressionListAuditor implements DocumentationAuditor {
     throw new IOException("Failed to fetch disable list: " + response);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   public static List<String> parseInstrumentationList(String fileContent) {
     List<String> instrumentationList = new ArrayList<>();
     Yaml yaml = new Yaml();

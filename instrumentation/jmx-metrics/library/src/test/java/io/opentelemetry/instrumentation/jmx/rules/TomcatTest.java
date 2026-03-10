@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -24,7 +24,7 @@ class TomcatTest extends TargetSystemTest {
   @ParameterizedTest
   @ValueSource(strings = {"tomcat:10.0", "tomcat:9.0"})
   void testCollectedMetrics(String dockerImageName) {
-    List<String> yamlFiles = Collections.singletonList("tomcat.yaml");
+    List<String> yamlFiles = singletonList("tomcat.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 

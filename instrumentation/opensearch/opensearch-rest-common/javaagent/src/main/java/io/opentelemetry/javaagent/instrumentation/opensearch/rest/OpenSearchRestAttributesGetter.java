@@ -5,26 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(OpenSearchRestRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(OpenSearchRestRequest request) {
-    return null;
+  public String getDbSystemName(OpenSearchRestRequest request) {
+    return DbSystemNameIncubatingValues.OPENSEARCH;
   }
 
   @Override
@@ -33,17 +26,10 @@ final class OpenSearchRestAttributesGetter
     return null;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(OpenSearchRestRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRestRequest request) {
-    return request.getMethod() + " " + request.getOperation();
+    return request.getMethod() + " " + request.getEndpoint();
   }
 
   @Override
@@ -54,8 +40,43 @@ final class OpenSearchRestAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(
-      @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
-    return response != null ? dbResponseStatusCode(response.getStatusCode()) : null;
+  public String getErrorType(
+      OpenSearchRestRequest request,
+      @Nullable OpenSearchRestResponse response,
+      @Nullable Throwable error) {
+
+    if (response != null) {
+      int statusCode = response.getStatusCode();
+      if (statusCode >= 400 || statusCode < 100) {
+        return Integer.toString(statusCode);
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkType(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    if (response == null) {
+      return null;
+    }
+    InetAddress address = response.getAddress();
+    if (address instanceof Inet4Address) {
+      return "ipv4";
+    } else if (address instanceof Inet6Address) {
+      return "ipv6";
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public String getNetworkPeerAddress(
+      OpenSearchRestRequest request, @Nullable OpenSearchRestResponse response) {
+    if (response != null && response.getAddress() != null) {
+      return response.getAddress().getHostAddress();
+    }
+    return null;
   }
 }

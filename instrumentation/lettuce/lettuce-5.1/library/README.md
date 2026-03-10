@@ -42,7 +42,7 @@ OpenTelemetry openTelemetry = ...;
 LettuceTelemetry lettuceTelemetry = LettuceTelemetry.create(openTelemetry);
 
 ClientResources clientResources = ClientResources.builder()
-    .tracing(lettuceTelemetry.newTracing())
+    .tracing(lettuceTelemetry.createTracing())
     .build();
 
 RedisClient redisClient = RedisClient.create(clientResources, "redis://localhost:6379");

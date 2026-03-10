@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -68,7 +69,7 @@ class FieldMapping {
     }
     this.type = type;
     this.attributeKey = attributeKey;
-    this.fields = Collections.unmodifiableList(Arrays.asList(fieldPath.split("\\.")));
+    this.fields = Collections.unmodifiableList(asList(fieldPath.split("\\.")));
     this.experimental = experimental;
   }
 
@@ -76,7 +77,7 @@ class FieldMapping {
     return attributeKey.getType();
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we expect the caller to check the attribute type
   <T> AttributeKey<T> getAttributeKey() {
     return (AttributeKey<T>) attributeKey;
   }

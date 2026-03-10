@@ -43,7 +43,7 @@ OpenTelemetry openTelemetry = ...;
 JettyClientTelemetry telemetry = JettyClientTelemetry.create(openTelemetry);
 
 // Get a traced HttpClient
-HttpClient httpClient = telemetry.getHttpClient();
+HttpClient httpClient = telemetry.createHttpClient();
 
 // ... use the httpClient to make requests
 ```

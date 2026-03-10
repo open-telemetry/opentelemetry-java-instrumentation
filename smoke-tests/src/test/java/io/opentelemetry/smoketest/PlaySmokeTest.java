@@ -5,10 +5,11 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.HttpAttributes;
+import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -22,14 +23,14 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
         .image(
             jdk ->
                 String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-20251009.18389598601",
-                    jdk))
-        .waitStrategy(
-            new TargetWaitStrategy.Log(java.time.Duration.ofMinutes(1), ".*Listening for HTTP.*"));
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-%s",
+                    jdk, TestImageVersions.PLAY_VERSION))
+        .env("OTEL_INSTRUMENTATION_COMMON_EXPERIMENTAL_CONTROLLER_TELEMETRY_ENABLED", "true")
+        .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening for HTTP.*"));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {17, 21, 25})
   void playSmokeTest(int jdk) {
     start(jdk);
 
@@ -43,7 +44,7 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
                 span ->
                     span.hasName("GET /welcome")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/welcome"),
+                        .hasAttribute(HTTP_ROUTE, "/welcome"),
                 span -> span.hasName("/welcome").hasKind(SpanKind.INTERNAL)));
   }
 }

@@ -5,19 +5,26 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassInfo;
+import io.opentelemetry.javaagent.bootstrap.advice.AdviceForwardLookupSupplier;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldLookupSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.instrumentation.executors.ExecutorLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaLookupSupplier;
 import io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.jul.JulLookupSupplier;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +44,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -122,7 +128,7 @@ public class HelperInjector implements Transformer {
                 className ->
                     HelperClassDefinition.create(
                         className, helpersSource, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     this.helperClassesGenerator = (cl) -> helpers;
     this.helperResources = helperResources;
@@ -152,10 +158,10 @@ public class HelperInjector implements Transformer {
     List<HelperClassDefinition> helperDefinitions =
         helpers.stream()
             .map(helperType -> HelperClassDefinition.create(helperType, InjectionMode.CLASS_ONLY))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     return new HelperInjector(
-        requestingName, cl -> helperDefinitions, Collections.emptyList(), null, instrumentation);
+        requestingName, cl -> helperDefinitions, emptyList(), null, instrumentation);
   }
 
   public static void setHelperInjectorListener(HelperInjectorListener listener) {
@@ -180,7 +186,7 @@ public class HelperInjector implements Transformer {
               helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectClass())
                   .collect(
-                      Collectors.toMap(
+                      toMap(
                           HelperClassDefinition::getClassName,
                           helper -> () -> helper.getBytecode().getBytecode(),
                           (a, b) -> {
@@ -193,7 +199,7 @@ public class HelperInjector implements Transformer {
               helpers.stream()
                   .filter(helper -> helper.getInjectionMode().shouldInjectResource())
                   .collect(
-                      Collectors.toMap(
+                      toMap(
                           helper -> helper.getClassName().replace('.', '/') + ".class",
                           helper -> helper.getBytecode().getUrl()));
 
@@ -237,8 +243,7 @@ public class HelperInjector implements Transformer {
       }
     }
     additionalResources.forEach(
-        (path, url) ->
-            injectResourceToClassloader(classLoader, path, Collections.singletonList(url)));
+        (path, url) -> injectResourceToClassloader(classLoader, path, singletonList(url)));
   }
 
   private static void injectResourceToClassloader(
@@ -289,7 +294,7 @@ public class HelperInjector implements Transformer {
       if (isBootClassLoader(classLoader)) {
         injectBootstrapClassLoader(classnameToBytes);
       }
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       if (logger.isLoggable(SEVERE)) {
         logger.log(
             SEVERE,
@@ -297,16 +302,20 @@ public class HelperInjector implements Transformer {
             new Object[] {typeDescription, requestingName, classLoader},
             e);
       }
-      throw new IllegalStateException(e);
+      throw e;
     }
   }
 
-  public static void injectHelperClasses(
+  public void injectHelperClasses(
       ClassLoader classLoader, Map<String, Supplier<byte[]>> classNameToBytes) {
-    if (isBootClassLoader(classLoader)) {
-      throw new UnsupportedOperationException("boot loader not supported");
-    }
     if (classNameToBytes.isEmpty()) {
+      return;
+    }
+    if (classLoader == null) {
+      if (instrumentation == null) {
+        throw new UnsupportedOperationException("boot loader not supported");
+      }
+      injectBootstrapClassLoader(classNameToBytes);
       return;
     }
 
@@ -334,11 +343,13 @@ public class HelperInjector implements Transformer {
   static {
     // add lookups for instrumentations that define classes in boot loader
     addPackageLookup(new ExecutorLookupSupplier());
+    addPackageLookup(new JulLookupSupplier());
     addPackageLookup(new LambdaLookupSupplier());
     addPackageLookup(new ReflectionLookupSupplier());
     // because all generated virtual field classes are in the same package we can use lookup to
     // define them
     addPackageLookup(new VirtualFieldLookupSupplier());
+    addPackageLookup(new AdviceForwardLookupSupplier());
   }
 
   private static void addPackageLookup(Supplier<MethodHandles.Lookup> supplier) {
@@ -350,7 +361,7 @@ public class HelperInjector implements Transformer {
     return lookup != null ? ClassInjector.UsingLookup.of(lookup) : null;
   }
 
-  private void injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject) throws IOException {
+  private void injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject) {
     Map<String, byte[]> classnameToBytes = resolve(inject);
     if (helperInjectorListener != null) {
       helperInjectorListener.onInjection(classnameToBytes);
@@ -372,7 +383,7 @@ public class HelperInjector implements Transformer {
         if (classInjector != null) {
           iterator.remove();
           try {
-            classInjector.injectRaw(Collections.singletonMap(className, entry.getValue()));
+            classInjector.injectRaw(singletonMap(className, entry.getValue()));
           } catch (LinkageError error) {
             // Unlike the ClassInjector.UsingUnsafe.ofBootLoader() ClassInjector.UsingLookup doesn't
             // check whether the class got loaded when there is an exception defining it.
@@ -404,7 +415,7 @@ public class HelperInjector implements Transformer {
     // a reference count -- but for now, starting simple.
 
     // Failures to create a tempDir are propagated as IOException and handled by transform
-    if (!classnameToBytes.isEmpty()) {
+    if (!classnameToBytes.isEmpty() && instrumentation != null) {
       File tempDir = createTempDir();
       try {
         ClassInjector.UsingInstrumentation.of(
@@ -417,8 +428,12 @@ public class HelperInjector implements Transformer {
     }
   }
 
-  private static File createTempDir() throws IOException {
-    return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
+  private static File createTempDir() {
+    try {
+      return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
+    } catch (IOException exception) {
+      throw new IllegalStateException("Failed to create temporary directory.", exception);
+    }
   }
 
   private static void deleteTempDir(File file) {

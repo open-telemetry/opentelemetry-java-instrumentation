@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -66,7 +67,7 @@ public class SemconvStabilityUtil {
   @SuppressWarnings("unchecked")
   public static <T> AttributeKey<T> maybeStable(AttributeKey<T> oldKey) {
     // not testing database/dup
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return (AttributeKey<T>) oldToNewMap.get(oldKey);
     }
     return oldKey;
@@ -74,7 +75,7 @@ public class SemconvStabilityUtil {
 
   public static String maybeStableDbSystemName(String oldDbSystemName) {
     // not testing database/dup
-    if (SemconvStability.emitStableDatabaseSemconv()) {
+    if (emitStableDatabaseSemconv()) {
       return SemconvStability.stableDbSystemName(oldDbSystemName);
     }
     return oldDbSystemName;

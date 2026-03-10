@@ -27,7 +27,6 @@ dependencies {
   library("org.grails:grails-plugin-url-mappings:$grailsVersion")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-7.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent"))
 
@@ -59,6 +58,17 @@ configurations.testRuntimeClasspath {
     // requires old logback (and therefore also old slf4j)
     force("ch.qos.logback:logback-classic:1.2.11")
     force("org.slf4j:slf4j-api:1.7.36")
+  }
+}
+
+spotless {
+  groovy {
+    target("src/**/*.groovy")
+    licenseHeaderFile(
+      rootProject.file("buildscripts/spotless.license.java"),
+      "(package|import|(?:abstract )?class)"
+    )
+    endWithNewline()
   }
 }
 

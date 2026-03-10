@@ -8,7 +8,6 @@ package com.example.javaagent;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesBuilder;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
 /**
  * Custom {@link IgnoredTypesConfigurer} which exists currently only to verify correct shading.
@@ -19,5 +18,5 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 public class DemoIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
 
   @Override
-  public void configure(IgnoredTypesBuilder builder, ConfigProperties config) {}
+  public void configure(IgnoredTypesBuilder builder) {}
 }

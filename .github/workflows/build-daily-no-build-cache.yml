@@ -29,8 +29,8 @@ jobs:
   # muzzle is not included here because it doesn't use gradle cache anyway and so is already covered
   # by the normal daily build
 
-  # link-check and misspell-check are not included here because they don't use gradle cache
-  # anyway and so are already covered by the normal daily build
+  # link-check is not included here because it doesn't use gradle cache anyway and so is already
+  # covered by the normal daily build
 
   workflow-notification:
     permissions:

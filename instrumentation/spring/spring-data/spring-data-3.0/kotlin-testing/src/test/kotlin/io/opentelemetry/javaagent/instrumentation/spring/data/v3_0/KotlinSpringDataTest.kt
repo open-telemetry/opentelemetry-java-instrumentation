@@ -52,7 +52,7 @@ class KotlinSpringDataTest {
       trace.hasSpansSatisfyingExactly({
         it.hasName("CustomerRepository.findById").hasNoParent()
       }, {
-        it.hasName("SELECT db.customer").hasParent(trace.getSpan(0))
+        it.hasName("SELECT db.CUSTOMER").hasParent(trace.getSpan(0))
       })
     })
   }

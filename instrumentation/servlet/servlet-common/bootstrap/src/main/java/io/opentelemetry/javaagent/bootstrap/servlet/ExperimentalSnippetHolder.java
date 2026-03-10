@@ -5,15 +5,16 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 
 public class ExperimentalSnippetHolder {
 
   private static volatile String snippet = getSnippetSetting();
 
   private static String getSnippetSetting() {
-    String result = ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet");
-    return result == null ? "" : result;
+    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
+        .getString("javascript_snippet/development", "");
   }
 
   public static void setSnippet(String newValue) {

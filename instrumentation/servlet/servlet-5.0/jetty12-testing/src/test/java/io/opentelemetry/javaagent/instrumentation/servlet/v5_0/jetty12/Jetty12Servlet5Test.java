@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty12;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import jakarta.servlet.Servlet;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.Callback;
@@ -40,7 +41,7 @@ public abstract class Jetty12Servlet5Test
         (request, response, callback) -> {
           String message = (String) request.getAttribute("org.eclipse.jetty.server.error_message");
           if (message != null) {
-            response.write(true, StandardCharsets.UTF_8.encode(message), Callback.NOOP);
+            response.write(true, UTF_8.encode(message), Callback.NOOP);
           }
           callback.succeeded();
           return true;

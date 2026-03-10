@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
     typeToSpanKey.put(InstrumentationType.RPC_SERVER, SpanKey.RPC_SERVER);
     typeToSpanKey.put(InstrumentationType.MESSAGING_PRODUCER, SpanKey.PRODUCER);
     typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_RECEIVE, SpanKey.CONSUMER_RECEIVE);
-    typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_PROCESS, SpanKey.CONSUMER_RECEIVE);
+    typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_PROCESS, SpanKey.CONSUMER_PROCESS);
   }
 
   private final InternalInstrumenterCustomizer customizer;
@@ -82,9 +83,16 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
 
   @Override
   @SuppressWarnings("FunctionalInterfaceClash") // interface has deprecated overload
-  public InstrumenterCustomizer setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor) {
-    customizer.setSpanNameExtractor(spanNameExtractor);
+  public InstrumenterCustomizer setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractorCustomizer) {
+    customizer.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
+    return this;
+  }
+
+  @Override
+  public InstrumenterCustomizer setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<?, ?>> spanStatusExtractorCustomizer) {
+    customizer.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 }

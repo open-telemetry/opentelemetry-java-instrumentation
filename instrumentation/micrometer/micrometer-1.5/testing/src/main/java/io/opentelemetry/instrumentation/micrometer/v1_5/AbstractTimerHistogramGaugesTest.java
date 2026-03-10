@@ -8,12 +8,13 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("PreferJavaTimeOverload")
@@ -37,10 +38,10 @@ public abstract class AbstractTimerHistogramGaugesTest {
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(500, TimeUnit.MILLISECONDS);
-    timer.record(5, TimeUnit.SECONDS);
-    timer.record(50, TimeUnit.SECONDS);
-    timer.record(500, TimeUnit.SECONDS);
+    timer.record(500, MILLISECONDS);
+    timer.record(5, SECONDS);
+    timer.record(50, SECONDS);
+    timer.record(500, SECONDS);
 
     // then
     testing()
@@ -125,8 +126,8 @@ public abstract class AbstractTimerHistogramGaugesTest {
             .register(Metrics.globalRegistry);
 
     // when
-    timer.record(50, TimeUnit.MILLISECONDS);
-    timer.record(500, TimeUnit.MILLISECONDS);
+    timer.record(50, MILLISECONDS);
+    timer.record(500, MILLISECONDS);
 
     // then
     testing()

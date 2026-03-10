@@ -11,8 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -85,26 +85,22 @@ public interface InstrumenterCustomizer {
    * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
    * customizing how span names are generated for the instrumented operations.
    *
-   * @param spanNameExtractorTransformer function that transforms the original span name extractor
+   * @param spanNameExtractorCustomizer function that transforms the original span name extractor
    * @return this InstrumenterCustomizer for method chaining
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
    */
-  @Deprecated
-  @SuppressWarnings("FunctionalInterfaceClash")
-  default InstrumenterCustomizer setSpanNameExtractor(
-      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
-    return setSpanNameExtractor(spanNameExtractorTransformer::apply);
-  }
+  InstrumenterCustomizer setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractorCustomizer);
 
   /**
-   * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
-   * customizing how span names are generated for the instrumented operations.
+   * Sets a transformer function that will modify the {@link SpanStatusExtractor}. This allows
+   * customizing how span statuses are generated for the instrumented operations.
    *
-   * @param spanNameExtractor function that transforms the original span name extractor
+   * @param spanStatusExtractorCustomizer function that transforms the original span status
+   *     extractor
    * @return this InstrumenterCustomizer for method chaining
    */
-  InstrumenterCustomizer setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor);
+  InstrumenterCustomizer setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<?, ?>> spanStatusExtractorCustomizer);
 
   /** Types of instrumentation. */
   enum InstrumentationType {

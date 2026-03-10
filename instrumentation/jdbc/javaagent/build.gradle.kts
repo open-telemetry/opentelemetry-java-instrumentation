@@ -63,11 +63,17 @@ tasks {
   }
 
   val testSqlCommenter by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SqlCommenterTest")
     }
     include("**/SqlCommenterTest.*")
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.sqlcommenter.enabled=true")
+    // This property is read in TestAgentSqlCommenterCustomizer, we use it instead of the
+    // otel.instrumentation.jdbc.experimental.sqlcommenter.enabled to test that the
+    // SqlCommenterCustomizer is run.
+    jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -80,7 +86,8 @@ tasks {
       excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
   val testSlickStableSemconv by registering(Test::class) {
@@ -126,5 +133,6 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }

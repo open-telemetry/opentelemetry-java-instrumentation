@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
 final class GraphqlDataFetcherAttributesExtractor
-    implements AttributesExtractor<DataFetchingEnvironment, Void> {
+    implements AttributesExtractor<DataFetchingEnvironment, Object> {
 
   // NOTE: These are not part of the Semantic Convention and are subject to change
   private static final AttributeKey<String> GRAPHQL_FIELD_NAME =
@@ -34,6 +34,6 @@ final class GraphqlDataFetcherAttributesExtractor
       AttributesBuilder attributes,
       Context context,
       DataFetchingEnvironment environment,
-      @Nullable Void unused,
+      @Nullable Object unused,
       @Nullable Throwable error) {}
 }

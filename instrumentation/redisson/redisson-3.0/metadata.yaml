@@ -1,0 +1,5 @@
+description: This instrumentation enables database client spans and database client metrics for Redisson Redis client operations.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/redisson/redisson

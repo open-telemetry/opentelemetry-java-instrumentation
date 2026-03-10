@@ -20,9 +20,11 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
@@ -31,7 +33,6 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 class OpenTelemetryStatement<S extends Statement> implements Statement {
@@ -41,7 +42,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final DbInfo dbInfo;
   protected final String query;
   protected final Instrumenter<DbRequest, Void> instrumenter;
-  protected final boolean sqlCommenterEnabled;
+  protected final SqlCommenter sqlCommenter;
 
   private final List<String> batchCommands = new ArrayList<>();
   protected long batchSize;
@@ -51,8 +52,8 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       Instrumenter<DbRequest, Void> instrumenter,
-      boolean sqlCommenterEnabled) {
-    this(delegate, connection, dbInfo, null, instrumenter, sqlCommenterEnabled);
+      SqlCommenter sqlCommenter) {
+    this(delegate, connection, dbInfo, null, instrumenter, sqlCommenter);
   }
 
   OpenTelemetryStatement(
@@ -61,17 +62,17 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       DbInfo dbInfo,
       String query,
       Instrumenter<DbRequest, Void> instrumenter,
-      boolean sqlCommenterEnabled) {
+      SqlCommenter sqlCommenter) {
     this.delegate = delegate;
     this.connection = connection;
     this.dbInfo = dbInfo;
     this.query = query;
     this.instrumenter = instrumenter;
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
+    this.sqlCommenter = sqlCommenter;
   }
 
   private String processQuery(String sql) {
-    return sqlCommenterEnabled ? SqlCommenterUtil.processQuery(sql) : sql;
+    return sqlCommenter.processQuery(connection.delegate, sql, true);
   }
 
   @Override
@@ -384,7 +385,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
-    DbRequest request = DbRequest.create(dbInfo, sql);
+    DbRequest request = DbRequest.create(dbInfo, sql, false);
     return wrapCall(request, callable);
   }
 
@@ -409,7 +410,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, Collections.emptyMap());
+    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, emptyMap(), false);
     return wrapCall(request, callable);
   }
 }

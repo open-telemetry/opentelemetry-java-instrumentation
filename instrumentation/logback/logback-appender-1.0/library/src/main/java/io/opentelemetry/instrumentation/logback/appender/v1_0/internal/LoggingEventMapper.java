@@ -5,10 +5,18 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldCodeSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableCodeSemconv;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -20,10 +28,8 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
@@ -31,13 +37,10 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -84,6 +87,7 @@ public final class LoggingEventMapper {
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
+  private final boolean captureTemplate;
   private final boolean captureArguments;
   private final boolean captureLogstashMarkerAttributes;
   private final boolean captureLogstashStructuredArguments;
@@ -96,6 +100,7 @@ public final class LoggingEventMapper {
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
+    this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
@@ -133,7 +138,7 @@ public final class LoggingEventMapper {
       setTimestampFromInstant(builder, loggingEvent);
     } else {
       long timestamp = loggingEvent.getTimeStamp();
-      builder.setTimestamp(timestamp, TimeUnit.MILLISECONDS);
+      builder.setTimestamp(timestamp, MILLISECONDS);
     }
 
     // level
@@ -171,7 +176,7 @@ public final class LoggingEventMapper {
         String fileName = firstStackElement.getFileName();
         int lineNumber = firstStackElement.getLineNumber();
 
-        if (SemconvStability.isEmitOldCodeSemconv()) {
+        if (emitOldCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILEPATH, fileName);
           }
@@ -181,7 +186,7 @@ public final class LoggingEventMapper {
             builder.setAttribute(CODE_LINENO, (long) lineNumber);
           }
         }
-        if (SemconvStability.isEmitStableCodeSemconv()) {
+        if (emitStableCodeSemconv()) {
           if (fileName != null) {
             builder.setAttribute(CODE_FILE_PATH, fileName);
           }
@@ -215,10 +220,16 @@ public final class LoggingEventMapper {
       captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
+    if (captureTemplate
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      captureTemplate(builder, loggingEvent);
+    }
+
     if (captureArguments
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
-      captureArguments(builder, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+      captureArguments(builder, loggingEvent.getArgumentArray());
     }
 
     if (supportsLogstashMarkers && captureLogstashMarkerAttributes) {
@@ -265,22 +276,24 @@ public final class LoggingEventMapper {
     }
   }
 
-  void captureArguments(LogRecordBuilder builder, String message, Object[] arguments) {
-    builder.setAttribute(LOG_BODY_TEMPLATE, message);
+  private static void captureTemplate(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    builder.setAttribute(LOG_BODY_TEMPLATE, loggingEvent.getMessage());
+  }
+
+  private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
-        LOG_BODY_PARAMETERS,
-        Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
+        LOG_BODY_PARAMETERS, Arrays.stream(arguments).map(String::valueOf).collect(toList()));
   }
 
   private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
     if (builder instanceof ExtendedLogRecordBuilder) {
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     } else {
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      builder.setAttribute(EXCEPTION_TYPE, throwable.getClass().getName());
+      builder.setAttribute(EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();
       throwable.printStackTrace(new PrintWriter(writer));
-      builder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      builder.setAttribute(EXCEPTION_STACKTRACE, writer.toString());
     }
   }
 
@@ -440,7 +453,7 @@ public final class LoggingEventMapper {
       LogRecordBuilder builder, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     Marker marker = loggingEvent.getMarker();
     if (marker != null && (!skipLogstashMarkers || !isLogstashMarker(marker))) {
-      builder.setAttribute(LOG_MARKER, Collections.singletonList(marker.getName()));
+      builder.setAttribute(LOG_MARKER, singletonList(marker.getName()));
     }
   }
 
@@ -640,7 +653,7 @@ public final class LoggingEventMapper {
   private void captureLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashStructuredArgument(builder, argument);
+        captureLogstashMarker(builder, argument);
       }
     }
   }
@@ -649,15 +662,8 @@ public final class LoggingEventMapper {
   private static boolean isLogstashStructuredArgument(Object argument) {
     // StructuredArguments implement the marker interface, so we can check for it
     // without importing the class directly (which may not be available at runtime)
-    return argument instanceof SingleFieldAppendingMarker;
-  }
-
-  @NoMuzzle
-  private void captureLogstashStructuredArgument(LogRecordBuilder builder, Object argument) {
-    // StructuredArguments created by v() or keyValue() extend SingleFieldAppendingMarker
-    // which has getFieldName() and provides field value via reflection
-    SingleFieldAppendingMarker marker = (SingleFieldAppendingMarker) argument;
-    captureLogstashMarker(builder, marker);
+    return argument instanceof SingleFieldAppendingMarker
+        || argument instanceof MapEntriesAppendingMarker;
   }
 
   private interface FieldReader {
@@ -686,6 +692,7 @@ public final class LoggingEventMapper {
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
+    private boolean captureTemplate;
     private boolean captureArguments;
     private boolean captureLogstashMarkerAttributes;
     private boolean captureLogstashStructuredArguments;
@@ -730,19 +737,15 @@ public final class LoggingEventMapper {
     }
 
     @CanIgnoreReturnValue
-    public Builder setCaptureArguments(boolean captureArguments) {
-      this.captureArguments = captureArguments;
+    public Builder setCaptureTemplate(boolean captureTemplate) {
+      this.captureTemplate = captureTemplate;
       return this;
     }
 
-    /**
-     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
-     *     deprecated and will be removed in a future release.
-     */
-    @Deprecated
     @CanIgnoreReturnValue
-    public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-      return setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
+    public Builder setCaptureArguments(boolean captureArguments) {
+      this.captureArguments = captureArguments;
+      return this;
     }
 
     @CanIgnoreReturnValue

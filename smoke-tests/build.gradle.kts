@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.time.Duration
 
 plugins {
@@ -11,20 +10,20 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
-val dockerJavaVersion = "3.6.0"
+val dockerJavaVersion = "3.7.0"
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.76.0"))
+  implementation(platform("io.grpc:grpc-bom:1.79.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.33.0")
+  implementation("com.google.protobuf:protobuf-java-util:4.34.0")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -72,13 +71,26 @@ tasks {
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
-    inputs.files(layout.files(shadowTask))
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
+    val agentJarPath = shadowTask.flatMap { it.archiveFile }
+    inputs.files(agentJarPath)
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
+    val extensionTask = project(":smoke-tests:extensions:extension").tasks.named<Jar>("jar")
+    val extensionJarPath = extensionTask.flatMap { it.archiveFile }
+
+    val extensionTestAppTask = project(":smoke-tests:extensions:testapp").tasks.named<Jar>("jar")
+    val extensionTestAppJarPath = extensionTestAppTask.flatMap { it.archiveFile }
+
+    dependsOn(shadowTask, extensionTestAppTask, extensionTask)
+
     doFirst {
-      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
+      jvmArgs(
+        "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}",
+        "-Dio.opentelemetry.smoketest.extension.path=${extensionJarPath.get()}",
+        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}"
+      )
     }
   }
 }

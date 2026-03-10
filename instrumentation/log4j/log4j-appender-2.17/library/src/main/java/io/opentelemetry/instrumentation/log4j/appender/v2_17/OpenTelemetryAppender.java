@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,13 +27,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -254,7 +255,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     return Arrays.stream(value.split(","))
         .map(String::trim)
         .filter(s -> !s.isEmpty())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /**
@@ -323,10 +324,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // reconstruct the context from context data
     if (context == Context.root()) {
       ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
-      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
+      String traceId = contextDataAccessor.getValue(contextData, contextDataKeys.getTraceIdKey());
+      String spanId = contextDataAccessor.getValue(contextData, contextDataKeys.getSpanIdKey());
       String traceFlags =
-          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+          contextDataAccessor.getValue(contextData, contextDataKeys.getTraceFlags());
       if (traceId != null && spanId != null && traceFlags != null) {
         context =
             Context.root()
@@ -355,9 +357,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
       builder.setTimestamp(
-          TimeUnit.MILLISECONDS.toNanos(timestamp.getEpochMillisecond())
-              + timestamp.getNanoOfMillisecond(),
-          TimeUnit.NANOSECONDS);
+          MILLISECONDS.toNanos(timestamp.getEpochMillisecond()) + timestamp.getNanoOfMillisecond(),
+          NANOSECONDS);
     }
     builder.emit();
   }

@@ -5,7 +5,8 @@
 
 package test;
 
-import java.util.Arrays;
+import static java.util.Arrays.asList;
+
 import java.util.HashSet;
 import java.util.Set;
 import javax.ws.rs.ApplicationPath;
@@ -16,6 +17,6 @@ public class RestApplication extends Application {
 
   @Override
   public Set<Class<?>> getClasses() {
-    return new HashSet<>(Arrays.asList(CdiRestResource.class, EjbRestResource.class));
+    return new HashSet<>(asList(CdiRestResource.class, EjbRestResource.class));
   }
 }

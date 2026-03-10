@@ -75,6 +75,9 @@ targets:
       target: ':instrumentation:apache-dubbo-2.7:library-autoconfigure'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-elasticjob-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-httpasyncclient-4.1:javaagent'
     - type: gradle
       path: ./
@@ -156,6 +159,9 @@ targets:
       target: ':instrumentation:hystrix-1.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:iceberg-1.8:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:influxdb-2.4:javaagent'
     - type: gradle
       path: ./
@@ -174,9 +180,6 @@ targets:
       target: ':instrumentation:java-util-logging:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:javalin-5.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jaxrs-client:jaxrs-client-1.1-testing'
     - type: gradle
       path: ./
@@ -187,6 +190,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:jdbc:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jfinal-3.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jmx-metrics:javaagent'
@@ -268,6 +274,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:rmi:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:runtime-telemetry:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:runtime-telemetry:library'
     - type: gradle
       path: ./
       target: ':instrumentation:scala-fork-join-2.8:javaagent'
@@ -492,7 +504,7 @@ targets:
       target: ':instrumentation:graphql-java:graphql-java-20.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:graphql-java:graphql-java-common:library'
+      target: ':instrumentation:graphql-java:graphql-java-common-12.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
@@ -532,6 +544,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:internal:internal-url-class-loader:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:javalin:javalin-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:javalin:javalin-7.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-1.0:javaagent'
@@ -648,9 +666,6 @@ targets:
       target: ':instrumentation:ktor:ktor-1.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:ktor:ktor-2-common:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:ktor:ktor-2.0:javaagent'
     - type: gradle
       path: ./
@@ -663,7 +678,7 @@ targets:
       target: ':instrumentation:ktor:ktor-3.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:ktor:ktor-common:library'
+      target: ':instrumentation:ktor:ktor-common-2.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-4.0:javaagent'
@@ -828,6 +843,15 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
     - type: gradle
       path: ./
@@ -879,6 +903,15 @@ targets:
       target: ':instrumentation:restlet:restlet-2.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:rocketmq:rocketmq-client-4.8:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rocketmq:rocketmq-client-4.8:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:rocketmq:rocketmq-client-5.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:runtime-telemetry:runtime-telemetry-java17:javaagent'
     - type: gradle
       path: ./
@@ -900,9 +933,6 @@ targets:
       target: ':instrumentation:rxjava:rxjava-2.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rxjava:rxjava-3-common:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:rxjava:rxjava-3.0:javaagent'
     - type: gradle
       path: ./
@@ -915,13 +945,22 @@ targets:
       target: ':instrumentation:rxjava:rxjava-3.1.1:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:rxjava:rxjava-common-3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:servlet:servlet-2.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:servlet:servlet-3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:servlet:servlet-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:servlet:servlet-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:servlet:servlet-common:bootstrap'
@@ -930,7 +969,10 @@ targets:
       target: ':instrumentation:servlet:servlet-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:servlet:servlet-javax-common:javaagent'
+      target: ':instrumentation:servlet:servlet-common:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:servlet:servlet-common-javax:library'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-batch-3.0:javaagent'
@@ -1035,6 +1077,9 @@ targets:
       target: ':instrumentation:zio:zio-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:zio:zio-http-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent'
     - type: gradle
       path: ./
@@ -1113,16 +1158,13 @@ targets:
       target: ':instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-4.8:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-data:spring-data-1.8:javaagent'

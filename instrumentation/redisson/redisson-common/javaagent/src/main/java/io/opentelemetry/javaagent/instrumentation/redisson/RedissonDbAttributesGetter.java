@@ -6,22 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest, Void> {
 
-  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(RedissonRequest request) {
-    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getUser(RedissonRequest request) {
-    return null;
+  public String getDbSystemName(RedissonRequest request) {
+    return DbSystemNameIncubatingValues.REDIS;
   }
 
   @Nullable
@@ -30,20 +23,20 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return null;
   }
 
-  @Deprecated
-  @Override
-  public String getConnectionString(RedissonRequest request) {
-    return null;
-  }
-
   @Override
   public String getDbQueryText(RedissonRequest request) {
-    return request.getStatement();
+    return request.getQueryText();
   }
 
   @Nullable
   @Override
   public String getDbOperationName(RedissonRequest request) {
-    return request.getOperation();
+    return request.getOperationName();
+  }
+
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      RedissonRequest request, @Nullable Void unused) {
+    return request.getAddress();
   }
 }

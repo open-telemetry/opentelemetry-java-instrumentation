@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import static io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.createClient;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.twitter.finagle.ConnectionFailedException;
@@ -35,7 +36,6 @@ import io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.Clien
 import java.net.ConnectException;
 import java.net.URI;
 import java.nio.channels.ClosedChannelException;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -198,7 +198,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, https://192.0.2.1/ => non routable address
     if ("http://localhost:61/".equals(uriString) || "https://192.0.2.1/".equals(uriString)) {
-      return Collections.emptySet();
+      return emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(SERVER_ADDRESS);

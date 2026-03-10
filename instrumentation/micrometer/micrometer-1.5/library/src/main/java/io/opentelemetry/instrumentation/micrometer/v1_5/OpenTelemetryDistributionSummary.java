@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.HistogramAdviceUtil.setExplicitBucketsIfConfigured;
+import static java.util.Collections.emptyList;
 
 import io.micrometer.core.instrument.AbstractDistributionSummary;
 import io.micrometer.core.instrument.Clock;
@@ -22,12 +23,12 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
-import java.util.Collections;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
-    implements RemovableMeter {
+    implements RemovableMeter, OpenTelemetryInstrument {
 
   private final Measurements measurements;
   private final TimeWindowMax max;
@@ -105,7 +106,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
   @Override
   public Iterable<Measurement> measure() {
     UnsupportedReadLogger.logWarning();
-    return Collections.emptyList();
+    return emptyList();
   }
 
   @Override

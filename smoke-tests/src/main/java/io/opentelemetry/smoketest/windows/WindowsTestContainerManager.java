@@ -5,6 +5,9 @@
 
 package io.opentelemetry.smoketest.windows;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
@@ -18,6 +21,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
+import io.opentelemetry.smoketest.ImageVersions;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.smoketest.TestContainerManager;
@@ -36,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -78,7 +81,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .getId();
 
     String backendImageName =
-        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20251006.18272043386";
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:"
+            + ImageVersions.FAKE_BACKEND_WINDOWS_VERSION;
     if (!imageExists(backendImageName)) {
       pullImage(backendImageName);
     }
@@ -386,7 +390,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
           regex.toString());
 
       try {
-        lineHit.await(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        lineHit.await(timeout.toMillis(), MILLISECONDS);
       } catch (InterruptedException e) {
         throw new IllegalStateException(e);
       }
@@ -403,10 +407,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     private final String path;
     private final Duration timeout;
     private final RateLimiter rateLimiter =
-        RateLimiterBuilder.newBuilder()
-            .withRate(1, TimeUnit.SECONDS)
-            .withConstantThroughput()
-            .build();
+        RateLimiterBuilder.newBuilder().withRate(1, SECONDS).withConstantThroughput().build();
 
     private HttpWaiter(int internalPort, String path, Duration timeout) {
       this.internalPort = internalPort;
@@ -424,7 +425,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       try {
         Unreliables.retryUntilSuccess(
             (int) timeout.toMillis(),
-            TimeUnit.MILLISECONDS,
+            MILLISECONDS,
             () -> {
               rateLimiter.doWhenReady(
                   () -> {
@@ -451,10 +452,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
     private final int internalPort;
     private final Duration timeout;
     private final RateLimiter rateLimiter =
-        RateLimiterBuilder.newBuilder()
-            .withRate(1, TimeUnit.SECONDS)
-            .withConstantThroughput()
-            .build();
+        RateLimiterBuilder.newBuilder().withRate(1, SECONDS).withConstantThroughput().build();
 
     private PortWaiter(int internalPort, Duration timeout) {
       this.internalPort = internalPort;
@@ -472,7 +470,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
       try {
         Unreliables.retryUntilSuccess(
             (int) timeout.toMillis(),
-            TimeUnit.MILLISECONDS,
+            MILLISECONDS,
             () -> {
               rateLimiter.doWhenReady(
                   () -> {

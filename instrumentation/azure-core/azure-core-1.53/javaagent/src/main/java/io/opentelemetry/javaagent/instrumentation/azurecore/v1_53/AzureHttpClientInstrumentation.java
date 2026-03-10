@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.azure.core.http.HttpResponse;
+import com.azure.core.util.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -55,8 +56,7 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static Mono<HttpResponse> asyncSendExit(
-        @Advice.Argument(1) com.azure.core.util.Context azContext,
-        @Advice.Return Mono<HttpResponse> mono) {
+        @Advice.Argument(1) Context azContext, @Advice.Return Mono<HttpResponse> mono) {
       return disallowNestedClientSpanMono(mono, azContext);
     }
   }
@@ -66,7 +66,7 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope syncSendEnter(@Advice.Argument(1) com.azure.core.util.Context azContext) {
+    public static Scope syncSendEnter(@Advice.Argument(1) Context azContext) {
       return disallowNestedClientSpanSync(azContext);
     }
 

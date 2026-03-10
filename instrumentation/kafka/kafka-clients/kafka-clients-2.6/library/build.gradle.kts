@@ -20,34 +20,7 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("*Deprecated*")
-    }
-  }
-
-  val testDeprecated by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DeprecatedInterceptorsTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
-  }
-
-  val testDeprecatedSuppressReceiveSpans by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DeprecatedInterceptorsSuppressReceiveSpansTest")
-    }
-  }
-
-  check {
-    dependsOn(testDeprecated, testDeprecatedSuppressReceiveSpans)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
 

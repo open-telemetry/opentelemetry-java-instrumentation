@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import java.util.logging.Level;
+import static java.util.logging.Level.FINE;
+
 import java.util.logging.Logger;
 
 final class PluginImplUtil { // TODO: Copy & pasted to v1
@@ -44,7 +45,7 @@ final class PluginImplUtil { // TODO: Copy & pasted to v1
       // always be found) but a dependency failed to load (most likely because the corresponding SDK
       // dependency is not on the class path).
       logger.log(
-          Level.FINE,
+          FINE,
           () ->
               "Failed to load "
                   + implFullClassName

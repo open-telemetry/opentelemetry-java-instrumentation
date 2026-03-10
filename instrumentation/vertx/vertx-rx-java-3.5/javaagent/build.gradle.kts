@@ -76,6 +76,16 @@ tasks {
   named("compileVersion5TestJava", JavaCompile::class).configure {
     options.release.set(11)
   }
+
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    }
+  }
+
   val testJavaVersion =
     gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
       ?: JavaVersion.current()
@@ -83,9 +93,12 @@ tasks {
     named("version5Test", Test::class).configure {
       enabled = false
     }
+    named("version5TestStableSemconv", Test::class).configure {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, stableSemconvSuites)
   }
 }

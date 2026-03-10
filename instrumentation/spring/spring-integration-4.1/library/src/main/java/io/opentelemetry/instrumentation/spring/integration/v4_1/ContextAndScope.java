@@ -22,7 +22,7 @@ abstract class ContextAndScope {
     getScope().close();
   }
 
-  static ContextAndScope create(Context context, Scope scope) {
+  static ContextAndScope create(@Nullable Context context, Scope scope) {
     return new AutoValue_ContextAndScope(context, scope);
   }
 }

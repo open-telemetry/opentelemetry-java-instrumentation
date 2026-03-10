@@ -28,7 +28,7 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
 
   // Attributes
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // safe because of the AttributeKey<T> typing
   @Override
   @Nullable
   public <T> T get(AttributeKey<T> key) {
@@ -65,7 +65,9 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
   @Override
   @CanIgnoreReturnValue
   public <T> AttributesBuilder put(AttributeKey<T> key, @Nullable T value) {
-    super.put(key, value);
+    if (value != null) {
+      super.put(key, value);
+    }
     return this;
   }
 

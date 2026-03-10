@@ -10,32 +10,34 @@ import static io.opentelemetry.instrumentation.netty.common.v4_0.internal.client
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumenter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.NettyClientHandlerFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class NettyClientSingletons {
 
   private static final boolean connectionTelemetryEnabled =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.netty.connection-telemetry.enabled", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "netty")
+          .get("connection_telemetry")
+          .getBoolean("enabled", false);
   private static final boolean sslTelemetryEnabled =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "netty")
+          .get("ssl_telemetry")
+          .getBoolean("enabled", false);
 
-  private static final Instrumenter<NettyRequest, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<NettyCommonRequest, HttpResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
   private static final NettySslInstrumenter SSL_INSTRUMENTER;
   private static final NettyClientHandlerFactory CLIENT_HANDLER_FACTORY;
 
   static {
-    DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder =
+    DefaultHttpClientInstrumenterBuilder<NettyCommonRequest, HttpResponse> builder =
         NettyClientInstrumenterBuilderFactory.create(
                 "io.opentelemetry.netty-4.1", GlobalOpenTelemetry.get())
             .configure(AgentCommonConfig.get());
@@ -45,15 +47,14 @@ public final class NettyClientSingletons {
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled));
     INSTRUMENTER = factory.instrumenter();
-    CONNECTION_INSTRUMENTER =
-        factory.createConnectionInstrumenter(AgentCommonConfig.get().getPeerServiceResolver());
+    CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter(GlobalOpenTelemetry.get());
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
     CLIENT_HANDLER_FACTORY =
         new NettyClientHandlerFactory(
             INSTRUMENTER, AgentCommonConfig.get().shouldEmitExperimentalHttpClientTelemetry());
   }
 
-  public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {
+  public static Instrumenter<NettyCommonRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 
