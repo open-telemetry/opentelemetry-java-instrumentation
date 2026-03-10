@@ -10,7 +10,6 @@ import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
@@ -116,7 +115,7 @@ enum ArmeriaHttpClientAttributesGetter
     }
     int separatorPos = authority.indexOf(':');
     if (separatorPos == -1) {
-      return HttpConstants.defaultPortForScheme(scheme(ctx));
+      return defaultPortForProtocol(ctx.sessionProtocol());
     }
     try {
       return Integer.parseInt(authority.substring(separatorPos + 1));
@@ -133,15 +132,14 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Nullable
-  private static String scheme(ClientRequestContext ctx) {
-    String scheme = request(ctx).scheme();
-    if (scheme == null) {
-      String name = ctx.sessionProtocol().uriText();
-      if ("http".equals(name) || "https".equals(name)) {
-        scheme = name;
-      }
+  private static Integer defaultPortForProtocol(SessionProtocol protocol) {
+    if (protocol == SessionProtocol.HTTP) {
+      return 80;
     }
-    return scheme;
+    if (protocol == SessionProtocol.HTTPS) {
+      return 443;
+    }
+    return null;
   }
 
   @Nullable

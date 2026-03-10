@@ -80,10 +80,7 @@ enum JavaHttpClientAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(HttpRequest request) {
-    int port = request.uri().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(request.uri().getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        request.uri().getPort(), () -> request.uri().getScheme());
   }
 }

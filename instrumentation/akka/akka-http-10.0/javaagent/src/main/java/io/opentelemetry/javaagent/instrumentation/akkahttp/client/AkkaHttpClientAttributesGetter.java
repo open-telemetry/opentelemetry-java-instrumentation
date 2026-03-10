@@ -65,10 +65,7 @@ class AkkaHttpClientAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(HttpRequest httpRequest) {
-    int port = httpRequest.uri().authority().port();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(httpRequest.uri().scheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        httpRequest.uri().authority().port(), () -> httpRequest.uri().scheme());
   }
 }

@@ -94,11 +94,7 @@ public final class ApacheHttpClientRequest {
     if (uri == null) {
       return null;
     }
-    int port = uri.getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(uri.getScheme());
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
   }
 
   @Nullable

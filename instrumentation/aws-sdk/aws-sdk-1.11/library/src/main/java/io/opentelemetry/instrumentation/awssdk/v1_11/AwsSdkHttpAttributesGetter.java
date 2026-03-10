@@ -96,10 +96,7 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   @Override
   @Nullable
   public Integer getServerPort(Request<?> request) {
-    int port = request.getEndpoint().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(request.getEndpoint().getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        request.getEndpoint().getPort(), () -> request.getEndpoint().getScheme());
   }
 }

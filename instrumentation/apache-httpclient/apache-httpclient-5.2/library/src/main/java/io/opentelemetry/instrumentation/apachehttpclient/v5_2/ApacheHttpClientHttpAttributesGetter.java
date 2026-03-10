@@ -109,11 +109,8 @@ enum ApacheHttpClientHttpAttributesGetter
     if (request.getRequest().getAuthority() == null) {
       return null;
     }
-    int port = request.getRequest().getAuthority().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(request.getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        request.getRequest().getAuthority().getPort(), request::getScheme);
   }
 
   private static ProtocolVersion getVersion(

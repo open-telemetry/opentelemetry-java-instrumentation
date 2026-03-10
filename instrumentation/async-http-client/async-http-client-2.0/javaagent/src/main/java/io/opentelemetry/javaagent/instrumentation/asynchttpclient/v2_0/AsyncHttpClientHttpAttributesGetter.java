@@ -90,11 +90,8 @@ final class AsyncHttpClientHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(RequestContext request) {
-    int port = request.getRequest().getUri().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(request.getRequest().getUri().getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        request.getRequest().getUri().getPort(), () -> request.getRequest().getUri().getScheme());
   }
 
   @Override

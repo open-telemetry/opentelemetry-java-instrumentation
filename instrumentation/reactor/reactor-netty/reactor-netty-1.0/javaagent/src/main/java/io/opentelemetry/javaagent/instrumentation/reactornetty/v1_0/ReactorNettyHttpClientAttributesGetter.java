@@ -102,11 +102,8 @@ final class ReactorNettyHttpClientAttributesGetter
     if (resourceUrl == null) {
       return null;
     }
-    Integer port = UrlParser.getPort(resourceUrl);
-    if (port != null) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(UrlParser.getScheme(resourceUrl));
+    return HttpConstants.portOrDefaultFromScheme(
+        UrlParser.getPort(resourceUrl), () -> UrlParser.getScheme(resourceUrl));
   }
 
   @Nullable

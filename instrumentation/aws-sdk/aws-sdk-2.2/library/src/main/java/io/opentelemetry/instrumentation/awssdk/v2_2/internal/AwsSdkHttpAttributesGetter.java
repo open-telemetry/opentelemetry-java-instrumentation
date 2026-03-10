@@ -65,10 +65,6 @@ class AwsSdkHttpAttributesGetter
   public Integer getServerPort(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);
-    int port = httpRequest.port();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(httpRequest.protocol());
+    return HttpConstants.portOrDefaultFromScheme(httpRequest.port(), httpRequest::protocol);
   }
 }

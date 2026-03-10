@@ -105,10 +105,7 @@ enum SpringWebHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(HttpRequest httpRequest) {
-    int port = httpRequest.getURI().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(httpRequest.getURI().getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        httpRequest.getURI().getPort(), () -> httpRequest.getURI().getScheme());
   }
 }

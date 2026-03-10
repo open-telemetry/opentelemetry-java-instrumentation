@@ -68,10 +68,7 @@ class HttpUrlHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(HttpURLConnection connection) {
-    int port = connection.getURL().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(connection.getURL().getProtocol());
+    return HttpConstants.portOrDefaultFromScheme(
+        connection.getURL().getPort(), () -> connection.getURL().getProtocol());
   }
 }

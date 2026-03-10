@@ -57,11 +57,8 @@ public enum WebClientHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(ClientRequest request) {
-    int port = request.url().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(request.url().getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        request.url().getPort(), () -> request.url().getScheme());
   }
 
   @Nullable

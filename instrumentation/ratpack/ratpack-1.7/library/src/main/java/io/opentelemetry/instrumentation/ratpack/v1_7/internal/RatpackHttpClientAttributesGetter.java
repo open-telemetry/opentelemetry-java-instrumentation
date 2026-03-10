@@ -58,10 +58,7 @@ enum RatpackHttpClientAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(RequestSpec request) {
-    int port = request.getUri().getPort();
-    if (port > 0) {
-      return port;
-    }
-    return HttpConstants.defaultPortForScheme(request.getUri().getScheme());
+    return HttpConstants.portOrDefaultFromScheme(
+        request.getUri().getPort(), () -> request.getUri().getScheme());
   }
 }
