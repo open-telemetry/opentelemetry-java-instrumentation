@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static java.util.Collections.emptyList;
 
 import io.netty.handler.codec.http.HttpVersion;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -102,8 +101,17 @@ final class ReactorNettyHttpClientAttributesGetter
     if (resourceUrl == null) {
       return null;
     }
-    return HttpConstants.portOrDefaultFromScheme(
-        UrlParser.getPort(resourceUrl), () -> UrlParser.getScheme(resourceUrl));
+    Integer port = UrlParser.getPort(resourceUrl);
+    if (port != null) {
+      return port;
+    }
+    if (resourceUrl.startsWith("https://")) {
+      return 443;
+    }
+    if (resourceUrl.startsWith("http://")) {
+      return 80;
+    }
+    return null;
   }
 
   @Nullable
