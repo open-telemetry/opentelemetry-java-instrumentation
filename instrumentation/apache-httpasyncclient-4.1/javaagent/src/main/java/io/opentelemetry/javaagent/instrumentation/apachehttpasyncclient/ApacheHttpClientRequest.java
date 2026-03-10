@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -88,18 +89,10 @@ public final class ApacheHttpClientRequest {
       return null;
     }
     int port = uri.getPort();
-    if (port != -1) {
+    if (port > 0) {
       return port;
     }
-    switch (uri.getScheme()) {
-      case "http":
-        return 80;
-      case "https":
-        return 443;
-      default:
-        logger.log(FINE, "no default port mapping for scheme: {0}", uri.getScheme());
-        return null;
-    }
+    return HttpConstants.defaultPortForScheme(uri.getScheme());
   }
 
   @Nullable

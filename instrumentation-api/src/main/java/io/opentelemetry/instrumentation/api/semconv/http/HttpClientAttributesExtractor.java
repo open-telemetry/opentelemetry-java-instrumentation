@@ -6,19 +6,14 @@
 package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
@@ -58,7 +53,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
-  private final AddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor;
   private final InternalServerAttributesExtractor<REQUEST> internalServerExtractor;
   private final ToIntFunction<Context> resendCountIncrementer;
   private final Set<String> sensitiveQueryParameters;
@@ -71,7 +65,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         builder.capturedResponseHeaders,
         builder.knownMethods);
     internalNetworkExtractor = builder.buildNetworkExtractor();
-    serverAddressAndPortExtractor = builder.serverAddressAndPortExtractor;
     internalServerExtractor = builder.buildServerExtractor();
     resendCountIncrementer = builder.resendCountIncrementer;
     sensitiveQueryParameters = builder.sensitiveQueryParameters;
@@ -81,25 +74,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
+    internalServerExtractor.onStart(attributes, request);
+
     String fullUrl = stripSensitiveData(getter.getUrlFull(request));
-
-    if (SemconvStability.v3Preview()) {
-      AddressAndPort serverAddressAndPort = serverAddressAndPortExtractor.extract(request);
-      if (serverAddressAndPort.getAddress() != null) {
-        attributes.put(SERVER_ADDRESS, serverAddressAndPort.getAddress());
-      }
-      Integer port = serverAddressAndPort.getPort();
-      // only infer default port when server address is supplied by the getter
-      if ((port == null || port <= 0) && serverAddressAndPort.getAddress() != null) {
-        port = defaultPortForScheme(fullUrl);
-      }
-      if (port != null && port > 0) {
-        attributes.put(SERVER_PORT, (long) port);
-      }
-    } else {
-      internalServerExtractor.onStart(attributes, request);
-    }
-
     attributes.put(URL_FULL, fullUrl);
 
     int resendCount = resendCountIncrementer.applyAsInt(parentContext);
@@ -177,19 +154,5 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return url;
     }
     return url.substring(0, schemeEndIndex + 3) + "REDACTED:REDACTED" + url.substring(atIndex);
-  }
-
-  @Nullable
-  private static Integer defaultPortForScheme(@Nullable String url) {
-    if (url == null) {
-      return null;
-    }
-    if (url.startsWith("https://")) {
-      return 443;
-    }
-    if (url.startsWith("http://")) {
-      return 80;
-    }
-    return null;
   }
 }

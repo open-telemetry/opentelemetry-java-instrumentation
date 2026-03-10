@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.HttpURLConnection;
 import java.util.List;
@@ -64,8 +65,13 @@ class HttpUrlHttpAttributesGetter
     return connection.getURL().getHost();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(HttpURLConnection connection) {
-    return connection.getURL().getPort();
+    int port = connection.getURL().getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(connection.getURL().getProtocol());
   }
 }

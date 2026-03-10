@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -90,7 +91,14 @@ public final class ApacheHttpClientRequest {
 
   @Nullable
   public Integer getServerPort() {
-    return uri == null ? null : uri.getPort();
+    if (uri == null) {
+      return null;
+    }
+    int port = uri.getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(uri.getScheme());
   }
 
   @Nullable

@@ -65,6 +65,7 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
     return request.getServerPort();
   }

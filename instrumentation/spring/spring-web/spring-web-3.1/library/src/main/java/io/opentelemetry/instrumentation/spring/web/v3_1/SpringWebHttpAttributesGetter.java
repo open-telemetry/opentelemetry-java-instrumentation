@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -102,7 +103,12 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getServerPort(HttpRequest httpRequest) {
-    return httpRequest.getURI().getPort();
+    int port = httpRequest.getURI().getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(httpRequest.getURI().getScheme());
   }
 }

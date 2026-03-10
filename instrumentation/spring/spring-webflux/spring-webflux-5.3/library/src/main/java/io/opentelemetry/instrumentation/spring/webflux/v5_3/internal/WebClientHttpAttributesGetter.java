@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -53,9 +54,14 @@ public enum WebClientHttpAttributesGetter
     return request.url().getHost();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(ClientRequest request) {
-    return request.url().getPort();
+    int port = request.url().getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(request.url().getScheme());
   }
 
   @Nullable

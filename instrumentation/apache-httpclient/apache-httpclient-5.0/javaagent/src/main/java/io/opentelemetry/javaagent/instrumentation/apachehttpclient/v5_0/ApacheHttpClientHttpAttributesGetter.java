@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
@@ -132,7 +133,11 @@ final class ApacheHttpClientHttpAttributesGetter
     if (authority == null) {
       return null;
     }
-    return authority.getPort();
+    int port = authority.getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(request.getScheme());
   }
 
   private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {

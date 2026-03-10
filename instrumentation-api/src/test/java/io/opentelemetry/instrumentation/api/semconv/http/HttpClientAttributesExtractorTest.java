@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -411,58 +410,6 @@ class HttpClientAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build()).containsOnly(entry(HTTP_RESPONSE_STATUS_CODE, 200L));
-  }
-
-  @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void shouldInferDefaultPortFromHttpScheme() {
-    Map<String, String> request = new HashMap<>();
-    request.put("urlFull", "http://github.com/repos");
-    request.put("serverAddress", "github.com");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build())
-        .containsEntry(SERVER_ADDRESS, "github.com")
-        .containsEntry(SERVER_PORT, 80L);
-  }
-
-  @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void shouldInferDefaultPortFromHttpsScheme() {
-    Map<String, String> request = new HashMap<>();
-    request.put("urlFull", "https://github.com/repos");
-    request.put("serverAddress", "github.com");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build())
-        .containsEntry(SERVER_ADDRESS, "github.com")
-        .containsEntry(SERVER_PORT, 443L);
-  }
-
-  @Test
-  @EnabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void shouldNotInferDefaultPortWhenExplicitPortIsPresent() {
-    Map<String, String> request = new HashMap<>();
-    request.put("urlFull", "http://github.com:8080/repos");
-    request.put("serverAddress", "github.com");
-    request.put("serverPort", "8080");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build())
-        .containsEntry(SERVER_ADDRESS, "github.com")
-        .containsEntry(SERVER_PORT, 8080L);
   }
 
   @Test

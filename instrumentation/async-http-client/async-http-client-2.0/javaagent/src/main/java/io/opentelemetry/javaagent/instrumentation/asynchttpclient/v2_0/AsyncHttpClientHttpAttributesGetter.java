@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -86,9 +87,14 @@ final class AsyncHttpClientHttpAttributesGetter
     return request.getRequest().getUri().getHost();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(RequestContext request) {
-    return request.getRequest().getUri().getPort();
+    int port = request.getRequest().getUri().getPort();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(request.getRequest().getUri().getScheme());
   }
 
   @Override

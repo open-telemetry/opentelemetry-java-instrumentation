@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
 import java.util.List;
@@ -61,8 +62,13 @@ class PekkoHttpClientAttributesGetter
     return httpRequest.uri().authority().host().address();
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(HttpRequest httpRequest) {
-    return httpRequest.uri().authority().port();
+    int port = httpRequest.uri().authority().port();
+    if (port > 0) {
+      return port;
+    }
+    return HttpConstants.defaultPortForScheme(httpRequest.uri().scheme());
   }
 }

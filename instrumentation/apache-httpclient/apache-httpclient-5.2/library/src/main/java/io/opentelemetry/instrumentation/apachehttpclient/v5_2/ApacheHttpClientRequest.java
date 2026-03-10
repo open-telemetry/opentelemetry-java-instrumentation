@@ -46,6 +46,11 @@ public final class ApacheHttpClientRequest {
   }
 
   @Nullable
+  String getScheme() {
+    return uri != null ? uri.getScheme() : null;
+  }
+
+  @Nullable
   private static URI getUri(HttpRequest httpRequest) {
     try {
       // this can be relative or absolute
