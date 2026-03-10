@@ -338,7 +338,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     logRecordBuilder.emit();
   }
 
-  private static <REQUEST> InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor() {
+  private static <REQUEST>
+      InternalExceptionEventExtractor<REQUEST> defaultExceptionEventExtractor() {
     return (logRecordBuilder, context, request) -> {
       logRecordBuilder.setEventName("exception");
       logRecordBuilder.setSeverity(Severity.WARN);
