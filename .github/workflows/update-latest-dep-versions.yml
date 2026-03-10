@@ -65,16 +65,15 @@ jobs:
           body="Auto-generated update of pinned latest dependency versions used by \`testLatestDeps\` builds."
           branch="otelbot/update-latest-dep-versions"
 
-          # close any existing PR on the same branch
-          existing_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
-          if [ -n "$existing_pr" ]; then
-            gh pr close "$existing_pr"
-          fi
-
           git checkout -b $branch
           git add .github/config/latest-dep-versions.json
           git commit -m "$message"
           git push --force --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
+
+          # only create a new PR if one doesn't already exist
+          existing_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
+          if [ -z "$existing_pr" ]; then
+            gh pr create --title "$message" \
+                         --body "$body" \
+                         --base main
+          fi

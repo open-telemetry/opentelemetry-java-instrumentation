@@ -1,4 +1,4 @@
-import io.opentelemetry.instrumentation.gradle.VersionFilters
+import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 
 tasks {
   val resolveLatestDepVersions by registering {
@@ -25,7 +25,7 @@ tasks {
       }
 
       fun recordVersion(key: String, version: String) {
-        if (VersionFilters.isUnstable(version)) {
+        if (!AcceptableVersions.isStable(version)) {
           logger.info("Skipping pre-release version $key:$version")
           return
         }
@@ -47,7 +47,7 @@ tasks {
                     val reqVersion = requested.version
                     val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
                     if (reqVersion == "latest.release") {
-                      recordVersion("${requested.group}:${requested.module}", selectedVersion)
+                      recordVersion("${requested.group}:${requested.module}#+", selectedVersion)
                     } else if (reqVersion.contains("+")) {
                       recordVersion("${requested.group}:${requested.module}#$reqVersion", selectedVersion)
                     }
@@ -66,7 +66,7 @@ tasks {
           project.dependencies.create("org.springframework.boot:spring-boot-dependencies:$range")
         )
         detached.resolutionStrategy.componentSelection.all {
-          if (VersionFilters.isUnstable(candidate.version)) {
+          if (!AcceptableVersions.isStable(candidate.version)) {
             reject("pre-release version")
           }
         }

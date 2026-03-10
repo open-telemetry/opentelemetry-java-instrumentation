@@ -51,7 +51,7 @@ val muzzlePinnedVersions: Map<String, String> by lazy {
  * Returns null if no pinned version exists or the version is a pre-release.
  */
 fun resolveUpperBound(group: String, module: String, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Version? {
-  val pinnedVersion = muzzlePinnedVersions["$group:$module"] ?: return null
+  val pinnedVersion = muzzlePinnedVersions["$group:$module#+"] ?: return null
   if (!AcceptableVersions.isStable(pinnedVersion)) {
     return null
   }
