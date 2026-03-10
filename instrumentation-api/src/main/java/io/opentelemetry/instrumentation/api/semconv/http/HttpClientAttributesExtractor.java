@@ -89,7 +89,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         attributes.put(SERVER_ADDRESS, serverAddressAndPort.getAddress());
       }
       Integer port = serverAddressAndPort.getPort();
-      if (port == null || port <= 0) {
+      // only infer default port when server address is supplied by the getter
+      if ((port == null || port <= 0) && serverAddressAndPort.getAddress() != null) {
         port = defaultPortForScheme(fullUrl);
       }
       if (port != null && port > 0) {
