@@ -12524,6 +12524,12 @@ libraries:
         - name: messaging.system
           type: STRING
   runtime:
+  - name: runtime-telemetry
+    source_path: instrumentation/runtime-telemetry
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.runtime-telemetry
+    has_standalone_library: true
   - name: runtime-telemetry-java17
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java17
     minimum_java_version: 17
