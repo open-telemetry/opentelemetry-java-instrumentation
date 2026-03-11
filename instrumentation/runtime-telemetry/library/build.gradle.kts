@@ -69,6 +69,10 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
   // Configure testJava17 compilation for Java 17
   named<JavaCompile>("compileTestJava17Java") {
     dependsOn("compileJava17Java")
@@ -106,6 +110,7 @@ tasks {
     }
     include("**/*G1GcMemoryMetricTest.*")
     jvmArgs("-XX:+UseG1GC")
+    systemProperty("metadataConfig", "Java17")
   }
 
   val testPS by registering(Test::class) {
@@ -117,6 +122,7 @@ tasks {
     }
     include("**/*PsGcMemoryMetricTest.*")
     jvmArgs("-XX:+UseParallelGC")
+    systemProperty("metadataConfig", "Java17")
   }
 
   val testSerial by registering(Test::class) {
@@ -128,6 +134,7 @@ tasks {
     }
     include("**/*SerialGcMemoryMetricTest.*")
     jvmArgs("-XX:+UseSerialGC")
+    systemProperty("metadataConfig", "Java17")
   }
 
   // Run other Java 17 tests (not GC-specific)
@@ -140,6 +147,7 @@ tasks {
       excludeTestsMatching("*SerialGcMemoryMetricTest")
       excludeTestsMatching("*PsGcMemoryMetricTest")
     }
+    systemProperty("metadataConfig", "Java17")
   }
 
   test {
