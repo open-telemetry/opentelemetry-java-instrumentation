@@ -6,6 +6,7 @@
 # Lines starting with # are comments.
 
 servlet/ jetty,liberty,payara,tomcat,tomee,websphere,wildfly
+jdbc/ jetty,liberty,payara,tomcat,tomee,websphere,wildfly,other
 jetty/ jetty
 tomcat/ tomcat,tomee
 liberty/ liberty
