@@ -12,6 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
+import org.apache.pekko.http.scaladsl.model.Uri;
 
 class PekkoHttpClientAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
@@ -65,7 +66,7 @@ class PekkoHttpClientAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(HttpRequest httpRequest) {
-    return HttpConstants.portOrDefaultFromScheme(
-        httpRequest.uri().authority().port(), () -> httpRequest.uri().scheme());
+    Uri uri = httpRequest.uri();
+    return HttpConstants.portOrDefaultFromScheme(uri.authority().port(), uri::scheme);
   }
 }

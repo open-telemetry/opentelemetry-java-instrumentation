@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -68,7 +69,7 @@ class HttpUrlHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(HttpURLConnection connection) {
-    return HttpConstants.portOrDefaultFromScheme(
-        connection.getURL().getPort(), () -> connection.getURL().getProtocol());
+    URL url = connection.getURL();
+    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url::getProtocol);
   }
 }

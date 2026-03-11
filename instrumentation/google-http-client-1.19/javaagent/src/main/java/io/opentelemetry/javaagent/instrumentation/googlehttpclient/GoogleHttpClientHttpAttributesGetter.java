@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 
+import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -52,7 +53,7 @@ final class GoogleHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return HttpConstants.portOrDefaultFromScheme(
-        request.getUrl().getPort(), () -> request.getUrl().getScheme());
+    GenericUrl url = request.getUrl();
+    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url::getScheme);
   }
 }

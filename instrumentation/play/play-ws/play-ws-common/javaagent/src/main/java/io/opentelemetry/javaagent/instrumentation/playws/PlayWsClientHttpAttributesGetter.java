@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.playws;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
 import play.shaded.ahc.org.asynchttpclient.Request;
@@ -51,8 +52,8 @@ final class PlayWsClientHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(Request request) {
-    return HttpConstants.portOrDefaultFromScheme(
-        request.getUri().getPort(), () -> request.getUri().getScheme());
+    URI uri = request.getUri();
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
   }
 
   @Override

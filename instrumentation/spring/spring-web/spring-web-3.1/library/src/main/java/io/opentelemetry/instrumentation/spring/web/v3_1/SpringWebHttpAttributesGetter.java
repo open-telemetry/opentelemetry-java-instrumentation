@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGet
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
@@ -105,7 +106,7 @@ enum SpringWebHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(HttpRequest httpRequest) {
-    return HttpConstants.portOrDefaultFromScheme(
-        httpRequest.getURI().getPort(), () -> httpRequest.getURI().getScheme());
+    URI uri = httpRequest.getURI();
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
   }
 }
