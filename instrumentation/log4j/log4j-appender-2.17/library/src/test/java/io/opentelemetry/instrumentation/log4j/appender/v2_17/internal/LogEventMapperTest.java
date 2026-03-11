@@ -105,8 +105,7 @@ class LogEventMapperTest {
 
   @ParameterizedTest
   @MethodSource("eventNameProperties")
-  void testCaptureEventNameFromContextData(
-      String eventNameProperty, boolean captureEventName) {
+  void testCaptureEventNameFromContextData(String eventNameProperty, boolean captureEventName) {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
