@@ -4,7 +4,6 @@
  */
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
@@ -22,8 +21,10 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
+import org.eclipse.aether.util.version.GenericVersionScheme
 import java.net.URL
 import java.net.URLClassLoader
+import java.util.Locale
 import java.util.stream.StreamSupport
 
 plugins {
@@ -39,28 +40,21 @@ val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit
 val muzzlePinnedVersions: Map<String, String> by lazy {
   val file = rootProject.file(".github/config/latest-dep-versions.json")
   @Suppress("UNCHECKED_CAST")
-  if (file.exists()) {
-    groovy.json.JsonSlurper().parse(file) as Map<String, String>
-  } else {
-    emptyMap()
-  }
+  groovy.json.JsonSlurper().parse(file) as Map<String, String>
 }
 
 /**
  * Resolve the pinned upper bound as an Aether Version for a muzzle-checked artifact.
- * Returns null if no pinned version exists or the version is a pre-release.
  */
-fun resolveUpperBound(group: String, module: String, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Version? {
-  val pinnedVersion = muzzlePinnedVersions["$group:$module#+"] ?: return null
-  if (!AcceptableVersions.isStable(pinnedVersion)) {
-    return null
-  }
-  val artifact = DefaultArtifact(group, module, "jar", "[$pinnedVersion,$pinnedVersion]")
-  val result = system.resolveVersionRange(session, VersionRangeRequest().apply {
-    repositories = repos
-    this.artifact = artifact
-  })
-  return result.highestVersion
+fun resolveUpperBound(group: String, module: String, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Version {
+  val key = "$group:$module#+"
+  val pinnedVersion = muzzlePinnedVersions[key]
+    ?: throw GradleException(
+      "Pinned version missing for muzzle artifact \"$key\". " +
+        "Run ./gradlew resolveLatestDepVersions -PtestLatestDeps=true -PresolveLatestDeps=true " +
+        "to regenerate .github/config/latest-dep-versions.json"
+    )
+  return GenericVersionScheme().parseVersion(pinnedVersion)
 }
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
@@ -426,11 +420,11 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
   return inverseDirectives
 }
 
-fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version? = null) = sequence {
-  val predicate = AcceptableVersions(skipVersions)
+fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version) = sequence {
   fun accept(version: Version?): Boolean {
-    if (!predicate.test(version)) return false
-    if (upperBound != null && version != null && version > upperBound) return false
+    if (version == null) return false
+    if (skipVersions.contains(version.toString().lowercase(Locale.ROOT))) return false
+    if (version > upperBound) return false
     return true
   }
   if (accept(range.lowestVersion)) {
