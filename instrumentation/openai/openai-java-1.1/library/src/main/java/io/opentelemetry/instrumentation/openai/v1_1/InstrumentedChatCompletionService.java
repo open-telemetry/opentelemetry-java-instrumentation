@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+
 import com.openai.core.RequestOptions;
 import com.openai.core.http.StreamResponse;
 import com.openai.models.chat.completions.ChatCompletion;
@@ -14,7 +16,6 @@ import com.openai.services.blocking.chat.ChatCompletionService;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
@@ -23,17 +24,17 @@ final class InstrumentedChatCompletionService
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;
-  private final CaptureMessageOptions captureMessageOptions;
+  private final boolean captureMessageContent;
 
   InstrumentedChatCompletionService(
       ChatCompletionService delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
       Logger eventLogger,
-      CaptureMessageOptions captureMessageOptions) {
+      boolean captureMessageContent) {
     super(delegate);
     this.instrumenter = instrumenter;
     this.eventLogger = eventLogger;
-    this.captureMessageOptions = captureMessageOptions;
+    this.captureMessageContent = captureMessageContent;
   }
 
   @Override
@@ -96,11 +97,18 @@ final class InstrumentedChatCompletionService
       Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
-    ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageOptions);
+    if (!emitGenAiExperimentalConventions()) {
+      ChatCompletionEventsHelper.emitPromptLogEvents(
+          context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    }
     ChatCompletion result = delegate.create(chatCompletionCreateParams, requestOptions);
-    ChatCompletionEventsHelper.emitCompletionLogEvents(
-        context, eventLogger, result, captureMessageOptions);
+    if (emitGenAiExperimentalConventions()) {
+      ChatCompletionEventsHelper.emitOperationDetailsEvent(
+          context, eventLogger, chatCompletionCreateParams, result, captureMessageContent);
+    } else {
+      ChatCompletionEventsHelper.emitCompletionLogEvents(
+          context, eventLogger, result, captureMessageContent);
+    }
     return result;
   }
 
@@ -126,8 +134,10 @@ final class InstrumentedChatCompletionService
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
-    ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageOptions);
+    if (!emitGenAiExperimentalConventions()) {
+      ChatCompletionEventsHelper.emitPromptLogEvents(
+          context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+    }
     StreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
     return new TracingStreamedResponse(
@@ -137,7 +147,7 @@ final class InstrumentedChatCompletionService
             chatCompletionCreateParams,
             instrumenter,
             eventLogger,
-            captureMessageOptions.captureMessageContent(),
+            captureMessageContent,
             newSpan));
   }
 }

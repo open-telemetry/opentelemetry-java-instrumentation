@@ -30,6 +30,8 @@ public final class SemconvStability {
   private static final boolean emitOldRpcSemconv;
   private static final boolean emitStableRpcSemconv;
 
+  private static final boolean emitGenAiExperimentalConventions;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
@@ -42,6 +44,8 @@ public final class SemconvStability {
 
     boolean oldRpc = true;
     boolean stableRpc = false;
+
+    boolean genAiExperimental = false;
 
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
@@ -88,6 +92,10 @@ public final class SemconvStability {
         oldRpc = true;
         stableRpc = true;
       }
+
+      if (values.contains("gen_ai_latest_experimental")) {
+        genAiExperimental = true;
+      }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
@@ -101,6 +109,8 @@ public final class SemconvStability {
 
     emitOldRpcSemconv = oldRpc;
     emitStableRpcSemconv = stableRpc;
+
+    emitGenAiExperimentalConventions = genAiExperimental;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -158,6 +168,14 @@ public final class SemconvStability {
 
   public static boolean emitStableRpcSemconv() {
     return emitStableRpcSemconv;
+  }
+
+  public static boolean emitOldGenAiSemconv() {
+    return !emitGenAiExperimentalConventions;
+  }
+
+  public static boolean emitGenAiExperimentalConventions() {
+    return emitGenAiExperimentalConventions;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

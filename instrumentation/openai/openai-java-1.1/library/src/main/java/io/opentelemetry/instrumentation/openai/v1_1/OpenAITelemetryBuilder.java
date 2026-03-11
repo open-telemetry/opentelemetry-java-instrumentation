@@ -12,7 +12,6 @@ import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
-import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
@@ -28,16 +27,12 @@ public final class OpenAITelemetryBuilder {
 
   private boolean captureMessageContent;
 
-  // TODO(cirilla-zmh): Java Instrumentation is still not support structural attributes for
-  //  'gen_ai.input.messages'. Implement this once it's supported.
-  private boolean emitExperimentalConventions;
-
   OpenAITelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
 
   /**
-   * Sets whether emitted log events include full content of user and assistant messages.
+   * Sets whether message content should be captured in span attributes and emitted log events.
    *
    * <p>Note that full content can have data privacy and size concerns and care should be taken when
    * enabling this.
@@ -45,14 +40,6 @@ public final class OpenAITelemetryBuilder {
   @CanIgnoreReturnValue
   public OpenAITelemetryBuilder setCaptureMessageContent(boolean captureMessageContent) {
     this.captureMessageContent = captureMessageContent;
-    return this;
-  }
-
-  /** Sets whether emitted the latest experimental version of GenAI conventions. */
-  @CanIgnoreReturnValue
-  public OpenAITelemetryBuilder setEmitExperimentalConventions(
-      boolean emitExperimentalConventions) {
-    this.emitExperimentalConventions = emitExperimentalConventions;
     return this;
   }
 
@@ -65,7 +52,10 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(ChatAttributesGetter.INSTANCE))
-            .addAttributesExtractor(GenAiAttributesExtractor.create(ChatAttributesGetter.INSTANCE))
+            .addAttributesExtractor(
+                GenAiAttributesExtractor.builder(ChatAttributesGetter.INSTANCE)
+                    .setCaptureMessageContent(captureMessageContent)
+                    .build())
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter();
 
@@ -81,9 +71,6 @@ public final class OpenAITelemetryBuilder {
 
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
     return new OpenAITelemetry(
-        chatInstrumenter,
-        embeddingsInstrumenter,
-        eventLogger,
-        CaptureMessageOptions.create(captureMessageContent, emitExperimentalConventions));
+        chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
   }
 }

@@ -8,12 +8,11 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 import javax.annotation.Nullable;
 
 /**
- * An interface for getting GenAI operation attributes.
+ * An interface for getting GenAI operation attributes common to all GenAI span types.
  *
- * <p>Instrumentation authors will create implementations of this interface for their specific
- * library/framework. It will be used by the {@link GenAiAttributesExtractor} to obtain the various
- * GenAI attributes in a type-generic way. It will also be used by the {@link
- * GenAiSpanNameExtractor} to generate span name in a type-generic way.
+ * <p>Instrumentation authors will create implementations of this interface (or its sub-interfaces)
+ * for their specific library/framework. It will be used by the {@link GenAiSpanNameExtractor} and
+ * various GenAI attributes extractors to obtain attributes in a type-generic way.
  */
 public interface GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 

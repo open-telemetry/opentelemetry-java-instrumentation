@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -16,9 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of <a
- * href="https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#execute-tool-span">GenAI
- * tool attributes</a>.
+ * Extractor of GenAI tool attributes.
  *
  * <p>This class delegates to a type-specific {@link GenAiToolAttributesGetter} for individual
  * attribute extraction from request/response objects.
@@ -39,6 +36,13 @@ public class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
     return new GenAiToolAttributesExtractor<>(attributesGetter);
   }
 
+  /** Creates the GenAI tool attributes extractor with message content capture option. */
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      GenAiToolAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      boolean captureMessageContent) {
+    return new GenAiToolAttributesExtractor<>(attributesGetter);
+  }
+
   private final GenAiToolAttributesGetter<REQUEST, RESPONSE> getter;
 
   private GenAiToolAttributesExtractor(GenAiToolAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -47,10 +51,10 @@ public class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, GEN_AI_OPERATION_NAME, getter.getOperationName(request));
-    internalSet(attributes, GEN_AI_TOOL_DESCRIPTION, getter.getToolDescription(request));
-    internalSet(attributes, GEN_AI_TOOL_NAME, getter.getToolName(request));
-    internalSet(attributes, GEN_AI_TOOL_TYPE, getter.getToolType(request));
+    attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
+    attributes.put(GEN_AI_TOOL_DESCRIPTION, getter.getToolDescription(request));
+    attributes.put(GEN_AI_TOOL_NAME, getter.getToolName(request));
+    attributes.put(GEN_AI_TOOL_TYPE, getter.getToolType(request));
   }
 
   @Override
@@ -60,6 +64,6 @@ public class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    internalSet(attributes, GEN_AI_TOOL_CALL_ID, getter.getToolCallId(request, response));
+    attributes.put(GEN_AI_TOOL_CALL_ID, getter.getToolCallId(request, response));
   }
 }

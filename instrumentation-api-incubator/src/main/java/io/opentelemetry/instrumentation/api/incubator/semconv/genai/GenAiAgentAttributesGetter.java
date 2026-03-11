@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * various GenAI agent attributes in a type-generic way.
  */
 public interface GenAiAgentAttributesGetter<REQUEST, RESPONSE>
-    extends GenAiAttributesGetter<REQUEST, RESPONSE> {
+    extends GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
   @Nullable
   String getName(REQUEST request);

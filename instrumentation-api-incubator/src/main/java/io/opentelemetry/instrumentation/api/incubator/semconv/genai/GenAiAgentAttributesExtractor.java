@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -15,8 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/">
- * GenAI agent attributes</a>.
+ * Extractor of GenAI agent attributes.
  *
  * <p>This class delegates to a type-specific {@link GenAiAgentAttributesGetter} for individual
  * attribute extraction from request/response objects.
@@ -46,10 +45,11 @@ public final class GenAiAgentAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, GEN_AI_AGENT_DESCRIPTION, getter.getDescription(request));
-    internalSet(attributes, GEN_AI_AGENT_ID, getter.getId(request));
-    internalSet(attributes, GEN_AI_AGENT_NAME, getter.getName(request));
-    internalSet(attributes, GEN_AI_DATA_SOURCE_ID, getter.getDataSourceId(request));
+    attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
+    attributes.put(GEN_AI_AGENT_DESCRIPTION, getter.getDescription(request));
+    attributes.put(GEN_AI_AGENT_ID, getter.getId(request));
+    attributes.put(GEN_AI_AGENT_NAME, getter.getName(request));
+    attributes.put(GEN_AI_DATA_SOURCE_ID, getter.getDataSourceId(request));
   }
 
   @Override

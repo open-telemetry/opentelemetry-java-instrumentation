@@ -6,7 +6,10 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldGenAiSemconv;
 import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_SYSTEM;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -26,10 +29,10 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +48,10 @@ final class ChatCompletionEventsHelper {
       Context context,
       Logger eventLogger,
       ChatCompletionCreateParams request,
-      CaptureMessageOptions captureMessageOptions) {
-    if (captureMessageOptions.emitExperimentalConventions()) {
-      // According to https://opentelemetry.io/docs/specs/semconv/gen-ai/openai/
-      // skip if experimental conventions are not enabled
+      boolean captureMessageContent) {
+    if (emitGenAiExperimentalConventions()) {
       return;
     }
-    boolean captureMessageContent = captureMessageOptions.captureMessageContent();
     for (ChatCompletionMessageParam msg : request.messages()) {
       String eventType;
       Map<String, Value<?>> body = new HashMap<>();
@@ -176,13 +176,10 @@ final class ChatCompletionEventsHelper {
       Context context,
       Logger eventLogger,
       ChatCompletion completion,
-      CaptureMessageOptions captureMessageOptions) {
-    if (captureMessageOptions.emitExperimentalConventions()) {
-      // According to https://opentelemetry.io/docs/specs/semconv/gen-ai/openai/
-      // skip if experimental conventions are not enabled
+      boolean captureMessageContent) {
+    if (emitGenAiExperimentalConventions()) {
       return;
     }
-    boolean captureMessageContent = captureMessageOptions.captureMessageContent();
     for (ChatCompletion.Choice choice : completion.choices()) {
       ChatCompletionMessage choiceMsg = choice.message();
       Map<String, Value<?>> message = new HashMap<>();
@@ -223,10 +220,14 @@ final class ChatCompletionEventsHelper {
   }
 
   private static LogRecordBuilder newEvent(Logger eventLogger, String name) {
-    return eventLogger
-        .logRecordBuilder()
-        .setAttribute(EVENT_NAME, name)
-        .setAttribute(GEN_AI_PROVIDER_NAME, "openai");
+    LogRecordBuilder builder = eventLogger.logRecordBuilder().setAttribute(EVENT_NAME, name);
+    if (emitGenAiExperimentalConventions()) {
+      builder.setAttribute(GEN_AI_PROVIDER_NAME, "openai");
+    }
+    if (emitOldGenAiSemconv()) {
+      builder.setAttribute(GEN_AI_SYSTEM, "openai");
+    }
+    return builder;
   }
 
   private static Value<?> buildToolCallEventObject(
@@ -457,6 +458,119 @@ final class ChatCompletionEventsHelper {
     public String arguments() {
       return invokeStringHandle(argumentsHandle, function);
     }
+  }
+
+  static Value<?> buildInputMessagesValue(ChatCompletionCreateParams request) {
+    List<Value<?>> messages = new ArrayList<>();
+    for (ChatCompletionMessageParam msg : request.messages()) {
+      Map<String, Value<?>> map = new HashMap<>();
+      if (msg.isSystem()) {
+        map.put("role", Value.of("system"));
+        map.put("content", Value.of(contentToString(msg.asSystem().content())));
+      } else if (msg.isDeveloper()) {
+        map.put("role", Value.of("developer"));
+        map.put("content", Value.of(contentToString(msg.asDeveloper().content())));
+      } else if (msg.isUser()) {
+        map.put("role", Value.of("user"));
+        map.put("content", Value.of(contentToString(msg.asUser().content())));
+      } else if (msg.isAssistant()) {
+        ChatCompletionAssistantMessageParam assistant = msg.asAssistant();
+        map.put("role", Value.of("assistant"));
+        assistant.content().ifPresent(c -> map.put("content", Value.of(contentToString(c))));
+        assistant
+            .toolCalls()
+            .ifPresent(
+                toolCalls -> {
+                  List<Value<?>> tcValues =
+                      toolCalls.stream()
+                          .map(tc -> buildToolCallEventObject(tc, true))
+                          .collect(toList());
+                  map.put("tool_calls", Value.of(tcValues));
+                });
+      } else if (msg.isTool()) {
+        ChatCompletionToolMessageParam tool = msg.asTool();
+        map.put("role", Value.of("tool"));
+        map.put("content", Value.of(contentToString(tool.content())));
+        map.put("id", Value.of(tool.toolCallId()));
+      } else {
+        continue;
+      }
+      messages.add(Value.of(map));
+    }
+    return Value.of(messages);
+  }
+
+  @Nullable
+  static Value<?> buildOutputMessagesValue(@Nullable ChatCompletion response) {
+    if (response == null) {
+      return null;
+    }
+    List<Value<?>> messages = new ArrayList<>();
+    for (ChatCompletion.Choice choice : response.choices()) {
+      ChatCompletionMessage msg = choice.message();
+      Map<String, Value<?>> map = new HashMap<>();
+      map.put("role", Value.of("assistant"));
+      msg.content().ifPresent(c -> map.put("content", Value.of(c)));
+      msg.toolCalls()
+          .ifPresent(
+              toolCalls -> {
+                List<Value<?>> tcValues =
+                    toolCalls.stream()
+                        .map(tc -> buildToolCallEventObject(tc, true))
+                        .collect(toList());
+                map.put("tool_calls", Value.of(tcValues));
+              });
+      messages.add(Value.of(map));
+    }
+    return Value.of(messages);
+  }
+
+  /**
+   * Emits the v1.37.0 consolidated event {@code gen_ai.client.inference.operation.details}
+   * containing structured input and output message arrays.
+   */
+  public static void emitOperationDetailsEvent(
+      Context context,
+      Logger eventLogger,
+      ChatCompletionCreateParams request,
+      @Nullable ChatCompletion response,
+      boolean captureMessageContent) {
+    Map<String, Value<?>> body = new HashMap<>();
+    if (captureMessageContent) {
+      body.put("input", buildInputMessagesValue(request));
+      if (response != null) {
+        Value<?> output = buildOutputMessagesValue(response);
+        if (output != null) {
+          body.put("output", output);
+        }
+      }
+    }
+    newEvent(eventLogger, "gen_ai.client.inference.operation.details")
+        .setContext(context)
+        .setBody(Value.of(body))
+        .emit();
+  }
+
+  @Nullable
+  static Value<?> buildSystemInstructionsValue(ChatCompletionCreateParams request) {
+    List<Value<?>> instructions = new ArrayList<>();
+    for (ChatCompletionMessageParam msg : request.messages()) {
+      if (msg.isSystem()) {
+        Map<String, Value<?>> map = new HashMap<>();
+        map.put("role", Value.of("system"));
+        map.put("content", Value.of(contentToString(msg.asSystem().content())));
+        instructions.add(Value.of(map));
+      } else if (msg.isDeveloper()) {
+        Map<String, Value<?>> map = new HashMap<>();
+        map.put("role", Value.of("developer"));
+        map.put("content", Value.of(contentToString(msg.asDeveloper().content())));
+        instructions.add(Value.of(map));
+      }
+    }
+    if (instructions.isEmpty()) {
+      return null;
+    }
+    return Value.of(instructions);
   }
 
   private ChatCompletionEventsHelper() {}

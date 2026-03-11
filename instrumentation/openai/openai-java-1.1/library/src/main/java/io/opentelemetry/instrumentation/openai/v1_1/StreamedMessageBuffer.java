@@ -11,6 +11,7 @@ import com.openai.core.JsonField;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionMessage;
+import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 import io.opentelemetry.api.common.Value;
 import java.util.HashMap;
 import java.util.List;
@@ -41,15 +42,15 @@ final class StreamedMessageBuffer {
       // Can't happen in practice, mostly to satisfy null check
       choice.finishReason(JsonField.ofNullable(null));
     }
-    if (message != null) {
-      choice.message(
-          ChatCompletionMessage.builder()
-              .content(message.toString())
-              .refusal(Optional.empty())
-              .build());
-    } else {
-      choice.message(JsonField.ofNullable(null));
+    ChatCompletionMessage.Builder msgBuilder =
+        ChatCompletionMessage.builder()
+            .content(message != null ? message.toString() : null)
+            .refusal(Optional.empty());
+    if (toolCalls != null) {
+      msgBuilder.toolCalls(
+          toolCalls.values().stream().map(StreamedMessageBuffer::toSdkToolCall).collect(toList()));
     }
+    choice.message(msgBuilder.build());
     return choice.build();
   }
 
@@ -107,6 +108,17 @@ final class StreamedMessageBuffer {
                 });
       }
     }
+  }
+
+  private static ChatCompletionMessageToolCall toSdkToolCall(ToolCallBuffer tc) {
+    return ChatCompletionMessageToolCall.builder()
+        .id(tc.id)
+        .function(
+            ChatCompletionMessageToolCall.Function.builder()
+                .name(tc.function.name != null ? tc.function.name : "")
+                .arguments(tc.function.arguments != null ? tc.function.arguments.toString() : "")
+                .build())
+        .build();
   }
 
   private static Value<?> buildToolCallEventObject(ToolCallBuffer call) {

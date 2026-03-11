@@ -13,7 +13,6 @@ import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
-import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting OpenAI clients. */
@@ -36,30 +35,30 @@ public final class OpenAITelemetry {
 
   private final Logger eventLogger;
 
-  private final CaptureMessageOptions captureMessageOptions;
+  private final boolean captureMessageContent;
 
   OpenAITelemetry(
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter,
       Logger eventLogger,
-      CaptureMessageOptions captureMessageOptions) {
+      boolean captureMessageContent) {
     this.chatInstrumenter = chatInstrumenter;
     this.embeddingsInstrumenter = embeddingsInstrumenter;
     this.eventLogger = eventLogger;
-    this.captureMessageOptions = captureMessageOptions;
+    this.captureMessageContent = captureMessageContent;
   }
 
   /** Wraps the provided OpenAIClient, enabling telemetry for it. */
   public OpenAIClient wrap(OpenAIClient client) {
     return new InstrumentedOpenAiClient(
-            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageOptions)
+            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
         .createProxy();
   }
 
   /** Wraps the provided OpenAIClientAsync, enabling telemetry for it. */
   public OpenAIClientAsync wrap(OpenAIClientAsync client) {
     return new InstrumentedOpenAiClientAsync(
-            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageOptions)
+            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
         .createProxy();
   }
 }

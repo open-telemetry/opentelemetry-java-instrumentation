@@ -17,10 +17,13 @@ import javax.annotation.Nullable;
 public interface GenAiToolAttributesGetter<REQUEST, RESPONSE>
     extends GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
+  @Nullable
   String getToolDescription(REQUEST request);
 
+  @Nullable
   String getToolName(REQUEST request);
 
+  @Nullable
   String getToolType(REQUEST request);
 
   @Nullable

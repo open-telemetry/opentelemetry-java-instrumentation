@@ -24,9 +24,17 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    // TODO run tests both with and without genai message capture
-
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimentalSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=gen_ai_latest_experimental")
+  }
+
+  check {
+    dependsOn(testExperimentalSemconv)
   }
 }

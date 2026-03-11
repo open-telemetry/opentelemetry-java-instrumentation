@@ -9,17 +9,19 @@ import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/">GenAI
- * attributes</a>.
+ * Extractor of GenAI inference attributes.
  *
  * <p>This class delegates to a type-specific {@link GenAiAttributesGetter} for individual attribute
  * extraction from request/response objects.
@@ -33,6 +35,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> GEN_AI_OPERATION_NAME = stringKey("gen_ai.operation.name");
   private static final AttributeKey<String> GEN_AI_OUTPUT_TYPE = stringKey("gen_ai.output.type");
   static final AttributeKey<String> GEN_AI_PROVIDER_NAME = stringKey("gen_ai.provider.name");
+  static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
   private static final AttributeKey<Long> GEN_AI_REQUEST_CHOICE_COUNT =
       longKey("gen_ai.request.choice.count");
   private static final AttributeKey<List<String>> GEN_AI_REQUEST_ENCODING_FORMATS =
@@ -60,26 +63,53 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS = longKey("gen_ai.usage.input_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_OUTPUT_TOKENS =
       longKey("gen_ai.usage.output_tokens");
+  private static final AttributeKey<Value<?>> GEN_AI_INPUT_MESSAGES =
+      valueKey("gen_ai.input.messages");
+  private static final AttributeKey<Value<?>> GEN_AI_OUTPUT_MESSAGES =
+      valueKey("gen_ai.output.messages");
+  private static final AttributeKey<Value<?>> GEN_AI_SYSTEM_INSTRUCTIONS =
+      valueKey("gen_ai.system_instructions");
+  private static final AttributeKey<Value<?>> GEN_AI_TOOL_DEFINITIONS =
+      valueKey("gen_ai.tool.definitions");
 
-  /** Creates the GenAI attributes extractor. */
+  /** Creates the GenAI attributes extractor with default settings. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       GenAiAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    return new GenAiAttributesExtractor<>(attributesGetter);
+    return builder(attributesGetter).build();
+  }
+
+  /** Returns a new {@link GenAiAttributesExtractorBuilder}. */
+  public static <REQUEST, RESPONSE>
+      GenAiAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+          GenAiAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
+    return new GenAiAttributesExtractorBuilder<>(attributesGetter);
   }
 
   private final GenAiAttributesGetter<REQUEST, RESPONSE> getter;
+  private final boolean captureMessageContent;
 
-  private GenAiAttributesExtractor(GenAiAttributesGetter<REQUEST, RESPONSE> getter) {
-    this.getter = getter;
+  GenAiAttributesExtractor(GenAiAttributesExtractorBuilder<REQUEST, RESPONSE> builder) {
+    this.getter = builder.getter;
+    this.captureMessageContent = builder.captureMessageContent;
   }
 
   @Override
+  // calling deprecated getSystem() for backward-compatible dual-emit
+  @SuppressWarnings("deprecation")
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     attributes.put(GEN_AI_CONVERSATION_ID, getter.getConversationId(request));
     attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
     attributes.put(GEN_AI_OUTPUT_TYPE, getter.getOutputType(request));
-    attributes.put(GEN_AI_PROVIDER_NAME, getter.getSystem(request));
-    attributes.put(GEN_AI_REQUEST_CHOICE_COUNT, getter.getChoiceCount(request));
+    if (SemconvStability.emitGenAiExperimentalConventions()) {
+      attributes.put(GEN_AI_PROVIDER_NAME, getter.getProviderName(request));
+    }
+    if (SemconvStability.emitOldGenAiSemconv()) {
+      attributes.put(GEN_AI_SYSTEM, getter.getSystem(request));
+    }
+    Long choiceCount = getter.getChoiceCount(request);
+    if (choiceCount != null && choiceCount != 1) {
+      attributes.put(GEN_AI_REQUEST_CHOICE_COUNT, choiceCount);
+    }
     attributes.put(GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
     attributes.put(GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
     attributes.put(GEN_AI_REQUEST_ENCODING_FORMATS, getter.getRequestEncodingFormats(request));
@@ -90,6 +120,10 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
     attributes.put(GEN_AI_REQUEST_TOP_K, getter.getRequestTopK(request));
     attributes.put(GEN_AI_REQUEST_TOP_P, getter.getRequestTopP(request));
+    if (SemconvStability.emitGenAiExperimentalConventions() && captureMessageContent) {
+      attributes.put(GEN_AI_SYSTEM_INSTRUCTIONS, getter.getSystemInstructions(request));
+      attributes.put(GEN_AI_TOOL_DEFINITIONS, getter.getToolDefinitions(request));
+    }
   }
 
   @Override
@@ -107,5 +141,9 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
     attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
     attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
+    if (SemconvStability.emitGenAiExperimentalConventions() && captureMessageContent) {
+      attributes.put(GEN_AI_INPUT_MESSAGES, getter.getInputMessages(request, response));
+      attributes.put(GEN_AI_OUTPUT_MESSAGES, getter.getOutputMessages(request, response));
+    }
   }
 }

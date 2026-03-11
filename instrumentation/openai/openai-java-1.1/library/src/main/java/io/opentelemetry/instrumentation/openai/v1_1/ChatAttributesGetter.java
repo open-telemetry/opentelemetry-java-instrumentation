@@ -13,6 +13,7 @@ import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionCreateParams.ResponseFormat;
 import com.openai.models.completions.CompletionUsage;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
@@ -32,7 +33,7 @@ enum ChatAttributesGetter
   }
 
   @Override
-  public String getSystem(ChatCompletionCreateParams request) {
+  public String getProviderName(ChatCompletionCreateParams request) {
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
@@ -176,5 +177,24 @@ enum ChatAttributesGetter
       return null;
     }
     return response.usage().map(CompletionUsage::completionTokens).orElse(null);
+  }
+
+  @Override
+  public Value<?> getInputMessages(
+      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+    return ChatCompletionEventsHelper.buildInputMessagesValue(request);
+  }
+
+  @Nullable
+  @Override
+  public Value<?> getOutputMessages(
+      ChatCompletionCreateParams request, @Nullable ChatCompletion response) {
+    return ChatCompletionEventsHelper.buildOutputMessagesValue(response);
+  }
+
+  @Nullable
+  @Override
+  public Value<?> getSystemInstructions(ChatCompletionCreateParams request) {
+    return ChatCompletionEventsHelper.buildSystemInstructionsValue(request);
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
 import static java.util.stream.Collectors.toList;
 
 import com.openai.models.chat.completions.ChatCompletion;
@@ -70,9 +71,10 @@ final class StreamListener {
       if (choice.finishReason().isPresent()) {
         buffer.finishReason = choice.finishReason().get().toString();
 
-        // message has ended, let's emit
-        ChatCompletionEventsHelper.emitCompletionLogEvent(
-            context, eventLogger, choice.index(), buffer.finishReason, buffer.toEventBody());
+        if (!emitGenAiExperimentalConventions()) {
+          ChatCompletionEventsHelper.emitCompletionLogEvent(
+              context, eventLogger, choice.index(), buffer.finishReason, buffer.toEventBody());
+        }
       }
     }
   }
@@ -92,7 +94,7 @@ final class StreamListener {
       return;
     }
 
-    ChatCompletion.Builder result =
+    ChatCompletion.Builder resultBuilder =
         ChatCompletion.builder()
             .created(0)
             .model(model)
@@ -100,11 +102,18 @@ final class StreamListener {
             .choices(choiceBuffers.stream().map(StreamedMessageBuffer::toChoice).collect(toList()));
 
     if (usage != null) {
-      result.usage(usage);
+      resultBuilder.usage(usage);
+    }
+
+    ChatCompletion result = resultBuilder.build();
+
+    if (emitGenAiExperimentalConventions()) {
+      ChatCompletionEventsHelper.emitOperationDetailsEvent(
+          context, eventLogger, request, result, captureMessageContent);
     }
 
     if (newSpan) {
-      instrumenter.end(context, request, result.build(), error);
+      instrumenter.end(context, request, result, error);
     }
   }
 }

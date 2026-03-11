@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_CHOICE_COUNT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
@@ -110,7 +110,7 @@ class ChatTest extends AbstractChatTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(genAiProviderKey(), OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                             satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -134,7 +134,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -149,7 +149,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(22.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -159,7 +159,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(2.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -168,24 +168,34 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of("message", Value.of(emptyMap()))));
-            });
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("message", Value.of(emptyMap()))));
+              });
+    }
   }
 
   @Test
@@ -210,7 +220,7 @@ class ChatTest extends AbstractChatTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(genAiProviderKey(), OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                             satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -235,7 +245,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -250,7 +260,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(22.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -260,7 +270,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(7.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -269,32 +279,42 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("message", Value.of(emptyMap())))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(1)),
-                            KeyValue.of("message", Value.of(emptyMap())))));
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of("message", Value.of(emptyMap())))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(1)),
+                              KeyValue.of("message", Value.of(emptyMap())))));
+    }
   }
 
   @Test
@@ -340,7 +360,7 @@ class ChatTest extends AbstractChatTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(genAiProviderKey(), OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                             satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -364,7 +384,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -379,7 +399,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(67)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -389,7 +409,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(46.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -398,50 +418,60 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("tool_calls")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message",
-                                Value.of(
-                                    KeyValue.of(
-                                        "tool_calls",
-                                        Value.of(
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")))),
-                                                KeyValue.of("id", Value.of(newYorkCallId)),
-                                                KeyValue.of("type", Value.of("function"))),
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")))),
-                                                KeyValue.of("id", Value.of(londonCallId)),
-                                                KeyValue.of("type", Value.of("function"))))))))));
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("tool_calls")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(
+                                      KeyValue.of(
+                                          "tool_calls",
+                                          Value.of(
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")))),
+                                                  KeyValue.of("id", Value.of(newYorkCallId)),
+                                                  KeyValue.of("type", Value.of("function"))),
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")))),
+                                                  KeyValue.of("id", Value.of(londonCallId)),
+                                                  KeyValue.of("type", Value.of("function"))))))))));
+    }
 
     getTesting().clearData();
 
@@ -462,7 +492,7 @@ class ChatTest extends AbstractChatTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(genAiProviderKey(), OPENAI),
                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                             satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -486,7 +516,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -501,7 +531,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(99)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -511,7 +541,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSum(25.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -520,63 +550,75 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.assistant.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "tool_calls",
-                                Value.of(
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(KeyValue.of("name", Value.of("get_weather")))),
-                                        KeyValue.of("id", Value.of(newYorkCallId)),
-                                        KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(KeyValue.of("name", Value.of("get_weather")))),
-                                        KeyValue.of("id", Value.of(londonCallId)),
-                                        KeyValue.of("type", Value.of("function"))))))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(KeyValue.of("id", Value.of(newYorkCallId)))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(KeyValue.of("id", Value.of(londonCallId)))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("message", Value.of(emptyMap())))));
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx1));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.assistant.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "tool_calls",
+                                  Value.of(
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")))),
+                                          KeyValue.of("id", Value.of(newYorkCallId)),
+                                          KeyValue.of("type", Value.of("function"))),
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")))),
+                                          KeyValue.of("id", Value.of(londonCallId)),
+                                          KeyValue.of("type", Value.of("function"))))))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(KeyValue.of("id", Value.of(newYorkCallId)))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(KeyValue.of("id", Value.of(londonCallId)))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of("message", Value.of(emptyMap())))));
+    }
   }
 
   @Test
@@ -613,7 +655,7 @@ class ChatTest extends AbstractChatTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasAttributesSatisfyingExactly(
-                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(genAiProviderKey(), OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -635,7 +677,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -644,24 +686,34 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log -> {
                 log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                        equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log -> {
-              log.hasAttributesSatisfyingExactly(
-                      equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                  .hasSpanContext(spanCtx)
-                  .hasBody(
-                      Value.of(
-                          KeyValue.of("finish_reason", Value.of("stop")),
-                          KeyValue.of("index", Value.of(0)),
-                          KeyValue.of("message", Value.of(emptyMap()))));
-            });
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("message", Value.of(emptyMap()))));
+              });
+    }
   }
 
   @Test
@@ -707,7 +759,7 @@ class ChatTest extends AbstractChatTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasAttributesSatisfyingExactly(
-                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(genAiProviderKey(), OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -730,7 +782,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -739,32 +791,42 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("message", Value.of(emptyMap())))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(1)),
-                            KeyValue.of("message", Value.of(emptyMap())))));
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of("message", Value.of(emptyMap())))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(1)),
+                              KeyValue.of("message", Value.of(emptyMap())))));
+    }
   }
 
   @Test
@@ -808,7 +870,7 @@ class ChatTest extends AbstractChatTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasAttributesSatisfyingExactly(
-                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(genAiProviderKey(), OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -830,7 +892,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -839,50 +901,60 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("tool_calls")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of(
-                                "message",
-                                Value.of(
-                                    KeyValue.of(
-                                        "tool_calls",
-                                        Value.of(
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")))),
-                                                KeyValue.of("id", Value.of(newYorkCallId)),
-                                                KeyValue.of("type", Value.of("function"))),
-                                            Value.of(
-                                                KeyValue.of(
-                                                    "function",
-                                                    Value.of(
-                                                        KeyValue.of(
-                                                            "name", Value.of("get_weather")))),
-                                                KeyValue.of("id", Value.of(londonCallId)),
-                                                KeyValue.of("type", Value.of("function"))))))))));
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("tool_calls")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of(
+                                  "message",
+                                  Value.of(
+                                      KeyValue.of(
+                                          "tool_calls",
+                                          Value.of(
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")))),
+                                                  KeyValue.of("id", Value.of(newYorkCallId)),
+                                                  KeyValue.of("type", Value.of("function"))),
+                                              Value.of(
+                                                  KeyValue.of(
+                                                      "function",
+                                                      Value.of(
+                                                          KeyValue.of(
+                                                              "name", Value.of("get_weather")))),
+                                                  KeyValue.of("id", Value.of(londonCallId)),
+                                                  KeyValue.of("type", Value.of("function"))))))))));
+    }
 
     getTesting().clearData();
 
@@ -908,7 +980,7 @@ class ChatTest extends AbstractChatTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasAttributesSatisfyingExactly(
-                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(genAiProviderKey(), OPENAI),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
@@ -930,7 +1002,7 @@ class ChatTest extends AbstractChatTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(genAiProviderKey(), OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                             equalTo(
@@ -939,62 +1011,74 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    getTesting()
-        .waitAndAssertLogRecords(
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.system.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.user.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.assistant.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of(
-                                "tool_calls",
-                                Value.of(
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(KeyValue.of("name", Value.of("get_weather")))),
-                                        KeyValue.of("id", Value.of(newYorkCallId)),
-                                        KeyValue.of("type", Value.of("function"))),
-                                    Value.of(
-                                        KeyValue.of(
-                                            "function",
-                                            Value.of(KeyValue.of("name", Value.of("get_weather")))),
-                                        KeyValue.of("id", Value.of(londonCallId)),
-                                        KeyValue.of("type", Value.of("function"))))))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(KeyValue.of("id", Value.of(newYorkCallId)))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(KeyValue.of("id", Value.of(londonCallId)))),
-            log ->
-                log.hasAttributesSatisfyingExactly(
-                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
-                    .hasSpanContext(spanCtx1)
-                    .hasBody(
-                        Value.of(
-                            KeyValue.of("finish_reason", Value.of("stop")),
-                            KeyValue.of("index", Value.of(0)),
-                            KeyValue.of("message", Value.of(emptyMap())))));
+    if (emitGenAiExperimentalConventions()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.client.inference.operation.details"))
+                      .hasSpanContext(spanCtx1));
+    } else {
+      getTesting()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.system.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.user.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(emptyMap())),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.assistant.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of(
+                                  "tool_calls",
+                                  Value.of(
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")))),
+                                          KeyValue.of("id", Value.of(newYorkCallId)),
+                                          KeyValue.of("type", Value.of("function"))),
+                                      Value.of(
+                                          KeyValue.of(
+                                              "function",
+                                              Value.of(
+                                                  KeyValue.of("name", Value.of("get_weather")))),
+                                          KeyValue.of("id", Value.of(londonCallId)),
+                                          KeyValue.of("type", Value.of("function"))))))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(KeyValue.of("id", Value.of(newYorkCallId)))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI),
+                          equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(Value.of(KeyValue.of("id", Value.of(londonCallId)))),
+              log ->
+                  log.hasAttributesSatisfyingExactly(
+                          equalTo(genAiProviderKey(), OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                      .hasSpanContext(spanCtx1)
+                      .hasBody(
+                          Value.of(
+                              KeyValue.of("finish_reason", Value.of("stop")),
+                              KeyValue.of("index", Value.of(0)),
+                              KeyValue.of("message", Value.of(emptyMap())))));
+    }
   }
 }
