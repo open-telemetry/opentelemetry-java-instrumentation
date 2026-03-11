@@ -48,6 +48,7 @@ public final class LogEventMapper {
   @Deprecated // removing support for MDC-based event name since it's not scoped narrowly
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
@@ -171,36 +172,49 @@ public final class LogEventMapper {
   private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Hashtable<?, ?> context = MDC.getContext();
+    if (context == null) {
+      return;
+    }
+
+    // otel.event.name takes priority over event.name
+    Object otelEventName = context.get(OTEL_EVENT_NAME_KEY);
+    if (otelEventName != null && !otelEventName.toString().isEmpty()) {
+      builder.setEventName(otelEventName.toString());
+    } else if (captureEventName) {
+      Object eventName = context.get(EVENT_NAME.getKey());
+      if (eventName != null && !eventName.toString().isEmpty()) {
+        builder.setEventName(eventName.toString());
+      }
+    }
 
     if (captureAllMdcAttributes) {
-      if (context != null) {
-        for (Map.Entry<?, ?> entry : context.entrySet()) {
-          setAttributeOrEventName(
-              builder, getMdcAttributeKey(String.valueOf(entry.getKey())), entry.getValue());
+      for (Map.Entry<?, ?> entry : context.entrySet()) {
+        String key = String.valueOf(entry.getKey());
+        if (!OTEL_EVENT_NAME_KEY.equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          Object value = entry.getValue();
+          if (value != null) {
+            builder.setAttribute(getMdcAttributeKey(key), value.toString());
+          }
         }
       }
       return;
     }
 
     for (Map.Entry<String, AttributeKey<String>> entry : captureMdcAttributes.entrySet()) {
-      Object value = context.get(entry.getKey());
-      setAttributeOrEventName(builder, entry.getValue(), value);
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME_KEY.equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        Object value = context.get(key);
+        if (value != null) {
+          builder.setAttribute(entry.getValue(), value.toString());
+        }
+      }
     }
   }
 
   private static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
-  }
-
-  private void setAttributeOrEventName(
-      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
-    if (value != null) {
-      if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value.toString());
-      } else {
-        builder.setAttribute(key, value.toString());
-      }
-    }
   }
 
   private static Severity levelToSeverity(Priority level) {

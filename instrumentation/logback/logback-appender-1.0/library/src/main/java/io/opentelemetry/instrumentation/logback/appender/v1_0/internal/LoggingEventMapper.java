@@ -264,16 +264,36 @@ public final class LoggingEventMapper {
 
   // visible for testing
   void captureMdcAttributes(LogRecordBuilder builder, Map<String, String> mdcProperties) {
+    // otel.event.name takes priority over event.name
+    String otelEventName = mdcProperties.get(OTEL_EVENT_NAME_KEY);
+    if (otelEventName != null && !otelEventName.isEmpty()) {
+      builder.setEventName(otelEventName);
+    } else if (captureEventName) {
+      String eventName = mdcProperties.get(EVENT_NAME.getKey());
+      if (eventName != null && !eventName.isEmpty()) {
+        builder.setEventName(eventName);
+      }
+    }
+
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        setAttributeOrEventName(builder, getAttributeKey(entry.getKey()), entry.getValue());
+        String key = entry.getKey();
+        if (!OTEL_EVENT_NAME_KEY.equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          builder.setAttribute(getAttributeKey(key), entry.getValue());
+        }
       }
       return;
     }
 
     for (String key : captureMdcAttributes) {
-      String value = mdcProperties.get(key);
-      setAttributeOrEventName(builder, getAttributeKey(key), value);
+      if (!OTEL_EVENT_NAME_KEY.equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        String value = mdcProperties.get(key);
+        if (value != null) {
+          builder.setAttribute(getAttributeKey(key), value);
+        }
+      }
     }
   }
 

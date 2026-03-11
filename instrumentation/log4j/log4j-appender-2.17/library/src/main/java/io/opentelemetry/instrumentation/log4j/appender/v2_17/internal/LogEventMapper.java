@@ -45,7 +45,6 @@ public final class LogEventMapper<T> {
   @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-  private static final AttributeKey<String> OTEL_EVENT_NAME = AttributeKey.stringKey("otel.event.name");
 
   private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
@@ -83,17 +82,11 @@ public final class LogEventMapper<T> {
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
-    // If captureEventName is enabled, ensure event-name keys are in the list that we loop over.
+    // If captureEventName is enabled, ensure event.name key is in the list that we loop over.
     if (captureEventName && !captureAllContextDataAttributes) {
-      if (!captureContextDataAttributes.contains("event.name")
-          || !captureContextDataAttributes.contains(OTEL_EVENT_NAME_KEY)) {
+      if (!captureContextDataAttributes.contains("event.name")) {
         captureContextDataAttributes = new ArrayList<>(captureContextDataAttributes);
-        if (!captureContextDataAttributes.contains("event.name")) {
-          captureContextDataAttributes.add("event.name");
-        }
-        if (!captureContextDataAttributes.contains(OTEL_EVENT_NAME_KEY)) {
-          captureContextDataAttributes.add(OTEL_EVENT_NAME_KEY);
-        }
+        captureContextDataAttributes.add("event.name");
       }
     }
     this.captureContextDataAttributes = captureContextDataAttributes;
@@ -229,26 +222,38 @@ public final class LogEventMapper<T> {
   // visible for testing
   void captureContextDataAttributes(LogRecordBuilder builder, T contextData) {
 
+    // otel.event.name takes priority over event.name
+    String otelEventName = contextDataAccessor.getValue(contextData, OTEL_EVENT_NAME_KEY);
+    if (otelEventName != null && !otelEventName.isEmpty()) {
+      builder.setEventName(otelEventName);
+    } else if (captureEventName) {
+      String eventName = contextDataAccessor.getValue(contextData, EVENT_NAME.getKey());
+      if (eventName != null && !eventName.isEmpty()) {
+        builder.setEventName(eventName);
+      }
+    }
+
     if (captureAllContextDataAttributes) {
       contextDataAccessor.forEach(
           contextData,
-          (key, value) -> setAttributeOrEventName(builder, getContextDataAttributeKey(key), value));
+          (key, value) -> {
+            if (!OTEL_EVENT_NAME_KEY.equals(key)
+                && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+              if (value != null) {
+                builder.setAttribute(getContextDataAttributeKey(key), value);
+              }
+            }
+          });
       return;
     }
 
     for (String key : captureContextDataAttributes) {
-      String value = contextDataAccessor.getValue(contextData, key);
-      setAttributeOrEventName(builder, getContextDataAttributeKey(key), value);
-    }
-  }
-
-  private void setAttributeOrEventName(
-      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
-    if (value != null) {
-      if (captureEventName && (key.equals(EVENT_NAME) || key.equals(OTEL_EVENT_NAME))) {
-        builder.setEventName(value.toString());
-      } else {
-        builder.setAttribute(key, value.toString());
+      if (!OTEL_EVENT_NAME_KEY.equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        String value = contextDataAccessor.getValue(contextData, key);
+        if (value != null) {
+          builder.setAttribute(getContextDataAttributeKey(key), value);
+        }
       }
     }
   }

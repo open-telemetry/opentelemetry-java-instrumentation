@@ -19,10 +19,14 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class LogEventMapperTest {
 
@@ -95,8 +99,14 @@ class LogEventMapperTest {
     verifyNoMoreInteractions(builder);
   }
 
-  @Test
-  void testCaptureOtelEventNameFromContextData() {
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name", true), Arguments.of("otel.event.name", false));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testCaptureEventNameFromContextData(
+      String eventNameProperty, boolean captureEventName) {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
@@ -106,10 +116,10 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("key1"),
-            true);
+            captureEventName);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
-    contextData.put("otel.event.name", "MyEventName");
+    contextData.put(eventNameProperty, "MyEventName");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
     // when

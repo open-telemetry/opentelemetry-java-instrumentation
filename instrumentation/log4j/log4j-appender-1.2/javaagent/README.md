@@ -7,4 +7,6 @@
 | `otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes`         | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes.                                         |
 | `otel.instrumentation.log4j-appender.experimental.capture-event-name`             | Boolean | `false` | **Deprecated.** Enable moving the `event.name` attribute (captured by one of the other mechanisms of capturing attributes) to the log event name.             |
 
+The `otel.event.name` key is supported in MDC entries. When present, its value is used as the log event name and is not emitted as an attribute.
+
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

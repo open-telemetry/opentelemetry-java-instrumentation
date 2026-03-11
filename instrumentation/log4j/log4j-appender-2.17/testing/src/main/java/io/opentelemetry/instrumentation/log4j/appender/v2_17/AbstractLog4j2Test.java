@@ -140,11 +140,16 @@ public abstract class AbstractLog4j2Test {
     }
   }
 
-  @Test
-  void testContextData() {
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testContextData(String eventNameProperty) {
     ThreadContext.put("key1", "val1");
     ThreadContext.put("key2", "val2");
-    ThreadContext.put("event.name", "MyEventName");
+    ThreadContext.put(eventNameProperty, "MyEventName");
     try {
       logger.info("xyz: {}", 123);
     } finally {
@@ -152,34 +157,6 @@ public abstract class AbstractLog4j2Test {
     }
 
     List<AttributeAssertion> assertions = addCodeLocationAttributes("testContextData");
-    assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("key1"), "val1"));
-    assertions.add(equalTo(stringKey("key2"), "val2"));
-
-    testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody("xyz: 123")
-                    .hasEventName("MyEventName")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
-  }
-
-  @Test
-  void testOtelEventNameInContextData() {
-    ThreadContext.put("key1", "val1");
-    ThreadContext.put("key2", "val2");
-    ThreadContext.put("otel.event.name", "MyEventName");
-    try {
-      logger.info("xyz: {}", 123);
-    } finally {
-      ThreadContext.clearMap();
-    }
-
-    List<AttributeAssertion> assertions = addCodeLocationAttributes("testOtelEventNameInContextData");
     assertions.addAll(threadAttributesAssertions());
     assertions.add(equalTo(stringKey("key1"), "val1"));
     assertions.add(equalTo(stringKey("key2"), "val2"));

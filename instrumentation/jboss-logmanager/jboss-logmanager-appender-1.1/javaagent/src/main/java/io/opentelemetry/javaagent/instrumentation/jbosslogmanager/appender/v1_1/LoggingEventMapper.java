@@ -37,6 +37,8 @@ public final class LoggingEventMapper {
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
+  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
+
   private final List<String> captureMdcAttributes;
 
   private static final boolean captureExperimentalAttributes =
@@ -109,35 +111,45 @@ public final class LoggingEventMapper {
   private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Map<String, String> context = MDC.copy();
+    if (context == null) {
+      return;
+    }
+
+    // otel.event.name takes priority over event.name
+    String otelEventName = context.get(OTEL_EVENT_NAME_KEY);
+    if (otelEventName != null && !otelEventName.isEmpty()) {
+      builder.setEventName(otelEventName);
+    } else if (captureEventName) {
+      String eventName = context.get(EVENT_NAME.getKey());
+      if (eventName != null && !eventName.isEmpty()) {
+        builder.setEventName(eventName);
+      }
+    }
 
     if (captureAllMdcAttributes) {
-      if (context != null) {
-        for (Map.Entry<String, String> entry : context.entrySet()) {
-          setAttributeOrEventName(builder, getMdcAttributeKey(entry.getKey()), entry.getValue());
+      for (Map.Entry<String, String> entry : context.entrySet()) {
+        String key = entry.getKey();
+        if (!OTEL_EVENT_NAME_KEY.equals(key)
+            && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+          builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
         }
       }
       return;
     }
 
     for (String key : captureMdcAttributes) {
-      Object value = context.get(key);
-      setAttributeOrEventName(builder, getMdcAttributeKey(key), value);
+      if (!OTEL_EVENT_NAME_KEY.equals(key)
+          && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
+        String value = context.get(key);
+        if (value != null) {
+          builder.setAttribute(getMdcAttributeKey(key), value);
+        }
+      }
     }
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
-  }
-
-  private void setAttributeOrEventName(
-      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
-    if (value != null) {
-      if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value.toString());
-      } else {
-        builder.setAttribute(key, value.toString());
-      }
-    }
   }
 
   private static Severity levelToSeverity(java.util.logging.Level level) {

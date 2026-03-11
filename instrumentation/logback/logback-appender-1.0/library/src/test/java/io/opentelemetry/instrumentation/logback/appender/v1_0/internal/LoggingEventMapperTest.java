@@ -20,8 +20,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @DisabledInNativeImage // conflict with Mockito
 class LoggingEventMapperTest {
@@ -76,6 +80,56 @@ class LoggingEventMapperTest {
     // then
     verify(builder).setAttribute(stringKey("key1"), "value1");
     verify(builder).setAttribute(stringKey("key2"), "value2");
+    verifyNoMoreInteractions(builder);
+  }
+
+  private static Stream<Arguments> eventNameProperties() {
+    return Stream.of(Arguments.of("event.name", true), Arguments.of("otel.event.name", false));
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testEventNameMdc(String eventNameProperty, boolean captureEventName) {
+    // given
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setCaptureEventName(captureEventName)
+            .setCaptureMdcAttributes(singletonList("key1"))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put(eventNameProperty, "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setEventName("MyEventName");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @ParameterizedTest
+  @MethodSource("eventNameProperties")
+  void testEventNameMdcWithCaptureAll(String eventNameProperty, boolean captureEventName) {
+    // given
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setCaptureEventName(captureEventName)
+            .setCaptureMdcAttributes(singletonList("*"))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put(eventNameProperty, "MyEventName");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verify(builder).setEventName("MyEventName");
     verifyNoMoreInteractions(builder);
   }
 
