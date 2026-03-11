@@ -61,6 +61,10 @@ jobs:
         with:
           fetch-depth: ${{ needs.determine-affected.outputs.build-scope == 'TARGETED' && 0 || 1 }}
 
+      - name: Fetch base ref for targeted diff
+        if: ${{ needs.determine-affected.outputs.build-scope == 'TARGETED' }}
+        run: git fetch origin "${{ inputs.pr-base-sha }}"
+
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
