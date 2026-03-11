@@ -30,7 +30,6 @@ public final class ThriftServerInstrumentationModule extends InstrumentationModu
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ThriftServerInstrumentation(),
-        new ThriftServletInstrumentation(),
         new ThriftAsyncProcessInstrumentation(),
         new ThriftFrameBufferInstrumentation(),
         new ThriftBaseProcessorInstrumentation(),
