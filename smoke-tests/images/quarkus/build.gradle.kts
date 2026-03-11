@@ -17,7 +17,7 @@ plugins {
   id("java")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.32.2"
+  id("io.quarkus") version "3.32.3"
 }
 
 dependencies {
