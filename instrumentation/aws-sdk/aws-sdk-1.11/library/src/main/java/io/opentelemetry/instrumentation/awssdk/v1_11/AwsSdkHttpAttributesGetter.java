@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.http.HttpResponse;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -95,7 +96,7 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   @Override
   @Nullable
   public Integer getServerPort(Request<?> request) {
-    // Returns the effective port directly; scheme fallback is not needed.
-    return request.getEndpoint().getPort();
+    return HttpConstants.portOrDefaultFromScheme(
+        request.getEndpoint().getPort(), () -> request.getEndpoint().getScheme());
   }
 }
