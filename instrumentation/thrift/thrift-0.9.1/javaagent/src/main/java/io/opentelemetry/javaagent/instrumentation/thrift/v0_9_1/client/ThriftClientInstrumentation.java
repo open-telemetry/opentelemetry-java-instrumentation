@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.ThriftSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -42,7 +43,7 @@ public final class ThriftClientInstrumentation implements TypeInstrumentation {
         ThriftClientInstrumentation.class.getName() + "$ConstructorTowAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(isProtected()).and(named("sendBase")),
+        isMethod().and(isProtected()).and(nameStartsWith("sendBase")),
         ThriftClientInstrumentation.class.getName() + "$ClientSendAdvice");
 
     transformer.applyAdviceToMethod(

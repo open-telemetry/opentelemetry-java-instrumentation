@@ -29,6 +29,7 @@ public final class ThriftClientCommonInstrumentationModule extends Instrumentati
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new ThriftClientInstrumentation(),
         new ThriftAsyncClientInstrumentation(),
         new ThriftAsyncMethodCallInstrumentation(),
         new ThriftAsyncWriteArgsInstrumentation());
