@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
@@ -80,7 +81,6 @@ public enum JettyClientHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(Request request) {
-    // Returns the effective port directly; scheme fallback is not needed.
-    return request.getPort();
+    return HttpConstants.portOrDefaultFromScheme(request.getPort(), request::getScheme);
   }
 }
