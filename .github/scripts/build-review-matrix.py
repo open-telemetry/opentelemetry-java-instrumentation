@@ -5,8 +5,6 @@ Reads module list from settings.gradle.kts, filters out already-reviewed
 modules (from the progress cache), respects the open-PR cap, and writes
 matrix JSON + has_work flag to $GITHUB_OUTPUT.
 
-Also updates the progress file so dispatched modules won't be re-reviewed.
-
 Environment variables:
   GITHUB_OUTPUT      - path to the GitHub Actions output file
   GH_TOKEN           - token for `gh pr list` (set automatically by the workflow)
@@ -70,12 +68,6 @@ def write_output(key: str, value: str) -> None:
         f.write(f"{key}={value}\n")
 
 
-def save_progress(reviewed: set[str]) -> None:
-    """Write the updated progress file."""
-    PROGRESS_DIR.mkdir(parents=True, exist_ok=True)
-    PROGRESS_FILE.write_text("\n".join(sorted(reviewed)) + "\n")
-
-
 def main() -> None:
     all_modules = parse_modules()
     print(f"Total instrumentation modules: {len(all_modules)}")
@@ -113,11 +105,6 @@ def main() -> None:
 
     write_output("has_work", "true")
     write_output("matrix", matrix_json)
-
-    # Record dispatched modules
-    reviewed.update(name for name, _ in batch)
-    save_progress(reviewed)
-    print(f"Progress file now has {len(reviewed)} modules")
 
 
 if __name__ == "__main__":

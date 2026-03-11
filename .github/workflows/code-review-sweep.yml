@@ -38,13 +38,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python .github/scripts/build-review-matrix.py
 
-      - name: Save progress cache
-        if: steps.build-matrix.outputs.has_work == 'true'
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-        with:
-          path: /tmp/review-progress
-          key: code-review-progress-${{ github.run_id }}
-
   # ---------------------------------------------------------------------------
   # Job 2: Run copilot review for each module in the matrix
   # ---------------------------------------------------------------------------
@@ -155,3 +148,38 @@ jobs:
           else
             echo "PR already exists for $branch — skipping creation"
           fi
+
+  # ---------------------------------------------------------------------------
+  # Job 3: Record reviewed modules only when the entire batch succeeded
+  # ---------------------------------------------------------------------------
+  finalize:
+    needs: [dispatch, review]
+    if: needs.review.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore progress cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: /tmp/review-progress
+          key: code-review-progress
+          restore-keys: code-review-progress-
+
+      - name: Mark batch as reviewed
+        run: |
+          mkdir -p /tmp/review-progress
+          touch /tmp/review-progress/reviewed.txt
+
+          matrix='${{ needs.dispatch.outputs.matrix }}'
+          for name in $(echo "$matrix" | jq -r '.include[].short_name'); do
+            echo "$name" >> /tmp/review-progress/reviewed.txt
+            echo "Marking as reviewed: $name"
+          done
+
+          sort -u /tmp/review-progress/reviewed.txt -o /tmp/review-progress/reviewed.txt
+          echo "Total reviewed modules: $(wc -l < /tmp/review-progress/reviewed.txt)"
+
+      - name: Save progress cache
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: /tmp/review-progress
+          key: code-review-progress-${{ github.run_id }}
