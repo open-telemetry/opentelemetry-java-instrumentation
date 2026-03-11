@@ -1,0 +1,20 @@
+# Maps instrumentation directory prefixes to smoke test suites.
+# Format: <instrumentation-prefix> <suite1,suite2,...>
+#
+# When a changed instrumentation matches a prefix, the listed suites run.
+# If no prefix matches, no suites run (the instrumentation isn't exercised by smoke tests).
+# Lines starting with # are comments.
+
+servlet/ jetty,liberty,payara,tomcat,tomee,websphere,wildfly
+jetty/ jetty
+tomcat/ tomcat,tomee
+liberty/ liberty
+payara/ payara
+websphere/ websphere
+wildfly/ wildfly
+grizzly- jetty
+spring/ other
+grpc- other
+play- other
+quarkus- other
+instrumentation-annotations/ other

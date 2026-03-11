@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Trivial change to exercise targeted CI test path
 package io.opentelemetry.javaagent.instrumentation.jetty.common;
 
 import io.opentelemetry.context.Context;

@@ -24,11 +24,14 @@ jobs:
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
       cache-read-only: true
+      # Pass empty string when 'test all' label is present to force full build
+      pr-base-sha: ${{ contains(github.event.pull_request.labels.*.name, 'test all') && '' || github.event.pull_request.base.sha }}
 
   test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       cache-read-only: true
+      pr-base-sha: ${{ contains(github.event.pull_request.labels.*.name, 'test all') && '' || github.event.pull_request.base.sha }}
 
   test-native:
     uses: ./.github/workflows/reusable-native-tests.yml
@@ -39,6 +42,7 @@ jobs:
     uses: ./.github/workflows/reusable-muzzle.yml
     with:
       cache-read-only: true
+      pr-base-sha: ${{ contains(github.event.pull_request.labels.*.name, 'test all') && '' || github.event.pull_request.base.sha }}
 
   # this is not a required check to avoid blocking pull requests if external links break
   markdown-check:
@@ -72,7 +76,7 @@ jobs:
           (
             !startsWith(github.base_ref, 'release/') &&
             (
-              needs.muzzle.result != 'success' ||
+              (needs.muzzle.result != 'success' && needs.muzzle.result != 'skipped') ||
               needs.markdown-lint-check.result != 'success'
             )
           )
