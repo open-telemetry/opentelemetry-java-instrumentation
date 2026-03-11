@@ -1,4 +1,5 @@
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
+import org.gradle.util.internal.VersionNumber
 
 tasks {
   val resolveLatestDepVersions by registering {
@@ -13,24 +14,9 @@ tasks {
 
       val versions = sortedMapOf<String, String>()
 
-      fun isHigherVersion(v1: String, v2: String): Boolean {
-        val parts1 = v1.split(Regex("[.\\-]"))
-        val parts2 = v2.split(Regex("[.\\-]"))
-        for (i in 0 until maxOf(parts1.size, parts2.size)) {
-          val n1 = parts1.getOrElse(i) { "0" }.toIntOrNull() ?: 0
-          val n2 = parts2.getOrElse(i) { "0" }.toIntOrNull() ?: 0
-          if (n1 != n2) return n1 > n2
-        }
-        return false
-      }
-
       fun recordVersion(key: String, version: String) {
-        if (!AcceptableVersions.isStable(version)) {
-          logger.info("Skipping pre-release version $key:$version")
-          return
-        }
         val existing = versions[key]
-        if (existing == null || isHigherVersion(version, existing)) {
+        if (existing == null || VersionNumber.parse(version) > VersionNumber.parse(existing)) {
           versions[key] = version
         }
       }
@@ -60,7 +46,9 @@ tasks {
           }
       }
 
-      // Resolve Spring Boot catalog versions using a detached configuration
+      // Resolve Spring Boot catalog versions using a detached configuration.
+      // The subproject scan doesn't capture these because the Spring Boot Gradle plugin
+      // applies the BOM at an already-resolved version, not the original "3.+"/"4.+" range.
       listOf("3.+", "4.+").forEach { range ->
         val detached = project.configurations.detachedConfiguration(
           project.dependencies.create("org.springframework.boot:spring-boot-dependencies:$range")
