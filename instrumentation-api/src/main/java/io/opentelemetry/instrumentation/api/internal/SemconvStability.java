@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -40,10 +41,8 @@ public final class SemconvStability {
     if (value == null) {
       value = System.getenv("OTEL_SEMCONV_STABILITY_OPT_IN");
     }
-    if (value != null) {
-      Set<String> values = new HashSet<>(asList(value.split(",")));
-      configure(values);
-    }
+    Set<String> values = value != null ? new HashSet<>(asList(value.split(","))) : emptySet();
+    configure(values);
   }
 
   private static void configure(Set<String> values) {
