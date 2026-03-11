@@ -10,11 +10,11 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.netty.request.NettyRequest;
+import org.asynchttpclient.uri.Uri;
 
 final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<RequestContext, Response> {
@@ -91,8 +91,7 @@ final class AsyncHttpClientHttpAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(RequestContext request) {
-    HttpRequest httpRequest = request.getRequest();
-    URI uri = httpRequest.getUri();
+    Uri uri = request.getRequest().getUri();
     return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
   }
 
