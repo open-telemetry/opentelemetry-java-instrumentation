@@ -17,7 +17,7 @@ import java.util.List;
 public class JexInstrumentationModule extends InstrumentationModule {
 
   public JexInstrumentationModule() {
-    super("avaje-jex", "avaje-jex-3.0");
+    super("avaje_jex", "avaje_jex_3.0");
   }
 
   @Override

@@ -27,7 +27,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public IndyInstrumentationTestModule() {
-    super("indy-test");
+    super("indy_test");
   }
 
   @Override

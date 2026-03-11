@@ -17,7 +17,7 @@ import java.util.List;
 public class KafkaStreamsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public KafkaStreamsInstrumentationModule() {
-    super("kafka-streams", "kafka-streams-0.11", "kafka");
+    super("kafka_streams", "kafka_streams_0.11", "kafka");
   }
 
   @Override

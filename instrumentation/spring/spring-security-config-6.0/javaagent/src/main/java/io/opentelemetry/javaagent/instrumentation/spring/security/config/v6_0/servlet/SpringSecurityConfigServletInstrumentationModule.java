@@ -22,10 +22,10 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
     implements ExperimentalInstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
     super(
-        "spring-security-config",
-        "spring-security-config-6.0",
-        "spring-security-config-servlet",
-        "spring-security-config-servlet-6.0");
+        "spring_security_config",
+        "spring_security_config_6.0",
+        "spring_security_config_servlet",
+        "spring_security_config_servlet_6.0");
   }
 
   @Override

@@ -20,7 +20,7 @@ public class InstrumentationApiInstrumentationModule extends InstrumentationModu
     implements ExperimentalInstrumentationModule {
 
   public InstrumentationApiInstrumentationModule() {
-    super("opentelemetry-instrumentation-api");
+    super("opentelemetry_instrumentation_api");
   }
 
   @Override

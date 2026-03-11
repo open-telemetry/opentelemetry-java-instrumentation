@@ -23,7 +23,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class TestInstrumentationModule2 extends InstrumentationModule {
   public TestInstrumentationModule2() {
-    super("test-instrumentation2");
+    super("test_instrumentation2");
   }
 
   @Override

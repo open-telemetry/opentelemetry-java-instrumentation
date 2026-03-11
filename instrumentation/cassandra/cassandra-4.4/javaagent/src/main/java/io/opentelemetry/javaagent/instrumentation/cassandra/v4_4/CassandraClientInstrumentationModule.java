@@ -20,7 +20,7 @@ public class CassandraClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public CassandraClientInstrumentationModule() {
-    super("cassandra", "cassandra-4.4");
+    super("cassandra", "cassandra_4.4");
   }
 
   @Override

@@ -17,7 +17,7 @@ import java.util.List;
 public class ApplicationLoggingInstrumentationModule extends InstrumentationModule {
 
   public ApplicationLoggingInstrumentationModule() {
-    super("internal-application-logger");
+    super("internal_application_logger");
   }
 
   @Override

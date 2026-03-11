@@ -28,7 +28,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringBatchInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringBatchInstrumentationModule() {
-    super("spring-batch", "spring-batch-3.0");
+    super("spring_batch", "spring_batch_3.0");
   }
 
   @Override

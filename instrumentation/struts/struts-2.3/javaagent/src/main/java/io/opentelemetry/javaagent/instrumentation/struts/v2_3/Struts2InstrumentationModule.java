@@ -18,7 +18,7 @@ public class Struts2InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public Struts2InstrumentationModule() {
-    super("struts", "struts-2.3");
+    super("struts", "struts_2.3");
   }
 
   @Override

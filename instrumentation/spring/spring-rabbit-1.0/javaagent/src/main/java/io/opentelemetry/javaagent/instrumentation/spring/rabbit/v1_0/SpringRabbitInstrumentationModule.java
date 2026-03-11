@@ -17,7 +17,7 @@ import java.util.List;
 public class SpringRabbitInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringRabbitInstrumentationModule() {
-    super("spring-rabbit", "spring-rabbit-1.0");
+    super("spring_rabbit", "spring_rabbit_1.0");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class RmiClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public RmiClientInstrumentationModule() {
-    super("rmi", "rmi-client");
+    super("rmi", "rmi_client");
   }
 
   @Override

@@ -226,7 +226,7 @@ class InstrumentationModuleClassLoaderTest {
     List<String> hiddenPackages = new ArrayList<>();
 
     public HidingModule() {
-      super("hiding-module");
+      super("hiding_module");
     }
 
     @Override

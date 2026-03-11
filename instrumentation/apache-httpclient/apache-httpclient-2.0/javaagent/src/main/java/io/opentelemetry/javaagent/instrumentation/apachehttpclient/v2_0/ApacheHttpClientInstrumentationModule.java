@@ -18,7 +18,7 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ApacheHttpClientInstrumentationModule() {
-    super("apache-httpclient", "apache-httpclient-2.0");
+    super("apache_httpclient", "apache_httpclient_2.0");
   }
 
   @Override

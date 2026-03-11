@@ -18,7 +18,7 @@ public class WebfluxServerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public WebfluxServerInstrumentationModule() {
-    super("spring-webflux", "spring-webflux-5.0", "spring-webflux-server");
+    super("spring_webflux", "spring_webflux_5.0", "spring_webflux_server");
   }
 
   @Override

@@ -20,7 +20,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-2.6");
+    super("couchbase", "couchbase_2.6");
   }
 
   @Override

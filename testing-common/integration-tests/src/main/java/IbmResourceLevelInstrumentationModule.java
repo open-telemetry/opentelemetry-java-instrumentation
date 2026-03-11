@@ -13,7 +13,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class IbmResourceLevelInstrumentationModule extends InstrumentationModule {
   public IbmResourceLevelInstrumentationModule() {
-    super("ibm-resource-level");
+    super("ibm_resource_level");
   }
 
   @Override

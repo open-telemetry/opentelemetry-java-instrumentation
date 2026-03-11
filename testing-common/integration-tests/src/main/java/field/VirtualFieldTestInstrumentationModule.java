@@ -21,7 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class VirtualFieldTestInstrumentationModule extends InstrumentationModule {
   public VirtualFieldTestInstrumentationModule() {
-    super("virtual-field-test");
+    super("virtual_field_test");
   }
 
   @Override

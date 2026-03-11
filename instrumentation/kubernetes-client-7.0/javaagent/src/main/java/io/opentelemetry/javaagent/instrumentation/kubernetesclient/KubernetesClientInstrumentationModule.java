@@ -18,7 +18,7 @@ public class KubernetesClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public KubernetesClientInstrumentationModule() {
-    super("kubernetes-client", "kubernetes-client-7.0");
+    super("kubernetes_client", "kubernetes_client_7.0");
   }
 
   @Override

@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HibernateInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public HibernateInstrumentationModule() {
-    super("hibernate-procedure-call", "hibernate-procedure-call-4.3", "hibernate");
+    super("hibernate_procedure_call", "hibernate_procedure_call_4.3", "hibernate");
   }
 
   @Override

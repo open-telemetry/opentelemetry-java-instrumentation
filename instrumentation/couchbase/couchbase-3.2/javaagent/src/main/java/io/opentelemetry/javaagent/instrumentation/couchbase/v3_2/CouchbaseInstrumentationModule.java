@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-3.2");
+    super("couchbase", "couchbase_3.2");
   }
 
   @Override

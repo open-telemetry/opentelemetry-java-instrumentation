@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Axis2InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public Axis2InstrumentationModule() {
-    super("axis2", "axis2-1.6", "jaxws");
+    super("axis2", "axis2_1.6", "jaxws");
   }
 
   @Override

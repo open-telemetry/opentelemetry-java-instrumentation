@@ -16,7 +16,7 @@ import java.util.List;
 public class HibernateReactiveStageInstrumentationModule extends InstrumentationModule {
 
   public HibernateReactiveStageInstrumentationModule() {
-    super("hibernate-reactive", "hibernate-reactive-1.0", "hibernate-reactive-stage");
+    super("hibernate_reactive", "hibernate_reactive_1.0", "hibernate_reactive_stage");
   }
 
   @Override

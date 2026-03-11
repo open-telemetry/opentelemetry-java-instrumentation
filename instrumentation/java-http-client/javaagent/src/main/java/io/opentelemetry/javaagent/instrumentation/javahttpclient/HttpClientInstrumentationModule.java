@@ -17,7 +17,7 @@ import java.util.List;
 public class HttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public HttpClientInstrumentationModule() {
-    super("java-http-client");
+    super("java_http_client");
   }
 
   @Override

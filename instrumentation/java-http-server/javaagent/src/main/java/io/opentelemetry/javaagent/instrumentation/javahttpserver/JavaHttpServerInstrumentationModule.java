@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JavaHttpServerInstrumentationModule extends InstrumentationModule {
   public JavaHttpServerInstrumentationModule() {
-    super("java-http-server");
+    super("java_http_server");
   }
 
   @Override

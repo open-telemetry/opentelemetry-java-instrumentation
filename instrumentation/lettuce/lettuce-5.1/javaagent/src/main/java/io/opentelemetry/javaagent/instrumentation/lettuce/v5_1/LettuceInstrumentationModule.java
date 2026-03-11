@@ -20,7 +20,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public LettuceInstrumentationModule() {
-    super("lettuce", "lettuce-5.1");
+    super("lettuce", "lettuce_5.1");
   }
 
   @Override

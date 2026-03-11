@@ -17,7 +17,7 @@ import java.util.List;
 public class JmsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JmsInstrumentationModule() {
-    super("jms", "jms-1.1");
+    super("jms", "jms_1.1");
   }
 
   @Override

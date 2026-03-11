@@ -18,7 +18,7 @@ public class JavaUtilLoggingInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public JavaUtilLoggingInstrumentationModule() {
-    super("java-util-logging");
+    super("java_util_logging");
   }
 
   @Override

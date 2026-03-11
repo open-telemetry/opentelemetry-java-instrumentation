@@ -17,7 +17,7 @@ import java.util.List;
 public class FinatraInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public FinatraInstrumentationModule() {
-    super("finatra", "finatra-2.9");
+    super("finatra", "finatra_2.9");
   }
 
   @Override

@@ -20,7 +20,7 @@ public class UndertowInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public UndertowInstrumentationModule() {
-    super("undertow", "undertow-1.4");
+    super("undertow", "undertow_1.4");
   }
 
   @Override

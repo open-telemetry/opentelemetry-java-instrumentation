@@ -21,7 +21,7 @@ public class SpringJmsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public SpringJmsInstrumentationModule() {
-    super("spring-jms", "spring-jms-6.0");
+    super("spring_jms", "spring_jms_6.0");
   }
 
   @Override

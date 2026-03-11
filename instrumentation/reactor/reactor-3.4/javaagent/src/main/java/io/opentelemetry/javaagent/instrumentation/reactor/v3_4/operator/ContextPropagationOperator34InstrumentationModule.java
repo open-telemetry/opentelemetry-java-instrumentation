@@ -20,7 +20,7 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
     implements ExperimentalInstrumentationModule {
 
   public ContextPropagationOperator34InstrumentationModule() {
-    super("reactor", "reactor-3.4", "reactor-context-propagation-operator");
+    super("reactor", "reactor_3.4", "reactor_context_propagation_operator");
   }
 
   @Override

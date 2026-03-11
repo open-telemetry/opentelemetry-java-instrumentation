@@ -16,7 +16,7 @@ import java.util.List;
 public class InfluxDbInstrumentationModule extends InstrumentationModule {
 
   public InfluxDbInstrumentationModule() {
-    super("influxdb", "influxdb-2.4");
+    super("influxdb", "influxdb_2.4");
   }
 
   @Override

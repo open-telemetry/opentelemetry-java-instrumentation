@@ -29,7 +29,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super("reactor-netty", "reactor-netty-0.9");
+    super("reactor_netty", "reactor_netty_0.9");
   }
 
   @Override

@@ -18,7 +18,7 @@ public class ReactorKafkaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ReactorKafkaInstrumentationModule() {
-    super("reactor-kafka", "reactor-kafka-1.0");
+    super("reactor_kafka", "reactor_kafka_1.0");
   }
 
   @Override

@@ -22,7 +22,7 @@ public class MicrometerInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public MicrometerInstrumentationModule() {
-    super("micrometer", "micrometer-1.5");
+    super("micrometer", "micrometer_1.5");
   }
 
   @Override

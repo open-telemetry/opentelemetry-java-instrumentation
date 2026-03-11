@@ -18,7 +18,7 @@ public class Log4jAppenderInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public Log4jAppenderInstrumentationModule() {
-    super("log4j-appender", "log4j-appender-2.17");
+    super("log4j_appender", "log4j_appender_2.17");
   }
 
   @Override

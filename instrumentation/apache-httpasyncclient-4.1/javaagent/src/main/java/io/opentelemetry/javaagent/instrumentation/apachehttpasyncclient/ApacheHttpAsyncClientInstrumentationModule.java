@@ -17,7 +17,7 @@ import java.util.List;
 public class ApacheHttpAsyncClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public ApacheHttpAsyncClientInstrumentationModule() {
-    super("apache-httpasyncclient", "apache-httpasyncclient-4.1");
+    super("apache_httpasyncclient", "apache_httpasyncclient_4.1");
   }
 
   @Override

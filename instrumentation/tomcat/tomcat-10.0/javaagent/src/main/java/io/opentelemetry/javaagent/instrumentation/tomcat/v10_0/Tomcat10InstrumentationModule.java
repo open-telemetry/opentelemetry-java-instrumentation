@@ -21,7 +21,7 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public Tomcat10InstrumentationModule() {
-    super("tomcat", "tomcat-10.0");
+    super("tomcat", "tomcat_10.0");
   }
 
   @Override

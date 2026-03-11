@@ -17,7 +17,7 @@ import java.util.List;
 public class LettuceInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public LettuceInstrumentationModule() {
-    super("lettuce", "lettuce-4.0");
+    super("lettuce", "lettuce_4.0");
   }
 
   @Override

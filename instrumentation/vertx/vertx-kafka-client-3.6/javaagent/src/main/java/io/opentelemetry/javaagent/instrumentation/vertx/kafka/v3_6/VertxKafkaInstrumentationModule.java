@@ -18,7 +18,7 @@ public class VertxKafkaInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxKafkaInstrumentationModule() {
-    super("vertx-kafka-client", "vertx-kafka-client-3.6", "vertx");
+    super("vertx_kafka_client", "vertx_kafka_client_3.6", "vertx");
   }
 
   @Override

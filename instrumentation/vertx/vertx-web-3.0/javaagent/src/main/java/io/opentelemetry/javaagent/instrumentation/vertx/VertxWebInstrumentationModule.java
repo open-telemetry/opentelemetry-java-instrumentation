@@ -18,7 +18,7 @@ public class VertxWebInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public VertxWebInstrumentationModule() {
-    super("vertx-web", "vertx-web-3.0", "vertx");
+    super("vertx_web", "vertx_web_3.0", "vertx");
   }
 
   @Override

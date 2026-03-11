@@ -18,7 +18,7 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public OkHttp3InstrumentationModule() {
-    super("okhttp", "okhttp-3.0");
+    super("okhttp", "okhttp_3.0");
   }
 
   @Override

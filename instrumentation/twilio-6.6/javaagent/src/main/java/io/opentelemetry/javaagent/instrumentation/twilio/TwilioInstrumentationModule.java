@@ -17,7 +17,7 @@ import java.util.List;
 public class TwilioInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public TwilioInstrumentationModule() {
-    super("twilio", "twilio-6.6");
+    super("twilio", "twilio_6.6");
   }
 
   @Override

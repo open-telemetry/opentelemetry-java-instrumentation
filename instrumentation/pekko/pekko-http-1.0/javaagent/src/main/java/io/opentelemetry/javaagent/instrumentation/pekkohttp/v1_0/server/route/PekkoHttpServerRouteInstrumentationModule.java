@@ -21,7 +21,7 @@ import java.util.List;
 public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public PekkoHttpServerRouteInstrumentationModule() {
-    super("pekko-http", "pekko-http-1.0", "pekko-http-server", "pekko-http-server-route");
+    super("pekko_http", "pekko_http_1.0", "pekko_http_server", "pekko_http_server_route");
   }
 
   @Override

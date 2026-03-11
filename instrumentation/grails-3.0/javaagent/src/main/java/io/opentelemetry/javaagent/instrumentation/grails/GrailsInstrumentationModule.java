@@ -17,7 +17,7 @@ import java.util.List;
 public class GrailsInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public GrailsInstrumentationModule() {
-    super("grails", "grails-3.0");
+    super("grails", "grails_3.0");
   }
 
   @Override

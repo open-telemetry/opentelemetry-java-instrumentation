@@ -18,7 +18,7 @@ public class OracleUcpInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public OracleUcpInstrumentationModule() {
-    super("oracle-ucp", "oracle-ucp-11.2");
+    super("oracle_ucp", "oracle_ucp_11.2");
   }
 
   @Override

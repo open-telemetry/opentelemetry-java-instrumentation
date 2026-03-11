@@ -17,7 +17,7 @@ import java.util.List;
 public class JspInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public JspInstrumentationModule() {
-    super("jsp", "jsp-2.3");
+    super("jsp", "jsp_2.3");
   }
 
   @Override

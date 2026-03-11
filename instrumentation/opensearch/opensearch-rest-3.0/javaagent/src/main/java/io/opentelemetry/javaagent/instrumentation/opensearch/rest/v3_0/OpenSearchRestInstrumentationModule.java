@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenSearchRestInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenSearchRestInstrumentationModule() {
-    super("opensearch-rest", "opensearch-rest-3.0", "opensearch");
+    super("opensearch_rest", "opensearch_rest_3.0", "opensearch");
   }
 
   @Override

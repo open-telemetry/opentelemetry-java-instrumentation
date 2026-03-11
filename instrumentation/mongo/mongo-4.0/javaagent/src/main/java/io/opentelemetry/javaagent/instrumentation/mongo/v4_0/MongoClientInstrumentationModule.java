@@ -20,7 +20,7 @@ public class MongoClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public MongoClientInstrumentationModule() {
-    super("mongo", "mongo-4.0");
+    super("mongo", "mongo_4.0");
   }
 
   @Override

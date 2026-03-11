@@ -17,7 +17,7 @@ import java.util.List;
 public class DataSourceInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public DataSourceInstrumentationModule() {
-    super("jdbc-datasource");
+    super("jdbc_datasource");
   }
 
   @Override
