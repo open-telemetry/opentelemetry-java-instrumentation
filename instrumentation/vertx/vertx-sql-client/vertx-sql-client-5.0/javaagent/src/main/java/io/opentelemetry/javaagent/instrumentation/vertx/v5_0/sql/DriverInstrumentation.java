@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getDbSystemFromClassName;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.storePoolDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -50,7 +50,7 @@ public class DriverInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This Object driver, @Advice.Return Pool pool) {
       if (pool != null) {
-        storePoolDbSystem(pool, getDbSystemFromClassName(driver));
+        storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));
       }
     }
   }

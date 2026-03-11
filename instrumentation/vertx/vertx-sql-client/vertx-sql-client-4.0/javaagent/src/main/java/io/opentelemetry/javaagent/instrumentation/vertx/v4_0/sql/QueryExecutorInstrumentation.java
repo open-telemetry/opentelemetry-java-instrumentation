@@ -104,7 +104,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
-        String dbSystem = VertxSqlClientUtil.getDbSystemFromClassName(connectOptions);
+        String dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
         Context parentContext = Context.current();

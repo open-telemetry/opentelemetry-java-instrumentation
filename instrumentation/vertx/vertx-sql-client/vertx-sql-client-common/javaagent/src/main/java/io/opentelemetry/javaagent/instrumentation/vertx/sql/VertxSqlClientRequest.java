@@ -49,6 +49,11 @@ public final class VertxSqlClientRequest {
     return parameterizedQuery;
   }
 
+  @Deprecated // to be removed in 3.0
+  public String getDbSystem() {
+    return VertxSqlClientUtil.getOldDbSystemFromName(dbSystemName);
+  }
+
   public String getDbSystemName() {
     return dbSystemName;
   }

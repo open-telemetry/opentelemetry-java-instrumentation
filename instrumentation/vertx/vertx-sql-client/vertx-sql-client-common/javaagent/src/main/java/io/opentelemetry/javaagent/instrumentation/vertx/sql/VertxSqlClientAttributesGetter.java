@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.DB2;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MICROSOFT_SQL_SERVER;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.POSTGRESQL;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -40,6 +40,13 @@ enum VertxSqlClientAttributesGetter
     return null;
   }
 
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbSystem(VertxSqlClientRequest request) {
+    return request.getDbSystem();
+  }
+
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
     switch (request.getDbSystemName()) {
@@ -48,7 +55,7 @@ enum VertxSqlClientAttributesGetter
         return DOUBLE_QUOTES_ARE_STRING_LITERALS;
       case POSTGRESQL:
       case ORACLE_DB:
-      case DB2:
+      case IBM_DB2:
       case MICROSOFT_SQL_SERVER:
         // These databases treat double-quoted fragments as identifiers
         return DOUBLE_QUOTES_ARE_IDENTIFIERS;
