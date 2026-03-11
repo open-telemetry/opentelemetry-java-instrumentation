@@ -19,8 +19,6 @@ dependencies {
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
   val testPrometheusMode by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -30,8 +28,6 @@ tasks {
     }
     include("**/*PrometheusModeTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
-    systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.micrometer.prometheus-mode.enabled=true")
   }
 
   val testBaseTimeUnit by registering(Test::class) {
@@ -42,8 +38,6 @@ tasks {
     }
     include("**/*TimerMillisecondsTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
-    systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.micrometer.base-time-unit=milliseconds")
   }
 
   val testHistogramGauges by registering(Test::class) {
@@ -54,8 +48,6 @@ tasks {
     }
     include("**/*HistogramGaugesTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
-    systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.micrometer.histogram-gauges.enabled=true")
   }
 
   test {
@@ -64,7 +56,6 @@ tasks {
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
     }
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
