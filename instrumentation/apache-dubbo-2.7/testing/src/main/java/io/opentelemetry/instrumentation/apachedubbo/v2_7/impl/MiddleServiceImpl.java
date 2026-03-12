@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.rpc.service.GenericService;
 
-public class MiddleServiceImpl implements MiddleService {
+public final class MiddleServiceImpl implements MiddleService {
 
   private final ReferenceConfig<?> referenceConfig;
 

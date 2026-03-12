@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7.impl;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 
-public class HelloServiceImpl implements HelloService {
+public final class HelloServiceImpl implements HelloService {
   @Override
   public String hello(String hello) {
     return hello;
