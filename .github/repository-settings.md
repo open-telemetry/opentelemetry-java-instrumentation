@@ -8,6 +8,7 @@ private admin repo.
 
 ### Repository secrets
 
+- `COPILOT_GITHUB_TOKEN` - owned by [@trask](https://github.com/trask)
 - `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
