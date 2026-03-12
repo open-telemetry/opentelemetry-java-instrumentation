@@ -213,6 +213,10 @@ To inspect applied edits: git diff HEAD~1
 If no findings:
 > `✅ No fix-review issues found in <heading>.`
 
+   If the user asks you to write the summary to a file, write the Fix Review Summary
+   section (from the `##` heading through the `git diff HEAD~1` line) to the requested
+   file path.
+
 ## Knowledge Loading
 
 Always load:
