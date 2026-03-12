@@ -73,6 +73,7 @@ final class ActivejHttpServerAttributesGetter
     return request.getQuery();
   }
 
+  @Nullable
   @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse httpResponse) {
@@ -82,6 +83,7 @@ final class ActivejHttpServerAttributesGetter
     };
   }
 
+  @Nullable
   @Override
   @SuppressWarnings("UnnecessaryDefaultInEnumSwitch")
   public String getNetworkProtocolVersion(
