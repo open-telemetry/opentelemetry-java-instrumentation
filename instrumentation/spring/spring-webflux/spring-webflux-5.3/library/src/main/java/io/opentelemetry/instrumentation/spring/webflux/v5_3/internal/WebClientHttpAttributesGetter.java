@@ -59,7 +59,7 @@ public enum WebClientHttpAttributesGetter
   @Override
   public Integer getServerPort(ClientRequest request) {
     URI url = request.url();
-    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url.getScheme());
   }
 
   @Nullable

@@ -31,7 +31,7 @@ final class AsyncHttpClient19Helper implements AsyncHttpClientHelper {
   @Nullable
   public Integer getServerPort(Request request) {
     Uri uri = request.getUri();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 
   @Override

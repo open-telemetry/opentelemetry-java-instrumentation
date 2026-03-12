@@ -82,6 +82,6 @@ enum JavaHttpClientAttributesGetter
   @Nullable
   public Integer getServerPort(HttpRequest request) {
     URI uri = request.uri();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }

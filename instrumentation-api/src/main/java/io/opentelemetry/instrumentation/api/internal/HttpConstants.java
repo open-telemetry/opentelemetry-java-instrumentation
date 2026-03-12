@@ -10,7 +10,6 @@ import static java.util.Collections.unmodifiableSet;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -32,19 +31,19 @@ public final class HttpConstants {
   public static final String _OTHER = "_OTHER";
 
   @Nullable
-  public static Integer portOrDefaultFromScheme(@Nullable Integer port, Supplier<String> scheme) {
+  public static Integer portOrDefaultFromScheme(@Nullable Integer port, @Nullable String scheme) {
     if (port != null && port > 0) {
       return port;
     }
-    return defaultPortForScheme(scheme.get());
+    return defaultPortForScheme(scheme);
   }
 
   @Nullable
-  public static Integer portOrDefaultFromScheme(int port, Supplier<String> scheme) {
+  public static Integer portOrDefaultFromScheme(int port, @Nullable String scheme) {
     if (port > 0) {
       return port;
     }
-    return defaultPortForScheme(scheme.get());
+    return defaultPortForScheme(scheme);
   }
 
   @Nullable

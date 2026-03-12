@@ -133,7 +133,7 @@ final class ApacheHttpClientHttpAttributesGetter
     if (authority == null) {
       return null;
     }
-    return HttpConstants.portOrDefaultFromScheme(authority.getPort(), request::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(authority.getPort(), request.getScheme());
   }
 
   private static ProtocolVersion getVersion(HttpRequest request, @Nullable HttpResponse response) {

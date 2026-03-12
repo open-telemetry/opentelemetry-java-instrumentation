@@ -103,7 +103,7 @@ enum ApacheHttpClientHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
-    return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
   }
 
   private static ProtocolVersion getVersion(

@@ -86,6 +86,6 @@ final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Re
   @Nullable
   public Integer getServerPort(Request request) {
     return HttpConstants.portOrDefaultFromScheme(
-        request.url().getPort(), () -> request.url().getProtocol());
+        request.url().getPort(), request.url().getProtocol());
   }
 }

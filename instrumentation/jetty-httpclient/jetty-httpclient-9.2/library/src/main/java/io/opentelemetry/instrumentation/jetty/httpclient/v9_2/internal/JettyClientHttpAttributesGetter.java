@@ -81,6 +81,6 @@ public enum JettyClientHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(Request request) {
-    return HttpConstants.portOrDefaultFromScheme(request.getPort(), request::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(request.getPort(), request.getScheme());
   }
 }

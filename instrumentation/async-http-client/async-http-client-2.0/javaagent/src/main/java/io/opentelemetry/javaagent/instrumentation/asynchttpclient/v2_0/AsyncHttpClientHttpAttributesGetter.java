@@ -92,7 +92,7 @@ final class AsyncHttpClientHttpAttributesGetter
   @Override
   public Integer getServerPort(RequestContext request) {
     Uri uri = request.getRequest().getUri();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 
   @Override

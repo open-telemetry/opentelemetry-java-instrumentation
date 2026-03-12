@@ -71,6 +71,6 @@ final class JoddHttpHttpAttributesGetter
   @Override
   @Nullable
   public Integer getServerPort(HttpRequest request) {
-    return HttpConstants.portOrDefaultFromScheme(request.port(), request::protocol);
+    return HttpConstants.portOrDefaultFromScheme(request.port(), request.protocol());
   }
 }

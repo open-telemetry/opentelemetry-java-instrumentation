@@ -70,6 +70,6 @@ class HttpUrlHttpAttributesGetter
   @Override
   public Integer getServerPort(HttpURLConnection connection) {
     URL url = connection.getURL();
-    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url::getProtocol);
+    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url.getProtocol());
   }
 }

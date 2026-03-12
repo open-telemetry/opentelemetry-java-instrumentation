@@ -54,6 +54,6 @@ final class GoogleHttpClientHttpAttributesGetter
   @Nullable
   public Integer getServerPort(HttpRequest request) {
     GenericUrl url = request.getUrl();
-    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(url.getPort(), url.getScheme());
   }
 }

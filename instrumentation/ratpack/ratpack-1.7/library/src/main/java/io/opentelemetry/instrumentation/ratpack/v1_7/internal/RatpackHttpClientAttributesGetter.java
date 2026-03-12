@@ -60,6 +60,6 @@ enum RatpackHttpClientAttributesGetter
   @Nullable
   public Integer getServerPort(RequestSpec request) {
     URI uri = request.getUri();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }

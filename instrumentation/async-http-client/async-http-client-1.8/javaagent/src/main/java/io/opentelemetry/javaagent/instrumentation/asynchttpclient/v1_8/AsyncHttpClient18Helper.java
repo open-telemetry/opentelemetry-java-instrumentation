@@ -37,7 +37,7 @@ final class AsyncHttpClient18Helper implements AsyncHttpClientHelper {
   @Nullable
   public Integer getServerPort(Request request) {
     URI uri = request.getOriginalURI();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 
   @Override

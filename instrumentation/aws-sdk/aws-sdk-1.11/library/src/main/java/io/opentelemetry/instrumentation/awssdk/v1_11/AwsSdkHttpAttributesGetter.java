@@ -98,6 +98,6 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   @Nullable
   public Integer getServerPort(Request<?> request) {
     URI endpoint = request.getEndpoint();
-    return HttpConstants.portOrDefaultFromScheme(endpoint.getPort(), endpoint::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(endpoint.getPort(), endpoint.getScheme());
   }
 }

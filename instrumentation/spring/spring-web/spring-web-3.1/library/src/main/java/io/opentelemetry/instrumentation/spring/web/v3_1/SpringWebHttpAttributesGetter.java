@@ -107,6 +107,6 @@ enum SpringWebHttpAttributesGetter
   @Nullable
   public Integer getServerPort(HttpRequest httpRequest) {
     URI uri = httpRequest.getURI();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 }

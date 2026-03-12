@@ -53,7 +53,7 @@ final class PlayWsClientHttpAttributesGetter
   @Override
   public Integer getServerPort(Request request) {
     Uri uri = request.getUri();
-    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri::getScheme);
+    return HttpConstants.portOrDefaultFromScheme(uri.getPort(), uri.getScheme());
   }
 
   @Override
