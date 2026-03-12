@@ -131,9 +131,18 @@ Auto-fix boundaries:
     `put` is a no-op for null values, so remove the conditional and pass the value
     directly (same for span, log, and metrics attribute setters)
   - defensive `if (param == null)` checks on parameters not annotated `@Nullable` —
-    these contradict the framework’s nullability contract; remove the guard. Conversely,
+    these contradict the framework's nullability contract; remove the guard. Conversely,
     if a call site passes `null` or a method returns `null`, add `@Nullable` to the
     parameter or return type instead of adding a null guard in the caller/callee.
+    **Exception**: when the method overrides an interface from the upstream OpenTelemetry
+    SDK (e.g., `TextMapGetter`, `TextMapSetter`), the interface may declare the parameter
+    `@Nullable` even though the annotation is not visible in this repository. Consult
+    the upstream nullability contract table in `knowledge/general-rules.md` before
+    removing any null check on an overriding method. If the interface declares the
+    parameter `@Nullable`, keep the null check and add `@Nullable` to the implementing
+    class parameter to match. Conversely, if an implementation is *missing* a null
+    check or `@Nullable` annotation for a parameter that is `@Nullable` upstream,
+    add both the annotation and the null guard.
   - getter/setter/boolean-getter naming convention violations (`get*`, `set*`, `is*`) and
     other API convention fixes (e.g. missing `@CanIgnoreReturnValue`, wrong method signature)
     in **non-stable modules** (module `gradle.properties` does not contain
