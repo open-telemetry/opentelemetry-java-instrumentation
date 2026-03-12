@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JbossLogmanagerTest {
 
@@ -192,12 +193,8 @@ class JbossLogmanagerTest {
     }
   }
 
-  private static Stream<Arguments> eventNameProperties() {
-    return Stream.of(Arguments.of("event.name"), Arguments.of("otel.event.name"));
-  }
-
   @ParameterizedTest
-  @MethodSource("eventNameProperties")
+  @ValueSource(strings = {"event.name", "otel.event.name"})
   void testMdc(String eventNameProperty) {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
