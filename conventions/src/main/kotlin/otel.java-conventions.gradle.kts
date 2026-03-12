@@ -10,7 +10,7 @@ plugins {
 
   id("otel.errorprone-conventions")
   id("otel.spotless-conventions")
-  id("org.owasp.dependencycheck")
+  id("org.sonatype.gradle.plugins.scan")
 }
 
 val otelJava = extensions.create<OtelJavaExtension>("otelJava")
@@ -427,11 +427,10 @@ tasks.withType<Checkstyle> {
   isShowViolations = true
 }
 
-dependencyCheck {
-  skipConfigurations = listOf("errorprone", "checkstyle", "annotationProcessor")
-  suppressionFile = "buildscripts/dependency-check-suppressions.xml"
-  failBuildOnCVSS = 7.0f // fail on high or critical CVE
-  nvd.apiKey = System.getenv("NVD_API_KEY")
+ossIndexAudit {
+  username = System.getenv("SONATYPE_OSS_INDEX_USER") ?: ""
+  password = System.getenv("SONATYPE_OSS_INDEX_PASSWORD") ?: ""
+  outputFormat = org.sonatype.gradle.plugins.scan.ossindex.OutputFormat.JSON_CYCLONE_DX_1_4
 }
 
 idea {
