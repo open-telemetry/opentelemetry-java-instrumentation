@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
-import static java.util.Collections.emptyIterator;
-
 import io.activej.http.HttpHeader;
 import io.activej.http.HttpHeaderValue;
 import io.activej.http.HttpHeaders;
@@ -17,8 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-enum ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
-  INSTANCE;
+final class ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {
@@ -27,19 +24,11 @@ enum ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
 
   @Override
   public String get(HttpRequest carrier, String key) {
-    if (carrier == null) {
-      return null;
-    }
-
     return carrier.getHeader(HttpHeaders.of(key));
   }
 
   @Override
   public Iterator<String> getAll(HttpRequest carrier, String key) {
-    if (carrier == null) {
-      return emptyIterator();
-    }
-
     HttpHeader httpHeader = HttpHeaders.of(key);
     List<String> values = new ArrayList<>();
     for (Map.Entry<HttpHeader, HttpHeaderValue> entry : carrier.getHeaders()) {
