@@ -43,6 +43,7 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new CommandSchedulerInstrumentation(),
         new PoolInstrumentation(),
         new SqlClientBaseInstrumentation(),
         new QueryExecutorInstrumentation(),

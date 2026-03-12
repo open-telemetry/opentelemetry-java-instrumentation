@@ -103,6 +103,12 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        // Skip vertx-sql-client instrumentation for JDBC-backed connections
+        // (connect options are not available for the JDBC path) —
+        // let JDBC instrumentation handle them instead
+        if (connectOptions == null) {
+          return new AdviceScope(callDepth);
+        }
         String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);

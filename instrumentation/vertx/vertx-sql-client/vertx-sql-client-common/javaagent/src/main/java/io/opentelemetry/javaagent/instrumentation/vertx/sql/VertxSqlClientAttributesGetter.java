@@ -7,13 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sql;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -32,16 +30,8 @@ enum VertxSqlClientAttributesGetter
       createResponseStatusExtractor();
 
   @Override
-  @Nullable
   public String getDbSystemName(VertxSqlClientRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      String dbSystemName = request.getDbSystemName();
-      // Only emit db.system.name when we can identify the specific database;
-      // return null for OTHER_SQL to avoid emitting an uninformative fallback value
-      return OTHER_SQL.equals(dbSystemName) ? null : dbSystemName;
-    }
-    // preserving old behavior
-    return null;
+    return request.getDbSystemName();
   }
 
   @Deprecated // to be removed in 3.0
