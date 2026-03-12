@@ -104,7 +104,7 @@ final class ApacheHttpClientHttpAttributesGetter
     if (hostConfiguration == null) {
       return null;
     }
-    int port = hostConfiguration.getPort();
-    return port > 0 ? port : null;
+    // Returns the effective port directly; scheme fallback is not needed.
+    return hostConfiguration.getPort();
   }
 }
