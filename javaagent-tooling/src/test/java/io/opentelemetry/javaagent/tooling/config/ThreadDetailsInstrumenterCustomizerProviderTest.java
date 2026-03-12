@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
@@ -15,7 +17,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistri
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -42,15 +43,15 @@ class ThreadDetailsInstrumenterCustomizerProviderTest {
             (Consumer<SpanDataAssert>)
                 span ->
                     span.hasAttributesSatisfying(
-                        satisfies(ThreadIncubatingAttributes.THREAD_ID, n -> n.isNotNull()),
-                        satisfies(ThreadIncubatingAttributes.THREAD_NAME, n -> n.isNotBlank()))),
+                        satisfies(THREAD_ID, n -> n.isNotNull()),
+                        satisfies(THREAD_NAME, n -> n.isNotBlank()))),
         Arguments.of(
             false,
             (Consumer<SpanDataAssert>)
                 span ->
                     span.hasAttributesSatisfying(
-                        satisfies(ThreadIncubatingAttributes.THREAD_ID, n -> n.isNull()),
-                        satisfies(ThreadIncubatingAttributes.THREAD_NAME, n -> n.isNull()))));
+                        satisfies(THREAD_ID, n -> n.isNull()),
+                        satisfies(THREAD_NAME, n -> n.isNull()))));
   }
 
   @ParameterizedTest(name = "enabled={0}")
