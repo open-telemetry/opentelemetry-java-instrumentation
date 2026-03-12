@@ -224,8 +224,7 @@ public final class LoggingEventMapper {
     if (supportsLogstashStructuredArguments
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
-      processLogstashStructuredArguments(
-          builder, loggingEvent.getArgumentArray());
+      processLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
     }
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
@@ -516,8 +515,7 @@ public final class LoggingEventMapper {
     return true;
   }
 
-  private void processLogstashMarkers(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void processLogstashMarkers(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
       captureMultipleLogstashMarkers(builder, loggingEvent);
     } else {
@@ -531,8 +529,7 @@ public final class LoggingEventMapper {
   }
 
   @SuppressWarnings("deprecation") // getMarker is deprecated since 1.3.0
-  private void captureSingleLogstashMarker(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureSingleLogstashMarker(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (isLogstashMarker(marker)) {
       captureLogstashMarkerAndReferences(builder, marker);
@@ -550,8 +547,7 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
-  private void captureLogstashMarkerAndReferences(
-      LogRecordBuilder builder, Marker marker) {
+  private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
     captureLogstashMarker(builder, logstashMarker, captureLogstashMarkerAttributes);
 
@@ -691,8 +687,7 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
-  private void processLogstashStructuredArguments(
-      LogRecordBuilder builder, Object[] arguments) {
+  private void processLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
         captureLogstashMarker(builder, argument, captureLogstashStructuredArguments);
