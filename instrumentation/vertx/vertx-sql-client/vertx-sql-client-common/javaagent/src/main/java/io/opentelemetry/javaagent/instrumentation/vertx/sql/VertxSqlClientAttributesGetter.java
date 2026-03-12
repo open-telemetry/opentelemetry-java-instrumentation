@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -34,7 +35,10 @@ enum VertxSqlClientAttributesGetter
   @Nullable
   public String getDbSystemName(VertxSqlClientRequest request) {
     if (emitStableDatabaseSemconv()) {
-      return request.getDbSystemName();
+      String dbSystemName = request.getDbSystemName();
+      // Only emit db.system.name when we can identify the specific database;
+      // return null for OTHER_SQL to avoid emitting an uninformative fallback value
+      return OTHER_SQL.equals(dbSystemName) ? null : dbSystemName;
     }
     // preserving old behavior
     return null;
@@ -44,7 +48,8 @@ enum VertxSqlClientAttributesGetter
   @Override
   @Nullable
   public String getDbSystem(VertxSqlClientRequest request) {
-    return request.getDbSystem();
+    // preserving old behavior: db.system was never set for vertx sql client
+    return null;
   }
 
   @Override

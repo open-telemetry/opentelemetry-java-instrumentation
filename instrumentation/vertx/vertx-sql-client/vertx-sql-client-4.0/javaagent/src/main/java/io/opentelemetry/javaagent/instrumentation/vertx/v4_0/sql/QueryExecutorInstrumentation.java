@@ -104,7 +104,12 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
 
         SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
-        String dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
+        // Try db system stored from pool class first (handles generic SqlConnectOptions),
+        // fall back to class name detection on the connect options itself
+        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        if (dbSystem == null) {
+          dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
+        }
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
         Context parentContext = Context.current();
