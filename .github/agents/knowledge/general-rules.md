@@ -30,7 +30,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Build | `testcontainersBuildService` declaration | Testcontainers dependency without `usesService` | `gradle-conventions.md` |
 | Style | Prefer instance creation over singletons for stateless interface impls | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `AttributesExtractor`, `SpanNameExtractor`, `HttpServerResponseMutator`, enum/static singletons | — |
 | Style | Remove redundant null guards on attribute puts | `AttributesBuilder.put`, `onStart`, `onEnd`, attribute extraction methods | — |
-| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned | `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
+| Style | Nullability correctness — no guards for non-nullable params; add `@Nullable` when null is actually passed/returned; respect upstream SDK `@Nullable` contracts for `TextMapGetter`/`TextMapSetter` | `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`, `*Extractor` implementations, null checks, missing `@Nullable` | — |
 | Architecture | Library vs javaagent boundaries | Always | — |
 | NewModule | New instrumentation module checklist | New modules | _(inline below)_ |
 
@@ -119,6 +119,23 @@ Use `@Nullable` annotations accurately throughout the codebase:
 
 - **Parameters**: annotate `@Nullable` if and only if `null` is actually passed by callers.
 - **Return types**: annotate `@Nullable` if and only if the method actually returns `null`.
+- **External interface contracts**: interfaces from the OpenTelemetry SDK
+  (`io.opentelemetry.context.propagation`) declare `@Nullable` on certain parameters.
+  These annotations are not visible in this repository because the interfaces live in the
+  upstream `opentelemetry-java` SDK. Implementations **must** propagate the upstream
+  `@Nullable` annotation to overriding parameter declarations and include appropriate
+  null checks. If an implementation is missing `@Nullable` on the parameter or is missing
+  a null check for a parameter that is `@Nullable` in the upstream interface, add both
+  the annotation and the null guard.
+
+  Upstream nullability contracts:
+
+  | Interface | Method | `@Nullable` Parameters |
+  |-----------|--------|------------------------|
+  | `TextMapGetter<CarrierT>` | `get(CarrierT, String)` | `carrier` is `@Nullable` |
+  | `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` is `@Nullable` |
+  | `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
+  | `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` is `@Nullable` |
 
 ## [Semconv] Constants by Module Type
 
