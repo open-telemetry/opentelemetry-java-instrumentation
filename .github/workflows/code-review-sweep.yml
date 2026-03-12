@@ -94,6 +94,7 @@ jobs:
           done
 
       - name: Commit and push fixes
+        id: commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -122,10 +123,11 @@ jobs:
 
           git checkout -b "$branch"
           git push -f origin "$branch"
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: otelbot-token
-        if: success()
+        if: steps.commit.outputs.pushed == 'true'
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
