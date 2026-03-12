@@ -29,8 +29,6 @@ enum BedrockRuntimeAttributesGetter
 
   @Override
   public String getOperationTarget(ExecutionAttributes executionAttributes) {
-    // FIXME: Only work when operation name are chat or text_completion. Fix this if there's more
-    //  kinds of operation names.
     return getRequestModel(executionAttributes);
   }
 

@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAi
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -50,8 +49,8 @@ public final class GenAiRetrieveAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(
         GenAiAttributesExtractor.GEN_AI_OPERATION_NAME,
         GenAiExtendedAttributes.GenAiOperationNameValues.RETRIEVE_DOCUMENTS);
-    set(attributes, GEN_AI_RETRIEVAL_QUERY, getter.getQuery(request));
-    set(attributes, SERVER_ADDRESS, getter.getServerAddress(request));
+    attributes.put(GEN_AI_RETRIEVAL_QUERY, getter.getQuery(request));
+    attributes.put(SERVER_ADDRESS, getter.getServerAddress(request));
     Integer port = getter.getServerPort(request);
     if (port != null) {
       attributes.put(SERVER_PORT, (long) port);
@@ -66,14 +65,7 @@ public final class GenAiRetrieveAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     if (captureMessageContent) {
-      set(attributes, GEN_AI_RETRIEVAL_DOCUMENTS, getter.getDocuments(request, response));
-    }
-  }
-
-  private static <T> void set(
-      AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
-    if (value != null) {
-      attributes.put(key, value);
+      attributes.put(GEN_AI_RETRIEVAL_DOCUMENTS, getter.getDocuments(request, response));
     }
   }
 }

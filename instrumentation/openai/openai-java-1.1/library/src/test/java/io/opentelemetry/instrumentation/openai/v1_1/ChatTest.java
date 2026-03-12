@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -168,7 +168,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -279,7 +279,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -418,7 +418,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -550,7 +550,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -686,7 +686,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -791,7 +791,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -901,7 +901,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1011,7 +1011,7 @@ class ChatTest extends AbstractChatTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
 
 import com.openai.core.RequestOptions;
 import com.openai.core.http.AsyncStreamResponse;
@@ -101,7 +101,7 @@ final class InstrumentedChatCompletionServiceAsync
       Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
-    if (!emitGenAiExperimentalConventions()) {
+    if (!emitGenAiLatestExperimentalConventions()) {
       ChatCompletionEventsHelper.emitPromptLogEvents(
           context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     }
@@ -109,7 +109,7 @@ final class InstrumentedChatCompletionServiceAsync
         delegate.create(chatCompletionCreateParams, requestOptions);
     future.thenAccept(
         r -> {
-          if (emitGenAiExperimentalConventions()) {
+          if (emitGenAiLatestExperimentalConventions()) {
             ChatCompletionEventsHelper.emitOperationDetailsEvent(
                 context, eventLogger, chatCompletionCreateParams, r, captureMessageContent);
           } else {
@@ -142,7 +142,7 @@ final class InstrumentedChatCompletionServiceAsync
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
-    if (!emitGenAiExperimentalConventions()) {
+    if (!emitGenAiLatestExperimentalConventions()) {
       ChatCompletionEventsHelper.emitPromptLogEvents(
           context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     }

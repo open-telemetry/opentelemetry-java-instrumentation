@@ -17,7 +17,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAi
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_MEMORY_TOP_K;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_MEMORY_USER_ID;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -58,16 +57,16 @@ public final class GenAiMemoryAttributesExtractor<REQUEST, RESPONSE>
         GenAiAttributesExtractor.GEN_AI_OPERATION_NAME,
         GenAiExtendedAttributes.GenAiOperationNameValues.MEMORY_OPERATION);
     attributes.put(GEN_AI_MEMORY_OPERATION, getter.getMemoryOperation(request));
-    set(attributes, GEN_AI_MEMORY_USER_ID, getter.getUserId(request));
-    set(attributes, GEN_AI_MEMORY_AGENT_ID, getter.getAgentId(request));
-    set(attributes, GEN_AI_MEMORY_RUN_ID, getter.getRunId(request));
-    set(attributes, GEN_AI_MEMORY_ID, getter.getMemoryId(request));
-    set(attributes, GEN_AI_MEMORY_MEMORY_TYPE, getter.getMemoryType(request));
-    set(attributes, GEN_AI_MEMORY_TOP_K, getter.getTopK(request));
-    set(attributes, GEN_AI_MEMORY_THRESHOLD, getter.getThreshold(request));
-    set(attributes, GEN_AI_MEMORY_RERANK, getter.getRerank(request));
+    attributes.put(GEN_AI_MEMORY_USER_ID, getter.getUserId(request));
+    attributes.put(GEN_AI_MEMORY_AGENT_ID, getter.getAgentId(request));
+    attributes.put(GEN_AI_MEMORY_RUN_ID, getter.getRunId(request));
+    attributes.put(GEN_AI_MEMORY_ID, getter.getMemoryId(request));
+    attributes.put(GEN_AI_MEMORY_MEMORY_TYPE, getter.getMemoryType(request));
+    attributes.put(GEN_AI_MEMORY_TOP_K, getter.getTopK(request));
+    attributes.put(GEN_AI_MEMORY_THRESHOLD, getter.getThreshold(request));
+    attributes.put(GEN_AI_MEMORY_RERANK, getter.getRerank(request));
     if (captureMessageContent) {
-      set(attributes, GEN_AI_MEMORY_INPUT_MESSAGES, getter.getInputMessages(request));
+      attributes.put(GEN_AI_MEMORY_INPUT_MESSAGES, getter.getInputMessages(request));
     }
   }
 
@@ -79,14 +78,7 @@ public final class GenAiMemoryAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     if (captureMessageContent) {
-      set(attributes, GEN_AI_MEMORY_OUTPUT_MESSAGES, getter.getOutputMessages(request, response));
-    }
-  }
-
-  private static <T> void set(
-      AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
-    if (value != null) {
-      attributes.put(key, value);
+      attributes.put(GEN_AI_MEMORY_OUTPUT_MESSAGES, getter.getOutputMessages(request, response));
     }
   }
 }

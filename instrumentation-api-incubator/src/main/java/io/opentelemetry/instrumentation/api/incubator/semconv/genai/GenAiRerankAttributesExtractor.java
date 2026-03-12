@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
-import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_RERANK_DOCUMENTS_COUNT;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_RERANK_INPUT_DOCUMENTS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiExtendedAttributes.GEN_AI_RERANK_OUTPUT_DOCUMENTS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -51,23 +49,22 @@ public final class GenAiRerankAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(
         GenAiAttributesExtractor.GEN_AI_OPERATION_NAME,
         GenAiExtendedAttributes.GenAiOperationNameValues.RERANK_DOCUMENTS);
-    if (SemconvStability.emitGenAiExperimentalConventions()) {
-      set(
-          attributes,
-          GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME,
-          getter.getProviderName(request));
+    if (SemconvStability.emitGenAiLatestExperimentalConventions()) {
+      attributes.put(
+          GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME, getter.getProviderName(request));
     }
     if (SemconvStability.emitOldGenAiSemconv()) {
-      set(attributes, GenAiAttributesExtractor.GEN_AI_SYSTEM, getter.getProviderName(request));
+      attributes.put(GenAiAttributesExtractor.GEN_AI_SYSTEM, getter.getProviderName(request));
     }
-    set(attributes, GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
-    set(attributes, GEN_AI_RERANK_DOCUMENTS_COUNT, getter.getDocumentsCount(request));
+    attributes.put(
+        GenAiAttributesExtractor.GEN_AI_REQUEST_MODEL, getter.getRequestModel(request));
+    attributes.put(GEN_AI_RERANK_DOCUMENTS_COUNT, getter.getDocumentsCount(request));
     Long topK = getter.getTopK(request);
     if (topK != null) {
-      attributes.put(doubleKey("gen_ai.request.top_k"), (double) topK);
+      attributes.put(GenAiAttributesExtractor.GEN_AI_REQUEST_TOP_K, (double) topK);
     }
     if (captureMessageContent) {
-      set(attributes, GEN_AI_RERANK_INPUT_DOCUMENTS, getter.getInputDocuments(request));
+      attributes.put(GEN_AI_RERANK_INPUT_DOCUMENTS, getter.getInputDocuments(request));
     }
   }
 
@@ -79,14 +76,8 @@ public final class GenAiRerankAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     if (captureMessageContent) {
-      set(attributes, GEN_AI_RERANK_OUTPUT_DOCUMENTS, getter.getOutputDocuments(request, response));
-    }
-  }
-
-  private static <T> void set(
-      AttributesBuilder attributes, AttributeKey<T> key, @Nullable T value) {
-    if (value != null) {
-      attributes.put(key, value);
+      attributes.put(
+          GEN_AI_RERANK_OUTPUT_DOCUMENTS, getter.getOutputDocuments(request, response));
     }
   }
 }

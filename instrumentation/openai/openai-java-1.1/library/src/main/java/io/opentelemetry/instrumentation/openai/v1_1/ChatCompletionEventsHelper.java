@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldGenAiSemconv;
 import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_SYSTEM;
@@ -49,7 +49,7 @@ final class ChatCompletionEventsHelper {
       Logger eventLogger,
       ChatCompletionCreateParams request,
       boolean captureMessageContent) {
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       return;
     }
     for (ChatCompletionMessageParam msg : request.messages()) {
@@ -177,7 +177,7 @@ final class ChatCompletionEventsHelper {
       Logger eventLogger,
       ChatCompletion completion,
       boolean captureMessageContent) {
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       return;
     }
     for (ChatCompletion.Choice choice : completion.choices()) {
@@ -221,7 +221,7 @@ final class ChatCompletionEventsHelper {
 
   private static LogRecordBuilder newEvent(Logger eventLogger, String name) {
     LogRecordBuilder builder = eventLogger.logRecordBuilder().setAttribute(EVENT_NAME, name);
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       builder.setAttribute(GEN_AI_PROVIDER_NAME, "openai");
     }
     if (emitOldGenAiSemconv()) {

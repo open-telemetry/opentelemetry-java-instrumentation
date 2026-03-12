@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -233,7 +233,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       basicSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       basicSpanAttrs.add(
@@ -294,7 +294,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -347,7 +347,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -439,7 +439,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       clientOptionsSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       clientOptionsSpanAttrs.add(
@@ -501,7 +501,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -565,7 +565,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     reasons -> reasons.containsExactly("stop", "stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 7L)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       multiChoiceSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       multiChoiceSpanAttrs.add(
@@ -630,7 +630,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -726,7 +726,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     reasons -> reasons.containsExactly("tool_calls")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 67L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 46L)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       toolCallsFirstSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -805,7 +805,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -921,7 +921,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 99L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 25L)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       toolCallsSecondSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -1000,7 +1000,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1142,7 +1142,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       errorSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
     }
@@ -1175,7 +1175,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (!emitGenAiExperimentalConventions()) {
+    if (!emitGenAiLatestExperimentalConventions()) {
     getTesting()
         .waitAndAssertLogRecords(
             log ->
@@ -1223,7 +1223,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop"))));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       streamSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       streamSpanAttrs.add(
@@ -1259,7 +1259,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1333,7 +1333,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop")),
                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       streamUsageSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       streamUsageSpanAttrs.add(
@@ -1395,7 +1395,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1477,7 +1477,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
                     reasons -> reasons.containsExactly("stop", "stop"))));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       streamMultiChoiceSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
       streamMultiChoiceSpanAttrs.add(
@@ -1517,7 +1517,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1659,7 +1659,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS,
                     reasons -> reasons.containsExactly("tool_calls"))));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       streamToolCallsFirstSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -1714,7 +1714,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -1837,7 +1837,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
                 satisfies(
                     GEN_AI_RESPONSE_FINISH_REASONS, reasons -> reasons.containsExactly("stop"))));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       streamToolCallsSecondSpanAttrs.add(
           equalTo(
               GEN_AI_SYSTEM_INSTRUCTIONS,
@@ -1892,7 +1892,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       getTesting()
           .waitAndAssertLogRecords(
               log ->
@@ -2034,7 +2034,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 equalTo(genAiProviderKey(), OPENAI),
                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)));
-    if (emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       streamErrorSpanAttrs.add(
           equalTo(GEN_AI_INPUT_MESSAGES, messageList(chatMessage("user", TEST_CHAT_INPUT))));
     }
@@ -2067,7 +2067,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
-    if (!emitGenAiExperimentalConventions()) {
+    if (!emitGenAiLatestExperimentalConventions()) {
     getTesting()
         .waitAndAssertLogRecords(
             log ->

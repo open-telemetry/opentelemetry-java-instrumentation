@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiExperimentalConventions;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -41,7 +41,7 @@ abstract class AbstractOpenAiTest {
   protected static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
 
   protected static AttributeKey<String> genAiProviderKey() {
-    return emitGenAiExperimentalConventions()
+    return emitGenAiLatestExperimentalConventions()
         ? GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME
         : GEN_AI_SYSTEM;
   }

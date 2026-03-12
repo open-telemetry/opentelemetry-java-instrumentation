@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitGenAiLatestExperimentalConventions;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -52,7 +53,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
       stringArrayKey("gen_ai.request.stop_sequences");
   private static final AttributeKey<Double> GEN_AI_REQUEST_TEMPERATURE =
       doubleKey("gen_ai.request.temperature");
-  private static final AttributeKey<Double> GEN_AI_REQUEST_TOP_K =
+  static final AttributeKey<Double> GEN_AI_REQUEST_TOP_K =
       doubleKey("gen_ai.request.top_k");
   private static final AttributeKey<Double> GEN_AI_REQUEST_TOP_P =
       doubleKey("gen_ai.request.top_p");
@@ -100,7 +101,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_CONVERSATION_ID, getter.getConversationId(request));
     attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
     attributes.put(GEN_AI_OUTPUT_TYPE, getter.getOutputType(request));
-    if (SemconvStability.emitGenAiExperimentalConventions()) {
+    if (emitGenAiLatestExperimentalConventions()) {
       attributes.put(GEN_AI_PROVIDER_NAME, getter.getProviderName(request));
     }
     if (SemconvStability.emitOldGenAiSemconv()) {
@@ -120,7 +121,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
     attributes.put(GEN_AI_REQUEST_TOP_K, getter.getRequestTopK(request));
     attributes.put(GEN_AI_REQUEST_TOP_P, getter.getRequestTopP(request));
-    if (SemconvStability.emitGenAiExperimentalConventions() && captureMessageContent) {
+    if (emitGenAiLatestExperimentalConventions() && captureMessageContent) {
       attributes.put(GEN_AI_SYSTEM_INSTRUCTIONS, getter.getSystemInstructions(request));
       attributes.put(GEN_AI_TOOL_DEFINITIONS, getter.getToolDefinitions(request));
     }
@@ -141,7 +142,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
     attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
     attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
-    if (SemconvStability.emitGenAiExperimentalConventions() && captureMessageContent) {
+    if (emitGenAiLatestExperimentalConventions() && captureMessageContent) {
       attributes.put(GEN_AI_INPUT_MESSAGES, getter.getInputMessages(request, response));
       attributes.put(GEN_AI_OUTPUT_MESSAGES, getter.getOutputMessages(request, response));
     }
