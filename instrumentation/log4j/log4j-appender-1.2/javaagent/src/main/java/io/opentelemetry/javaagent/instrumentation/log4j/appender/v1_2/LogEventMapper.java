@@ -45,7 +45,6 @@ public final class LogEventMapper {
   private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
-  @Deprecated // removing support for MDC-based event name since it's not scoped narrowly
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
   private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
@@ -178,11 +177,11 @@ public final class LogEventMapper {
 
     // otel.event.name takes priority over event.name
     Object otelEventName = context.get(OTEL_EVENT_NAME_KEY);
-    if (otelEventName != null && !otelEventName.toString().isEmpty()) {
-      builder.setEventName(otelEventName.toString());
+    if (otelEventName instanceof String) {
+      builder.setEventName((String) otelEventName);
     } else if (captureEventName) {
       Object eventName = context.get(EVENT_NAME.getKey());
-      if (eventName != null && !eventName.toString().isEmpty()) {
+      if (eventName != null) {
         builder.setEventName(eventName.toString());
       }
     }

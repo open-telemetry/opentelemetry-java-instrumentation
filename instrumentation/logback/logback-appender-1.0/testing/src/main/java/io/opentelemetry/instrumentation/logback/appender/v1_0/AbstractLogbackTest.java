@@ -226,7 +226,7 @@ public abstract class AbstractLogbackTest {
   @ParameterizedTest
   @MethodSource("eventNameProperties")
   void testEventNameMdc(String eventNameProperty) {
-    boolean expectEventNameSet = "otel.event.name".equals(eventNameProperty) || expectEventName();
+    boolean expectEventName = "otel.event.name".equals(eventNameProperty) || expectEventName();
 
     MDC.put("key1", "val1");
     MDC.put(eventNameProperty, "MyEventName");
@@ -244,7 +244,7 @@ public abstract class AbstractLogbackTest {
         codeFileAndLineAssertions(AbstractLogbackTest.class.getSimpleName() + ".java"));
     assertions.addAll(codeFunctionAssertions(AbstractLogbackTest.class, "testEventNameMdc"));
     assertions.add(equalTo(stringKey("key1"), "val1"));
-    if (!expectEventNameSet) {
+    if (!expectEventName) {
       assertions.add(equalTo(stringKey(eventNameProperty), "MyEventName"));
     }
 
@@ -257,7 +257,7 @@ public abstract class AbstractLogbackTest {
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(assertions);
-              if (expectEventNameSet) {
+              if (expectEventName) {
                 logRecord.hasEventName("MyEventName");
               }
             });

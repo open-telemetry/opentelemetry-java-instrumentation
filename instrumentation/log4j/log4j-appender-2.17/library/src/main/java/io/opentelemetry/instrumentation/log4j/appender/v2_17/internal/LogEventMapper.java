@@ -16,7 +16,6 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -41,8 +40,6 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
-
-  @Deprecated
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
@@ -82,13 +79,6 @@ public final class LogEventMapper<T> {
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
-    // If captureEventName is enabled, ensure event.name key is in the list that we loop over.
-    if (captureEventName && !captureAllContextDataAttributes) {
-      if (!captureContextDataAttributes.contains("event.name")) {
-        captureContextDataAttributes = new ArrayList<>(captureContextDataAttributes);
-        captureContextDataAttributes.add("event.name");
-      }
-    }
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureEventName = captureEventName;
   }
@@ -115,6 +105,8 @@ public final class LogEventMapper<T> {
       Supplier<StackTraceElement> sourceSupplier,
       Context context) {
 
+    // Event name priority (last writer wins): MapMessage > context data.
+    // Sources are called in ascending priority order.
     captureContextDataAttributes(builder, contextData);
 
     captureMessage(builder, message);
@@ -199,7 +191,7 @@ public final class LogEventMapper<T> {
     }
 
     String eventName = mapMessage.get(OTEL_EVENT_NAME_KEY);
-    if (eventName != null && !eventName.isEmpty()) {
+    if (eventName != null) {
       builder.setEventName(eventName);
     }
 
@@ -224,11 +216,11 @@ public final class LogEventMapper<T> {
 
     // otel.event.name takes priority over event.name
     String otelEventName = contextDataAccessor.getValue(contextData, OTEL_EVENT_NAME_KEY);
-    if (otelEventName != null && !otelEventName.isEmpty()) {
+    if (otelEventName != null) {
       builder.setEventName(otelEventName);
     } else if (captureEventName) {
       String eventName = contextDataAccessor.getValue(contextData, EVENT_NAME.getKey());
-      if (eventName != null && !eventName.isEmpty()) {
+      if (eventName != null) {
         builder.setEventName(eventName);
       }
     }

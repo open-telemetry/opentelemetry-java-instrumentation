@@ -26,14 +26,13 @@ import org.jboss.logmanager.MDC;
 
 public final class LoggingEventMapper {
 
-  private static final java.util.logging.Logger julLogger =
+  private static final java.util.logging.Logger logger =
       java.util.logging.Logger.getLogger(LoggingEventMapper.class.getName());
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
-  @Deprecated // removing support for MDC-based event name since it's not scoped narrowly
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
@@ -60,7 +59,7 @@ public final class LoggingEventMapper {
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
     if (captureEventName) {
-      julLogger.warning(
+      logger.warning(
           "The otel.instrumentation.jboss-logmanager.experimental.capture-event-name setting is"
               + " deprecated and will be removed in a future version.");
     }
@@ -117,11 +116,11 @@ public final class LoggingEventMapper {
 
     // otel.event.name takes priority over event.name
     String otelEventName = context.get(OTEL_EVENT_NAME_KEY);
-    if (otelEventName != null && !otelEventName.isEmpty()) {
+    if (otelEventName != null) {
       builder.setEventName(otelEventName);
     } else if (captureEventName) {
       String eventName = context.get(EVENT_NAME.getKey());
-      if (eventName != null && !eventName.isEmpty()) {
+      if (eventName != null) {
         builder.setEventName(eventName);
       }
     }
