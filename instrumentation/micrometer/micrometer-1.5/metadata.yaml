@@ -8,7 +8,8 @@ library_link: https://micrometer.io/
 configurations:
   - name: otel.instrumentation.micrometer.prometheus-mode.enabled
     description: >
-      Enables Prometheus mode to match Micrometer PrometheusMeterRegistry naming conventions.
+      Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be
+      renamed to match Micrometer instrument naming, and the base time unit will be set to seconds.
     type: boolean
     default: false
   - name: otel.instrumentation.micrometer.base-time-unit
