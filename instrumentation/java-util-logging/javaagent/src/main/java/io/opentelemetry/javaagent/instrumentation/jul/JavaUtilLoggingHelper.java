@@ -19,7 +19,6 @@ import static java.util.logging.Level.WARNING;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -91,8 +90,7 @@ public final class JavaUtilLoggingHelper {
     // throwable
     Throwable throwable = logRecord.getThrown();
     if (throwable != null) {
-      // this cast is safe within java agent instrumentation
-      ((ExtendedLogRecordBuilder) builder).setException(throwable);
+      builder.setException(throwable);
     }
 
     if (captureExperimentalAttributes) {

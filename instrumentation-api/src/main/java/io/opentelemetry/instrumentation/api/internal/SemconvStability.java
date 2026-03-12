@@ -5,8 +5,14 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,99 +24,105 @@ import java.util.Set;
  */
 public final class SemconvStability {
 
-  private static final boolean emitOldDatabaseSemconv;
-  private static final boolean emitStableDatabaseSemconv;
+  private static boolean emitOldDatabaseSemconv;
+  private static boolean emitStableDatabaseSemconv;
 
-  private static final boolean emitOldCodeSemconv;
-  private static final boolean emitStableCodeSemconv;
+  private static boolean emitOldCodeSemconv;
+  private static boolean emitStableCodeSemconv;
 
-  private static final boolean emitOldServicePeerSemconv;
-  private static final boolean emitStableServicePeerSemconv;
+  private static boolean emitOldServicePeerSemconv;
+  private static boolean emitStableServicePeerSemconv;
 
-  private static final boolean emitOldRpcSemconv;
-  private static final boolean emitStableRpcSemconv;
+  private static boolean emitOldRpcSemconv;
+  private static boolean emitStableRpcSemconv;
 
-  private static final boolean emitGenAiLatestExperimentalConventions;
+  private static boolean emitGenAiLatestExperimentalSemconv;
 
   static {
-    boolean oldDatabase = true;
-    boolean stableDatabase = false;
-
-    boolean oldCode = true;
-    boolean stableCode = false;
-
-    boolean oldServicePeer = true;
-    boolean stableServicePeer = false;
-
-    boolean oldRpc = true;
-    boolean stableRpc = false;
-
-    boolean genAiLatestExperimental = false;
-
     String value = System.getProperty("otel.semconv-stability.opt-in");
     if (value == null) {
       value = System.getenv("OTEL_SEMCONV_STABILITY_OPT_IN");
     }
-    if (value != null) {
-      Set<String> values = new HashSet<>(asList(value.split(",")));
+    Set<String> values = value != null ? new HashSet<>(asList(value.split(","))) : emptySet();
+    configure(values);
+  }
 
-      // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
-      // should emit both sets of attributes for XXX
+  private static void configure(Set<String> values) {
+    // set default values
+    emitOldDatabaseSemconv = true;
+    emitStableDatabaseSemconv = false;
 
-      if (values.contains("database")) {
-        oldDatabase = false;
-        stableDatabase = true;
-      }
-      if (values.contains("database/dup")) {
-        oldDatabase = true;
-        stableDatabase = true;
-      }
+    emitOldCodeSemconv = true;
+    emitStableCodeSemconv = false;
 
-      if (values.contains("code")) {
-        oldCode = false;
-        stableCode = true;
-      }
-      if (values.contains("code/dup")) {
-        oldCode = true;
-        stableCode = true;
-      }
+    emitOldServicePeerSemconv = true;
+    emitStableServicePeerSemconv = false;
 
-      if (values.contains("service.peer")) {
-        oldServicePeer = false;
-        stableServicePeer = true;
-      }
-      if (values.contains("service.peer/dup")) {
-        oldServicePeer = true;
-        stableServicePeer = true;
-      }
+    emitOldRpcSemconv = true;
+    emitStableRpcSemconv = false;
 
-      if (values.contains("rpc")) {
-        oldRpc = false;
-        stableRpc = true;
-      }
-      if (values.contains("rpc/dup")) {
-        oldRpc = true;
-        stableRpc = true;
-      }
+    emitGenAiLatestExperimentalSemconv = false;
 
-      if (values.contains("gen_ai_latest_experimental")) {
-        genAiLatestExperimental = true;
-      }
+    // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
+    // should emit both sets of attributes for XXX
+
+    if (values.contains("database")) {
+      emitOldDatabaseSemconv = false;
+      emitStableDatabaseSemconv = true;
+    }
+    if (values.contains("database/dup")) {
+      emitOldDatabaseSemconv = true;
+      emitStableDatabaseSemconv = true;
     }
 
-    emitOldDatabaseSemconv = oldDatabase;
-    emitStableDatabaseSemconv = stableDatabase;
+    if (values.contains("code")) {
+      emitOldCodeSemconv = false;
+      emitStableCodeSemconv = true;
+    }
+    if (values.contains("code/dup")) {
+      emitOldCodeSemconv = true;
+      emitStableCodeSemconv = true;
+    }
 
-    emitOldCodeSemconv = oldCode;
-    emitStableCodeSemconv = stableCode;
+    if (values.contains("service.peer")) {
+      emitOldServicePeerSemconv = false;
+      emitStableServicePeerSemconv = true;
+    }
+    if (values.contains("service.peer/dup")) {
+      emitOldServicePeerSemconv = true;
+      emitStableServicePeerSemconv = true;
+    }
 
-    emitOldServicePeerSemconv = oldServicePeer;
-    emitStableServicePeerSemconv = stableServicePeer;
+    if (values.contains("rpc")) {
+      emitOldRpcSemconv = false;
+      emitStableRpcSemconv = true;
+    }
+    if (values.contains("rpc/dup")) {
+      emitOldRpcSemconv = true;
+      emitStableRpcSemconv = true;
+    }
 
-    emitOldRpcSemconv = oldRpc;
-    emitStableRpcSemconv = stableRpc;
+    if (values.contains("gen_ai_latest_experimental")) {
+      emitGenAiLatestExperimentalSemconv = true;
+    }
+  }
 
-    emitGenAiLatestExperimentalConventions = genAiLatestExperimental;
+  public static void configure(OpenTelemetry openTelemetry) {
+    DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
+
+    Set<String> values =
+        new HashSet<>(
+            generalConfig
+                .get("semconv_stability")
+                .getScalarList("opt_in", String.class, new ArrayList<>()));
+    configure(values);
+  }
+
+  private static DeclarativeConfigProperties getGeneralInstrumentationConfig(
+      OpenTelemetry openTelemetry) {
+    return openTelemetry instanceof ExtendedOpenTelemetry
+        ? ((ExtendedOpenTelemetry) openTelemetry).getGeneralInstrumentationConfig()
+        : empty();
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -171,11 +183,11 @@ public final class SemconvStability {
   }
 
   public static boolean emitOldGenAiSemconv() {
-    return !emitGenAiLatestExperimentalConventions;
+    return !emitGenAiLatestExperimentalSemconv;
   }
 
-  public static boolean emitGenAiLatestExperimentalConventions() {
-    return emitGenAiLatestExperimentalConventions;
+  public static boolean emitGenAiLatestExperimentalSemconv() {
+    return emitGenAiLatestExperimentalSemconv;
   }
 
   private static final Map<String, String> rpcSystemNameMap = new HashMap<>();

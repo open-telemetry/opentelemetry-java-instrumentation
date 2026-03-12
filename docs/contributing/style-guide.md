@@ -52,9 +52,8 @@ still allows the code to function correctly.
 Classes in `.internal` packages are not considered public API and may change without notice. These
 packages contain implementation details that should not be used by external consumers.
 
-- Use `.internal` packages for implementation classes that need to be public within the module but
-  should not be used externally
-- Try to avoid referencing `.internal` classes from other modules
+Use `.internal` packages for implementation classes that need to be public within the module but
+should not be used externally
 
 ### Class organization
 
@@ -81,6 +80,8 @@ methods.
 ### `final` keyword usage
 
 Public non-internal non-test classes should be declared `final` where possible.
+"Internal" here includes `.internal` packages **and** `javaagent/src/main/` classes — javaagent
+instrumentation code is not public API.
 
 Methods should only be declared `final` if they are in public non-internal non-test non-final classes.
 
