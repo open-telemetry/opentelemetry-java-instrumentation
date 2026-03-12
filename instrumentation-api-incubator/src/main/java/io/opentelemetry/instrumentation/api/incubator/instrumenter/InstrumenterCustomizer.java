@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.instrumenter;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -33,6 +34,13 @@ public interface InstrumenterCustomizer {
    * @return the name of the instrumentation this customizer targets
    */
   String getInstrumentationName();
+
+  /**
+   * Returns the OpenTelemetry instance associated with this instrumenter.
+   *
+   * @return the OpenTelemetry instance
+   */
+  OpenTelemetry getOpenTelemetry();
 
   /**
    * Tests whether given instrumenter produces telemetry of specified type. Instrumentation type is
