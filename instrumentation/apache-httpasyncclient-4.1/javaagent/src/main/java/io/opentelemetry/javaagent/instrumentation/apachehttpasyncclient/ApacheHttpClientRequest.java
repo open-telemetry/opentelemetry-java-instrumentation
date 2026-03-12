@@ -79,6 +79,7 @@ public final class ApacheHttpClientRequest {
     return protocolVersion.getMajor() + "." + protocolVersion.getMinor();
   }
 
+  @Nullable
   public String getServerAddress() {
     return uri != null ? uri.getHost() : null;
   }

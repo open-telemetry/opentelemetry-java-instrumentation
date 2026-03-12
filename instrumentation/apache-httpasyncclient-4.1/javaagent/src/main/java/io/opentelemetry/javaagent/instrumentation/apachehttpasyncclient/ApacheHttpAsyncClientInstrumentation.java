@@ -156,13 +156,15 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
     private final Context parentContext;
     @Nullable private final HttpContext httpContext;
-    private final FutureCallback<T> delegate;
+    @Nullable private final FutureCallback<T> delegate;
 
     private volatile Context context;
     private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
-        Context parentContext, HttpContext httpContext, FutureCallback<T> delegate) {
+        Context parentContext,
+        @Nullable HttpContext httpContext,
+        @Nullable FutureCallback<T> delegate) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       // Note: this can be null in real life, so we have to handle this carefully
@@ -179,12 +181,6 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       }
 
       instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
-
-      if (parentContext == null) {
-        completeDelegate(result);
-        return;
-      }
-
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
       }
@@ -201,12 +197,6 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
       // end span before calling delegate
       instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
-
-      if (parentContext == null) {
-        failDelegate(ex);
-        return;
-      }
-
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
       }
@@ -224,12 +214,6 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
       instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
-
-      if (parentContext == null) {
-        cancelDelegate();
-        return;
-      }
-
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();
       }
