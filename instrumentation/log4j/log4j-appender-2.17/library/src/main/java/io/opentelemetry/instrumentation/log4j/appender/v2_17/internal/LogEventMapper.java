@@ -42,8 +42,9 @@ public final class LogEventMapper<T> {
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-
-  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
+  // copied from OtelIncubatingAttributes
+  private static final AttributeKey<String> OTEL_EVENT_NAME =
+      AttributeKey.stringKey("otel.event.name");
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
@@ -190,7 +191,7 @@ public final class LogEventMapper<T> {
       builder.setBody(body);
     }
 
-    String eventName = mapMessage.get(OTEL_EVENT_NAME_KEY);
+    String eventName = mapMessage.get(OTEL_EVENT_NAME.getKey());
     if (eventName != null) {
       builder.setEventName(eventName);
     }
@@ -202,7 +203,7 @@ public final class LogEventMapper<T> {
           .forEach(
               (key, value) -> {
                 if (value != null
-                    && !key.equals(OTEL_EVENT_NAME_KEY)
+                    && !key.equals(OTEL_EVENT_NAME.getKey())
                     && (!checkSpecialMapMessageAttribute
                         || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
@@ -215,7 +216,7 @@ public final class LogEventMapper<T> {
   void captureContextDataAttributes(LogRecordBuilder builder, T contextData) {
 
     // otel.event.name takes priority over event.name
-    String otelEventName = contextDataAccessor.getValue(contextData, OTEL_EVENT_NAME_KEY);
+    String otelEventName = contextDataAccessor.getValue(contextData, OTEL_EVENT_NAME.getKey());
     if (otelEventName != null) {
       builder.setEventName(otelEventName);
     } else if (captureEventName) {
@@ -229,7 +230,7 @@ public final class LogEventMapper<T> {
       contextDataAccessor.forEach(
           contextData,
           (key, value) -> {
-            if (!OTEL_EVENT_NAME_KEY.equals(key)
+            if (!OTEL_EVENT_NAME.getKey().equals(key)
                 && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
               if (value != null) {
                 builder.setAttribute(getContextDataAttributeKey(key), value);
@@ -240,7 +241,7 @@ public final class LogEventMapper<T> {
     }
 
     for (String key : captureContextDataAttributes) {
-      if (!OTEL_EVENT_NAME_KEY.equals(key)
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
           && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
         String value = contextDataAccessor.getValue(contextData, key);
         if (value != null) {

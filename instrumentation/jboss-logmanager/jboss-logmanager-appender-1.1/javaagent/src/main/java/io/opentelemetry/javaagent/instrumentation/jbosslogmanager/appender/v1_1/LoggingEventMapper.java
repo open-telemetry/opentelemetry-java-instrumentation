@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
+import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -35,8 +36,6 @@ public final class LoggingEventMapper {
 
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-
-  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
 
   private final List<String> captureMdcAttributes;
 
@@ -115,7 +114,7 @@ public final class LoggingEventMapper {
     }
 
     // otel.event.name takes priority over event.name
-    String otelEventName = context.get(OTEL_EVENT_NAME_KEY);
+    String otelEventName = context.get(OTEL_EVENT_NAME.getKey());
     if (otelEventName != null) {
       builder.setEventName(otelEventName);
     } else if (captureEventName) {
@@ -128,7 +127,7 @@ public final class LoggingEventMapper {
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : context.entrySet()) {
         String key = entry.getKey();
-        if (!OTEL_EVENT_NAME_KEY.equals(key)
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
             && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
           builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
         }
@@ -137,7 +136,7 @@ public final class LoggingEventMapper {
     }
 
     for (String key : captureMdcAttributes) {
-      if (!OTEL_EVENT_NAME_KEY.equals(key)
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
           && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
         String value = context.get(key);
         if (value != null) {

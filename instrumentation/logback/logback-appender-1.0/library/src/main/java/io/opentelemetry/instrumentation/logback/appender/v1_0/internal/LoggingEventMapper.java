@@ -74,7 +74,9 @@ public final class LoggingEventMapper {
       AttributeKey.stringKey("log.body.template");
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
-  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
+  // copied from OtelIncubatingAttributes
+  private static final AttributeKey<String> OTEL_EVENT_NAME =
+      AttributeKey.stringKey("otel.event.name");
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -265,7 +267,7 @@ public final class LoggingEventMapper {
   // visible for testing
   void captureMdcAttributes(LogRecordBuilder builder, Map<String, String> mdcProperties) {
     // otel.event.name takes priority over event.name
-    String otelEventName = mdcProperties.get(OTEL_EVENT_NAME_KEY);
+    String otelEventName = mdcProperties.get(OTEL_EVENT_NAME.getKey());
     if (otelEventName != null) {
       builder.setEventName(otelEventName);
     } else if (captureEventName) {
@@ -278,7 +280,7 @@ public final class LoggingEventMapper {
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
         String key = entry.getKey();
-        if (!OTEL_EVENT_NAME_KEY.equals(key)
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
             && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
           builder.setAttribute(getAttributeKey(key), entry.getValue());
         }
@@ -287,7 +289,7 @@ public final class LoggingEventMapper {
     }
 
     for (String key : captureMdcAttributes) {
-      if (!OTEL_EVENT_NAME_KEY.equals(key)
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
           && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
         String value = mdcProperties.get(key);
         if (value != null) {
@@ -330,7 +332,7 @@ public final class LoggingEventMapper {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        if (OTEL_EVENT_NAME_KEY.equals(keyValuePair.key) && keyValuePair.value != null) {
+        if (OTEL_EVENT_NAME.getKey().equals(keyValuePair.key) && keyValuePair.value != null) {
           builder.setEventName(keyValuePair.value.toString());
           break;
         }
@@ -343,7 +345,7 @@ public final class LoggingEventMapper {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        if (!OTEL_EVENT_NAME_KEY.equals(keyValuePair.key)) {
+        if (!OTEL_EVENT_NAME.getKey().equals(keyValuePair.key)) {
           captureAttribute(builder, this.captureEventName, keyValuePair.key, keyValuePair.value);
         }
       }
@@ -568,7 +570,7 @@ public final class LoggingEventMapper {
       fieldReader.read(
           logstashMarker,
           (name, value) -> {
-            if (OTEL_EVENT_NAME_KEY.equals(name) && value != null) {
+            if (OTEL_EVENT_NAME.getKey().equals(name) && value != null) {
               builder.setEventName(value.toString());
             } else if (captureAllAttributes) {
               captureAttribute(builder, captureEventName, name, value);

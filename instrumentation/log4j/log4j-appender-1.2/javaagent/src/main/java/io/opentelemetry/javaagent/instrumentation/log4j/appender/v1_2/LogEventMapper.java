@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
+import static io.opentelemetry.semconv.incubating.OtelIncubatingAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.Collections.emptyList;
@@ -47,7 +48,6 @@ public final class LogEventMapper {
       AttributeKey.stringKey("code.namespace");
   // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-  private static final String OTEL_EVENT_NAME_KEY = "otel.event.name";
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
@@ -176,7 +176,7 @@ public final class LogEventMapper {
     }
 
     // otel.event.name takes priority over event.name
-    Object otelEventName = context.get(OTEL_EVENT_NAME_KEY);
+    Object otelEventName = context.get(OTEL_EVENT_NAME.getKey());
     if (otelEventName instanceof String) {
       builder.setEventName((String) otelEventName);
     } else if (captureEventName) {
@@ -189,7 +189,7 @@ public final class LogEventMapper {
     if (captureAllMdcAttributes) {
       for (Map.Entry<?, ?> entry : context.entrySet()) {
         String key = String.valueOf(entry.getKey());
-        if (!OTEL_EVENT_NAME_KEY.equals(key)
+        if (!OTEL_EVENT_NAME.getKey().equals(key)
             && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
           Object value = entry.getValue();
           if (value != null) {
@@ -202,7 +202,7 @@ public final class LogEventMapper {
 
     for (Map.Entry<String, AttributeKey<String>> entry : captureMdcAttributes.entrySet()) {
       String key = entry.getKey();
-      if (!OTEL_EVENT_NAME_KEY.equals(key)
+      if (!OTEL_EVENT_NAME.getKey().equals(key)
           && !(captureEventName && EVENT_NAME.getKey().equals(key))) {
         Object value = context.get(key);
         if (value != null) {
